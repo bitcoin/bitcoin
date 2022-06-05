@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 
 #include <boost/test/unit_test.hpp>
@@ -184,32 +185,35 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
-            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+            auto flag_word = test[2].get_str();
+            auto verify_flags = ParseScriptFlags(flag_word);
+            if (!verify_flags) BOOST_ERROR("Bad test: unknown verification flag '" << flag_word << "'");
+
 
             // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
-            if (~verify_flags != FillFlags(~verify_flags)) {
+            if (~verify_flags.value() != FillFlags(~verify_flags.value())) {
                 BOOST_ERROR("Bad test flags: " << strTest);
             }
 
-            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags, txdata, strTest, /*expect_valid=*/true),
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags.value(), txdata, strTest, /*expect_valid=*/true),
                                 "Tx unexpectedly failed: " << strTest);
 
             // Backwards compatibility of script verification flags: Removing any flag(s) should not invalidate a valid transaction
             for (const auto& [name, flag] : MapFlagNames()) {
                 // Removing individual flags
-                unsigned int flags = TrimFlags(~(verify_flags | flag));
+                unsigned int flags = TrimFlags(~(verify_flags.value() | flag));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
                 // Removing random combinations of flags
-                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(MapFlagNames().size())));
+                flags = TrimFlags(~(verify_flags.value() | (unsigned int)InsecureRandBits(MapFlagNames().size())));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with random flags " << ToString(flags) << ": " << strTest);
                 }
             }
 
             // Check that flags are maximal: transaction should fail if any unset flags are set.
-            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
+            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags.value())) {
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Too many flags unset: " << strTest);
                 }
@@ -274,33 +278,35 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             PrecomputedTransactionData txdata(tx);
-            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+            auto flag_word = test[2].get_str();
+            auto verify_flags = ParseScriptFlags(flag_word);
+            if (!verify_flags) BOOST_ERROR("Bad test: unknown verification flag '" << flag_word << "'");
 
             // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
-            if (verify_flags != FillFlags(verify_flags)) {
+            if (verify_flags != FillFlags(verify_flags.value())) {
                 BOOST_ERROR("Bad test flags: " << strTest);
             }
 
             // Not using FillFlags() in the main test, in order to detect invalid verifyFlags combination
-            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags, txdata, strTest, /*expect_valid=*/false),
+            BOOST_CHECK_MESSAGE(CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags.value(), txdata, strTest, /*expect_valid=*/false),
                                 "Tx unexpectedly passed: " << strTest);
 
             // Backwards compatibility of script verification flags: Adding any flag(s) should not validate an invalid transaction
             for (const auto& [name, flag] : MapFlagNames()) {
-                unsigned int flags = FillFlags(verify_flags | flag);
+                unsigned int flags = FillFlags(verify_flags.value() | flag);
                 // Adding individual flags
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with flag " << name << " set: " << strTest);
                 }
                 // Adding random combinations of flags
-                flags = FillFlags(verify_flags | (unsigned int)InsecureRandBits(MapFlagNames().size()));
+                flags = FillFlags(verify_flags.value() | (unsigned int)InsecureRandBits(MapFlagNames().size()));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with random flags " << name << ": " << strTest);
                 }
             }
 
             // Check that flags are minimal: transaction should succeed if any set flags are unset.
-            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags)) {
+            for (auto flags_excluding_one : ExcludeIndividualFlags(verify_flags.value())) {
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Too many flags set: " << strTest);
                 }

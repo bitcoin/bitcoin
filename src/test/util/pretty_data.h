@@ -15,6 +15,7 @@
 #include <charconv>
 #include <iomanip>
 #include <map>
+#include <optional>
 #include <ostream>
 #include <set>
 #include <string>
@@ -140,7 +141,7 @@ const std::map<std::string_view, unsigned int>& MapFlagNames();
  * Given a comma-separated string of script verification flags (from
  * `script/interpreter.h`) return the flag word (word with the flag bits set)
  */
-unsigned int ParseScriptFlags(std::string_view strFlags, bool issue_boost_error = true);
+std::optional<unsigned int> ParseScriptFlags(std::string_view strFlags);
 
 /**
  * Given a flag word (word with script verification flag bits set) return
@@ -153,7 +154,7 @@ std::string FormatScriptFlags(unsigned int flags);
  *
  * The name is the enum name with the prefix `SCRIPT_ERR_` removed.
  */
-ScriptError_t ParseScriptError(std::string_view err, bool issue_boost_error = true);
+std::optional<ScriptError_t> ParseScriptError(std::string_view err);
 
 /**
  * Given a script error value return its string name.
@@ -162,7 +163,7 @@ ScriptError_t ParseScriptError(std::string_view err, bool issue_boost_error = tr
  * that this is different from `ScriptErrorString` (`script_error.h`) which
  * returns an English phrase describing the error.
  */
-std::string FormatScriptError(ScriptError_t err, bool issue_boost_error = true);
+std::optional<std::string> FormatScriptError(ScriptError_t err);
 
 namespace test::util::literals {
 

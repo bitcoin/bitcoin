@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -65,7 +66,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
     CMutableTransaction tx2 = tx;
     BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
-    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
+    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err).value() + " where " + FormatScriptError((ScriptError_t)scriptError).value() + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
     for (int i = 0; i < 16; ++i) {
@@ -357,7 +358,7 @@ public:
         array.push_back(FormatScript(spendTx.vin[0].scriptSig));
         array.push_back(FormatScript(creditTx->vout[0].scriptPubKey));
         array.push_back(FormatScriptFlags(flags));
-        array.push_back(FormatScriptError((ScriptError_t)scriptError));
+        array.push_back(FormatScriptError((ScriptError_t)scriptError).value());
         array.push_back(comment);
         return array;
     }
@@ -894,10 +895,15 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         CScript scriptSig = ParseScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
-        unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
-        int scriptError = ParseScriptError(test[pos++].get_str());
+        auto flagWord = test[pos++].get_str();
+        auto scriptflags = ParseScriptFlags(flagWord);
+        if (!scriptflags) BOOST_ERROR("Bad test: unknown verification flag '" << flagWord << "'");
 
-        DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
+        auto errorWord = test[pos++].get_str();
+        auto scriptError = ParseScriptError(errorWord);
+        if (!scriptError) BOOST_ERROR("Bad test: unknown script error value '" << errorWord << "'");
+
+        DoTest(scriptPubKey, scriptSig, witness, scriptflags.value(), strTest, scriptError.value(), nValue);
     }
 }
 
@@ -1607,7 +1613,10 @@ static void AssetTest(const UniValue& test)
     const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
     BOOST_CHECK(prevouts.size() == mtx.vin.size());
     size_t idx = test["index"].getInt<int64_t>();
-    uint32_t test_flags{ParseScriptFlags(test["flags"].get_str())};
+    auto flags_word = test["flags"].get_str();
+    auto test_flags{ParseScriptFlags(flags_word)};
+    if (!test_flags) BOOST_ERROR("Bad test: unknown verification flag '" << flags_word << "'");
+
     bool fin = test.exists("final") && test["final"].get_bool();
 
     if (test.exists("success")) {
@@ -1620,7 +1629,7 @@ static void AssetTest(const UniValue& test)
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // "final": true tests are valid for all flags. Others are only valid with flags that are
             // a subset of test_flags.
-            if (fin || ((flags & test_flags) == flags)) {
+            if (fin || ((flags & test_flags.value()) == flags)) {
                 bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
                 BOOST_CHECK(ret);
             }
@@ -1636,7 +1645,7 @@ static void AssetTest(const UniValue& test)
         CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
-            if ((flags & test_flags) == test_flags) {
+            if ((flags & test_flags.value()) == test_flags.value()) {
                 bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
                 BOOST_CHECK(!ret);
             }

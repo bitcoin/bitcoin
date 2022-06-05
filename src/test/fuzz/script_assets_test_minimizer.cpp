@@ -15,6 +15,7 @@
 #include <util/string.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -126,7 +127,8 @@ void Test(const std::string& str)
     if (prevouts.size() != tx.vin.size()) throw std::runtime_error("Incorrect number of prevouts");
     size_t idx = test["index"].getInt<int64_t>();
     if (idx >= tx.vin.size()) throw std::runtime_error("Invalid index");
-    unsigned int test_flags = ParseScriptFlags(test["flags"].get_str());
+    auto test_flags = ParseScriptFlags(test["flags"].get_str());
+    if (!test_flags) throw std::runtime_error("Invalid flag string");
     bool final = test.exists("final") && test["final"].get_bool();
 
     if (test.exists("success")) {
@@ -138,7 +140,7 @@ void Test(const std::string& str)
         for (const auto flags : ALL_FLAGS) {
             // "final": true tests are valid for all flags. Others are only valid with flags that are
             // a subset of test_flags.
-            if (final || ((flags & test_flags) == flags)) {
+            if (final || ((flags & test_flags.value()) == flags)) {
                 (void)VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
             }
         }
@@ -152,7 +154,7 @@ void Test(const std::string& str)
         MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
         for (const auto flags : ALL_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
-            if ((flags & test_flags) == test_flags) {
+            if ((flags & test_flags.value()) == test_flags.value()) {
                 (void)VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
             }
         }

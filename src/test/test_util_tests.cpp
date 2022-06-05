@@ -178,14 +178,14 @@ BOOST_AUTO_TEST_CASE(ex_vector_tests)
 BOOST_AUTO_TEST_CASE(pretty_flags)
 {
     // A small assortment
-    BOOST_TEST(SCRIPT_VERIFY_P2SH == ParseScriptFlags("P2SH"sv, false));
-    BOOST_TEST(SCRIPT_VERIFY_SIGPUSHONLY == ParseScriptFlags("SIGPUSHONLY"sv, false));
-    BOOST_TEST(SCRIPT_VERIFY_TAPROOT == ParseScriptFlags("TAPROOT"sv, false));
-    BOOST_TEST((SCRIPT_VERIFY_MINIMALIF | SCRIPT_VERIFY_WITNESS) == ParseScriptFlags("MINIMALIF,WITNESS"sv, false));
-    BOOST_TEST((SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_DERSIG) == ParseScriptFlags("TAPROOT,LOW_S,DERSIG"sv, false));
-    BOOST_TEST(0 == ParseScriptFlags("F00BAR"sv, false));
-    BOOST_TEST(0 == ParseScriptFlags("witness"sv, false));        // case-sensitive
-    BOOST_TEST(0 == ParseScriptFlags("P2SH , WITNESS"sv, false)); // Underlying function "split" doesn't trim
+    BOOST_TEST(SCRIPT_VERIFY_P2SH == ParseScriptFlags("P2SH"sv).value_or(0));
+    BOOST_TEST(SCRIPT_VERIFY_SIGPUSHONLY == ParseScriptFlags("SIGPUSHONLY"sv).value_or(0));
+    BOOST_TEST(SCRIPT_VERIFY_TAPROOT == ParseScriptFlags("TAPROOT"sv).value_or(0));
+    BOOST_TEST((SCRIPT_VERIFY_MINIMALIF | SCRIPT_VERIFY_WITNESS) == ParseScriptFlags("MINIMALIF,WITNESS"sv).value_or(0));
+    BOOST_TEST((SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_DERSIG) == ParseScriptFlags("TAPROOT,LOW_S,DERSIG"sv).value_or(0));
+    BOOST_TEST(0 == ParseScriptFlags("F00BAR"sv).value_or(0));
+    BOOST_TEST(0 == ParseScriptFlags("witness"sv).value_or(0));        // case-sensitive
+    BOOST_TEST(0 == ParseScriptFlags("P2SH , WITNESS"sv).value_or(0)); // Underlying function "split" doesn't tri.m
 
     BOOST_TEST("STRICTENC"sv == FormatScriptFlags(SCRIPT_VERIFY_STRICTENC));
     BOOST_TEST("WITNESS_PUBKEYTYPE"sv == FormatScriptFlags(SCRIPT_VERIFY_WITNESS_PUBKEYTYPE));
@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(pretty_flags)
     // Systematic
     auto flag_map = MapFlagNames();
     for (auto [name1, value1] : flag_map) {
-        BOOST_TEST(value1 == ParseScriptFlags(name1));
+        BOOST_TEST(value1 == ParseScriptFlags(name1).value_or(0));
         BOOST_TEST(name1 == FormatScriptFlags(value1));
 
         for (auto [name2, value2] : flag_map) {
             if (value1 == value2) continue;
-            BOOST_TEST((value1 | value2) == ParseScriptFlags(std::string(name1) + "," + std::string(name2), false));
+            BOOST_TEST((value1 | value2) == ParseScriptFlags(std::string(name1) + "," + std::string(name2)).value_or(0));
             BOOST_TEST(std::string(name1 < name2 ? name1 : name2) + "," + std::string(name1 < name2 ? name2 : name1) == FormatScriptFlags(value1 | value2));
         }
     }
@@ -212,21 +212,21 @@ BOOST_AUTO_TEST_CASE(pretty_flags)
 BOOST_AUTO_TEST_CASE(pretty_script_errors)
 {
     // A small assortment
-    BOOST_TEST("OK"sv == FormatScriptError(SCRIPT_ERR_OK, false));
-    BOOST_TEST("UNKNOWN_ERROR"sv == FormatScriptError(SCRIPT_ERR_UNKNOWN_ERROR, false));
-    BOOST_TEST(""sv == FormatScriptError(SCRIPT_ERR_ERROR_COUNT, false));
+    BOOST_TEST("OK"sv == FormatScriptError(SCRIPT_ERR_OK).value_or(""s));
+    BOOST_TEST("UNKNOWN_ERROR"sv == FormatScriptError(SCRIPT_ERR_UNKNOWN_ERROR).value_or(""s));
+    BOOST_TEST(""sv == FormatScriptError(SCRIPT_ERR_ERROR_COUNT).value_or(""s));
 
-    BOOST_TEST(SCRIPT_ERR_OK == ParseScriptError("OK"sv, false));
-    BOOST_TEST(SCRIPT_ERR_SCHNORR_SIG_SIZE == ParseScriptError("SCHNORR_SIG_SIZE"sv, false));
-    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("F00Bar"sv, false));
-    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("Schnorr_Sig"sv, false)); // case-sensitive
-    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("MINIMALIF "sv, false));  // doesn't trim arg
+    BOOST_TEST(SCRIPT_ERR_OK == ParseScriptError("OK"sv).value_or(SCRIPT_ERR_UNKNOWN_ERROR));
+    BOOST_TEST(SCRIPT_ERR_SCHNORR_SIG_SIZE == ParseScriptError("SCHNORR_SIG_SIZE"sv).value_or(SCRIPT_ERR_UNKNOWN_ERROR));
+    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("F00Bar"sv).value_or(SCRIPT_ERR_UNKNOWN_ERROR));
+    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("Schnorr_Sig"sv).value_or(SCRIPT_ERR_UNKNOWN_ERROR)); // case-sensitive
+    BOOST_TEST(SCRIPT_ERR_UNKNOWN_ERROR == ParseScriptError("MINIMALIF "sv).value_or(SCRIPT_ERR_UNKNOWN_ERROR));  // doesn't tri.m arg
 
     // Systematic
     for (size_t i = 0; i < SCRIPT_ERR_ERROR_COUNT; ++i) {
-        const auto name = FormatScriptError(static_cast<ScriptError_t>(i));
+        const auto name = FormatScriptError(static_cast<ScriptError_t>(i)).value_or(""s);
         BOOST_TEST(!name.empty());
-        BOOST_TEST(i == ParseScriptError(name));
+        BOOST_TEST(i == ParseScriptError(name).value_or(i ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK));
     }
 }
 

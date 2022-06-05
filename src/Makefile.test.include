@@ -126,6 +126,7 @@ BITCOIN_TESTS =\
   test/script_parse_tests.cpp \
   test/script_segwit_tests.cpp \
   test/script_standard_tests.cpp \
+  test/script_tapscript_tests.cpp \
   test/script_tests.cpp \
   test/scriptnum10.h \
   test/scriptnum_tests.cpp \

@@ -8,10 +8,9 @@
 #include <util/string.h>
 
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
-
-#include <boost/test/unit_test.hpp>
 
 using namespace std::string_view_literals;
 
@@ -42,7 +41,7 @@ const std::map<std::string_view, unsigned int> mapFlagNames = {
 };
 
 // Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames
-auto DoValidateMapFlagNames = []() {
+[[maybe_unused]] auto DoValidateMapFlagNames = []() {
     unsigned int standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
     for (const auto& pair : mapFlagNames) {
         standard_flags_missing &= ~(pair.second);
@@ -113,7 +112,7 @@ const ScriptErrorDesc script_errors[] = {
 };
 
 // Check that all ERROR CODES in ScriptError_t are present in script_errors array
-auto DoValidateScriptErrorCount = []() {
+[[maybe_unused]] auto DoValidateScriptErrorCount = []() {
     assert(SCRIPT_ERR_ERROR_COUNT == std::size(script_errors));
     return true;
 }();
@@ -125,7 +124,7 @@ const std::map<std::string_view, unsigned int>& MapFlagNames()
     return mapFlagNames;
 }
 
-unsigned int ParseScriptFlags(std::string_view strFlags, bool issue_boost_error)
+std::optional<unsigned int> ParseScriptFlags(std::string_view strFlags)
 {
     if (strFlags.empty() || strFlags == "NONE") return 0;
     unsigned int flags = 0;
@@ -134,9 +133,7 @@ unsigned int ParseScriptFlags(std::string_view strFlags, bool issue_boost_error)
     for (const std::string& word : words) {
         if (auto r = mapFlagNames.find(word); r != mapFlagNames.end()) {
             flags |= r->second;
-        } else if (issue_boost_error) {
-            BOOST_ERROR("Bad test: unknown verification flag '" << word << "'");
-        }
+        } else return {};
     }
 
     return flags;
@@ -156,23 +153,22 @@ std::string FormatScriptFlags(unsigned int flags)
         }
         it++;
     }
+    if (ret.empty()) return "";
     return ret.substr(0, ret.size() - 1);
 }
 
-std::string FormatScriptError(ScriptError_t err, bool issue_boost_error)
+std::optional<std::string> FormatScriptError(ScriptError_t err)
 {
     for (const auto& se : script_errors)
         if (se.err == err)
             return std::string(se.name);
-    if (issue_boost_error) BOOST_ERROR("Unknown scripterror enumeration value, update script_errors in script_tests.cpp.");
-    return "";
+    return {};
 }
 
-ScriptError_t ParseScriptError(std::string_view name, bool issue_boost_error)
+std::optional<ScriptError_t> ParseScriptError(std::string_view name)
 {
     for (const auto& se : script_errors)
         if (se.name == name)
             return se.err;
-    if (issue_boost_error) BOOST_ERROR("Unknown scripterror \"" << name << "\" in test description");
-    return SCRIPT_ERR_UNKNOWN_ERROR;
+    return {};
 }
