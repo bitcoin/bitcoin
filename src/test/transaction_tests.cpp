@@ -21,6 +21,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <test/util/pretty_data.h>
 #include <test/util/script.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
@@ -40,70 +41,14 @@ typedef std::vector<unsigned char> valtype;
 // In script_tests.cpp
 UniValue read_json(const std::string& jsondata);
 
-static std::map<std::string, unsigned int> mapFlagNames = {
-    {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
-    {std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC},
-    {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
-    {std::string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S},
-    {std::string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY},
-    {std::string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA},
-    {std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY},
-    {std::string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS},
-    {std::string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK},
-    {std::string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF},
-    {std::string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL},
-    {std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
-    {std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
-    {std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS},
-    {std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM},
-    {std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE},
-    {std::string("CONST_SCRIPTCODE"), (unsigned int)SCRIPT_VERIFY_CONST_SCRIPTCODE},
-    {std::string("TAPROOT"), (unsigned int)SCRIPT_VERIFY_TAPROOT},
-    {std::string("DISCOURAGE_UPGRADABLE_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE},
-    {std::string("DISCOURAGE_OP_SUCCESS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS},
-    {std::string("DISCOURAGE_UPGRADABLE_TAPROOT_VERSION"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION},
-};
-
-unsigned int ParseScriptFlags(std::string strFlags)
-{
-    if (strFlags.empty() || strFlags == "NONE") return 0;
-    unsigned int flags = 0;
-    std::vector<std::string> words = SplitString(strFlags, ',');
-
-    for (const std::string& word : words)
-    {
-        if (!mapFlagNames.count(word))
-            BOOST_ERROR("Bad test: unknown verification flag '" << word << "'");
-        flags |= mapFlagNames[word];
-    }
-
-    return flags;
-}
-
 // Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
 bool CheckMapFlagNames()
 {
     unsigned int standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
-    for (const auto& pair : mapFlagNames) {
+    for (const auto& pair : MapFlagNames()) {
         standard_flags_missing &= ~(pair.second);
     }
     return standard_flags_missing == 0;
-}
-
-std::string FormatScriptFlags(unsigned int flags)
-{
-    if (flags == 0) {
-        return "";
-    }
-    std::string ret;
-    std::map<std::string, unsigned int>::const_iterator it = mapFlagNames.begin();
-    while (it != mapFlagNames.end()) {
-        if (flags & it->second) {
-            ret += it->first + ",";
-        }
-        it++;
-    }
-    return ret.substr(0, ret.size() - 1);
 }
 
 /*
@@ -173,7 +118,7 @@ unsigned int FillFlags(unsigned int flags)
 std::set<unsigned int> ExcludeIndividualFlags(unsigned int flags)
 {
     std::set<unsigned int> flags_combos;
-    for (const auto& pair : mapFlagNames) {
+    for (const auto& pair : MapFlagNames()) {
         const unsigned int flags_excluding_one = TrimFlags(flags & ~(pair.second));
         if (flags != flags_excluding_one) {
             flags_combos.insert(flags_excluding_one);
@@ -250,14 +195,14 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                                 "Tx unexpectedly failed: " << strTest);
 
             // Backwards compatibility of script verification flags: Removing any flag(s) should not invalidate a valid transaction
-            for (const auto& [name, flag] : mapFlagNames) {
+            for (const auto& [name, flag] : MapFlagNames()) {
                 // Removing individual flags
                 unsigned int flags = TrimFlags(~(verify_flags | flag));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
                 // Removing random combinations of flags
-                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size())));
+                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(MapFlagNames().size())));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with random flags " << ToString(flags) << ": " << strTest);
                 }
@@ -341,14 +286,14 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                                 "Tx unexpectedly passed: " << strTest);
 
             // Backwards compatibility of script verification flags: Adding any flag(s) should not validate an invalid transaction
-            for (const auto& [name, flag] : mapFlagNames) {
+            for (const auto& [name, flag] : MapFlagNames()) {
                 unsigned int flags = FillFlags(verify_flags | flag);
                 // Adding individual flags
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with flag " << name << " set: " << strTest);
                 }
                 // Adding random combinations of flags
-                flags = FillFlags(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size()));
+                flags = FillFlags(verify_flags | (unsigned int)InsecureRandBits(MapFlagNames().size()));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with random flags " << name << ": " << strTest);
                 }

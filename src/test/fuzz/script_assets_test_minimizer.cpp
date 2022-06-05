@@ -9,6 +9,7 @@
 #include <script/interpreter.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/util/pretty_data.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -88,16 +89,6 @@ CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-const std::map<std::string, unsigned int> FLAG_NAMES = {
-    {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
-    {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
-    {std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY},
-    {std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
-    {std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
-    {std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS},
-    {std::string("TAPROOT"), (unsigned int)SCRIPT_VERIFY_TAPROOT},
-};
-
 std::vector<unsigned int> AllFlags()
 {
     std::vector<unsigned int> ret;
@@ -124,22 +115,6 @@ std::vector<unsigned int> AllFlags()
 }
 
 const std::vector<unsigned int> ALL_FLAGS = AllFlags();
-
-unsigned int ParseScriptFlags(const std::string& str)
-{
-    if (str.empty()) return 0;
-
-    unsigned int flags = 0;
-    std::vector<std::string> words = SplitString(str, ',');
-
-    for (const std::string& word : words) {
-        auto it = FLAG_NAMES.find(word);
-        if (it == FLAG_NAMES.end()) throw std::runtime_error("Unknown verification flag " + word);
-        flags |= it->second;
-    }
-
-    return flags;
-}
 
 void Test(const std::string& str)
 {

@@ -15,6 +15,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <streams.h>
+#include <test/util/pretty_data.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
@@ -38,9 +39,6 @@
 
 static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-unsigned int ParseScriptFlags(std::string strFlags);
-std::string FormatScriptFlags(unsigned int flags);
-
 UniValue read_json(const std::string& jsondata)
 {
     UniValue v;
@@ -51,76 +49,6 @@ UniValue read_json(const std::string& jsondata)
         return UniValue(UniValue::VARR);
     }
     return v.get_array();
-}
-
-struct ScriptErrorDesc
-{
-    ScriptError_t err;
-    const char *name;
-};
-
-static ScriptErrorDesc script_errors[]={
-    {SCRIPT_ERR_OK, "OK"},
-    {SCRIPT_ERR_UNKNOWN_ERROR, "UNKNOWN_ERROR"},
-    {SCRIPT_ERR_EVAL_FALSE, "EVAL_FALSE"},
-    {SCRIPT_ERR_OP_RETURN, "OP_RETURN"},
-    {SCRIPT_ERR_SCRIPT_SIZE, "SCRIPT_SIZE"},
-    {SCRIPT_ERR_PUSH_SIZE, "PUSH_SIZE"},
-    {SCRIPT_ERR_OP_COUNT, "OP_COUNT"},
-    {SCRIPT_ERR_STACK_SIZE, "STACK_SIZE"},
-    {SCRIPT_ERR_SIG_COUNT, "SIG_COUNT"},
-    {SCRIPT_ERR_PUBKEY_COUNT, "PUBKEY_COUNT"},
-    {SCRIPT_ERR_VERIFY, "VERIFY"},
-    {SCRIPT_ERR_EQUALVERIFY, "EQUALVERIFY"},
-    {SCRIPT_ERR_CHECKMULTISIGVERIFY, "CHECKMULTISIGVERIFY"},
-    {SCRIPT_ERR_CHECKSIGVERIFY, "CHECKSIGVERIFY"},
-    {SCRIPT_ERR_NUMEQUALVERIFY, "NUMEQUALVERIFY"},
-    {SCRIPT_ERR_BAD_OPCODE, "BAD_OPCODE"},
-    {SCRIPT_ERR_DISABLED_OPCODE, "DISABLED_OPCODE"},
-    {SCRIPT_ERR_INVALID_STACK_OPERATION, "INVALID_STACK_OPERATION"},
-    {SCRIPT_ERR_INVALID_ALTSTACK_OPERATION, "INVALID_ALTSTACK_OPERATION"},
-    {SCRIPT_ERR_UNBALANCED_CONDITIONAL, "UNBALANCED_CONDITIONAL"},
-    {SCRIPT_ERR_NEGATIVE_LOCKTIME, "NEGATIVE_LOCKTIME"},
-    {SCRIPT_ERR_UNSATISFIED_LOCKTIME, "UNSATISFIED_LOCKTIME"},
-    {SCRIPT_ERR_SIG_HASHTYPE, "SIG_HASHTYPE"},
-    {SCRIPT_ERR_SIG_DER, "SIG_DER"},
-    {SCRIPT_ERR_MINIMALDATA, "MINIMALDATA"},
-    {SCRIPT_ERR_SIG_PUSHONLY, "SIG_PUSHONLY"},
-    {SCRIPT_ERR_SIG_HIGH_S, "SIG_HIGH_S"},
-    {SCRIPT_ERR_SIG_NULLDUMMY, "SIG_NULLDUMMY"},
-    {SCRIPT_ERR_PUBKEYTYPE, "PUBKEYTYPE"},
-    {SCRIPT_ERR_CLEANSTACK, "CLEANSTACK"},
-    {SCRIPT_ERR_MINIMALIF, "MINIMALIF"},
-    {SCRIPT_ERR_SIG_NULLFAIL, "NULLFAIL"},
-    {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS, "DISCOURAGE_UPGRADABLE_NOPS"},
-    {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM, "DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"},
-    {SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH, "WITNESS_PROGRAM_WRONG_LENGTH"},
-    {SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY, "WITNESS_PROGRAM_WITNESS_EMPTY"},
-    {SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH, "WITNESS_PROGRAM_MISMATCH"},
-    {SCRIPT_ERR_WITNESS_MALLEATED, "WITNESS_MALLEATED"},
-    {SCRIPT_ERR_WITNESS_MALLEATED_P2SH, "WITNESS_MALLEATED_P2SH"},
-    {SCRIPT_ERR_WITNESS_UNEXPECTED, "WITNESS_UNEXPECTED"},
-    {SCRIPT_ERR_WITNESS_PUBKEYTYPE, "WITNESS_PUBKEYTYPE"},
-    {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
-    {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
-};
-
-static std::string FormatScriptError(ScriptError_t err)
-{
-    for (const auto& se : script_errors)
-        if (se.err == err)
-            return se.name;
-    BOOST_ERROR("Unknown scripterror enumeration value, update script_errors in script_tests.cpp.");
-    return "";
-}
-
-static ScriptError_t ParseScriptError(const std::string& name)
-{
-    for (const auto& se : script_errors)
-        if (se.name == name)
-            return se.err;
-    BOOST_ERROR("Unknown scripterror \"" << name << "\" in test description");
-    return SCRIPT_ERR_UNKNOWN_ERROR;
 }
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
