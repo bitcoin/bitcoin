@@ -14,6 +14,9 @@ target_include_directories(secp256k1
 )
 
 set(libsecp256k1_configure_cmd "${CMAKE_SOURCE_DIR}/src/secp256k1/configure")
+if(CMAKE_CROSSCOMPILING)
+    list(APPEND libsecp256k1_configure_cmd "CONFIG_SITE=${CONFIG_SITE}")
+endif()
 list(APPEND libsecp256k1_configure_cmd "--disable-shared")
 list(APPEND libsecp256k1_configure_cmd "--with-pic")
 list(APPEND libsecp256k1_configure_cmd "--enable-benchmark=no")
