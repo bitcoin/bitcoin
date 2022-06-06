@@ -103,7 +103,54 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
-
+bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
+	bool getdata = false;
+	if (!oOptions.isNull()) {
+		const UniValue &getdataObj = find_value(oOptions, "getdata");
+		if (getdataObj.isBool()) {
+			getdata = getdataObj.get_bool();
+		}
+	}
+	std::unique_ptr<CDBIterator> pcursor(pnevmdatadb.NewIterator());
+	pcursor->SeekToFirst();
+	std::pair<std::vector<uint8_t>, bool> key;
+	uint32_t index = 0;
+	while (pcursor->Valid()) {
+		try {
+            key.first.clear();
+			if (pcursor->GetKey(key)) {
+                UniValue oBlob(UniValue::VOBJ);
+                // data
+                if(key.second == true) {
+                    std::vector<uint8_t> vchData;
+                    if(pcursor->GetValue(vchData)) {
+                        oBlob.__pushKV("versionhash",  HexStr(key.first));
+                        oBlob.__pushKV("datasize", (int)vchData.size());
+                        if(getdata) {  
+                            oBlob.__pushKV("data", HexStr(vchData));
+                        }    
+                    }
+                } else {
+           			pcursor->Next();
+					continue;         
+                }
+				index += 1;
+				if (index <= from) {
+					pcursor->Next();
+					continue;
+				}
+				oRes.push_back(oBlob);
+				if (index >= count + from)
+					break;
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
+}
 bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
@@ -691,6 +738,61 @@ static RPCHelpMan listassets()
 },
     };
 }
+static RPCHelpMan listnevmblobdata()
+{
+    return RPCHelpMan{"listnevmblobdata",
+        "\nScan through all blobs.\n",
+        {
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of results to return."},
+            {"from", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of results to skip."},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
+                {
+                    {"getdata", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Return data from blob"},
+                }
+                }
+            },
+            RPCResult{
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "versionhash", "The version hash of the NEVM blob"},
+                        {RPCResult::Type::NUM, "datasize", "Size of data blob in bytes"},
+                        {RPCResult::Type::STR_HEX, "data", "Blob data if getdata is true"},
+                    }},
+                },
+            },
+            RPCExamples{
+            HelpExampleCli("listnevmblobdata", "0")
+            + HelpExampleCli("listnevmblobdata", "10 10")
+            + HelpExampleCli("listnevmblobdata", "0 0 '{\"getdata\":\true}'")
+            + HelpExampleRpc("listnevmblobdata", "0, 0, '{\"getdata\":\false}'")
+            },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    const UniValue &params = request.params;
+    UniValue options;
+    uint32_t count = 10;
+    uint32_t from = 0;
+    if (params.size() > 0) {
+        count = params[0].getInt<int>();
+        if (count == 0) {
+            count = 10;
+        }
+    }
+    if (params.size() > 1) {
+        from = params[1].getInt<int>();
+    }
+    if (params.size() > 2) {
+        options = params[2];
+    }
+    UniValue oRes(UniValue::VARR);
+    if (!ScanBlobs(*pnevmdatadb, count, from, options, oRes))
+        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
+    return oRes;
+},
+    };
+}
 
 static RPCHelpMan syscoingetspvproof()
 {
@@ -1006,8 +1108,9 @@ void RegisterAssetRPCCommands(CRPCTable &t)
         {"syscoin", &syscoindecoderawtransaction},
         {"syscoin", &assetinfo},
         {"syscoin", &listassets},
+        {"syscoin", &listnevmblobdata},
         {"syscoin", &assetallocationverifyzdag},
-        {"syscoin", &syscoinsetethheaders},
+        {"syscoin", &syscoinsetethheaders}, 
         {"syscoin", &syscoinstopgeth},
         {"syscoin", &syscoinstartgeth},
         {"syscoin", &syscoincheckmint},

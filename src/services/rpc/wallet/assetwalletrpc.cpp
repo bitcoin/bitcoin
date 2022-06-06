@@ -1973,7 +1973,17 @@ static RPCHelpMan syscoincreaterawnevmblob()
     if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
     }
-    const UniValue& res = send().HandleRequest(requestSend);
+    UniValue res;
+    try {
+        res = send().HandleRequest(requestSend);
+    } catch(...) {
+        NEVMDataVec nevmDataVecOut;
+        nevmDataVecOut.emplace_back(nevmData.vchVersionHash);
+        if(!EraseNEVMData(nevmDataVecOut)) {
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
+        }
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
+    }
     const UniValue &txidObj = find_value(res.get_obj(), "txid");
     if(txidObj.isNull()) {
         NEVMDataVec nevmDataVecOut;

@@ -44,17 +44,17 @@ public:
         const auto& pair = std::make_pair(nVersionHash, true);
         return Exists(pair);
     } 
-    bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& nData) {
+    bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& vchData) {
         const auto& pair = std::make_pair(nVersionHash, true);
-        return Read(pair, nData);
+        return Read(pair, vchData);
     } 
     bool ReadMPT(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime) {
         const auto& pair = std::make_pair(nVersionHash, false);
         return Read(pair, nMedianTime);
     } 
-    bool WriteData(const std::vector<uint8_t>& nVersionHash, const std::vector<uint8_t>& nData) {
+    bool WriteData(const std::vector<uint8_t>& nVersionHash, const std::vector<uint8_t>& vchData) {
         const auto& pair = std::make_pair(nVersionHash, true);
-        return Write(pair, nData);
+        return Write(pair, vchData);
     }
     bool Prune(CDBBatch &batch, int64_t nMedianTime);
 };
