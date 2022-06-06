@@ -33,7 +33,7 @@ class NEVMDataTest(SyscoinTestFramework):
         vh = secrets.token_hex(32)
         print('Trying 2MB + 1 to ensure it cannot create blob...')
         blobDataMaxPlus = secrets.token_hex(MAX_NEVM_DATA_BLOB + 1)
-        assert_raises_rpc_error(-1, 'Unknown transaction nevm data', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
+        assert_raises_rpc_error(-20, 'Transaction not complete or invalid', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
         print('Trying 2MB * MAX_DATA_BLOBS per block...')
         self.blobVHs = []
         # need to split it up due to 25 mempool chain limit of transactions using inputs of other mempool txs
