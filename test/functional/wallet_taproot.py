@@ -7,19 +7,18 @@
 import random
 
 from decimal import Decimal
+from test_framework.address import output_key_to_p2tr
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
     MAX_PUBKEYS_PER_MULTI_A,
-    OP_1,
     OP_CHECKSIG,
     OP_CHECKSIGADD,
     OP_NUMEQUAL,
     taproot_construct,
 )
-from test_framework.segwit_addr import encode_segwit_address
 
 # xprvs/xpubs, and m/* derived x-only pubkeys (created using independent implementation)
 KEYS = [
@@ -183,10 +182,7 @@ def multi_a(k, hex_keys, sort=False):
 
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
-    tap = taproot_construct(pubkey, scripts)
-    assert tap.scriptPubKey[0] == OP_1
-    assert tap.scriptPubKey[1] == 0x20
-    return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
+    return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
 
 class WalletTaprootTest(BitcoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
