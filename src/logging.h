@@ -9,6 +9,7 @@
 #include <fs.h>
 #include <tinyformat.h>
 #include <threadsafety.h>
+#include <unordered_map>
 #include <util/string.h>
 
 #include <atomic>
@@ -74,6 +75,7 @@ namespace BCLog {
         Error,
         None, // Internal use only
     };
+    constexpr auto DEFAULT_LOG_LEVEL{Level::Info};
 
     class Logger
     {
@@ -94,6 +96,13 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<uint32_t> m_categories{0};
 
+        //! Category-specific log level. Overrides the global `m_log_level`.
+        std::unordered_map<LogFlags, Level> m_category_log_levels;
+
+        //! If there is no category-specific log level, all logs with a severity
+        //! level lower than `m_log_level` will be ignored.
+        Level m_log_level{Level::Info};
+
         std::string LogTimestampStr(const std::string& str);
 
         /** Slots that connect to the print signal */
@@ -112,7 +121,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags category, const BCLog::Level level);
+        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const
@@ -136,6 +145,16 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
+        Level LogLevel() const
+        {
+            return m_log_level;
+        }
+
+        std::unordered_map<LogFlags, Level> CategoryLevels() const
+        {
+            return m_category_log_levels;
+        }
+
         /** Start logging (and flush all buffered messages) */
         bool StartLogging();
         /** Only for testing */
@@ -150,7 +169,15 @@ namespace BCLog {
         void DisableCategory(LogFlags flag);
         bool DisableCategory(const std::string& str);
 
+        bool SetLogLevel(const std::string& level);
+        void SetLogLevel(Level level) { m_log_level = level; }
+
+        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str);
+        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) { m_category_log_levels = levels; }
+
         bool WillLogCategory(LogFlags category) const;
+        bool WillLogCategoryLevel(LogFlags category, Level level) const;
+
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
         /** Returns a string with the log categories in alphabetical order. */
@@ -158,6 +185,12 @@ namespace BCLog {
         {
             return Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
         };
+
+        //! Returns a string with the log levels in increasing order of severity.
+        std::string LogLevelsString() const;
+
+        //! Returns the string representation of a log level.
+        std::string LogLevelToStr(BCLog::Level level = DEFAULT_LOG_LEVEL) const;
 
         bool DefaultShrinkDebugFile() const;
     };
@@ -169,12 +202,7 @@ BCLog::Logger& LogInstance();
 /** Return true if log accepts specified category, at the specified level. */
 static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
 {
-    // Log messages at Warning and Error level unconditionally, so that
-    // important troubleshooting information doesn't get lost.
-    if (level >= BCLog::Level::Warning) {
-        return true;
-    }
-    return LogInstance().WillLogCategory(category);
+    return LogInstance().WillLogCategoryLevel(category, level);
 }
 
 /** Return true if str parses as a log category and set the flag */
