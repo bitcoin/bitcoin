@@ -81,3 +81,93 @@ target_link_libraries(bitcoin_consensus
   PRIVATE
     secp256k1
 )
+
+
+# P2P and RPC server functionality used by `bitcoind` and `bitcoin-qt` executables.
+add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL)
+
+target_sources(bitcoin_node
+  PRIVATE
+    addrdb.cpp
+    addrman.cpp
+    banman.cpp
+    blockencodings.cpp
+    blockfilter.cpp
+    chain.cpp
+    consensus/tx_verify.cpp
+    dbwrapper.cpp
+    deploymentstatus.cpp
+    flatfile.cpp
+    httprpc.cpp
+    httpserver.cpp
+    i2p.cpp
+    index/base.cpp
+    index/blockfilterindex.cpp
+    index/coinstatsindex.cpp
+    index/txindex.cpp
+    init.cpp
+    kernel/checks.cpp
+    kernel/coinstats.cpp
+    kernel/context.cpp
+    mapport.cpp
+    net.cpp
+    netgroup.cpp
+    net_processing.cpp
+    node/blockstorage.cpp
+    node/caches.cpp
+    node/chainstate.cpp
+    node/coin.cpp
+    node/context.cpp
+    node/interfaces.cpp
+    node/miner.cpp
+    node/minisketchwrapper.cpp
+    node/psbt.cpp
+    node/transaction.cpp
+    node/ui_interface.cpp
+    noui.cpp
+    policy/fees.cpp
+    policy/packages.cpp
+    policy/rbf.cpp
+    policy/settings.cpp
+    pow.cpp
+    rest.cpp
+    rpc/blockchain.cpp
+    rpc/fees.cpp
+    rpc/mempool.cpp
+    rpc/mining.cpp
+    rpc/net.cpp
+    rpc/node.cpp
+    rpc/output_script.cpp
+    rpc/rawtransaction.cpp
+    rpc/server.cpp
+    rpc/server_util.cpp
+    rpc/signmessage.cpp
+    rpc/txoutproof.cpp
+    script/sigcache.cpp
+    shutdown.cpp
+    signet.cpp
+    timedata.cpp
+    torcontrol.cpp
+    txdb.cpp
+    txmempool.cpp
+    txorphanage.cpp
+    txrequest.cpp
+    validation.cpp
+    validationinterface.cpp
+    versionbits.cpp
+
+    dummywallet.cpp
+)
+
+target_include_directories(bitcoin_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+target_link_libraries(bitcoin_node
+  PRIVATE
+    minisketch
+    leveldb
+    univalue
+    Boost::headers
+)
