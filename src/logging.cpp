@@ -199,7 +199,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string LogLevelToStr(BCLog::Level level)
+std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
 {
     switch (level) {
     case BCLog::Level::Debug:

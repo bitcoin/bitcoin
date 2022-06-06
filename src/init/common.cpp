@@ -11,6 +11,7 @@
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -28,6 +29,7 @@ void AddLoggingArgs(ArgsManager& argsman)
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-debugexclude=<category>", "Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except the specified category. This option can be specified multiple times to exclude multiple categories.", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logips", strprintf("Include IP addresses in debug output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option or the logging RPC: %s (default=%s); warning and error levels are always logged. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 #ifdef HAVE_THREAD_LOCAL
     argsman.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (only available on platforms supporting thread_local) (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -53,6 +55,26 @@ void SetLoggingOptions(const ArgsManager& args)
     LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
 
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
+}
+
+void SetLoggingLevel(const ArgsManager& args)
+{
+    if (args.IsArgSet("-loglevel")) {
+        for (const std::string& level_str : args.GetArgs("-loglevel")) {
+            if (level_str.find_first_of(':', 3) == std::string::npos) {
+                // user passed a global log level, i.e. -loglevel=<level>
+                if (!LogInstance().SetLogLevel(level_str)) {
+                    InitWarning(strprintf(_("Unsupported global logging level -loglevel=%s. Valid values: %s."), level_str, LogInstance().LogLevelsString()));
+                }
+            } else {
+                // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
+                const auto& toks = SplitString(level_str, ':');
+                if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
+                    InitWarning(strprintf(_("Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=<category>:<loglevel>. Valid categories: %s. Valid loglevels: %s."), level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString()));
+                }
+            }
+        }
+    }
 }
 
 void SetLoggingCategories(const ArgsManager& args)
