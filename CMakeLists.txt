@@ -60,4 +60,33 @@ include(cmake/subtree-minisketch.cmake)
 include(cmake/subtree-secp256k1.cmake)
 include(cmake/subtree-univalue.cmake)
 
+check_cxx_source_compiles("
+  #include <ctime>
+  int main(int argc, char** argv)
+  {
+    gmtime_r((const time_t*)nullptr, (struct tm*)nullptr);
+    return 0;
+  }"
+  HAVE_GMTIME_R
+)
+if(NOT HAVE_GMTIME_R)
+  check_cxx_source_compiles("
+    #include <ctime>
+    int main(int argc, char** argv)
+    {
+      gmtime_s((struct tm*)nullptr, (const time_t*)nullptr);
+      return 0;
+    }"
+    HAVE_GMTIME_S
+  )
+  if(NOT HAVE_GMTIME_S)
+    message(FATAL_ERROR "Both gmtime_r and gmtime_s are unavailable")
+  endif()
+endif()
+
+# Find Boost headers only.
+find_package(Boost 1.64.0 REQUIRED)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_subdirectory(src)

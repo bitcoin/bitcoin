@@ -3,6 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 add_subdirectory(crypto)
+add_subdirectory(util)
 
 # Home for common functionality shared by different executables and libraries.
 # Similar to `bitcoin_util` library, but higher-level.
