@@ -31,9 +31,9 @@ if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   if [ ! -f "$ANDROID_TOOLS_PATH" ]; then
     CI_EXEC curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
   fi
-  CI_EXEC mkdir -p "${ANDROID_HOME}/cmdline-tools"
-  CI_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "${ANDROID_HOME}/cmdline-tools"
-  CI_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
+  CI_EXEC mkdir -p "$ANDROID_HOME"
+  CI_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
+  CI_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --sdk_root=\"${ANDROID_HOME}\" --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
 fi
 
 if [ -z "$NO_DEPENDS" ]; then
