@@ -180,6 +180,7 @@ $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
 include funcs.mk
 
 final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
+final_build_id_long+=$(shell $(build_SHA256SUM) depends.cmake.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	rm -rf $(@D)
@@ -246,6 +247,19 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             $< > $@
 	touch $@
 
+$(host_prefix)/share/depends.cmake : depends.cmake.in $(host_prefix)/.stamp_$(final_build_id)
+	@mkdir -p $(@D)
+	sed -e 's|@CONFIG_SITE@|$(host_prefix)/share/config.site|' \
+        -e 's|@CMAKE_SYSTEM_NAME@|$($(host_os)_cmake_system)|' \
+        -e 's|@CMAKE_C_COMPILER@|$(host_CC)|' \
+        -e 's|@CMAKE_CXX_COMPILER@|$(host_CXX)|' \
+        -e 's|@CMAKE_PREFIX_PATH@|$(host_prefix)|' \
+        -e 's|@CPPFLAGS_FROM_DEPENDS@|$(strip $(host_CPPFLAGS) $(host_$(release_type)_CPPFLAGS))|' \
+        -e 's|@CFLAGS_FROM_DEPENDS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \
+        -e 's|@CXXFLAGS_FROM_DEPENDS@|$(strip $(host_CXXFLAGS) $(host_$(release_type)_CXXFLAGS))|' \
+        -e 's|@LDFLAGS_FROM_DEPENDS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
+        $< > $@
+	touch $@
 
 define check_or_remove_cached
   mkdir -p $(BASE_CACHE)/$(host)/$(package) && cd $(BASE_CACHE)/$(host)/$(package); \
@@ -267,6 +281,7 @@ check-sources:
 	@$(foreach package,$(all_packages),$(call check_or_remove_sources,$(package));)
 
 $(host_prefix)/share/config.site: check-packages
+$(host_prefix)/share/depends.cmake: check-packages
 
 check-packages: check-sources
 
@@ -276,7 +291,7 @@ clean-all: clean
 clean:
 	@rm -rf $(WORK_PATH) $(BASE_CACHE) $(BUILD) *.log
 
-install: check-packages $(host_prefix)/share/config.site
+install: check-packages $(host_prefix)/share/config.site $(host_prefix)/share/depends.cmake
 
 
 download-one: check-sources $(all_sources)
