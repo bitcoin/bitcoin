@@ -64,8 +64,25 @@ class TestNode():
 
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
-
-    def __init__(self, i, datadir, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
+    def __init__(self,
+                 i,
+                 datadir,
+                 *,
+                 chain,
+                 rpchost,
+                 timewait,
+                 timeout_factor,
+                 bitcoind,
+                 bitcoin_cli,
+                 coverage_dir,
+                 cwd,
+                 extra_conf=None,
+                 extra_args=None,
+                 use_cli=False,
+                 start_perf=False,
+                 use_valgrind=False,
+                 version=None,
+                 descriptors=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -105,19 +122,19 @@ class TestNode():
             "-uacomment=testnode%d" % i,
         ]
         if use_valgrind:
-            default_suppressions_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..", "..", "..", "contrib", "valgrind.supp")
-            suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE",
-                                          default_suppressions_file)
-            self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
-                         "--gen-suppressions=all", "--exit-on-first-error=yes",
-                         "--error-exitcode=1", "--quiet"] + self.args
+            default_suppressions_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "contrib", "valgrind.supp")
+            suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE", default_suppressions_file)
+            self.args = [
+                "valgrind", "--suppressions={}".format(suppressions_file), "--gen-suppressions=all", "--exit-on-first-error=yes", "--error-exitcode=1",
+                "--quiet"
+            ] + self.args
 
         if self.version_is_at_least(190000):
             self.args.append("-logthreadnames")
         if self.version_is_at_least(219900):
             self.args.append("-logsourcelocations")
+        if self.version_is_at_least(239000):
+            self.args.append("-loglevel=debug")
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
@@ -129,7 +146,7 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
-        self.cleanup_on_exit = True # Whether to kill the node when this object goes away
+        self.cleanup_on_exit = True  # Whether to kill the node when this object goes away
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
 
@@ -138,19 +155,19 @@ class TestNode():
 
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
     PRIV_KEYS = [
-            # address , privkey
-            AddressKeyPair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
-            AddressKeyPair('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
-            AddressKeyPair('mnonCMyH9TmAsSj3M59DsbH8H63U3RKoFP', 'cTrh7dkEAeJd6b3MRX9bZK8eRmNqVCMH3LSUkE3dSFDyzjU38QxK'),
-            AddressKeyPair('mqJupas8Dt2uestQDvV2NH3RU8uZh2dqQR', 'cVuKKa7gbehEQvVq717hYcbE9Dqmq7KEBKqWgWrYBa2CKKrhtRim'),
-            AddressKeyPair('msYac7Rvd5ywm6pEmkjyxhbCDKqWsVeYws', 'cQDCBuKcjanpXDpCqacNSjYfxeQj8G6CAtH1Dsk3cXyqLNC4RPuh'),
-            AddressKeyPair('n2rnuUnwLgXqf9kk2kjvVm8R5BZK1yxQBi', 'cQakmfPSLSqKHyMFGwAqKHgWUiofJCagVGhiB4KCainaeCSxeyYq'),
-            AddressKeyPair('myzuPxRwsf3vvGzEuzPfK9Nf2RfwauwYe6', 'cQMpDLJwA8DBe9NcQbdoSb1BhmFxVjWD5gRyrLZCtpuF9Zi3a9RK'),
-            AddressKeyPair('mumwTaMtbxEPUswmLBBN3vM9oGRtGBrys8', 'cSXmRKXVcoouhNNVpcNKFfxsTsToY5pvB9DVsFksF1ENunTzRKsy'),
-            AddressKeyPair('mpV7aGShMkJCZgbW7F6iZgrvuPHjZjH9qg', 'cSoXt6tm3pqy43UMabY6eUTmR3eSUYFtB2iNQDGgb3VUnRsQys2k'),
-            AddressKeyPair('mq4fBNdckGtvY2mijd9am7DRsbRB4KjUkf', 'cN55daf1HotwBAgAKWVgDcoppmUNDtQSfb7XLutTLeAgVc3u8hik'),
-            AddressKeyPair('mpFAHDjX7KregM3rVotdXzQmkbwtbQEnZ6', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
-            AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
+        # address , privkey
+        AddressKeyPair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
+        AddressKeyPair('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
+        AddressKeyPair('mnonCMyH9TmAsSj3M59DsbH8H63U3RKoFP', 'cTrh7dkEAeJd6b3MRX9bZK8eRmNqVCMH3LSUkE3dSFDyzjU38QxK'),
+        AddressKeyPair('mqJupas8Dt2uestQDvV2NH3RU8uZh2dqQR', 'cVuKKa7gbehEQvVq717hYcbE9Dqmq7KEBKqWgWrYBa2CKKrhtRim'),
+        AddressKeyPair('msYac7Rvd5ywm6pEmkjyxhbCDKqWsVeYws', 'cQDCBuKcjanpXDpCqacNSjYfxeQj8G6CAtH1Dsk3cXyqLNC4RPuh'),
+        AddressKeyPair('n2rnuUnwLgXqf9kk2kjvVm8R5BZK1yxQBi', 'cQakmfPSLSqKHyMFGwAqKHgWUiofJCagVGhiB4KCainaeCSxeyYq'),
+        AddressKeyPair('myzuPxRwsf3vvGzEuzPfK9Nf2RfwauwYe6', 'cQMpDLJwA8DBe9NcQbdoSb1BhmFxVjWD5gRyrLZCtpuF9Zi3a9RK'),
+        AddressKeyPair('mumwTaMtbxEPUswmLBBN3vM9oGRtGBrys8', 'cSXmRKXVcoouhNNVpcNKFfxsTsToY5pvB9DVsFksF1ENunTzRKsy'),
+        AddressKeyPair('mpV7aGShMkJCZgbW7F6iZgrvuPHjZjH9qg', 'cSoXt6tm3pqy43UMabY6eUTmR3eSUYFtB2iNQDGgb3VUnRsQys2k'),
+        AddressKeyPair('mq4fBNdckGtvY2mijd9am7DRsbRB4KjUkf', 'cN55daf1HotwBAgAKWVgDcoppmUNDtQSfb7XLutTLeAgVc3u8hik'),
+        AddressKeyPair('mpFAHDjX7KregM3rVotdXzQmkbwtbQEnZ6', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
+        AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
     ]
 
     def get_deterministic_priv_key(self):
@@ -222,8 +239,7 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
-                raise FailedToStartError(self._node_msg(
-                    'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
+                raise FailedToStartError(self._node_msg('bitcoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 rpc = get_rpc_proxy(
                     rpc_url(self.datadir, self.index, self.chain, self.rpchost),
@@ -294,7 +310,7 @@ class TestNode():
                 self.log.debug("Cookie credentials successfully retrieved")
                 return
             except ValueError:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
-                pass            # so we continue polling until RPC credentials are retrieved
+                pass  # so we continue polling until RPC credentials are retrieved
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to retrieve cookie credentials after {}s".format(self.rpc_timeout))
 
@@ -369,8 +385,7 @@ class TestNode():
             return False
 
         # process has stopped. Assert that it didn't return an error code.
-        assert return_code == 0, self._node_msg(
-            "Node returned non-zero exit code (%d) when stopping" % return_code)
+        assert return_code == 0, self._node_msg("Node returned non-zero exit code (%d) when stopping" % return_code)
         self.running = False
         self.process = None
         self.rpc_connected = False
@@ -455,9 +470,7 @@ class TestNode():
             # No sleep here because we want to detect the message fragment as fast as
             # possible.
 
-        self._raise_assertion_error(
-            'Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(
-                str(expected_msgs), print_log))
+        self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
     def profile_with_perf(self, profile_name: str):
@@ -486,8 +499,10 @@ class TestNode():
         def test_success(cmd):
             return subprocess.call(
                 # shell=True required for pipe use below
-                cmd, shell=True,
-                stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0
+                cmd,
+                shell=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL) == 0
 
         if not sys.platform.startswith('linux'):
             self.log.warning("Can't profile with perf; only available on Linux platforms")
@@ -498,8 +513,7 @@ class TestNode():
             return None
 
         if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
-            self.log.warning(
-                "perf output won't be very useful without debug symbols compiled into bitcoind")
+            self.log.warning("perf output won't be very useful without debug symbols compiled into bitcoind")
 
         output_path = tempfile.NamedTemporaryFile(
             dir=self.datadir,
@@ -508,12 +522,17 @@ class TestNode():
         ).name
 
         cmd = [
-            'perf', 'record',
-            '-g',                     # Record the callgraph.
-            '--call-graph', 'dwarf',  # Compatibility for gcc's --fomit-frame-pointer.
-            '-F', '101',              # Sampling frequency in Hz.
-            '-p', str(self.process.pid),
-            '-o', output_path,
+            'perf',
+            'record',
+            '-g',  # Record the callgraph.
+            '--call-graph',
+            'dwarf',  # Compatibility for gcc's --fomit-frame-pointer.
+            '-F',
+            '101',  # Sampling frequency in Hz.
+            '-p',
+            str(self.process.pid),
+            '-o',
+            output_path,
         ]
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.perf_subprocesses[profile_name] = subp
@@ -530,9 +549,8 @@ class TestNode():
 
         stderr = subp.stderr.read().decode()
         if 'Consider tweaking /proc/sys/kernel/perf_event_paranoid' in stderr:
-            self.log.warning(
-                "perf couldn't collect data! Try "
-                "'sudo sysctl -w kernel.perf_event_paranoid=-1'")
+            self.log.warning("perf couldn't collect data! Try "
+                             "'sudo sysctl -w kernel.perf_event_paranoid=-1'")
         else:
             report_cmd = "perf report -i {}".format(output_path)
             self.log.info("See perf output by running '{}'".format(report_cmd))
@@ -561,16 +579,13 @@ class TestNode():
                     stderr = log_stderr.read().decode('utf-8').strip()
                     if match == ErrorMatch.PARTIAL_REGEX:
                         if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
+                            self._raise_assertion_error('Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
                     elif match == ErrorMatch.FULL_REGEX:
                         if re.fullmatch(expected_msg, stderr) is None:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+                            self._raise_assertion_error('Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
                     elif match == ErrorMatch.FULL_TEXT:
                         if expected_msg != stderr:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+                            self._raise_assertion_error('Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             except subprocess.TimeoutExpired:
                 self.process.kill()
                 self.running = False
@@ -624,12 +639,12 @@ class TestNode():
         This method adds the p2p connection to the self.p2ps list and returns
         the connection to the caller.
         """
-
         def addconnection_callback(address, port):
             self.log.debug("Connecting to %s:%d %s" % (address, port, connection_type))
             self.addconnection('%s:%d' % (address, port), connection_type)
 
-        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, **kwargs)()
+        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor,
+                                        **kwargs)()
 
         if connection_type == "feeler":
             # feeler connections are closed as soon as the node receives a `version` message
@@ -735,6 +750,7 @@ class TestNodeCLI():
         except (json.JSONDecodeError, decimal.InvalidOperation):
             return cli_stdout.rstrip("\n")
 
+
 class RPCOverloadWrapper():
     def __init__(self, rpc, cli=False, descriptors=False):
         self.rpc = rpc
@@ -747,21 +763,26 @@ class RPCOverloadWrapper():
     def createwallet_passthrough(self, *args, **kwargs):
         return self.__getattr__("createwallet")(*args, **kwargs)
 
-    def createwallet(self, wallet_name, disable_private_keys=None, blank=None, passphrase='', avoid_reuse=None, descriptors=None, load_on_startup=None, external_signer=None):
+    def createwallet(self,
+                     wallet_name,
+                     disable_private_keys=None,
+                     blank=None,
+                     passphrase='',
+                     avoid_reuse=None,
+                     descriptors=None,
+                     load_on_startup=None,
+                     external_signer=None):
         if descriptors is None:
             descriptors = self.descriptors
-        return self.__getattr__('createwallet')(wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors, load_on_startup, external_signer)
+        return self.__getattr__('createwallet')(wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors, load_on_startup,
+                                                external_signer)
 
     def importprivkey(self, privkey, label=None, rescan=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importprivkey')(privkey, label, rescan)
         desc = descsum_create('combo(' + privkey + ')')
-        req = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
-        }]
+        req = [{'desc': desc, 'timestamp': 0 if rescan else 'now', 'label': label if label else ''}]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
@@ -771,11 +792,7 @@ class RPCOverloadWrapper():
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
         cms = self.createmultisig(nrequired, keys, address_type)
-        req = [{
-            'desc': cms['descriptor'],
-            'timestamp': 0,
-            'label': label if label else ''
-        }]
+        req = [{'desc': cms['descriptor'], 'timestamp': 0, 'label': label if label else ''}]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
@@ -786,11 +803,7 @@ class RPCOverloadWrapper():
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importpubkey')(pubkey, label, rescan)
         desc = descsum_create('combo(' + pubkey + ')')
-        req = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
-        }]
+        req = [{'desc': desc, 'timestamp': 0 if rescan else 'now', 'label': label if label else ''}]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
@@ -801,22 +814,14 @@ class RPCOverloadWrapper():
             return self.__getattr__('importaddress')(address, label, rescan, p2sh)
         is_hex = False
         try:
-            int(address ,16)
+            int(address, 16)
             is_hex = True
             desc = descsum_create('raw(' + address + ')')
         except:
             desc = descsum_create('addr(' + address + ')')
-        reqs = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
-        }]
+        reqs = [{'desc': desc, 'timestamp': 0 if rescan else 'now', 'label': label if label else ''}]
         if is_hex and p2sh:
-            reqs.append({
-                'desc': descsum_create('p2sh(raw(' + address + '))'),
-                'timestamp': 0 if rescan else 'now',
-                'label': label if label else ''
-            })
+            reqs.append({'desc': descsum_create('p2sh(raw(' + address + '))'), 'timestamp': 0 if rescan else 'now', 'label': label if label else ''})
         import_res = self.importdescriptors(reqs)
         for res in import_res:
             if not res['success']:

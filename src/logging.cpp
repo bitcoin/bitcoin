@@ -5,9 +5,9 @@
 
 #include <fs.h>
 #include <logging.h>
-#include <unordered_map>
-#include <util/threadnames.h>
+#include <optional>
 #include <util/string.h>
+#include <util/threadnames.h>
 #include <util/time.h>
 
 #include <algorithm>
@@ -122,6 +122,25 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 {
     return (m_categories.load(std::memory_order_relaxed) & category) != 0;
 }
+bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
+{
+    // Log messages at Warning and Error level unconditionally, so that
+    // important troubleshooting information doesn't get lost.
+    if (level >= BCLog::Level::Warning) {
+        return true;
+    }
+
+    if (!WillLogCategory(category)) return false;
+
+    BCLog::Level threshold_level;
+    auto it = m_category_levels.find(category);
+    if (it == m_category_levels.end()) {
+        threshold_level = m_threshold_level;
+    } else {
+        threshold_level = it->second;
+    }
+    return level >= threshold_level;
+}
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
@@ -138,7 +157,7 @@ struct CLogCategoryDesc {
     }
 };
 
-const CLogCategoryDesc LogCategories[]{
+static const CLogCategoryDesc LogCategories[]{
     {BCLog::NONE, "none"},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
@@ -174,10 +193,10 @@ const CLogCategoryDesc LogCategories[]{
     {BCLog::ALL, "1"},
 };
 
-// Ignore last 2 extra mappings of NONE and ALL.
-const std::unordered_map<BCLog::LogFlags, std::string> LogCategoryToStr{
+static const std::unordered_map<BCLog::LogFlags, std::string> LogCategoryToStr{
     LogCategories,
-    LogCategories + std::size(LogCategories) - 2};
+    LogCategories + std::size(LogCategories) - 2 // Ignore last 2 extra mappings of NONE and ALL.
+};
 
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 {
@@ -194,7 +213,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string LogLevelToStr(BCLog::Level level)
+std::string BCLog::LogLevelToStr(BCLog::Level level)
 {
     switch (level) {
     case BCLog::Level::None:
@@ -209,6 +228,23 @@ std::string LogLevelToStr(BCLog::Level level)
         return "error";
     }
     assert(false);
+}
+
+static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
+{
+    if (level_str == "none") {
+        return BCLog::Level::None;
+    } else if (level_str == "debug") {
+        return BCLog::Level::Debug;
+    } else if (level_str == "info") {
+        return BCLog::Level::Info;
+    } else if (level_str == "warning") {
+        return BCLog::Level::Warning;
+    } else if (level_str == "error") {
+        return BCLog::Level::Error;
+    } else {
+        return std::nullopt;
+    }
 }
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
@@ -227,6 +263,15 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
         ret.push_back(catActive);
     }
     return ret;
+}
+
+std::vector<BCLog::Level> BCLog::Logger::LogLevelsList() const
+{
+    return {BCLog::Level::Debug, BCLog::Level::None, BCLog::Level::Info, BCLog::Level::Warning, BCLog::Level::Error};
+}
+std::string BCLog::Logger::LogLevelsString() const
+{
+    return Join(LogLevelsList(), ", ", [](const BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
@@ -286,11 +331,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
 
         if (category != LogFlags::NONE) {
             auto it = LogCategoryToStr.find(category);
-            if (it == LogCategoryToStr.end()) {
-                s += "unknown";
-            } else {
-                s += it->second;
-            }
+            s += it == LogCategoryToStr.end() ? "unknown" : it->second;
         }
 
         if (category != LogFlags::NONE && level != Level::None) {
@@ -388,4 +429,28 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+bool BCLog::Logger::SetLogLevel(const std::string& level_str)
+{
+    const auto level = GetLogLevel(level_str);
+    if (level) {
+        m_threshold_level = level.value();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool BCLog::Logger::SetCategoryLogLevel(const std::string& category_str, const std::string& level_str)
+{
+    BCLog::LogFlags category;
+    if (!GetLogCategory(category, category_str)) return false;
+
+    const auto level = GetLogLevel(level_str);
+    if (level) {
+        m_category_levels[category] = level.value();
+        return true;
+    } else {
+        return false;
+    }
 }
