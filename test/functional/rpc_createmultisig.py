@@ -43,7 +43,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         if self.is_bdb_compiled():
             self.final = node2.getnewaddress()
         else:
-            self.final = getnewdestination()[2]
+            self.final = getnewdestination('bech32')[2]
 
     def run_test(self):
         node0, node1, node2 = self.nodes
@@ -66,9 +66,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # Test mixed compressed and uncompressed pubkeys
         self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
-        pk0 = getnewdestination()[0].hex()
-        pk1 = getnewdestination()[0].hex()
-        pk2 = getnewdestination()[0].hex()
+        pk0, pk1, pk2 = [getnewdestination('bech32')[0].hex() for _ in range(3)]
 
         # decompress pk2
         pk_obj = ECPubKey()
