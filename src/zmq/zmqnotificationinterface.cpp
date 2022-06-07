@@ -153,9 +153,9 @@ bool CZMQNotificationInterface::Initialize()
 {
     int major = 0, minor = 0, patch = 0;
     zmq_version(&major, &minor, &patch);
-    LogPrint(BCLog::ZMQ, "zmq: version %d.%d.%d\n", major, minor, patch);
+    LogPrint(BCLog::ZMQ, "version %d.%d.%d\n", major, minor, patch);
 
-    LogPrint(BCLog::ZMQ, "zmq: Initialize notification interface\n");
+    LogPrint(BCLog::ZMQ, "Initialize notification interface\n");
     // SYSCOIN
     assert(!pcontext && !pcontextsub);
 
@@ -170,9 +170,9 @@ bool CZMQNotificationInterface::Initialize()
 
     for (auto& notifier : notifiers) {
         if (notifier->Initialize(pcontext, pcontextsub)) {
-            LogPrint(BCLog::ZMQ, "zmq: Notifier %s ready (address = %s, subscriber address = %s)\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
+            LogPrint(BCLog::ZMQ, "Notifier %s ready (address = %s, subscriber address = %s)\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
         } else {
-            LogPrint(BCLog::ZMQ, "zmq: Notifier %s failed (address = %s, subscriber address = %s)\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
+            LogPrint(BCLog::ZMQ, "Notifier %s failed (address = %s, subscriber address = %s)\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
             return false;
         }
     }
@@ -183,11 +183,11 @@ bool CZMQNotificationInterface::Initialize()
 // Called during shutdown sequence
 void CZMQNotificationInterface::Shutdown()
 {
-    LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
+    LogPrint(BCLog::ZMQ, "Shutdown notification interface\n");
     if (pcontext)
     {
         for (auto& notifier : notifiers) {
-            LogPrint(BCLog::ZMQ, "zmq: Shutdown notifier %s at %s, subscriber: %s\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
+            LogPrint(BCLog::ZMQ, "Shutdown notifier %s at %s, subscriber: %s\n", notifier->GetType(), notifier->GetAddress(), notifier->GetAddressSub());
             notifier->Shutdown();
         }
         zmq_ctx_term(pcontext);
