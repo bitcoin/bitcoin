@@ -171,3 +171,30 @@ target_link_libraries(bitcoin_node
     univalue
     Boost::headers
 )
+
+
+if(BUILD_DAEMON)
+  # Bitcoin Core bitcoind
+  add_executable(bitcoind)
+
+  target_sources(bitcoind
+    PRIVATE
+      bitcoind.cpp
+      init/bitcoind.cpp
+  )
+
+  target_link_libraries(bitcoind
+    PRIVATE
+      bitcoin_node
+      bitcoin_consensus
+      bitcoin_common
+      bitcoin_util
+      bitcoin_crypto
+      PkgConfig::libevent
+  )
+  if(WIN32)
+    target_link_options(bitcoind PRIVATE -static)
+  else()
+    target_link_libraries(bitcoind PRIVATE PkgConfig::libevent_pthreads)
+  endif()
+endif()
