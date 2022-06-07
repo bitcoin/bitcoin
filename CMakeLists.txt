@@ -55,6 +55,13 @@ if(USE_CCACHE)
   endif()
 endif()
 
+option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables" OFF)
+if(REDUCE_EXPORTS)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+  link_libraries(-Wl,--exclude-libs,ALL)
+endif()
+
 if(WIN32)
   add_compile_definitions(_MT WIN32 _WINDOWS _WIN32_WINNT=0x0601 _WIN32_IE=0x0501 WIN32_LEAN_AND_MEAN)
   link_libraries(-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1)
