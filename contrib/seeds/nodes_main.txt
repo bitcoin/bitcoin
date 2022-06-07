@@ -13,3 +13,5 @@
 174.62.70.234:9333
 178.62.46.195:9333
 213.244.192.149:9333
+xtmsopiy2ssu2vumfmnjq3nyflnq2pkpcxndi6rxgwnkljmzijafozqd.onion:9333
+37am23y5vro3iorqlmjjty7ctsgz6myoaushxrfqct4ngakl7d7idgid.onion:9333

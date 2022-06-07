@@ -21,6 +21,13 @@ static constexpr uint32_t CHANGE_INDEX{0};
 static constexpr uint32_t PEGIN_INDEX{1};
 
 /// <summary>
+/// Outputs sent to a stealth address whose spend key was not generated using the MWEB
+/// keychain won't have an address index. We use 0xfffffffe to represent this.
+/// In that case, we must lookup the secret key in the wallet DB, rather than the MWEB keychain.
+/// </summary>
+static constexpr uint32_t CUSTOM_KEY{std::numeric_limits<uint32_t>::max() - 1};
+
+/// <summary>
 /// Outputs sent to others will be marked with an address_index of 0xffffffff.
 /// </summary>
 static constexpr uint32_t UNKNOWN_INDEX{std::numeric_limits<uint32_t>::max()};
@@ -35,7 +42,8 @@ struct Coin : public Traits::ISerializable {
     uint32_t address_index{UNKNOWN_INDEX};
 
     // The private key needed in order to spend the coin.
-    // May be empty for watch-only wallets.
+    // Will be empty for watch-only wallets.
+    // May be empty for locked wallets. Upon unlock, spend_key will get populated.
     boost::optional<SecretKey> spend_key;
 
     // The blinding factor of the coin's output.

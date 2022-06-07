@@ -36,6 +36,11 @@ struct Block {
         return IsNull() ? 0 : m_block->GetSupplyChange();
     }
 
+    mw::Hash GetHash() const noexcept
+    {
+        return IsNull() ? mw::Hash{} : m_block->GetHeader()->GetHash();
+    }
+
     mw::Header::CPtr GetMWEBHeader() const noexcept
     {
         return IsNull() ? mw::Header::CPtr{nullptr} : m_block->GetHeader();
