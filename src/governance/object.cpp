@@ -465,8 +465,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
     switch (nObjectType) {
     case GOVERNANCE_OBJECT_PROPOSAL: {
         bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
-        bool fAllowLegacyFormat = !fAllowScript; // reusing the same bit to stop accepting proposals in legacy format
-        CProposalValidator validator(GetDataAsHexString(), fAllowLegacyFormat, fAllowScript);
+        CProposalValidator validator(GetDataAsHexString(), fAllowScript);
         // Note: It's ok to have expired proposals
         // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
         // TODO: should they be tagged as "expired" to skip vote downloading?
@@ -686,7 +685,7 @@ void CGovernanceObject::Relay(CConnman& connman) const
         LOCK(cs_main);
         bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
         if (fAllowScript) {
-            CProposalValidator validator(GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
+            CProposalValidator validator(GetDataAsHexString(), false /* no script */);
             if (!validator.Validate(false /* ignore expiration */)) {
                 // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
                 LogPrint(BCLog::GOBJECT, "CGovernanceObject::Relay -- won't relay %s to older peers\n", GetHash().ToString());

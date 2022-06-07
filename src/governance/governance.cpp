@@ -403,8 +403,7 @@ void CGovernanceManager::UpdateCachesAndClean()
             // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
                 bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
-                bool fAllowLegacyFormat = !fAllowScript; // reusing the same bit to stop accepting proposals in legacy format
-                CProposalValidator validator(pObj->GetDataAsHexString(), fAllowLegacyFormat, fAllowScript);
+                CProposalValidator validator(pObj->GetDataAsHexString(), fAllowScript);
                 if (!validator.Validate()) {
                     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", strHash);
                     pObj->PrepareDeletion(nNow);
@@ -669,7 +668,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
             // We know this proposal is valid locally, otherwise we would not store it.
             // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
             // because they won't accept it anyway and will simply ban us eventually.
-            CProposalValidator validator(govobj.GetDataAsHexString(), false /* no legacy format */, false /* but also no script */);
+            CProposalValidator validator(govobj.GetDataAsHexString(), false /* no script */);
             if (!validator.Validate(false /* ignore expiration */)) {
                 // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
                 LogPrintf("CGovernanceManager::%s -- not syncing p2sh govobj to older node: %s, peer=%d\n", __func__,
