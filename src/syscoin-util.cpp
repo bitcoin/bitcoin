@@ -15,6 +15,7 @@
 #include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <version.h>
 
 #include <atomic>
 #include <cstdio>
