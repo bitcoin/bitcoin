@@ -608,6 +608,8 @@ public:
 
     int64_t GetTxTime() const;
 
+    bool CanBeResent() const;
+
     // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
     bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay);
 
@@ -1336,8 +1338,14 @@ public:
     /** Return whether transaction can be abandoned */
     bool TransactionCanBeAbandoned(const uint256& hashTx) const;
 
+    /** Return whether transaction can be resent */
+    bool TransactionCanBeResent(const uint256& hashTx) const;
+
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
+
+    /* Resend a transaction */
+    bool ResendTransaction(const uint256& hashTx);
 
     //! Verify wallet naming and perform salvage on the wallet if required
     static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bilingual_str& error_string, std::vector<bilingual_str>& warnings);

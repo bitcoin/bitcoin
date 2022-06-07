@@ -1393,6 +1393,13 @@ bool CWallet::TransactionCanBeAbandoned(const uint256& hashTx) const
     return wtx && !wtx->isAbandoned() && wtx->GetDepthInMainChain() == 0 && !wtx->InMempool();
 }
 
+bool CWallet::TransactionCanBeResent(const uint256& hashTx) const
+{
+    LOCK(cs_wallet);
+    const CWalletTx* wtx = GetWalletTx(hashTx);
+    return wtx && wtx->CanBeResent();
+}
+
 void CWallet::MarkInputsDirty(const CTransactionRef& tx)
 {
     for (const CTxIn& txin : tx->vin) {
@@ -1458,6 +1465,18 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
     fAnonymizableTallyCachedNonDenom = false;
 
     return true;
+}
+
+bool CWallet::ResendTransaction(const uint256& hashTx)
+{
+    LOCK(cs_wallet);
+
+    auto it = mapWallet.find(hashTx);
+    assert(it != mapWallet.end());
+    CWalletTx& wtx = it->second;
+
+    std::string unused_err_string;
+    return wtx.SubmitMemoryPoolAndRelay(unused_err_string, true);
 }
 
 void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx)
@@ -2507,19 +2526,25 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
+bool CWalletTx::CanBeResent() const
+{
+    return
+        // Can't relay if wallet is not broadcasting
+        pwallet->GetBroadcastTransactions() &&
+        // Don't relay abandoned transactions
+        !isAbandoned() &&
+        // Don't try to submit coinbase transactions. These would fail anyway but would
+        // cause log spam.
+        !IsCoinBase() &&
+        // Don't try to submit conflicted or confirmed transactions.
+        GetDepthInMainChain() == 0 &&
+        // Don't try to submit transactions locked via InstantSend.
+        !IsLockedByInstantSend();
+}
+
 bool CWalletTx::SubmitMemoryPoolAndRelay(std::string& err_string, bool relay)
 {
-    // Can't relay if wallet is not broadcasting
-    if (!pwallet->GetBroadcastTransactions()) return false;
-    // Don't relay abandoned transactions
-    if (isAbandoned()) return false;
-    // Don't try to submit coinbase transactions. These would fail anyway but would
-    // cause log spam.
-    if (IsCoinBase()) return false;
-    // Don't try to submit conflicted or confirmed transactions.
-    if (GetDepthInMainChain() != 0) return false;
-    // Don't try to submit transactions locked via InstantSend.
-    if (IsLockedByInstantSend()) return false;
+    if (!CanBeResent()) return false;
 
     // Submit transaction to mempool for relay
     pwallet->WalletLogPrintf("Submitting wtx %s to mempool for relay\n", GetHash().ToString());

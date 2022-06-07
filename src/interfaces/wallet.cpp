@@ -294,10 +294,16 @@ public:
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
+    bool transactionCanBeResent(const uint256& txid) override { return m_wallet->TransactionCanBeResent(txid); }
     bool abandonTransaction(const uint256& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->AbandonTransaction(txid);
+    }
+    bool resendTransaction(const uint256& txid) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->ResendTransaction(txid);
     }
     CTransactionRef getTx(const uint256& txid) override
     {

@@ -177,8 +177,14 @@ public:
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
 
+    //! Return whether transaction can be resent.
+    virtual bool transactionCanBeResent(const uint256& txid) = 0;
+
     //! Abandon transaction.
     virtual bool abandonTransaction(const uint256& txid) = 0;
+
+    //! Resend transaction.
+    virtual bool resendTransaction(const uint256& txid) = 0;
 
     //! Get a transaction.
     virtual CTransactionRef getTx(const uint256& txid) = 0;

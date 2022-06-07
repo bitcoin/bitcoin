@@ -75,6 +75,7 @@ private:
     QDateTimeEdit *dateFrom;
     QDateTimeEdit *dateTo;
     QAction *abandonAction;
+    QAction *resendAction;
 
     QWidget *createDateRangeWidget();
     void updateCalendarWidgets();
@@ -102,6 +103,7 @@ private Q_SLOTS:
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void updateCoinJoinVisibility();
     void abandonTx();
+    void resendTx();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
