@@ -2027,21 +2027,33 @@ static RPCHelpMan syscoincreatenevmblob()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(*pwallet);
-    std::string strData(ToUpper(request.params[0].get_str()));
-    CDataStream ssData(SER_NETWORK, PROTOCOL_VERSION);
-    ssData << strData;
-    auto vchData = ParseHex(HexStr(ssData));
+    std::string strData(request.params[0].get_str());
+    std::vector<unsigned char> vchData(strData.data(), strData.data() + strData.size());
+    // how many 0 bytes are we going to add to each field element?
+    int numMultiples = vchData.size() / 32;
+    int nSize = vchData.size() + numMultiples;
     int modDataFill = 0;
-    // fill up to factor of 32 with empty spaces
-    if((vchData.size() % 32) != 0)
-        modDataFill = 32 - (vchData.size() % 32);
-    std::vector<unsigned char> vchFill(modDataFill, 0x20);
-    vchData.insert(vchData.end(), std::begin(vchFill), std::end((vchFill)));
+    // fill up to factor of 32 with 0
+    if((nSize % 32) != 0)
+        modDataFill = 32 - (nSize % 32);
+    std::vector<unsigned char> vchFill(modDataFill, 0);
+    std::vector<unsigned char> newVchData;
+    auto it = vchData.begin();
+    for(int i = 0; i<numMultiples;i++) {
+        newVchData.insert(newVchData.end(), it, (it+31));
+        // fill with 0 delimeter
+        newVchData.push_back(0);
+        it += 31;
+    }
+    // insert the remaining bytes
+    newVchData.insert(newVchData.end(), it, std::end(vchData));
+    // fill with 0's to make sure we are using divisor of 32
+    newVchData.insert(newVchData.end(), std::begin(vchFill), std::end((vchFill)));
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmData;
     // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCreateNEVMBlob(vchData, nevmData, state);
+    GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmData, state);
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
