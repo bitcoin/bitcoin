@@ -2609,11 +2609,10 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
         const CNetMsgMaker msg_maker(INIT_PROTO_VERSION);
         // Signal ADDRv2 support (BIP155).
-        if (nSendVersion >= 70016) {
+        if (nSendVersion >= ADDRV2_PROTO_VERSION) {
             // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
             // implementations reject messages they don't know. As a courtesy, don't send
-            // it to nodes with a version before 70016, as no software is known to support
-            // BIP155 that doesn't announce at least that protocol version number.
+            // it to nodes with a version before ADDRV2_PROTO_VERSION.
             connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
 
@@ -2752,6 +2751,10 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::SENDADDRV2) {
+        if (pfrom->GetSendVersion() < ADDRV2_PROTO_VERSION) {
+            // Ignore previous implementations
+            return true;
+        }
         if (pfrom->fSuccessfullyConnected) {
             // Disconnect peers that send SENDADDRV2 message after VERACK; this
             // must be negotiated between VERSION and VERACK.
