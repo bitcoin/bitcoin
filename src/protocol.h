@@ -3,10 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef __cplusplus
-#error This header can only be compiled as C++.
-#endif
-
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
@@ -15,10 +11,9 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <version.h>
 
+#include <cstdint>
 #include <limits>
-#include <stdint.h>
 #include <string>
 
 /** Message header.
@@ -420,7 +415,6 @@ public:
             use_v2 = s.GetVersion() & ADDRV2_FORMAT;
         }
 
-        SER_READ(obj, obj.nTime = TIME_INIT);
         READWRITE(obj.nTime);
         // nServices is serialized as CompactSize in V2; as uint64_t in V1.
         if (use_v2) {
