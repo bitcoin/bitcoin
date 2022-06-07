@@ -69,6 +69,22 @@ class LLMQConnections(DashTestFramework):
 
         self.check_reconnects(4)
 
+        self.log.info("check that old masternode conections are dropped")
+        removed = False
+        for mn in self.mninfo:
+            if len(mn.node.quorum("memberof", mn.proTxHash)) > 0:
+                try:
+                    with mn.node.assert_debug_log(['removing masternodes quorum connections']):
+                        with mn.node.assert_debug_log(['keeping mn quorum connections']):
+                            self.mine_quorum()
+                            mn.node.mockscheduler(60) # we check for old connections via the scheduler every 60 seconds
+                    removed = True
+                except:
+                    pass # it's ok to not remove connections sometimes
+            if removed:
+                break
+        assert removed # no way we removed none
+
     def check_reconnects(self, expected_connection_count):
         self.log.info("disable and re-enable networking on all masternodes")
         for mn in self.mninfo:
