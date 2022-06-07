@@ -417,10 +417,10 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
     // we check all members if they sent us their contributions
     // we consider members as bad if they missed to send anything or if they sent multiple
-    // in both cases we won't give him a second chance as he is either down, buggy or an adversary
+    // in both cases we won't give them a second chance as they might be either down, buggy or an adversary
     // we assume that such a participant will be marked as bad by the whole network in most cases,
     // as propagation will ensure that all nodes see the same vvecs/contributions. In case nodes come to
-    // different conclusions, the aggregation phase will handle this (most voted quorum key wins)
+    // different conclusions, the aggregation phase will handle this (most voted quorum key wins).
 
     cxxtimer::Timer t1(true);
 
