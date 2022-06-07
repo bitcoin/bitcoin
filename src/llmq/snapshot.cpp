@@ -28,7 +28,7 @@ void CQuorumSnapshot::ToJson(UniValue& obj) const
     //TODO Check this function if correct
     obj.setObject();
     UniValue activeQ(UniValue::VARR);
-    for (const auto& h : activeQuorumMembers) {
+    for (const bool h : activeQuorumMembers) {
         // cppcheck-suppress useStlAlgorithm
         activeQ.push_back(h);
     }
