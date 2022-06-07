@@ -13,3 +13,4 @@ CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
 CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
+unsigned int ancestorLimit = DEFAULT_ANCESTOR_LIMIT;
