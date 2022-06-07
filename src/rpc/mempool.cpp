@@ -8,6 +8,7 @@
 #include <core_io.h>
 #include <fs.h>
 #include <policy/rbf.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -15,7 +16,6 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
-#include <validation.h>
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::NodeContext;
