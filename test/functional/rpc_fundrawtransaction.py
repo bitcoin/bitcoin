@@ -109,7 +109,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_weight_calculation()
         self.test_change_position()
         self.test_simple()
-        self.test_simple_two_coins()
         self.test_simple_two_outputs()
         self.test_change()
         self.test_no_change()
@@ -180,17 +179,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert len(dec_tx['vin']) > 0  #test that we have enough inputs
-
-    def test_simple_two_coins(self):
-        self.log.info("Test fundrawtxn with 2 coins")
-        inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.2 }
-        rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
-        dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
-
-        rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
-        dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert len(dec_tx['vin']) > 0  #test if we have enough inputs
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
     def test_simple_two_outputs(self):
