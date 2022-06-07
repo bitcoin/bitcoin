@@ -99,8 +99,9 @@ endif()
 option(BUILD_DAEMON "Build bitcoind" ON)
 option(BUILD_CLI "Build bitcoin-cli" ON)
 option(BUILD_BITCOINCONSENSUS_LIB "Build bitcoinconsensus shared library" ON)
+option(BUILD_BITCOINKERNEL_LIB "Build experimental bitcoinkernel shared library" ON)
 
-if(BUILD_DAEMON OR BUILD_CLI)
+if(BUILD_DAEMON OR BUILD_CLI OR BUILD_BITCOINKERNEL_LIB)
   # Find Boost headers only.
   find_package(Boost 1.64.0 REQUIRED)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -121,6 +122,10 @@ add_subdirectory(src)
 
 if(BUILD_BITCOINCONSENSUS_LIB)
   add_subdirectory(src/script)
+endif()
+
+if(BUILD_BITCOINKERNEL_LIB)
+  add_subdirectory(src/kernel)
 endif()
 
 if(CMAKE_CROSSCOMPILING)
