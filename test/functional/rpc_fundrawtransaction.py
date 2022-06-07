@@ -841,11 +841,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = self.nodes[3].createrawtransaction(inputs=[], outputs={self.nodes[3].getnewaddress(): 1})
         result3 = self.nodes[3].fundrawtransaction(rawtx)
         res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
-        changeaddress = ""
-        for out in res_dec['vout']:
-            if out['value'] > 1.0:
-                changeaddress += out['scriptPubKey']['address']
-        assert changeaddress != ""
+        changeaddress = res_dec["vout"][result3["changepos"]]['scriptPubKey']['address']
         nextaddr = self.nodes[3].getnewaddress()
         # Now the change address key should be removed from the keypool.
         assert changeaddress != nextaddr
