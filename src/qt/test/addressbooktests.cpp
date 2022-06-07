@@ -16,6 +16,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
+#include <walletinitinterface.h>
 
 #include <QApplication>
 #include <QTimer>
@@ -57,6 +58,7 @@ void EditAddressAndSubmit(
 void TestAddAddressesToSendBook(interfaces::Node& node)
 {
     TestChain100Setup test;
+    node.setContext(&test.m_node);
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     bool firstRun;
     wallet->LoadWallet(firstRun);

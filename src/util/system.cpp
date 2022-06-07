@@ -261,10 +261,11 @@ static bool CheckValid(const std::string& key, const util::SettingsValue& val, u
     return true;
 }
 
-ArgsManager::ArgsManager()
-{
-    // nothing to do
-}
+// Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
+// #include class definitions for all members.
+// For example, m_settings has an internal dependency on univalue.
+ArgsManager::ArgsManager() {}
+ArgsManager::~ArgsManager() {}
 
 const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
 {
@@ -589,6 +590,12 @@ void ArgsManager::ForceRemoveArg(const std::string& strArg)
 bool HelpRequested(const ArgsManager& args)
 {
     return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
+}
+
+void SetupHelpOptions(ArgsManager& args)
+{
+    args.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
+    args.AddHiddenArgs({"-h", "-help"});
 }
 
 static const int screenWidth = 79;
@@ -1088,6 +1095,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
@@ -1099,6 +1107,7 @@ void runCommand(const std::string& strCommand)
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
+#endif
 
 void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
 {

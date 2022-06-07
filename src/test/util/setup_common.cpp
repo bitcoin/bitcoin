@@ -12,6 +12,7 @@
 #include <crypto/sha256.h>
 #include <index/txindex.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
@@ -30,6 +31,7 @@
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <walletinitinterface.h>
 
 #include <util/validation.h>
 
@@ -99,8 +101,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SelectParams(chainName);
     SeedInsecureRand();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
-    InitLogging();
-    AppInitParameterInteraction();
+    InitLogging(*m_node.args);
+    AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();
@@ -109,6 +111,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
+    m_node.chain = interfaces::MakeChain(m_node);
+    g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     evoDb.reset(new CEvoDB(1 << 20, true, true));
     connman = MakeUnique<CConnman>(0x1337, 0x1337);
