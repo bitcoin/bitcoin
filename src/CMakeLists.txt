@@ -198,3 +198,28 @@ if(BUILD_DAEMON)
     target_link_libraries(bitcoind PRIVATE PkgConfig::libevent_pthreads)
   endif()
 endif()
+
+
+if(BUILD_CLI)
+  # Bitcoin Core RPC client
+  add_executable(bitcoin-cli)
+
+  target_sources(bitcoin-cli
+    PRIVATE
+      bitcoin-cli.cpp
+      compat/stdin.cpp
+      rpc/client.cpp
+  )
+
+  target_link_libraries(bitcoin-cli
+    PRIVATE
+      bitcoin_util
+      bitcoin_crypto
+      univalue
+      PkgConfig::libevent
+  )
+
+  if(WIN32)
+    target_link_options(bitcoin-cli PRIVATE -static)
+  endif()
+endif()
