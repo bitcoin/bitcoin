@@ -1704,8 +1704,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     node.scheduler = MakeUnique<CScheduler>();
 
     // Start the lightweight task scheduler thread
-    CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
-    threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    threadGroup.create_thread([&] { TraceThread("scheduler", [&] { node.scheduler->serviceQueue(); }); });
 
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
@@ -2069,7 +2068,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                 bool failed_chainstate_init = false;
                 for (CChainState* chainstate : chainman.GetAll()) {
-                    LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
                     chainstate->InitCoinsDB(
                         /* cache_size_bytes */ nCoinDBCache,
                         /* in_memory */ false,
