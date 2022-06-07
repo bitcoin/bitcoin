@@ -15,7 +15,7 @@ from subprocess import run
 
 exit_code = 0
 mod_path = Path(__file__).parent
-lints = glob(f"{mod_path}/lint-*")
+lints = glob(f"{mod_path}/lint-*.py")
 if which("parallel") and which("column"):
     logfile = "parallel_out.log"
     command = ["parallel", "--jobs", "100%", "--will-cite", "--joblog", logfile, ":::"] + lints
