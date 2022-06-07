@@ -23,6 +23,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/memory.h>
+#include <util/settings.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 #include <amount.h>
@@ -92,6 +93,8 @@ fs::path GetDefaultDataDir();
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
+// Return true if -datadir option points to a valid directory or is not specified.
+bool CheckDataDirOption();
 /** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
@@ -180,9 +183,7 @@ protected:
     };
 
     mutable CCriticalSection cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
-    std::map<std::string, std::vector<std::string>> m_command_line_args GUARDED_BY(cs_args);
-    std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
+    util::Settings m_settings GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
@@ -215,9 +216,9 @@ public:
     const std::list<SectionInfo> GetUnrecognizedSections() const;
 
     /**
-     * Return the map of all the args passed via cmd line
+     * Return the map of all the args passed via the command line
      */
-    const std::map<std::string, std::vector<std::string>> GetCommandLineArgs() const;
+    const std::map<std::string, std::vector<util::SettingsValue>> GetCommandLineArgs() const;
 
     /**
      * Return a vector of strings of the given argument

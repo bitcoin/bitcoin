@@ -55,7 +55,7 @@ static bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
-    SetupServerArgs();
+    SetupServerArgs(node);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s\n", error)));
@@ -87,18 +87,11 @@ static bool AppInit(int argc, char* argv[])
     util::Ref context{node};
     try
     {
-        bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
-        if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
-        {
+        if (!CheckDataDirOption()) {
             return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""))));
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
             return InitError(Untranslated(strprintf("Error reading configuration file: %s\n", error)));
-        }
-        if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
-        {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
-            return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {

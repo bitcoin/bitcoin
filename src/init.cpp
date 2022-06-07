@@ -395,6 +395,7 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
+    node.args = nullptr;
     node.mempool = nullptr;
     node.chainman = nullptr;
     node.scheduler.reset();
@@ -465,8 +466,11 @@ std::string GetSupportedSocketEventsStr()
     return strSupportedModes;
 }
 
-void SetupServerArgs()
+void SetupServerArgs(NodeContext& node)
 {
+    assert(!node.args);
+    node.args = &gArgs;
+
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
     const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
@@ -2023,13 +2027,15 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!::BlockIndex().empty() &&
+                if (!chainman.BlockIndex().empty() &&
                         !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
 
-                if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !::BlockIndex().empty() && ::BlockIndex().count(chainparams.GetConsensus().hashDevnetGenesisBlock) == 0)
+                if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !chainman.BlockIndex().empty() &&
+                        !LookupBlockIndex(chainparams.GetConsensus().hashDevnetGenesisBlock)) {
                     return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
+                }
 
                 // Check for changed -addressindex state
                 if (fAddressIndex != gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
@@ -2448,13 +2454,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     //// debug print
     {
         LOCK(cs_main);
-        LogPrintf("block tree size = %u\n", ::BlockIndex().size());
-        chain_active_height = ::ChainActive().Height();
+        LogPrintf("block tree size = %u\n", chainman.BlockIndex().size());
+        chain_active_height = chainman.ActiveChain().Height();
         if (tip_info) {
             tip_info->block_height = chain_active_height;
-            tip_info->block_time = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockTime() : Params().GenesisBlock().GetBlockTime();
-            tip_info->block_hash = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockHash() : Params().GenesisBlock().GetHash();
-            tip_info->verification_progress = GuessVerificationProgress(Params().TxData(), ::ChainActive().Tip());
+            tip_info->block_time = chainman.ActiveChain().Tip() ? chainman.ActiveChain().Tip()->GetBlockTime() : Params().GenesisBlock().GetBlockTime();
+            tip_info->block_hash = chainman.ActiveChain().Tip() ? chainman.ActiveChain().Tip()->GetBlockHash() : Params().GenesisBlock().GetHash();
+            tip_info->verification_progress = GuessVerificationProgress(Params().TxData(), chainman.ActiveChain().Tip());
         }
         if (tip_info && ::pindexBestHeader) {
             tip_info->header_height = ::pindexBestHeader->nHeight;

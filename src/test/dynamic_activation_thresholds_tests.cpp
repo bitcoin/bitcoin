@@ -37,7 +37,7 @@ struct TestChainDATSetup : public TestChainSetup
         for (int i = 0; i < window - num_blocks; ++i) {
             CreateAndProcessBlock({}, coinbaseKey);
         }
-        gArgs.ForceRemoveArg("-blockversion");
+        gArgs.ForceRemoveArg("blockversion");
         if (num_blocks > 0) {
             // Mine signalling blocks
             for (int i = 0; i < num_blocks; ++i) {

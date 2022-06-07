@@ -57,12 +57,17 @@ const std::map<std::string, std::set<std::string>> EXPECTED_DESERIALIZATION_EXCE
     {"Unknown transaction optional data: iostream error", {"block", "blocktxn", "cmpctblock", "tx"}},
 };
 
-const RegTestingSetup* g_setup;
+const TestingSetup* g_setup;
 } // namespace
 
 void initialize()
 {
-    static RegTestingSetup setup{};
+    static TestingSetup setup{
+        CBaseChainParams::REGTEST,
+        {
+            "-nodebuglogfile",
+        },
+    };
     g_setup = &setup;
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {

@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+class ArgsManager;
 class BanMan;
 class CConnman;
 class CScheduler;
@@ -37,6 +38,7 @@ struct NodeContext {
     std::unique_ptr<PeerLogicValidation> peer_logic;
     ChainstateManager* chainman{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<BanMan> banman;
+    ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<interfaces::Chain> chain;
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     std::unique_ptr<CScheduler> scheduler;
