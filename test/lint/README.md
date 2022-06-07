@@ -39,6 +39,6 @@ To do so, add the upstream repository as remote:
 git remote add --fetch secp256k1 https://github.com/bitcoin-core/secp256k1.git
 ```
 
-lint-all.py
+all-lint.py
 ===========
 Calls other scripts with the `lint-` prefix.

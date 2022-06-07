@@ -13,11 +13,10 @@ from subprocess import run
 
 exit_code = 0
 mod_path = Path(__file__).parent
-for lint in glob(f"{mod_path}/lint-*"):
-    if lint != __file__:
-        result = run([lint])
-        if result.returncode != 0:
-            print(f"^---- failure generated from {lint.split('/')[-1]}")
-            exit_code |= result.returncode
+for lint in glob(f"{mod_path}/lint-*.py"):
+    result = run([lint])
+    if result.returncode != 0:
+        print(f"^---- failure generated from {lint.split('/')[-1]}")
+        exit_code |= result.returncode
 
 exit(exit_code)
