@@ -1148,6 +1148,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
                 {RPCResult::Type::NUM, "governanceminquorum", "the absolute minimum number of votes needed to trigger a governance action"},
                 {RPCResult::Type::NUM, "proposalfee", "the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + ""},
                 {RPCResult::Type::NUM, "superblockcycle", "the number of blocks between superblocks"},
+                {RPCResult::Type::NUM, "superblockmaturitywindow", "the superblock trigger creation window"},
                 {RPCResult::Type::NUM, "lastsuperblock", "the block number of the last superblock"},
                 {RPCResult::Type::NUM, "nextsuperblock", "the block number of the next superblock"},
             }},
@@ -1169,6 +1170,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024, versionbitscache) == ThresholdState::ACTIVE;
     obj.pushKV("proposalfee", ValueFromAmount(fork_active ? GOVERNANCE_PROPOSAL_FEE_TX : GOVERNANCE_PROPOSAL_FEE_TX_OLD));
     obj.pushKV("superblockcycle", Params().GetConsensus().nSuperblockCycle);
+    obj.pushKV("superblockmaturitywindow", Params().GetConsensus().nSuperblockMaturityWindow);
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
 
