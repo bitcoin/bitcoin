@@ -269,7 +269,6 @@ public:
     // Stream subset
     //
     bool eof() const             { return size() == 0; }
-    CDataStream* rdbuf()         { return this; }
     int in_avail() const         { return size(); }
 
     void SetType(int n)          { nType = n; }
