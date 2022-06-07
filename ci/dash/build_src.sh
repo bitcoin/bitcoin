@@ -25,7 +25,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     # TODO: Check docs (re-enable after all Bitcoin PRs have been merged and docs fully fixed)
     #test/lint/check-doc.py
     # Run all linters
-    test/lint/lint-all.py
+    test/lint/all-lint.py
 fi
 
 ccache --zero-stats --max-size=$CCACHE_SIZE
