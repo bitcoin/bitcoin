@@ -14,8 +14,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    PORT_MIN,
-    PORT_RANGE,
+    p2p_port,
 )
 
 # As defined in net_processing.
@@ -44,10 +43,9 @@ class AddrReceiver(P2PInterface):
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # Start onion ports after p2p and rpc ports.
-        port = PORT_MIN + 2 * PORT_RANGE
-        self.onion_port1 = port
-        self.onion_port2 = port + 1
+        # Use some of the remaining p2p ports for the onion binds.
+        self.onion_port1 = p2p_port(1)
+        self.onion_port2 = p2p_port(2)
         self.extra_args = [
             [f"-bind=127.0.0.1:{self.onion_port1}=onion", f"-bind=127.0.0.1:{self.onion_port2}=onion"],
         ]
