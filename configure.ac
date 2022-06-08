@@ -1484,6 +1484,10 @@ fi
   dnl we don't use multi_index serialization
   BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_DISABLE_SERIALIZATION"
 
+  if test "$enable_debug" = "yes" || test "$enable_fuzz" = "yes"; then
+    BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE"
+  fi
+
 dnl Prevent use of std::unary_function, which was removed in C++17,
 dnl and will generate warnings with newer compilers for Boost
 dnl older than 1.80.
