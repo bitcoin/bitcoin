@@ -93,6 +93,9 @@ New settings
 Tools and Utilities
 -------------------
 
+- A new `-loglevel` configuration option allows setting global and per-category
+  log severity levels. (#25203)
+
 Wallet
 ------
 
