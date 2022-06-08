@@ -12,11 +12,11 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
-#include <util/strencodings.h>
 #include <tinyformat.h>
 #include <util/readwritefile.h>
 #include <util/sock.h>
 #include <util/spanparsing.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 
 #include <chrono>
@@ -115,8 +115,19 @@ namespace sam {
 Session::Session(const fs::path& private_key_file,
                  const CService& control_host,
                  CThreadInterrupt* interrupt)
-    : m_private_key_file(private_key_file), m_control_host(control_host), m_interrupt(interrupt),
-      m_control_sock(std::make_unique<Sock>(INVALID_SOCKET))
+    : m_private_key_file{private_key_file},
+      m_control_host{control_host},
+      m_interrupt{interrupt},
+      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
+      m_transient{false}
+{
+}
+
+Session::Session(const CService& control_host, CThreadInterrupt* interrupt)
+    : m_control_host{control_host},
+      m_interrupt{interrupt},
+      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
+      m_transient{true}
 {
 }
 
@@ -355,29 +366,47 @@ void Session::CreateIfNotCreatedAlready()
         return;
     }
 
-    Log("Creating SAM session with %s", m_control_host.ToString());
+    const auto session_type = m_transient ? "transient" : "persistent";
+    const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
+
+    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToString());
 
     auto sock = Hello();
 
-    const auto& [read_ok, data] = ReadBinaryFile(m_private_key_file);
-    if (read_ok) {
-        m_private_key.assign(data.begin(), data.end());
+    if (m_transient) {
+        // The destination (private key) is generated upon session creation and returned
+        // in the reply in DESTINATION=.
+        const Reply& reply = SendRequestAndGetReply(
+            *sock,
+            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT", session_id));
+
+        m_private_key = DecodeI2PBase64(reply.Get("DESTINATION"));
     } else {
-        GenerateAndSavePrivateKey(*sock);
+        // Read our persistent destination (private key) from disk or generate
+        // one and save it to disk. Then use it when creating the session.
+        const auto& [read_ok, data] = ReadBinaryFile(m_private_key_file);
+        if (read_ok) {
+            m_private_key.assign(data.begin(), data.end());
+        } else {
+            GenerateAndSavePrivateKey(*sock);
+        }
+
+        const std::string& private_key_b64 = SwapBase64(EncodeBase64(m_private_key));
+
+        SendRequestAndGetReply(*sock,
+                               strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
+                                         session_id,
+                                         private_key_b64));
     }
-
-    const std::string& session_id = GetRandHash().GetHex().substr(0, 10); // full is an overkill, too verbose in the logs
-    const std::string& private_key_b64 = SwapBase64(EncodeBase64(m_private_key));
-
-    SendRequestAndGetReply(*sock, strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=%s",
-                                            session_id, private_key_b64));
 
     m_my_addr = CService(DestBinToAddr(MyDestination()), I2P_SAM31_PORT);
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 
-    LogPrintfCategory(BCLog::I2P, "SAM session created: session id=%s, my address=%s\n",
-                      m_session_id, m_my_addr.ToString());
+    Log("%s SAM session %s created, my address=%s",
+        Capitalize(session_type),
+        m_session_id,
+        m_my_addr.ToString());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()
