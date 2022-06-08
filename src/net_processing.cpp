@@ -1487,8 +1487,8 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connma
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes](CNode* pnode) {
-        if (pnode->nVersion >= CADDR_TIME_VERSION) {
+    auto sortfunc = [&best, &hasher, nRelayNodes, addr](CNode* pnode) {
+        if (pnode->nVersion >= CADDR_TIME_VERSION && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                 if (hashKey > best[i].first) {
@@ -2608,6 +2608,14 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
 
         const CNetMsgMaker msg_maker(INIT_PROTO_VERSION);
+        // Signal ADDRv2 support (BIP155).
+        if (nSendVersion >= ADDRV2_PROTO_VERSION) {
+            // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
+            // implementations reject messages they don't know. As a courtesy, don't send
+            // it to nodes with a version before ADDRV2_PROTO_VERSION.
+            connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
+        }
+
         connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         pfrom->nServices = nServices;
@@ -2714,10 +2722,6 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             CMNAuth::PushMNAUTH(pfrom, *connman);
         }
 
-        // Signal ADDRv2 support (BIP155).
-        // NOTE: Should NOT send this prior to MNMAUTH.
-        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDADDRV2));
-
         // Tell our peer we prefer to receive headers rather than inv's
         // We send this to non-NODE NETWORK peers as well, because even
         // non-NODE NETWORK peers can announce blocks (such as pruning
@@ -2743,6 +2747,21 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
 
         pfrom->fSuccessfullyConnected = true;
+        return true;
+    }
+
+    if (msg_type == NetMsgType::SENDADDRV2) {
+        if (pfrom->GetSendVersion() < ADDRV2_PROTO_VERSION) {
+            // Ignore previous implementations
+            return true;
+        }
+        if (pfrom->fSuccessfullyConnected) {
+            // Disconnect peers that send SENDADDRV2 message after VERACK; this
+            // must be negotiated between VERSION and VERACK.
+            pfrom->fDisconnect = true;
+            return false;
+        }
+        pfrom->m_wants_addrv2 = true;
         return true;
     }
 
@@ -2824,11 +2843,6 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
         statsClient.gauge("peers.knownAddresses", connman->GetAddressCount(), 1.0f);
-        return true;
-    }
-
-    if (msg_type == NetMsgType::SENDADDRV2) {
-        pfrom->m_wants_addrv2 = true;
         return true;
     }
 
