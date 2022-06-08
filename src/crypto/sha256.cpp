@@ -10,18 +10,18 @@
 
 #include <compat/cpuid.h>
 
-#if defined(__linux__) && defined(ENABLE_ARM_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+#if defined(__linux__) && ENABLE_ARM_SHANI && !defined(BUILD_BITCOIN_INTERNAL)
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #endif
 
-#if defined(MAC_OSX) && defined(ENABLE_ARM_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+#if defined(MAC_OSX) && ENABLE_ARM_SHANI && !defined(BUILD_BITCOIN_INTERNAL)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-#if defined(USE_ASM)
+#if USE_ASM
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
@@ -567,7 +567,7 @@ bool SelfTest() {
     return true;
 }
 
-#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
+#if USE_ASM && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 /** Check whether the OS has enabled AVX registers. */
 bool AVXEnabled()
 {
@@ -582,7 +582,7 @@ bool AVXEnabled()
 std::string SHA256AutoDetect()
 {
     std::string ret = "standard";
-#if defined(USE_ASM) && defined(HAVE_GETCPUID)
+#if USE_ASM && defined(HAVE_GETCPUID)
     bool have_sse4 = false;
     bool have_xsave = false;
     bool have_avx = false;
@@ -604,7 +604,7 @@ std::string SHA256AutoDetect()
         have_x86_shani = (ebx >> 29) & 1;
     }
 
-#if defined(ENABLE_X86_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_X86_SHANI && !defined(BUILD_BITCOIN_INTERNAL)
     if (have_x86_shani) {
         Transform = sha256_x86_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_x86_shani::Transform>;
@@ -621,13 +621,13 @@ std::string SHA256AutoDetect()
         TransformD64 = TransformD64Wrapper<sha256_sse4::Transform>;
         ret = "sse4(1way)";
 #endif
-#if defined(ENABLE_SSE41) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_SSE41 && !defined(BUILD_BITCOIN_INTERNAL)
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret += ",sse41(4way)";
 #endif
     }
 
-#if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_AVX2 && !defined(BUILD_BITCOIN_INTERNAL)
     if (have_avx2 && have_avx && enabled_avx) {
         TransformD64_8way = sha256d64_avx2::Transform_8way;
         ret += ",avx2(8way)";
@@ -635,7 +635,7 @@ std::string SHA256AutoDetect()
 #endif
 #endif // defined(USE_ASM) && defined(HAVE_GETCPUID)
 
-#if defined(ENABLE_ARM_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_ARM_SHANI && !defined(BUILD_BITCOIN_INTERNAL)
     bool have_arm_shani = false;
 
 #if defined(__linux__)

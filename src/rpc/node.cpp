@@ -70,7 +70,7 @@ static RPCHelpMan setmocktime()
     };
 }
 
-#if defined(USE_SYSCALL_SANDBOX)
+#if USE_SYSCALL_SANDBOX
 static RPCHelpMan invokedisallowedsyscall()
 {
     return RPCHelpMan{
@@ -430,7 +430,7 @@ void RegisterNodeRPCCommands(CRPCTable& t)
         {"hidden", &echo},
         {"hidden", &echojson},
         {"hidden", &echoipc},
-#if defined(USE_SYSCALL_SANDBOX)
+#if USE_SYSCALL_SANDBOX
         {"hidden", &invokedisallowedsyscall},
 #endif // USE_SYSCALL_SANDBOX
     };

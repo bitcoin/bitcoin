@@ -8,7 +8,7 @@
 
 #include <util/syscall_sandbox.h>
 
-#if defined(USE_SYSCALL_SANDBOX)
+#if USE_SYSCALL_SANDBOX
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -830,11 +830,11 @@ void TestDisallowedSandboxCall()
     std::array<gid_t, 1> groups;
     [[maybe_unused]] int32_t ignored = getgroups(groups.size(), groups.data());
 }
-#endif // defined(USE_SYSCALL_SANDBOX)
+#endif // USE_SYSCALL_SANDBOX
 
 void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy)
 {
-#if defined(USE_SYSCALL_SANDBOX)
+#if USE_SYSCALL_SANDBOX
     if (!g_syscall_sandbox_enabled) {
         return;
     }
@@ -923,5 +923,5 @@ void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy)
 
     const std::string thread_name = !util::ThreadGetInternalName().empty() ? util::ThreadGetInternalName() : "*unnamed*";
     LogPrint(BCLog::UTIL, "Syscall filter installed for thread \"%s\"\n", thread_name);
-#endif // defined(USE_SYSCALL_SANDBOX)
+#endif // USE_SYSCALL_SANDBOX
 }

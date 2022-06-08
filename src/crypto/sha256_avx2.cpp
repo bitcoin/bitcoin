@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifdef ENABLE_AVX2
+#if ENABLE_AVX2
 
 #include <stdint.h>
 #include <immintrin.h>

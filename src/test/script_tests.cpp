@@ -20,7 +20,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
 #include <script/bitcoinconsensus.h>
 #endif
 
@@ -149,7 +149,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
     }
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
     uint32_t libconsensus_flags{flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL};
@@ -1501,7 +1501,7 @@ static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
 
 /* Test simple (successful) usage of bitcoinconsensus_verify_script */
 BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
@@ -1641,7 +1641,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_INVALID_FLAGS);
 }
 
-#endif // defined(HAVE_CONSENSUS_LIB)
+#endif // HAVE_CONSENSUS_LIB
 
 static std::vector<unsigned int> AllConsensusFlags()
 {

@@ -43,12 +43,12 @@ enum class SyscallSandboxPolicy {
 //! This experimental feature is available under Linux x86_64 only.
 void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy);
 
-#if defined(USE_SYSCALL_SANDBOX)
+#if USE_SYSCALL_SANDBOX
 //! Setup and enable the experimental syscall sandbox for the running process.
 [[nodiscard]] bool SetupSyscallSandbox(bool log_syscall_violation_before_terminating);
 
 //! Invoke a disallowed syscall. Use for testing purposes.
 void TestDisallowedSandboxCall();
-#endif // defined(USE_SYSCALL_SANDBOX)
+#endif // USE_SYSCALL_SANDBOX
 
 #endif // BITCOIN_UTIL_SYSCALL_SANDBOX_H
