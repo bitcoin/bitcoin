@@ -564,6 +564,7 @@ void CNode::CloseSocketDisconnect()
         LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
         m_sock.reset();
     }
+    m_i2p_sam_session.reset();
 }
 
 void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const {
@@ -2702,20 +2703,27 @@ ServiceFlags CConnman::GetLocalServices() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, std::shared_ptr<Sock> sock, const CAddress& addrIn,
-             uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn,
-             const CAddress& addrBindIn, const std::string& addrNameIn,
-             ConnectionType conn_type_in, bool inbound_onion)
+CNode::CNode(NodeId idIn,
+             std::shared_ptr<Sock> sock,
+             const CAddress& addrIn,
+             uint64_t nKeyedNetGroupIn,
+             uint64_t nLocalHostNonceIn,
+             const CAddress& addrBindIn,
+             const std::string& addrNameIn,
+             ConnectionType conn_type_in,
+             bool inbound_onion,
+             std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
     : m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
-      addr(addrIn),
-      addrBind(addrBindIn),
+      addr{addrIn},
+      addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
-      m_inbound_onion(inbound_onion),
-      nKeyedNetGroup(nKeyedNetGroupIn),
-      id(idIn),
-      nLocalHostNonce(nLocalHostNonceIn),
-      m_conn_type(conn_type_in)
+      m_inbound_onion{inbound_onion},
+      nKeyedNetGroup{nKeyedNetGroupIn},
+      id{idIn},
+      nLocalHostNonce{nLocalHostNonceIn},
+      m_conn_type{conn_type_in},
+      m_i2p_sam_session{std::move(i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
