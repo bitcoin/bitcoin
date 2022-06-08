@@ -9,6 +9,8 @@
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <memory>
+
 namespace kernel {
 
 std::optional<bilingual_str> SanityChecks(const Context&)
