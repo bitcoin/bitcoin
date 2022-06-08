@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70220  # ISDLOCK_PROTO_VERSION
+MY_VERSION = 70223  # ADDRV2_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
