@@ -431,9 +431,9 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
-        self.send_message(msg_verack())
         if self.support_addrv2:
             self.send_message(msg_sendaddrv2())
+        self.send_message(msg_verack())
         self.nServices = message.nServices
 
     # Connection helper methods

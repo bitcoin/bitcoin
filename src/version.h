@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2022 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70222;
+static const int PROTOCOL_VERSION = 70223;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -37,6 +37,9 @@ static const int ISDLOCK_PROTO_VERSION = 70220;
 
 //! GOVSCRIPT was activated in this version
 static const int GOVSCRIPT_PROTO_VERSION = 70221;
+
+//! ADDRV2 was introduced in this version
+static const int ADDRV2_PROTO_VERSION = 70223;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 
