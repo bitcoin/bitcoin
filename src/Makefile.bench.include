@@ -43,6 +43,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/peer_eviction.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
+  bench/rfc8439.cpp \
   bench/rollingbloom.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
