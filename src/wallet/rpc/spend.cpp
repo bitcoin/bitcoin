@@ -611,7 +611,12 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             if (options.exists("minconf")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "min_conf and minconf options should not both be set. Use minconf (min_conf is deprecated).");
             }
+
             coinControl.m_min_depth = options["min_conf"].getInt<int>();
+
+            if (coinControl.m_min_depth < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative min_conf");
+            }
         }
 
         if (options.exists("maxconf")) {
