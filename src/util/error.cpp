@@ -5,8 +5,10 @@
 #include <util/error.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/translation.h>
+
+#include <cassert>
+#include <string>
 
 bilingual_str TransactionErrorString(const TransactionError err)
 {
