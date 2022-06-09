@@ -12,7 +12,7 @@ class ECCVerifyHandle;
 namespace kernel {
 //! Context struct holding the kernel library's logically global state, and
 //! passed to external libbitcoin_kernel functions which need access to this
-//! state. The kernel libary API is a work in progress, so state organization
+//! state. The kernel library API is a work in progress, so state organization
 //! and member list will evolve over time.
 //!
 //! State stored directly in this struct should be simple. More complex state
