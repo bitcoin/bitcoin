@@ -188,6 +188,52 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
     }
 }
 
+static void TestFSChaCha20(const std::string& hex_plaintext, const std::string& hexkey, size_t rekey_interval, const std::string& ciphertext_after_rotation)
+{
+    auto key_vec = ParseHex(hexkey);
+    BOOST_CHECK_EQUAL(FSCHACHA20_KEYLEN, key_vec.size());
+    std::array<std::byte, FSCHACHA20_KEYLEN> key;
+    memcpy(key.data(), key_vec.data(), FSCHACHA20_KEYLEN);
+
+    auto plaintext = ParseHex(hex_plaintext);
+
+    auto fsc20 = FSChaCha20{key, rekey_interval};
+    auto c20 = ChaCha20{reinterpret_cast<const unsigned char*>(key.data())};
+
+    std::vector<std::byte> fsc20_output;
+    fsc20_output.resize(plaintext.size());
+
+    std::vector<unsigned char> c20_output;
+    c20_output.resize(plaintext.size());
+
+    for (size_t i = 0; i < rekey_interval; i++) {
+        fsc20.Crypt(MakeByteSpan(plaintext), fsc20_output);
+        c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+        BOOST_CHECK_EQUAL(0, memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()));
+    }
+
+    // At the rotation interval, the outputs will no longer match
+    fsc20.Crypt(MakeByteSpan(plaintext), fsc20_output);
+    auto c20_copy = c20;
+    c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+    BOOST_CHECK(memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()) != 0);
+
+    unsigned char new_key[FSCHACHA20_KEYLEN];
+    c20_copy.Keystream(new_key, FSCHACHA20_KEYLEN);
+    c20.SetKey32(new_key);
+
+    std::array<std::byte, 12> new_nonce;
+    WriteLE32(reinterpret_cast<unsigned char*>(new_nonce.data()), 0);
+    WriteLE64(reinterpret_cast<unsigned char*>(new_nonce.data()) + 4, 1);
+    c20.SetRFC8439Nonce(new_nonce);
+
+    // Outputs should match again after simulating key rotation
+    c20.Crypt(plaintext.data(), c20_output.data(), plaintext.size());
+    BOOST_CHECK_EQUAL(0, memcmp(c20_output.data(), fsc20_output.data(), plaintext.size()));
+
+    BOOST_CHECK_EQUAL(HexStr(fsc20_output), ciphertext_after_rotation);
+}
+
 static void TestChaCha20RFC8439(const std::string& hex_key, const std::array<std::byte, 12>& nonce, uint32_t seek, const std::string& hex_expected_keystream, const std::string& hex_input, const std::string& hex_expected_output)
 {
     auto key = ParseHex(hex_key);
@@ -679,6 +725,20 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                         rfc8439_nonce2, 0, "ecfa254f845f647473d3cb140da9e87606cb33066c447b87bc2666dde3fbb739", "", "");
     TestChaCha20RFC8439("1c9240a5eb55d38af333888604f6b5f0473917c1402b80099dca5cbc207075c0",
                         rfc8439_nonce2, 0, "965e3bc6f9ec7ed9560808f4d229f94b137ff275ca9b3fcbdd59deaad23310ae", "", "");
+
+    // Forward secure ChaCha20
+    TestFSChaCha20("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   "0000000000000000000000000000000000000000000000000000000000000000",
+                   256,
+                   "a93df4ef03011f3db95f60d996e1785df5de38fc39bfcb663a47bb5561928349");
+    TestFSChaCha20("01",
+                   "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                   5,
+                   "ea");
+    TestFSChaCha20("e93fdb5c762804b9a706816aca31e35b11d2aa3080108ef46a5b1f1508819c0a",
+                   "8ec4c3ccdaea336bdeb245636970be01266509b33f3d2642504eaf412206207a",
+                   4096,
+                   "8bfaa4eacff308fdb4a94a5ff25bd9d0c1f84b77f81239f67ff39d6e1ac280c9");
 }
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
