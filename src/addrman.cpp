@@ -66,14 +66,16 @@ int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int nBucket) con
 
 bool AddrInfo::IsTerrible(int64_t nNow) const
 {
-    if (nLastTry && nLastTry >= nNow - 60) // never remove things tried in the last minute
+    if (nNow - nLastTry <= 60) { // never remove things tried in the last minute
         return false;
+    }
 
     if (nTime > nNow + 10 * 60) // came in a flying DeLorean
         return true;
 
-    if (nTime == 0 || nNow - nTime > ADDRMAN_HORIZON_DAYS * 24 * 60 * 60) // not seen in recent history
+    if (nNow - nTime > ADDRMAN_HORIZON_DAYS * 24 * 60 * 60) { // not seen in recent history
         return true;
+    }
 
     if (nLastSuccess == 0 && nAttempts >= ADDRMAN_RETRIES) // tried N times and never a success
         return true;
@@ -557,15 +559,17 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         // periodically update nTime
         bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
         int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
+        if (pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty) {
             pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
+        }
 
         // add services
         pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
         // do not update if no new information is present
-        if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
+        if (addr.nTime <= pinfo->nTime) {
             return false;
+        }
 
         // do not update if the entry was already in the "tried" table
         if (pinfo->fInTried)
