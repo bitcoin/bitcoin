@@ -7,6 +7,8 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -41,5 +43,31 @@ FUZZ_TARGET(crypto_chacha20)
                 const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
                 chacha20.Crypt(input.data(), output.data(), input.size());
             });
+    }
+}
+
+FUZZ_TARGET(crypto_fschacha20)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    auto key_vec = ConsumeFixedLengthByteVector(fuzzed_data_provider, FSCHACHA20_KEYLEN);
+    key_vec.resize(FSCHACHA20_KEYLEN);
+    auto salt_vec = ConsumeFixedLengthByteVector(fuzzed_data_provider, FSCHACHA20_KEYLEN);
+    salt_vec.resize(FSCHACHA20_KEYLEN);
+
+    std::array<std::byte, FSCHACHA20_KEYLEN> key;
+    memcpy(key.data(), key_vec.data(), FSCHACHA20_KEYLEN);
+
+    std::array<std::byte, FSCHACHA20_KEYLEN> salt;
+    memcpy(salt.data(), salt_vec.data(), FSCHACHA20_KEYLEN);
+
+    auto fsc20 = FSChaCha20{key, salt, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 1024)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        auto input = fuzzed_data_provider.ConsumeBytes<std::byte>(fuzzed_data_provider.ConsumeIntegralInRange(0, 4096));
+        std::vector<std::byte> output;
+        output.resize(input.size());
+        fsc20.Crypt(input, output);
     }
 }

@@ -5,8 +5,10 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include <crypto/common.h>
 #include <crypto/chacha20.h>
+#include <crypto/common.h>
+#include <hash.h>
+#include <support/cleanse.h>
 
 #include <string.h>
 
@@ -420,5 +422,22 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         c += 64;
         m += 64;
         prev_block_start_pos = 0;
+    }
+}
+
+void FSChaCha20::Crypt(Span<const std::byte> input, Span<std::byte> output)
+{
+    assert(input.size() == output.size());
+    c20.Crypt(reinterpret_cast<const unsigned char*>(input.data()),
+              reinterpret_cast<unsigned char*>(output.data()), input.size());
+    messages_with_key++;
+
+    if (messages_with_key % rekey_interval == 0) {
+        auto new_key = Hash(rekey_salt, key);
+        memory_cleanse(key.data(), key.size());
+        memcpy(key.data(), &new_key, FSCHACHA20_KEYLEN);
+        c20.SetKey(reinterpret_cast<unsigned char*>(key.data()), key.size());
+        rekey_counter++;
+        set_nonce();
     }
 }

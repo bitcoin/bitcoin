@@ -5,10 +5,15 @@
 #ifndef BITCOIN_CRYPTO_CHACHA20_H
 #define BITCOIN_CRYPTO_CHACHA20_H
 
+#include <crypto/common.h>
+#include <span.h>
+
 #include <array>
 #include <cstddef>
 #include <stdint.h>
 #include <stdlib.h>
+
+static constexpr size_t FSCHACHA20_KEYLEN = 32;
 
 /** A class for ChaCha20 256-bit stream cipher developed by Daniel J. Bernstein
     https://cr.yp.to/chacha/chacha-20080128.pdf */
@@ -39,4 +44,40 @@ public:
     void Crypt(const unsigned char* input, unsigned char* output, size_t bytes);
 };
 
+class FSChaCha20
+{
+private:
+    ChaCha20 c20;
+    size_t rekey_interval;
+    uint32_t messages_with_key;
+    uint64_t rekey_counter;
+    std::array<std::byte, FSCHACHA20_KEYLEN> key;
+    std::array<std::byte, FSCHACHA20_KEYLEN> rekey_salt;
+
+    void set_nonce()
+    {
+        std::array<std::byte, 12> nonce;
+        WriteLE32(reinterpret_cast<unsigned char*>(nonce.data()), uint32_t{0});
+        WriteLE64(reinterpret_cast<unsigned char*>(nonce.data()) + 4, rekey_counter);
+        c20.SetRFC8439Nonce(nonce);
+    }
+
+public:
+    FSChaCha20() = delete;
+    FSChaCha20(const std::array<std::byte, FSCHACHA20_KEYLEN>& key,
+               const std::array<std::byte, FSCHACHA20_KEYLEN>& rekey_salt,
+               size_t rekey_interval)
+        : c20{reinterpret_cast<const unsigned char*>(key.data()), FSCHACHA20_KEYLEN},
+          rekey_interval{rekey_interval},
+          messages_with_key{0},
+          rekey_counter{0},
+          key{key},
+          rekey_salt{rekey_salt}
+    {
+        assert(rekey_interval > 0);
+        set_nonce();
+    }
+
+    void Crypt(Span<const std::byte> input, Span<std::byte> output);
+};
 #endif // BITCOIN_CRYPTO_CHACHA20_H
