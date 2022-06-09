@@ -123,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
     {
-        CWallet wallet(m_node.chain.get(), "", m_args, CreateDummyWalletDatabase());
+        CWallet wallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
         {
             LOCK(wallet.cs_wallet);
             wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -131,13 +131,28 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
+        std::chrono::steady_clock::time_point fake_time;
+        reserver.setNow([&] { fake_time += 60s; return fake_time; });
         reserver.reserve();
-        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
+
+        {
+            CBlockLocator locator;
+            BOOST_CHECK(!WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
+            BOOST_CHECK(locator.IsNull());
+        }
+
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/true);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
         BOOST_CHECK_EQUAL(GetBalance(wallet).m_mine_immature, 100 * COIN);
+
+        {
+            CBlockLocator locator;
+            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
+            BOOST_CHECK(!locator.IsNull());
+        }
     }
 
     // Prune the older block file.

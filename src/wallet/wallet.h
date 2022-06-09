@@ -896,8 +896,11 @@ void MaybeResendWalletTxs(WalletContext& context);
 class WalletRescanReserver
 {
 private:
+    using Clock = std::chrono::steady_clock;
+    using NowFn = std::function<Clock::time_point()>;
     CWallet& m_wallet;
     bool m_could_reserve;
+    NowFn m_now;
 public:
     explicit WalletRescanReserver(CWallet& w) : m_wallet(w), m_could_reserve(false) {}
 
@@ -917,6 +920,10 @@ public:
     {
         return (m_could_reserve && m_wallet.fScanningWallet);
     }
+
+    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); };
+
+    void setNow(NowFn now) { m_now = std::move(now); }
 
     ~WalletRescanReserver()
     {
