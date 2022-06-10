@@ -229,10 +229,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 # It still needs to exist and be None in order for tests to work however.
                 self.options.descriptors = None
 
+        PortSeed.n = self.options.port_seed
+
     def setup(self):
         """Call this method to start up the test framework object with options set."""
-
-        PortSeed.n = self.options.port_seed
 
         check_json_precision()
 
