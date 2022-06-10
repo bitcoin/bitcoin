@@ -1075,16 +1075,14 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
 
 static UniValue mockscheduler(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-        RPCHelpMan{"mockscheduler",
+    RPCHelpMan{"mockscheduler",
         "\nBump the scheduler into the future (-regtest only)\n",
         {
             {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
         },
         RPCResults{},
         RPCExamples{""},
-        }.ToString());
+    }.Check(request);
 
     if (!Params().IsMockableChain()) {
         throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
