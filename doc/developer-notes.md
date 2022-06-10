@@ -947,15 +947,20 @@ Threads and synchronization
 - Prefer `Mutex` type to `RecursiveMutex` one.
 
 - Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
-  get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
-  run-time asserts in function definitions (`AssertLockNotHeld()` can be omitted if `LOCK()` is
-  called unconditionally after it because `LOCK()` does the same check as
-  `AssertLockNotHeld()` internally, for non-recursive mutexes):
+  get compile-time warnings about potential race conditions or deadlocks in code.
 
   - In functions that are declared separately from where they are defined, the
     thread safety annotations should be added exclusively to the function
     declaration. Annotations on the definition could lead to false positives
     (lack of compile failure) at call sites between the two.
+
+  - Prefer locks that are in a class rather than global, and that are
+    internal to a class (private or protected) rather than public.
+
+  - Combine annotations in function declarations with run-time asserts in
+    function definitions (`AssertLockNotHeld()` can be omitted if `LOCK()` is
+    called unconditionally after it because `LOCK()` does the same check as
+    `AssertLockNotHeld()` internally, for non-recursive mutexes):
 
 ```C++
 // txmempool.h
@@ -980,21 +985,37 @@ void CTxMemPool::UpdateTransactionsFromBlock(...)
 
 ```C++
 // validation.h
-class ChainstateManager
+class CChainState
 {
+protected:
+    ...
+    Mutex m_chainstate_mutex;
+    ...
 public:
     ...
-    bool ProcessNewBlock(...) LOCKS_EXCLUDED(::cs_main);
+    bool ActivateBestChain(
+        BlockValidationState& state,
+        std::shared_ptr<const CBlock> pblock = nullptr)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
+        LOCKS_EXCLUDED(::cs_main);
+    ...
+    bool PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
+        LOCKS_EXCLUDED(::cs_main);
     ...
 }
 
 // validation.cpp
-bool ChainstateManager::ProcessNewBlock(...)
+bool CChainState::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 {
+    AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
-    ...
-    LOCK(::cs_main);
-    ...
+    {
+        LOCK(cs_main);
+        ...
+    }
+
+    return ActivateBestChain(state, std::shared_ptr<const CBlock>());
 }
 ```
 

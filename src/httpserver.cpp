@@ -159,7 +159,7 @@ static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
 //! List of 'external' RPC users (global variable, used by httprpc)
 std::vector<std::string> g_external_usernames;
 //! Handlers for (sub)paths
-static Mutex g_httppathhandlers_mutex;
+static GlobalMutex g_httppathhandlers_mutex;
 static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_mutex);
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;

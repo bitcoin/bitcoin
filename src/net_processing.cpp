@@ -332,7 +332,7 @@ struct Peer {
         return m_tx_relay.get();
     };
 
-    TxRelay* GetInvRelay() LOCKS_EXCLUDED(m_tx_relay_mutex)
+    TxRelay* GetInvRelay() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_relay_mutex)
     {
         return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
     }

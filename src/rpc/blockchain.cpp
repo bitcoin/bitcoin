@@ -77,7 +77,7 @@ struct CUpdatedBlock
     int height;
 };
 
-static Mutex cs_blockchange;
+static GlobalMutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
