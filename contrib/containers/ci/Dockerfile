@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     cmake \
     git \
     g++ \
+    gettext \
     wget \
     unzip \
     libtool \
