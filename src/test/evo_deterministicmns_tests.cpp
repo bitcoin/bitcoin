@@ -245,7 +245,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 
     // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should fail
     auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-    EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
+    Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr);
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     // Mining a block with a DIP3 transaction should succeed now
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-    BOOST_ASSERT(EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
@@ -470,7 +470,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
     SignTransaction(*m_node.mempool, tx_collateral, coinbaseKey);
 
     auto block = std::make_shared<CBlock>(CreateBlock({tx_collateral}, coinbaseKey));
-    BOOST_ASSERT(EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
@@ -600,7 +600,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     SignTransaction(*m_node.mempool, tx_collateral, coinbaseKey);
 
     auto block = std::make_shared<CBlock>(CreateBlock({tx_collateral}, coinbaseKey));
-    BOOST_ASSERT(EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
@@ -631,7 +631,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     auto tx_reg_hash = tx_reg.GetHash();
 
     block = std::make_shared<CBlock>(CreateBlock({tx_reg}, coinbaseKey));
-    BOOST_ASSERT(EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
@@ -643,7 +643,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     auto proUpRevTx = CreateProUpRevTx(*m_node.mempool, collateral_utxos, tx_reg_hash, operatorKey, collateralKey);
 
     block = std::make_shared<CBlock>(CreateBlock({proUpRevTx}, coinbaseKey));
-    BOOST_ASSERT(EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr));
+    BOOST_ASSERT(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 3);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());

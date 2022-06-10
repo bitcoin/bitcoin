@@ -88,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Prune the older block file.
     {
         LOCK(cs_main);
-        EnsureChainman(m_node).PruneOneBlockFile(oldTip->GetBlockPos().nFile);
+        Assert(m_node.chainman)->PruneOneBlockFile(oldTip->GetBlockPos().nFile);
     }
     UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Prune the remaining block file.
     {
         LOCK(cs_main);
-        EnsureChainman(m_node).PruneOneBlockFile(newTip->GetBlockPos().nFile);
+        Assert(m_node.chainman)->PruneOneBlockFile(newTip->GetBlockPos().nFile);
     }
     UnlinkPrunedFiles({newTip->GetBlockPos().nFile});
 
@@ -151,7 +151,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
     // Prune the older block file.
     {
         LOCK(cs_main);
-        EnsureChainman(m_node).PruneOneBlockFile(oldTip->GetBlockPos().nFile);
+        Assert(m_node.chainman)->PruneOneBlockFile(oldTip->GetBlockPos().nFile);
     }
     UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 

@@ -56,10 +56,4 @@ struct NodeContext {
     ~NodeContext();
 };
 
-inline ChainstateManager& EnsureChainman(const NodeContext& node)
-{
-    assert(node.chainman);
-    return *node.chainman;
-}
-
 #endif // BITCOIN_NODE_CONTEXT_H
