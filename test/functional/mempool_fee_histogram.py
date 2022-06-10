@@ -15,11 +15,11 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    ceildiv,
 )
 
 def get_actual_fee_rate(fee_in_satoshis, vsize):
-    fee_rate = ceildiv(fee_in_satoshis, vsize)
+    # NOTE: Must round down, unlike ceildiv/get_fee
+    fee_rate = fee_in_satoshis // vsize
     return str(fee_rate)
 
 def get_tx_details(node, txid):
