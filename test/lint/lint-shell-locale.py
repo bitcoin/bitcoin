@@ -41,7 +41,7 @@ def main():
     exit_code = 0
     shell_files = get_shell_files_list()
     for file_path in shell_files:
-        if re.search('src/(dashbls|secp256k1|minisketch|univalue)/', file_path):
+        if re.search('src/(dashbls|secp256k1|minisketch)/', file_path):
             continue
 
         with open(file_path, 'r', encoding='utf-8') as file_obj:

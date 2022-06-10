@@ -45,7 +45,6 @@ EXCLUDE_DIRS = [
     "src/leveldb/",
     "src/minisketch",
     "src/secp256k1/",
-    "src/univalue/",
 ]
 
 INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']

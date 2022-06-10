@@ -68,7 +68,7 @@ def main():
     ]
     files = get_files(files_cmd)
     # remove everything that doesn't match this regex
-    reg = re.compile(r'src/[dashbls,immer,leveldb,secp256k1,minisketch,univalue]')
+    reg = re.compile(r'src/[dashbls,immer,leveldb,secp256k1,minisketch]')
     files[:] = [file for file in files if not reg.match(file)]
 
     # build the `shellcheck` command

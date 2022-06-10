@@ -26,7 +26,6 @@ export COMMIT_RANGE
 test/lint/git-subtree-check.sh src/crypto/ctaes
 test/lint/git-subtree-check.sh src/secp256k1
 test/lint/git-subtree-check.sh src/minisketch
-test/lint/git-subtree-check.sh src/univalue
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/check-doc.py
 test/lint/all-lint.py
