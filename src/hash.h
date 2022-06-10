@@ -96,20 +96,12 @@ inline uint160 Hash160(const T1& in1)
 }
 
 /** A writer stream (for serialization) that computes a 256-bit hash. */
-class CHashWriter
+class HashWriter
 {
 private:
     CSHA256 ctx;
 
-    const int nType;
-    const int nVersion;
 public:
-
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
-
-    int GetType() const { return nType; }
-    int GetVersion() const { return nVersion; }
-
     void write(Span<const std::byte> src)
     {
         ctx.Write(UCharCast(src.data()), src.size());
@@ -143,6 +135,26 @@ public:
         uint256 result = GetHash();
         return ReadLE64(result.begin());
     }
+
+    template <typename T>
+    HashWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
+class CHashWriter : public HashWriter
+{
+private:
+    const int nType;
+    const int nVersion;
+
+public:
+    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
+
+    int GetType() const { return nType; }
+    int GetVersion() const { return nVersion; }
 
     template<typename T>
     CHashWriter& operator<<(const T& obj) {
