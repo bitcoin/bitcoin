@@ -301,6 +301,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/partially_downloaded_block.cpp \
  test/fuzz/policy_estimator.cpp \
  test/fuzz/policy_estimator_io.cpp \
+ test/fuzz/poolresource.cpp \
  test/fuzz/pow.cpp \
  test/fuzz/prevector.cpp \
  test/fuzz/primitives_transaction.cpp \
