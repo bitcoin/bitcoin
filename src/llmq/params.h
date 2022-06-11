@@ -90,8 +90,9 @@ struct LLMQParams {
     // Number of quorums to consider "active" for signing sessions
     int signingActiveQuorumCount;
 
-    // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections. This
-    // should be at least one more then the active quorums set.
+    // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections.
+    // For non-rotated quorums it should be at least one more than the active quorums set.
+    // For rotated quorums it should be equal to 2 x active quorums set.
     int keepOldConnections;
 
     // How many members should we try to send all sigShares to before we give up.
