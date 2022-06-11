@@ -85,14 +85,12 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool has_filtered_address = false;
-    CTxDestination filtered_address = CNoDestination();
+    std::optional<CTxDestination> filtered_address{std::nullopt};
     if (!by_label && !params[3].isNull() && !params[3].get_str().empty()) {
         if (!IsValidDestinationString(params[3].get_str())) {
             throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
         }
         filtered_address = DecodeDestination(params[3].get_str());
-        has_filtered_address = true;
     }
 
     // Tally
@@ -106,23 +104,21 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
         // Coinbase with less than 1 confirmation is no longer in the main chain
         if ((wtx.IsCoinBase() && (nDepth < 1))
-            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
-        {
+            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase)) {
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout)
-        {
+        for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
 
-            if (has_filtered_address && !(filtered_address == address)) {
+            if (filtered_address && !(filtered_address == address)) {
                 continue;
             }
 
             isminefilter mine = wallet.IsMine(address);
-            if(!(mine & filter))
+            if (!(mine & filter))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -148,34 +144,27 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         bool fIsWatchonly = false;
-        if (it != mapTally.end())
-        {
+        if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
             fIsWatchonly = (*it).second.fIsWatchonly;
         }
 
-        if (by_label)
-        {
+        if (by_label) {
             tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
             _item.nConf = std::min(_item.nConf, nConf);
             _item.fIsWatchonly = fIsWatchonly;
-        }
-        else
-        {
+        } else {
             UniValue obj(UniValue::VOBJ);
-            if(fIsWatchonly)
-                obj.pushKV("involvesWatchonly", true);
+            if (fIsWatchonly) obj.pushKV("involvesWatchonly", true);
             obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
-            if (it != mapTally.end())
-            {
-                for (const uint256& _item : (*it).second.txids)
-                {
+            if (it != mapTally.end()) {
+                for (const uint256& _item : (*it).second.txids) {
                     transactions.push_back(_item.GetHex());
                 }
             }
@@ -184,18 +173,16 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         }
     };
 
-    if (has_filtered_address) {
-        const auto& entry = wallet.FindAddressBookEntry(filtered_address, /*allow_change=*/false);
-        if (entry) func(filtered_address, entry->GetLabel(), entry->purpose, /*is_change=*/false);
+    if (filtered_address) {
+        const auto& entry = wallet.FindAddressBookEntry(*filtered_address, /*allow_change=*/false);
+        if (entry) func(*filtered_address, entry->GetLabel(), entry->purpose, /*is_change=*/false);
     } else {
         // No filtered addr, walk-through the addressbook entry
         wallet.ForEachAddrBookEntry(func);
     }
 
-    if (by_label)
-    {
-        for (const auto& entry : label_tally)
-        {
+    if (by_label) {
+        for (const auto& entry : label_tally) {
             CAmount nAmount = entry.second.nAmount;
             int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
