@@ -153,6 +153,8 @@ class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 public:
     void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
 
+    void ProcessDSQueue(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+
     void DoMaintenance();
 };
 

@@ -12,6 +12,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
+#include <coinjoin/client.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -58,6 +59,68 @@ BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
     static_assert(!CCoinJoin::IsCollateralAmount(0.00040001 * COIN));
     static_assert(!CCoinJoin::IsCollateralAmount(0.00100000 * COIN));
     static_assert(!CCoinJoin::IsCollateralAmount(0.00100001 * COIN));
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_pending_dsa_request_tests)
+{
+    CPendingDsaRequest dsa_request;
+    BOOST_CHECK(dsa_request.GetAddr() == CService());
+    BOOST_CHECK(dsa_request.GetDSA() == CCoinJoinAccept());
+    BOOST_CHECK_EQUAL(dsa_request.IsExpired(), true);
+    CPendingDsaRequest dsa_request_2;
+    BOOST_CHECK(dsa_request == dsa_request_2);
+    CCoinJoinAccept cja;
+    cja.nDenom = 4;
+    CService cserv(CNetAddr(), 1111);
+    CPendingDsaRequest custom_request(cserv, cja);
+    BOOST_CHECK(custom_request.GetAddr() == cserv);
+    BOOST_CHECK(custom_request.GetDSA() == cja);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), false);
+    SetMockTime(GetTime() + 15);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), false);
+    SetMockTime(GetTime() + 1);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), true);
+
+    BOOST_CHECK(dsa_request != custom_request);
+    BOOST_CHECK(!(dsa_request == custom_request));
+    BOOST_CHECK(!dsa_request);
+    BOOST_CHECK(custom_request);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_dstxin_tests)
+{
+    CTxDSIn txin;
+    BOOST_CHECK(txin.prevPubKey == CScript());
+    BOOST_CHECK_EQUAL(txin.fHasSig, false);
+    BOOST_CHECK_EQUAL(txin.nRounds, -10);
+    CTxDSIn custom_txin(txin, CScript(4), -9);
+    BOOST_CHECK(custom_txin.prevPubKey == CScript(4));
+    BOOST_CHECK_EQUAL(custom_txin.fHasSig, false);
+    BOOST_CHECK_EQUAL(custom_txin.nRounds, -9);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_status_update_tests)
+{
+    CCoinJoinStatusUpdate cjsu;
+    BOOST_CHECK_EQUAL(cjsu.nSessionID, 0);
+    BOOST_CHECK_EQUAL(cjsu.nState, POOL_STATE_IDLE);
+    BOOST_CHECK_EQUAL(cjsu.nEntriesCount, 0);
+    BOOST_CHECK_EQUAL(cjsu.nStatusUpdate, STATUS_ACCEPTED);
+    BOOST_CHECK_EQUAL(cjsu.nMessageID, MSG_NOERR);
+    CCoinJoinStatusUpdate custom_cjsu(1, POOL_STATE_QUEUE, 1, STATUS_REJECTED, ERR_QUEUE_FULL);
+    BOOST_CHECK_EQUAL(custom_cjsu.nSessionID, 1);
+    BOOST_CHECK_EQUAL(custom_cjsu.nState, POOL_STATE_QUEUE);
+    BOOST_CHECK_EQUAL(custom_cjsu.nEntriesCount, 1);
+    BOOST_CHECK_EQUAL(custom_cjsu.nStatusUpdate, STATUS_REJECTED);
+    BOOST_CHECK_EQUAL(custom_cjsu.nMessageID, ERR_QUEUE_FULL);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_accept_tests)
+{
+    CCoinJoinAccept cja;
+    BOOST_CHECK_EQUAL(cja.nDenom, 0);
+    BOOST_CHECK_EQUAL(cja.txCollateral.GetHash(), CMutableTransaction().GetHash());
+    // CMutableTransaction custom_cmt()
 }
 
 class CTransactionBuilderTestSetup : public TestChain100Setup
@@ -141,6 +204,19 @@ public:
         return tallyItem;
     }
 };
+
+BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
+{
+    BOOST_CHECK_EQUAL(coinJoinClientManagers.size(), 1);
+    auto& cj_man = coinJoinClientManagers.begin()->second;
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
+    BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);
+    BOOST_CHECK_EQUAL(cj_man->StartMixing(), false);
+    cj_man->StopMixing();
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
 {

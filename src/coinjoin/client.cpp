@@ -44,70 +44,72 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        CCoinJoinQueue dsq;
-        vRecv >> dsq;
+        CCoinJoinClientQueueManager::ProcessDSQueue(pfrom, msg_type, vRecv, connman, enable_bip61);
+    }
+}
 
-        {
-            TRY_LOCK(cs_vecqueue, lockRecv);
-            if (!lockRecv) return;
+void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+{
+    CCoinJoinQueue dsq;
+    vRecv >> dsq;
 
-            // process every dsq only once
-            for (const auto& q : vecCoinJoinQueue) {
-                if (q == dsq) {
-                    return;
-                }
-                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
-                    // no way the same mn can send another dsq with the same readiness this soon
-                    LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
-                    return;
-                }
-            }
-        } // cs_vecqueue
+    {
+        TRY_LOCK(cs_vecqueue, lockRecv);
+        if (!lockRecv) return;
 
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
-
-        if (dsq.IsTimeOutOfBounds()) return;
-
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
-        if (!dmn) return;
-
-        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 10);
-            return;
-        }
-
-        // if the queue is ready, submit if we can
-        if (dsq.fReady && ranges::any_of(coinJoinClientManagers,
-                                         [&dmn, &connman](const auto& pair){ return pair.second->TrySubmitDenominate(dmn->pdmnState->addr, connman); })) {
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
-            return;
-        } else {
-            int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
-            // don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
-                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
+        // process every dsq only once
+        for (const auto& q : vecCoinJoinQueue) {
+            if (q == dsq) {
                 return;
             }
-
-            mmetaman.AllowMixing(dmn->proTxHash);
-
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
-
-            ranges::any_of(coinJoinClientManagers,
-                           [&dsq](const auto& pair){ return pair.second->MarkAlreadyJoinedQueueAsTried(dsq); });
-
-            {
-                TRY_LOCK(cs_vecqueue, lockRecv);
-                if (!lockRecv) return;
-                vecCoinJoinQueue.push_back(dsq);
+            if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                // no way the same mn can send another dsq with the same readiness this soon
+                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                return;
             }
-            dsq.Relay(connman);
+        }
+    } // cs_vecqueue
+
+    LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
+
+    if (dsq.IsTimeOutOfBounds()) return;
+
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+    if (!dmn) return;
+
+    if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 10);
+        return;
+    }
+
+    // if the queue is ready, submit if we can
+    if (dsq.fReady && ranges::any_of(coinJoinClientManagers,
+                                     [&dmn, &connman](const auto& pair){ return pair.second->TrySubmitDenominate(dmn->pdmnState->addr, connman); })) {
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+        return;
+    } else {
+        int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+        int64_t nDsqThreshold = mmetaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
+        // don't allow a few nodes to dominate the queuing process
+        if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
+            return;
         }
 
+        mmetaman.AllowMixing(dmn->proTxHash);
+
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+
+        ranges::any_of(coinJoinClientManagers,
+                       [&dsq](const auto& pair){ return pair.second->MarkAlreadyJoinedQueueAsTried(dsq); });
+
+        {TRY_LOCK(cs_vecqueue, lockRecv);
+        if (!lockRecv) return;
+        vecCoinJoinQueue.push_back(dsq);}
+        dsq.Relay(connman);
     }
 }
 
