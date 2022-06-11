@@ -29,16 +29,14 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    get_datadir_path,
 )
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
 
-
-import os
 import re
+
 
 class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -310,7 +308,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             else:
                 file = "test.csv"
 
-            path = os.path.join(get_datadir_path(self.options.tmpdir, 1), file)
+            path = str(self.nodes[1].datadir_path / file)
             self.nodes[1].dumpcoinstats(path, cumulative)
 
             with open(path, 'r', encoding='utf-8') as f:

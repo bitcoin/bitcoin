@@ -49,7 +49,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
-    get_datadir_path,
 )
 from test_framework.wallet import MiniWallet
 
@@ -573,7 +572,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_vin_contains_prevout(3)
 
         self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
-        datadir = get_datadir_path(self.options.tmpdir, 0)
+        datadir = self.nodes[0].datadir_path
 
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")

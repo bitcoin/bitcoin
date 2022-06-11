@@ -11,7 +11,6 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_datadir_path
 import os
 
 
@@ -26,7 +25,7 @@ class AbortNodeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.generate(self.nodes[0], 3, sync_fun=self.no_op)
-        datadir = get_datadir_path(self.options.tmpdir, 0)
+        datadir = self.nodes[0].datadir_path
 
         # Deleting the undo file will result in reorg failure
         os.unlink(os.path.join(datadir, self.chain, 'blocks', 'rev00000.dat'))
