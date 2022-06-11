@@ -2348,17 +2348,16 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
     }
 }
 
-std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) const
+std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<AddrBookFilter>& _filter) const
 {
     AssertLockHeld(cs_wallet);
-    std::set<CTxDestination> result;
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book)
-    {
-        if (item.second.IsChange()) continue;
-        const CTxDestination& address = item.first;
+    std::vector<CTxDestination> result;
+    AddrBookFilter filter = _filter ? *_filter : AddrBookFilter();
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
+        if (filter.ignore_change && item.second.IsChange()) continue;
         const std::string& strName = item.second.GetLabel();
-        if (strName == label)
-            result.insert(address);
+        if (filter.m_op_label && *filter.m_op_label != strName) continue;
+        result.emplace_back(item.first);
     }
     return result;
 }
