@@ -958,7 +958,7 @@ RPCHelpMan signrawtransactionwithwallet()
 }
 
 // Definition of allowed formats of specifying transaction outputs in
-// `send` and `walletcreatefundedpsbt` RPCs.
+// `bumpfee`, `psbtbumpfee`, `send` and `walletcreatefundedpsbt` RPCs.
 static std::vector<RPCArg> OutputsDoc()
 {
     return
@@ -1013,7 +1013,12 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
                              "are replaceable).\n"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                     "\"" + FeeModes("\"\n\"") + "\""},
+                             "\"" + FeeModes("\"\n\"") + "\""},
+                    {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "New outputs (key-value pairs) which will replace\n"
+                             "the original ones, if provided. Each address can only appear once and there can\n"
+                             "only be one \"data\" object.\n",
+                        OutputsDoc(),
+                        RPCArgOptions{.skip_type_check = true}},
                 },
                 RPCArgOptions{.oneline_description="options"}},
         },
@@ -1050,6 +1055,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
+    std::vector<CTxOut> outputs;
 
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
@@ -1060,6 +1066,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"outputs", UniValueType()}, // will be checked by AddOutputs()
             },
             true, true);
 
@@ -1073,6 +1080,16 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
+
+        // Prepare new outputs by creating a temporary tx and calling AddOutputs().
+        if (!options["outputs"].isNull()) {
+            if (options["outputs"].isArray() && options["outputs"].empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array");
+            }
+            CMutableTransaction tempTx;
+            AddOutputs(tempTx, options["outputs"]);
+            outputs = tempTx.vout;
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -1090,7 +1107,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CMutableTransaction mtx;
     feebumper::Result res;
     // Targeting feerate bump.
-    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt);
+    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:

@@ -38,6 +38,13 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
   */
 void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins);
 
+
+/** Normalize univalue-represented inputs and add them to the transaction */
+void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, bool rbf);
+
+/** Normalize univalue-represented outputs and add them to the transaction */
+void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
+
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf);
 
