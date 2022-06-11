@@ -2305,13 +2305,13 @@ static RPCHelpMan scantxoutset()
                         "[scanobjects,...]"},
         },
         {
-            RPCResult{"When action=='abort'", RPCResult::Type::BOOL, "", ""},
-            RPCResult{"When action=='status' and no scan is in progress", RPCResult::Type::NONE, "", ""},
-            RPCResult{"When action=='status' and scan is in progress", RPCResult::Type::OBJ, "", "",
+            RPCResult{"When action=='abort'", RPCResult::Type::BOOL, "success", "True if scan will be aborted (not necessarily before this RPC returns), or false if there is no scan to abort"},
+            RPCResult{"When action=='status' and no scan is in progress - possibly already completed", RPCResult::Type::NONE, "", ""},
+            RPCResult{"When action=='status' and a scan is currently in progress", RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "progress", "The scan progress"},
+                {RPCResult::Type::NUM, "progress", "Approximate percent complete"},
             }},
-            RPCResult{"When action=='start'", RPCResult::Type::OBJ, "", "", {
+            RPCResult{"When action=='start'; only returns after scan completes", RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::BOOL, "success", "Whether the scan was completed"},
                 {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs scanned"},
                 {RPCResult::Type::NUM, "height", "The current block height (index)"},
