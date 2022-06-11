@@ -138,26 +138,12 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    // Create m_address_book iterator
-    // If we aren't filtering, go from begin() to end()
-    auto start = wallet.m_address_book.begin();
-    auto end = wallet.m_address_book.end();
-    // If we are filtering, find() the applicable entry
-    if (has_filtered_address) {
-        start = wallet.m_address_book.find(filtered_address);
-        if (start != end) {
-            end = std::next(start);
-        }
-    }
+    const auto& func = [&](const CTxDestination& address, const std::string& label, const std::string& purpose, bool is_change) {
+        if (is_change) return; // no change addresses
 
-    for (auto item_it = start; item_it != end; ++item_it)
-    {
-        if (item_it->second.IsChange()) continue;
-        const CTxDestination& address = item_it->first;
-        const std::string& label = item_it->second.GetLabel();
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
-            continue;
+            return;
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
@@ -196,6 +182,14 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             obj.pushKV("txids", transactions);
             ret.push_back(obj);
         }
+    };
+
+    if (has_filtered_address) {
+        const auto& entry = wallet.FindAddressBookEntry(filtered_address, /*allow_change=*/false);
+        if (entry) func(filtered_address, entry->GetLabel(), entry->purpose, /*is_change=*/false);
+    } else {
+        // No filtered addr, walk-through the addressbook entry
+        wallet.ForEachAddrBookEntry(func);
     }
 
     if (by_label)
