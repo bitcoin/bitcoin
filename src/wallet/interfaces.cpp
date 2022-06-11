@@ -191,18 +191,16 @@ public:
         std::string* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto it = m_wallet->m_address_book.find(dest);
-        if (it == m_wallet->m_address_book.end() || it->second.IsChange()) {
-            return false;
-        }
+        const auto& entry = m_wallet->FindAddressBookEntry(dest, /*allow_change=*/false);
+        if (!entry) return false; // addr not found
         if (name) {
-            *name = it->second.GetLabel();
+            *name = entry->GetLabel();
         }
         if (is_mine) {
             *is_mine = m_wallet->IsMine(dest);
         }
         if (purpose) {
-            *purpose = it->second.purpose;
+            *purpose = entry->purpose;
         }
         return true;
     }
