@@ -204,14 +204,14 @@ public:
         }
         return true;
     }
-    std::vector<WalletAddress> getAddresses() override
+    std::vector<WalletAddress> getAddresses() const override
     {
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletAddress> result;
-        for (const auto& item : m_wallet->m_address_book) {
-            if (item.second.IsChange()) continue;
-            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
-        }
+        m_wallet->ForEachAddrBookEntry([&](const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change) EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet) {
+            if (is_change) return;
+            result.emplace_back(dest, m_wallet->IsMine(dest), label, purpose);
+        });
         return result;
     }
     std::vector<std::string> getAddressReceiveRequests() override {
