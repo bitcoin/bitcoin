@@ -2348,17 +2348,28 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
     }
 }
 
+void CWallet::ForEachAddrBookEntry(const ListAddrBookFunc& func) const
+{
+    AssertLockHeld(cs_wallet);
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
+        const auto& entry = item.second;
+        func(item.first, entry.GetLabel(), entry.purpose, entry.IsChange());
+    }
+}
+
 std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<AddrBookFilter>& _filter) const
 {
     AssertLockHeld(cs_wallet);
     std::vector<CTxDestination> result;
     AddrBookFilter filter = _filter ? *_filter : AddrBookFilter();
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
-        if (filter.ignore_change && item.second.IsChange()) continue;
-        const std::string& strName = item.second.GetLabel();
-        if (filter.m_op_label && *filter.m_op_label != strName) continue;
-        result.emplace_back(item.first);
-    }
+    ForEachAddrBookEntry([&result, &filter](const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change) {
+        // Filter by change
+        if (filter.ignore_change && is_change) return;
+        // Filter by label
+        if (filter.m_op_label && *filter.m_op_label != label) return;
+        // All good
+        result.emplace_back(dest);
+    });
     return result;
 }
 
