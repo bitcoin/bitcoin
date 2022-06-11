@@ -1,8 +1,8 @@
 // Copyright 2016 Wladimir J. van der Laan
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
-#ifndef UNIVALUE_UTFFILTER_H
-#define UNIVALUE_UTFFILTER_H
+#ifndef BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
+#define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
 
 #include <string>
 
@@ -116,4 +116,4 @@ private:
     }
 };
 
-#endif
+#endif // BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
