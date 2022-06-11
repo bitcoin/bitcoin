@@ -924,7 +924,7 @@ static void gobject_getcurrentvotes_help(const JSONRPCRequest& request)
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "object id"},
             {"txid", RPCArg::Type::STR_HEX, /* default */ "", "masternode collateral txid"},
-            {"vout", RPCArg::Type::STR, /* default */ "", "masternode collateral output index, required if <txid> presents"},
+            {"vout", RPCArg::Type::STR, /* default */ "", "masternode collateral output index, required if <txid> present"},
         },
         RPCResults{},
         RPCExamples{""}
