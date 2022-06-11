@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QRGeneralImageWidget" name="lblQRCode">
+    <widget class="QRImageWidget" name="lblQRCode">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -115,9 +115,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QRGeneralImageWidget</class>
+   <class>QRImageWidget</class>
    <extends>QLabel</extends>
-   <header>qt/qrdialog.h</header>
+   <header>qt/qrimagewidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
