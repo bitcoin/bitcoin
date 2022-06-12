@@ -403,7 +403,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 GetBlockHash() const
+    uint256 ConstructBlockHash() const
     {
         CBlockHeader block;
         block.nVersion = nVersion;
@@ -415,6 +415,7 @@ public:
         return block.GetHash();
     }
 
+    uint256 GetBlockHash() = delete;
     std::string ToString() = delete;
 };
 
