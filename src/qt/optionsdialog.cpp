@@ -11,6 +11,7 @@
 
 #include <qt/appearancewidget.h>
 #include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -215,6 +216,11 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
+void OptionsDialog::setClientModel(ClientModel* client_model)
+{
+    m_client_model = client_model;
+}
+
 void OptionsDialog::setModel(OptionsModel *_model)
 {
     this->model = _model;
@@ -393,14 +399,15 @@ void OptionsDialog::setOkButtonState(bool fState)
 
 void OptionsDialog::on_resetButton_clicked()
 {
-    if(model)
-    {
+    if (model) {
         // confirmation dialog
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
+            tr("Client restart required to activate changes.") + "<br><br>" +
+            tr("Current settings will be backed up at \"%1\".").arg(m_client_model->dataDir()) + "<br><br>" +
+            tr("Client will be shut down. Do you want to proceed?"),
             QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
-        if(btnRetVal == QMessageBox::Cancel)
+        if (btnRetVal == QMessageBox::Cancel)
             return;
 
         /* reset all options and close GUI */
