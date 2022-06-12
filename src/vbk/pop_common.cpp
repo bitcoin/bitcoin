@@ -31,10 +31,10 @@ void SetPopConfig(const altintegration::Config& newConfig)
     config = std::make_shared<altintegration::Config>(newConfig);
 }
 
-void SetPop(std::shared_ptr<altintegration::PayloadsStorage> payloads_provider, std::shared_ptr<altintegration::BlockReader> block_provider)
+void SetPop(std::shared_ptr<altintegration::PayloadsStorage> payloads_provider, std::shared_ptr<altintegration::BlockReader> block_provider, std::shared_ptr<altintegration::EthashCache> ethash_cache, std::shared_ptr<altintegration::ProgpowHeaderCache> progpow_header_cache)
 {
     assert(config && "Config is not initialized. Invoke SetPopConfig.");
-    app = altintegration::PopContext::create(config, payloads_provider, block_provider);
+    app = altintegration::PopContext::create(config, payloads_provider, block_provider, ethash_cache, progpow_header_cache);
 }
 
 std::string toPrettyString(const altintegration::PopContext& pop)

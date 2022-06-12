@@ -11,7 +11,9 @@
 #include <limits>
 #include <shutdown.h>
 #include <validation.h>
+#include <vbk/adaptors/ethash_cache_provider.hpp>
 #include <vbk/adaptors/payloads_provider.hpp>
+#include <vbk/adaptors/progpow_header_cache_provider.hpp>
 #include <veriblock/pop.hpp>
 
 
@@ -35,7 +37,9 @@ void InitPopContext(CDBWrapper& db)
 {
     auto payloads_provider = std::make_shared<PayloadsProvider>(db);
     auto block_provider = std::make_shared<BlockReader>(db);
-    SetPop(payloads_provider, block_provider);
+    // auto ethash_cache = std::make_shared<EthashCache>(db);
+    auto progpow_header_cache = std::make_shared<ProgpowHeaderCache>(db);
+    SetPop(payloads_provider, block_provider, nullptr, progpow_header_cache);
 }
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
