@@ -178,7 +178,6 @@ public:
 
         size_t cnt = ReadCompactSize(s);
         for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
-            uint256 hash;
             CFinalCommitment qc;
             ::Unserialize(s, qc);
             lastCommitmentPerIndex.push_back(std::move(qc));
