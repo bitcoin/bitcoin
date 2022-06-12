@@ -1336,6 +1336,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         {"-zmqpubrawblock",         true},
         {"-zmqpubrawtx",            true},
         {"-zmqpubsequence",         true},
+        {"-zmqpubhashwallettx",     true},
+        {"-zmqpubrawwallettx",      true},
     }) {
         for (const std::string& socket_addr : args.GetArgs(arg)) {
             std::string host_out;
