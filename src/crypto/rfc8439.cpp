@@ -57,14 +57,23 @@ std::array<std::byte, POLY1305_KEYLEN> GetPoly1305Key(ChaCha20& c20)
     return polykey;
 }
 
-void RFC8439Crypt(ChaCha20& c20, Span<const std::byte> in_bytes, Span<std::byte> out_bytes)
+void RFC8439Crypt(ChaCha20& c20, const std::vector<Span<const std::byte>>& in_bytes, Span<std::byte> out_bytes)
 {
-    assert(in_bytes.size() == out_bytes.size());
+    size_t total_bytes = 0;
+    for (auto in: in_bytes) {
+        total_bytes += in.size();
+    }
+    assert(total_bytes == out_bytes.size());
     c20.SeekRFC8439(1);
-    c20.Crypt(reinterpret_cast<const unsigned char*>(in_bytes.data()), reinterpret_cast<unsigned char*>(out_bytes.data()), in_bytes.size());
+
+    auto write_pos = out_bytes.data();
+    for (auto in: in_bytes) {
+        c20.Crypt(reinterpret_cast<const unsigned char*>(in.data()), reinterpret_cast<unsigned char*>(write_pos), in.size());
+        write_pos += in.size();
+    }
 }
 
-RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, Span<const std::byte> plaintext)
+RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, const std::vector<Span<const std::byte>>& plaintexts)
 {
     assert(key.size() == RFC8439_KEYLEN);
     RFC8439Encrypted ret;
@@ -74,8 +83,13 @@ RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte>
 
     std::array<std::byte, POLY1305_KEYLEN> polykey{GetPoly1305Key(c20)};
 
-    ret.ciphertext.resize(plaintext.size());
-    RFC8439Crypt(c20, plaintext, ret.ciphertext);
+    size_t total_bytes = 0;
+    for (auto plaintext: plaintexts) {
+        total_bytes += plaintext.size();
+    }
+
+    ret.ciphertext.resize(total_bytes);
+    RFC8439Crypt(c20, plaintexts, ret.ciphertext);
     ret.tag = ComputeRFC8439Tag(polykey, aad, ret.ciphertext);
     return ret;
 }
@@ -101,6 +115,8 @@ RFC8439Decrypted RFC8439Decrypt(Span<const std::byte> aad, Span<const std::byte>
 
     ret.success = true;
     ret.plaintext.resize(encrypted.ciphertext.size());
-    RFC8439Crypt(c20, encrypted.ciphertext, ret.plaintext);
+
+    std::vector<Span<const std::byte>> ins{encrypted.ciphertext};
+    RFC8439Crypt(c20, ins, ret.plaintext);
     return ret;
 }

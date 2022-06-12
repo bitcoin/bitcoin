@@ -807,8 +807,6 @@ static void TestBIP324CipherSuite(const std::string& hex_input, const std::strin
 
 BOOST_AUTO_TEST_CASE(bip324_cipher_suite_testvectors)
 {
-    /* test bip324 cipher suite */
-
     // encrypting an empty message should result in 20 bytes:
     // 3 bytes of encrypted length, 1 byte header and 16 bytes MAC
     TestBIP324CipherSuite(/* plaintext */ "",
@@ -1080,7 +1078,8 @@ static void TestRFC8439AEAD(const std::string& hex_aad, const std::string& hex_k
     std::array<std::byte, 12> nonce_arr;
     memcpy(nonce_arr.data(), nonce.data(), 12);
     auto plaintext = ParseHex(hex_plaintext);
-    auto encrypted = RFC8439Encrypt(MakeByteSpan(aad), MakeByteSpan(key), nonce_arr, MakeByteSpan(plaintext));
+    std::vector<Span<const std::byte>> ins{MakeByteSpan(plaintext)};
+    auto encrypted = RFC8439Encrypt(MakeByteSpan(aad), MakeByteSpan(key), nonce_arr, ins);
 
     BOOST_CHECK_EQUAL(HexStr(MakeByteSpan(encrypted.ciphertext)), hex_expected_ciphertext);
     BOOST_CHECK_EQUAL(HexStr(MakeByteSpan(encrypted.tag)), hex_expected_auth_tag);

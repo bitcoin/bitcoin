@@ -28,7 +28,9 @@ FUZZ_TARGET(crypto_rfc8439)
     auto plaintext = fdp.ConsumeBytes<std::byte>(plaintext_len);
     plaintext.resize(plaintext_len);
 
-    auto encrypted = RFC8439Encrypt(aad, key, nonce, plaintext);
+    std::vector<Span<const std::byte>> ins{plaintext};
+
+    auto encrypted = RFC8439Encrypt(aad, key, nonce, ins);
     assert(encrypted.ciphertext.size() == plaintext.size());
 
     auto bit_flip_attack = !plaintext.empty() && fdp.ConsumeBool();

@@ -25,7 +25,7 @@ struct RFC8439Decrypted {
     std::vector<std::byte> plaintext;
 };
 
-RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, Span<const std::byte> plaintext);
+RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, const std::vector<Span<const std::byte>>& plaintexts);
 
 RFC8439Decrypted RFC8439Decrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, const RFC8439Encrypted& encrypted);
 #endif // BITCOIN_CRYPTO_RFC8439_H

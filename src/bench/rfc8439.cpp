@@ -23,10 +23,11 @@ std::array<std::byte, 12> nonce = {std::byte{0x00}, std::byte{0x01}, std::byte{0
 
 static void RFC8439_AEAD(benchmark::Bench& bench, size_t plaintext_size, bool include_decryption)
 {
-    std::vector<std::byte> plaintext_in(plaintext_size, std::byte{0x00});
+    const std::vector<std::byte> plaintext_in(plaintext_size, std::byte{0x00});
+    std::vector<Span<const std::byte>> ins{plaintext_in};
 
     bench.batch(plaintext_size).unit("byte").run([&] {
-        auto encrypted = RFC8439Encrypt(aad, zero_key, nonce, plaintext_in);
+        auto encrypted = RFC8439Encrypt(aad, zero_key, nonce, ins);
 
         if (include_decryption) {
             auto decrypted = RFC8439Decrypt(aad, zero_key, nonce, encrypted);
