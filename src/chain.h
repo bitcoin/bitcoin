@@ -415,16 +415,7 @@ public:
         return block.GetHash();
     }
 
-
-    std::string ToString() const
-    {
-        std::string str = "CDiskBlockIndex(";
-        str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString(),
-            hashPrev.ToString());
-        return str;
-    }
+    std::string ToString() = delete;
 };
 
 /** An in-memory indexed chain of blocks. */
