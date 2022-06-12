@@ -42,7 +42,7 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 // This is all you need to run all the tests
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     // Initialize persistent globals with the testing setup state for sanity.
     // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
     BitcoinApplication app(*node);
     app.setApplicationName("Dash-Qt-test");
 
+    node->setupServerArgs();            // Make gArgs available in the NodeContext
+    node->context()->args->ClearArgs(); // Clear added args again
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
         fInvalid = true;

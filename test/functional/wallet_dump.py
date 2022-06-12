@@ -86,6 +86,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
+        self.disable_mocktime()
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
 
@@ -151,6 +152,11 @@ class WalletDumpTest(BitcoinTestFramework):
         # Now check IsMine is true
         result = self.nodes[0].getaddressinfo(multisig_addr)
         assert result['ismine'] == True
+
+        self.log.info('Check that wallet is flushed')
+        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
+            self.nodes[0].getnewaddress()
+
 
 if __name__ == '__main__':
     WalletDumpTest().main()

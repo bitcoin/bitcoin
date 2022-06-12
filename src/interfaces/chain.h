@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+class ArgsManager;
 class CBlock;
 class CConnman;
 class CFeeRate;
