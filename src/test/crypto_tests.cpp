@@ -500,6 +500,24 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "fab78c9");
 }
 
+BOOST_AUTO_TEST_CASE(chacha20_midblock)
+{
+    auto key = ParseHex("0000000000000000000000000000000000000000000000000000000000000000");
+    ChaCha20 c20{key.data(), 32};
+    // get one block of keystream
+    unsigned char block[64];
+    c20.Keystream(block, CHACHA20_ROUND_OUTPUT);
+    unsigned char b1[5], b2[7], b3[52];
+    c20 = ChaCha20{key.data(), 32};
+    c20.Keystream(b1, 5);
+    c20.Keystream(b2, 7);
+    c20.Keystream(b3, 52);
+
+    BOOST_CHECK_EQUAL(0, memcmp(b1, block, 5));
+    BOOST_CHECK_EQUAL(0, memcmp(b2, block + 5, 7));
+    BOOST_CHECK_EQUAL(0, memcmp(b3, block + 12, 52));
+}
+
 BOOST_AUTO_TEST_CASE(poly1305_testvector)
 {
     // RFC 7539, section 2.5.2.

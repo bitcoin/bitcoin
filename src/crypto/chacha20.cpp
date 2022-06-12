@@ -49,28 +49,37 @@ void ChaCha20::SetKey(const unsigned char* k, size_t keylen)
     input[13] = 0;
     input[14] = 0;
     input[15] = 0;
+
+    prev_block_start_pos = 0;
 }
 
 ChaCha20::ChaCha20()
 {
     memset(input, 0, sizeof(input));
+    memset(prev_block_bytes, 0, sizeof(prev_block_bytes));
+    prev_block_start_pos = 0;
 }
 
 ChaCha20::ChaCha20(const unsigned char* k, size_t keylen)
 {
     SetKey(k, keylen);
+    prev_block_start_pos = 0;
 }
 
 void ChaCha20::SetIV(uint64_t iv)
 {
     input[14] = iv;
     input[15] = iv >> 32;
+
+    prev_block_start_pos = 0;
 }
 
 void ChaCha20::Seek(uint64_t pos)
 {
     input[12] = pos;
     input[13] = pos >> 32;
+
+    prev_block_start_pos = 0;
 }
 
 void ChaCha20::Keystream(unsigned char* c, size_t bytes)
@@ -101,6 +110,22 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
     j15 = input[15];
 
     for (;;) {
+        if (prev_block_start_pos) {
+            size_t available = 64 - prev_block_start_pos;
+            size_t to_use = (available < bytes) ? available : bytes;
+            for (i = 0; i < to_use; i++) {
+                c[i] = prev_block_bytes[prev_block_start_pos + i];
+            }
+            c += to_use;
+            bytes -= to_use;
+            prev_block_start_pos += to_use;
+
+            if (prev_block_start_pos >= 64) {
+                prev_block_start_pos = 0;
+            }
+            if (bytes) continue;
+            return;
+        }
         if (bytes < 64) {
             ctarget = c;
             c = tmp;
@@ -151,6 +176,28 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
         x14 += j14;
         x15 += j15;
 
+        if (bytes < 64) {
+            // TODO can be optimized, we don't need all the block, just the unused part.
+            WriteLE32(prev_block_bytes, x0);
+            WriteLE32(prev_block_bytes + 4, x1);
+            WriteLE32(prev_block_bytes + 8, x2);
+            WriteLE32(prev_block_bytes + 12, x3);
+            WriteLE32(prev_block_bytes + 16, x4);
+            WriteLE32(prev_block_bytes + 20, x5);
+            WriteLE32(prev_block_bytes + 24, x6);
+            WriteLE32(prev_block_bytes + 28, x7);
+            WriteLE32(prev_block_bytes + 32, x8);
+            WriteLE32(prev_block_bytes + 36, x9);
+            WriteLE32(prev_block_bytes + 40, x10);
+            WriteLE32(prev_block_bytes + 44, x11);
+            WriteLE32(prev_block_bytes + 48, x12);
+            WriteLE32(prev_block_bytes + 52, x13);
+            WriteLE32(prev_block_bytes + 56, x14);
+            WriteLE32(prev_block_bytes + 60, x15);
+
+            prev_block_start_pos = bytes;
+        }
+
         ++j12;
         if (!j12) ++j13;
 
@@ -181,6 +228,7 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
         }
         bytes -= 64;
         c += 64;
+        prev_block_start_pos = 0;
     }
 }
 
@@ -212,6 +260,24 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
     j15 = input[15];
 
     for (;;) {
+        if (prev_block_start_pos) {
+            size_t available = 64 - prev_block_start_pos;
+            size_t to_use = (available < bytes) ? available : bytes;
+            for (i = 0; i < to_use; i++) {
+                c[i] = prev_block_bytes[prev_block_start_pos + i] ^ m[i];
+            }
+            m += to_use;
+            c += to_use;
+            bytes -= to_use;
+            prev_block_start_pos += to_use;
+
+            if (prev_block_start_pos >= 64) {
+                prev_block_start_pos = 0;
+            }
+            if (bytes) continue;
+            return;
+        }
+
         if (bytes < 64) {
             // if m has fewer than 64 bytes available, copy m to tmp and
             // read from tmp instead
@@ -266,6 +332,28 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         x14 += j14;
         x15 += j15;
 
+        if (bytes < 64) {
+            // TODO can be optimized, we don't need all the block, just the unused part.
+            WriteLE32(prev_block_bytes, x0);
+            WriteLE32(prev_block_bytes + 4, x1);
+            WriteLE32(prev_block_bytes + 8, x2);
+            WriteLE32(prev_block_bytes + 12, x3);
+            WriteLE32(prev_block_bytes + 16, x4);
+            WriteLE32(prev_block_bytes + 20, x5);
+            WriteLE32(prev_block_bytes + 24, x6);
+            WriteLE32(prev_block_bytes + 28, x7);
+            WriteLE32(prev_block_bytes + 32, x8);
+            WriteLE32(prev_block_bytes + 36, x9);
+            WriteLE32(prev_block_bytes + 40, x10);
+            WriteLE32(prev_block_bytes + 44, x11);
+            WriteLE32(prev_block_bytes + 48, x12);
+            WriteLE32(prev_block_bytes + 52, x13);
+            WriteLE32(prev_block_bytes + 56, x14);
+            WriteLE32(prev_block_bytes + 60, x15);
+
+            prev_block_start_pos = bytes;
+        }
+
         x0 ^= ReadLE32(m + 0);
         x1 ^= ReadLE32(m + 4);
         x2 ^= ReadLE32(m + 8);
@@ -314,5 +402,6 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         bytes -= 64;
         c += 64;
         m += 64;
+        prev_block_start_pos = 0;
     }
 }

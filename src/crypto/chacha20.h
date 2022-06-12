@@ -14,6 +14,8 @@ class ChaCha20
 {
 private:
     uint32_t input[16];
+    uint8_t prev_block_bytes[64];
+    uint8_t prev_block_start_pos{0};
 
 public:
     ChaCha20();
