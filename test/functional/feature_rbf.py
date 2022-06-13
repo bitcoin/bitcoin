@@ -684,7 +684,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             utxo_to_spend=parent_utxo,
             sequence=SEQUENCE_FINAL,
             fee_rate=Decimal('0.02'),
-            mempool_valid=False,
         )
 
         # Broadcast replacement child tx

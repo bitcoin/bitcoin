@@ -563,7 +563,7 @@ def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txout
                 from_node=node,
                 utxo_to_spend=None if use_internal_utxos else utxos.pop(),
                 fee_rate=0,
-                mempool_valid=False)['tx']
+        )["tx"]
         tx.vout[0].nValue -= fee_sats
         tx.vout.extend(txouts)
         res = node.testmempoolaccept([tx.serialize().hex()])[0]
