@@ -254,6 +254,15 @@ void bench_group_add_affine_var(void* arg, int iters) {
     }
 }
 
+void bench_group_add_zinv_var(void* arg, int iters) {
+    int i;
+    bench_inv *data = (bench_inv*)arg;
+
+    for (i = 0; i < iters; i++) {
+        secp256k1_gej_add_zinv_var(&data->gej[0], &data->gej[0], &data->ge[1], &data->gej[0].y);
+    }
+}
+
 void bench_group_to_affine_var(void* arg, int iters) {
     int i;
     bench_inv *data = (bench_inv*)arg;
@@ -376,6 +385,7 @@ int main(int argc, char **argv) {
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_var", bench_group_add_var, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine", bench_group_add_affine, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine_var", bench_group_add_affine_var, bench_setup, NULL, &data, 10, iters*10);
+    if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_zinv_var", bench_group_add_zinv_var, bench_setup, NULL, &data, 10, iters*10);
     if (d || have_flag(argc, argv, "group") || have_flag(argc, argv, "to_affine")) run_benchmark("group_to_affine_var", bench_group_to_affine_var, bench_setup, NULL, &data, 10, iters);
 
     if (d || have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("wnaf_const", bench_wnaf_const, bench_setup, NULL, &data, 10, iters);
