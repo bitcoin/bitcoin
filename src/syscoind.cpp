@@ -256,7 +256,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     return fRet;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
