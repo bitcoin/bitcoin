@@ -99,9 +99,9 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
-    EnableCategory(flag);
+    auto category = GetLogCategory(str);
+    if (!category) return false;
+    EnableCategory(category.value());
     return true;
 }
 
@@ -112,9 +112,9 @@ void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 
 bool BCLog::Logger::DisableCategory(const std::string& str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
-    DisableCategory(flag);
+    auto category = GetLogCategory(str);
+    if (!category) return false;
+    DisableCategory(category.value());
     return true;
 }
 
@@ -182,19 +182,15 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::ALL, "all"},
 };
 
-bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
+std::optional<BCLog::LogFlags> GetLogCategory(const std::string& str)
 {
-    if (str.empty()) {
-        flag = BCLog::ALL;
-        return true;
-    }
+    if (str.empty()) return BCLog::ALL;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
         if (category_desc.category == str) {
-            flag = category_desc.flag;
-            return true;
+            return category_desc.flag;
         }
     }
-    return false;
+    return std::nullopt;
 }
 
 std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
@@ -502,11 +498,10 @@ bool BCLog::Logger::SetLogLevel(const std::string& level_str)
 
 bool BCLog::Logger::SetCategoryLogLevel(const std::string& category_str, const std::string& level_str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, category_str)) return false;
-
+    const auto category = GetLogCategory(category_str);
+    if (!category) return false;
     const auto level = GetLogLevel(level_str);
     if (!level) return false;
-    m_category_log_levels[flag] = level.value();
+    m_category_log_levels[category.value()] = level.value();
     return true;
 }
