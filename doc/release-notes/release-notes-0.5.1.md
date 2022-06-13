@@ -21,7 +21,7 @@ For Ubuntu users, there is a new ppa maintained by Matt Corallo which
 you can add to your system so that it will automatically keep
 bitcoin up-to-date.  Just type
 sudo apt-add-repository ppa:bitcoin/bitcoin
-in your terminal, then install the bitcoin-qt package.
+in your terminal, then install the navcoin-qt package.
 
 
 BUG FIXES
@@ -40,4 +40,4 @@ orphan blocks.
 
 The wallet passphrase dialog now warns you if the caps lock key was pressed.
 
-Improved searching in addresses and labels in bitcoin-qt.
+Improved searching in addresses and labels in navcoin-qt.

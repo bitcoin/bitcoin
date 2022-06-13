@@ -8,7 +8,7 @@ Please report bugs using the issue tracker at github:
 https://github.com/bitcoin/bitcoin/issues
 
 Stable source code is hosted at Gitorious:
-http://gitorious.org/bitcoin/bitcoind-stable/archive-tarball/v0.5.4#.tar.gz
+http://gitorious.org/bitcoin/navcoind-stable/archive-tarball/v0.5.4#.tar.gz
 
 PROTOCOL UPDATES
 

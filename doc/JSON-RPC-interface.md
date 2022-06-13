@@ -1,7 +1,7 @@
 # JSON-RPC Interface
 
-The headless daemon `bitcoind` has the JSON-RPC API enabled by default, the GUI
-`bitcoin-qt` has it disabled by default. This can be changed with the `-server`
+The headless daemon `navcoind` has the JSON-RPC API enabled by default, the GUI
+`navcoin-qt` has it disabled by default. This can be changed with the `-server`
 option. In the GUI it is possible to execute RPC methods in the Debug Console
 Dialog.
 
@@ -62,7 +62,7 @@ RPC interface will be abused.
   withstand arbitrary Internet traffic, so changing the above settings
   to expose it to the Internet (even using something like a Tor onion
   service) could expose you to unconsidered vulnerabilities.  See
-  `bitcoind -help` for more information about these settings and other
+  `navcoind -help` for more information about these settings and other
   settings described in this document.
 
     Related, if you use Bitcoin Core inside a Docker container, you may
