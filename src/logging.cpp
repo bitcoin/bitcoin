@@ -321,15 +321,18 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     return ret;
 }
 
-static constexpr std::array<BCLog::Level, static_cast<size_t>(BCLog::Level::None)> LogLevelsList()
+static std::vector<BCLog::Level> LogLevelsList()
 {
-    return {BCLog::Level::Trace, BCLog::Level::Debug, BCLog::Level::Info, BCLog::Level::Warning, BCLog::Level::Error};
+    std::vector<BCLog::Level> levels;
+    for (int n = 0; n < static_cast<int>(BCLog::Level::None); ++n) {
+        levels.emplace_back(static_cast<BCLog::Level>(n));
+    }
+    return levels;
 }
 
 std::string BCLog::Logger::LogLevelsString() const
 {
-    const auto& levels = LogLevelsList();
-    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
+    return Join(LogLevelsList(), ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
