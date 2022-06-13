@@ -5,9 +5,12 @@
 """Test fee estimation code."""
 from copy import deepcopy
 from decimal import Decimal
+import http.client
+import json
 import os
 import random
 import time
+import urllib.parse
 
 from test_framework.messages import (
     COIN,
@@ -71,6 +74,22 @@ def small_txpuzzle_randfee(
     return (tx.get_vsize(), fee)
 
 
+def rest_getfee(url, mode, target, status=200):
+    rest_uri = '/rest/fee/%s/%s.json' % (mode, target)
+
+    url = urllib.parse.urlparse(url)
+    conn = http.client.HTTPConnection(url.hostname, url.port)
+    conn.request('GET', rest_uri)
+    resp = conn.getresponse()
+    data = resp.read()
+
+    assert_equal(resp.status, status)
+
+    if status == 200:
+        return json.loads(data.decode('utf-8'), parse_float=Decimal)
+    else:
+        return data
+
 def check_raw_estimates(node, fees_seen):
     """Call estimaterawfee and verify that the estimates meet certain invariants."""
 
@@ -95,6 +114,8 @@ def check_smart_estimates(node, fees_seen):
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
+        assert_equal(e, rest_getfee(node.url, 'unset', i+1))
+
         feerate = float(e["feerate"])
         assert_greater_than(feerate, 0)
         assert_greater_than_or_equal(feerate, float(mempoolMinFee))
@@ -144,7 +165,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.noban_tx_relay = True
         self.extra_args = [
             [],
-            ["-blockmaxweight=68000"],
+            ["-blockmaxweight=68000", "-rest"],
             ["-blockmaxweight=32000"],
         ]
 
@@ -239,7 +260,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_feerate_mempoolminfee(self):
         high_val = 3 * self.nodes[1].estimatesmartfee(1)["feerate"]
-        self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
+        self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}", '-rest'])
         check_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
 
@@ -476,6 +497,13 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -32603, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
         )
+
+        self.log.info("Bad REST requests")
+        assert rest_getfee(self.nodes[1].url, 'foobar', 2, 400).startswith(b'<MODE> must be one of <unset|economical|conservative>')
+        assert rest_getfee(self.nodes[1].url, 'conservative', -1, 400).startswith(b'Unable to parse confirmation target to int')
+        assert rest_getfee(self.nodes[1].url, 'conservative', 'abc', 400).startswith(b'Unable to parse confirmation target to int')
+        assert rest_getfee(self.nodes[1].url, 'conservative', 2**65, 400).startswith(b'Unable to parse confirmation target to int')
+        assert rest_getfee(self.nodes[1].url, 'conservative', 0, 400).startswith(b'Invalid confirmation target, must be in between ')
 
 
 if __name__ == "__main__":
