@@ -2283,6 +2283,7 @@ template <typename T>
 bool PeerManagerImpl::PrepareNEVMBlock(T &block, bool bRecent) {
     // recent marks if a cached block is used by network code where we need to lock around the use of it through m_most_recent_block_mutex
     if(bRecent) {
+        AssertLockNotHeld(m_most_recent_block_mutex);
         LOCK(m_most_recent_block_mutex);
         return FillNEVMData(block);
     }
