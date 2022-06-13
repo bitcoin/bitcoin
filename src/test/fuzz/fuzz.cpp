@@ -194,7 +194,7 @@ int main(int argc, char** argv)
         return 0;
     }
     std::signal(SIGABRT, signal_handler);
-    int64_t start_time = GetTimeSeconds();
+    const auto start_time{Now<SteadySeconds>()};
     int tested = 0;
     for (int i = 1; i < argc; ++i) {
         fs::path input_path(*(argv + i));
@@ -215,8 +215,8 @@ int main(int argc, char** argv)
             buffer.clear();
         }
     }
-    int64_t end_time = GetTimeSeconds();
-    std::cout << g_fuzz_target << ": succeeded against " << tested << " files in " << (end_time - start_time) << "s." << std::endl;
+    const auto end_time{Now<SteadySeconds>()};
+    std::cout << g_fuzz_target << ": succeeded against " << tested << " files in " << count_seconds(end_time - start_time) << "s." << std::endl;
 #endif
     return 0;
 }

@@ -3,13 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-#include <vector>
-#include <string>
-#include <map>
-#include <cassert>
-#include <stdexcept>
 #include <univalue.h>
+
+#include <cassert>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #define BOOST_FIXTURE_TEST_SUITE(a, b)
 #define BOOST_AUTO_TEST_CASE(funcName) void funcName()

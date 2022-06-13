@@ -3,12 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-#include <iomanip>
-#include <sstream>
-#include <stdlib.h>
+#include <univalue.h>
 
-#include "univalue.h"
+#include <iomanip>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 const UniValue NullUniValue;
 

@@ -1707,8 +1707,10 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  */
 CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate)
 {
-    int64_t nNow = GetTime();
-    int64_t start_time = GetTimeMillis();
+    using Clock = std::chrono::steady_clock;
+    constexpr auto LOG_INTERVAL{60s};
+    auto current_time{Clock::now()};
+    auto start_time{Clock::now()};
 
     assert(reserver.isReserved());
 
@@ -1735,8 +1737,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
             ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
         }
-        if (GetTime() >= nNow + 60) {
-            nNow = GetTime();
+        if (Clock::now() >= current_time + LOG_INTERVAL) {
+            current_time = Clock::now();
             WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
         }
 
@@ -1803,7 +1805,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
     } else {
-        WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - start_time);
+        auto duration_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start_time);
+        WalletLogPrintf("Rescan completed in %15dms\n", duration_milliseconds.count());
     }
     return result;
 }
