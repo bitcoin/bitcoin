@@ -237,12 +237,35 @@ static RPCHelpMan deriveaddresses()
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                {
+                    {"details", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, the output script and public keys of each address will be shown."},
+                },
+                "\"options\""
+            },
         },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::STR, "address", "the derived addresses"},
-            }
+        {
+            RPCResult{"for details = false",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::STR, "address", "the derived addresses"},
+                }
+            },
+            RPCResult{"for details = true",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "index", /*optional=*/true, "the index of the address"},
+                        {RPCResult::Type::STR, "address", "the derived addresses"},
+                        {RPCResult::Type::STR_HEX, "output_script", "the output script"},
+                        {RPCResult::Type::ARR, "public_keys", "list of public keys",
+                        {
+                            {RPCResult::Type::STR_HEX, "public_key", "the public key"},
+                        }}
+                    }}
+                }
+            },
         },
         RPCExamples{
             "First three native segwit receive addresses\n" +
@@ -251,6 +274,21 @@ static RPCHelpMan deriveaddresses()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
+            bool details = false;
+
+            if (!request.params[2].isNull()) {
+                const UniValue& options = request.params[2];
+                RPCTypeCheckObj(options,
+                    {
+                        {"details", UniValueType(UniValue::VBOOL)},
+                    },
+                    true, true);
+
+                if (options.exists("details")) {
+                    details = options["details"].get_bool();
+                }
+            }
+
             RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
             const std::string desc_str = request.params[0].get_str();
 
@@ -268,11 +306,11 @@ static RPCHelpMan deriveaddresses()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
 
-            if (!desc->IsRange() && request.params.size() > 1) {
+            if (!desc->IsRange() && !request.params[1].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
             }
 
-            if (desc->IsRange() && request.params.size() == 1) {
+            if (desc->IsRange() && request.params[1].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
             }
 
@@ -291,7 +329,26 @@ static RPCHelpMan deriveaddresses()
                         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor does not have a corresponding address");
                     }
 
-                    addresses.push_back(EncodeDestination(dest));
+                    if (details) {
+                        UniValue item(UniValue::VOBJ);
+                        UniValue public_keys(UniValue::VARR);
+
+                        if (desc->IsRange()) item.pushKV("index", i);
+                        item.pushKV("address", EncodeDestination(dest));
+                        desc->ExpandPrivate(i, key_provider, provider);
+                        item.pushKV("output_script", HexStr(ToByteVector(script)));
+
+                        for (auto& [_, pubKey_origin] : provider.origins) {
+                            public_keys.push_back(HexStr(ToByteVector(pubKey_origin.first)));
+                        }
+                        item.pushKV("public_keys", public_keys);
+
+                        addresses.push_back(item);
+                    }
+                    else
+                    {
+                        addresses.push_back(EncodeDestination(dest));
+                    }
                 }
             }
 
