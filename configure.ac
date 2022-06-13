@@ -19,16 +19,16 @@ if test "$PKG_CONFIG" = ""; then
   AC_MSG_ERROR([pkg-config not found])
 fi
 
-BITCOIN_DAEMON_NAME=bitcoind
-BITCOIN_GUI_NAME=bitcoin-qt
-BITCOIN_CLI_NAME=bitcoin-cli
-BITCOIN_TX_NAME=bitcoin-tx
-BITCOIN_UTIL_NAME=bitcoin-util
-BITCOIN_CHAINSTATE_NAME=bitcoin-chainstate
-BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
+BITCOIN_DAEMON_NAME=navcoind
+BITCOIN_GUI_NAME=navcoin-qt
+BITCOIN_CLI_NAME=navcoin-cli
+BITCOIN_TX_NAME=navcoin-tx
+BITCOIN_UTIL_NAME=navcoin-util
+BITCOIN_CHAINSTATE_NAME=navcoin-chainstate
+BITCOIN_WALLET_TOOL_NAME=navcoin-wallet
 dnl Multi Process
-BITCOIN_MP_NODE_NAME=bitcoin-node
-BITCOIN_MP_GUI_NAME=bitcoin-gui
+BITCOIN_MP_NODE_NAME=navcoin-node
+BITCOIN_MP_GUI_NAME=navcoin-gui
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR([ARFLAGS], [Flags for the archiver, defaults to <cr> if not set])

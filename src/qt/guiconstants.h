@@ -19,7 +19,7 @@ static constexpr auto SHUTDOWN_POLLING_DELAY{200ms};
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
-/* BitcoinGUI -- Size of icons in status bar */
+/* NavcoinGUI -- Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_SPLASHSCREEN = true;
@@ -46,12 +46,12 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
 
-#define QAPP_ORG_NAME "Bitcoin"
-#define QAPP_ORG_DOMAIN "bitcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcoin-Qt-testnet"
-#define QAPP_APP_NAME_SIGNET "Bitcoin-Qt-signet"
-#define QAPP_APP_NAME_REGTEST "Bitcoin-Qt-regtest"
+#define QAPP_ORG_NAME "Navcoin"
+#define QAPP_ORG_DOMAIN "navcoin.org"
+#define QAPP_APP_NAME_DEFAULT "Navcoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Navcoin-Qt-testnet"
+#define QAPP_APP_NAME_SIGNET "Navcoin-Qt-signet"
+#define QAPP_APP_NAME_REGTEST "Navcoin-Qt-regtest"
 
 /* One gigabyte (GB) in bytes */
 static constexpr uint64_t GB_BYTES{1000000000};
