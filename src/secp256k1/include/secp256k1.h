@@ -141,9 +141,13 @@ typedef int (*secp256k1_nonce_function)(
 # define SECP256K1_NO_BUILD
 #endif
 
+/** At secp256k1 build-time DLL_EXPORT is defined when building objects destined
+ *  for a shared library, but not for those intended for static libraries.
+ */
+
 #ifndef SECP256K1_API
 # if defined(_WIN32)
-#  ifdef SECP256K1_BUILD
+#  if defined(SECP256K1_BUILD) && defined(DLL_EXPORT)
 #   define SECP256K1_API __declspec(dllexport)
 #  else
 #   define SECP256K1_API

@@ -8,6 +8,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <compat.h>
 #include <logging.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -73,7 +74,7 @@ static bool WalletAppInit(int argc, char* argv[])
     return true;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
