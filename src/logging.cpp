@@ -125,9 +125,9 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
 {
-    // Log messages at Warning and Error level unconditionally, so that
-    // important troubleshooting information doesn't get lost.
-    if (level >= BCLog::Level::Warning) return true;
+    // Log the Info, Warning, and Error message levels unconditionally, so that
+    // important troubleshooting information isn't lost.
+    if (level >= BCLog::Level::Info) return true;
 
     if (!WillLogCategory(category)) return false;
 
