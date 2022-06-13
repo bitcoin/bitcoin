@@ -146,8 +146,8 @@ def check_host(args) -> int:
         platforms = {
             'aarch64-*-linux*': 'aarch64-linux-gnu',
             'x86_64-*-linux*': 'x86_64-linux-gnu',
-            'x86_64-apple-darwin*': 'osx64',
-            'aarch64-apple-darwin*': 'osx64',
+            'x86_64-apple-darwin*': 'x86_64-apple-darwin',
+            'aarch64-apple-darwin*': 'arm64-apple-darwin',
         }
         args.platform = ''
         for pattern, target in platforms.items():
