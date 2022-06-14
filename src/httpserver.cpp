@@ -11,7 +11,7 @@
 #include <chainparamsbase.h>
 #include <compat.h>
 #include <netbase.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>

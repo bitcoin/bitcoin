@@ -13,7 +13,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>

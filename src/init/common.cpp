@@ -9,7 +9,7 @@
 #include <clientversion.h>
 #include <fs.h>
 #include <logging.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/time.h>
