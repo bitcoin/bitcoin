@@ -78,6 +78,10 @@ if test "@host_os@" = darwin; then
   BREW=no
 fi
 
+if test -z "$enable_lto" && test -n "@lto@"; then
+  enable_lto=yes
+fi
+
 PATH="${depends_prefix}/native/bin:${PATH}"
 PKG_CONFIG="$(which pkg-config) --static"
 
