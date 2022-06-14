@@ -606,6 +606,15 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert_equal(test_node.last_message["block"].block.sha256, int(block_hash, 16))
             assert "blocktxn" not in test_node.last_message
 
+        # Request with out-of-bounds tx index results in disconnect
+        bad_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        block_hash = node.getblockhash(chain_height)
+        block = from_hex(CBlock(), node.getblock(block_hash, False))
+        msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [len(block.vtx)])
+        with node.assert_debug_log(['getblocktxn with out-of-bounds tx indices']):
+            bad_peer.send_message(msg)
+        bad_peer.wait_for_disconnect()
+
     def test_compactblocks_not_at_tip(self, test_node):
         node = self.nodes[0]
         # Test that requesting old compactblocks doesn't work.
