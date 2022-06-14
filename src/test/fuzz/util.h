@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <coins.h>
 #include <optional.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -130,6 +131,17 @@ template <class T>
                (i < 0 && j < std::numeric_limits<T>::min() - i);
     }
     return std::numeric_limits<T>::max() - i < j;
+}
+
+[[ nodiscard ]] inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
+{
+    for (const CTxIn& tx_in : tx.vin) {
+        const Coin& coin = inputs.AccessCoin(tx_in.prevout);
+        if (coin.IsSpent()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
