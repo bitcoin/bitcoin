@@ -98,6 +98,11 @@ bool CProposalValidator::ValidateName()
         return false;
     }
 
+    if (strName.empty()) {
+        strErrorMessages += "name cannot be empty;";
+        return false;
+    }
+
     static constexpr std::string_view strAllowedChars{"-_abcdefghijklmnopqrstuvwxyz0123456789"};
 
     strName = ToLower(strName);
