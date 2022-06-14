@@ -90,10 +90,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.test_too_many_replacements_with_default_mempool_params()
 
         self.log.info("Running test opt-in...")
-        self.test_opt_in(fullrbf=False)
-        self.nodes[0], self.nodes[-1] = self.nodes[-1], self.nodes[0]
-        self.test_opt_in(fullrbf=True)
-        self.nodes[0], self.nodes[-1] = self.nodes[-1], self.nodes[0]
+        self.test_opt_in(self.nodes[0], fullrbf=False)
+        self.test_opt_in(self.nodes[-1], fullrbf=True)
 
         self.log.info("Running test RPC...")
         self.test_rpc()
@@ -512,19 +510,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.generate(normal_node, 1)
         self.wallet.rescan_utxos()
 
-    def test_opt_in(self, fullrbf):
+    def test_opt_in(self, node, fullrbf):
         """Replacing should only work if orig tx opted in"""
-        tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
+        tx0_outpoint = self.make_utxo(node, int(1.1 * COIN))
 
         # Create a non-opting in transaction
         tx1a = CTransaction()
         tx1a.vin = [CTxIn(tx0_outpoint, nSequence=SEQUENCE_FINAL)]
         tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
         tx1a_hex = tx1a.serialize().hex()
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
+        tx1a_txid = node.sendrawtransaction(tx1a_hex, 0)
 
         # This transaction isn't shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
+        assert_equal(node.getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
 
         # Shouldn't be able to double-spend
         tx1b = CTransaction()
@@ -533,19 +531,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1b_hex = tx1b.serialize().hex()
 
         if fullrbf:
-            tx1a_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
+            tx1a_txid = node.sendrawtransaction(tx1b_hex, 0)
         else:
             # This will raise an exception
-            assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx1b_hex, 0)
 
-        tx1_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
+        tx1_outpoint = self.make_utxo(node, int(1.1 * COIN))
 
         # Create a different non-opting in transaction
         tx2a = CTransaction()
         tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0xfffffffe)]
         tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
         tx2a_hex = tx2a.serialize().hex()
-        tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, 0)
+        tx2a_txid = node.sendrawtransaction(tx2a_hex, 0)
 
         # Still shouldn't be able to double-spend
         tx2b = CTransaction()
@@ -554,10 +552,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx2b_hex = tx2b.serialize().hex()
 
         if fullrbf:
-            tx2a_txid = self.nodes[0].sendrawtransaction(tx2b_hex, 0)
+            tx2a_txid = node.sendrawtransaction(tx2b_hex, 0)
         else:
             # This will raise an exception
-            assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
+            assert_raises_rpc_error(-26, "txn-mempool-conflict", node.sendrawtransaction, tx2b_hex, 0)
 
         # Now create a new transaction that spends from tx1a and tx2a
         # opt-in on one of the inputs
@@ -572,10 +570,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3a.vout = [CTxOut(int(0.8 * COIN), CScript([b'c'])), CTxOut(int(0.9 * COIN), CScript([b'd']))]
         tx3a_hex = tx3a.serialize().hex()
 
-        tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, 0)
+        tx3a_txid = node.sendrawtransaction(tx3a_hex, 0)
 
         # This transaction is shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
+        assert_equal(node.getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
@@ -587,12 +585,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3c.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPKH_SCRIPT)]
         tx3c_hex = tx3c.serialize().hex()
 
-        self.nodes[0].sendrawtransaction(tx3b_hex, 0)
+        node.sendrawtransaction(tx3b_hex, 0)
         # If tx3b was accepted, tx3c won't look like a replacement,
         # but make sure it is accepted anyway
-        self.nodes[0].sendrawtransaction(tx3c_hex, 0)
+        node.sendrawtransaction(tx3c_hex, 0)
 
-        self.generate(self.nodes[0], 1)  # clean mempool
+        self.generate(node, 1)  # clean mempool
 
     def test_prioritised_transactions(self):
         # Ensure that fee deltas used via prioritisetransaction are
