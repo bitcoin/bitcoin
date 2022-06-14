@@ -5,40 +5,12 @@
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 
 #include <cassert>
 #include <cstdint>
 #include <netinet/in.h>
 #include <vector>
-
-namespace {
-CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    const Network network = fuzzed_data_provider.PickValueInArray({Network::NET_IPV4, Network::NET_IPV6, Network::NET_INTERNAL, Network::NET_ONION});
-    if (network == Network::NET_IPV4) {
-        const in_addr v4_addr = {
-            .s_addr = fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-        return CNetAddr{v4_addr};
-    } else if (network == Network::NET_IPV6) {
-        if (fuzzed_data_provider.remaining_bytes() < 16) {
-            return CNetAddr{};
-        }
-        in6_addr v6_addr = {};
-        memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
-        return CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-    } else if (network == Network::NET_INTERNAL) {
-        CNetAddr net_addr;
-        net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
-        return net_addr;
-    } else if (network == Network::NET_ONION) {
-        CNetAddr net_addr;
-        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
-        return net_addr;
-    } else {
-        assert(false);
-    }
-}
-}; // namespace
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
