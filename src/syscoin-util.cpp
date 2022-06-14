@@ -80,7 +80,7 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 
     return CONTINUE_EXECUTION;
 }
-Mutex cs_head;
+GlobalMutex cs_head;
 static void grind_task(uint32_t nBits, CBlockHeader& header_orig, uint32_t offset, uint32_t step, std::atomic<bool>& found)
 {
     arith_uint256 target;
