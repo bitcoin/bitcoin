@@ -48,6 +48,7 @@ FUZZ_TARGETS = \
   test/fuzz/flatfile \
   test/fuzz/float \
   test/fuzz/hex \
+  test/fuzz/http_request \
   test/fuzz/integer \
   test/fuzz/inv_deserialize \
   test/fuzz/key \
@@ -558,6 +559,12 @@ test_fuzz_hex_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_hex_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_hex_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_hex_SOURCES = $(FUZZ_SUITE) test/fuzz/hex.cpp
+
+test_fuzz_http_request_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_http_request_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_http_request_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_http_request_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_http_request_SOURCES = $(FUZZ_SUITE) test/fuzz/http_request.cpp
 
 test_fuzz_integer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_integer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
