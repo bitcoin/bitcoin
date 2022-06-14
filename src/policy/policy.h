@@ -36,7 +36,6 @@ static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{1000};
 /** Default for -bytespersigop */
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 /** Default for -mempoolreplacement */
-static constexpr bool DEFAULT_ENABLE_REPLACEMENT{true};
 static constexpr bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT{true};
 /** Default for -permitbaremultisig */
 static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{true};

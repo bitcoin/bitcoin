@@ -558,7 +558,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-bytespersigop", strprintf("Equivalent bytes per sigop in transactions for relay and mining (default: %u)", DEFAULT_BYTES_PER_SIGOP), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarriersize", strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)", MAX_OP_RETURN_RELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-mempoolreplacement", strprintf("Enable transaction replacement in the memory pool (\"fee,-optin\" = ignore opt-out flag, default: %u)", DEFAULT_ENABLE_REPLACEMENT), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-mempoolreplacement", strprintf("Set to either \"fee,optin\" to honour RBF opt-out signal, or \"fee,-optin\" to always RBF aka full RBF (default: %s)", DEFAULT_REPLACEMENT_HONOUR_OPTOUT ? "fee,optin" : "fee,-optin"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted inbound peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
@@ -1040,17 +1040,20 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         }
     }
 
-    gEnableReplacement = args.GetBoolArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT);
-    if ((!gEnableReplacement) && args.IsArgSet("-mempoolreplacement")) {
+    bool enable_replacement = args.GetBoolArg("-mempoolreplacement", /*fDefault=*/true);
+    if ((!enable_replacement) && args.IsArgSet("-mempoolreplacement")) {
         // Minimal effort at forwards compatibility
         std::string replacement_opt = args.GetArg("-mempoolreplacement", "");  // default is impossible
         std::vector<std::string> replacement_modes = SplitString(replacement_opt, ",+");
-        gEnableReplacement = (std::find(replacement_modes.begin(), replacement_modes.end(), "fee") != replacement_modes.end());
-        if (gEnableReplacement) {
+        enable_replacement = (std::find(replacement_modes.begin(), replacement_modes.end(), "fee") != replacement_modes.end());
+        if (enable_replacement) {
             gReplacementHonourOptOut = (std::find(replacement_modes.begin(), replacement_modes.end(), "-optin") == replacement_modes.end());
         } else {
             gReplacementHonourOptOut = true;
         }
+    }
+    if (!enable_replacement) {
+        return InitError(strprintf(_("-mempoolreplacement=%s is not supported by %s"), args.GetArg("-mempoolreplacement", "0"), PACKAGE_NAME));
     }
 
 #if defined(USE_SYSCALL_SANDBOX)

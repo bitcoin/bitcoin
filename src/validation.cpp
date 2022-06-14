@@ -741,9 +741,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
                 // might be replaced, causing removal of this descendant.
                 bool allow_replacement;
-                if (!gEnableReplacement) {
-                    allow_replacement = false;
-                } else if (gReplacementHonourOptOut) {
+                if (gReplacementHonourOptOut) {
                     allow_replacement = SignalsOptInRBF(*ptxConflicting);
                 } else {
                     allow_replacement = true;
