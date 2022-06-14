@@ -376,8 +376,8 @@ void Session::CreateIfNotCreatedAlready()
     m_session_id = session_id;
     m_control_sock = std::move(sock);
 
-    LogPrintf("I2P: SAM session created: session id=%s, my address=%s\n", m_session_id,
-              m_my_addr.ToString());
+    LogPrintfCategory(BCLog::I2P, "SAM session created: session id=%s, my address=%s\n",
+                      m_session_id, m_my_addr.ToString());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()
