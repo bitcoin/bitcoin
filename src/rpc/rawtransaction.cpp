@@ -183,7 +183,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                             {RPCResult::Type::STR_HEX, "blockhash", "the block hash"},
                             {RPCResult::Type::NUM, "height", "The block height"},
                             {RPCResult::Type::NUM, "confirmations", "The confirmations"},
-                            {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
+                            {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME},
                             {RPCResult::Type::NUM, "time", "Same as \"blocktime\""},
                             {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state"},
                             {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state"},

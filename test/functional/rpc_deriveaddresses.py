@@ -10,7 +10,6 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 class DeriveaddressesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.supports_cli = 1
 
     def run_test(self):
         assert_raises_rpc_error(-5, "Missing checksum", self.nodes[0].deriveaddresses, "a")

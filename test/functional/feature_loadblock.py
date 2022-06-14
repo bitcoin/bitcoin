@@ -26,6 +26,7 @@ class LoadblockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.supports_cli = False
 
     def run_test(self):
         self.nodes[1].setnetworkactive(state=False)

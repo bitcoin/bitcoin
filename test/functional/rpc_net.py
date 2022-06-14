@@ -51,6 +51,7 @@ class NetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.supports_cli = False
 
     def setup_network(self):
         self.disable_mocktime()
