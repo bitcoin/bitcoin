@@ -47,6 +47,7 @@ FUZZ_TARGETS = \
   test/fuzz/flat_file_pos_deserialize \
   test/fuzz/flatfile \
   test/fuzz/float \
+  test/fuzz/golomb_rice \
   test/fuzz/hex \
   test/fuzz/http_request \
   test/fuzz/integer \
@@ -553,6 +554,12 @@ test_fuzz_float_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_float_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_float_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_float_SOURCES = $(FUZZ_SUITE) test/fuzz/float.cpp
+
+test_fuzz_golomb_rice_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_golomb_rice_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_golomb_rice_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_golomb_rice_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_golomb_rice_SOURCES = $(FUZZ_SUITE) test/fuzz/golomb_rice.cpp
 
 test_fuzz_hex_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_hex_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
