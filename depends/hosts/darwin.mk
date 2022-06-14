@@ -110,6 +110,12 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 
 darwin_CFLAGS=-pipe
+
+ifneq ($(LTO),)
+darwin_CFLAGS += -flto
+darwin_LDFLAGS += -flto
+endif
+
 darwin_CXXFLAGS=$(darwin_CFLAGS)
 
 darwin_release_CFLAGS=-O2
