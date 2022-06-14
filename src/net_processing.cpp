@@ -421,9 +421,9 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     // SYSCOIN
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent = true) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent = true) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex);
     template <typename T>
-    bool PrepareNEVMBlock(T &block, bool bRecent);
+    bool PrepareNEVMBlock(T &block, bool bRecent) EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
     /** Register with TxRequestTracker that an INV has been received from a
      *  peer. The announcement parameters are decided in PeerManager and then
      *  passed to TxRequestTracker. */
@@ -2280,7 +2280,7 @@ uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) const EXCLUSIVE_LOCK
     return nFetchFlags;
 }
 template <typename T>
-bool PeerManagerImpl::PrepareNEVMBlock(T &block, bool bRecent) EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex) {
+bool PeerManagerImpl::PrepareNEVMBlock(T &block, bool bRecent) {
     // recent marks if a cached block is used by network code where we need to lock around the use of it through m_most_recent_block_mutex
     if(bRecent) {
         LOCK(m_most_recent_block_mutex);
