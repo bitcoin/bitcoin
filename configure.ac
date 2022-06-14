@@ -1016,6 +1016,8 @@ AC_CHECK_DECLS([daemon])
 
 AC_CHECK_DECLS([pipe2])
 
+AC_CHECK_FUNCS([timingsafe_bcmp])
+
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
 		[#if HAVE_ENDIAN_H
                  #include <endian.h>
