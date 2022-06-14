@@ -957,6 +957,26 @@ RPCHelpMan signrawtransactionwithwallet()
     };
 }
 
+// Definition of allowed formats of specifying transaction outputs in
+// `send` and `walletcreatefundedpsbt` RPCs.
+static std::vector<RPCArg> OutputsDoc()
+{
+    return
+    {
+        {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
+            {
+                {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address,\n"
+                         "the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
+            },
+        },
+        {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            {
+                {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+            },
+        },
+    };
+}
+
 static RPCHelpMan bumpfee_helper(std::string method_name)
 {
     const bool want_psbt = method_name == "psbtbumpfee";
@@ -1145,18 +1165,7 @@ RPCHelpMan send()
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
-                {
-                    {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
-                        {
-                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
-                        },
-                        },
-                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
-                        {
-                            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
-                        },
-                    },
-                },
+                OutputsDoc(),
                 RPCArgOptions{.skip_type_check = true}},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
@@ -1607,19 +1616,8 @@ RPCHelpMan walletcreatefundedpsbt()
                             "That is, each address can only appear once and there can only be one 'data' object.\n"
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "accepted as second parameter.",
-                        {
-                            {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
-                                {
-                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
-                                },
-                                },
-                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
-                                {
-                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
-                                },
-                            },
-                        },
-                     RPCArgOptions{.skip_type_check = true}},
+                        OutputsDoc(),
+                        RPCArgOptions{.skip_type_check = true}},
                     {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         Cat<std::vector<RPCArg>>(
