@@ -52,7 +52,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 
     options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler{m_node.chainman->ActiveChainstate(), *m_node.mempool, options};
+    return BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options};
 }
 
 constexpr static struct {
