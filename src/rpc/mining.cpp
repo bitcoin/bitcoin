@@ -138,8 +138,9 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     if (block.nNonce == std::numeric_limits<uint32_t>::max()) {
         return true;
     }
-
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
+    // SYSCOIN
+    CBlock copyBlock = block;
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(copyBlock);
     if (!chainman.ProcessNewBlock(shared_pblock, true, nullptr)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
