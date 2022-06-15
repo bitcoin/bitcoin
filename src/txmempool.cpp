@@ -831,6 +831,8 @@ void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
 bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) const {
     AssertLockHeld(cs_main);
     AssertLockHeld(cs);
+    if(mapAssetAllocationConflicts.empty())
+        return true;
     for (const CTxIn &txin : tx.vin) {
         auto it = mapAssetAllocationConflicts.find(txin.prevout);
         // ensure that we check for mapAssetAllocationConflicts intersection of this input
