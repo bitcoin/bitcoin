@@ -2041,7 +2041,7 @@ static RPCHelpMan syscoincreatenevmblob()
     auto it = vchData.begin();
     for(int i = 0; i<numMultiples;i++) {
         newVchData.insert(newVchData.end(), it, (it+31));
-        // fill with 0 delimeter
+        // fill with 0 delimiter
         newVchData.push_back(0);
         it += 31;
     }

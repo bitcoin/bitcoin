@@ -3653,7 +3653,7 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
     // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
     // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
     if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
-        LogPrintf("CChainState::%s -- CNEVMDataDB::Prune failed: %s\n", __func__);
+        LogPrintf("CChainState::%s -- CNEVMDataDB::Prune failed\n", __func__);
     }
     // no cs_main allowed
     bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
