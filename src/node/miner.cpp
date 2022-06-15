@@ -301,7 +301,6 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 {
     // SYSCOIN
     int nCountAncestorNEVMDataTxs = 0;
-    AssertLockHeld(m_mempool->cs);
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
