@@ -1150,6 +1150,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def start_masternode(self, mninfo, extra_args=None):
         args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
+        self.extra_args[mninfo.nodeIdx].append('-masternodeblsprivkey=%s' % mninfo.keyOperator)
         if extra_args is not None:
             args += extra_args
         self.start_node(mninfo.nodeIdx, extra_args=args)
