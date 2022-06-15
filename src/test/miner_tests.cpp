@@ -53,7 +53,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, params, options);
+    return BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, m_node.mempool.get(), params, options);
 }
 
 constexpr static struct {
