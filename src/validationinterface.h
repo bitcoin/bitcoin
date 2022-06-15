@@ -188,7 +188,7 @@ protected:
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
-    virtual void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) {}
+    virtual void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight) {}
     virtual void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {}
     virtual void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {}
     virtual void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state) {}
@@ -234,7 +234,7 @@ public:
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
-    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut);
+    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight);
     void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
     void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state);

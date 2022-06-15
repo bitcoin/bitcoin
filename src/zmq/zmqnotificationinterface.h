@@ -39,7 +39,7 @@ protected:
     // SYSCOIN
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
     void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
-    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut) override;
+    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight) override;
     void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState& state) override;
     void NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state) override;

@@ -184,7 +184,7 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] != nullptr;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockDataIn, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, const node::BlockManager* blockman) {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockDataIn, const int64_t nMedianTime, const int nHeight, const std::function<int64_t()>& adjusted_time_callback, const node::BlockManager* blockman) {
     assert(!header.IsNull());
     uint256 hash = header.GetHash();
     block = header;
@@ -211,7 +211,8 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         block.vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
 
     NEVMDataVec nevmDataVecOut;
-    if(blockman && !ProcessNEVMData(*blockman, block, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
+    if(PODAContext && blockman && !ProcessNEVMData(*blockman, block, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         return READ_STATUS_INVALID;
     }
     BlockValidationState state;

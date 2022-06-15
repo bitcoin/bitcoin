@@ -161,6 +161,7 @@ struct Params {
     bool bTestnet{false};
     int nBridgeStartBlock;
     int nNEVMStartBlock;
+    int nPODAStartBlock;
     int nUTXOAssetsBlock;
     int nUTXOAssetsBlockProvisioning;
     uint64_t nMinMNSubsidySats;

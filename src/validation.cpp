@@ -2047,7 +2047,7 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-empty");
     }
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut);
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight);
     }
     bool res = true;
     if(nHeight > nLastKnownHeightOnStart)
@@ -2062,7 +2062,7 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
             if(!bResponse) {
                 if(RestartGethNode()) {
                     // try again after resetting connection
-                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut);
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight);
                     if(nHeight > nLastKnownHeightOnStart)
                         res = state.IsValid();
                 }

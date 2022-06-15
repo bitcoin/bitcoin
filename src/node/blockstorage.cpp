@@ -830,7 +830,8 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CCha
 {
     // SYSCOIN
     NEVMDataVec dataVec;
-    if(!ProcessNEVMData(*this, const_cast<CBlock&>(block), 0, nullptr, dataVec, true)) {
+    bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
+    if(PODAContext && !ProcessNEVMData(*this, const_cast<CBlock&>(block), 0, nullptr, dataVec, true)) {
         error("%s: ProcessNEVMData failed", __func__); 
         return FlatFilePos();
     }

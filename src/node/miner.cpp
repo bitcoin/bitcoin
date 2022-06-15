@@ -301,7 +301,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 {
     // SYSCOIN
     int nCountAncestorNEVMDataTxs = 0;
-    AssertLockHeld(m_mempool.cs);
+    AssertLockHeld(m_mempool->cs);
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
@@ -316,7 +316,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         }
   
         // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
-        if(!m_mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
+        if(!m_mempool->isSyscoinConflictIsFirstSeen(it->GetTx())) {
             return false;
         } 
 
