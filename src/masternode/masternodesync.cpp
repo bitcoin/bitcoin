@@ -8,7 +8,7 @@
 #include <masternode/masternodesync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <evo/deterministicmns.h>
 #include <shutdown.h>
 #include <util/translation.h>

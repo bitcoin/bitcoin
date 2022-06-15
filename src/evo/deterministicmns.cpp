@@ -10,7 +10,7 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <script/standard.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <validation.h>
 #include <validationinterface.h>
 
