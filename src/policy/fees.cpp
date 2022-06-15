@@ -663,6 +663,23 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     shortStats->UpdateMovingAverages();
     longStats->UpdateMovingAverages();
 
+    // Do not consider transactions that were CPFP'd.
+    // For each mempool transaction that was included in a block, if its individual feerate is higher
+    // than its ancestor score it incentivized the inclusion of some of its parents in the block.
+    // Remove all such parents whose feerate is lower than the child's of the tracking before updating
+    // the data points.
+    for (const auto& entry : entries) {
+        CFeeRate individual_feerate{entry->GetFee(), static_cast<uint32_t>(entry->GetTxSize())};
+        CFeeRate ancestor_score{entry->GetModFeesWithAncestors(), static_cast<uint32_t>(entry->GetSizeWithAncestors())};
+
+        if (individual_feerate > ancestor_score) {
+            for (const CTxMemPoolEntry& parent : entry->GetMemPoolParents()) {
+                CFeeRate parent_feerate{parent.GetFee(), static_cast<uint32_t>(parent.GetTxSize())};
+                if (parent_feerate < individual_feerate) _removeTx(parent.GetTx().GetHash(), /* inBlock = */true);
+            }
+        }
+    }
+
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
     for (const auto& entry : entries) {
