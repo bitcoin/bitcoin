@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_NODE_UI_INTERFACE_H
-#define SYSCOIN_NODE_UI_INTERFACE_H
+#ifndef SYSCOIN_NODE_INTERFACE_UI_H
+#define SYSCOIN_NODE_INTERFACE_UI_H
 
 #include <functional>
 #include <memory>
@@ -127,4 +127,4 @@ constexpr auto AbortError = InitError;
 
 extern CClientUIInterface uiInterface;
 
-#endif // SYSCOIN_NODE_UI_INTERFACE_H
+#endif // SYSCOIN_NODE_INTERFACE_UI_H
