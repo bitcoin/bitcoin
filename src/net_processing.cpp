@@ -3617,7 +3617,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> ptx;
         // SYSCOIN
         NEVMDataVec nevmDataVecOut;
-        if(!ProcessNEVMData(ptx, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime, nevmDataVecOut)) {
+        if(!ProcessNEVMData(m_chainman.m_blockman, ptx, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime, nevmDataVecOut)) {
             LogPrint(BCLog::NET, "NEVM data transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -3971,7 +3971,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
                 std::vector<CTransactionRef> dummy;
                 // SYSCOIN
-                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime);
+                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime, &m_chainman.m_blockman);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -4056,7 +4056,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
             // SYSCOIN
-            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, resp.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime);
+            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, resp.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime, &m_chainman.m_blockman);
             if (status == READ_STATUS_INVALID) {
                 RemoveBlockRequest(resp.blockhash); // Reset in-flight state in case Misbehaving does not result in a disconnect
                 Misbehaving(pfrom.GetId(), 100, "invalid compact block/non-matching block transactions");
@@ -4152,7 +4152,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> *pblock;
         // SYSCOIN
         NEVMDataVec nevmDataVecOut;
-        if(!ProcessNEVMData(*pblock, nMedianTime, GetAdjustedTime, nevmDataVecOut)) {
+        if(!ProcessNEVMData(m_chainman.m_blockman, *pblock, nMedianTime, GetAdjustedTime, nevmDataVecOut)) {
             LogPrint(BCLog::NET, "Unexpected NEVM block message received from peer %d\n", pfrom.GetId());
             return;  
         }

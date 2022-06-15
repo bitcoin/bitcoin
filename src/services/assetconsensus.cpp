@@ -1181,8 +1181,7 @@ bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMe
     }
     if(!vecDataKeys.empty())
         LogPrint(BCLog::SYS, "Flushing, setting %d nevm heights\n", vecDataKeys.size());
-    // prune older entries
-    return Prune(batch, nMedianTime);
+    return WriteBatch(batch);
 }
 bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
     CDBBatch batch(*this);    
@@ -1210,7 +1209,8 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
         LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
     return WriteBatch(batch);
 }
-bool CNEVMDataDB::Prune(CDBBatch &batch, const int64_t nMedianTime) {
+bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
+    CDBBatch batch(*this);
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     std::pair<std::vector<unsigned char>, bool> pair;

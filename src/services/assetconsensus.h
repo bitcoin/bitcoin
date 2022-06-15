@@ -56,7 +56,7 @@ public:
         const auto& pair = std::make_pair(nVersionHash, true);
         return Write(pair, vchData);
     }
-    bool Prune(CDBBatch &batch, int64_t nMedianTime);
+    bool Prune(int64_t nMedianTime);
 };
 class CAssetDB : public CDBWrapper {
 public:

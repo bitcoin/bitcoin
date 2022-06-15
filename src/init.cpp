@@ -786,7 +786,7 @@ void InitParameterInteraction(ArgsManager& args)
         }
         #ifdef ENABLE_WALLET
         // masternode should not have wallet enabled
-        args.ForceSetArg("-disablewallet", "1");
+        args.SoftSetBoolArg("-disablewallet", true);
         LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
         #endif // ENABLE_WALLET
         if (args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {

@@ -2142,14 +2142,22 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
+bool ProcessNEVMDataHelper(const node::BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
     int64_t nTimeNow = 0;
     if(nMedianTime > 0)
         nTimeNow = adjusted_time_callback();
+    const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
+    int64_t nMedianTimeCL = 0;
+    if (!clsig.IsNull()) {
+        const auto* blockIndex = blockman.LookupBlockIndex(clsig.blockHash);
+        if(blockIndex)
+            nMedianTimeCL = blockIndex->GetMedianTimePast();
+    }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
     for (auto &nevmDataEntry : vecNevmData) {
-        bool enforceNotHaveData = nMedianTime > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
+        // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
+        bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
         // dataDoesntExistInDb is checked here as its not OK semantically for data to be empty within the time window but pragmatically its fine protocol wise as we have the data
@@ -2203,7 +2211,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2232,7 +2240,7 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::functi
             vecNevmData.emplace_back(entry);
         }
     }
-    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
             if(nevmDataEntry.nevmData) {
                 delete nevmDataEntry.nevmData;
@@ -2249,7 +2257,7 @@ bool ProcessNEVMData(CBlock &block, const int64_t nMedianTime, const std::functi
     }
     return true;
 }
-bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -2267,7 +2275,7 @@ bool ProcessNEVMData(CTransactionRef& tx, const int64_t nMedianTime, const std::
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    if(!ProcessNEVMDataHelper(vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         return false;
     }  
     return true;
@@ -3640,13 +3648,18 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
     // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
     // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
     // and mark all of them as conflicting.
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
+    LogPrint(BCLog::CHAINLOCKS, "CChainState::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
     EnforceBlock(state, pindex);
+    // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
+    // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
+    if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
+        LogPrintf("CChainState::%s -- CNEVMDataDB::Prune failed: %s\n", __func__);
+    }
     // no cs_main allowed
     bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
     if (activateNeeded) {
         if(!ActivateBestChain(state, nullptr)) {
-            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+            LogPrintf("CChainState::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
         }
     }
 }

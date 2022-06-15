@@ -134,8 +134,8 @@ class InvalidMessagesTest(SyscoinTestFramework):
     def test_size(self):
         self.log.info("Test message with oversized payload disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        # SYSCOIN 32MB
-        with self.nodes[0].assert_debug_log(['Header error: Size too large (badmsg, 33554433 bytes)']):
+        # SYSCOIN 100MB
+        with self.nodes[0].assert_debug_log(['Header error: Size too large (badmsg, 104857601 bytes)']):
             msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             conn.send_raw_message(msg)

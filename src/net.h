@@ -65,7 +65,8 @@ static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
  */
 /* FIXME: Once the headers size limit is deployed sufficiently in the network,
    we may want to lower this again if it seems useful.  */
-static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 32 * 1024 * 1024;
+// 32MB max NEVM, 4MB UTXO, 64MB BLOBS
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 100 * 1024 * 1024;
 /** Maximum length of the user agent string in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes over which we'll relay everything (blocks, tx, addrs, etc) */

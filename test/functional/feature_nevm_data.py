@@ -3,14 +3,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import secrets
-from test_framework.test_framework import SyscoinTestFramework
+import time
+from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync
 from test_framework.messages import NEVM_DATA_EXPIRE_TIME, MAX_DATA_BLOBS, MAX_NEVM_DATA_BLOB
-class NEVMDataTest(SyscoinTestFramework):
+
+class NEVMDataTest(DashTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 5
-        self.rpc_timeout = 240
+        self.set_dash_test_params(5, 4, [["-disablewallet=0","-walletrejectlongchains=0","-whitelist=noban@127.0.0.1"]] * 5, fast_dip3_enforcement=True)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -36,17 +37,10 @@ class NEVMDataTest(SyscoinTestFramework):
         assert_raises_rpc_error(-20, 'Transaction not complete or invalid', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
         print('Trying 2MB * MAX_DATA_BLOBS per block...')
         self.blobVHs = []
-        # need to split it up due to 25 mempool chain limit of transactions using inputs of other mempool txs
-        for i in range(0, 16):
+        for i in range(0, 33):
             vh = secrets.token_hex(32)
             self.blobVHs.append(vh)
             self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
-        for i in range(0, 17):
-            vh = secrets.token_hex(32)
-            self.blobVHs.append(vh)
-            self.nodes[1].syscoincreaterawnevmblob(vh, blobDataMax)
-        print('Syncing mempools...')
-        self.sync_mempools()
         print('Generating block...')
         tip = self.generate(self.nodes[0], 1)[-1]
         rpc_details = self.nodes[0].getblock(tip, True)
@@ -121,6 +115,8 @@ class NEVMDataTest(SyscoinTestFramework):
         print('Generating blocks without waiting for mempools to sync...')
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:4])
+        self.bump_mocktime(5, nodes=self.nodes[0:4])
+        time.sleep(1)
         self.sync_mempools(self.nodes[0:4])
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         print('Check for consistency...')
@@ -146,16 +142,15 @@ class NEVMDataTest(SyscoinTestFramework):
         self.starttime = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
         self.sync_blocks(self.nodes[0:4])
         print('Test reindex...')
-        self.restart_node(1, extra_args=["-reindex"])
-        force_finish_mnsync(self.nodes[1])
+        self.restart_node(1, extra_args=self.extra_args[1] + ["-reindex"])
         self.connect_nodes(1, 0)
+        self.connect_nodes(0, 1)
         self.sync_blocks(self.nodes[0:3])
         assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         assert_equal(self.nodes[1].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         print('Start node 4...')
         self.start_node(4)
-        force_finish_mnsync(self.nodes[4])
         self.connect_nodes(4, 0)
         self.connect_nodes(3, 0)
         self.connect_nodes(2, 0)
@@ -172,11 +167,13 @@ class NEVMDataTest(SyscoinTestFramework):
         self.mocktime = self.starttime
         self.bump_mocktime(NEVM_DATA_EXPIRE_TIME-1) # right before expiry
         self.generate(self.nodes[0], 1)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         assert_equal(self.nodes[4].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[4].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         assert_equal(self.nodes[4].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         self.bump_mocktime(1) # push median time over expiry
         self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
@@ -186,16 +183,35 @@ class NEVMDataTest(SyscoinTestFramework):
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[1].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
 
     def run_test(self):
+        self.nodes[1].createwallet("")
+        self.nodes[2].createwallet("")
+        self.nodes[3].createwallet("")
         force_finish_mnsync(self.nodes[0])
         force_finish_mnsync(self.nodes[1])
         force_finish_mnsync(self.nodes[2])
         force_finish_mnsync(self.nodes[3])
         force_finish_mnsync(self.nodes[4])
         self.generate(self.nodes[0], 10)
-        self.sync_blocks()
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+
+        self.log.info("Mining 4 quorums")
+        for i in range(4):
+            self.mine_quorum()
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.log.info("Mine single block, wait for chainlock")
+        self.generate(self.nodes[0], 1)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.generate(self.nodes[1], 10)
         self.sync_blocks()
         self.generate(self.nodes[3], 102)
+        self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1)
+        self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), 1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
         self.nevm_data_max_size_blob()
         self.nevm_data_block_max_blobs()
