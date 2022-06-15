@@ -2242,7 +2242,7 @@ bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const in
             vecNevmData.emplace_back(entry);
         }
     }
-    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
             if(nevmDataEntry.nevmData) {
                 delete nevmDataEntry.nevmData;
@@ -2277,7 +2277,7 @@ bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef& tx, co
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         return false;
     }  
     return true;
