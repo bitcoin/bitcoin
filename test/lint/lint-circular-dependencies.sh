@@ -76,7 +76,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     "coinjoin/client -> net_processing -> coinjoin/client"
     "llmq/quorums -> net_processing -> llmq/quorums"
-    "llmq/commitment -> llmq/utils -> llmq/commitment"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "evo/deterministicmns -> validationinterface -> txmempool -> evo/deterministicmns"
     "llmq/chainlocks -> validation -> llmq/chainlocks"
