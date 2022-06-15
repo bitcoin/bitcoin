@@ -77,6 +77,10 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
         assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee)
 
+        self.log.info('Test passing a value below the minimum (5 MB) to -maxmempool throws an error')
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(["-maxmempool=4"], "Error: -maxmempool must be at least 5 MB")
+
 
 if __name__ == '__main__':
     MempoolLimitTest().main()
