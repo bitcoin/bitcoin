@@ -829,7 +829,6 @@ void CTxMemPool::removeZDAGConflicts(const CTransaction &tx)
 
 // true if other tx (conflicting) was first in mempool and it was involved in asset double spend
 bool CTxMemPool::isSyscoinConflictIsFirstSeen(const CTransaction &tx) const {
-    AssertLockHeld(cs_main);
     AssertLockHeld(cs);
     if(mapAssetAllocationConflicts.empty())
         return true;
