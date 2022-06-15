@@ -297,9 +297,10 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool& mempool, const CTxMemPool::setEntries& package) const
 {
     // SYSCOIN
+    AssertLockHeld(mempool.cs);
     int nCountAncestorNEVMDataTxs = 0;
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
@@ -315,7 +316,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         }
   
         // If conflicting syscoin related dbl-spent input in this tx, skip it if its newer (prefer first tx based on time)
-        if(!m_mempool->isSyscoinConflictIsFirstSeen(it->GetTx())) {
+        if(!mempool.isSyscoinConflictIsFirstSeen(it->GetTx())) {
             return false;
         } 
 
@@ -525,8 +526,8 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);
 
-        // Test if all tx's are Final
-        if (!TestPackageTransactions(ancestors)) {
+        // SYSCOIN Test if all tx's are Final
+        if (!TestPackageTransactions(mempool, ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
