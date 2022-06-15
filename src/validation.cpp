@@ -2146,12 +2146,14 @@ bool ProcessNEVMDataHelper(const node::BlockManager& blockman, std::vector<CNEVM
     int64_t nTimeNow = 0;
     if(nMedianTime > 0)
         nTimeNow = adjusted_time_callback();
-    const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
     int64_t nMedianTimeCL = 0;
-    if (!clsig.IsNull()) {
-        const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
-        if(blockIndex)
-            nMedianTimeCL = blockIndex->GetMedianTimePast();
+    if(llmq::chainLocksHandler) {
+        const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
+        if (!clsig.IsNull()) {
+            const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
+            if(blockIndex)
+                nMedianTimeCL = blockIndex->GetMedianTimePast();
+        }
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
