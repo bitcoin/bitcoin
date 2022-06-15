@@ -11,6 +11,7 @@
 #include <logging/timer.h>
 #endif
 
+#include <attributes.h>
 #include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
@@ -426,5 +427,78 @@ public:
         return fHaveGrant;
     }
 };
+
+/**
+ * A generic container that protects an owned object with a mutex.
+ * This is like a mutex with an extension - owning an object of arbitrary type
+ * and providing a dereference operation which gives access to the owned object
+ * and transparently locks the mutex for the duration of the access. For example:
+ *
+ * @code{.cpp}
+ * Synced<std::vector<int>> v{4, 5, 6};
+ *
+ * std::thread t1{[&v]() { WITH_SYNCED_LOCK(v, p, p->push_back(7); }};
+ * std::thread t2{[&v]() { WITH_SYNCED_LOCK(v, p, p->push_back(8); }};
+ *
+ * SYNCED_LOCK(v, v_locked);
+ * const size_t size = v_locked->size();
+ * for (auto& i : *v_locked) {
+ *     i *= 10;
+ * }
+ * // The container will not be changed by another thread between the two size() calls.
+ * assert(size == v_locked->size());
+ *
+ * std::cout << (*v_locked)[0] << std::endl;
+ *
+ * @endcode
+ */
+template <typename T>
+class Synced
+{
+public:
+    /**
+     * Construct the container and its internal object of type T,
+     * passing `args...` to T's constructor.
+     */
+    template <typename... Args>
+    Synced(Args... args) : m_obj{args...}
+    {
+    }
+
+    /**
+     * An auxiliary class that holds the parent locked for the duration of its
+     * lifetime and provides access to the internal object.
+     */
+    class SCOPED_LOCKABLE Proxy : public ::UniqueLock<Mutex>
+    {
+    public:
+        Proxy(Synced& parent LIFETIMEBOUND, const char* name, const char* file, int line)
+            EXCLUSIVE_LOCK_FUNCTION(parent.m_mutex)
+            : ::UniqueLock<Mutex>{parent.m_mutex, name, file, line}, m_parent{parent}
+        {
+        }
+
+        ~Proxy() UNLOCK_FUNCTION() {}
+
+        T& operator*() LIFETIMEBOUND { return m_parent.m_obj; }
+
+        T* operator->() LIFETIMEBOUND { return &m_parent.m_obj; }
+
+    private:
+        Synced& m_parent;
+    };
+
+protected:
+    mutable Mutex m_mutex;
+    T m_obj GUARDED_BY(m_mutex);
+};
+
+#define SYNCED_LOCK(synced, name) decltype(synced)::Proxy name{synced, #synced, __FILE__, __LINE__}
+
+#define WITH_SYNCED_LOCK(synced, name, code) \
+    [&]() {                                  \
+        SYNCED_LOCK(synced, name);           \
+        code;                                \
+    }()
 
 #endif // BITCOIN_SYNC_H
