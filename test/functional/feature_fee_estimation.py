@@ -265,6 +265,11 @@ class EstimateFeeTest(BitcoinTestFramework):
             # Broadcast 5 low fee transaction which don't need to
             for _ in range(5):
                 tx = make_tx(self.wallet, utxos.pop(0), low_feerate)
+                self.confutxo.append({
+                    "txid": tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(tx["tx"].vout[0].nValue) / COIN
+                })
                 txs.append(tx)
             batch_send_tx = [node.sendrawtransaction.get_request(tx["hex"]) for tx in txs]
             for n in self.nodes:
@@ -278,11 +283,15 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(utxos_to_respend) > 0:
                 u = utxos_to_respend.pop(0)
                 tx = make_tx(self.wallet, u, high_feerate)
+                self.confutxo.append({
+                    "txid": tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(tx["tx"].vout[0].nValue) / COIN
+                })
                 node.sendrawtransaction(tx["hex"])
                 txs.append(tx)
             dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
             self.wallet.scan_txs(dec_txs)
-
 
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
