@@ -2149,7 +2149,7 @@ bool ProcessNEVMDataHelper(const node::BlockManager& blockman, std::vector<CNEVM
     const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
     int64_t nMedianTimeCL = 0;
     if (!clsig.IsNull()) {
-        const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash);
+        const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
         if(blockIndex)
             nMedianTimeCL = blockIndex->GetMedianTimePast();
     }
