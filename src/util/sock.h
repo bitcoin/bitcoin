@@ -12,6 +12,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 /**
  * Maximum time to wait for I/O readiness.
@@ -130,25 +131,83 @@ public:
     /**
      * If passed to `Wait()`, then it will wait for readiness to read from the socket.
      */
-    static constexpr Event RECV = 0b01;
+    static constexpr Event RECV = 0b001;
 
     /**
      * If passed to `Wait()`, then it will wait for readiness to send to the socket.
      */
-    static constexpr Event SEND = 0b10;
+    static constexpr Event SEND = 0b010;
+
+    /**
+     * Ignored if passed to `Wait()`, but could be set in the occurred events if an
+     * exceptional condition has occurred on the socket or if it has been disconnected.
+     */
+    static constexpr Event ERR = 0b100;
 
     /**
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
-     * @param[out] occurred If not nullptr and `true` is returned, then upon return this
-     * indicates which of the requested events occurred. A timeout is indicated by return
-     * value of `true` and `occurred` being set to 0.
-     * @return true on success and false otherwise
+     * @param[out] occurred If not nullptr and the function returns `true`, then this
+     * indicates which of the requested events occurred (`ERR` will be added, even if
+     * not requested, if an exceptional event occurs on the socket).
+     * A timeout is indicated by return value of `true` and `occurred` being set to 0.
+     * @return true on success (or timeout, if `occurred` of 0 is returned), false otherwise
      */
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
                                     Event* occurred = nullptr) const;
+
+    /**
+     * Auxiliary requested/occurred events to wait for in `WaitMany()`.
+     */
+    struct Events {
+        explicit Events(Event req) : requested{req}, occurred{0} {}
+        Event requested;
+        Event occurred;
+    };
+
+    struct HashSharedPtrSock {
+        size_t operator()(const std::shared_ptr<const Sock>& s) const
+        {
+            return s ? s->m_socket : std::numeric_limits<SOCKET>::max();
+        }
+    };
+
+    struct EqualSharedPtrSock {
+        bool operator()(const std::shared_ptr<const Sock>& lhs,
+                        const std::shared_ptr<const Sock>& rhs) const
+        {
+            if (lhs && rhs) {
+                return lhs->m_socket == rhs->m_socket;
+            }
+            if (!lhs && !rhs) {
+                return true;
+            }
+            return false;
+        }
+    };
+
+    /**
+     * On which socket to wait for what events in `WaitMany()`.
+     * The `shared_ptr` is copied into the map to ensure that the `Sock` object
+     * is not destroyed (its destructor would close the underlying socket).
+     * If this happens shortly before or after we call `poll(2)` and a new
+     * socket gets created under the same file descriptor number then the report
+     * from `WaitMany()` will be bogus.
+     */
+    using EventsPerSock = std::unordered_map<std::shared_ptr<const Sock>, Events, HashSharedPtrSock, EqualSharedPtrSock>;
+
+    /**
+     * Same as `Wait()`, but wait on many sockets within the same timeout.
+     * @param[in] timeout Wait this long for at least one of the requested events to occur.
+     * @param[in,out] events_per_sock Wait for the requested events on these sockets and set
+     * `occurred` for the events that actually occurred.
+     * @return true on success (or timeout, if all `what[].occurred` are returned as 0),
+     * false otherwise
+     */
+    [[nodiscard]] virtual bool WaitMany(std::chrono::milliseconds timeout,
+                                        EventsPerSock& events_per_sock) const;
 
     /* Higher level, convenience, methods. These may throw. */
 
