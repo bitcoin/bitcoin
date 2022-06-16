@@ -581,7 +581,7 @@ inspecting signatures in Mach-O binaries.")
         xz
         ;; Build tools
         gnu-make
-        libtool
+        libtool-2.4.7
         autoconf-2.71
         automake
         pkg-config
