@@ -18,6 +18,7 @@ RUN apt update && \
     apt install --no-install-recommends -y \
         autoconf \
         automake \
+        bsdmainutils \
         build-essential \
         libtool \
         g++-10 \
@@ -52,13 +53,13 @@ COPY \
     ./
 
 COPY \
-    /infra/configure-itcoin-core.sh \
+    /infra/configure-itcoin-core-dev.sh \
     /infra/Makefile \
     /opt/itcoin-core-source/infra/
 
 WORKDIR /opt/itcoin-core-source/infra
 
-RUN ./configure-itcoin-core.sh
+RUN ./configure-itcoin-core-dev.sh
 
 # run the build on all the available cores (sparing one), with load limiting.
 RUN make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1)

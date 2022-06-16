@@ -27,7 +27,7 @@
 !/contrib
 !/doc
 !/infra/bitcoin.conf.tmpl
-!/infra/configure-itcoin-core.sh
+!/infra/configure-itcoin-core-dev.sh
 !/infra/create-keypair.sh
 !/infra/entrypoint.sh
 !/infra/Makefile
