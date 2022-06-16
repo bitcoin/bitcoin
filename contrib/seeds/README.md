@@ -8,21 +8,11 @@ and remove old versions as necessary (at a minimum when GetDesirableServiceFlags
 changes its default return value, as those are the services which seeds are added
 to addrman with).
 
-The seeds compiled into the release are created from sipa's DNS seed data, like this:
+The seeds compiled into the release are created from sipa's DNS seed and AS map
+data. Run the following commands from the `/contrib/seeds` directory:
 
     curl https://bitcoin.sipa.be/seeds.txt.gz | gzip -dc > seeds_main.txt
-    python3 makeseeds.py < seeds_main.txt > nodes_main.txt
+    curl https://bitcoin.sipa.be/asmap-filled.dat > asmap-filled.dat
+    python3 makeseeds.py -a asmap-filled.dat < seeds_main.txt > nodes_main.txt
     cat nodes_main_manual.txt >> nodes_main.txt
     python3 generate-seeds.py . > ../../src/chainparamsseeds.h
-
-## Dependencies
-
-Ubuntu, Debian:
-
-    sudo apt-get install python3-dnspython
-
-and/or for other operating systems:
-
-    pip install dnspython
-
-See https://dnspython.readthedocs.io/en/latest/installation.html for more information.
