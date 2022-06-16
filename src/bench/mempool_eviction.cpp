@@ -97,7 +97,7 @@ static void MempoolEviction(benchmark::Bench& bench)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    CTxMemPool pool;
+    CTxMemPool& pool = *Assert(testing_setup->m_node.mempool);
     // Create transaction references outside the "hot loop"
     const CTransactionRef tx1_r{MakeTransactionRef(tx1)};
     const CTransactionRef tx2_r{MakeTransactionRef(tx2)};
