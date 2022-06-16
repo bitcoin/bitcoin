@@ -59,8 +59,6 @@ namespace Consensus {
 struct Params;
 } // namespace Consensus
 
-/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
-static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 101;
 /** Default for -limitdescendantcount, max number of in-mempool descendants */
 static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 /** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */

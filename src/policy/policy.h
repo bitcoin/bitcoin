@@ -59,6 +59,8 @@ static const unsigned int DUST_RELAY_TX_FEE = 3000;
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static constexpr unsigned int DEFAULT_ANCESTOR_LIMIT{25};
+/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
+static constexpr unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT{101};
 /**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid
