@@ -91,7 +91,7 @@ fi
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
-export HOSTS="${HOSTS:-x86_64-w64-mingw32 x86_64-apple-darwin19}"
+export HOSTS="${HOSTS:-x86_64-w64-mingw32 x86_64-apple-darwin arm64-apple-darwin}"
 
 # Usage: distsrc_for_host HOST
 #
@@ -152,10 +152,10 @@ outdir_for_host() {
 unsigned_tarball_for_host() {
     case "$1" in
         *mingw*)
-            echo "$(outdir_for_host "$1")/${DISTNAME}-win-unsigned.tar.gz"
+            echo "$(outdir_for_host "$1")/${DISTNAME}-win64-unsigned.tar.gz"
             ;;
         *darwin*)
-            echo "$(outdir_for_host "$1")/${DISTNAME}-osx-unsigned.tar.gz"
+            echo "$(outdir_for_host "$1")/${DISTNAME}-${1}-unsigned.tar.gz"
             ;;
         *)
             exit 1
@@ -221,20 +221,6 @@ JOBS="${JOBS:-$(nproc)}"
 
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --format=%at -1)}"
-
-# Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
-# across time.
-time-machine() {
-    # shellcheck disable=SC2086
-    guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
-                      --commit=aa34d4d28dfe25ba47d5800d05000fb7221788c0 \
-                      --cores="$JOBS" \
-                      --keep-failed \
-                      --fallback \
-                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
-                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
-                      -- "$@"
-}
 
 # Make sure an output directory exists for our builds
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"

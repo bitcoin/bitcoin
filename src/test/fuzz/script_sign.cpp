@@ -1,10 +1,11 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <key.h>
+#include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <script/sign.h>
@@ -43,7 +44,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         } catch (const std::ios_base::failure&) {
         }
         CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
-        SerializeHDKeypaths(serialized, hd_keypaths, fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+        SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
     }
 
     {
@@ -61,7 +62,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         }
         CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
         try {
-            SerializeHDKeypaths(serialized, hd_keypaths, fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+            SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
         } catch (const std::ios_base::failure&) {
         }
         std::map<CPubKey, KeyOriginInfo> deserialized_hd_keypaths;
@@ -112,7 +113,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
             }
             if (n_in < script_tx_to.vin.size()) {
                 (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>());
-                MutableTransactionSignatureCreator signature_creator{&tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
+                MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::vector<unsigned char> vch_sig;
                 CKeyID address;
                 if (fuzzed_data_provider.ConsumeBool()) {

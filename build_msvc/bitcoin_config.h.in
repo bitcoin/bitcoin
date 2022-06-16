@@ -44,17 +44,8 @@
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
 
-/* define if the Boost::Filesystem library is available */
-#define HAVE_BOOST_FILESYSTEM /**/
-
 /* define if external signer support is enabled (requires Boost::Process) */
 #define ENABLE_EXTERNAL_SIGNER /**/
-
-/* define if the Boost::System library is available */
-#define HAVE_BOOST_SYSTEM /**/
-
-/* define if the Boost::Unit_Test_Framework library is available */
-#define HAVE_BOOST_UNIT_TEST_FRAMEWORK /**/
 
 /* Define this symbol if the consensus lib has been built */
 #define HAVE_CONSENSUS_LIB 1
@@ -133,10 +124,6 @@
 /* Define to 1 if you have the declaration of `strerror_r', and to 0 if you
    don't. */
 #define HAVE_DECL_STRERROR_R 0
-
-/* Define to 1 if you have the declaration of `strnlen', and to 0 if you
-   don't. */
-#define HAVE_DECL_STRNLEN 1
 
 /* Define if the dllexport attribute is supported. */
 #define HAVE_DLLEXPORT_ATTRIBUTE 1

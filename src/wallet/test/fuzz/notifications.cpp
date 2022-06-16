@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+namespace wallet {
 namespace {
 const TestingSetup* g_setup;
 
@@ -63,7 +64,7 @@ struct FuzzedWallet {
         assert(RemoveWallet(context, wallet, load_on_start, warnings));
         assert(warnings.empty());
         UnloadWallet(std::move(wallet));
-        fs::remove_all(GetWalletDir() / name);
+        fs::remove_all(GetWalletDir() / fs::PathFromString(name));
     }
     CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
     {
@@ -168,3 +169,4 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
     }
 }
 } // namespace
+} // namespace wallet

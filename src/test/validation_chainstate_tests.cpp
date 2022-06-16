@@ -1,15 +1,16 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
-#include <random.h>
-#include <uint256.h>
 #include <consensus/validation.h>
-#include <sync.h>
+#include <random.h>
 #include <rpc/blockchain.h>
+#include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/setup_common.h>
+#include <timedata.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <vector>
@@ -22,7 +23,12 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
-    ChainstateManager manager;
+    const ChainstateManager::Options chainman_opts{
+        Params(),
+        GetAdjustedTime,
+    };
+    ChainstateManager manager{chainman_opts};
+
     WITH_LOCK(::cs_main, manager.m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true));
     CTxMemPool mempool;
 
@@ -43,6 +49,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     c1.InitCoinsDB(
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
+    BOOST_REQUIRE(c1.LoadGenesisBlock()); // Need at least one block loaded to be able to flush caches
 
     // Add a coin to the in-memory cache, upsize once, then downsize.
     {
@@ -71,9 +78,6 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         // The view cache should be empty since we had to destruct to downsize.
         BOOST_CHECK(!c1.CoinsTip().HaveCoinInCache(outpoint));
     }
-
-    // Avoid triggering the address sanitizer.
-    WITH_LOCK(::cs_main, manager.Unload());
 }
 
 //! Test UpdateTip behavior for both active and background chainstates.
@@ -95,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
 
     // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(chainman.IsSnapshotActive());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.IsSnapshotActive()));
 
     curr_tip = ::g_best_block;
 

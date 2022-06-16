@@ -1,6 +1,10 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <crypto/chacha_poly_aead.h>
 
@@ -73,7 +77,7 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
             return false;
         }
         memory_cleanse(expected_tag, sizeof(expected_tag));
-        // MAC has been successfully verified, make sure we don't covert it in decryption
+        // MAC has been successfully verified, make sure we don't convert it in decryption
         src_len -= POLY1305_TAGLEN;
     }
 

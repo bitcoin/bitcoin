@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,9 +30,9 @@
 #endif
 
 // Settings
-static Mutex g_proxyinfo_mutex;
-static proxyType proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
-static proxyType nameProxy GUARDED_BY(g_proxyinfo_mutex);
+static GlobalMutex g_proxyinfo_mutex;
+static Proxy proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
+static Proxy nameProxy GUARDED_BY(g_proxyinfo_mutex);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
@@ -136,7 +136,7 @@ static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
 {
     vIP.clear();
 
-    if (!ValidAsCString(name)) {
+    if (!ContainsNoNUL(name)) {
         return false;
     }
 
@@ -169,7 +169,7 @@ static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
 
 bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ValidAsCString(name)) {
+    if (!ContainsNoNUL(name)) {
         return false;
     }
     std::string strHost = name;
@@ -184,7 +184,7 @@ bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned in
 
 bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ValidAsCString(name)) {
+    if (!ContainsNoNUL(name)) {
         return false;
     }
     std::vector<CNetAddr> vIP;
@@ -197,7 +197,7 @@ bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSL
 
 bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
 {
-    if (name.empty() || !ValidAsCString(name)) {
+    if (name.empty() || !ContainsNoNUL(name)) {
         return false;
     }
     uint16_t port{portDefault};
@@ -216,7 +216,7 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t port
 
 bool Lookup(const std::string& name, CService& addr, uint16_t portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ValidAsCString(name)) {
+    if (!ContainsNoNUL(name)) {
         return false;
     }
     std::vector<CService> vService;
@@ -229,7 +229,7 @@ bool Lookup(const std::string& name, CService& addr, uint16_t portDefault, bool 
 
 CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupFn dns_lookup_function)
 {
-    if (!ValidAsCString(name)) {
+    if (!ContainsNoNUL(name)) {
         return {};
     }
     CService addr;
@@ -305,7 +305,7 @@ enum class IntrRecvError {
  *
  * @see This function can be interrupted by calling InterruptSocks5(bool).
  *      Sockets can be made non-blocking with SetSocketNonBlocking(const
- *      SOCKET&, bool).
+ *      SOCKET&).
  */
 static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const Sock& sock)
 {
@@ -499,10 +499,11 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
         return nullptr;
     }
 
+    auto sock = std::make_unique<Sock>(hSocket);
+
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
-    if (!IsSelectableSocket(hSocket)) {
-        CloseSocket(hSocket);
+    if (!IsSelectableSocket(sock->Get())) {
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
         return nullptr;
     }
@@ -511,19 +512,24 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     int set = 1;
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
-    setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
+    if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int)) == SOCKET_ERROR) {
+        LogPrintf("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
+                  NetworkErrorString(WSAGetLastError()));
+    }
 #endif
 
     // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
-    SetSocketNoDelay(hSocket);
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+    }
 
     // Set the non-blocking option on the socket.
-    if (!SetSocketNonBlocking(hSocket, true)) {
-        CloseSocket(hSocket);
+    if (!SetSocketNonBlocking(sock->Get())) {
         LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
-    return std::make_unique<Sock>(hSocket);
+    return sock;
 }
 
 std::function<std::unique_ptr<Sock>(const CService&)> CreateSock = CreateSockTCP;
@@ -605,7 +611,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
     return true;
 }
 
-bool SetProxy(enum Network net, const proxyType &addrProxy) {
+bool SetProxy(enum Network net, const Proxy &addrProxy) {
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
         return false;
@@ -614,7 +620,7 @@ bool SetProxy(enum Network net, const proxyType &addrProxy) {
     return true;
 }
 
-bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
+bool GetProxy(enum Network net, Proxy &proxyInfoOut) {
     assert(net >= 0 && net < NET_MAX);
     LOCK(g_proxyinfo_mutex);
     if (!proxyInfo[net].IsValid())
@@ -623,7 +629,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     return true;
 }
 
-bool SetNameProxy(const proxyType &addrProxy) {
+bool SetNameProxy(const Proxy &addrProxy) {
     if (!addrProxy.IsValid())
         return false;
     LOCK(g_proxyinfo_mutex);
@@ -631,7 +637,7 @@ bool SetNameProxy(const proxyType &addrProxy) {
     return true;
 }
 
-bool GetNameProxy(proxyType &nameProxyOut) {
+bool GetNameProxy(Proxy &nameProxyOut) {
     LOCK(g_proxyinfo_mutex);
     if(!nameProxy.IsValid())
         return false;
@@ -653,7 +659,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
+bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
 {
     // first connect to proxy server
     if (!ConnectSocketDirectly(proxy.proxy, sock, nTimeout, true)) {
@@ -669,87 +675,154 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uin
             return false;
         }
     } else {
-        if (!Socks5(strDest, port, 0, sock)) {
+        if (!Socks5(strDest, port, nullptr, sock)) {
             return false;
         }
     }
     return true;
 }
 
-bool LookupSubNet(const std::string& strSubnet, CSubNet& ret, DNSLookupFn dns_lookup_function)
+bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 {
-    if (!ValidAsCString(strSubnet)) {
+    if (!ContainsNoNUL(subnet_str)) {
         return false;
     }
-    size_t slash = strSubnet.find_last_of('/');
-    CNetAddr network;
 
-    std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress, network, false, dns_lookup_function))
-    {
-        if (slash != strSubnet.npos)
-        {
-            std::string strNetmask = strSubnet.substr(slash + 1);
-            uint8_t n;
-            if (ParseUInt8(strNetmask, &n)) {
-                // If valid number, assume CIDR variable-length subnet masking
-                ret = CSubNet(network, n);
-                return ret.IsValid();
-            }
-            else // If not a valid number, try full netmask syntax
-            {
-                CNetAddr netmask;
-                // Never allow lookup for netmask
-                if (LookupHost(strNetmask, netmask, false, dns_lookup_function)) {
-                    ret = CSubNet(network, netmask);
-                    return ret.IsValid();
+    const size_t slash_pos{subnet_str.find_last_of('/')};
+    const std::string str_addr{subnet_str.substr(0, slash_pos)};
+    CNetAddr addr;
+
+    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
+        if (slash_pos != subnet_str.npos) {
+            const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
+            uint8_t netmask;
+            if (ParseUInt8(netmask_str, &netmask)) {
+                // Valid number; assume CIDR variable-length subnet masking.
+                subnet_out = CSubNet{addr, netmask};
+                return subnet_out.IsValid();
+            } else {
+                // Invalid number; try full netmask syntax. Never allow lookup for netmask.
+                CNetAddr full_netmask;
+                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
+                    subnet_out = CSubNet{addr, full_netmask};
+                    return subnet_out.IsValid();
                 }
             }
-        }
-        else // Single IP subnet (<ipv4>/32 or <ipv6>/128)
-        {
-            ret = CSubNet(network);
-            return ret.IsValid();
+        } else {
+            // Single IP subnet (<ipv4>/32 or <ipv6>/128).
+            subnet_out = CSubNet{addr};
+            return subnet_out.IsValid();
         }
     }
     return false;
 }
 
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
+bool SetSocketNonBlocking(const SOCKET& hSocket)
 {
-    if (fNonBlocking) {
 #ifdef WIN32
-        u_long nOne = 1;
-        if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
+    u_long nOne = 1;
+    if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
 #else
-        int fFlags = fcntl(hSocket, F_GETFL, 0);
-        if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
+    int fFlags = fcntl(hSocket, F_GETFL, 0);
+    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
 #endif
-            return false;
-        }
-    } else {
-#ifdef WIN32
-        u_long nZero = 0;
-        if (ioctlsocket(hSocket, FIONBIO, &nZero) == SOCKET_ERROR) {
-#else
-        int fFlags = fcntl(hSocket, F_GETFL, 0);
-        if (fcntl(hSocket, F_SETFL, fFlags & ~O_NONBLOCK) == SOCKET_ERROR) {
-#endif
-            return false;
-        }
+        return false;
     }
 
     return true;
 }
 
-bool SetSocketNoDelay(const SOCKET& hSocket)
-{
-    int set = 1;
-    int rc = setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
-    return rc == 0;
-}
-
 void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
+}
+
+bool IsBadPort(uint16_t port)
+{
+    /* Don't forget to update doc/p2p-bad-ports.md if you change this list. */
+
+    switch (port) {
+    case 1:     // tcpmux
+    case 7:     // echo
+    case 9:     // discard
+    case 11:    // systat
+    case 13:    // daytime
+    case 15:    // netstat
+    case 17:    // qotd
+    case 19:    // chargen
+    case 20:    // ftp data
+    case 21:    // ftp access
+    case 22:    // ssh
+    case 23:    // telnet
+    case 25:    // smtp
+    case 37:    // time
+    case 42:    // name
+    case 43:    // nicname
+    case 53:    // domain
+    case 69:    // tftp
+    case 77:    // priv-rjs
+    case 79:    // finger
+    case 87:    // ttylink
+    case 95:    // supdup
+    case 101:   // hostname
+    case 102:   // iso-tsap
+    case 103:   // gppitnp
+    case 104:   // acr-nema
+    case 109:   // pop2
+    case 110:   // pop3
+    case 111:   // sunrpc
+    case 113:   // auth
+    case 115:   // sftp
+    case 117:   // uucp-path
+    case 119:   // nntp
+    case 123:   // NTP
+    case 135:   // loc-srv /epmap
+    case 137:   // netbios
+    case 139:   // netbios
+    case 143:   // imap2
+    case 161:   // snmp
+    case 179:   // BGP
+    case 389:   // ldap
+    case 427:   // SLP (Also used by Apple Filing Protocol)
+    case 465:   // smtp+ssl
+    case 512:   // print / exec
+    case 513:   // login
+    case 514:   // shell
+    case 515:   // printer
+    case 526:   // tempo
+    case 530:   // courier
+    case 531:   // chat
+    case 532:   // netnews
+    case 540:   // uucp
+    case 548:   // AFP (Apple Filing Protocol)
+    case 554:   // rtsp
+    case 556:   // remotefs
+    case 563:   // nntp+ssl
+    case 587:   // smtp (rfc6409)
+    case 601:   // syslog-conn (rfc3195)
+    case 636:   // ldap+ssl
+    case 989:   // ftps-data
+    case 990:   // ftps
+    case 993:   // ldap+ssl
+    case 995:   // pop3+ssl
+    case 1719:  // h323gatestat
+    case 1720:  // h323hostcall
+    case 1723:  // pptp
+    case 2049:  // nfs
+    case 3659:  // apple-sasl / PasswordServer
+    case 4045:  // lockd
+    case 5060:  // sip
+    case 5061:  // sips
+    case 6000:  // X11
+    case 6566:  // sane-port
+    case 6665:  // Alternate IRC
+    case 6666:  // Alternate IRC
+    case 6667:  // Standard IRC
+    case 6668:  // Alternate IRC
+    case 6669:  // Alternate IRC
+    case 6697:  // IRC + TLS
+    case 10080: // Amanda
+        return true;
+    }
+    return false;
 }

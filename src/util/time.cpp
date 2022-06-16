@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,16 +22,6 @@
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
 static std::atomic<int64_t> nMockTime(0); //!< For testing
-
-int64_t GetTime()
-{
-    int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
-    if (mocktime) return mocktime;
-
-    time_t now = time(nullptr);
-    assert(now > 0);
-    return now;
-}
 
 bool ChronoSanityCheck()
 {
@@ -76,19 +66,16 @@ bool ChronoSanityCheck()
     return true;
 }
 
-template <typename T>
-T GetTime()
+NodeClock::time_point NodeClock::now() noexcept
 {
     const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
-
-    return std::chrono::duration_cast<T>(
+    const auto ret{
         mocktime.count() ?
             mocktime :
-            std::chrono::microseconds{GetTimeMicros()});
-}
-template std::chrono::seconds GetTime();
-template std::chrono::milliseconds GetTime();
-template std::chrono::microseconds GetTime();
+            std::chrono::system_clock::now().time_since_epoch()};
+    assert(ret > 0s);
+    return time_point{ret};
+};
 
 template <typename T>
 static T GetSystemTime()
@@ -124,10 +111,7 @@ int64_t GetTimeMicros()
     return int64_t{GetSystemTime<std::chrono::microseconds>().count()};
 }
 
-int64_t GetTimeSeconds()
-{
-    return int64_t{GetSystemTime<std::chrono::seconds>().count()};
-}
+int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
 
 std::string FormatISO8601DateTime(int64_t nTime) {
     struct tm ts;

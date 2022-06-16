@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,12 +21,12 @@ FUZZ_TARGET(node_eviction)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         eviction_candidates.push_back({
             /*id=*/fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /*nTimeConnected=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*m_connected=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /*m_min_ping_time=*/std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /*nLastBlockTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /*nLastTXTime=*/fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /*m_last_block_time=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /*m_last_tx_time=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /*fRelevantServices=*/fuzzed_data_provider.ConsumeBool(),
-            /*fRelayTxes=*/fuzzed_data_provider.ConsumeBool(),
+            /*m_relay_txs=*/fuzzed_data_provider.ConsumeBool(),
             /*fBloomFilter=*/fuzzed_data_provider.ConsumeBool(),
             /*nKeyedNetGroup=*/fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
             /*prefer_evict=*/fuzzed_data_provider.ConsumeBool(),

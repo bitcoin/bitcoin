@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,20 +14,19 @@
 #include <util/strencodings.h>
 #include <version.h>
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-
 #include <algorithm>
 #include <string>
 
 namespace {
-
-opcodetype ParseOpCode(const std::string& s)
+class OpCodeParser
 {
-    static std::map<std::string, opcodetype> mapOpNames;
+private:
+    std::map<std::string, opcodetype> mapOpNames;
 
-    if (mapOpNames.empty()) {
-        for (unsigned int op = 0; op <= MAX_OPCODE; op++) {
+public:
+    OpCodeParser()
+    {
+        for (unsigned int op = 0; op <= MAX_OPCODE; ++op) {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED) {
                 continue;
@@ -44,10 +43,18 @@ opcodetype ParseOpCode(const std::string& s)
             }
         }
     }
+    opcodetype Parse(const std::string& s) const
+    {
+        auto it = mapOpNames.find(s);
+        if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
+        return it->second;
+    }
+};
 
-    auto it = mapOpNames.find(s);
-    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
-    return it->second;
+opcodetype ParseOpCode(const std::string& s)
+{
+    static const OpCodeParser ocp;
+    return ocp.Parse(s);
 }
 
 } // namespace
@@ -56,12 +63,11 @@ CScript ParseScript(const std::string& s)
 {
     CScript result;
 
-    std::vector<std::string> words;
-    boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
+    std::vector<std::string> words = SplitString(s, " \t\n");
 
     for (const std::string& w : words) {
         if (w.empty()) {
-            // Empty string, ignore. (boost::split given '' will return one word)
+            // Empty string, ignore. (SplitString doesn't combine multiple separators)
         } else if (std::all_of(w.begin(), w.end(), ::IsDigit) ||
                    (w.front() == '-' && w.size() > 1 && std::all_of(w.begin() + 1, w.end(), ::IsDigit)))
         {
@@ -248,7 +254,7 @@ std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strN
 
 int ParseSighashString(const UniValue& sighash)
 {
-    int hash_type = SIGHASH_ALL;
+    int hash_type = SIGHASH_DEFAULT;
     if (!sighash.isNull()) {
         static std::map<std::string, int> map_sighash_values = {
             {std::string("DEFAULT"), int(SIGHASH_DEFAULT)},

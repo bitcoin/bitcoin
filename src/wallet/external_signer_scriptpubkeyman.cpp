@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
 {
     LOCK(cs_desc_man);
@@ -82,3 +83,4 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
     if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
     return TransactionError::OK;
 }
+} // namespace wallet

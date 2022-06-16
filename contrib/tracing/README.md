@@ -237,7 +237,7 @@ Histogram of block connection times in milliseconds (ms).
 
 ### log_utxocache_flush.py
 
-A BCC Python script to log the cache and index flushes. Based on the
+A BCC Python script to log the UTXO cache flushes. Based on the
 `utxocache:flush` tracepoint.
 
 ```bash
@@ -246,23 +246,10 @@ $ python3 contrib/tracing/log_utxocache_flush.py ./src/bitcoind
 
 ```
 Logging utxocache flushes. Ctrl-C to end...
-Duration (µs)   Mode       Coins Count     Memory Usage    Prune    Full Flush
-0               PERIODIC   28484           3929.87 kB      False    False
-1               PERIODIC   28485           3930.00 kB      False    False
-0               PERIODIC   28489           3930.51 kB      False    False
-1               PERIODIC   28490           3930.64 kB      False    False
-0               PERIODIC   28491           3930.77 kB      False    False
-0               PERIODIC   28491           3930.77 kB      False    False
-0               PERIODIC   28496           3931.41 kB      False    False
-1               PERIODIC   28496           3931.41 kB      False    False
-0               PERIODIC   28497           3931.54 kB      False    False
-1               PERIODIC   28497           3931.54 kB      False    False
-1               PERIODIC   28499           3931.79 kB      False    False
-.
-.
-.
-53788           ALWAYS     30076           4136.27 kB      False    False
-7463            ALWAYS     0               245.84 kB       False    False
+Duration (µs)   Mode       Coins Count     Memory Usage    Prune
+730451          IF_NEEDED  22990           3323.54 kB      True
+637657          ALWAYS     122320          17124.80 kB     False
+81349           ALWAYS     0               1383.49 kB      False
 ```
 
 ### log_utxos.bt
@@ -275,7 +262,13 @@ uncached from the UTXO set. Based on the `utxocache:add`, `utxocache:spend` and
 $ bpftrace contrib/tracing/log_utxos.bt
 ```
 
-It should produce an output similar to the following.
+This should produce an output similar to the following. If you see bpftrace
+warnings like `Lost 24 events`, the eBPF perf ring-buffer is filled faster
+than it is being read. You can increase the ring-buffer size by setting the
+ENV variable `BPFTRACE_PERF_RB_PAGES` (default 64) at a cost of higher
+memory usage. See the [bpftrace reference guide] for more information.
+
+[bpftrace reference guide]: https://github.com/iovisor/bpftrace/blob/master/docs/reference_guide.md#98-bpftrace_perf_rb_pages
 
 ```bash
 Attaching 4 probes...

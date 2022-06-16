@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <fs.h>
 #include <node/utxo_snapshot.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -12,6 +13,8 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+using node::SnapshotMetadata;
 
 namespace {
 
@@ -55,7 +58,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
     if (fuzzed_data_provider.ConsumeBool()) {
         for (const auto& block : *g_chain) {
             BlockValidationState dummy;
-            bool processed{chainman.ProcessNewBlockHeaders({*block}, dummy, ::Params())};
+            bool processed{chainman.ProcessNewBlockHeaders({*block}, dummy)};
             Assert(processed);
             const auto* index{WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block->GetHash()))};
             Assert(index);

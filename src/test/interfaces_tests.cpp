@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
 
 BOOST_AUTO_TEST_CASE(hasBlocks)
 {
+    LOCK(::cs_main);
     auto& chain = m_node.chain;
     const CChain& active = Assert(m_node.chainman)->ActiveChain();
 

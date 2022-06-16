@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,10 +28,7 @@ PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent) :
     refresh();
 }
 
-PeerTableModel::~PeerTableModel()
-{
-    // Intentionally left empty
-}
+PeerTableModel::~PeerTableModel() = default;
 
 void PeerTableModel::startAutoRefresh()
 {
@@ -71,6 +68,8 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         switch (column) {
         case NetNodeId:
             return (qint64)rec->nodeStats.nodeid;
+        case Age:
+            return GUIUtil::FormatPeerAge(rec->nodeStats.m_connected);
         case Address:
             return QString::fromStdString(rec->nodeStats.m_addr_name);
         case Direction:
@@ -80,7 +79,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
                                //: An Outbound Connection to a Peer.
                                tr("Outbound"));
         case ConnectionType:
-            return GUIUtil::ConnectionTypeToQString(rec->nodeStats.m_conn_type, /* prepend_direction */ false);
+            return GUIUtil::ConnectionTypeToQString(rec->nodeStats.m_conn_type, /*prepend_direction=*/false);
         case Network:
             return GUIUtil::NetworkToQString(rec->nodeStats.m_network);
         case Ping:
@@ -96,6 +95,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
     } else if (role == Qt::TextAlignmentRole) {
         switch (column) {
         case NetNodeId:
+        case Age:
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
         case Address:
             return {};

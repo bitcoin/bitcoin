@@ -7,6 +7,7 @@
 #include <wallet/wallet.h>
 
 
+namespace wallet {
 RPCHelpMan walletpassphrase()
 {
     return RPCHelpMan{"walletpassphrase",
@@ -53,7 +54,7 @@ RPCHelpMan walletpassphrase()
         strWalletPass = request.params[0].get_str().c_str();
 
         // Get the timeout
-        nSleepTime = request.params[1].get_int64();
+        nSleepTime = request.params[1].getInt<int64_t>();
         // Timeout cannot be negative, otherwise it will relock immediately
         if (nSleepTime < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
@@ -65,7 +66,7 @@ RPCHelpMan walletpassphrase()
         }
 
         if (strWalletPass.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
         }
 
         if (!pwallet->Unlock(strWalletPass)) {
@@ -138,7 +139,7 @@ RPCHelpMan walletpassphrasechange()
     strNewWalletPass = request.params[1].get_str().c_str();
 
     if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
@@ -235,7 +236,7 @@ RPCHelpMan encryptwallet()
     strWalletPass = request.params[0].get_str().c_str();
 
     if (strWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
     if (!pwallet->EncryptWallet(strWalletPass)) {
@@ -246,3 +247,4 @@ RPCHelpMan encryptwallet()
 },
     };
 }
+} // namespace wallet

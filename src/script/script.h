@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,6 +29,9 @@ static const int MAX_OPS_PER_SCRIPT = 201;
 // Maximum number of public keys per multisig
 static const int MAX_PUBKEYS_PER_MULTISIG = 20;
 
+/** The limit of keys in OP_CHECKSIGADD-based scripts. It is due to the stack limit in BIP342. */
+static constexpr unsigned int MAX_PUBKEYS_PER_MULTI_A = 999;
+
 // Maximum script length in bytes
 static const int MAX_SCRIPT_SIZE = 10000;
 
@@ -51,10 +54,10 @@ static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 static constexpr unsigned int ANNEX_TAG = 0x50;
 
 // Validation weight per passing signature (Tapscript only, see BIP 342).
-static constexpr uint64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED = 50;
+static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
-static constexpr uint64_t VALIDATION_WEIGHT_OFFSET = 50;
+static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
@@ -332,6 +335,8 @@ public:
         return m_value;
     }
 
+    int64_t GetInt64() const { return m_value; }
+
     std::vector<unsigned char> getvch() const
     {
         return serialize(m_value);
@@ -572,5 +577,32 @@ struct CScriptWitness
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
+
+bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
+
+/** Build a script by concatenating other scripts, or any argument accepted by CScript::operator<<. */
+template<typename... Ts>
+CScript BuildScript(Ts&&... inputs)
+{
+    CScript ret;
+    int cnt{0};
+
+    ([&ret, &cnt] (Ts&& input) {
+        cnt++;
+        if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<Ts>>, CScript>) {
+            // If it is a CScript, extend ret with it. Move or copy the first element instead.
+            if (cnt == 0) {
+                ret = std::forward<Ts>(input);
+            } else {
+                ret.insert(ret.end(), input.begin(), input.end());
+            }
+        } else {
+            // Otherwise invoke CScript::operator<<.
+            ret << input;
+        }
+    } (std::forward<Ts>(inputs)), ...);
+
+    return ret;
+}
 
 #endif // BITCOIN_SCRIPT_SCRIPT_H

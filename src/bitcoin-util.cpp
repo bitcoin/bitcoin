@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,18 +11,18 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <compat.h>
 #include <core_io.h>
 #include <streams.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <version.h>
 
 #include <atomic>
 #include <cstdio>
 #include <functional>
 #include <memory>
 #include <thread>
-
-#include <boost/algorithm/string.hpp>
 
 static const int CONTINUE_EXECUTION=-1;
 
@@ -53,7 +53,10 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
     if (HelpRequested(args) || args.IsArgSet("-version")) {
         // First part of help message is specific to this utility
         std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
-        if (!args.IsArgSet("-version")) {
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                 "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
             strUsage += "\n" + args.GetHelpMessage();
@@ -140,16 +143,7 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
     return EXIT_SUCCESS;
 }
 
-#ifdef WIN32
-// Export main() and ensure working ASLR on Windows.
-// Exporting a symbol will prevent the linker from stripping
-// the .reloc section from the binary, which is a requirement
-// for ASLR. This is a temporary workaround until a fixed
-// version of binutils is used for releases.
-__declspec(dllexport) int main(int argc, char* argv[])
-#else
-int main(int argc, char* argv[])
-#endif
+MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
     SetupEnvironment();

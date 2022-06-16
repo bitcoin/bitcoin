@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,10 +40,10 @@ protected:
         DB(const fs::path& path, size_t n_cache_size,
            bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
 
-        /// Read block locator of the chain that the txindex is in sync with.
+        /// Read block locator of the chain that the index is in sync with.
         bool ReadBestBlock(CBlockLocator& locator) const;
 
-        /// Write block locator of the chain that the txindex is in sync with.
+        /// Write block locator of the chain that the index is in sync with.
         void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator);
     };
 
@@ -75,6 +75,9 @@ private:
     /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
     /// getting corrupted.
     bool Commit();
+
+    virtual bool AllowPrune() const = 0;
+
 protected:
     CChainState* m_chainstate{nullptr};
 
@@ -102,6 +105,9 @@ protected:
 
     /// Get the name of the index for display in logs.
     virtual const char* GetName() const = 0;
+
+    /// Update the internal best block index as well as the prune lock.
+    void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.

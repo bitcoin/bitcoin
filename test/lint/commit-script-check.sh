@@ -17,6 +17,11 @@ if test -z "$1"; then
     exit 1
 fi
 
+if ! sed --help 2>&1 | grep -q 'GNU'; then
+    echo "Error: the installed sed package is not compatible. Please make sure you have GNU sed installed in your system.";
+    exit 1;
+fi
+
 RET=0
 PREV_BRANCH=$(git name-rev --name-only HEAD)
 PREV_HEAD=$(git rev-parse HEAD)

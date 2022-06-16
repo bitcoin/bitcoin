@@ -6,13 +6,14 @@
 #ifndef __UNIVALUE_H__
 #define __UNIVALUE_H__
 
-#include <stdint.h>
-#include <string.h>
-
-#include <string>
-#include <vector>
+#include <charconv>
+#include <cstdint>
+#include <cstring>
 #include <map>
-#include <cassert>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 class UniValue {
 public:
@@ -82,66 +83,10 @@ public:
     bool isObject() const { return (typ == VOBJ); }
 
     bool push_back(const UniValue& val);
-    bool push_back(const std::string& val_) {
-        UniValue tmpVal(VSTR, val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(const char *val_) {
-        std::string s(val_);
-        return push_back(s);
-    }
-    bool push_back(uint64_t val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(int64_t val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(bool val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(int val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(double val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
     bool push_backV(const std::vector<UniValue>& vec);
 
     void __pushKV(const std::string& key, const UniValue& val);
     bool pushKV(const std::string& key, const UniValue& val);
-    bool pushKV(const std::string& key, const std::string& val_) {
-        UniValue tmpVal(VSTR, val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, const char *val_) {
-        std::string _val(val_);
-        return pushKV(key, _val);
-    }
-    bool pushKV(const std::string& key, int64_t val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, uint64_t val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, bool val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, int val_) {
-        UniValue tmpVal((int64_t)val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, double val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
     bool pushKVs(const UniValue& obj);
 
     std::string write(unsigned int prettyIndent = 0,
@@ -168,10 +113,22 @@ public:
     // value is of unexpected type
     const std::vector<std::string>& getKeys() const;
     const std::vector<UniValue>& getValues() const;
+    template <typename Int>
+    auto getInt() const
+    {
+        static_assert(std::is_integral<Int>::value);
+        if (typ != VNUM) {
+            throw std::runtime_error("JSON value is not an integer as expected");
+        }
+        Int result;
+        const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
+        if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
+            throw std::runtime_error("JSON integer out of range");
+        }
+        return result;
+    }
     bool get_bool() const;
     const std::string& get_str() const;
-    int get_int() const;
-    int64_t get_int64() const;
     double get_real() const;
     const UniValue& get_obj() const;
     const UniValue& get_array() const;

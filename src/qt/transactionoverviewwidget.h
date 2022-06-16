@@ -5,11 +5,8 @@
 #ifndef BITCOIN_QT_TRANSACTIONOVERVIEWWIDGET_H
 #define BITCOIN_QT_TRANSACTIONOVERVIEWWIDGET_H
 
-#include <qt/transactiontablemodel.h>
-
 #include <QListView>
 #include <QSize>
-#include <QSizePolicy>
 
 QT_BEGIN_NAMESPACE
 class QShowEvent;
@@ -21,21 +18,11 @@ class TransactionOverviewWidget : public QListView
     Q_OBJECT
 
 public:
-    explicit TransactionOverviewWidget(QWidget* parent = nullptr) : QListView(parent) {}
-
-    QSize sizeHint() const override
-    {
-        return {sizeHintForColumn(TransactionTableModel::ToAddress), QListView::sizeHint().height()};
-    }
+    explicit TransactionOverviewWidget(QWidget* parent = nullptr);
+    QSize sizeHint() const override;
 
 protected:
-    void showEvent(QShowEvent* event) override
-    {
-        Q_UNUSED(event);
-        QSizePolicy sp = sizePolicy();
-        sp.setHorizontalPolicy(QSizePolicy::Minimum);
-        setSizePolicy(sp);
-    }
+    void showEvent(QShowEvent* event) override;
 };
 
 #endif // BITCOIN_QT_TRANSACTIONOVERVIEWWIDGET_H

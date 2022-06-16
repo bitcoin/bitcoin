@@ -7,7 +7,7 @@
   bpftrace contrib/tracing/log_utxos.bt
 
   This script requires a 'bitcoind' binary compiled with eBPF support and the
-  'utxochache' tracepoints. By default, it's assumed that 'bitcoind' is
+  'utxocache' tracepoints. By default, it's assumed that 'bitcoind' is
   located in './src/bitcoind'. This can be modified in the script below.
 
   NOTE: requires bpftrace v0.12.0 or above.

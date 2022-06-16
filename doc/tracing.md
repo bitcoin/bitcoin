@@ -110,23 +110,31 @@ Arguments passed:
 
 ### Context `utxocache`
 
+The following tracepoints cover the in-memory UTXO cache. UTXOs are, for example,
+added to and removed (spent) from the cache when we connect a new block.
+**Note**: Bitcoin Core uses temporary clones of the _main_ UTXO cache
+(`chainstate.CoinsTip()`). For example, the RPCs `generateblock` and
+`getblocktemplate` call `TestBlockValidity()`, which applies the UTXO set
+changes to a temporary cache. Similarly, mempool consistency checks, which are
+frequent on regtest, also apply the the UTXO set changes to a temporary cache.
+Changes to the _main_ UTXO cache and to temporary caches trigger the tracepoints.
+We can't tell if a temporary cache or the _main_ cache was changed.
+
 #### Tracepoint `utxocache:flush`
 
-Is called *after* the caches and indexes are flushed depending on the mode
-`CChainState::FlushStateToDisk` is called with.
+Is called *after* the in-memory UTXO cache is flushed.
 
 Arguments passed:
-1. Duration in microseconds as `int64`
+1. Time it took to flush the cache microseconds as `int64`
 2. Flush state mode as `uint32`. It's an enumerator class with values `0`
    (`NONE`), `1` (`IF_NEEDED`), `2` (`PERIODIC`), `3` (`ALWAYS`)
-3. Number of coins flushed as `uint64`
-4. Memory usage in bytes as `uint64`
-5. If the flush was pruned as `bool`
-6. If it was full flush as `bool`
+3. Cache size (number of coins) before the flush as `uint64`
+4. Cache memory usage in bytes as `uint64`
+5. If pruning caused the flush as `bool`
 
 #### Tracepoint `utxocache:add`
 
-It is called when a new coin is added to the UTXO cache.
+Is called when a coin is added to a UTXO cache. This can be a temporary UTXO cache too.
 
 Arguments passed:
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
@@ -137,7 +145,7 @@ Arguments passed:
 
 #### Tracepoint `utxocache:spent`
 
-It is called when a coin is spent from the UTXO cache.
+Is called when a coin is spent from a UTXO cache. This can be a temporary UTXO cache too.
 
 Arguments passed:
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
@@ -148,14 +156,60 @@ Arguments passed:
 
 #### Tracepoint `utxocache:uncache`
 
-It is called when the UTXO with the given outpoint is removed from the cache.
+Is called when a coin is purposefully unloaded from a UTXO cache. This
+happens, for example, when we load an UTXO into a cache when trying to accept
+a transaction that turns out to be invalid. The loaded UTXO is uncached to avoid
+filling our UTXO cache up with irrelevant UTXOs.
 
 Arguments passed:
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Output index as `uint32`
 3. Block height the coin was uncached, as `uint32`
 4. Value of the coin as `int64`
-. If the coin is a coinbase as `bool`
+5. If the coin is a coinbase as `bool`
+
+### Context `coin_selection`
+
+#### Tracepoint `coin_selection:selected_coins`
+
+Is called when `SelectCoins` completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Coin selection algorithm name as `pointer to C-style string`
+3. Selection target value as `int64`
+4. Calculated waste metric of the solution as `int64`
+5. Total value of the selected inputs as `int64`
+
+#### Tracepoint `coin_selection:normal_create_tx_internal`
+
+Is called when the first `CreateTransactionInternal` completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Whether `CreateTransactionInternal` succeeded as `bool`
+3. The expected transaction fee as an `int64`
+4. The position of the change output as an `int32`
+
+#### Tracepoint `coin_selection:attempting_aps_create_tx`
+
+Is called when `CreateTransactionInternal` is called the second time for the optimistic
+Avoid Partial Spends selection attempt. This is used to determine whether the next
+tracepoints called are for the Avoid Partial Spends solution, or a different transaction.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+
+#### Tracepoint `coin_selection:aps_create_tx_internal`
+
+Is called when the second `CreateTransactionInternal` with Avoid Partial Spends enabled completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Whether the Avoid Partial Spends solution will be used as `bool`
+3. Whether `CreateTransactionInternal` succeeded as` bool`
+4. The expected transaction fee as an `int64`
+5. The position of the change output as an `int32`
 
 ## Adding tracepoints to Bitcoin Core
 

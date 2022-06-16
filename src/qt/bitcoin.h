@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ public:
     /// parameter interaction/setup based on rules
     void parameterSetup();
     /// Create options model
-    void createOptionsModel(bool resetSettings);
+    [[nodiscard]] bool createOptionsModel(bool resetSettings);
     /// Initialize prune setting
     void InitPruneSetting(int64_t prune_MiB);
     /// Create main window
@@ -91,6 +91,9 @@ Q_SIGNALS:
     void requestedShutdown();
     void splashFinished();
     void windowShown(BitcoinGUI* window);
+
+protected:
+    bool event(QEvent* e) override;
 
 private:
     std::optional<InitExecutor> m_executor;

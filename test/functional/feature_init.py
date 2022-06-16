@@ -3,8 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Stress tests related to node initialization."""
-import random
-import time
 import os
 from pathlib import Path
 
@@ -26,7 +24,6 @@ class InitStressTest(BitcoinTestFramework):
     def run_test(self):
         """
         - test terminating initialization after seeing a certain log line.
-        - test terminating init after seeing a random number of log lines.
         - test removing certain essential files to test startup error paths.
         """
         # TODO: skip Windows for now since it isn't clear how to SIGTERM.
@@ -44,97 +41,44 @@ class InitStressTest(BitcoinTestFramework):
         def sigterm_node():
             node.process.terminate()
             node.process.wait()
-            node.debug_log_path.unlink()
-            node.debug_log_path.touch()
 
         def check_clean_start():
             """Ensure that node restarts successfully after various interrupts."""
-            # TODO: add -txindex=1 to fully test index initiatlization.
-            # See https://github.com/bitcoin/bitcoin/pull/23289#discussion_r735159180 for
-            # a discussion of the related bug.
             node.start()
             node.wait_for_rpc_connection()
             assert_equal(200, node.getblockcount())
 
         lines_to_terminate_after = [
-            'scheduler thread start',
-            'Loading P2P addresses',
-            'Loading banlist',
-            'Loading block index',
-            'Switching active chainstate',
-            'Loaded best chain:',
-            'init message: Verifying blocks',
-            'loadblk thread start',
-            # TODO: reenable - see above TODO
-            # 'txindex thread start',
-            'net thread start',
-            'addcon thread start',
-            'msghand thread start',
+            b'Validating signatures for all blocks',
+            b'scheduler thread start',
+            b'Starting HTTP server',
+            b'Loading P2P addresses',
+            b'Loading banlist',
+            b'Loading block index',
+            b'Switching active chainstate',
+            b'Checking all blk files are present',
+            b'Loaded best chain:',
+            b'init message: Verifying blocks',
+            b'init message: Starting network threads',
+            b'net thread start',
+            b'addcon thread start',
+            b'loadblk thread start',
+            b'txindex thread start',
+            b'block filter index thread start',
+            b'coinstatsindex thread start',
+            b'msghand thread start',
+            b'net thread start',
+            b'addcon thread start',
         ]
         if self.is_wallet_compiled():
-            lines_to_terminate_after.append('Verifying wallet')
+            lines_to_terminate_after.append(b'Verifying wallet')
 
         for terminate_line in lines_to_terminate_after:
-            self.log.info(f"Starting node and will exit after line '{terminate_line}'")
-            node.start(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
-            )
-            logfile = open(node.debug_log_path, 'r', encoding='utf8')
-
-            MAX_SECS_TO_WAIT = 30
-            start = time.time()
-            num_lines = 0
-
-            while True:
-                line = logfile.readline()
-                if line:
-                    num_lines += 1
-
-                if line and terminate_line.lower() in line.lower():
-                    self.log.debug(f"Terminating node after {num_lines} log lines seen")
-                    sigterm_node()
-                    break
-
-                if (time.time() - start) > MAX_SECS_TO_WAIT:
-                    raise AssertionError(
-                        f"missed line {terminate_line}; terminating now after {num_lines} lines")
-
-                if node.process.poll() is not None:
-                    raise AssertionError(f"node failed to start (line: '{terminate_line}')")
-
-        check_clean_start()
-        num_total_logs = len(node.debug_log_path.read_text().splitlines())
-        self.stop_node(0)
-
-        self.log.info(
-            f"Terminate at some random point in the init process (max logs: {num_total_logs})")
-
-        for _ in range(40):
-            terminate_after = random.randint(1, num_total_logs)
-            self.log.debug(f"Starting node and will exit after {terminate_after} lines")
-            node.start(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
-            )
-            logfile = open(node.debug_log_path, 'r', encoding='utf8')
-
-            MAX_SECS_TO_WAIT = 10
-            start = time.time()
-            num_lines = 0
-
-            while True:
-                line = logfile.readline()
-                if line:
-                    num_lines += 1
-
-                if num_lines >= terminate_after or (time.time() - start) > MAX_SECS_TO_WAIT:
-                    self.log.debug(f"Terminating node after {num_lines} log lines seen")
-                    sigterm_node()
-                    break
-
-                if node.process.poll() is not None:
-                    raise AssertionError("node failed to start")
+            self.log.info(f"Starting node and will exit after line {terminate_line}")
+            with node.wait_for_debug_log([terminate_line]):
+                node.start(extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1'])
+            self.log.debug("Terminating node after terminate line was found")
+            sigterm_node()
 
         check_clean_start()
         self.stop_node(0)
@@ -148,11 +92,12 @@ class InitStressTest(BitcoinTestFramework):
         }
 
         for file_patt, err_fragment in files_to_disturb.items():
-            target_file = list(node.chain_path.glob(file_patt))[0]
+            target_files = list(node.chain_path.glob(file_patt))
 
-            self.log.info(f"Tweaking file to ensure failure {target_file}")
-            bak_path = str(target_file) + ".bak"
-            target_file.rename(bak_path)
+            for target_file in target_files:
+                self.log.info(f"Tweaking file to ensure failure {target_file}")
+                bak_path = str(target_file) + ".bak"
+                target_file.rename(bak_path)
 
             # TODO: at some point, we should test perturbing the files instead of removing
             # them, e.g.
@@ -166,14 +111,16 @@ class InitStressTest(BitcoinTestFramework):
             # investigate doing this later.
 
             node.assert_start_raises_init_error(
-                # TODO: add -txindex=1 to fully test index initiatlization.
-                # extra_args=['-txindex=1'],
+                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1'],
                 expected_msg=err_fragment,
                 match=ErrorMatch.PARTIAL_REGEX,
             )
 
-            self.log.info(f"Restoring file from {bak_path} and restarting")
-            Path(bak_path).rename(target_file)
+            for target_file in target_files:
+                bak_path = str(target_file) + ".bak"
+                self.log.debug(f"Restoring file from {bak_path} and restarting")
+                Path(bak_path).rename(target_file)
+
             check_clean_start()
             self.stop_node(0)
 

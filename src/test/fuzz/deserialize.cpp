@@ -15,6 +15,7 @@
 #include <merkleblock.h>
 #include <net.h>
 #include <netbase.h>
+#include <netgroup.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
@@ -22,7 +23,9 @@
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <streams.h>
+#include <test/util/setup_common.h>
 #include <undo.h>
+#include <util/system.h>
 #include <version.h>
 
 #include <exception>
@@ -33,8 +36,17 @@
 
 #include <test/fuzz/fuzz.h>
 
+using node::SnapshotMetadata;
+
+namespace {
+const BasicTestingSetup* g_setup;
+} // namespace
+
 void initialize_deserialize()
 {
+    static const auto testing_setup = MakeNoLogFileContext<>();
+    g_setup = testing_setup.get();
+
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
     static const ECCVerifyHandle verify_handle;
 }
@@ -189,7 +201,10 @@ FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
-    AddrMan am(/*asmap=*/std::vector<bool>(), /*deterministic=*/false, /*consistency_check_ratio=*/0);
+    NetGroupManager netgroupman{std::vector<bool>()};
+    AddrMan am(netgroupman,
+               /*deterministic=*/false,
+               g_setup->m_node.args->GetIntArg("-checkaddrman", 0));
     DeserializeFromFuzzingInput(buffer, am);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {

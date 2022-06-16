@@ -10,11 +10,14 @@
 class ArgsManager;
 class CChain;
 class CKey;
-class CWallet;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
 
+namespace wallet {
+class CWallet;
+
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, ArgsManager& args, const CKey& key);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_TEST_UTIL_H

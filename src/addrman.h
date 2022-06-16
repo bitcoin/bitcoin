@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <netaddress.h>
+#include <netgroup.h>
 #include <protocol.h>
 #include <streams.h>
 #include <timedata.h>
@@ -17,10 +18,41 @@
 #include <utility>
 #include <vector>
 
+class InvalidAddrManVersionError : public std::ios_base::failure
+{
+public:
+    InvalidAddrManVersionError(std::string msg) : std::ios_base::failure(msg) { }
+};
+
 class AddrManImpl;
 
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
+
+/** Test-only struct, capturing info about an address in AddrMan */
+struct AddressPosition {
+    // Whether the address is in the new or tried table
+    const bool tried;
+
+    // Addresses in the tried table should always have a multiplicity of 1.
+    // Addresses in the new table can have multiplicity between 1 and
+    // ADDRMAN_NEW_BUCKETS_PER_ADDRESS
+    const int multiplicity;
+
+    // If the address is in the new table, the bucket and position are
+    // populated based on the first source who sent the address.
+    // In certain edge cases, this may not be where the address is currently
+    // located.
+    const int bucket;
+    const int position;
+
+    bool operator==(AddressPosition other) {
+        return std::tie(tried, multiplicity, bucket, position) ==
+               std::tie(other.tried, other.multiplicity, other.bucket, other.position);
+    }
+    explicit AddressPosition(bool tried_in, int multiplicity_in, int bucket_in, int position_in)
+        : tried{tried_in}, multiplicity{multiplicity_in}, bucket{bucket_in}, position{position_in} {}
+};
 
 /** Stochastic address manager
  *
@@ -57,7 +89,7 @@ protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
-    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
+    explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
 
@@ -81,8 +113,14 @@ public:
      * @return    true if at least one address is successfully added. */
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty = 0);
 
-    //! Mark an entry as accessible, possibly moving it from "new" to "tried".
-    void Good(const CService& addr, int64_t nTime = GetAdjustedTime());
+    /**
+     * Mark an address record as accessible and attempt to move it to addrman's tried table.
+     *
+     * @param[in] addr            Address record to attempt to move to tried table.
+     * @param[in] nTime           The time that we were last connected to this peer.
+     * @return    true if the address is successfully moved from the new table to the tried table.
+     */
+    bool Good(const CService& addr, int64_t nTime = GetAdjustedTime());
 
     //! Mark an entry as connection attempted to.
     void Attempt(const CService& addr, bool fCountFailure, int64_t nTime = GetAdjustedTime());
@@ -135,7 +173,14 @@ public:
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);
 
-    const std::vector<bool>& GetAsmap() const;
+    /** Test-only function
+     * Find the address record in AddrMan and return information about its
+     * position.
+     * @param[in] addr       The address record to look up.
+     * @return               Information about the address record in AddrMan
+     *                       or nullopt if address is not found.
+     */
+    std::optional<AddressPosition> FindAddressEntry(const CAddress& addr);
 };
 
 #endif // BITCOIN_ADDRMAN_H

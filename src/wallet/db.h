@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,8 +16,10 @@
 #include <optional>
 #include <string>
 
+class ArgsManager;
 struct bilingual_str;
 
+namespace wallet {
 void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
 /** RAII class that provides access to a WalletDatabase */
@@ -206,7 +208,12 @@ struct DatabaseOptions {
     std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
-    bool verify = true;
+
+    // Specialized options. Not every option is supported by every backend.
+    bool verify = true;             //!< Check data integrity on load.
+    bool use_unsafe_sync = false;   //!< Disable file sync for faster performance.
+    bool use_shared_memory = false; //!< Let other processes access the database.
+    int64_t max_log_mb = 100;       //!< Max log size to allow before consolidating.
 };
 
 enum class DatabaseStatus {
@@ -220,16 +227,19 @@ enum class DatabaseStatus {
     FAILED_LOAD,
     FAILED_VERIFY,
     FAILED_ENCRYPT,
+    FAILED_INVALID_BACKUP_FILE,
 };
 
 /** Recursively list database paths in directory. */
 std::vector<fs::path> ListDatabases(const fs::path& path);
 
+void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);
 bool IsBDBFile(const fs::path& path);
 bool IsSQLiteFile(const fs::path& path);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_DB_H

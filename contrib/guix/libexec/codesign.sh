@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2021 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
@@ -81,14 +84,11 @@ mkdir -p "$DISTSRC"
             # Apply detached codesignatures to dist/ (in-place)
             signapple apply dist/Bitcoin-Qt.app codesignatures/osx/dist
 
-            # Make an uncompressed DMG from dist/
+            # Make a DMG from dist/
             xorrisofs -D -l -V "$(< osx_volname)" -no-pad -r -dir-mode 0755 \
-                      -o uncompressed.dmg \
+                      -o "${OUTDIR}/${DISTNAME}-${HOST}.dmg" \
                       dist \
                       -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
-
-            # Compress uncompressed.dmg and output to OUTDIR
-            ./dmg dmg uncompressed.dmg "${OUTDIR}/${DISTNAME}-osx-signed.dmg"
             ;;
         *)
             exit 1

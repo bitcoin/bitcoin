@@ -11,11 +11,13 @@
 
 class ArgsManager;
 class CScheduler;
-struct WalletContext;
 
 namespace interfaces {
 class Chain;
 } // namespace interfaces
+
+namespace wallet {
+struct WalletContext;
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
 bool VerifyWallets(WalletContext& context);
@@ -34,5 +36,6 @@ void StopWallets(WalletContext& context);
 
 //! Close all wallets.
 void UnloadWallets(WalletContext& context);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_LOAD_H

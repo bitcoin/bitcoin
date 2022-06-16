@@ -16,9 +16,9 @@ configure Tor.
 ## How to see information about your Tor configuration via Bitcoin Core
 
 There are several ways to see your local onion address in Bitcoin Core:
-- in the debug log (grep for "tor:" or "AddLocal")
-- in the output of RPC `getnetworkinfo` in the "localaddresses" section
-- in the output of the CLI `-netinfo` peer connections dashboard
+- in the "Local addresses" output of CLI `-netinfo`
+- in the "localaddresses" output of RPC `getnetworkinfo`
+- in the debug log (grep for "AddLocal"; the Tor address ends in `.onion`)
 
 You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
@@ -26,6 +26,9 @@ information in the debug log about your Tor configuration.
 CLI `-addrinfo` returns the number of addresses known to your node per
 network. This can be useful to see how many onion peers your node knows,
 e.g. for `-onlynet=onion`.
+
+To fetch a number of onion addresses that your node knows, for example seven
+addresses, use the `getnodeaddresses 7 onion` RPC.
 
 ## 1. Run Bitcoin Core behind a Tor proxy
 
@@ -40,9 +43,11 @@ outgoing connections, but more is possible.
     -onion=ip:port  Set the proxy server to use for Tor onion services. You do not
                     need to set this if it's the same as -proxy. You can use -onion=0
                     to explicitly disable access to onion services.
+                    ------------------------------------------------------------------
                     Note: Only the -proxy option sets the proxy for DNS requests;
                     with -onion they will not route over Tor, so use -proxy if you
                     have privacy concerns.
+                    ------------------------------------------------------------------
 
     -listen         When using -proxy, listening is disabled by default. If you want
                     to manually configure an onion service (see section 3), you'll
@@ -53,14 +58,10 @@ outgoing connections, but more is possible.
     -seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
                     other P2P nodes.
 
-    -onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
-                    connections are not affected by this option. This option can be
-                    specified multiple times to allow multiple network types, e.g.
-                    onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
-                    Warning: if you use -onlynet with values other than onion, and
-                    the -onion or -proxy option is set, then outgoing onion
-                    connections will still be made; use -noonion or -onion=0 to
-                    disable outbound onion connections in this case.
+    -onlynet=onion  Make automatic outbound connections only to .onion addresses.
+                    Inbound and manual connections are not affected by this option.
+                    It can be specified multiple times to allow multiple networks,
+                    e.g. onlynet=onion, onlynet=i2p, onlynet=cjdns.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 

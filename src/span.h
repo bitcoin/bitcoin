@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -243,16 +243,21 @@ T& SpanPopBack(Span<T>& span)
     return back;
 }
 
+//! Convert a data pointer to a std::byte data pointer.
+//! Where possible, please use the safer AsBytes helpers.
+inline const std::byte* AsBytePtr(const void* data) { return reinterpret_cast<const std::byte*>(data); }
+inline std::byte* AsBytePtr(void* data) { return reinterpret_cast<std::byte*>(data); }
+
 // From C++20 as_bytes and as_writeable_bytes
 template <typename T>
 Span<const std::byte> AsBytes(Span<T> s) noexcept
 {
-    return {reinterpret_cast<const std::byte*>(s.data()), s.size_bytes()};
+    return {AsBytePtr(s.data()), s.size_bytes()};
 }
 template <typename T>
 Span<std::byte> AsWritableBytes(Span<T> s) noexcept
 {
-    return {reinterpret_cast<std::byte*>(s.data()), s.size_bytes()};
+    return {AsBytePtr(s.data()), s.size_bytes()};
 }
 
 template <typename V>

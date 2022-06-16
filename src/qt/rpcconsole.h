@@ -1,9 +1,13 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_RPCCONSOLE_H
 #define BITCOIN_QT_RPCCONSOLE_H
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
@@ -17,6 +21,7 @@
 
 class ClientModel;
 class PlatformStyle;
+class RPCExecutor;
 class RPCTimerInterface;
 class WalletModel;
 
@@ -49,8 +54,11 @@ public:
     }
 
     void setClientModel(ClientModel *model = nullptr, int bestblock_height = 0, int64_t bestblock_date = 0, double verification_progress = 0.0);
-    void addWallet(WalletModel * const walletModel);
+
+#ifdef ENABLE_WALLET
+    void addWallet(WalletModel* const walletModel);
     void removeWallet(WalletModel* const walletModel);
+#endif // ENABLE_WALLET
 
     enum MessageClass {
         MC_ERROR,
@@ -129,10 +137,6 @@ public Q_SLOTS:
     /** set which tab has the focus (is visible) */
     void setTabFocus(enum TabTypes tabType);
 
-Q_SIGNALS:
-    // For RPC command executor
-    void cmdRequest(const QString &command, const WalletModel* wallet_model);
-
 private:
     struct TranslatedStrings {
         const QString yes{tr("Yes")}, no{tr("No")}, to{tr("To")}, from{tr("From")},
@@ -166,6 +170,7 @@ private:
     int consoleFontSize = 0;
     QCompleter *autoCompleter = nullptr;
     QThread thread;
+    RPCExecutor* m_executor{nullptr};
     WalletModel* m_last_wallet_model{nullptr};
     bool m_is_executing{false};
     QByteArray m_peer_widget_header_state;
@@ -175,8 +180,9 @@ private:
     void updateNetworkState();
 
     /** Helper for the output of a time duration field. Inputs are UNIX epoch times. */
-    QString TimeDurationField(uint64_t time_now, uint64_t time_at_event) const {
-        return time_at_event ? GUIUtil::formatDurationStr(time_now - time_at_event) : tr("Never");
+    QString TimeDurationField(std::chrono::seconds time_now, std::chrono::seconds time_at_event) const
+    {
+        return time_at_event.count() ? GUIUtil::formatDurationStr(time_now - time_at_event) : tr("Never");
     }
 
 private Q_SLOTS:

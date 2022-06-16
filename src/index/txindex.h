@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,8 @@ protected:
 
 private:
     const std::unique_ptr<DB> m_db;
+
+    bool AllowPrune() const override { return false; }
 
 protected:
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;

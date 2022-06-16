@@ -19,6 +19,7 @@
 #include <variant>
 #include <vector>
 
+namespace wallet {
 //! State of transaction confirmed in a block.
 struct TxStateConfirmed {
     uint256 confirmed_block_hash;
@@ -295,6 +296,7 @@ public:
     bool isUnconfirmed() const { return !isAbandoned() && !isConflicted() && !isConfirmed(); }
     bool isConfirmed() const { return state<TxStateConfirmed>(); }
     const uint256& GetHash() const { return tx->GetHash(); }
+    const uint256& GetWitnessHash() const { return tx->GetWitnessHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
@@ -303,5 +305,6 @@ public:
     CWalletTx(CWalletTx const &) = delete;
     void operator=(CWalletTx const &x) = delete;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_TRANSACTION_H

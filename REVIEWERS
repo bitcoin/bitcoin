@@ -18,12 +18,11 @@
 
 
 # Maintainers
+#   @achow101
 #   @fanquake
 #   @hebasto
-#   @jonasschnelli
 #   @laanwj
 #   @marcofalke
-#   @meshcollider
 #   @sipa
 
 # Docs
@@ -113,7 +112,7 @@
 /src/dbwrapper.*                            @jamesob
 
 # Linter
-/test/lint/lint-shell.sh                    @hebasto
+/test/lint/lint-shell.py                    @hebasto
 
 # Bech32
 /src/bech32.*                               @sipa
@@ -134,3 +133,8 @@
 /src/script/interpreter.*                   @sipa
 /src/validation.*                           @sipa
 /src/consensus/                             @sipa
+
+# Tracing
+/doc/tracing.md                             @jb55 @0xB10C
+/src/util/trace.h                           @jb55 @0xB10C
+/contrib/tracing/                           @jb55 @0xB10C

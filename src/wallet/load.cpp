@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,20 +19,25 @@
 
 #include <univalue.h>
 
+#include <system_error>
+
+namespace wallet {
 bool VerifyWallets(WalletContext& context)
 {
     interfaces::Chain& chain = *context.chain;
     ArgsManager& args = *Assert(context.args);
 
     if (args.IsArgSet("-walletdir")) {
-        fs::path wallet_dir = fs::PathFromString(args.GetArg("-walletdir", ""));
-        boost::system::error_code error;
+        const fs::path wallet_dir{args.GetPathArg("-walletdir")};
+        std::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
+        // It also lets the fs::exists and fs::is_directory checks below pass on windows, since they return false
+        // if a path has trailing slashes, and it strips trailing slashes.
         fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
-        if (error || !fs::exists(wallet_dir)) {
+        if (error || !fs::exists(canonical_wallet_dir)) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), fs::PathToString(wallet_dir)));
             return false;
-        } else if (!fs::is_directory(wallet_dir)) {
+        } else if (!fs::is_directory(canonical_wallet_dir)) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), fs::PathToString(wallet_dir)));
             return false;
         // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
@@ -52,6 +57,7 @@ bool VerifyWallets(WalletContext& context)
     if (!args.IsArgSet("wallet")) {
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(args, options);
         bilingual_str error_string;
         options.require_existing = true;
         options.verify = false;
@@ -79,6 +85,7 @@ bool VerifyWallets(WalletContext& context)
 
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(args, options);
         options.require_existing = true;
         options.verify = true;
         bilingual_str error_string;
@@ -107,6 +114,7 @@ bool LoadWallets(WalletContext& context)
             }
             DatabaseOptions options;
             DatabaseStatus status;
+            ReadDatabaseArgs(*context.args, options);
             options.require_existing = true;
             options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
             bilingual_str error;
@@ -122,6 +130,8 @@ bool LoadWallets(WalletContext& context)
                 chain.initError(error);
                 return false;
             }
+
+            NotifyWalletLoaded(context, pwallet);
             AddWallet(context, pwallet);
         }
         return true;
@@ -169,3 +179,4 @@ void UnloadWallets(WalletContext& context)
         UnloadWallet(std::move(wallet));
     }
 }
+} // namespace wallet

@@ -71,6 +71,15 @@ block^@M-^?M-^?M-^?M-^?M-^?nM-^?M-^?
 
 In this case the fuzzer managed to create a `block` message which when passed to `ProcessMessage(...)` increased coverage.
 
+It is possible to specify `bitcoind` arguments to the `fuzz` executable.
+Depending on the test, they may be ignored or consumed and alter the behavior
+of the test. Just make sure to use double-dash to distinguish them from the
+fuzzer's own arguments:
+
+```sh
+$ FUZZ=address_deserialize_v2 src/test/fuzz/fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+```
+
 ## Fuzzing corpora
 
 The project's collection of seed corpora is found in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo.

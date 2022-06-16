@@ -3,14 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
- * See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/link_references/link_boost_test_module_macro.html
+ * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
  */
 #define BOOST_TEST_MODULE Bitcoin Core Test Suite
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <test/util/setup_common.h>
 
+#include <functional>
 #include <iostream>
 
 /** Redirect debug log to unit_test.log files */
@@ -23,4 +24,18 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN = [](const std::str
         })};
     if (!should_log) return;
     std::cout << s;
+};
+
+/**
+ * Retrieve the command line arguments from boost.
+ * Allows usage like:
+ * `test_bitcoin --run_test="net_tests/cnode_listen_port" -- -checkaddrman=1 -printtoconsole=1`
+ * which would return `["-checkaddrman=1", "-printtoconsole=1"]`.
+ */
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
+    std::vector<const char*> args;
+    for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i) {
+        args.push_back(boost::unit_test::framework::master_test_suite().argv[i]);
+    }
+    return args;
 };

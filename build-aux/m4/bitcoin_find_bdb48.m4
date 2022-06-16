@@ -91,7 +91,6 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
     fi
   fi
   if test "$use_bdb" != "no"; then
-    AC_SUBST(BDB_LIBS)
     AC_DEFINE([USE_BDB], [1], [Define if BDB support should be compiled in])
     use_bdb=yes
   fi

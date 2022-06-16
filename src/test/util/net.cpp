@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,12 +47,12 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
             /*id=*/id,
-            /*nTimeConnected=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*m_connected=*/std::chrono::seconds{random_context.randrange(100)},
             /*m_min_ping_time=*/std::chrono::microseconds{random_context.randrange(100)},
-            /*nLastBlockTime=*/static_cast<int64_t>(random_context.randrange(100)),
-            /*nLastTXTime=*/static_cast<int64_t>(random_context.randrange(100)),
+            /*m_last_block_time=*/std::chrono::seconds{random_context.randrange(100)},
+            /*m_last_tx_time=*/std::chrono::seconds{random_context.randrange(100)},
             /*fRelevantServices=*/random_context.randbool(),
-            /*fRelayTxes=*/random_context.randbool(),
+            /*m_relay_txs=*/random_context.randbool(),
             /*fBloomFilter=*/random_context.randbool(),
             /*nKeyedNetGroup=*/random_context.randrange(100),
             /*prefer_evict=*/random_context.randbool(),

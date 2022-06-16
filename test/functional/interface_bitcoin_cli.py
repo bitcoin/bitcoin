@@ -66,12 +66,6 @@ def cli_get_info_string_to_dict(cli_get_info_string):
 
 
 class TestBitcoinCli(BitcoinTestFramework):
-    def is_specified_wallet_compiled(self):
-        if self.options.descriptors:
-            return self.is_sqlite_compiled()
-        else:
-            return self.is_bdb_compiled()
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -146,7 +140,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         if self.is_specified_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
-            # Explicitely set the output type in order to have constintent tx vsize / fees
+            # Explicitly set the output type in order to have consistent tx vsize / fees
             # for both legacy and descriptor wallets (disables the change address type detection algorithm)
             self.restart_node(0, extra_args=["-addresstype=bech32", "-changetype=bech32"])
             assert_equal(Decimal(cli_get_info['Balance']), BALANCE)

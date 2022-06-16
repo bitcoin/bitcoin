@@ -28,7 +28,8 @@ Common `host-platform-triplet`s for cross compilation are:
 - `i686-pc-linux-gnu` for Linux 32 bit
 - `x86_64-pc-linux-gnu` for x86 Linux
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin19` for macOS
+- `x86_64-apple-darwin` for macOS
+- `arm64-apple-darwin` for ARM macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `powerpc64-linux-gnu` for Linux POWER 64-bit (big endian)
@@ -38,7 +39,6 @@ Common `host-platform-triplet`s for cross compilation are:
 - `s390x-linux-gnu` for Linux S390X
 - `armv7a-linux-android` for Android ARM 32 bit
 - `aarch64-linux-android` for Android ARM 64 bit
-- `i686-linux-android` for Android x86 32 bit
 - `x86_64-linux-android` for Android x86 64 bit
 
 The paths are automatically configured and no other options are needed unless targeting [Android](../doc/build-android.md).
@@ -47,7 +47,7 @@ The paths are automatically configured and no other options are needed unless ta
 
 #### For macOS cross compilation
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libz-dev python3-setuptools libtinfo5 xorriso
+    sudo apt-get install curl bsdmainutils cmake libz-dev python3-setuptools libtinfo5 xorriso
 
 Note: You must obtain the macOS SDK before proceeding with a cross-compile.
 Under the depends directory, create a subdirectory named `SDKs`.
@@ -80,12 +80,13 @@ For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
-RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
-this is apparently fixed in gcc-8.1.0.
-
 For linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
+
+### Install the required dependencies: OpenBSD
+
+    pkg_add bash gtar
 
 ### Dependency Options
 
@@ -112,7 +113,11 @@ The following can be set when running make: `make FOO=bar`
 - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
 - `FORCE_USE_SYSTEM_CLANG`: (EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
   system's `$PATH` rather than the default prebuilt release of Clang
-  from llvm.org. Clang 8 or later is required.
+  from llvm.org. Clang 8 or later is required
+- `LOG`: Use file-based logging for individual packages. During a package build its log file
+  resides in the `depends` directory, and the log file is printed out automatically in case
+  of build error. After successful build log files are moved along with package archives
+- `LTO`: Use LTO when building packages.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to bitcoin's configure. In this case, `--disable-wallet`.

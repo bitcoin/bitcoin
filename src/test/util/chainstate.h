@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
+const auto NoMalleation = [](CAutoFile& file, node::SnapshotMetadata& meta){};
 
 /**
  * Create and activate a UTXO snapshot, optionally providing a function to
@@ -24,13 +24,13 @@ const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
  */
 template<typename F = decltype(NoMalleation)>
 static bool
-CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleation = NoMalleation)
+CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F malleation = NoMalleation)
 {
     // Write out a snapshot to the test's tempdir.
     //
     int height;
     WITH_LOCK(::cs_main, height = node.chainman->ActiveHeight());
-    fs::path snapshot_path = root / tfm::format("test_snapshot.%d.dat", height);
+    fs::path snapshot_path = root / fs::u8path(tfm::format("test_snapshot.%d.dat", height));
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 
@@ -43,7 +43,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
     //
     FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
     CAutoFile auto_infile{infile, SER_DISK, CLIENT_VERSION};
-    SnapshotMetadata metadata;
+    node::SnapshotMetadata metadata;
     auto_infile >> metadata;
 
     malleation(auto_infile, metadata);

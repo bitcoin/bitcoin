@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,11 +45,11 @@ static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
     return (underlying(a) & underlying(b));
 }
 
-class proxyType
+class Proxy
 {
 public:
-    proxyType(): randomize_credentials(false) {}
-    explicit proxyType(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
+    Proxy(): randomize_credentials(false) {}
+    explicit Proxy(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
 
     bool IsValid() const { return proxy.IsValid(); }
 
@@ -73,8 +73,8 @@ enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
-bool SetProxy(enum Network net, const proxyType &addrProxy);
-bool GetProxy(enum Network net, proxyType &proxyInfoOut);
+bool SetProxy(enum Network net, const Proxy &addrProxy);
+bool GetProxy(enum Network net, Proxy &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 /**
  * Set the name proxy to use for all connections to nodes specified by a
@@ -92,9 +92,9 @@ bool IsProxy(const CNetAddr &addr);
  *       server in common use (most notably Tor) actually implements UDP
  *       support, and a DNS resolver is beyond the scope of this project.
  */
-bool SetNameProxy(const proxyType &addrProxy);
+bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
-bool GetNameProxy(proxyType &nameProxyOut);
+bool GetNameProxy(Proxy &nameProxyOut);
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
@@ -169,13 +169,14 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
  * Parse and resolve a specified subnet string into the appropriate internal
  * representation.
  *
- * @param strSubnet A string representation of a subnet of the form `network
- *                address [ "/", ( CIDR-style suffix | netmask ) ]`(e.g.
- *                `2001:db8::/32`, `192.0.2.0/255.255.255.0`, or `8.8.8.8`).
- *
- * @returns Whether the operation succeeded or not.
+ * @param[in]  subnet_str  A string representation of a subnet of the form
+ *                         `network address [ "/", ( CIDR-style suffix | netmask ) ]`
+ *                         e.g. "2001:db8::/32", "192.0.2.0/255.255.255.0" or "8.8.8.8".
+ * @param[out] subnet_out  Internal subnet representation, if parsable/resolvable
+ *                         from `subnet_str`.
+ * @returns whether the operation succeeded or not.
  */
-bool LookupSubNet(const std::string& strSubnet, CSubNet& subnet, DNSLookupFn dns_lookup_function = g_dns_lookup);
+bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out);
 
 /**
  * Create a TCP socket in the given address family.
@@ -218,12 +219,10 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
  *
  * @returns Whether or not the operation succeeded.
  */
-bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
+bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 
-/** Disable or enable blocking-mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
-/** Set the TCP_NODELAY flag on a socket */
-bool SetSocketNoDelay(const SOCKET& hSocket);
+/** Enable non-blocking mode for a socket */
+bool SetSocketNonBlocking(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
 
 /**
@@ -245,5 +244,14 @@ void InterruptSocks5(bool interrupt);
  *      Version 5</a>
  */
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& socket);
+
+/**
+ * Determine if a port is "bad" from the perspective of attempting to connect
+ * to a node on that port.
+ * @see doc/p2p-bad-ports.md
+ * @param[in] port Port to check.
+ * @returns whether the port is bad
+ */
+bool IsBadPort(uint16_t port);
 
 #endif // BITCOIN_NETBASE_H

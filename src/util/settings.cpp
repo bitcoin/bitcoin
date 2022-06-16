@@ -1,11 +1,17 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <fs.h>
 #include <util/settings.h>
 
 #include <tinyformat.h>
 #include <univalue.h>
+
+#include <fstream>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace util {
 namespace {
@@ -63,7 +69,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     // Ok for file to not exist
     if (!fs::exists(path)) return true;
 
-    fsbridge::ifstream file;
+    std::ifstream file;
     file.open(path);
     if (!file.is_open()) {
       errors.emplace_back(strprintf("%s. Please check permissions.", fs::PathToString(path)));
@@ -106,13 +112,13 @@ bool WriteSettings(const fs::path& path,
     for (const auto& value : values) {
         out.__pushKV(value.first, value.second);
     }
-    fsbridge::ofstream file;
+    std::ofstream file;
     file.open(path);
     if (file.fail()) {
         errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));
         return false;
     }
-    file << out.write(/* prettyIndent= */ 1, /* indentLevel= */ 4) << std::endl;
+    file << out.write(/* prettyIndent= */ 4, /* indentLevel= */ 1) << std::endl;
     file.close();
     return true;
 }
@@ -121,6 +127,7 @@ SettingsValue GetSetting(const Settings& settings,
     const std::string& section,
     const std::string& name,
     bool ignore_default_section_config,
+    bool ignore_nonpersistent,
     bool get_chain_name)
 {
     SettingsValue result;
@@ -155,6 +162,9 @@ SettingsValue GetSetting(const Settings& settings,
             !never_ignore_negated_setting) {
             return;
         }
+
+        // Ignore nonpersistent settings if requested.
+        if (ignore_nonpersistent && (source == Source::COMMAND_LINE || source == Source::FORCED)) return;
 
         // Skip negated command line settings.
         if (skip_negated_command_line && span.last_negated()) return;

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,14 +8,22 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <clientversion.h>
+#include <compat.h>
 #include <interfaces/init.h>
+#include <key.h>
 #include <logging.h>
+#include <pubkey.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 #include <wallet/wallettool.h>
 
+#include <exception>
 #include <functional>
+#include <string>
+#include <tuple>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
@@ -52,11 +60,14 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
-        if (!args.IsArgSet("-version")) {
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                         "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
                         "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
-                        "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n"
+                        "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet arguments.\n\n"
                         "Usage:\n"
                         "  bitcoin-wallet [options] <command>\n";
             strUsage += "\n" + args.GetHelpMessage();
@@ -78,7 +89,7 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
     return true;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
 #ifdef WIN32
@@ -116,7 +127,7 @@ int main(int argc, char* argv[])
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(args, command->command)) {
+    if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }
     ECC_Stop();

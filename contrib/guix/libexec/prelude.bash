@@ -46,6 +46,22 @@ exit 1
 fi
 
 ################
+# Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
+# across time.
+time-machine() {
+    # shellcheck disable=SC2086
+    guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
+                      --commit=998eda3067c7d21e0d9bb3310d2f5a14b8f1c681 \
+                      --cores="$JOBS" \
+                      --keep-failed \
+                      --fallback \
+                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
+                      -- "$@"
+}
+
+
+################
 # Set common variables
 ################
 

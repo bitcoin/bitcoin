@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
+#include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
 #include <test/util/setup_common.h>
@@ -20,8 +21,11 @@
 #endif // ENABLE_WALLET
 
 #include <QApplication>
+#include <QDebug>
 #include <QObject>
 #include <QTest>
+
+#include <functional>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -34,10 +38,16 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
 #endif
 
+using node::NodeContext;
+
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
 // This is all you need to run all the tests
 int main(int argc, char* argv[])
@@ -48,9 +58,10 @@ int main(int argc, char* argv[])
     // regtest params.
     //
     // All tests must use their own testing setup (if needed).
-    {
+    fs::create_directories([] {
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
-    }
+        return gArgs.GetDataDirNet() / "blocks";
+    }());
 
     std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
     gArgs.ForceSetArg("-listen", "0");
@@ -60,8 +71,6 @@ int main(int argc, char* argv[])
     gArgs.ForceSetArg("-fixedseeds", "0");
     gArgs.ForceSetArg("-upnp", "0");
     gArgs.ForceSetArg("-natpmp", "0");
-
-    bool fInvalid = false;
 
     // Prefer the "minimal" platform for the test instead of the normal default
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
@@ -78,28 +87,32 @@ int main(int argc, char* argv[])
     app.setApplicationName("Bitcoin-Qt-test");
     app.createNode(*init);
 
+    int num_test_failures{0};
+
     AppTests app_tests(app);
-    if (QTest::qExec(&app_tests) != 0) {
-        fInvalid = true;
-    }
+    num_test_failures += QTest::qExec(&app_tests);
+
+    OptionTests options_tests(app.node());
+    num_test_failures += QTest::qExec(&options_tests);
+
     URITests test1;
-    if (QTest::qExec(&test1) != 0) {
-        fInvalid = true;
-    }
+    num_test_failures += QTest::qExec(&test1);
+
     RPCNestedTests test3(app.node());
-    if (QTest::qExec(&test3) != 0) {
-        fInvalid = true;
-    }
+    num_test_failures += QTest::qExec(&test3);
+
 #ifdef ENABLE_WALLET
     WalletTests test5(app.node());
-    if (QTest::qExec(&test5) != 0) {
-        fInvalid = true;
-    }
+    num_test_failures += QTest::qExec(&test5);
+
     AddressBookTests test6(app.node());
-    if (QTest::qExec(&test6) != 0) {
-        fInvalid = true;
-    }
+    num_test_failures += QTest::qExec(&test6);
 #endif
 
-    return fInvalid;
+    if (num_test_failures) {
+        qWarning("\nFailed tests: %d\n", num_test_failures);
+    } else {
+        qDebug("\nAll tests passed.\n");
+    }
+    return num_test_failures;
 }

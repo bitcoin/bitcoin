@@ -10,6 +10,7 @@
 #include <util/time.h>
 
 #include <chrono>
+#include <memory>
 #include <string>
 
 /**
@@ -97,6 +98,14 @@ public:
     [[nodiscard]] virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(this->Get(), addr, addr_len))`.
+     * Code that uses this wrapper can be unit tested if this method is overridden by a mock Sock
+     * implementation.
+     * The returned unique_ptr is empty if `accept()` failed in which case errno will be set.
+     */
+    [[nodiscard]] virtual std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const;
+
+    /**
      * getsockopt(2) wrapper. Equivalent to
      * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
@@ -105,6 +114,16 @@ public:
                                          int opt_name,
                                          void* opt_val,
                                          socklen_t* opt_len) const;
+
+    /**
+     * setsockopt(2) wrapper. Equivalent to
+     * `setsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int SetSockOpt(int level,
+                                         int opt_name,
+                                         const void* opt_val,
+                                         socklen_t opt_len) const;
 
     using Event = uint8_t;
 

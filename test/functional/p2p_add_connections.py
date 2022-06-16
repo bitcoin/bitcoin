@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test add_outbound_p2p_connection test framework functionality"""
 
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import check_node_connections
+from test_framework.util import (
+    assert_equal,
+    check_node_connections,
+)
 
+class P2PFeelerReceiver(P2PInterface):
+    def on_version(self, message):
+        # The bitcoind node closes feeler connections as soon as a version
+        # message is received from the test framework. Don't send any responses
+        # to the node's version message since the connection will already be
+        # closed.
+        pass
 
 class P2PAddConnections(BitcoinTestFramework):
     def set_test_params(self):
@@ -85,6 +95,16 @@ class P2PAddConnections(BitcoinTestFramework):
 
         check_node_connections(node=self.nodes[1], num_in=5, num_out=10)
 
+        self.log.info("Add 1 feeler connection to node 0")
+        feeler_conn = self.nodes[0].add_outbound_p2p_connection(P2PFeelerReceiver(), p2p_idx=6, connection_type="feeler")
+
+        # Feeler connection is closed
+        assert not feeler_conn.is_connected
+
+        # Verify version message received
+        assert_equal(feeler_conn.message_count["version"], 1)
+        # Feeler connections do not request tx relay
+        assert_equal(feeler_conn.last_message["version"].relay, 0)
 
 if __name__ == '__main__':
     P2PAddConnections().main()

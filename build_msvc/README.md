@@ -28,7 +28,7 @@ Qt
 ---------------------
 To build Bitcoin Core with the GUI, a static build of Qt is required.
 
-1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-src-5.15.2.zip`](https://download.qt.io/official_releases/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
+1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-opensource-src-5.15.3.zip`](https://download.qt.io/official_releases/qt/5.15/5.15.3/single/qt-everywhere-opensource-src-5.15.3.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
 
 2. Open "x64 Native Tools Command Prompt for VS 2019", and input the following commands:
 ```cmd

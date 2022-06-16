@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -17,6 +17,7 @@
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
+const unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID : public uint160
@@ -129,6 +130,11 @@ public:
         return a.vch[0] < b.vch[0] ||
                (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) < 0);
     }
+    friend bool operator>(const CPubKey& a, const CPubKey& b)
+    {
+        return a.vch[0] > b.vch[0] ||
+               (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) > 0);
+    }
 
     //! Implement serialization, as if this was a byte vector.
     template <typename Stream>
@@ -136,14 +142,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write((char*)vch, len);
+        s.write(AsBytes(Span{vch, len}));
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s.read((char*)vch, len);
+            s.read(AsWritableBytes(Span{vch, len}));
             if (len != size()) {
                 Invalidate();
             }
@@ -283,6 +289,7 @@ public:
 };
 
 struct CExtPubKey {
+    unsigned char version[4];
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
     unsigned int nChild;
@@ -303,8 +310,20 @@ struct CExtPubKey {
         return !(a == b);
     }
 
+    friend bool operator<(const CExtPubKey &a, const CExtPubKey &b)
+    {
+        if (a.pubkey < b.pubkey) {
+            return true;
+        } else if (a.pubkey > b.pubkey) {
+            return false;
+        }
+        return a.chaincode < b.chaincode;
+    }
+
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
+    void EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const;
+    void DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
 };
 

@@ -244,6 +244,23 @@ class CompactFiltersTest(BitcoinTestFramework):
             peer_0.send_message(request)
             peer_0.wait_for_disconnect()
 
+        self.log.info("Test -peerblockfilters without -blockfilterindex raises an error")
+        self.stop_node(0)
+        self.nodes[0].extra_args = ["-peerblockfilters"]
+        msg = "Error: Cannot set -peerblockfilters without -blockfilterindex."
+        self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test unknown value to -blockfilterindex raises an error")
+        self.nodes[0].extra_args = ["-blockfilterindex=abc"]
+        msg = "Error: Unknown -blockfilterindex value abc."
+        self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test -blockfilterindex with -reindex-chainstate raises an error")
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: -reindex-chainstate option is not compatible with -blockfilterindex. '
+            'Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.',
+            extra_args=['-blockfilterindex', '-reindex-chainstate'],
+        )
 
 def compute_last_header(prev_header, hashes):
     """Compute the last filter header from a starting header and a sequence of filter hashes."""

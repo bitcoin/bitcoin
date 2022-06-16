@@ -8,7 +8,7 @@ import base64
 import json
 import logging
 import math
-import os.path
+import os
 import re
 import struct
 import sys
@@ -493,10 +493,11 @@ def do_generate(args):
         logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
         mined_blocks += 1
         psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
-        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=psbt.encode('utf8')))
+        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
         if not psbt_signed.get("complete",False):
             logging.debug("Generated PSBT: %s" % (psbt,))
-            sys.stderr.write("PSBT signing failed")
+            sys.stderr.write("PSBT signing failed\n")
             return 1
         block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
         block = finish_block(block, signet_solution, args.grind_cmd)

@@ -1,39 +1,47 @@
 AC_PREREQ([2.60])
-AC_INIT([libsecp256k1],[0.1])
+
+# The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
+# the API. All changes in experimental modules are treated as
+# backwards-compatible and therefore at most increase the minor version.
+define(_PKG_VERSION_MAJOR, 0)
+define(_PKG_VERSION_MINOR, 1)
+define(_PKG_VERSION_BUILD, 0)
+define(_PKG_VERSION_IS_RELEASE, false)
+
+# The library version is based on libtool versioning of the ABI. The set of
+# rules for updating the version can be found here:
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# All changes in experimental modules are treated as if they don't affect the
+# interface and therefore only increase the revision.
+define(_LIB_VERSION_CURRENT, 0)
+define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_AGE, 0)
+
+AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
+
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 AC_CANONICAL_HOST
 AH_TOP([#ifndef LIBSECP256K1_CONFIG_H])
 AH_TOP([#define LIBSECP256K1_CONFIG_H])
 AH_BOTTOM([#endif /*LIBSECP256K1_CONFIG_H*/])
-AM_INIT_AUTOMAKE([foreign subdir-objects])
 
-LT_INIT
+# Require Automake 1.11.2 for AM_PROG_AR
+AM_INIT_AUTOMAKE([1.11.2 foreign subdir-objects])
 
 # Make the compilation flags quiet unless V=1 is used.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PKG_PROG_PKG_CONFIG
-
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-
-# Save definition of AC_PROG_CC because AM_PROG_CC_C_O in automake<=1.13 will
-# redefine AC_PROG_CC to exit with an error, which avoids the user calling it
-# accidently and screwing up the effect of AM_PROG_CC_C_O. However, we'll need
-# AC_PROG_CC later on in AX_PROG_CC_FOR_BUILD, where its usage is fine, and
-# we'll carefully make sure not to call AC_PROG_CC anywhere else.
-m4_copy([AC_PROG_CC], [saved_AC_PROG_CC])
-AM_PROG_CC_C_O
-# Restore AC_PROG_CC
-m4_rename_force([saved_AC_PROG_CC], [AC_PROG_CC])
-
-AC_PROG_CC_C89
+AC_PROG_CC
 if test x"$ac_cv_prog_cc_c89" = x"no"; then
   AC_MSG_ERROR([c89 compiler support required])
 fi
 AM_PROG_AS
+AM_PROG_AR
+
+LT_INIT([win32-dll])
+
+build_windows=no
 
 case $host_os in
   *darwin*)
@@ -43,14 +51,8 @@ case $host_os in
          # These Homebrew packages may be keg-only, meaning that they won't be found
          # in expected paths because they may conflict with system files. Ask
          # Homebrew where each one is located, then adjust paths accordingly.
-         openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
-         valgrind_prefix=`$BREW --prefix valgrind 2>/dev/null`
-         if test x$openssl_prefix != x; then
-           PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-           export PKG_CONFIG_PATH
-           CRYPTO_CPPFLAGS="-I$openssl_prefix/include"
-         fi
-         if test x$valgrind_prefix != x; then
+         if $BREW list --versions valgrind >/dev/null; then
+           valgrind_prefix=$($BREW --prefix valgrind 2>/dev/null)
            VALGRIND_CPPFLAGS="-I$valgrind_prefix/include"
          fi
        else
@@ -63,6 +65,9 @@ case $host_os in
          fi
        fi
      fi
+   ;;
+   cygwin*|mingw*)
+     build_windows=yes
    ;;
 esac
 
@@ -106,77 +111,68 @@ SECP_TRY_APPEND_DEFAULT_CFLAGS(SECP_CFLAGS)
 ### Define config arguments
 ###
 
+# In dev mode, we enable all binaries and modules by default but individual options can still be overridden explicitly.
+# Check for dev mode first because SECP_SET_DEFAULT needs enable_dev_mode set.
+AC_ARG_ENABLE(dev_mode, [], [],
+    [enable_dev_mode=no])
+
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark [default=yes]]),
-    [use_benchmark=$enableval],
-    [use_benchmark=yes])
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_benchmark], [yes], [yes])])
 
 AC_ARG_ENABLE(coverage,
-    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]),
-    [enable_coverage=$enableval],
-    [enable_coverage=no])
+    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_coverage], [no], [no])])
 
 AC_ARG_ENABLE(tests,
-    AS_HELP_STRING([--enable-tests],[compile tests [default=yes]]),
-    [use_tests=$enableval],
-    [use_tests=yes])
-
-AC_ARG_ENABLE(openssl_tests,
-    AS_HELP_STRING([--enable-openssl-tests],[enable OpenSSL tests [default=auto]]),
-    [enable_openssl_tests=$enableval],
-    [enable_openssl_tests=auto])
+    AS_HELP_STRING([--enable-tests],[compile tests [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_tests], [yes], [yes])])
 
 AC_ARG_ENABLE(experimental,
-    AS_HELP_STRING([--enable-experimental],[allow experimental configure options [default=no]]),
-    [use_experimental=$enableval],
-    [use_experimental=no])
+    AS_HELP_STRING([--enable-experimental],[allow experimental configure options [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_experimental], [no], [yes])])
 
 AC_ARG_ENABLE(exhaustive_tests,
-    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests [default=yes]]),
-    [use_exhaustive_tests=$enableval],
-    [use_exhaustive_tests=yes])
+    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_exhaustive_tests], [yes], [yes])])
 
-AC_ARG_ENABLE(ecmult_static_precomputation,
-    AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing [default=auto]]),
-    [use_ecmult_static_precomputation=$enableval],
-    [use_ecmult_static_precomputation=auto])
+AC_ARG_ENABLE(examples,
+    AS_HELP_STRING([--enable-examples],[compile the examples [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_examples], [no], [yes])])
 
 AC_ARG_ENABLE(module_ecdh,
-    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation]),
-    [enable_module_ecdh=$enableval],
-    [enable_module_ecdh=no])
+    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_ecdh], [no], [yes])])
 
 AC_ARG_ENABLE(module_recovery,
-    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module [default=no]]),
-    [enable_module_recovery=$enableval],
-    [enable_module_recovery=no])
+    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_recovery], [no], [yes])])
 
 AC_ARG_ENABLE(module_extrakeys,
-    AS_HELP_STRING([--enable-module-extrakeys],[enable extrakeys module (experimental)]),
-    [enable_module_extrakeys=$enableval],
-    [enable_module_extrakeys=no])
+    AS_HELP_STRING([--enable-module-extrakeys],[enable extrakeys module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_extrakeys], [no], [yes])])
 
 AC_ARG_ENABLE(module_schnorrsig,
-    AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module (experimental)]),
-    [enable_module_schnorrsig=$enableval],
-    [enable_module_schnorrsig=no])
+    AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_module_schnorrsig], [no], [yes])])
 
 AC_ARG_ENABLE(external_default_callbacks,
-    AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]),
-    [use_external_default_callbacks=$enableval],
-    [use_external_default_callbacks=no])
+    AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]), [],
+    [SECP_SET_DEFAULT([enable_external_default_callbacks], [no], [no])])
 
 # Test-only override of the (autodetected by the C code) "widemul" setting.
 # Legal values are int64 (for [u]int64_t), int128 (for [unsigned] __int128), and auto (the default).
 AC_ARG_WITH([test-override-wide-multiply], [] ,[set_widemul=$withval], [set_widemul=auto])
 
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto],
-[assembly optimizations to use (experimental: arm) [default=auto]])],[req_asm=$withval], [req_asm=auto])
+[assembly optimizations to use (experimental: arm) [default=auto]])],[req_asm=$withval], [req_asm=auto])
 
 AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
 [Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
 [The table will store 2^(SIZE-1) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
+[A window size larger than 15 will require you delete the prebuilt precomputed_ecmult.c file so that it can be rebuilt.]
+[For very large window sizes, use "make -j 1" to reduce memory use during compilation.]
 ["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
 )],
 [req_ecmult_window=$withval], [req_ecmult_window=auto])
@@ -222,7 +218,6 @@ else
     # We still add it here because passing it twice is not an issue, and handling
     # this case would just add unnecessary complexity (see #896).
     SECP_CFLAGS="-O2 $SECP_CFLAGS"
-    SECP_CFLAGS_FOR_BUILD="-O2 $SECP_CFLAGS_FOR_BUILD"
 fi
 
 if test x"$req_asm" = x"auto"; then
@@ -253,14 +248,14 @@ else
 fi
 
 # Select assembly optimization
-use_external_asm=no
+enable_external_asm=no
 
 case $set_asm in
 x86_64)
   AC_DEFINE(USE_ASM_X86_64, 1, [Define this symbol to enable x86_64 assembly optimizations])
   ;;
 arm)
-  use_external_asm=yes
+  enable_external_asm=yes
   ;;
 no)
   ;;
@@ -269,7 +264,7 @@ no)
   ;;
 esac
 
-if test x"$use_external_asm" = x"yes"; then
+if test x"$enable_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
 fi
 
@@ -327,109 +322,12 @@ case $set_ecmult_gen_precision in
   ;;
 esac
 
-if test x"$use_tests" = x"yes"; then
-  SECP_OPENSSL_CHECK
-  if test x"$enable_openssl_tests" != x"no" && test x"$has_openssl_ec" = x"yes"; then
-      enable_openssl_tests=yes
-      AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
-      SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS $CRYPTO_CPPFLAGS"
-      SECP_TEST_LIBS="$CRYPTO_LIBS"
-
-      case $host in
-      *mingw*)
-        SECP_TEST_LIBS="$SECP_TEST_LIBS -lgdi32"
-        ;;
-      esac
-  else
-    if test x"$enable_openssl_tests" = x"yes"; then
-      AC_MSG_ERROR([OpenSSL tests requested but OpenSSL with EC support is not available])
-    fi
-    enable_openssl_tests=no
-  fi
-else
-  if test x"$enable_openssl_tests" = x"yes"; then
-    AC_MSG_ERROR([OpenSSL tests requested but tests are not enabled])
-  fi
-  enable_openssl_tests=no
-fi
-
 if test x"$enable_valgrind" = x"yes"; then
   SECP_INCLUDES="$SECP_INCLUDES $VALGRIND_CPPFLAGS"
 fi
 
 # Add -Werror and similar flags passed from the outside (for testing, e.g., in CI)
 SECP_CFLAGS="$SECP_CFLAGS $WERROR_CFLAGS"
-
-# Handle static precomputation (after everything which modifies CFLAGS and friends)
-if test x"$use_ecmult_static_precomputation" != x"no"; then
-  if test x"$cross_compiling" = x"no"; then
-    set_precomp=yes
-    if test x"${CC_FOR_BUILD+x}${CFLAGS_FOR_BUILD+x}${CPPFLAGS_FOR_BUILD+x}${LDFLAGS_FOR_BUILD+x}" != x; then
-      AC_MSG_WARN([CC_FOR_BUILD, CFLAGS_FOR_BUILD, CPPFLAGS_FOR_BUILD, and/or LDFLAGS_FOR_BUILD is set but ignored because we are not cross-compiling.])
-    fi
-    # If we're not cross-compiling, simply use the same compiler for building the static precompation code.
-    CC_FOR_BUILD="$CC"
-    CPPFLAGS_FOR_BUILD="$CPPFLAGS"
-    SECP_CFLAGS_FOR_BUILD="$SECP_CFLAGS"
-    CFLAGS_FOR_BUILD="$CFLAGS"
-    LDFLAGS_FOR_BUILD="$LDFLAGS"
-  else
-    AX_PROG_CC_FOR_BUILD
-
-    # Temporarily switch to an environment for the native compiler
-    save_cross_compiling=$cross_compiling
-    cross_compiling=no
-    SAVE_CC="$CC"
-    CC="$CC_FOR_BUILD"
-    SAVE_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS_FOR_BUILD"
-    SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS_FOR_BUILD"
-    SAVE_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS_FOR_BUILD"
-
-    SECP_TRY_APPEND_DEFAULT_CFLAGS(SECP_CFLAGS_FOR_BUILD)
-
-    AC_MSG_CHECKING([for working native compiler: ${CC_FOR_BUILD}])
-    AC_RUN_IFELSE(
-      [AC_LANG_PROGRAM([], [])],
-      [working_native_cc=yes],
-      [working_native_cc=no],[:])
-
-    # Restore the environment
-    cross_compiling=$save_cross_compiling
-    CC="$SAVE_CC"
-    CPPFLAGS="$SAVE_CPPFLAGS"
-    CFLAGS="$SAVE_CFLAGS"
-    LDFLAGS="$SAVE_LDFLAGS"
-
-    if test x"$working_native_cc" = x"no"; then
-      AC_MSG_RESULT([no])
-      set_precomp=no
-      m4_define([please_set_for_build], [Please set CC_FOR_BUILD, CPPFLAGS_FOR_BUILD, CFLAGS_FOR_BUILD, and/or LDFLAGS_FOR_BUILD.])
-      if test x"$use_ecmult_static_precomputation" = x"yes";  then
-        AC_MSG_ERROR([native compiler ${CC_FOR_BUILD} does not produce working binaries. please_set_for_build])
-      else
-        AC_MSG_WARN([Disabling statically generated ecmult table because the native compiler ${CC_FOR_BUILD} does not produce working binaries. please_set_for_build])
-      fi
-    else
-      AC_MSG_RESULT([yes])
-      set_precomp=yes
-    fi
-  fi
-
-  AC_SUBST(CC_FOR_BUILD)
-  AC_SUBST(CPPFLAGS_FOR_BUILD)
-  AC_SUBST(SECP_CFLAGS_FOR_BUILD)
-  AC_SUBST(CFLAGS_FOR_BUILD)
-  AC_SUBST(LDFLAGS_FOR_BUILD)
-else
-  set_precomp=no
-fi
-
-if test x"$set_precomp" = x"yes"; then
-  AC_DEFINE(USE_ECMULT_STATIC_PRECOMPUTATION, 1, [Define this symbol to use a statically generated ecmult table])
-fi
 
 ###
 ### Handle module options
@@ -454,7 +352,7 @@ if test x"$enable_module_extrakeys" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_EXTRAKEYS, 1, [Define this symbol to enable the extrakeys module])
 fi
 
-if test x"$use_external_default_callbacks" = x"yes"; then
+if test x"$enable_external_default_callbacks" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_DEFAULT_CALLBACKS, 1, [Define this symbol if an external implementation of the default callbacks is used])
 fi
 
@@ -466,16 +364,8 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
-  AC_MSG_NOTICE([Building extrakeys module: $enable_module_extrakeys])
-  AC_MSG_NOTICE([Building schnorrsig module: $enable_module_schnorrsig])
   AC_MSG_NOTICE([******])
 else
-  if test x"$enable_module_extrakeys" = x"yes"; then
-    AC_MSG_ERROR([extrakeys module is experimental. Use --enable-experimental to allow.])
-  fi
-  if test x"$enable_module_schnorrsig" = x"yes"; then
-    AC_MSG_ERROR([schnorrsig module is experimental. Use --enable-experimental to allow.])
-  fi
   if test x"$set_asm" = x"arm"; then
     AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
   fi
@@ -493,32 +383,30 @@ AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
 AC_SUBST(SECP_CFLAGS)
 AM_CONDITIONAL([ENABLE_COVERAGE], [test x"$enable_coverage" = x"yes"])
-AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
-AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$use_exhaustive_tests" != x"no"])
-AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
-AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$set_precomp" = x"yes"])
+AM_CONDITIONAL([USE_TESTS], [test x"$enable_tests" != x"no"])
+AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$enable_exhaustive_tests" != x"no"])
+AM_CONDITIONAL([USE_EXAMPLES], [test x"$enable_examples" != x"no"])
+AM_CONDITIONAL([USE_BENCHMARK], [test x"$enable_benchmark" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
-AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
+AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
-
-# Make sure nothing new is exported so that we don't break the cache.
-PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
-unset PKG_CONFIG_PATH
-PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
+AM_CONDITIONAL([BUILD_WINDOWS], [test "$build_windows" = "yes"])
+AC_SUBST(LIB_VERSION_CURRENT, _LIB_VERSION_CURRENT)
+AC_SUBST(LIB_VERSION_REVISION, _LIB_VERSION_REVISION)
+AC_SUBST(LIB_VERSION_AGE, _LIB_VERSION_AGE)
 
 AC_OUTPUT
 
 echo
 echo "Build Options:"
-echo "  with ecmult precomp     = $set_precomp"
-echo "  with external callbacks = $use_external_default_callbacks"
-echo "  with benchmarks         = $use_benchmark"
-echo "  with tests              = $use_tests"
-echo "  with openssl tests      = $enable_openssl_tests"
+echo "  with external callbacks = $enable_external_default_callbacks"
+echo "  with benchmarks         = $enable_benchmark"
+echo "  with tests              = $enable_tests"
 echo "  with coverage           = $enable_coverage"
+echo "  with examples           = $enable_examples"
 echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
 echo "  module extrakeys        = $enable_module_extrakeys"
@@ -538,11 +426,3 @@ echo "  CPPFLAGS                = $CPPFLAGS"
 echo "  SECP_CFLAGS             = $SECP_CFLAGS"
 echo "  CFLAGS                  = $CFLAGS"
 echo "  LDFLAGS                 = $LDFLAGS"
-echo
-if test x"$set_precomp" = x"yes"; then
-echo "  CC_FOR_BUILD            = $CC_FOR_BUILD"
-echo "  CPPFLAGS_FOR_BUILD      = $CPPFLAGS_FOR_BUILD"
-echo "  SECP_CFLAGS_FOR_BUILD   = $SECP_CFLAGS_FOR_BUILD"
-echo "  CFLAGS_FOR_BUILD        = $CFLAGS_FOR_BUILD"
-echo "  LDFLAGS_FOR_BUILD       = $LDFLAGS_FOR_BUILD"
-fi

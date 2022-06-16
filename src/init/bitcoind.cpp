@@ -8,9 +8,12 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
+#include <util/check.h>
 #include <util/system.h>
 
 #include <memory>
+
+using node::NodeContext;
 
 namespace init {
 namespace {
@@ -24,9 +27,9 @@ public:
     }
     std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
-    std::unique_ptr<interfaces::WalletClient> makeWalletClient(interfaces::Chain& chain) override
+    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain) override
     {
-        return MakeWalletClient(chain, *Assert(m_node.args));
+        return MakeWalletLoader(chain, *Assert(m_node.args));
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     NodeContext& m_node;

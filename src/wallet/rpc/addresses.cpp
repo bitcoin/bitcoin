@@ -13,6 +13,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{"getnewaddress",
@@ -170,7 +171,7 @@ RPCHelpMan listaddressgroupings()
                             {
                                 {RPCResult::Type::STR, "address", "The bitcoin address"},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                                {RPCResult::Type::STR, "label", /* optional */ true, "The label"},
+                                {RPCResult::Type::STR, "label", /*optional=*/true, "The label"},
                             }},
                         }},
                     }
@@ -238,6 +239,10 @@ RPCHelpMan addmultisigaddress()
                         {RPCResult::Type::STR, "address", "The value of the new multisig address"},
                         {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script"},
                         {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig"},
+                        {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Any warnings resulting from the creation of this multisig",
+                        {
+                            {RPCResult::Type::STR, "", ""},
+                        }},
                     }
                 },
                 RPCExamples{
@@ -259,7 +264,7 @@ RPCHelpMan addmultisigaddress()
     if (!request.params[2].isNull())
         label = LabelFromValue(request.params[2]);
 
-    int required = request.params[0].get_int();
+    int required = request.params[0].getInt<int>();
 
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
@@ -295,6 +300,14 @@ RPCHelpMan addmultisigaddress()
     result.pushKV("address", EncodeDestination(dest));
     result.pushKV("redeemScript", HexStr(inner));
     result.pushKV("descriptor", descriptor->ToString());
+
+    UniValue warnings(UniValue::VARR);
+    if (descriptor->GetOutputType() != output_type) {
+        // Only warns if the user has explicitly chosen an address type we cannot generate
+        warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
+    }
+    if (!warnings.empty()) result.pushKV("warnings", warnings);
+
     return result;
 },
     };
@@ -327,9 +340,9 @@ RPCHelpMan keypoolrefill()
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
     unsigned int kpSize = 0;
     if (!request.params[0].isNull()) {
-        if (request.params[0].get_int() < 0)
+        if (request.params[0].getInt<int>() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-        kpSize = (unsigned int)request.params[0].get_int();
+        kpSize = (unsigned int)request.params[0].getInt<int>();
     }
 
     EnsureWalletIsUnlocked(*pwallet);
@@ -347,7 +360,12 @@ RPCHelpMan keypoolrefill()
 RPCHelpMan newkeypool()
 {
     return RPCHelpMan{"newkeypool",
-                "\nEntirely clears and refills the keypool."+
+                "\nEntirely clears and refills the keypool.\n"
+                "WARNING: On non-HD wallets, this will require a new backup immediately, to include the new keys.\n"
+                "When restoring a backup of an HD wallet created before the newkeypool command is run, funds received to\n"
+                "new addresses may not appear automatically. They have not been lost, but the wallet may not find them.\n"
+                "This can be fixed by running the newkeypool command on the backup and then rescanning, so the wallet\n"
+                "re-generates the required keys." +
             HELP_REQUIRING_PASSPHRASE,
                 {},
                 RPCResult{RPCResult::Type::NONE, "", ""},
@@ -491,33 +509,33 @@ RPCHelpMan getaddressinfo()
                         {RPCResult::Type::BOOL, "ismine", "If the address is yours."},
                         {RPCResult::Type::BOOL, "iswatchonly", "If the address is watchonly."},
                         {RPCResult::Type::BOOL, "solvable", "If we know how to spend coins sent to this address, ignoring the possible lack of private keys."},
-                        {RPCResult::Type::STR, "desc", /* optional */ true, "A descriptor for spending coins sent to this address (only when solvable)."},
-                        {RPCResult::Type::STR, "parent_desc", /* optional */ true, "The descriptor used to derive this address if this is a descriptor wallet"},
+                        {RPCResult::Type::STR, "desc", /*optional=*/true, "A descriptor for spending coins sent to this address (only when solvable)."},
+                        {RPCResult::Type::STR, "parent_desc", /*optional=*/true, "The descriptor used to derive this address if this is a descriptor wallet"},
                         {RPCResult::Type::BOOL, "isscript", "If the key is a script."},
                         {RPCResult::Type::BOOL, "ischange", "If the address was used for change output."},
                         {RPCResult::Type::BOOL, "iswitness", "If the address is a witness address."},
-                        {RPCResult::Type::NUM, "witness_version", /* optional */ true, "The version number of the witness program."},
-                        {RPCResult::Type::STR_HEX, "witness_program", /* optional */ true, "The hex value of the witness program."},
-                        {RPCResult::Type::STR, "script", /* optional */ true, "The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
+                        {RPCResult::Type::NUM, "witness_version", /*optional=*/true, "The version number of the witness program."},
+                        {RPCResult::Type::STR_HEX, "witness_program", /*optional=*/true, "The hex value of the witness program."},
+                        {RPCResult::Type::STR, "script", /*optional=*/true, "The output script type. Only if isscript is true and the redeemscript is known. Possible\n"
                                                                      "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
                             "witness_v0_scripthash, witness_unknown."},
-                        {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The redeemscript for the p2sh address."},
-                        {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
+                        {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The redeemscript for the p2sh address."},
+                        {RPCResult::Type::ARR, "pubkeys", /*optional=*/true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
                         {
                             {RPCResult::Type::STR, "pubkey", ""},
                         }},
-                        {RPCResult::Type::NUM, "sigsrequired", /* optional */ true, "The number of signatures required to spend multisig output (only if script is multisig)."},
-                        {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH)."},
-                        {RPCResult::Type::OBJ, "embedded", /* optional */ true, "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
+                        {RPCResult::Type::NUM, "sigsrequired", /*optional=*/true, "The number of signatures required to spend multisig output (only if script is multisig)."},
+                        {RPCResult::Type::STR_HEX, "pubkey", /*optional=*/true, "The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH)."},
+                        {RPCResult::Type::OBJ, "embedded", /*optional=*/true, "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
                         {
                             {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
                             "and relation to the wallet (ismine, iswatchonly)."},
                         }},
-                        {RPCResult::Type::BOOL, "iscompressed", /* optional */ true, "If the pubkey is compressed."},
-                        {RPCResult::Type::NUM_TIME, "timestamp", /* optional */ true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
-                        {RPCResult::Type::STR, "hdkeypath", /* optional */ true, "The HD keypath, if the key is HD and available."},
-                        {RPCResult::Type::STR_HEX, "hdseedid", /* optional */ true, "The Hash160 of the HD seed."},
-                        {RPCResult::Type::STR_HEX, "hdmasterfingerprint", /* optional */ true, "The fingerprint of the master key."},
+                        {RPCResult::Type::BOOL, "iscompressed", /*optional=*/true, "If the pubkey is compressed."},
+                        {RPCResult::Type::NUM_TIME, "timestamp", /*optional=*/true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
+                        {RPCResult::Type::STR, "hdkeypath", /*optional=*/true, "The HD keypath, if the key is HD and available."},
+                        {RPCResult::Type::STR_HEX, "hdseedid", /*optional=*/true, "The Hash160 of the HD seed."},
+                        {RPCResult::Type::STR_HEX, "hdmasterfingerprint", /*optional=*/true, "The fingerprint of the master key."},
                         {RPCResult::Type::ARR, "labels", "Array of labels associated with the address. Currently limited to one label but returned\n"
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
@@ -579,7 +597,7 @@ RPCHelpMan getaddressinfo()
     DescriptorScriptPubKeyMan* desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
     if (desc_spk_man) {
         std::string desc_str;
-        if (desc_spk_man->GetDescriptorString(desc_str, /* priv */ false)) {
+        if (desc_spk_man->GetDescriptorString(desc_str, /*priv=*/false)) {
             ret.pushKV("parent_desc", desc_str);
         }
     }
@@ -785,3 +803,4 @@ RPCHelpMan walletdisplayaddress()
     };
 }
 #endif // ENABLE_EXTERNAL_SIGNER
+} // namespace wallet

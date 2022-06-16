@@ -284,10 +284,11 @@ inline unsigned char LowerCase(unsigned char c)
 }
 
 /** Return indices of invalid characters in a Bech32 string. */
-bool CheckCharacters(const std::string& str, std::vector<int>& errors) {
+bool CheckCharacters(const std::string& str, std::vector<int>& errors)
+{
     bool lower = false, upper = false;
     for (size_t i = 0; i < str.size(); ++i) {
-        unsigned char c = str[i];
+        unsigned char c{(unsigned char)(str[i])};
         if (c >= 'a' && c <= 'z') {
             if (upper) {
                 errors.push_back(i);
