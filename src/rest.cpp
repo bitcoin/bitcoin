@@ -799,10 +799,10 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;
     {
-        auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool& mempool) {
+        auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool* mempool) {
             for (const COutPoint& vOutPoint : vOutPoints) {
                 Coin coin;
-                bool hit = !mempool.isSpent(vOutPoint) && view.GetCoin(vOutPoint, coin);
+                bool hit = (!mempool || !mempool->isSpent(vOutPoint)) && view.GetCoin(vOutPoint, coin);
                 hits.push_back(hit);
                 if (hit) outs.emplace_back(std::move(coin));
             }
@@ -815,10 +815,10 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             LOCK2(cs_main, mempool->cs);
             CCoinsViewCache& viewChain = chainman.ActiveChainstate().CoinsTip();
             CCoinsViewMemPool viewMempool(&viewChain, *mempool);
-            process_utxos(viewMempool, *mempool);
+            process_utxos(viewMempool, mempool);
         } else {
-            LOCK(cs_main);  // no need to lock mempool!
-            process_utxos(chainman.ActiveChainstate().CoinsTip(), CTxMemPool());
+            LOCK(cs_main);
+            process_utxos(chainman.ActiveChainstate().CoinsTip(), nullptr);
         }
 
         for (size_t i = 0; i < hits.size(); ++i) {
