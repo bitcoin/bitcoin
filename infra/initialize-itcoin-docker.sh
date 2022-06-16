@@ -80,7 +80,7 @@ INIT_DATA=$(docker run \
 )
 
 BLOCKSCRIPT=$(echo "${INIT_DATA}" | jq --raw-output '.blockscript')
-PRIVKEY=$(echo     "${INIT_DATA}" | jq --raw-output '.privkey')
+DESCRIPTORS=$(echo "${INIT_DATA}" | jq --raw-output '.descriptors')
 
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
 mkdir "${EXTERNAL_DATADIR}"
@@ -109,20 +109,23 @@ docker run \
 	"${ITCOIN_IMAGE}" \
 	bitcoind
 
-# Only the first time: let's create a wallet and call it itcoin_signer
-errecho "Create wallet itcoin_signer"
-"${MYDIR}/run-docker-bitcoin-cli.sh" -named createwallet wallet_name=itcoin_signer descriptors=false >/dev/null
+# Only the first time: let's create a blank descriptor wallet and call it
+# itcoin_signer
+errecho "Create a blank descriptor wallet itcoin_signer"
+"${MYDIR}/run-docker-bitcoin-cli.sh" -named createwallet wallet_name=itcoin_signer descriptors=true blank=true >/dev/null
 errecho "Wallet itcoin_signer created"
 
-# Now we need to import inside itcoin_signer the private key we generated
-# beforehand. This private key will be used to sign blocks.
-errecho "Import private key into itcoin_signer"
-"${MYDIR}/run-docker-bitcoin-cli.sh" importprivkey "${PRIVKEY}"
-errecho "Private key imported into itcoin_signer"
+# Now we need to import the private descriptors previously created into
+# itcoin_signer
+errecho "Import private descriptors into itcoin_signer"
+"${MYDIR}/run-docker-bitcoin-cli.sh" importdescriptors "${DESCRIPTORS}"
+errecho "Private descriptors imported into itcoin_signer"
 
-# Generate an address we'll send bitcoins to.
+# Generate a bech32m address we'll send bitcoins to.
+# Note that since we only imported tr descriptors, bech32m addresses are the
+# only ones we can generate
 errecho "Generate an address"
-ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" getnewaddress)
+ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" getnewaddress -addresstype bech32m)
 errecho "Address ${ADDR} generated"
 
 # Ask the miner to send bitcoins to that address. Being the first block in the
