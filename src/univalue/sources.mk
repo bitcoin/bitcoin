@@ -12,10 +12,8 @@ UNIVALUE_INCLUDE_DIR_INT = %reldir%/include
 
 UNIVALUE_DIST_HEADERS_INT =
 UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue.h
-
-UNIVALUE_LIB_HEADERS_INT =
-UNIVALUE_LIB_HEADERS_INT += %reldir%/lib/univalue_utffilter.h
-UNIVALUE_LIB_HEADERS_INT += %reldir%/lib/univalue_escapes.h
+UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue_utffilter.h
+UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue_escapes.h
 
 UNIVALUE_LIB_SOURCES_INT =
 UNIVALUE_LIB_SOURCES_INT += %reldir%/lib/univalue.cpp

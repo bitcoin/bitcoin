@@ -19,7 +19,6 @@ EXCLUDED_DIRS = ["src/leveldb/",
                  "src/crc32c/",
                  "src/secp256k1/",
                  "src/minisketch/",
-                 "src/univalue/",
                  "src/bls-dash/"]
 
 EXPECTED_BOOST_INCLUDES = ["boost/algorithm/string/replace.hpp",
