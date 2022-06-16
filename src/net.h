@@ -181,8 +181,7 @@ struct LocalServiceInfo {
     uint16_t nPort;
 };
 
-extern GlobalMutex g_maplocalhost_mutex;
-extern std::map<CNetAddr, LocalServiceInfo> g_my_net_addr GUARDED_BY(g_maplocalhost_mutex);
+extern Synced<std::map<CNetAddr, LocalServiceInfo>> g_my_net_addr;
 
 extern const std::string NET_MESSAGE_TYPE_OTHER;
 using mapMsgTypeSize = std::map</* message type */ std::string, /* total bytes */ uint64_t>;

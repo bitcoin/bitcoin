@@ -608,13 +608,13 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     // !IsRoutable the undefined behavior is easier to trigger deterministically
     in_addr raw_addr;
     raw_addr.s_addr = htonl(0x7f000001);
-    const CNetAddr g_my_net_addr_entry = CNetAddr(raw_addr);
+    const CNetAddr my_net_addr_entry{raw_addr};
     {
-        LOCK(g_maplocalhost_mutex);
         LocalServiceInfo lsi;
         lsi.nScore = 23;
         lsi.nPort = 42;
-        g_my_net_addr[g_my_net_addr_entry] = lsi;
+        SYNCED_LOCK(g_my_net_addr, p);
+        (*p)[my_net_addr_entry] = lsi;
     }
 
     // create a peer with an IPv4 address
@@ -646,10 +646,8 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     BOOST_CHECK(1);
 
     // Cleanup, so that we don't confuse other tests.
-    {
-        LOCK(g_maplocalhost_mutex);
-        g_my_net_addr.erase(g_my_net_addr_entry);
-    }
+    SYNCED_LOCK(g_my_net_addr, p);
+    p->erase(my_net_addr_entry);
 }
 
 BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)

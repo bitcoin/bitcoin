@@ -689,13 +689,12 @@ static RPCHelpMan getnetworkinfo()
     }
     UniValue localAddresses(UniValue::VARR);
     {
-        LOCK(g_maplocalhost_mutex);
-        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : g_my_net_addr)
-        {
+        SYNCED_LOCK(g_my_net_addr, p);
+        for (const auto& [addr, service_info] : *p) {
             UniValue rec(UniValue::VOBJ);
-            rec.pushKV("address", item.first.ToStringAddr());
-            rec.pushKV("port", item.second.nPort);
-            rec.pushKV("score", item.second.nScore);
+            rec.pushKV("address", addr.ToStringAddr());
+            rec.pushKV("port", service_info.nPort);
+            rec.pushKV("score", service_info.nScore);
             localAddresses.push_back(rec);
         }
     }
