@@ -47,8 +47,15 @@ MAX_VERSIONS = {
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
 'environ', '_environ', '__environ', '_fini', '_init', 'stdin',
-'stdout', 'stderr',
+'stdout', 'stderr', 'in6addr_any',
 }
+
+# bitcoin-qt only
+IGNORE_EXPORTS.update({
+'xcb_xkb_id', 'xcb_xfixes_id', 'timezone', '__tzname', 'xcb_shm_id',
+'tzname', 'xcb_xinerama_id', '__timezone', 'xcb_render_id', 'xcb_shape_id',
+'xcb_randr_id', 'xcb_sync_id',
+})
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
