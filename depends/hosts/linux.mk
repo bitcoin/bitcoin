@@ -1,11 +1,11 @@
-linux_CFLAGS=-pipe
+linux_CFLAGS=-pipe -std=$(C_STANDARD)
+linux_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
 ifneq ($(LTO),)
 linux_CFLAGS += -flto
+linux_CXXFLAGS += -flto
 linux_LDFLAGS += -flto
 endif
-
-linux_CXXFLAGS=$(linux_CFLAGS)
 
 linux_release_CFLAGS=-O2
 linux_release_CXXFLAGS=$(linux_release_CFLAGS)
