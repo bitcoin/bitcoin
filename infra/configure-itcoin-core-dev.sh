@@ -31,6 +31,7 @@ cd "${MY_DIR}/.."
     --enable-debug \
     --enable-determinism \
     --enable-suppress-external-warnings \
+    --enable-tests \
     --enable-wallet \
     --enable-werror \
     --disable-bench \
