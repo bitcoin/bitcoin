@@ -12,7 +12,16 @@ set -eu
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-USR_DIR=${1:-$(realpath "${MY_DIR}/../../itcoin-pbft/usrlocal")}
+# Using "--canonicalize-missing" allows USR_DIR to point to a non existing
+# directory by default. This is suboptimal, but it's useful when building in a
+# container, because in that case there is no need to share Boost with
+# itcoin-pbft, and we can simply use the OS-provided libraries.
+#
+# TODO: make the script stricter replacing "--canonicalize-missing" with
+#       "--canonicalize-existing", but find a way to keep the Docker build
+#       working (maybe introduce another argument that makes the match lax
+#       again?).
+USR_DIR=${1:-$(realpath --canonicalize-missing "${MY_DIR}/../../itcoin-pbft/usrlocal")}
 INSTALL_DIR=${2:-$(realpath "${MY_DIR}/../target")}
 
 # autogen always assumes that the user is calling it from the same directory
