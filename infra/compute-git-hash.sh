@@ -45,7 +45,7 @@ if [ -z "${GIT_HASH}" ]; then
     errecho "ERROR: the commit hash of the working copy at ${CANDIDATE_REPO_ROOT} could not be identified"
     if [ "${REPO_TYPE}" == "hg" ]; then
         errecho ""
-        errecho "Since you are running on a mercurial repository: did you recently committed without pushing?"
+        errecho "Since you are running on a mercurial repository: did you recently commit without pushing?"
         errecho "If so, try to execute \"hg gexport\""
     fi
     exit 2
