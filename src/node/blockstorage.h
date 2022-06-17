@@ -53,7 +53,7 @@ extern std::atomic_bool fReindex;
 extern bool fHavePruned;
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
-/** Number of MiB of block files that we're trying to stay below. */
+/** Number of bytes of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 
 /** True if we're running in -addressindex mode. */
