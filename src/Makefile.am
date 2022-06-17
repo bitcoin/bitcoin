@@ -41,7 +41,6 @@ LIBSYSCOIN_NODE=libsyscoin_node.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
 LIBSYSCOIN_CONSENSUS=libsyscoin_consensus.a
 LIBSYSCOIN_CLI=libsyscoin_cli.a
-LIBSYSCOIN_KERNEL=libsyscoin_kernel.a
 LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.la
 LIBSYSCOINQT=qt/libsyscoinqt.a
