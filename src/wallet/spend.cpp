@@ -166,12 +166,15 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
         }
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+            const CTxOut& output = wtx.tx->vout[i];
+            const COutPoint outpoint(wtxid, i);
+
             // Only consider selected coins if add_inputs is false
-            if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(COutPoint(entry.first, i))) {
+            if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(outpoint)) {
                 continue;
             }
 
-            if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount) {
+            if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount) {
                 continue;
             }
 
@@ -181,52 +184,52 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             }
             const bool &coinControlAssetRequested = !assetInfo.IsNull();
             const bool &isAssetUpdate = coinControlAssetRequested && IsAssetTx(txVersion);
-            const bool &isAssetCoin = !wtx.tx->vout[i].assetInfo.IsNull();
+            const bool &isAssetCoin = !output.assetInfo.IsNull();
             // for updates only select 0 value coins, otherwise enforce min amount rules
-            if (isAssetCoin && ((isAssetUpdate && wtx.tx->vout[i].assetInfo.nValue != 0) || (!isAssetUpdate && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset)))) {
+            if (isAssetCoin && ((isAssetUpdate && output.assetInfo.nValue != 0) || (!isAssetUpdate && (output.assetInfo.nValue < nMinimumAmountAsset || output.assetInfo.nValue > nMaximumAmountAsset)))) {
                 continue;
             }
             // SYSCOIN
-            if (!bIncludeLocked && wallet.IsLockedCoin(entry.first, i)) {
+            if (!bIncludeLocked && wallet.IsLockedCoin(outpoint)) {
                 continue;
             }
             // if coin control requested an asset to be funded
             if (coinControlAssetRequested) {
                 // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
-                const bool& bMatchAssetOrSysOutput = (assetInfo.nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
+                const bool& bMatchAssetOrSysOutput = (assetInfo.nAsset == output.assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
                 if(!bMatchAssetOrSysOutput) {
                     continue;
                 }
             }
-            if (wallet.IsSpent(wtxid, i)) {
+            if (wallet.IsSpent(outpoint)) {
                 continue;
             }
 
-            isminetype mine = wallet.IsMine(wtx.tx->vout[i]);
+            isminetype mine = wallet.IsMine(output);
 
             if (mine == ISMINE_NO) {
                 continue;
             }
 
-            if (!allow_used_addresses && wallet.IsSpentKey(wtxid, i)) {
+            if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
                 continue;
             }
 
-            std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(wtx.tx->vout[i].scriptPubKey);
+            std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
-            bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
+            bool solvable = provider ? IsSolvable(*provider, output.scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
             vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
-                nTotal += wtx.tx->vout[i].nValue;
+                nTotal += output.nValue;
                 if (nTotal >= nMinimumSumAmount) {
                     return;
                 }
             }
             // SYSCOIN
             if (nMinimumSumAmountAsset != MAX_ASSET && isAssetCoin) {
-                nTotalAsset += wtx.tx->vout[i].assetInfo.nValue;
+                nTotalAsset += output.assetInfo.nValue;
                 if (nTotalAsset >= nMinimumSumAmountAsset) {
                     return;
                 }
