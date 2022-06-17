@@ -11,6 +11,7 @@ race:BerkeleyDatabase
 race:DatabaseBatch
 race:zmq::*
 race:syscoin-qt
+race:GenerateBlock
 
 # deadlock (TODO fix)
 deadlock:CChainState::ConnectTip
