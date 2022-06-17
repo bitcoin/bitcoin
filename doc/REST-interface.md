@@ -84,6 +84,15 @@ Returns various state info regarding block chain processing.
 Only supports JSON as output format.
 Refer to the `getblockchaininfo` RPC help for details.
 
+#### Deployment info
+`GET /rest/deploymentinfo.json`
+`GET /rest/deploymentinfo/<BLOCKHASH>.json`
+
+Returns an object containing various state info regarding deployments of
+consensus changes at the current chain tip, or at <BLOCKHASH> if provided.
+Only supports JSON as output format.
+Refer to the `getdeploymentinfo` RPC help for details.
+
 #### Query UTXO set
 `GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
 
