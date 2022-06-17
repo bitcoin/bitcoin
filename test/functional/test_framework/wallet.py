@@ -19,9 +19,13 @@ from test_framework.address import (
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
     key_to_p2wpkh,
+    output_key_to_p2tr,
 )
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey
+from test_framework.key import (
+    ECKey,
+    compute_xonly_pubkey,
+)
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -38,6 +42,7 @@ from test_framework.script import (
     OP_NOP,
     OP_TRUE,
     SIGHASH_ALL,
+    taproot_construct,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
@@ -286,10 +291,10 @@ class MiniWallet:
         return txid
 
 
-def getnewdestination(address_type='bech32'):
+def getnewdestination(address_type='bech32m'):
     """Generate a random destination of the specified type and return the
        corresponding public key, scriptPubKey and address. Supported types are
-       'legacy', 'p2sh-segwit' and 'bech32'. Can be used when a random
+       'legacy', 'p2sh-segwit', 'bech32' and 'bech32m'. Can be used when a random
        destination is needed, but no compiled wallet is available (e.g. as
        replacement to the getnewaddress/getaddressinfo RPCs)."""
     key = ECKey()
@@ -304,7 +309,11 @@ def getnewdestination(address_type='bech32'):
     elif address_type == 'bech32':
         scriptpubkey = key_to_p2wpkh_script(pubkey)
         address = key_to_p2wpkh(pubkey)
-    # TODO: also support bech32m (need to generate x-only-pubkey)
+    elif address_type == 'bech32m':
+        tap = taproot_construct(compute_xonly_pubkey(key.get_bytes())[0])
+        pubkey = tap.output_pubkey
+        scriptpubkey = tap.scriptPubKey
+        address = output_key_to_p2tr(pubkey)
     else:
         assert False
     return pubkey, scriptpubkey, address
