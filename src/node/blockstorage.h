@@ -49,7 +49,7 @@ extern std::atomic_bool fReindex;
 /** Pruning-related variables and constants */
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
-/** Number of MiB of block files that we're trying to stay below. */
+/** Number of bytes of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
