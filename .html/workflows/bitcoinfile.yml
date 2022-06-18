@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/2022/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>BIP32 - JavaScript Deterministic Wallets</title>
+    <meta content="Client-side Bitcoin and other cryptocurrency address and deterministic wallets generator" name="description"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="bitcoin address generator" name="description" />
+    <meta content="Bitcoin-x.y.z" name="author" />
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet" />
+    <link href="css/brainwallet.css" rel="stylesheet" />
+    <link href="favicon.ico" rel="shortcut icon" />
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bitcoinjs-min.js"></script>
+    <script src="js/sha512.js"></script>
+    <script src="js/modsqrt.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/rfc1751.js"></script>
+    <script src="js/mnemonic.js"></script>
+    <script src="js/armory.js"></script>
+    <script src="js/bip32.js"></script>
+    <script src="js/cashaddrjs-0.2.8.min.js"></script>
+    <script src="js/electrum.js"></script>
+    <script src="js/tx.js"></script>
+    <script src="js/bitcoinsig.js"></script>
+    <script src="js/brainwallet.js"></script>
+  </head>
+  <body onclick="rng_seed_time();" onkeypress="rng_seed_time();">
+    <header class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button class="navbar-toggle" data-target=".bs-navbar-collapse" data-toggle="collapse" type="button"><span class="sr-only">Toggle navigation</span> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span> <span class="icon-bar">&nbsp;</span></button> <a class="navbar-brand" href="/">BIP32 Generator (Bitcoin!)</a>
+        </div>
+        <nav class="collapse navbar-collapse bs-navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a data-toggle="tab" href="#uvhw" id="tab-bip32">Home</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown" id="crCurrency">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="crSelect"><span id="crName">Bitcoin Mainnet</span>&nbsp;<b class="caret">&nbsp;</b></a>
+              <ul class="dropdown-menu">
+                <li><a href="http://blockchain.info/address/" id="btc_main">Bitcoin Mainnet</a></li>
+                <li><a href="http://blockexplorer.com/testnet/address/" id="btc_test">Bitcoin Testnet</a></li>
+                <li><a href="https://blockchair.com/bitcoin-cash/address/" id="bch_main">Bitcoin Cash Mainnet</a></li>
+                <li><a href="" id="bch_test">Bitcoin Cash Testnet</a></li>
+                <li><a href="http://block-explorer.com/address/" id="ltc_main">Litecoin Mainnet</a></li>
+                <li><a href="#" id="ltc_test">Litecoin Testnet</a></li>
+                <li><a href="http://dogechain.info/address/" id="doge_main">Dogecoin Mainnet</a></li>
+                <li><a href="#" id="doge_test">Dogecoin Testnet</a></li>
+                <li><a href="https://chainz.cryptoid.info/jbs/" id="jbs_main">Jumbucks Mainnet</a></li>
+                <!-- supported right now
+                <li><a href="http://explorer.litecoin.net/address/" title="0x30">LTC</a></li>
+                <li><a href="http://explorer.dot-bit.org/a/" title="0x34">NMC</a></li>
+                <li><a href="http://ppc.cryptocoinexplorer.com/address/" title="0x37">PPC</a></li>
+                <li><a href="http://d.evco.in/abe/address/" title="0x8A">IXC</a></li>
+                <li><a href="http://nvc.cryptocoinexplorer.com/address/" title="0x08">NVC</a></li>
+                <li><a href="http://trc.cryptocoinexplorer.com/address/" title="0x00">TRC</a></li>
+                <li><a href="http://ftc.cryptocoinexplorer.com/address/" title="0x0E">FTC</a></li>
+                 -->
+              </ul></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <div class="container">
+      <div class="tab-content">
+        <!-- BIP32 -->
+        <div class="tab-pane fade in active" id="bip32">
+          <form action="/" class="form-horizontal" method="get">
+            <fieldset>
+              <legend>BIP32 Deterministic Key Generator</legend>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="from_pass">Derive From</label>
+                <div class="col-lg-10">
+                  <div class="btn-group" data-toggle="buttons" id="gen_from">
+                    <label class="btn btn-default active" title="Single SHA256"><input id="from_pass" name="gen_from" type="radio" />Passphrase</label>
+                    <label class="btn btn-default" title="Base58-encoded"><input id="from_key" name="gen_from" type="radio" />BIP32 Key</label>
+                  </div>
+                  &nbsp;&nbsp;<span class="help-inline" id="gen_from_msg"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="bip32_source_passphrase">Passphrase</label>
+                <div class="col-lg-10">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <div class="input-group">
+                        <input class="form-control" id="bip32_source_passphrase" type="password" />
+                        <div class="input-group-addon" style="height: 80px;">
+                          <input type="checkbox" id="checkbox_show_passphrase" /> Show Passphrase
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p />
+                  <div class="row" >
+                    <div class="col-lg-12">
+                      <div class="progress progress-striped" id="bip32_hashing_style" style="margin-bottom: 10px;">
+                        <div class="progress-bar" style="width: 0%;" id="bip32_hashing_progress_bar">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-12">
+                        <input class="btn btn-default" title="Cancel" type="button" value="Cancel slow hash and use weak hash instead" id="cancel_hash_worker" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="bip32_source_key">BIP32 Extended Key</label>
+                <div class="col-lg-10">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <input class="form-control" id="bip32_source_key" type="text" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="bip32_key_info">Key Info</label>
+                <div class="col-lg-10">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <label class="control-label" id="bip32_key_info_title">title</label>
+                    </div>
+                  </div>
+                  <br />
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Version</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_version" disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Depth</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_depth" disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Parent Fingerprint</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_parent_fingerprint" disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Child Index</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_child_index" disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Chain Code</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_chain_code" disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-group">
+                      <div class="col-lg-2 control-label">Key</div>
+                      <div class="col-lg-10 col-lg-10-inner">
+                          <input class="form-control" id="bip32_key_info_key" disabled />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" id="extpubkeys_from_group">
+                <label class="col-lg-2 control-label" for="bip32_derivation_path">Derivation Path</label>
+                <div class="col-lg-10">
+                  <select class="form-control" id="bip32_derivation_path">
+                    <option value="m">Info: m</option>
+                    <option value="m/i">Simple: m/i</option>
+                    <option value="m/k'/0" selected>External account (master): m/k'/0</option>
+                    <option value="m/k'/0/i">External account i'th keypair: m/k'/0/i</option>
+                    <option value="m/k'/1">Internal account (master): m/k'/1</option>
+                    <option value="m/k'/1/i">Internal account i'th keypair: m/k'/1/i</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="custom_group">
+                <label class="col-lg-2 control-label" for="bip32_custom_path">Custom Path</label>
+                <div class="col-lg-10">
+                  <div class="input-group">
+                    <input class="form-control" id="bip32_custom_path" type="text" placeholder="m/i" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" id="account_group">
+                <label class="col-lg-2 control-label" for="account_index">Account (k)</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="account_index" maxlength="10" type="text" value="15052000" />
+                </div>
+              </div>
+              <div class="form-group" id="child_group">
+                <label class="col-lg-2 control-label" for="keypair_index">Keypair Index (i)</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="keypair_index" maxlength="10" type="text" value="15052000" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="derived_private_key">Derived Private Key</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="derived_private_key" readonly="readonly" type="text" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="derived_private_key_wif">Private Key (WIF)</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="derived_private_key_wif" readonly="readonly" type="text" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="genKeyQR">Private Key QR Code</label>
+                <div class="col-lg-10">
+                  <a id="revealKeyQR" class="form-control" style="cursor: pointer;">Click to show Private Key QR Code</a>
+                  <a id="genKeyURL" title=""><span id="genKeyQR"></span></a>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="derived_public_key">Derived Public Key</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="derived_public_key" readonly="readonly" type="text" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="derived_public_key_hex">Public Key (Hex)</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="derived_public_key_hex" readonly="readonly" type="text" />
+                </div>
+              </div>
+              <div id="cashaddr_group">
+                <div class="form-group">
+                  <label class="col-lg-2 control-label" for="cashaddr">CashAddr</label>
+                  <div class="col-lg-10">
+                    <input class="form-control" id="cashaddr" readonly="readonly" type="text" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-lg-2 control-label" for="genCashAddrQR">CashAddr QR Code</label>
+                  <div class="col-lg-10">
+                    <a href="#" id="genCashAddrURL" target="_blank" title="Click to view address history (external link)"><span id="genCashAddrQR"></span></a>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="addr" id="addrlabel">Address</label>
+                <div class="col-lg-10">
+                  <input class="form-control" id="addr" readonly="readonly" type="text" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-lg-2 control-label" for="genAddrQR" id="qraddrlabel">Address QR Code</label>
+                <div class="col-lg-10">
+                  <a href="#" id="genAddrURL" target="_blank" title="Click to view address history (external link)"><span id="genAddrQR"></span></a>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+        <hr />
+        <footer>
+          <p>
+          This work of art is public domain.<br>Donations welcome at <a href="bitcoin:1GwvLW9qJ8uaYjew3cFvPiqxViWhuU1pKT"> 1GwvLW9qJ8uaYjew3cFvPiqxViWhuU1pKT</a>.
+            <span class="pull-right">Powered by Vũ Thị Trà My😍 <a href="http://pages.github.com">GitHub Pages</a> &nbsp; 
+                <a href="https://github.com/uvhw/uvhw.github.io">GitHub Repository</a> &nbsp; 
+                <a href="https://github.com/bip32/bip32.github.io/archive/master.zip">Download ZIP</a>
+            </span>
+          </p>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
