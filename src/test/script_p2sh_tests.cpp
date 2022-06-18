@@ -13,6 +13,7 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 
+#include <optional>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -359,8 +360,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << std::vector<unsigned char>(oneAndTwo.begin(), oneAndTwo.end());
     txTo.vin[4].scriptSig << std::vector<unsigned char>(fifteenSigops.begin(), fifteenSigops.end());
 
-    std::string reason, debug;
-    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins, reason, debug));
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins) == std::nullopt);
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
 
@@ -376,9 +376,10 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     std::vector<std::vector<unsigned char>> vSolutions;
     BOOST_CHECK_EQUAL(Solver(txFrom.vout[5].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins, reason, debug));
-    BOOST_CHECK_EQUAL(reason, "bad-txns-input-scriptcheck-sigops");
-    BOOST_CHECK_EQUAL(debug, "input 0: 16 > 15");
+    auto result = ::AreInputsStandard(CTransaction(txToNonStd1), coins);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(result->first, "bad-txns-input-scriptcheck-sigops");
+    BOOST_CHECK_EQUAL(result->second, "input 0: 16 > 15");
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd1), coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -391,9 +392,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].scriptSig << std::vector<unsigned char>(twentySigops.begin(), twentySigops.end());
 
     BOOST_CHECK_EQUAL(Solver(txFrom.vout[6].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins, reason, debug));
-    BOOST_CHECK_EQUAL(reason, "bad-txns-input-scriptcheck-sigops");
-    BOOST_CHECK_EQUAL(debug, "input 0: 20 > 15");
+    BOOST_CHECK(result = ::AreInputsStandard(CTransaction(txToNonStd2), coins));
+    BOOST_CHECK_EQUAL(result->first, "bad-txns-input-scriptcheck-sigops");
+    BOOST_CHECK_EQUAL(result->second, "input 0: 20 > 15");
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
 
     // TxoutType::NONSTANDARD
@@ -407,9 +408,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd3.vin[0].scriptSig << std::vector<unsigned char>(no_sigops.begin(), no_sigops.end());
 
     BOOST_CHECK_EQUAL(Solver(txFrom.vout[7].scriptPubKey, vSolutions), TxoutType::NONSTANDARD);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd3), coins, reason, debug));
-    BOOST_CHECK_EQUAL(reason, "bad-txns-input-script-nonstandard");
-    BOOST_CHECK_EQUAL(debug, "input 0");
+    BOOST_CHECK(result = ::AreInputsStandard(CTransaction(txToNonStd3), coins));
+    BOOST_CHECK_EQUAL(result->first, "bad-txns-input-script-nonstandard");
+    BOOST_CHECK_EQUAL(result->second, "input 0");
 
     static const unsigned char op_return[] = { OP_RETURN }; // SCRIPT_ERR_OP_RETURN
 
@@ -429,9 +430,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK_EQUAL(Solver(txFrom.vout[8].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
     BOOST_CHECK(!EvalScript(stack, txToNonStd4.vin[0].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE, &serror));
     BOOST_CHECK_EQUAL(serror, SCRIPT_ERR_OP_RETURN);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd4), coins, reason, debug));
-    BOOST_CHECK_EQUAL(reason, "bad-txns-input-scriptsig-failure");
-    BOOST_CHECK_EQUAL(debug, "input 0: OP_RETURN was encountered");
+    BOOST_CHECK(result = ::AreInputsStandard(CTransaction(txToNonStd4), coins));
+    BOOST_CHECK_EQUAL(result->first, "bad-txns-input-scriptsig-failure");
+    BOOST_CHECK_EQUAL(result->second, "input 0: OP_RETURN was encountered");
 
     // TxoutType::WITNESS_UNKNOWN
     CMutableTransaction txWitnessUnknown;
@@ -444,9 +445,9 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txWitnessUnknown.vin[0].scriptSig << std::vector<unsigned char>(witnessUnknown.begin(), witnessUnknown.end());
 
     BOOST_CHECK_EQUAL(Solver(txFrom.vout[9].scriptPubKey, vSolutions), TxoutType::WITNESS_UNKNOWN);
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txWitnessUnknown), coins, reason, debug));
-    BOOST_CHECK_EQUAL(reason, "bad-txns-input-witness-unknown");
-    BOOST_CHECK_EQUAL(debug, "input 0");
+    BOOST_CHECK(result = ::AreInputsStandard(CTransaction(txWitnessUnknown), coins));
+    BOOST_CHECK_EQUAL(result->first, "bad-txns-input-witness-unknown");
+    BOOST_CHECK_EQUAL(result->second, "input 0");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

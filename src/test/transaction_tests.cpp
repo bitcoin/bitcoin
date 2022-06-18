@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 
 #include <boost/test/unit_test.hpp>
@@ -406,8 +407,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    std::string reason, debug;
-    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins, reason, debug));
+    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins) == std::nullopt);
 }
 
 static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)

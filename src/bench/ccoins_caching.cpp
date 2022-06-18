@@ -8,6 +8,7 @@
 #include <script/signingprovider.h>
 #include <test/util/transaction_utils.h>
 
+#include <optional>
 #include <vector>
 
 // Microbenchmark for simple accesses to a CCoinsViewCache database. Note from
@@ -43,11 +44,10 @@ static void CCoinsCaching(benchmark::Bench& bench)
     t1.vout[0].scriptPubKey << OP_1;
 
     // Benchmark.
-    std::string reason, debug;
     const CTransaction tx_1(t1);
     bench.run([&] {
-        bool success{AreInputsStandard(tx_1, coins, reason, debug)};
-        assert(success);
+        auto result{AreInputsStandard(tx_1, coins)};
+        assert(result == std::nullopt);
     });
     ECC_Stop();
 }

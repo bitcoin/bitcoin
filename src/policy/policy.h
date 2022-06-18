@@ -13,7 +13,9 @@
 #include <script/standard.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <utility>
 
 class CCoinsViewCache;
 class CFeeRate;
@@ -120,12 +122,14 @@ static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{2};
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
 /**
 * Check for standard transaction types
+* @param[in] tx              The transaction whose inputs are checked
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
-* @param[out] reason         If return is false, contains the first non-standard input's reason for being judged non-standard
-* @param[out] debug          If return is false, contains additional debug info related to the invalid input, including its index
-* @return True if all inputs (scriptSigs) use only standard transaction forms
+* @return nullopt if all inputs (scriptSigs) use only standard transaction forms,
+*   otherwise a pair of:
+*   * the first non-standard input's reason for being judged non-standard
+*   * additional debug info related to the invalid input, including its index
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason, std::string& debug);
+std::optional<std::pair<std::string, std::string>> AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
