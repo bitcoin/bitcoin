@@ -31,7 +31,7 @@ class RPCVerifyISLockTest(DashTestFramework):
     def run_test(self):
 
         node = self.nodes[0]
-        node.spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        node.sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()

@@ -120,80 +120,85 @@ static UniValue mnsync(const JSONRPCRequest& request)
 */
 static UniValue spork(const JSONRPCRequest& request)
 {
-    if (request.params.size() == 1) {
-        // basic mode, show info
-        std:: string strCommand = request.params[0].get_str();
-        if (strCommand == "show") {
-            UniValue ret(UniValue::VOBJ);
-            for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(std::string(sporkDef.name), sporkManager.GetSporkValue(sporkDef.sporkId));
-            }
-            return ret;
-        } else if(strCommand == "active"){
-            UniValue ret(UniValue::VOBJ);
-            for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(std::string(sporkDef.name), sporkManager.IsSporkActive(sporkDef.sporkId));
-            }
-            return ret;
+    // default help, for basic mode
+    RPCHelpMan{"spork",
+        "\nShows information about current state of sporks\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'show' to show all current spork values, 'active' to show which sporks are active"},
+        },
+        {
+            RPCResult{"For 'show'",
+                RPCResult::Type::OBJ_DYN, "", "keys are the sporks, and values indicates its value",
+                {
+                    {RPCResult::Type::NUM, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
+                }},
+            RPCResult{"For 'active'",
+                RPCResult::Type::OBJ_DYN, "", "keys are the sporks, and values indicates its status",
+                {
+                    {RPCResult::Type::BOOL, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
+                }},
+        },
+        RPCExamples {
+            HelpExampleCli("spork", "show")
+            + HelpExampleRpc("spork", "\"show\"")
         }
+    }.Check(request);
+
+    // basic mode, show info
+    std:: string strCommand = request.params[0].get_str();
+    if (strCommand == "show") {
+        UniValue ret(UniValue::VOBJ);
+        for (const auto& sporkDef : sporkDefs) {
+            ret.pushKV(std::string(sporkDef.name), sporkManager.GetSporkValue(sporkDef.sporkId));
+        }
+        return ret;
+    } else if(strCommand == "active"){
+        UniValue ret(UniValue::VOBJ);
+        for (const auto& sporkDef : sporkDefs) {
+            ret.pushKV(std::string(sporkDef.name), sporkManager.IsSporkActive(sporkDef.sporkId));
+        }
+        return ret;
     }
 
-    if (request.fHelp || request.params.size() != 2) {
-        // default help, for basic mode
-            RPCHelpMan{"spork",
-                "\nShows information about current state of sporks\n",
-                {
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'show' to show all current spork values, 'active' to show which sporks are active"},
-                },
-                {
-                    RPCResult{"For 'show'",
-                        RPCResult::Type::OBJ_DYN, "", "keys are the sporks, and values indicates its value",
-                        {
-                            {RPCResult::Type::NUM, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
-                        }},
-                    RPCResult{"For 'active'",
-                        RPCResult::Type::OBJ_DYN, "", "keys are the sporks, and values indicates its status",
-                        {
-                            {RPCResult::Type::BOOL, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
-                        }},
-                },
-                RPCExamples {
-                    HelpExampleCli("spork", "show")
-                    + HelpExampleRpc("spork", "\"show\"")
-            }}.Check(request);
-    } else {
-        // advanced mode, update spork values
-        SporkId nSporkID = CSporkManager::GetSporkIDByName(request.params[0].get_str());
-        if(nSporkID == SPORK_INVALID)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
+    return NullUniValue;
+}
 
-        NodeContext& node = EnsureNodeContext(request.context);
-        if (!node.connman)
-            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+static UniValue sporkupdate(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"sporkupdate",
+        "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
+        {
+            {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the spork to update"},
+            {"value", RPCArg::Type::NUM, RPCArg::Optional::NO, "The new desired value of the spork"},
+        },
+        RPCResult{
+            RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"
+        },
+        RPCExamples{
+            HelpExampleCli("sporkupdate", "SPORK_2_INSTANTSEND_ENABLED 4070908800")
+            + HelpExampleRpc("sporkupdate", "\"SPORK_2_INSTANTSEND_ENABLED\", 4070908800")
+        },
+    }.Check(request);
 
-        // SPORK VALUE
-        int64_t nValue = request.params[1].get_int64();
-
-        //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
-            return "success";
-        } else {
-                RPCHelpMan{"spork",
-                    "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
-                    {
-                        {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the spork to update"},
-                        {"value", RPCArg::Type::NUM, RPCArg::Optional::NO, "The new desired value of the spork"},
-                    },
-                    RPCResult{
-                        RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"
-                    },
-                    RPCExamples{
-                        HelpExampleCli("spork", "SPORK_2_INSTANTSEND_ENABLED 4070908800")
-                + HelpExampleRpc("spork", "\"SPORK_2_INSTANTSEND_ENABLED\", 4070908800")
-                    },
-                }.Check(request);
-        }
+    // advanced mode, update spork values
+    SporkId nSporkID = CSporkManager::GetSporkIDByName(request.params[0].get_str());
+    if (nSporkID == SPORK_INVALID) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
     }
+
+    NodeContext& node = EnsureNodeContext(request.context);
+    if (!node.connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    // SPORK VALUE
+    int64_t nValue = request.params[1].get_int64();
+
+    // broadcast new spork
+    if (sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)) {
+        return "success";
+    }
+
     return NullUniValue;
 }
 
@@ -1317,7 +1322,8 @@ static const CRPCCommand commands[] =
 
     /* Dash features */
     { "dash",               "mnsync",                 &mnsync,                 {} },
-    { "dash",               "spork",                  &spork,                  {"arg0","value"} },
+    { "dash",               "spork",                  &spork,                  {"command"} },
+    { "dash",               "sporkupdate",            &sporkupdate,            {"name","value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

@@ -72,7 +72,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         self.activate_dip8()
 
-        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
         self.activate_dip0024(expected_activation_height=900)
@@ -170,7 +170,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         self.log.info("Invalidate the quorum")
         self.bump_mocktime(5)
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
         self.nodes[0].invalidateblock(fallback_blockhash)
         assert_equal(self.nodes[0].getbestblockhash(), quorum_blockhash)
@@ -178,7 +178,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         self.log.info("Reconsider the quorum")
         self.bump_mocktime(5)
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.nodes[0].reconsiderblock(fallback_blockhash)
         wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash, sleep=1)

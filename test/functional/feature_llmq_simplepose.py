@@ -23,7 +23,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def run_test(self):
 
-        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
@@ -34,8 +34,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         self.repair_masternodes(False)
 
-        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-        self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
+        self.nodes[0].sporkupdate("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+        self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 0)
         self.wait_for_sporks_same()
 
         self.reset_probe_timeouts()
@@ -52,7 +52,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_banning(self.force_old_mn_proto, 3)
 
         # With PoSe off there should be no punishing for non-reachable and outdated nodes
-        self.nodes[0].spork("SPORK_23_QUORUM_POSE", 4070908800)
+        self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 4070908800)
         self.wait_for_sporks_same()
 
         self.repair_masternodes(True)

@@ -164,7 +164,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getmempooldescendants", 1, "verbose" },
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
-    { "spork", 1, "value" },
+    { "sporkupdate", 1, "value" },
     { "voteraw", 1, "tx_index" },
     { "voteraw", 5, "time" },
     { "getblockhashes", 0, "high"},
