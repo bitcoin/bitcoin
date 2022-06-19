@@ -19,6 +19,16 @@ class CCoinsViewCache;
 class CFeeRate;
 class CScript;
 
+/** Default for -limitancestorcount, max number of in-mempool ancestors */
+static const unsigned int DEFAULT_ANCESTOR_LIMIT = 25;
+/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
+static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 101;
+/** Default for -limitdescendantcount, max number of in-mempool descendants */
+static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
+/** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
+static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
+/** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
+static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = MAX_BLOCK_WEIGHT - 4000;
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
