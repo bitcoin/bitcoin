@@ -12,7 +12,7 @@
 #include <QResizeEvent>
 #include <QPropertyAnimation>
 
-ModalOverlay::ModalOverlay(QWidget *parent) :
+ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
 QWidget(parent),
 ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
@@ -43,6 +43,10 @@ foreverHidden(false)
     setVisible(false);
 
     GUIUtil::updateFonts();
+    if (!enable_wallet) {
+        ui->infoText->setVisible(false);
+        ui->infoTextStrong->setText(tr("Dash Core is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain."));
+    }
 }
 
 ModalOverlay::~ModalOverlay()

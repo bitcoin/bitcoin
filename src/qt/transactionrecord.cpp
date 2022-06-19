@@ -110,6 +110,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             // Payment to self by default
             sub.type = TransactionRecord::SendToSelf;
             sub.strAddress = "";
+            for (auto it = wtx.txout_address.begin(); it != wtx.txout_address.end(); ++it) {
+                if (it != wtx.txout_address.begin()) sub.strAddress += ", ";
+                sub.strAddress += EncodeDestination(*it);
+            }
 
             if(mapValue["DS"] == "1")
             {
