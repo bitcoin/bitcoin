@@ -826,11 +826,9 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
-    } else if (request.params[1].isNum()) {
+    } else if (!request.params[1].isNull()) {
         CFeeRate fr(AmountFromValue(request.params[1]));
         max_raw_tx_fee = fr.GetFee(GetVirtualTransactionSize(*tx));
-    } else if (!request.params[1].isNull()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "second argument (maxfeerate) must be numeric");
     }
 
     bool bypass_limits = false;
@@ -904,11 +902,9 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
-    } else if (request.params[1].isNum()) {
+    } else if (!request.params[1].isNull()) {
         CFeeRate fr(AmountFromValue(request.params[1]));
         max_raw_tx_fee = fr.GetFee(GetVirtualTransactionSize(*tx));
-    } else if (!request.params[1].isNull()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "second argument (maxfeerate) must be numeric");
     }
 
     CTxMemPool& mempool = EnsureMemPool(request.context);

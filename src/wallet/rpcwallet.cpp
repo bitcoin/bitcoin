@@ -49,6 +49,17 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
+static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& param) {
+    bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
+    bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
+
+    if (avoid_reuse && !can_avoid_reuse) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "wallet does not have the \"avoid reuse\" feature enabled");
+    }
+
+    return avoid_reuse;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
@@ -280,7 +291,7 @@ static UniValue setlabel(const JSONRPCRequest& request)
 
 static CTransactionRef SendMoney(CWallet* const pwallet, const CTxDestination& address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue)
 {
-    CAmount curBalance = pwallet->GetBalance().m_mine_trusted;
+    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
 
     // Check amount
     if (nValue <= 0)
@@ -319,6 +330,10 @@ static CTransactionRef SendMoney(CWallet* const pwallet, const CTxDestination& a
 
 static UniValue sendtoaddress(const JSONRPCRequest& request)
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
     RPCHelpMan{"sendtoaddress",
         "\nSend an amount to a given address." +
             HelpRequiringPassphrase() + "\n",
@@ -339,6 +354,8 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     "       \"UNSET\"\n"
     "       \"ECONOMICAL\"\n"
     "       \"CONSERVATIVE\""},
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Avoid spending from dirty addresses; addresses are considered\n"
+    "                             dirty if they have previously been used in a transaction."},
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "txid", "The transaction id."
@@ -350,10 +367,6 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     + HelpExampleRpc("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
         },
     }.Check(request);
-
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -398,6 +411,10 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
+
+    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(pwallet, request.params[9]);
+    // We also enable partial spend avoidance if reuse avoidance is set.
+    coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -711,6 +728,10 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
 
 static UniValue getbalance(const JSONRPCRequest& request)
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
     RPCHelpMan{"getbalance",
         "\nReturns the total available balance.\n"
         "The available balance is what the wallet considers currently spendable, and is\n"
@@ -720,6 +741,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
             {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend in the wallet's balance."},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Also include balance in watch-only addresses (see 'importaddress')"},
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
         },
         RPCResult{
             RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received for this wallet."
@@ -733,10 +755,6 @@ static UniValue getbalance(const JSONRPCRequest& request)
     + HelpExampleRpc("getbalance", "\"*\", 6")
         },
     }.Check(request);
-
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -765,7 +783,8 @@ static UniValue getbalance(const JSONRPCRequest& request)
         include_watchonly = true;
     }
 
-    const auto bal = pwallet->GetBalance(min_depth, fAddLocked);
+    bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[4]);
+    const auto bal = pwallet->GetBalance(min_depth, avoid_reuse, fAddLocked);
 
     return ValueFromAmount(bal.m_mine_trusted + (include_watchonly ? bal.m_watchonly_trusted : 0));
 }
@@ -2414,6 +2433,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                                         {RPCResult::Type::NUM, "hdinternalkeyindex", "current internal childkey index"},
                                 }},
                             }},
+                            {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
                             {RPCResult::Type::OBJ, "scanning", "current scanning details, or false if no scan is in progress",
                                 {
                                      {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
@@ -2477,6 +2497,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         }
         obj.pushKV("hdaccounts", accounts);
     }
+    obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
     if (pwallet->IsScanning()) {
         UniValue scanning(UniValue::VOBJ);
         scanning.pushKV("duration", pwallet->ScanningDuration() / 1000);
@@ -2703,6 +2724,72 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue setwalletflag(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    std::string flags = "";
+    for (auto& it : WALLET_FLAG_MAP)
+        if (it.second & MUTABLE_WALLET_FLAGS)
+            flags += (flags == "" ? "" : ", ") + it.first;
+
+    RPCHelpMan{"setwalletflag",
+        "\nChange the state of the given wallet flag for a wallet.\n",
+        {
+            {"flag", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the flag to change. Current available flags: " + flags},
+            {"value", RPCArg::Type::BOOL, /* default */ "true", "The new state."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "flag_name", "The name of the flag that was modified"},
+                {RPCResult::Type::BOOL, "flag_state", "The new state of the flag"},
+                {RPCResult::Type::STR, "warnings", "Any warnings associated with the change"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("setwalletflag", "avoid_reuse")
+      + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
+        },
+    }.Check(request);
+
+    std::string flag_str = request.params[0].get_str();
+    bool value = request.params[1].isNull() || request.params[1].get_bool();
+
+    if (!WALLET_FLAG_MAP.count(flag_str)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
+    }
+
+    auto flag = WALLET_FLAG_MAP.at(flag_str);
+
+    if (!(flag & MUTABLE_WALLET_FLAGS)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));
+    }
+
+    UniValue res(UniValue::VOBJ);
+
+    if (pwallet->IsWalletFlagSet(flag) == value) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is already set to %s: %s", value ? "true" : "false", flag_str));
+    }
+
+    res.pushKV("flag_name", flag_str);
+    res.pushKV("flag_state", value);
+
+    if (value) {
+        pwallet->SetWalletFlag(flag);
+    } else {
+        pwallet->UnsetWalletFlag(flag);
+    }
+
+    if (flag && value && WALLET_FLAG_CAVEATS.count(flag)) {
+        res.pushKV("warnings", WALLET_FLAG_CAVEATS.at(flag));
+    }
+
+    return res;
+}
+
 static UniValue createwallet(const JSONRPCRequest& request)
 {
     RPCHelpMan{
@@ -2713,6 +2800,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
             {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
             {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "false", "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2745,6 +2833,10 @@ static UniValue createwallet(const JSONRPCRequest& request)
             // Empty string means unencrypted
             warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
         }
+    }
+
+    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+        flags |= WALLET_FLAG_AVOID_REUSE;
     }
 
     bilingual_str error;
@@ -2810,6 +2902,11 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
 
 static UniValue listunspent(const JSONRPCRequest& request)
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
     RPCHelpMan{"listunspent",
         "\nReturns array of unspent transaction outputs\n"
         "with between minconf and maxconf (inclusive) confirmations.\n"
@@ -2852,6 +2949,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                     {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                     {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                     {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
+                    {RPCResult::Type::BOOL, "reused", /* optional*/ true, "Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                     {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions"
                                                     "                             from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                     "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
@@ -2866,10 +2964,6 @@ static UniValue listunspent(const JSONRPCRequest& request)
     + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
         },
     }.Check(request);
-
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
@@ -2960,6 +3054,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
     {
+        coinControl.m_avoid_address_reuse = false;
+
         LOCK(pwallet->cs_wallet);
         pwallet->AvailableCoins(vecOutputs, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     }
@@ -2970,6 +3066,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
         CTxDestination address;
         const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
+        bool reused = avoid_reuse && pwallet->IsUsedDestination(address);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;
@@ -3004,6 +3101,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             auto descriptor = InferDescriptor(scriptPubKey, *pwallet);
             entry.pushKV("desc", descriptor->ToString());
         }
+        if (avoid_reuse) entry.pushKV("reused", reused);
         entry.pushKV("safe", out.fSafe);
         entry.pushKV("coinjoin_rounds", pwallet->GetRealOutpointCoinJoinRounds(COutPoint(out.tx->GetHash(), out.i)));
         results.push_back(entry);
@@ -3872,14 +3970,14 @@ static const CRPCCommand commands[] =
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
-    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "passphrase"} },
+    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "passphrase", "avoid_reuse"} },
     { "wallet",             "dumphdinfo",                       &dumphdinfo,                    {} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressesbylabel",              &getaddressesbylabel,           {"label"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"dummy","minconf","addlocked","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"dummy","minconf","addlocked","include_watchonly", "avoid_reuse"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
@@ -3911,11 +4009,12 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_cj","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode", "avoid_reuse"} },
     { "wallet",             "setcoinjoinrounds",                &setcoinjoinrounds,             {"rounds"} },
     { "wallet",             "setcoinjoinamount",                &setcoinjoinamount,             {"amount"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
+    { "wallet",             "setwalletflag",                    &setwalletflag,                 {"flag","value"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },

@@ -53,6 +53,14 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
+    {WALLET_FLAG_AVOID_REUSE,
+        "You need to rescan the blockchain in order to correctly mark used "
+        "destinations in the past. Until this is done, some destinations may "
+        "be considered unused, even if the opposite is the case."
+    },
+};
+
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
@@ -1178,6 +1186,37 @@ void CWallet::MarkDirty()
     fAnonymizableTallyCachedNonDenom = false;
 }
 
+void CWallet::SetUsedDestinationState(const uint256& hash, unsigned int n, bool used)
+{
+    const CWalletTx* srctx = GetWalletTx(hash);
+    if (!srctx) return;
+
+    CTxDestination dst;
+    if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+        if (::IsMine(*this, dst)) {
+            LOCK(cs_wallet);
+            if (used && !GetDestData(dst, "used", nullptr)) {
+                AddDestData(dst, "used", "p"); // p for "present", opposite of absent (null)
+            } else if (!used && GetDestData(dst, "used", nullptr)) {
+                EraseDestData(dst, "used");
+            }
+        }
+    }
+}
+
+bool CWallet::IsUsedDestination(const CTxDestination& dst) const
+{
+    LOCK(cs_wallet);
+    return ::IsMine(*this, dst) && GetDestData(dst, "used", nullptr);
+}
+
+bool CWallet::IsUsedDestination(const uint256& hash, unsigned int n) const
+{
+    CTxDestination dst;
+    const CWalletTx* srctx = GetWalletTx(hash);
+    return srctx && ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst) && IsUsedDestination(dst);
+}
+
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -1185,6 +1224,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     WalletBatch batch(*database, "r+", fFlushOnClose);
 
     uint256 hash = wtxIn.GetHash();
+
+    if (IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
+        // Mark used destinations
+        for (const CTxIn& txin : wtxIn.tx->vin) {
+            const COutPoint& op = txin.prevout;
+            SetUsedDestinationState(op.hash, op.n, true);
+        }
+    }
 
     // Inserts only if not already there, returns tx inserted or tx found
     std::pair<std::map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(std::make_pair(hash, wtxIn));
@@ -2122,7 +2169,7 @@ void CWallet::UnsetWalletFlag(WalletBatch& batch, uint64_t flag)
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
-bool CWallet::IsWalletFlagSet(uint64_t flag)
+bool CWallet::IsWalletFlagSet(uint64_t flag) const
 {
     return (m_wallet_flags & flag);
 }
@@ -2131,7 +2178,7 @@ bool CWallet::SetWalletFlags(uint64_t overwriteFlags, bool memonly)
 {
     LOCK(cs_wallet);
     m_wallet_flags = overwriteFlags;
-    if (((overwriteFlags & g_known_wallet_flags) >> 32) ^ (overwriteFlags >> 32)) {
+    if (((overwriteFlags & KNOWN_WALLET_FLAGS) >> 32) ^ (overwriteFlags >> 32)) {
         // contains unknown non-tolerable wallet flags
         return false;
     }
@@ -2631,7 +2678,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
         return 0;
 
     // Avoid caching ismine for NO or ALL cases (could remove this check and simplify in the future).
-    bool allow_cache = filter == ISMINE_SPENDABLE || filter == ISMINE_WATCH_ONLY;
+    bool allow_cache = (filter & ISMINE_ALL) && (filter & ISMINE_ALL) != ISMINE_ALL;
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsImmatureCoinBase())
@@ -2641,11 +2688,12 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
         return m_amounts[AVAILABLE_CREDIT].m_value[filter];
     }
 
+    bool allow_used_addresses = (filter & ISMINE_USED) || !pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
     CAmount nCredit = 0;
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
-        if (!pwallet->IsSpent(hashTx, i))
+        if (!pwallet->IsSpent(hashTx, i) && (allow_used_addresses || !pwallet->IsUsedDestination(hashTx, i)))
         {
             const CTxOut &txout = tx->vout[i];
             nCredit += pwallet->GetCredit(txout, filter);
@@ -2899,16 +2947,17 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
     return ret;
 }
 
-CWallet::Balance CWallet::GetBalance(const int min_depth, const bool fAddLocked, const CCoinControl* coinControl) const
+CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse, const bool fAddLocked, const CCoinControl* coinControl) const
 {
     Balance ret;
+    isminefilter reuse_filter = avoid_reuse ? 0 : ISMINE_USED;
     {
         LOCK(cs_wallet);
         for (auto pcoin : GetSpendableTXs()) {
             const bool is_trusted{pcoin->IsTrusted()};
             const int tx_depth{pcoin->GetDepthInMainChain()};
-            const CAmount tx_credit_mine{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE)};
-            const CAmount tx_credit_watchonly{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY)};
+            const CAmount tx_credit_mine{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
+            const CAmount tx_credit_watchonly{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
             if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
@@ -3020,6 +3069,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
     CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
 
     CAmount nTotal = 0;
+    // Either the WALLET_FLAG_AVOID_REUSE flag is not set (in which case we always allow), or we default to avoiding, and only in the case where
+    // a coin control object is provided, and has the avoid address reuse flag set to false, do we allow already used addresses
+    bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
 
     for (auto pcoin : GetSpendableTXs()) {
         const uint256& wtxid = pcoin->GetHash();
@@ -3084,6 +3136,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 continue;
             }
 
+            if (!allow_used_addresses && IsUsedDestination(wtxid, i)) {
+                continue;
+            }
             bool solvable = IsSolvable(*this, pcoin->tx->vout[i].scriptPubKey);
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
@@ -5071,12 +5126,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
     if (fFirstRun)
     {
-        if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-            //selective allow to set flags
-            walletInstance->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-        } else if (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET) {
-            walletInstance->SetWalletFlag(WALLET_FLAG_BLANK_WALLET);
-        } else {
+        walletInstance->SetWalletFlags(wallet_creation_flags, false);
+        if (!(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             // Create new HD chain
             if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
                 std::string strSeed = gArgs.GetArg("-hdseed", "not hex");

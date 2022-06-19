@@ -924,7 +924,7 @@ Current subtrees include:
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
   - Upstream at https://github.com/google/crc32c ; Maintained by Google.
 
-- src/libsecp256k1
+- src/secp256k1
   - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes

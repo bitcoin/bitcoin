@@ -141,7 +141,7 @@ BitcoinCore::BitcoinCore(interfaces::Node& node) :
 void BitcoinCore::handleRunawayException(const std::exception_ptr e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings("gui")));
+    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings()));
 }
 
 void BitcoinCore::initialize()
@@ -587,6 +587,7 @@ int GuiMain(int argc, char* argv[])
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
+    GUIUtil::LogQtInfo();
     // Load custom application fonts and setup font management
     if (!GUIUtil::loadFonts()) {
         QMessageBox::critical(0, PACKAGE_NAME,
@@ -705,7 +706,7 @@ int GuiMain(int argc, char* argv[])
         }
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings("gui")));
+        app.handleRunawayException(QString::fromStdString(node->getWarnings()));
     }
     return rv;
 }
