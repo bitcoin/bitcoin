@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     }
 
     CScript s;
-    std::vector<std::vector<unsigned char> > solutions;
+    std::vector<std::vector<unsigned char>> solutions;
 
     // TxoutType::PUBKEY
     s.clear();
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     pubkey = key.GetPubKey();
 
     CScript s;
-    std::vector<std::vector<unsigned char> > solutions;
+    std::vector<std::vector<unsigned char>> solutions;
 
     // TxoutType::PUBKEY with incorrectly sized pubkey
     s.clear();

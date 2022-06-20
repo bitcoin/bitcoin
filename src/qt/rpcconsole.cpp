@@ -168,7 +168,7 @@ public:
 
 bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, const WalletModel* wallet_model)
 {
-    std::vector< std::vector<std::string> > stack;
+    std::vector<std::vector<std::string>> stack;
     stack.push_back(std::vector<std::string>());
 
     enum CmdParseState

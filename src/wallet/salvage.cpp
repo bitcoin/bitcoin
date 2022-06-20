@@ -16,7 +16,7 @@ namespace wallet {
 static const char *HEADER_END = "HEADER=END";
 /* End of key/value data */
 static const char *DATA_END = "DATA=END";
-typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
+typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char>> KeyValPair;
 
 static bool KeyFilter(const std::string& type)
 {

@@ -1061,7 +1061,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
     std::chrono::seconds nMostConnectionsTime{0};
-    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
+    std::map<uint64_t, std::vector<NodeEvictionCandidate>> mapNetGroupNodes;
     for (const NodeEvictionCandidate &node : vEvictionCandidates) {
         std::vector<NodeEvictionCandidate> &group = mapNetGroupNodes[node.nKeyedNetGroup];
         group.push_back(node);
@@ -1881,7 +1881,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Only connect out to one peer per network group (/16 for IPv4).
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
-        std::set<std::vector<unsigned char> > setConnected;
+        std::set<std::vector<unsigned char>> setConnected;
 
         {
             LOCK(m_nodes_mutex);

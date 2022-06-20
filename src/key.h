@@ -20,7 +20,7 @@
  * CPrivKey is a serialized private key, with all parameters included
  * (SIZE bytes)
  */
-typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
+typedef std::vector<unsigned char, secure_allocator<unsigned char>> CPrivKey;
 
 /** An encapsulated private key. */
 class CKey
@@ -48,7 +48,7 @@ private:
     bool fCompressed;
 
     //! The actual byte data
-    std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
+    std::vector<unsigned char, secure_allocator<unsigned char>> keydata;
 
     //! Check whether the 32-byte array pointed to by vch is valid keydata.
     bool static Check(const unsigned char* vch);

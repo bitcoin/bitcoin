@@ -27,7 +27,7 @@ static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server 
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static GlobalMutex g_deadline_timers_mutex;
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
+static std::map<std::string, std::unique_ptr<RPCTimerBase>> deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
 
 struct RPCCommandExecutionInfo
@@ -80,7 +80,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     std::string strRet;
     std::string category;
     std::set<intptr_t> setDone;
-    std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
+    std::vector<std::pair<std::string, const CRPCCommand*>> vCommands;
 
     for (const auto& entry : mapCommands)
         vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));

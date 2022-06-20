@@ -749,7 +749,7 @@ RPCHelpMan dumpwallet()
     std::set<CScriptID> scripts = spk_man.GetCScripts();
 
     // sort time/key pairs
-    std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
+    std::vector<std::pair<int64_t, CKeyID>> vKeyBirth;
     for (const auto& entry : mapKeyBirth) {
         vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
     }
@@ -775,7 +775,7 @@ RPCHelpMan dumpwallet()
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
     }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+    for (std::vector<std::pair<int64_t, CKeyID>>::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
         std::string strTime = FormatISO8601DateTime(it->first);
         std::string strAddr;

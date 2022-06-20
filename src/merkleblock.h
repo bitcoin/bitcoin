@@ -134,7 +134,7 @@ public:
      * Used only when a bloom filter is specified to allow
      * testing the transactions which matched the bloom filter.
      */
-    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
+    std::vector<std::pair<unsigned int, uint256>> vMatchedTxn;
 
     /**
      * Create from a CBlock, filtering transactions according to filter

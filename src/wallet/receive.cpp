@@ -387,10 +387,10 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
     return balances;
 }
 
-std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
+std::set< std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
-    std::set< std::set<CTxDestination> > groupings;
+    std::set< std::set<CTxDestination>> groupings;
     std::set<CTxDestination> grouping;
 
     for (const auto& walletEntry : wallet.mapWallet)
@@ -470,7 +470,7 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
             setmap[element] = merged;
     }
 
-    std::set< std::set<CTxDestination> > ret;
+    std::set< std::set<CTxDestination>> ret;
     for (const std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
     {
         ret.insert(*uniqueGrouping);
