@@ -165,6 +165,17 @@ class BIP65Test(BitcoinTestFramework):
                     'allowed': False,
                     'reject-reason': expected_cltv_reject_reason,
                 }],
+                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate": 0}),
+            )
+
+            # Test deprecated positional "maxfeerate" argument.
+            assert_equal(
+                [{
+                    'txid': spendtx.hash,
+                    'wtxid': spendtx.getwtxid(),
+                    'allowed': False,
+                    'reject-reason': expected_cltv_reject_reason,
+                }],
                 self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
             )
 

@@ -273,6 +273,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Fee rate is 0.00100000 BTC/kvB
         tx = self.wallet.create_self_transfer(fee_rate=Decimal('0.00100000'))
         # Thus, testmempoolaccept should reject
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']], options={"maxfeerate": 0.00001000})[0]
+        # Test deprecated positional "maxfeerate" argument.
         testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000)[0]
         assert_equal(testres['allowed'], False)
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
@@ -293,6 +295,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'])
         # and the following calls should both succeed
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']], options={"maxfeerate": 0.20000000})[0]
+        # Test deprecated positional "maxfeerate" argument.
         testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']], maxfeerate='0.20000000')[0]
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=tx['hex'], maxfeerate='0.20000000')

@@ -104,8 +104,14 @@ static RPCHelpMan testmempoolaccept()
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
-            {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
-             "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kvB\n"},
+            {"options|maxfeerate", {RPCArg::Type::OBJ, RPCArg::Type::AMOUNT}, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                {
+                    {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
+                    "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kvB\n"},
+                },
+                "\"options\""
+            },
+
         },
         RPCResult{
             RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -150,9 +156,37 @@ static RPCHelpMan testmempoolaccept()
                                    "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
-            const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
-                                                     DEFAULT_MAX_RAW_TX_FEE_RATE :
-                                                     CFeeRate(AmountFromValue(request.params[1]));
+            CFeeRate max_raw_tx_fee_rate = DEFAULT_MAX_RAW_TX_FEE_RATE;
+
+            switch (request.params[1].getType())
+            {
+            case UniValue::VNULL:
+                break;
+
+            case UniValue::VSTR:
+            case UniValue::VNUM: {
+                max_raw_tx_fee_rate = CFeeRate(AmountFromValue(request.params[1]));
+                break;
+            }
+
+            case UniValue::VOBJ: {
+
+                const UniValue& options = request.params[1];
+                RPCTypeCheckObj(options,
+                    {
+                        {"maxfeerate", UniValueType()}, // will be checked by AmountFromValue() below
+                    },
+                    true, true);
+
+                if (options.exists("maxfeerate")) {
+                    max_raw_tx_fee_rate = CFeeRate(AmountFromValue(options["maxfeerate"]));
+                }
+                break;
+            }
+
+            default:
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "maxfeerate must be of type object or number.");
+            }
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());

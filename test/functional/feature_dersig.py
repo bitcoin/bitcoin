@@ -122,6 +122,17 @@ class BIP66Test(BitcoinTestFramework):
                 'allowed': False,
                 'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
             }],
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate": 0}),
+        )
+
+        # Test deprecated positional "maxfeerate" argument.
+        assert_equal(
+            [{
+                'txid': spendtx.hash,
+                'wtxid': spendtx.getwtxid(),
+                'allowed': False,
+                'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
+            }],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
         )
 

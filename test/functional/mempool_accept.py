@@ -109,8 +109,17 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee_expected}}],
             rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0},
+        )
+        # Test deprecated positional "maxfeerate" argument.
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee_expected}}],
+            rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
+        # Check that testmempoolaccept fails when maxfeerate is not of type object, number or text ('0.2' is accepted).
+        assert_raises_rpc_error(-8, 'maxfeerate must be of type object or number.',
+            lambda: node.testmempoolaccept(rawtxs=[tx.serialize().hex()], maxfeerate=False))
         node.sendrawtransaction(hexstring=raw_tx_final, maxfeerate=0)
         self.mempool_size += 1
 
@@ -139,6 +148,12 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # take original raw_tx_0
         tx = tx_from_hex(raw_tx_0)
         tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
+            rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0},
+        )
+        # Test deprecated positional "maxfeerate" argument.
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
             rawtxs=[tx.serialize().hex()],
@@ -185,6 +200,12 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0].nValue = int(0.05 * COIN)
         raw_tx_reference = tx.serialize().hex()
         # Reference tx should be valid on itself
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
+            rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0},
+        )
+        # Test deprecated positional "maxfeerate" argument.
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
             rawtxs=[tx.serialize().hex()],
@@ -327,6 +348,12 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction that is locked by BIP68 sequence logic')
         tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].nSequence = 2  # We could include it in the second block mined from now, but not the very next one
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-BIP68-final'}],
+            rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0},
+        )
+        # Test deprecated positional "maxfeerate" argument.
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-BIP68-final'}],
             rawtxs=[tx.serialize().hex()],
