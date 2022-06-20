@@ -225,7 +225,7 @@ static RPCHelpMan getbestblockhash()
                 "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
                 {},
                 RPCResult{
-                    RPCResult::Type::STR_HEX, "", "the block hash, hex-encoded"},
+                    RPCResult::Type::STR_HEX, "", "The block hash, hex-encoded"},
                 RPCExamples{
                     HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
@@ -297,7 +297,7 @@ static RPCHelpMan waitforblock()
                 "\nWaits for a specific new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for."},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for"},
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
@@ -344,8 +344,8 @@ static RPCHelpMan waitforblockheight()
                 "of the current tip.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for."},
-                    {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for"},
+                    {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -407,7 +407,7 @@ static RPCHelpMan getdifficulty()
                 "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
                 {},
                 RPCResult{
-                    RPCResult::Type::NUM, "", "the proof-of-work difficulty as a multiple of the minimum difficulty."},
+                    RPCResult::Type::NUM, "", "The proof-of-work difficulty as a multiple of the minimum difficulty"},
                 RPCExamples{
                     HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
@@ -508,7 +508,7 @@ static RPCHelpMan getblockheader()
                     RPCResult{"for verbose = true",
                         RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                            {RPCResult::Type::STR_HEX, "hash", "The block hash (same as provided)"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
                             {RPCResult::Type::NUM, "height", "The block height or index"},
                             {RPCResult::Type::NUM, "version", "The block version"},
@@ -615,7 +615,7 @@ static RPCHelpMan getblock()
                     RPCResult{"for verbosity = 1",
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                    {RPCResult::Type::STR_HEX, "hash", "The block hash (same as provided)"},
                     {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
                     {RPCResult::Type::NUM, "size", "The block size"},
                     {RPCResult::Type::NUM, "strippedsize", "The block size excluding witness data"},
@@ -752,7 +752,7 @@ static RPCHelpMan pruneblockchain()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!node::fPruneMode)
-        throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode");
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -761,7 +761,7 @@ static RPCHelpMan pruneblockchain()
 
     int heightParam = request.params[0].getInt<int>();
     if (heightParam < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height");
     }
 
     // Height value more than a billion is too high to be a block height, and
@@ -770,7 +770,7 @@ static RPCHelpMan pruneblockchain()
         // Add a 2 hour buffer to include blocks which might have had old timestamps
         const CBlockIndex* pindex = active_chain.FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
         if (!pindex) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp");
         }
         heightParam = pindex->nHeight;
     }
@@ -778,11 +778,11 @@ static RPCHelpMan pruneblockchain()
     unsigned int height = (unsigned int) heightParam;
     unsigned int chainHeight = (unsigned int) active_chain.Height();
     if (chainHeight < chainman.GetParams().PruneAfterHeight()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
+        throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning");
     } else if (height > chainHeight) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height");
     } else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
-        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.\n");
+        LogPrint(BCLog::RPC, "Attempt to prune blocks close to the tip. Retaining the minimum number of blocks.\n");
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
@@ -846,7 +846,7 @@ static RPCHelpMan gettxoutsetinfo()
                 {
                     {"hash_type", RPCArg::Type::STR, RPCArg::Default{"hash_serialized_2"}, "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'muhash', 'none'."},
                     {"hash_or_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "The block hash or height of the target height (only available with coinstatsindex).", "", {"", "string or numeric"}},
-                    {"use_index", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use coinstatsindex, if available."},
+                    {"use_index", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use coinstatsindex (if available)"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1074,7 +1074,7 @@ static RPCHelpMan verifychain()
                 {
                     {"checklevel", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL)},
                         strprintf("How thorough the block verification is:\n%s", MakeUnorderedList(CHECKLEVEL_DOC))},
-                    {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check"},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Verified or not"},
@@ -1192,22 +1192,22 @@ RPCHelpMan getblockchaininfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "chain", "current network name (main, test, signet, regtest)"},
-                {RPCResult::Type::NUM, "blocks", "the height of the most-work fully-validated chain. The genesis block has height 0"},
-                {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
-                {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
-                {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
+                {RPCResult::Type::STR, "chain", "Current network name (main, test, signet, regtest)"},
+                {RPCResult::Type::NUM, "blocks", "The height of the most-work fully-validated chain. The genesis block has height 0"},
+                {RPCResult::Type::NUM, "headers", "The current number of headers we have validated"},
+                {RPCResult::Type::STR, "bestblockhash", "The hash of the currently best block"},
+                {RPCResult::Type::NUM, "difficulty", "The current difficulty"},
                 {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
-                {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) estimate of whether this node is in Initial Block Download mode"},
-                {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in active chain, in hexadecimal"},
-                {RPCResult::Type::NUM, "size_on_disk", "the estimated size of the block and undo files on disk"},
-                {RPCResult::Type::BOOL, "pruned", "if the blocks are subject to pruning"},
-                {RPCResult::Type::NUM, "pruneheight", /*optional=*/true, "height of the last block pruned, plus one (only present if pruning is enabled)"},
-                {RPCResult::Type::BOOL, "automatic_pruning", /*optional=*/true, "whether automatic pruning is enabled (only present if pruning is enabled)"},
-                {RPCResult::Type::NUM, "prune_target_size", /*optional=*/true, "the target size used by pruning (only present if automatic pruning is enabled)"},
-                {RPCResult::Type::STR, "warnings", "any network and blockchain warnings"},
+                {RPCResult::Type::NUM, "verificationprogress", "Estimate of verification progress [0..1]"},
+                {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) Estimate of whether this node is in Initial Block Download mode"},
+                {RPCResult::Type::STR_HEX, "chainwork", "Total amount of work in active chain, in hexadecimal"},
+                {RPCResult::Type::NUM, "size_on_disk", "The estimated size of the block and undo files on disk"},
+                {RPCResult::Type::BOOL, "pruned", "If the blocks are subject to pruning"},
+                {RPCResult::Type::NUM, "pruneheight", /*optional=*/true, "Height of the last block pruned, plus one (only present if pruning is enabled)"},
+                {RPCResult::Type::BOOL, "automatic_pruning", /*optional=*/true, "Whether automatic pruning is enabled (only present if pruning is enabled)"},
+                {RPCResult::Type::NUM, "prune_target_size", /*optional=*/true, "The target size used by pruning (only present if automatic pruning is enabled)"},
+                {RPCResult::Type::STR, "warnings", "Any network and blockchain warnings"},
             }},
         RPCExamples{
             HelpExampleCli("getblockchaininfo", "")
@@ -1254,27 +1254,27 @@ RPCHelpMan getblockchaininfo()
 
 namespace {
 const std::vector<RPCResult> RPCHelpForDeployment{
-    {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
-    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
-    {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
-    {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "status of bip9 softforks (only for \"bip9\" type)",
+    {RPCResult::Type::STR, "type", "One of \"buried\", \"bip9\""},
+    {RPCResult::Type::NUM, "height", /*optional=*/true, "Height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+    {RPCResult::Type::BOOL, "active", "True if the rules are enforced for the mempool and the next block"},
+    {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "Status of bip9 softforks (only for \"bip9\" type)",
     {
-        {RPCResult::Type::NUM, "bit", /*optional=*/true, "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
-        {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
-        {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
-        {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
-        {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\")"},
-        {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
-        {RPCResult::Type::STR, "status_next", "status of deployment at the next block"},
-        {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
+        {RPCResult::Type::NUM, "bit", /*optional=*/true, "The bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
+        {RPCResult::Type::NUM_TIME, "start_time", "The minimum median time past of a block at which the bit gains its meaning"},
+        {RPCResult::Type::NUM_TIME, "timeout", "The median time past of a block at which the deployment is considered failed if not yet locked in"},
+        {RPCResult::Type::NUM, "min_activation_height", "Minimum height of blocks for which the rules may be enforced"},
+        {RPCResult::Type::STR, "status", "Status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\")"},
+        {RPCResult::Type::NUM, "since", "Height of the first block to which the status applies"},
+        {RPCResult::Type::STR, "status_next", "Status of deployment at the next block"},
+        {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "Numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
         {
-            {RPCResult::Type::NUM, "period", "the length in blocks of the signalling period"},
-            {RPCResult::Type::NUM, "threshold", /*optional=*/true, "the number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
-            {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
-            {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
-            {RPCResult::Type::BOOL, "possible", /*optional=*/true, "returns false if there are not enough blocks left in this period to pass activation threshold (only for \"started\" status)"},
+            {RPCResult::Type::NUM, "period", "The length in blocks of the signalling period"},
+            {RPCResult::Type::NUM, "threshold", /*optional=*/true, "The number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
+            {RPCResult::Type::NUM, "elapsed", "The number of blocks elapsed since the beginning of the current period"},
+            {RPCResult::Type::NUM, "count", "The number of blocks with the version bit set in the current period"},
+            {RPCResult::Type::BOOL, "possible", /*optional=*/true, "Returns false if there are not enough blocks left in this period to pass activation threshold (only for \"started\" status)"},
         }},
-        {RPCResult::Type::STR, "signalling", /*optional=*/true, "indicates blocks that signalled with a # and blocks that did not with a -"},
+        {RPCResult::Type::STR, "signalling", /*optional=*/true, "Indicates blocks that signalled with a # and blocks that did not with a -"},
     }},
 };
 
@@ -1301,10 +1301,10 @@ static RPCHelpMan getdeploymentinfo()
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
-                {RPCResult::Type::STR, "hash", "requested block hash (or tip)"},
-                {RPCResult::Type::NUM, "height", "requested block height (or tip)"},
+                {RPCResult::Type::STR, "hash", "Requested block hash (or tip)"},
+                {RPCResult::Type::NUM, "height", "Requested block height (or tip)"},
                 {RPCResult::Type::OBJ_DYN, "deployments", "", {
-                    {RPCResult::Type::OBJ, "xxxx", "name of the deployment", RPCHelpForDeployment}
+                    {RPCResult::Type::OBJ, "xxxx", "Name of the deployment", RPCHelpForDeployment}
                 }},
             }
         },
@@ -1360,10 +1360,10 @@ static RPCHelpMan getchaintips()
                     RPCResult::Type::ARR, "", "",
                     {{RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::NUM, "height", "height of the chain tip"},
-                            {RPCResult::Type::STR_HEX, "hash", "block hash of the tip"},
-                            {RPCResult::Type::NUM, "branchlen", "zero for main chain, otherwise length of branch connecting the tip to the main chain"},
-                            {RPCResult::Type::STR, "status", "status of the chain, \"active\" for the main chain\n"
+                            {RPCResult::Type::NUM, "height", "Height of the chain tip"},
+                            {RPCResult::Type::STR_HEX, "hash", "Block hash of the tip"},
+                            {RPCResult::Type::NUM, "branchlen", "Zero for main chain, otherwise length of branch connecting the tip to the main chain"},
+                            {RPCResult::Type::STR, "status", "Status of the chain, \"active\" for the main chain\n"
             "Possible values for status:\n"
             "1.  \"invalid\"               This branch contains at least one invalid block\n"
             "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
@@ -1455,7 +1455,7 @@ static RPCHelpMan preciousblock()
                 "\nA later preciousblock call can override the effect of an earlier one.\n"
                 "\nThe effects of preciousblock are not retained across restarts.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as precious"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the block to mark as precious"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -1493,7 +1493,7 @@ static RPCHelpMan invalidateblock()
     return RPCHelpMan{"invalidateblock",
                 "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as invalid"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the block to mark as invalid"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -1535,7 +1535,7 @@ static RPCHelpMan reconsiderblock()
                 "\nRemoves invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
                 "This can be used to undo the effects of invalidateblock.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to reconsider"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the block to reconsider"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -1575,7 +1575,7 @@ static RPCHelpMan getchaintxstats()
                 "\nCompute statistics about the total number and rate of transactions in the chain.\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{"one month"}, "Size of the window in number of blocks"},
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"chain tip"}, "The hash of the block that ends the window."},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"chain tip"}, "The hash of the block that ends the window"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1583,7 +1583,7 @@ static RPCHelpMan getchaintxstats()
                         {RPCResult::Type::NUM_TIME, "time", "The timestamp for the final block in the window, expressed in " + UNIX_EPOCH_TIME},
                         {RPCResult::Type::NUM, "txcount", "The total number of transactions in the chain up to that point"},
                         {RPCResult::Type::STR_HEX, "window_final_block_hash", "The hash of the final block in the window"},
-                        {RPCResult::Type::NUM, "window_final_block_height", "The height of the final block in the window."},
+                        {RPCResult::Type::NUM, "window_final_block_height", "The height of the final block in the window"},
                         {RPCResult::Type::NUM, "window_block_count", "Size of the window in number of blocks"},
                         {RPCResult::Type::NUM, "window_tx_count", /*optional=*/true, "The number of transactions in the window. Only returned if \"window_block_count\" is > 0"},
                         {RPCResult::Type::NUM, "window_interval", /*optional=*/true, "The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0"},
@@ -2182,8 +2182,8 @@ static RPCHelpMan getblockfilter()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR_HEX, "filter", "the hex-encoded filter data"},
-                        {RPCResult::Type::STR_HEX, "header", "the hex-encoded filter header"},
+                        {RPCResult::Type::STR_HEX, "filter", "The hex-encoded filter data"},
+                        {RPCResult::Type::STR_HEX, "header", "The hex-encoded filter header"},
                     }},
                 RPCExamples{
                     HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"") +
@@ -2226,17 +2226,17 @@ static RPCHelpMan getblockfilter()
     if (!index->LookupFilter(block_index, filter) ||
         !index->LookupFilterHeader(block_index, filter_header)) {
         int err_code;
-        std::string errmsg = "Filter not found.";
+        std::string errmsg = "Filter not found";
 
         if (!block_was_connected) {
             err_code = RPC_INVALID_ADDRESS_OR_KEY;
-            errmsg += " Block was not connected to active chain.";
+            errmsg += " Block was not connected to active chain";
         } else if (!index_ready) {
             err_code = RPC_MISC_ERROR;
-            errmsg += " Block filters are still in the process of being indexed.";
+            errmsg += " Block filters are still in the process of being indexed";
         } else {
             err_code = RPC_INTERNAL_ERROR;
-            errmsg += " This error is unexpected and indicates index corruption.";
+            errmsg += " This error is unexpected and indicates index corruption";
         }
 
         throw JSONRPCError(err_code, errmsg);
@@ -2266,12 +2266,12 @@ static RPCHelpMan dumptxoutset()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::NUM, "coins_written", "the number of coins written in the snapshot"},
-                    {RPCResult::Type::STR_HEX, "base_hash", "the hash of the base of the snapshot"},
-                    {RPCResult::Type::NUM, "base_height", "the height of the base of the snapshot"},
-                    {RPCResult::Type::STR, "path", "the absolute path that the snapshot was written to"},
-                    {RPCResult::Type::STR_HEX, "txoutset_hash", "the hash of the UTXO set contents"},
-                    {RPCResult::Type::NUM, "nchaintx", "the number of transactions in the chain up to and including the base block"},
+                    {RPCResult::Type::NUM, "coins_written", "The number of coins written in the snapshot"},
+                    {RPCResult::Type::STR_HEX, "base_hash", "The hash of the base of the snapshot"},
+                    {RPCResult::Type::NUM, "base_height", "The height of the base of the snapshot"},
+                    {RPCResult::Type::STR, "path", "The absolute path that the snapshot was written to"},
+                    {RPCResult::Type::STR_HEX, "txoutset_hash", "The hash of the UTXO set contents"},
+                    {RPCResult::Type::NUM, "nchaintx", "The number of transactions in the chain up to and including the base block"},
                 }
         },
         RPCExamples{
