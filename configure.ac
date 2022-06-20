@@ -1261,8 +1261,8 @@ AC_LINK_IFELSE(
 AC_MSG_CHECKING([for ::_wsystem])
 AC_LINK_IFELSE(
     [ AC_LANG_PROGRAM(
-        [[ ]],
-        [[ int nErr = ::_wsystem(""); ]]
+        [[ #include <stdlib.h> ]],
+        [[ int nErr = ::_wsystem(NULL); ]]
     )],
     [ AC_MSG_RESULT([yes]); have_any_system=yes],
     [ AC_MSG_RESULT([no]) ]
