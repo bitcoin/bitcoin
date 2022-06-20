@@ -62,9 +62,6 @@
 #pragma warning(disable:4717)
 #endif
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <codecvt>
 
 #include <io.h> /* for _commit */

@@ -710,6 +710,9 @@ case $host in
      fi
 
      CORE_CPPFLAGS="$CORE_CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
+     dnl Prevent the definition of min/max macros.
+     dnl We always want to use the standard library.
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -DNOMINMAX"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
      dnl That breaks our ability to build dll's with static libgcc/libstdc++/libssp. Override
