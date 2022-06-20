@@ -168,7 +168,7 @@ class _Instruction(Enum):
     # Not an actual instruction, but a way to encode the empty program that fails. In the
     # encoder, it is used more generally to represent the failure case inside MATCH instructions,
     # which may (if used inside the context of a DEFAULT instruction) actually correspond to
-    # a succesful return. In this usage, they're always converted to an actual MATCH or RETURN
+    # a successful return. In this usage, they're always converted to an actual MATCH or RETURN
     # before the top level is reached (see make_default below).
     END = 4
 
