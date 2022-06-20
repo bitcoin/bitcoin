@@ -208,11 +208,10 @@ static RPCHelpMan getmemoryinfo()
     };
 }
 
-static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
-    cats = cats.get_array();
-    for (unsigned int i = 0; i < cats.size(); ++i) {
-        std::string cat = cats[i].get_str();
-
+static void EnableOrDisableLogCategories(const UniValue& cats, bool enable)
+{
+    for (const auto& cat_json : cats.get_array().getValues()) {
+        const auto& cat{cat_json.get_str()};
         bool success;
         if (enable) {
             success = LogInstance().EnableCategory(cat);

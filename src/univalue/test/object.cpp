@@ -398,7 +398,7 @@ void univalue_readwrite()
 
     BOOST_CHECK_EQUAL(v[0].getValStr(), "1.10000000");
 
-    UniValue obj = v[1];
+    const UniValue& obj{v[1]};
     BOOST_CHECK(obj.isObject());
     BOOST_CHECK_EQUAL(obj.size(), 3);
 

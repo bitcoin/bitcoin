@@ -381,7 +381,7 @@ RPCHelpMan sendmany()
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
     }
-    UniValue sendTo = request.params[1].get_obj();
+    const UniValue& sendTo{request.params[1].get_obj()};
 
     mapValue_t mapValue;
     if (!request.params[3].isNull() && !request.params[3].get_str().empty())
@@ -567,7 +567,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             }
         }
 
-        const UniValue include_watching_option = options.exists("include_watching") ? options["include_watching"] : options["includeWatching"];
+        const UniValue& include_watching_option{options.exists("include_watching") ? options["include_watching"] : options["includeWatching"]};
         coinControl.fAllowWatchOnly = ParseIncludeWatchonly(include_watching_option, wallet);
 
         if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
@@ -622,7 +622,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
     }
 
     if (options.exists("solving_data")) {
-        const UniValue solving_data = options["solving_data"].get_obj();
+        const UniValue& solving_data{options["solving_data"].get_obj()};
         if (solving_data.exists("pubkeys")) {
             for (const UniValue& pk_univ : solving_data["pubkeys"].get_array().getValues()) {
                 const std::string& pk_str = pk_univ.get_str();
@@ -1031,7 +1031,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     coin_control.m_signal_bip125_rbf = true;
 
     if (!request.params[1].isNull()) {
-        UniValue options = request.params[1];
+        const UniValue& options{request.params[1]};
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
@@ -1046,7 +1046,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and conf_target options should not both be set. Use conf_target (confTarget is deprecated).");
         }
 
-        auto conf_target = options.exists("confTarget") ? options["confTarget"] : options["conf_target"];
+        const auto& conf_target{options.exists("confTarget") ? options["confTarget"] : options["conf_target"]};
 
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();

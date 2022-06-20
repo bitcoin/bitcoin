@@ -559,8 +559,7 @@ static RPCHelpMan combinerawtransaction()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-
-    UniValue txs = request.params[0].get_array();
+    const UniValue& txs{request.params[0].get_array()};
     std::vector<CMutableTransaction> txVariants(txs.size());
 
     for (unsigned int idx = 0; idx < txs.size(); idx++) {
@@ -699,7 +698,7 @@ static RPCHelpMan signrawtransactionwithkey()
     FillableSigningProvider keystore;
     const UniValue& keys = request.params[1].get_array();
     for (unsigned int idx = 0; idx < keys.size(); ++idx) {
-        UniValue k = keys[idx];
+        const UniValue& k{keys[idx]};
         CKey key = DecodeSecret(k.get_str());
         if (!key.IsValid()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
@@ -1382,7 +1381,7 @@ static RPCHelpMan combinepsbt()
 {
     // Unserialize the transactions
     std::vector<PartiallySignedTransaction> psbtxs;
-    UniValue txs = request.params[0].get_array();
+    const UniValue& txs{request.params[0].get_array()};
     if (txs.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter 'txs' cannot be empty");
     }
@@ -1604,7 +1603,7 @@ static RPCHelpMan utxoupdatepsbt()
     // Parse descriptors, if any.
     FlatSigningProvider provider;
     if (!request.params[1].isNull()) {
-        auto descs = request.params[1].get_array();
+        const auto& descs{request.params[1].get_array()};
         for (size_t i = 0; i < descs.size(); ++i) {
             EvalDescriptorStringOrObject(descs[i], provider);
         }
@@ -1685,7 +1684,7 @@ static RPCHelpMan joinpsbts()
 {
     // Unserialize the transactions
     std::vector<PartiallySignedTransaction> psbtxs;
-    UniValue txs = request.params[0].get_array();
+    const UniValue& txs{request.params[0].get_array()};
 
     if (txs.size() <= 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "At least two PSBTs are required to join PSBTs.");

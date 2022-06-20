@@ -573,7 +573,7 @@ RPCHelpMan listunspent()
 
     std::set<CTxDestination> destinations;
     if (!request.params[2].isNull()) {
-        UniValue inputs = request.params[2].get_array();
+        const UniValue& inputs{request.params[2].get_array()};
         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());

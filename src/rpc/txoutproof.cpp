@@ -43,7 +43,7 @@ static RPCHelpMan gettxoutproof()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             std::set<uint256> setTxids;
-            UniValue txids = request.params[0].get_array();
+            const UniValue& txids{request.params[0].get_array()};
             if (txids.empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter 'txids' cannot be empty");
             }

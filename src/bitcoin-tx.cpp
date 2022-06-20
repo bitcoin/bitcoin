@@ -577,7 +577,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     if (!registers.count("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");
     FillableSigningProvider tempKeystore;
-    UniValue keysObj = registers["privatekeys"];
+    const UniValue& keysObj{registers["privatekeys"]};
 
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
         if (!keysObj[kidx].isStr())
@@ -592,7 +592,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     // Add previous txouts given in the RPC call:
     if (!registers.count("prevtxs"))
         throw std::runtime_error("prevtxs register variable must be set.");
-    UniValue prevtxsObj = registers["prevtxs"];
+    const UniValue& prevtxsObj{registers["prevtxs"]};
     {
         for (unsigned int previdx = 0; previdx < prevtxsObj.size(); previdx++) {
             const UniValue& prevOut = prevtxsObj[previdx];
@@ -642,7 +642,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             // add redeemScript to the tempKeystore so it can be signed:
             if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
                 prevOut.exists("redeemScript")) {
-                UniValue v = prevOut["redeemScript"];
+                const UniValue& v{prevOut["redeemScript"]};
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
                 tempKeystore.AddCScript(redeemScript);

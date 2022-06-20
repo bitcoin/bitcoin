@@ -166,7 +166,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     id = find_value(request, "id");
 
     // Parse method
-    UniValue valMethod = find_value(request, "method");
+    const UniValue& valMethod{find_value(request, "method")};
     if (valMethod.isNull())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (!valMethod.isStr())

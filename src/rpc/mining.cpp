@@ -325,7 +325,7 @@ static RPCHelpMan generateblock()
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
-    const auto raw_txs_or_txids = request.params[1].get_array();
+    const auto& raw_txs_or_txids{request.params[1].get_array()};
     for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
         const auto str(raw_txs_or_txids[i].get_str());
 
