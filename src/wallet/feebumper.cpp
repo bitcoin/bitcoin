@@ -213,7 +213,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     for (const auto& inputs : wtx.tx->vin) {
         new_coin_control.Select(COutPoint(inputs.prevout));
     }
-    new_coin_control.fAllowOtherInputs = true;
+    new_coin_control.m_allow_other_inputs = true;
 
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
