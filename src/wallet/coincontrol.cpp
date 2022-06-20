@@ -41,12 +41,6 @@ PreselectedInput& CCoinControl::Select(const COutPoint& outpoint)
 {
     return m_selected[outpoint];
 }
-
-void CCoinControl::SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
-{
-    m_selected[outpoint].SetTxOut(txout);
-}
-
 void CCoinControl::UnSelect(const COutPoint& outpoint)
 {
     m_selected.erase(outpoint);

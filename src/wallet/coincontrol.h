@@ -109,11 +109,6 @@ public:
      */
     PreselectedInput& Select(const COutPoint& outpoint);
     /**
-     * Lock-in the given output as an external input for spending because it is not in the wallet.
-     * The output will be included in the transaction even if it's not the most optimal choice.
-     */
-    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout);
-    /**
      * Unselects the given output.
      */
     void UnSelect(const COutPoint& outpoint);
