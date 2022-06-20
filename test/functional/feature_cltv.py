@@ -165,7 +165,7 @@ class BIP65Test(BitcoinTestFramework):
                     'allowed': False,
                     'reject-reason': expected_cltv_reject_reason,
                 }],
-                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
+                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate": 0}),
             )
 
             # Now we verify that a block with this transaction is also invalid.

@@ -109,7 +109,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': fee_expected}}],
             rawtxs=[tx.serialize().hex()],
-            maxfeerate=0,
+            options={"maxfeerate": 0},
         )
         node.sendrawtransaction(hexstring=raw_tx_final, maxfeerate=0)
         self.mempool_size += 1
@@ -142,7 +142,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
             rawtxs=[tx.serialize().hex()],
-            maxfeerate=0,
+            options={"maxfeerate": 0},
         )
 
         self.log.info('A transaction with missing inputs, that never existed')
@@ -188,7 +188,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
             rawtxs=[tx.serialize().hex()],
-            maxfeerate=0,
+            options={"maxfeerate": 0},
         )
 
         self.log.info('A transaction with no outputs')
@@ -330,7 +330,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-BIP68-final'}],
             rawtxs=[tx.serialize().hex()],
-            maxfeerate=0,
+            options={"maxfeerate": 0},
         )
 
 

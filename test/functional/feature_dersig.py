@@ -122,7 +122,7 @@ class BIP66Test(BitcoinTestFramework):
                 'allowed': False,
                 'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
             }],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate": 0}),
         )
 
         # Now we verify that a block with this transaction is also invalid.
