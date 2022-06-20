@@ -132,12 +132,19 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
+;; https://gcc.gnu.org/install/configure.html
+(define (hardened-gcc gcc)
+  (package-with-extra-configure-variable (
+    package-with-extra-configure-variable gcc
+    "--enable-default-ssp" "yes")
+    "--enable-default-pie" "yes"))
+
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.24)))
-                                       (base-gcc (make-gcc-rpath-link base-gcc)))
+                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
