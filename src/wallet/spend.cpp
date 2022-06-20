@@ -1347,15 +1347,15 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     for (const CTxIn& txin : tx.vin) {
         const auto& outPoint = txin.prevout;
-        if (wallet.IsMine(outPoint)) {
-            // The input was found in the wallet, so select as internal
-            coinControl.Select(outPoint);
-        } else if (coins[outPoint].out.IsNull()) {
-            error = _("Unable to find UTXO for external input");
-            return false;
-        } else {
+        PreselectedInput& preset_txin = coinControl.Select(outPoint);
+        if (!wallet.IsMine(outPoint)) {
+            if (coins[outPoint].out.IsNull()) {
+                error = _("Unable to find UTXO for external input");
+                return false;
+            }
+
             // The input was not in the wallet, but is in the UTXO set, so select as external
-            coinControl.SelectExternal(outPoint, coins[outPoint].out);
+            preset_txin.SetTxOut(coins[outPoint].out);
         }
     }
 

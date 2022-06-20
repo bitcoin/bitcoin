@@ -1282,7 +1282,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
     cc.m_allow_other_inputs = false;
     COutput output = available_coins.All().at(0);
     cc.SetInputWeight(output.outpoint, 148);
-    cc.SelectExternal(output.outpoint, output.txout);
+    cc.Select(output.outpoint).SetTxOut(output.txout);
 
     LOCK(wallet->cs_wallet);
     const auto preset_inputs = *Assert(FetchSelectedInputs(*wallet, cc, cs_params));
