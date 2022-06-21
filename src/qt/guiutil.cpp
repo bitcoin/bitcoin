@@ -56,6 +56,7 @@
 #include <QMouseEvent>
 #include <QPluginLoader>
 #include <QProgressDialog>
+#include <QRegularExpression>
 #include <QScreen>
 #include <QSettings>
 #include <QShortcut>
@@ -294,10 +295,11 @@ QString getDefaultDataDirectory()
 
 QString ExtractFirstSuffixFromFilter(const QString& filter)
 {
-    QRegExp filter_re(".* \\(\\*\\.(.*)[ \\)]");
+    QRegularExpression filter_re(QStringLiteral(".* \\(\\*\\.(.*)[ \\)]"), QRegularExpression::InvertedGreedinessOption);
     QString suffix;
-    if (filter_re.exactMatch(filter)) {
-        suffix = filter_re.cap(1);
+    QRegularExpressionMatch m = filter_re.match(filter);
+    if (m.hasMatch()) {
+        suffix = m.captured(1);
     }
     return suffix;
 }
