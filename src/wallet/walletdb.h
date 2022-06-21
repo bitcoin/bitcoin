@@ -191,6 +191,8 @@ private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {
+        TryInit(); // only if on-demand mode is configured
+
         if (!m_batch->Write(key, value, fOverwrite)) {
             return false;
         }
@@ -204,6 +206,8 @@ private:
     template <typename K>
     bool EraseIC(const K& key)
     {
+        TryInit(); // only if on-demand mode is configured
+
         if (!m_batch->Erase(key)) {
             return false;
         }
@@ -215,13 +219,39 @@ private:
     }
 
 public:
-    explicit WalletBatch(WalletDatabase &database, bool _fFlushOnClose = true) :
-        m_batch(database.MakeBatch(_fFlushOnClose)),
-        m_database(database)
+
+    /**
+     * If "initialize=false" the handler will not open nor initialize the db on the constructor.
+     *
+     * Users can create the handler object beforehand and pass it across
+     * different functions as ref.
+     * Allowing an entire process to use the same handler, perform batched operations and
+     * avoid db access acquisition if no write occurs.
+     *
+     * Db access will be initialized before the first write/erase operation.
+    */
+    explicit WalletBatch(WalletDatabase& database, bool fFlushOnClose = true,
+                         bool initialize = true) :
+                         m_database(database),
+                         m_flush_on_close(fFlushOnClose)
     {
+        if (initialize) {
+            TryInit();
+        }
     }
     WalletBatch(const WalletBatch&) = delete;
     WalletBatch& operator=(const WalletBatch&) = delete;
+
+    /**
+     *  Initialize the wallet batch on-demand.
+     *  no-op if batch was already initialized.
+     */
+    bool TryInit()
+    {
+        if (m_batch) return false;
+        m_batch = m_database.MakeBatch(m_flush_on_close);
+        return true;
+    }
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
@@ -294,6 +324,8 @@ public:
 private:
     std::unique_ptr<DatabaseBatch> m_batch;
     WalletDatabase& m_database;
+    // Whether it should flush to db at every write or not (only useful for bdb)
+    bool m_flush_on_close{false};
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
