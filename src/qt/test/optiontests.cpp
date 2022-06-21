@@ -4,6 +4,7 @@
 
 #include <init.h>
 #include <qt/bitcoin.h>
+#include <qt/guiutil.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
 #include <util/system.h>
@@ -121,4 +122,13 @@ void OptionTests::parametersInteraction()
     settings.remove("fListen");
     QVERIFY(!settings.contains("fListen"));
     gArgs.ClearPathCache();
+}
+
+void OptionTests::extractFilter()
+{
+    QString filter = QString("Partially Signed Transaction (Binary) (*.psbt)");
+    QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "psbt");
+
+    filter = QString("Image (*.png *.jpg)");
+    QCOMPARE(GUIUtil::ExtractFirstSuffixFromFilter(filter), "png");
 }
