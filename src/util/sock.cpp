@@ -39,32 +39,17 @@ Sock::Sock(Sock&& other)
     other.m_socket = INVALID_SOCKET;
 }
 
-Sock::~Sock() { Reset(); }
+Sock::~Sock() { Close(); }
 
 Sock& Sock::operator=(Sock&& other)
 {
-    Reset();
+    Close();
     m_socket = other.m_socket;
     other.m_socket = INVALID_SOCKET;
     return *this;
 }
 
 SOCKET Sock::Get() const { return m_socket; }
-
-void Sock::Reset() {
-    if (m_socket == INVALID_SOCKET) {
-        return;
-    }
-#ifdef WIN32
-    int ret = closesocket(m_socket);
-#else
-    int ret = close(m_socket);
-#endif
-    if (ret) {
-        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
-    }
-    m_socket = INVALID_SOCKET;
-}
 
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
@@ -370,6 +355,22 @@ bool Sock::IsConnected(std::string& errmsg) const
     default:
         return true;
     }
+}
+
+void Sock::Close()
+{
+    if (m_socket == INVALID_SOCKET) {
+        return;
+    }
+#ifdef WIN32
+    int ret = closesocket(m_socket);
+#else
+    int ret = close(m_socket);
+#endif
+    if (ret) {
+        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
+    }
+    m_socket = INVALID_SOCKET;
 }
 
 #ifdef WIN32

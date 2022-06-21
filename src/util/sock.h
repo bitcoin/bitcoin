@@ -69,11 +69,6 @@ public:
     [[nodiscard]] virtual SOCKET Get() const;
 
     /**
-     * Close if non-empty.
-     */
-    virtual void Reset();
-
-    /**
      * send(2) wrapper. Equivalent to `send(this->Get(), data, len, flags);`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
@@ -245,6 +240,12 @@ protected:
      * Contained socket. `INVALID_SOCKET` designates the object is empty.
      */
     SOCKET m_socket;
+
+private:
+    /**
+     * Close `m_socket` if it is not `INVALID_SOCKET`.
+     */
+    void Close();
 };
 
 /** Return readable error string for a network error code */

@@ -100,17 +100,12 @@ public:
         m_socket = INVALID_SOCKET - 1;
     }
 
-    ~StaticContentsSock() override { Reset(); }
+    ~StaticContentsSock() override { m_socket = INVALID_SOCKET; }
 
     StaticContentsSock& operator=(Sock&& other) override
     {
         assert(false && "Move of Sock into MockSock not allowed.");
         return *this;
-    }
-
-    void Reset() override
-    {
-        m_socket = INVALID_SOCKET;
     }
 
     ssize_t Send(const void*, size_t len, int) const override { return len; }

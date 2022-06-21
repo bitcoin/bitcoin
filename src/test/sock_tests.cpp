@@ -69,14 +69,6 @@ BOOST_AUTO_TEST_CASE(move_assignment)
     BOOST_CHECK(SocketIsClosed(s));
 }
 
-BOOST_AUTO_TEST_CASE(reset)
-{
-    const SOCKET s = CreateSocket();
-    Sock sock(s);
-    sock.Reset();
-    BOOST_CHECK(SocketIsClosed(s));
-}
-
 #ifndef WIN32 // Windows does not have socketpair(2).
 
 static void CreateSocketPair(int s[2])
