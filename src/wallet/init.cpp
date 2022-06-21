@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <net.h>
 #include <node/context.h>
+#include <univalue.h>
 #include <util/error.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -162,7 +163,15 @@ void WalletInit::Construct(NodeContext& node) const
         LogPrintf("Wallet disabled!\n");
         return;
     }
-    gArgs.SoftSetArg("-wallet", "");
+    // If there's no -wallet setting with a list of wallets to load, set it to
+    // load the default "" wallet.
+    if (!gArgs.IsArgSet("wallet")) {
+        gArgs.LockSettings([&](util::Settings& settings) {
+            util::SettingsValue wallets(util::SettingsValue::VARR);
+            wallets.push_back(""); // Default wallet name is ""
+            settings.rw_settings["wallet"] = wallets;
+        });
+    }
     node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
 }
 

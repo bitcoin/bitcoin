@@ -200,6 +200,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 2, "blank"},
     { "createwallet", 4, "avoid_reuse"},
     { "upgradetohd", 3, "rescan"},
+    { "createwallet", 5, "load_on_startup"},
+    { "loadwallet", 1, "load_on_startup"},
+    { "unloadwallet", 1, "load_on_startup"},
+    { "upgradetohd", 3, "rescan"},
     { "getnodeaddresses", 0, "count"},
     { "stop", 0, "wait" },
 };

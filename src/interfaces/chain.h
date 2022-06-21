@@ -7,6 +7,7 @@
 
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
+#include <util/settings.h>          // For util::SettingsValue
 
 #include <memory>
 #include <stddef.h>
@@ -243,6 +244,12 @@ public:
 
     //! Run function after given number of seconds. Cancel any previous calls with same name.
     virtual void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) = 0;
+
+    //! Return <datadir>/settings.json setting value.
+    virtual util::SettingsValue getRwSetting(const std::string& name) = 0;
+
+    //! Write a setting to <datadir>/settings.json.
+    virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
 
     //! Synchronously send TransactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
