@@ -132,25 +132,11 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; Building glibc with stack smashing protector first landed in glibc 2.25, use
-;; this function to disable for older glibcs
-;;
-;; From glibc 2.25 changelog:
-;;
-;;   * Most of glibc can now be built with the stack smashing protector enabled.
-;;     It is recommended to build glibc with --enable-stack-protector=strong.
-;;     Implemented by Nick Alcock (Oracle).
-(define (make-glibc-without-ssp xglibc)
-  (package-with-extra-configure-variable
-   (package-with-extra-configure-variable
-    xglibc "libc_cv_ssp" "no")
-   "libc_cv_ssp_strong" "no"))
-
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
+                                       (base-libc (make-glibc-without-werror glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
