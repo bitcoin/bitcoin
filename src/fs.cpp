@@ -12,9 +12,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #else
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <codecvt>
 #include <limits>
 #include <windows.h>

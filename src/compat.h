@@ -11,9 +11,6 @@
 #endif
 
 #ifdef WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #ifdef FD_SETSIZE
 #undef FD_SETSIZE // prevent redefinition compiler warning
 #endif
