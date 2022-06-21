@@ -12,7 +12,7 @@ class CBlockPolicyEstimator;
 /** Default for -maxmempool, maximum megabytes of mempool memory usage */
 static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
-static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY{336};
+static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
 
 namespace kernel {
 /**
@@ -28,7 +28,7 @@ struct MemPoolOptions {
     /* The ratio used to determine how often sanity checks will run.  */
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
-    std::chrono::seconds expiry{std::chrono::hours{DEFAULT_MEMPOOL_EXPIRY}};
+    std::chrono::seconds expiry{std::chrono::hours{DEFAULT_MEMPOOL_EXPIRY_HOURS}};
 };
 } // namespace kernel
 
