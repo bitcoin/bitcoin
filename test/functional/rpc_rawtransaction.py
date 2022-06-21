@@ -285,7 +285,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Test a transaction with a large fee.
         # Fee rate is 0.20000000 BTC/kvB
-        tx = self.wallet.create_self_transfer(from_node=self.nodes[0], fee_rate=Decimal("0.20000000"))
+        tx = self.wallet.create_self_transfer(fee_rate=Decimal("0.20000000"))
         # Thus, testmempoolaccept should reject
         testres = self.nodes[2].testmempoolaccept([tx['hex']])[0]
         assert_equal(testres['allowed'], False)

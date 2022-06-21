@@ -473,7 +473,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             # Now attempt to submit a tx that double-spends all the root tx inputs, which
             # would invalidate `num_txs_invalidated` transactions.
             double_tx = wallet.create_self_transfer_multi(
-                from_node=normal_node,
                 utxos_to_spend=root_utxos,
                 fee_per_output=10_000_000,  # absurdly high feerate
             )
