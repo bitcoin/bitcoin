@@ -768,7 +768,7 @@ static RPCHelpMan decodepsbt()
                                 {RPCResult::Type::OBJ, "final_scriptSig", /*optional=*/true, "",
                                 {
                                     {RPCResult::Type::STR, "asm", "The asm"},
-                                    {RPCResult::Type::STR, "hex", "The hex"},
+                                    {RPCResult::Type::STR_HEX, "hex", "The hex"},
                                 }},
                                 {RPCResult::Type::ARR, "final_scriptwitness", /*optional=*/true, "",
                                 {
