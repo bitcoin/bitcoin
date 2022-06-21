@@ -86,8 +86,7 @@ class MiniWallet:
     def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE):
         self._test_node = test_node
         self._utxos = []
-        self._priv_key = None
-        self._address = None
+        self._mode = mode
 
         assert isinstance(mode, MiniWalletMode)
         if mode == MiniWalletMode.RAW_OP_TRUE:
@@ -121,7 +120,7 @@ class MiniWallet:
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
-        assert self._priv_key is not None
+        assert_equal(self._mode, MiniWalletMode.RAW_P2PK)
         (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
         assert err is None
         # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
@@ -151,6 +150,7 @@ class MiniWallet:
         return descsum_create(f'raw({self._scriptPubKey.hex()})')
 
     def get_address(self):
+        assert_equal(self._mode, MiniWalletMode.ADDRESS_OP_TRUE)
         return self._address
 
     def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True) -> dict:
@@ -257,10 +257,12 @@ class MiniWallet:
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
-        if self._priv_key is None:
+        if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(104)  # anyone-can-spend
-        else:
+        elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
+        else:
+            assert False
         send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
         assert send_value > 0
 
@@ -268,17 +270,15 @@ class MiniWallet:
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
         tx.vout = [CTxOut(send_value, self._scriptPubKey)]
         tx.nLockTime = locktime
-        if not self._address:
-            # raw script
-            if self._priv_key is not None:
-                # P2PK, need to sign
-                self.sign_tx(tx)
-            else:
-                # anyone-can-spend
-                tx.vin[0].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
-        else:
+        if self._mode == MiniWalletMode.RAW_P2PK:
+            self.sign_tx(tx)
+        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
+            tx.vin[0].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
+        elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
             tx.wit.vtxinwit = [CTxInWitness()]
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
+        else:
+            assert False
         tx_hex = tx.serialize().hex()
 
         assert_equal(tx.get_vsize(), vsize)
