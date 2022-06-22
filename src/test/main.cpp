@@ -5,7 +5,7 @@
 /**
  * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
  */
-#define BOOST_TEST_MODULE Bitcoin Core Test Suite
+#define BOOST_TEST_MODULE Navcoin Core Test Suite
 
 #include <boost/test/included/unit_test.hpp>
 
