@@ -39,6 +39,14 @@ class SignetBasicTest(BitcoinTestFramework):
             shared_args3, shared_args3,
         ]
 
+    def setup_network(self):
+        self.setup_nodes()
+
+        # Setup the three signets, which are incompatible with each other
+        self.connect_nodes(0, 1)
+        self.connect_nodes(2, 3)
+        self.connect_nodes(4, 5)
+
     def run_test(self):
         self.log.info("basic tests using OP_TRUE challenge")
 
