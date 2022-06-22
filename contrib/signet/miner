@@ -882,8 +882,12 @@ def main():
     inner_argv = args.cli.split(" ")
     inner_parser = argparse.ArgumentParser()
     inner_parser.add_argument("-datadir", default="~/.bitcoin", type=str, help="bitcoin datadir")
+    inner_parser.add_argument("-conf", default=None, type=str, help="bitcoin conf file", dest='itcoin_conf')
+    inner_parser.add_argument("-rpcconnect", default=None, type=str, help="rpc connect host", dest='itcoin_rpcconnect')
     inner_args = inner_parser.parse_args(inner_argv[1:])
-    cli : TestNodeCLI = TestNodeCLI(inner_argv[0], inner_args.datadir)
+    cli : TestNodeCLI = TestNodeCLI(inner_argv[0], inner_args.datadir,
+        '-conf='+inner_args.itcoin_conf if inner_args.itcoin_conf is not None else None,
+        '-rpcconnect='+inner_args.itcoin_rpcconnect if inner_args.itcoin_rpcconnect is not None else None)
     args.bcli = lambda command=None, *args, **kwargs: bitcoin_cli(cli, command, *args, **kwargs)
     # ITCOIN_SPECIFIC - END
 
