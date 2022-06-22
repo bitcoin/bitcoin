@@ -163,6 +163,25 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
 }
 
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
+{
+    const CTxOut& out = psbt.tx->vout.at(index);
+    PSBTOutput& psbt_out = psbt.outputs.at(index);
+
+    // Fill a SignatureData with output info
+    SignatureData sigdata;
+    psbt_out.FillSignatureData(sigdata);
+
+    // Construct a would-be spend of this output, to update sigdata with.
+    // Note that ProduceSignature is used to fill in metadata (not actual signatures),
+    // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
+    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
+    ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
+
+    // Put redeem_script, key paths, into PSBTOutput.
+    psbt_out.FromSignatureData(sigdata);
+}
+
 bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash)
 {
     // if this input has a final scriptsig, don't do anything with it

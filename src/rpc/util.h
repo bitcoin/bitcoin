@@ -11,6 +11,8 @@
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <script/script.h>
+#include <script/sign.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -104,6 +106,8 @@ enum class OuterType {
     OBJ,
     NONE, // Only set on first recursion
 };
+/** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
 
 struct RPCArg {
     enum class Type {
