@@ -20,6 +20,7 @@ iwyu_tool.py \
   "src/init" \
   "src/rpc/fees.cpp" \
   "src/rpc/signmessage.cpp" \
+  "src/test/fuzz/txorphan.cpp" \
   "src/util/bip32.cpp" \
   "src/util/bytevectorhash.cpp" \
   "src/util/error.cpp" \
