@@ -38,7 +38,7 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
             wallet_tx_hsh = node.sendtoaddress(addr, 0.0001)
 
         # generate a txn using sendrawtransaction
-        txFS = self.wallet.create_self_transfer(from_node=node)
+        txFS = self.wallet.create_self_transfer()
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
 
         # check transactions are in unbroadcast using rpc
