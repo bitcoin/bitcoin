@@ -1,11 +1,12 @@
 package=libcurl
-$(package)_version=7.73.0
+$(package)_version=7.83.1
 $(package)_dependencies=gnutls zlib
-$(package)_download_path=https://curl.haxx.se/download
+$(package)_download_path=https://curl.se/download
 $(package)_file_name=curl-$($(package)_version).tar.gz
-$(package)_sha256_hash=ba98332752257b47b9dea6d8c0ad25ec1745c20424f1dd3ff2c99ab59e97cf91
+$(package)_sha256_hash=93fb2cd4b880656b4e8589c912a9fd092750166d555166370247f09d18f5d0c0
 
 # default settings
+$(package)_cflags+= -std=gnu11
 $(package)_cflags_darwin="-mmacosx-version-min=$(OSX_MIN_VERSION)"
 $(package)_config_opts=--with-zlib="$(host_prefix)" --disable-shared --enable-static --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --enable-proxy --without-ssl --with-gnutls="$(host_prefix)" --without-ca-path --without-ca-bundle --with-ca-fallback --disable-telnet
 $(package)_config_opts_linux=LIBS="-lnettle -lhogweed -lgmp" --without-ssl --enable-threaded-resolver
