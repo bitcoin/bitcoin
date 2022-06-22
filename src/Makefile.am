@@ -1255,9 +1255,7 @@ include Makefile.leveldb.include
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
 
-if ENABLE_TESTS
 include Makefile.test.include
-endif
 
 if ENABLE_BENCH
 include Makefile.bench.include
