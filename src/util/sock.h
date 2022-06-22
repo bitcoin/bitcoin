@@ -69,18 +69,6 @@ public:
     [[nodiscard]] virtual SOCKET Get() const;
 
     /**
-     * Get the value of the contained socket and drop ownership. It will not be closed by the
-     * destructor after this call.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    virtual SOCKET Release();
-
-    /**
-     * Close if non-empty.
-     */
-    virtual void Reset();
-
-    /**
      * send(2) wrapper. Equivalent to `send(this->Get(), data, len, flags);`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
@@ -252,12 +240,15 @@ protected:
      * Contained socket. `INVALID_SOCKET` designates the object is empty.
      */
     SOCKET m_socket;
+
+private:
+    /**
+     * Close `m_socket` if it is not `INVALID_SOCKET`.
+     */
+    void Close();
 };
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
-
-/** Close socket and set hSocket to INVALID_SOCKET */
-bool CloseSocket(SOCKET& hSocket);
 
 #endif // BITCOIN_UTIL_SOCK_H

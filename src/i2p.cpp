@@ -410,7 +410,7 @@ void Session::Disconnect()
             Log("Destroying session %s", m_session_id);
         }
     }
-    m_control_sock->Reset();
+    m_control_sock = std::make_unique<Sock>(INVALID_SOCKET);
     m_session_id.clear();
 }
 } // namespace sam
