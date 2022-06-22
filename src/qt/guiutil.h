@@ -320,21 +320,15 @@ namespace GUIUtil
         const QObject* sender,
         const QObject* receiver);
 
-    /**
-     * A drop-in replacement of QObject::connect function
-     * (see: https://doc.qt.io/qt-5/qobject.html#connect-3), that
-     * guaranties that all exceptions are handled within the slot.
-     *
-     * NOTE: This function is incompatible with Qt private signals.
-     */
-    template <typename Sender, typename Signal, typename Receiver, typename Slot, typename ... Args>
-    QMetaObject::Connection ExceptionSafeConnect(
-        Sender sender, Signal signal, Receiver receiver, Slot method,
-        Qt::ConnectionType type = Qt::AutoConnection)
-    {
-        return QObject::connect(
-            sender, signal, receiver,
-            [sender, receiver, method](Args&&... args) {
+    template <typename Sender, typename Receiver, typename Slot>
+    class ExceptionHandlingSlotWrapper {
+    public:
+        Sender sender;
+        Receiver receiver;
+        Slot method;
+
+        template <typename... Args>
+        inline void operator()(Args&&... args) {
                 bool ok{true};
                 try {
                     (receiver->*method)(std::forward<decltype(args)>(args)...);
@@ -358,7 +352,28 @@ namespace GUIUtil
                         Q_ARG(QString, "Unknown failure occurred."));
                 }
                 assert(ok);
-            },
+        }
+    };
+
+    /**
+     * A drop-in replacement of QObject::connect function
+     * (see: https://doc.qt.io/qt-5/qobject.html#connect-3), that
+     * guaranties that all exceptions are handled within the slot.
+     *
+     * NOTE: This function is incompatible with Qt private signals.
+     */
+    template <typename Sender, typename Signal, typename Receiver, typename Slot>
+    QMetaObject::Connection ExceptionSafeConnect(
+        Sender sender, Signal signal, Receiver receiver, Slot method,
+        Qt::ConnectionType type = Qt::AutoConnection)
+    {
+        ExceptionHandlingSlotWrapper<Sender, Receiver, Slot> wrapper;
+        wrapper.sender = sender;
+        wrapper.receiver = receiver;
+        wrapper.method = method;
+        return QObject::connect(
+            sender, signal, receiver,
+            wrapper,
             type);
     }
 } // namespace GUIUtil
