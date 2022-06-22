@@ -101,6 +101,9 @@ class MiniWallet:
             self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def _create_utxo(self, *, txid, vout, value, height):
+        return {"txid": txid, "vout": vout, "value": value, "height": height}
+
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
 
@@ -110,13 +113,13 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
+            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], height=utxo["height"]))
 
     def scan_tx(self, tx):
         """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'height': 0})
+                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0))
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -140,7 +143,7 @@ class MiniWallet:
         for b in blocks:
             block_info = self._test_node.getblock(blockhash=b, verbosity=2)
             cb_tx = block_info['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
+            self._utxos.append(self._create_utxo(txid=cb_tx["txid"], vout=0, value=cb_tx["vout"][0]["value"], height=block_info["height"]))
         return blocks
 
     def get_scriptPubKey(self):
@@ -264,12 +267,12 @@ class MiniWallet:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
-        send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
+        send_value = utxo_to_spend["value"] - (fee_rate * vsize / 1000)
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(send_value, self._scriptPubKey)]
+        tx.vout = [CTxOut(int(COIN * send_value), self._scriptPubKey)]
         tx.nLockTime = locktime
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
@@ -283,8 +286,9 @@ class MiniWallet:
         tx_hex = tx.serialize().hex()
 
         assert_equal(tx.get_vsize(), vsize)
+        new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, height=0)
 
-        return {'txid': tx.rehash(), 'wtxid': tx.getwtxid(), 'hex': tx_hex, 'tx': tx}
+        return {"txid": new_utxo["txid"], "wtxid": tx.getwtxid(), "hex": tx_hex, "tx": tx, "new_utxo": new_utxo}
 
     def sendrawtransaction(self, *, from_node, tx_hex, maxfeerate=0, **kwargs):
         txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
