@@ -90,6 +90,9 @@ class MiniWallet:
             self._address = ADDRESS_BCRT1_P2SH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def _create_utxo(self, *, txid, vout, value, height):
+        return {"txid": txid, "vout": vout, "value": value, "height": height}
+
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
 
@@ -99,13 +102,22 @@ class MiniWallet:
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
-            self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
+            self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], height=utxo["height"]))
 
     def scan_tx(self, tx):
-        """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
+        """Scan the tx and adjust the internal list of owned utxos"""
+        for spent in tx["vin"]:
+            # Mark spent. This may happen when the caller has ownership of a
+            # utxo that remained in this wallet. For example, by passing
+            # mark_as_spent=False to get_utxo or by using an utxo returned by a
+            # create_self_transfer* call.
+            try:
+                self.get_utxo(txid=spent["txid"], vout=spent["vout"])
+            except StopIteration:
+                pass
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value'], 'height': 0})
+                self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0))
 
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
@@ -124,12 +136,16 @@ class MiniWallet:
         tx.rehash()
 
     def generate(self, num_blocks, **kwargs):
-        """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
+        """Generate blocks with coinbase outputs to the internal address, and call rescan_utxos"""
         blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor(), **kwargs)
-        for b in blocks:
-            block_info = self._test_node.getblock(blockhash=b, verbosity=2)
-            cb_tx = block_info['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
+        # Calling rescan_utxos here makes sure that after a generate the utxo
+        # set is in a clean state. For example, the wallet will update
+        # - if the caller consumed utxos, but never used them
+        # - if the caller sent a transaction that is not mined or got rbf'd
+        # - after block re-orgs
+        # - the utxo height for mined mempool txs
+        # - However, the wallet will not consider remaining mempool txs
+        self.rescan_utxos()
         return blocks
 
     def get_scriptPubKey(self):
@@ -188,20 +204,10 @@ class MiniWallet:
         return txid, 1
 
     def send_self_transfer_multi(self, *, from_node, **kwargs):
-        """
-        Create and send a transaction that spends the given UTXOs and creates a
-        certain number of outputs with equal amounts.
-
-        Returns a dictionary with
-            - txid
-            - serialized transaction in hex format
-            - transaction as CTransaction instance
-            - list of newly created UTXOs, ordered by vout index
-        """
+        """Call create_self_transfer_multi and send the transaction."""
         tx = self.create_self_transfer_multi(**kwargs)
-        txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
-        return {'new_utxos': [self.get_utxo(txid=txid, vout=vout) for vout in range(len(tx.vout))],
-                'txid': txid, 'hex': tx.serialize().hex(), 'tx': tx}
+        self.sendrawtransaction(from_node=from_node, tx_hex=tx["hex"])
+        return tx
 
     def create_self_transfer_multi(
         self,
@@ -234,7 +240,18 @@ class MiniWallet:
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         for o in tx.vout:
             o.nValue = outputs_value_total // num_outputs
-        return tx
+        txid = tx.rehash()
+        return {
+            "new_utxos": [self._create_utxo(
+                txid=txid,
+                vout=i,
+                value=Decimal(tx.vout[i].nValue) / COIN,
+                height=0,
+            ) for i in range(len(tx.vout))],
+            "txid": txid,
+            "hex": tx.serialize().hex(),
+            "tx": tx,
+        }
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), utxo_to_spend=None, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
@@ -245,12 +262,12 @@ class MiniWallet:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
-        send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
+        send_value = utxo_to_spend["value"] - (fee_rate * vsize / 1000)
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(send_value, self._scriptPubKey)]
+        tx.vout = [CTxOut(int(COIN * send_value), self._scriptPubKey)]
         tx.nLockTime = locktime
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
@@ -263,8 +280,9 @@ class MiniWallet:
         tx_hex = tx.serialize().hex()
 
         assert_equal(tx.get_vsize(), vsize)
+        new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, height=0)
 
-        return {'txid': tx.rehash(), 'hex': tx_hex, 'tx': tx}
+        return {"txid": new_utxo["txid"], "hex": tx_hex, "tx": tx, "new_utxo": new_utxo}
 
     def sendrawtransaction(self, *, from_node, tx_hex, maxfeerate=0, **kwargs):
         txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
