@@ -58,7 +58,7 @@ These tests can be run (if the [test dependencies](/test) are installed) with: `
 The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
 and that unit/sanity tests are run automatically.
 
-### Manual Quality Assurance (QA) Testing
+### Manual Quality Assurance Testing (QAT)
 
 Changes should be tested by somebody other than the developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
