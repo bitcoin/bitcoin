@@ -116,7 +116,16 @@ class MiniWallet:
             self._utxos.append(self._create_utxo(txid=utxo["txid"], vout=utxo["vout"], value=utxo["amount"], height=utxo["height"]))
 
     def scan_tx(self, tx):
-        """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
+        """Scan the tx and adjust the internal list of owned utxos"""
+        for spent in tx["vin"]:
+            # Mark spent. This may happen when the caller has ownership of a
+            # utxo that remained in this wallet. For example, by passing
+            # mark_as_spent=False to get_utxo or by using an utxo returned by a
+            # create_self_transfer* call.
+            try:
+                self.get_utxo(txid=spent["txid"], vout=spent["vout"])
+            except StopIteration:
+                pass
         for out in tx['vout']:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
                 self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0))
