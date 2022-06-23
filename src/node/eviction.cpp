@@ -277,6 +277,16 @@ bool EvictionManagerImpl::RemoveCandidate(NodeId id)
     return m_candidates.erase(id) != 0;
 }
 
+std::optional<NodeEvictionCandidate> EvictionManagerImpl::GetCandidate(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return {it->second};
+    }
+
+    return {};
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -293,4 +303,9 @@ void EvictionManager::AddCandidate(NodeId id, std::chrono::seconds connected,
 bool EvictionManager::RemoveCandidate(NodeId id)
 {
     return m_impl->RemoveCandidate(id);
+}
+
+std::optional<NodeEvictionCandidate> EvictionManager::GetCandidate(NodeId id) const
+{
+    return m_impl->GetCandidate(id);
 }

@@ -32,6 +32,9 @@ public:
                       bool noban, ConnectionType conn_type)
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
     bool RemoveCandidate(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    std::optional<NodeEvictionCandidate> GetCandidate(NodeId id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 
 #endif // BITCOIN_NODE_EVICTION_IMPL_H

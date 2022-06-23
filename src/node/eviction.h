@@ -82,6 +82,8 @@ public:
                       bool is_local, Network network,
                       bool noban, ConnectionType conn_type);
     bool RemoveCandidate(NodeId id);
+
+    std::optional<NodeEvictionCandidate> GetCandidate(NodeId id) const;
 };
 
 #endif // BITCOIN_NODE_EVICTION_H
