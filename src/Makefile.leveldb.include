@@ -13,7 +13,6 @@ LIBMEMENV = $(LIBMEMENV_INT)
 
 LEVELDB_CPPFLAGS =
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
 
 LEVELDB_CPPFLAGS_INT =
 LEVELDB_CPPFLAGS_INT += -I$(srcdir)/leveldb
