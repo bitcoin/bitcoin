@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPCs that retrieve information from the mempool."""
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -19,7 +18,6 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.generate(self.wallet, COINBASE_MATURITY + 1)
         self.wallet.rescan_utxos()
         confirmed_utxo = self.wallet.get_utxo()
 
