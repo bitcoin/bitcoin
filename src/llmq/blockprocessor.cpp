@@ -153,11 +153,11 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         const auto numCommitmentsInNewBlock = qcs.count(params.type);
 
         if (!isCommitmentRequired && numCommitmentsInNewBlock > 0) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-qc-not-allowed");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-not-allowed");
         }
 
         if (isCommitmentRequired && numCommitmentsInNewBlock == 0) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-qc-missing");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-missing");
         }
         if (llmq::CLLMQUtils::IsQuorumRotationEnabled(params.type, pindex)) {
             LogPrintf("[ProcessBlock] h[%d] isCommitmentRequired[%d] numCommitmentsInNewBlock[%d]\n", pindex->nHeight, isCommitmentRequired, numCommitmentsInNewBlock);
@@ -210,31 +210,31 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     if (quorumHash.IsNull()) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s quorumHash is null.\n", __func__,
                  nHeight, uint8_t(qc.llmqType), qc.quorumIndex, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-block");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-block");
     }
     if (quorumHash != qc.quorumHash) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d, type=%d, quorumIndex=%d, quorumHash=%s, qc.quorumHash=%s signers=%s, validMembers=%d, quorumPublicKey=%s non equal quorumHash.\n", __func__,
                  nHeight, uint8_t(qc.llmqType), qc.quorumIndex, quorumHash.ToString(), qc.quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-block");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-block");
     }
 
     if (qc.IsNull()) {
         if (!qc.VerifyNull()) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%dqc verifynull failed.\n", __func__,
                      nHeight, uint8_t(qc.llmqType), qc.quorumIndex, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers());
-            return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid-null");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-invalid-null");
         }
         return true;
     }
 
     if (HasMinedCommitment(llmq_params.type, quorumHash)) {
         // should not happen as it's already handled in ProcessBlock
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-dup");
     }
 
     if (!IsMiningPhase(llmq_params, nHeight)) {
         // should not happen as it's already handled in ProcessBlock
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-height");
     }
 
     const auto* pQuorumBaseBlockIndex = LookupBlockIndex(qc.quorumHash);
@@ -242,7 +242,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     if (!qc.Verify(pQuorumBaseBlockIndex, fBLSChecks)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s qc verify failed.\n", __func__,
                  nHeight, uint8_t(qc.llmqType), qc.quorumIndex, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-invalid");
     }
 
     if (fJustCheck) {
@@ -385,13 +385,13 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
             if (!GetTxPayload(*tx, qc)) {
                 // should not happen as it was verified before processing the block
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d GetTxPayload fails\n", __func__, pindex->nHeight);
-                return state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-payload");
             }
 
             // only allow one commitment per type and per block (This was changed with rotation)
             if (!CLLMQUtils::IsQuorumRotationEnabled(qc.commitment.llmqType, pindex)) {
                 if (ret.count(qc.commitment.llmqType) != 0) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-dup");
                 }
             }
 
@@ -400,7 +400,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     }
 
     if (pindex->nHeight < consensus.DIP0003Height && !ret.empty()) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-qc-premature");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-premature");
     }
 
     return true;

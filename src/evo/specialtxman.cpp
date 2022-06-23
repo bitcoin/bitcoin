@@ -24,7 +24,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return true;
 
     if (pindexPrev && pindexPrev->nHeight + 1 < Params().GetConsensus().DIP0003Height) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
+        return state.Invalid(ValidationInvalidReason::TX_BAD_SPECIAL, false, REJECT_INVALID, "bad-tx-type");
     }
 
     try {
@@ -46,10 +46,10 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.DoS(100, false, REJECT_INVALID, "failed-check-special-tx");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "failed-check-special-tx");
     }
 
-    return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
+    return state.Invalid(ValidationInvalidReason::TX_BAD_SPECIAL, false, REJECT_INVALID, "bad-tx-type-check");
 }
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
@@ -72,7 +72,7 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true; // handled per block
     }
 
-    return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
+    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-tx-type-proc");
 }
 
 bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
@@ -153,7 +153,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.DoS(100, false, REJECT_INVALID, "failed-procspectxsinblock");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "failed-procspectxsinblock");
     }
 
     return true;

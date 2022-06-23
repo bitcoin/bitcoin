@@ -12,34 +12,34 @@
 maybe_error CProRegTx::IsTriviallyValid() const
 {
     if (nVersion == 0 || nVersion > CProRegTx::CURRENT_VERSION) {
-        return {100, "bad-protx-version"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
     if (nType != 0) {
-        return {100, "bad-protx-type"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-type"};
     }
     if (nMode != 0) {
-        return {100, "bad-protx-mode"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-mode"};
     }
 
     if (keyIDOwner.IsNull() || !pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {10, "bad-protx-key-null"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-key-null"};
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {10, "bad-protx-payee"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee"};
     }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
-        return {10, "bad-protx-payee-dest"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-dest"};
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(keyIDOwner) || payoutDest == CTxDestination(keyIDVoting)) {
-        return {10, "bad-protx-payee-reuse"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-reuse"};
     }
 
     if (nOperatorReward > 10000) {
-        return {10, "bad-protx-operator-reward"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-operator-reward"};
     }
 
     return {};
@@ -85,7 +85,7 @@ std::string CProRegTx::ToString() const
 maybe_error CProUpServTx::IsTriviallyValid() const
 {
     if (nVersion == 0 || nVersion > CProUpServTx::CURRENT_VERSION) {
-        return {100, "bad-protx-version"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
 
     return {};
@@ -106,17 +106,17 @@ std::string CProUpServTx::ToString() const
 maybe_error CProUpRegTx::IsTriviallyValid() const
 {
     if (nVersion == 0 || nVersion > CProUpRegTx::CURRENT_VERSION) {
-        return {100, "bad-protx-version"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
     if (nMode != 0) {
-        return {100, "bad-protx-mode"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-mode"};
     }
 
     if (!pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {10, "bad-protx-key-null"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-key-null"};
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {10, "bad-protx-payee"};
+        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee"};
     }
     return {};
 }
@@ -136,13 +136,13 @@ std::string CProUpRegTx::ToString() const
 maybe_error CProUpRevTx::IsTriviallyValid() const
 {
     if (nVersion == 0 || nVersion > CProUpRevTx::CURRENT_VERSION) {
-        return {100, "bad-protx-version"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
     }
 
     // nReason < CProUpRevTx::REASON_NOT_SPECIFIED is always `false` since
     // nReason is unsigned and CProUpRevTx::REASON_NOT_SPECIFIED == 0
     if (nReason > CProUpRevTx::REASON_LAST) {
-        return {100, "bad-protx-reason"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-reason"};
     }
     return {};
 }
