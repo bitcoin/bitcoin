@@ -36,6 +36,8 @@ from test_framework.script import (
 # met.
 DUMMY_P2WPKH_SCRIPT = CScript([b'a' * 21])
 DUMMY_2_P2WPKH_SCRIPT = CScript([b'b' * 21])
+DUMMY_P2PKH_SCRIPT = CScript([
+    OP_DUP, OP_HASH160, b'0' * 40, OP_EQUALVERIFY, OP_CHECKSIG])
 
 
 def key_to_p2pk_script(key):

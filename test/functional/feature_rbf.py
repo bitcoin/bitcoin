@@ -21,10 +21,12 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_greater_than,
 )
 from test_framework.script_util import (
     DUMMY_P2WPKH_SCRIPT,
     DUMMY_2_P2WPKH_SCRIPT,
+    DUMMY_P2PKH_SCRIPT,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
@@ -93,6 +95,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
+
+        self.log.info("Running test rule #3 (absolute fees exceeded)...")
+        self.test_rule3()
 
         self.log.info("Passed")
 
@@ -713,6 +718,32 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+
+    def test_rule3(self):
+        """
+        Ensure that a replacement transaction must pay a higher fee (not just feerate)
+        than what it is replacing.
+        """
+        tx0_outpoint = self.make_utxo(self.nodes[0], 1 * COIN)
+
+        big_output = DUMMY_P2PKH_SCRIPT
+        little_output = DUMMY_P2WPKH_SCRIPT
+        assert_greater_than(len(big_output), len(little_output))
+
+        bigtx = CTransaction()
+        bigtx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
+        bigtx.vout = [CTxOut(int(0.9 * COIN), big_output)]
+        bigtx_hex = bigtx.serialize().hex()
+        assert self.nodes[0].sendrawtransaction(bigtx_hex, 0)
+
+        # Higher feerate, but the actual fee is lower.
+        littletx = bigtx
+        littletx.vout = [CTxOut(int(0.9 * COIN) + 1, little_output)]
+        littletx_hex = bigtx.serialize().hex()
+
+        assert_raises_rpc_error(
+            -26, "less fees than conflicting",
+            self.nodes[0].sendrawtransaction, littletx_hex, 0)
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
