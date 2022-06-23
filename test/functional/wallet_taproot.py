@@ -8,6 +8,7 @@ import random
 
 from decimal import Decimal
 from test_framework.address import output_key_to_p2tr
+from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
@@ -156,9 +157,6 @@ KEYS = [
 
 CHANGE_XPRV = "tprv8ZgxMBicQKsPcyDrWwiecVnTtFmfRwbfFqEfR4ZGWvq5aTTwLBWmAm5zrbMcYtb9gQNFfhRfqhhrBG37U3nhmXxEgeEPBJGHAPrHCrAd1WX"
 CHANGE_XPUB = "tpubD6NzVbkrYhZ4WSFeQbPF1uSaTHHbbGnZq8qShabZwCdUQwihxaLMMFhs2kidGF2qrRKiQVqw8VoyuTHj1bZqmMXMeciaU1gBjWA1sim2zUB"
-
-# Point with no known discrete log.
-H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
 
 
 def key(hex_key):
