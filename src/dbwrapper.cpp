@@ -10,7 +10,7 @@
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
-#include <memenv.h>
+#include <leveldb/helpers/memenv/memenv.h>
 #include <stdint.h>
 #include <algorithm>
 
