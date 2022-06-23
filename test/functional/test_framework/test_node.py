@@ -686,8 +686,10 @@ def arg_to_cli(arg):
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
-    def __init__(self, binary, datadir):
-        self.options = []
+    # ITCOIN_SPECIFIC - START
+    def __init__(self, binary, datadir, itcoin_conf=None, itcoin_rpcconnect=None):
+        self.options = [option for option in (itcoin_conf, itcoin_rpcconnect) if option]
+        # ITCOIN_SPECIFIC - END
         self.binary = binary
         self.datadir = datadir
         self.input = None
@@ -696,7 +698,7 @@ class TestNodeCLI():
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
         cli = TestNodeCLI(self.binary, self.datadir)
-        cli.options = [str(o) for o in options]
+        cli.options = self.options + [str(o) for o in options] # ITCOIN_SPECIFIC
         cli.input = input
         return cli
 
