@@ -243,6 +243,8 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
 
     const CBlockIndex* best_block_index = m_best_block_index.load();
+
+    bool skip_write = false;
     if (!best_block_index) {
         if (pindex->nHeight != 0) {
             FatalError("%s: First block connected is not the genesis block (height=%d)",
@@ -262,11 +264,25 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
                       best_block_index->GetBlockHash().ToString());
             return;
         }
-        if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
+
+        // If best_block_index is an ancestor of pindex, then this is a block that we've already
+        // processed. This can occur if the sync thread is almost done catching up, the tip
+        // updates to the next block, and the sync thread finishes catching up to tip before
+        // the BlockConnected event is received. If we've already seen it, there's no reason to
+        // call Rewind, WriteBlock, and SetBestBlockIndex.
+        if (best_block_index->GetAncestor(pindex->nHeight) == pindex) {
+            skip_write = true;
+        }
+
+        if (!skip_write && best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
             FatalError("%s: Failed to rewind index %s to a previous chain tip",
                        __func__, GetName());
             return;
         }
+    }
+
+    if (skip_write) {
+        return;
     }
 
     if (WriteBlock(*block, pindex)) {
