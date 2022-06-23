@@ -20,9 +20,15 @@ INSTALL_DIR=$(realpath "${MY_DIR}/../target")
 cd "${MY_DIR}/.."
 "${MY_DIR}"/../autogen.sh
 
+# NB: The `--enable-debug` configure option included here adds
+#     `-DDEBUG_LOCKORDER` to the compiler flags. Hence, the flag
+#     -DDEBUG_LOCKORDER has to be used also in the compilation of itcoin-pbft,
+#     in order to prevent an unpredictable behaviour.
+#     See developer-notes.md for more information on DEBUG_LOCKORDER.
 "${MY_DIR}"/../configure \
     --prefix="${INSTALL_DIR}" \
     --enable-c++17 \
+    --enable-debug \
     --enable-determinism \
     --enable-suppress-external-warnings \
     --enable-wallet \
