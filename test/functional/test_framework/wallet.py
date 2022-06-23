@@ -147,12 +147,16 @@ class MiniWallet:
         tx.rehash()
 
     def generate(self, num_blocks, **kwargs):
-        """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
+        """Generate blocks with coinbase outputs to the internal address, and call rescan_utxos"""
         blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor(), **kwargs)
-        for b in blocks:
-            block_info = self._test_node.getblock(blockhash=b, verbosity=2)
-            cb_tx = block_info['tx'][0]
-            self._utxos.append(self._create_utxo(txid=cb_tx["txid"], vout=0, value=cb_tx["vout"][0]["value"], height=block_info["height"]))
+        # Calling rescan_utxos here makes sure that after a generate the utxo
+        # set is in a clean state. For example, the wallet will update
+        # - if the caller consumed utxos, but never used them
+        # - if the caller sent a transaction that is not mined or got rbf'd
+        # - after block re-orgs
+        # - the utxo height for mined mempool txs
+        # - However, the wallet will not consider remaining mempool txs
+        self.rescan_utxos()
         return blocks
 
     def get_scriptPubKey(self):
