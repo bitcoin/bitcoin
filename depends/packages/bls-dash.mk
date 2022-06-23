@@ -42,6 +42,13 @@ define $(package)_extract_cmds
   cp $($(package)_source_dir)/$($(package)_relic_file_name) .
 endef
 
+define $(package)_preprocess_cmds
+  sed -i.old "s|GIT_REPOSITORY https://github.com/AmineKhaldi/libsodium-cmake.git|URL \"../../sodium-$($(package)_sodium_version).tar.gz\"|" CMakeLists.txt && \
+  sed -i.old "s|GIT_TAG f73a3fe1afdc4e37ac5fe0ddd401bf521f6bba65|GIT_TAG \"\"|" CMakeLists.txt && \
+  sed -i.old "s|GIT_REPOSITORY https://github.com/Chia-Network/relic.git|URL \"../../relic-$($(package)_relic_version).tar.gz\"|" CMakeLists.txt && \
+  sed -i.old "s|RELIC_GIT_TAG \".*\"|RELIC_GIT_TAG \"\"|" CMakeLists.txt
+endef
+
 define $(package)_set_vars
   $(package)_config_opts=-DCMAKE_INSTALL_PREFIX=$(host_prefix)
   $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
@@ -62,13 +69,6 @@ define $(package)_set_vars
   endif
 
   $(package)_cppflags+= -UBLSALLOC_SODIUM
-endef
-
-define $(package)_preprocess_cmds
-  sed -i.old "s|GIT_REPOSITORY https://github.com/AmineKhaldi/libsodium-cmake.git|URL \"../../sodium-$($(package)_sodium_version).tar.gz\"|" CMakeLists.txt && \
-  sed -i.old "s|GIT_TAG f73a3fe1afdc4e37ac5fe0ddd401bf521f6bba65|GIT_TAG \"\"|" CMakeLists.txt && \
-  sed -i.old "s|GIT_REPOSITORY https://github.com/Chia-Network/relic.git|URL \"../../relic-$($(package)_relic_version).tar.gz\"|" CMakeLists.txt && \
-  sed -i.old "s|RELIC_GIT_TAG \".*\"|RELIC_GIT_TAG \"\"|" CMakeLists.txt
 endef
 
 define $(package)_config_cmds
