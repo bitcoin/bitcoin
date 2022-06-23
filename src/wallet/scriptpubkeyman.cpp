@@ -1070,7 +1070,7 @@ CPubKey LegacyScriptPubKeyMan::GenerateNewKey(WalletBatch &batch, CHDChain& hd_c
 
     // Compressed public keys were introduced in version 0.6.0
     if (fCompressed) {
-        m_storage.SetMinVersion(FEATURE_COMPRPUBKEY);
+        m_storage.SetMinVersion(FEATURE_COMPRPUBKEY, &batch);
     }
 
     CPubKey pubkey = secret.GetPubKey();

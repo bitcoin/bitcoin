@@ -853,7 +853,7 @@ public:
     /** overwrite all flags by the given uint64_t
        flags must be uninitialised (or 0)
        only known flags may be present */
-    void InitWalletFlags(uint64_t flags);
+    void InitWalletFlags(uint64_t flags, WalletBatch& batch);
     /** Loads the flags into the wallet. (used by LoadWallet) */
     bool LoadWalletFlags(uint64_t flags);
 
