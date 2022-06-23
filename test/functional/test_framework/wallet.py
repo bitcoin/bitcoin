@@ -209,20 +209,10 @@ class MiniWallet:
         return txid, 1
 
     def send_self_transfer_multi(self, *, from_node, **kwargs):
-        """
-        Create and send a transaction that spends the given UTXOs and creates a
-        certain number of outputs with equal amounts.
-
-        Returns a dictionary with
-            - txid
-            - serialized transaction in hex format
-            - transaction as CTransaction instance
-            - list of newly created UTXOs, ordered by vout index
-        """
+        """Call create_self_transfer_multi and send the transaction."""
         tx = self.create_self_transfer_multi(**kwargs)
-        txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
-        return {'new_utxos': [self.get_utxo(txid=txid, vout=vout) for vout in range(len(tx.vout))],
-                'txid': txid, 'hex': tx.serialize().hex(), 'tx': tx}
+        self.sendrawtransaction(from_node=from_node, tx_hex=tx["hex"])
+        return tx
 
     def create_self_transfer_multi(
         self,
@@ -256,7 +246,18 @@ class MiniWallet:
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         for o in tx.vout:
             o.nValue = outputs_value_total // num_outputs
-        return tx
+        txid = tx.rehash()
+        return {
+            "new_utxos": [self._create_utxo(
+                txid=txid,
+                vout=i,
+                value=Decimal(tx.vout[i].nValue) / COIN,
+                height=0,
+            ) for i in range(len(tx.vout))],
+            "txid": txid,
+            "hex": tx.serialize().hex(),
+            "tx": tx,
+        }
 
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), utxo_to_spend=None, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
