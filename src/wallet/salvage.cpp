@@ -136,6 +136,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
 
     DbTxn* ptxn = env->TxnBegin();
     CWallet dummyWallet(nullptr, "", CreateDummyWalletDatabase());
+    std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(dummyWallet.GetDatabase());
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */
@@ -146,7 +147,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
         {
             // Required in LoadKeyMetadata():
             LOCK(dummyWallet.cs_wallet);
-            fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue, strType, strErr, KeyFilter);
+            fReadOK = ReadKeyValue(&dummyWallet, *batch, ssKey, ssValue, strType, strErr, KeyFilter);
         }
         if (!KeyFilter(strType)) {
             continue;
@@ -162,6 +163,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
         if (ret2 > 0)
             fSuccess = false;
     }
+    batch.reset();
     ptxn->commit(0);
     pdbCopy->close(0);
 
