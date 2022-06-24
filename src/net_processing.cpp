@@ -289,6 +289,15 @@ struct Peer {
             LOCK(m_tx_inventory_mutex);
             m_tx_inventory_known_filter.insert(hash);
         }
+
+        void RelayTransaction(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+        {
+            AssertLockNotHeld(m_tx_inventory_mutex);
+            LOCK(m_tx_inventory_mutex);
+            if (!m_tx_inventory_known_filter.contains(hash)) {
+                m_tx_inventory_to_send.insert(hash);
+            }
+        }
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
@@ -1845,10 +1854,7 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         if (!tx_relay) continue;
 
         const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
-        LOCK(tx_relay->m_tx_inventory_mutex);
-        if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
-            tx_relay->m_tx_inventory_to_send.insert(hash);
-        }
+        tx_relay->RelayTransaction(hash);
     };
 }
 
