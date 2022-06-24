@@ -298,6 +298,12 @@ struct Peer {
                 m_tx_inventory_to_send.insert(hash);
             }
         }
+
+        bool VerifyUnconfirmedParent(const uint256& parent_txid) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+        {
+            AssertLockNotHeld(m_tx_inventory_mutex);
+            return WITH_LOCK(m_tx_inventory_mutex, return !m_tx_inventory_known_filter.contains(parent_txid));
+        }
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
@@ -2137,7 +2143,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             }
             for (const uint256& parent_txid : parent_ids_to_add) {
                 // Relaying a transaction with a recent but unconfirmed parent.
-                if (WITH_LOCK(tx_relay->m_tx_inventory_mutex, return !tx_relay->m_tx_inventory_known_filter.contains(parent_txid))) {
+                if (tx_relay->VerifyUnconfirmedParent(parent_txid)) {
                     LOCK(cs_main);
                     State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
                 }
