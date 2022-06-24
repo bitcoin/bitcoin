@@ -282,7 +282,7 @@ struct Peer {
         /** A bloom filter for which transactions to announce to the peer. See BIP37. */
         std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
 
-        mutable RecursiveMutex m_tx_inventory_mutex;
+        mutable Mutex m_tx_inventory_mutex;
         /** A filter of all the txids and wtxids that the peer has announced to
          *  us or we have announced to the peer. We use this to avoid announcing
          *  the same txid/wtxid to a peer that already has the transaction. */
