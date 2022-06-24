@@ -281,6 +281,14 @@ struct Peer {
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
+
+        void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+        {
+            AssertLockNotHeld(m_tx_inventory_mutex);
+
+            LOCK(m_tx_inventory_mutex);
+            m_tx_inventory_known_filter.insert(hash);
+        }
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
@@ -925,8 +933,7 @@ static void AddKnownTx(Peer& peer, const uint256& hash)
     auto tx_relay = peer.GetTxRelay();
     if (!tx_relay) return;
 
-    LOCK(tx_relay->m_tx_inventory_mutex);
-    tx_relay->m_tx_inventory_known_filter.insert(hash);
+    tx_relay->AddKnownTx(hash);
 }
 
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
