@@ -304,6 +304,13 @@ struct Peer {
             AssertLockNotHeld(m_tx_inventory_mutex);
             return WITH_LOCK(m_tx_inventory_mutex, return !m_tx_inventory_known_filter.contains(parent_txid));
         }
+
+        void SetSendMempool(bool value) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+        {
+            AssertLockNotHeld(m_tx_inventory_mutex);
+            LOCK(m_tx_inventory_mutex);
+            m_send_mempool = value;
+        }
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
@@ -3993,8 +4000,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
-            LOCK(tx_relay->m_tx_inventory_mutex);
-            tx_relay->m_send_mempool = true;
+            tx_relay->SetSendMempool(true);
         }
         return;
     }
