@@ -1123,6 +1123,7 @@ static void protx_diff_help(const JSONRPCRequest& request)
         {
             {"baseBlock", RPCArg::Type::NUM, RPCArg::Optional::NO, "The starting block height."},
             {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
+            {"extended", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Show additional fields."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -1150,15 +1151,19 @@ static UniValue protx_diff(const JSONRPCRequest& request)
     LOCK(cs_main);
     uint256 baseBlockHash = ParseBlock(request.params[0], "baseBlock");
     uint256 blockHash = ParseBlock(request.params[1], "block");
+    bool extended = false;
+    if (!request.params[3].isNull()) {
+        extended = ParseBoolV(request.params[3], "extended");
+    }
 
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, strError)) {
+    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, strError, extended)) {
         throw std::runtime_error(strError);
     }
 
     UniValue ret;
-    mnListDiff.ToJson(ret);
+    mnListDiff.ToJson(ret, extended);
     return ret;
 }
 

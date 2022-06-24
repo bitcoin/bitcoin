@@ -29,6 +29,8 @@ public:
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid;
+    CScript scriptPayout; // mem-only
+    CScript scriptOperatorPayout; // mem-only
 
     CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
@@ -63,7 +65,7 @@ public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj, bool extended) const;
 };
 
 class CSimplifiedMNList
@@ -116,9 +118,9 @@ public:
 
     bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
 
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj, bool extended) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet, bool extended);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H
