@@ -24,7 +24,7 @@ test/lint/git-subtree-check.sh src/crc32c
 test/lint/check-doc.py
 test/lint/lint-all.py
 
-if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "$CIRRUS_PR" = "" ] ; then
+if [ "$CIRRUS_REPO_FULL_NAME" = "navcoin/navcoin" ] && [ "$CIRRUS_PR" = "" ] ; then
     # Sanity check only the last few commits to get notified of missing sigs,
     # missing keys, or expired keys. Usually there is only one new merge commit
     # per push on the master branch and a few commits on release branches, so
