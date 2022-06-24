@@ -231,3 +231,12 @@ install: lib/libbls256.a lib/libbls256.$(LIB_SUF) lib/libbls384.a lib/libbls384.
 # don't remove these files automatically
 .SECONDARY: $(addprefix $(OBJ_DIR)/, $(ALL_SRC:.cpp=.o))
 
+check:
+	echo
+
+distdir:
+	echo
+
+distclean:
+	echo
+
