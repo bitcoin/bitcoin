@@ -40,10 +40,15 @@ void UninterruptibleSleep(const std::chrono::microseconds& n);
  * This helper is used to convert durations/time_points before passing them over an
  * interface that doesn't support std::chrono (e.g. RPC, debug log, or the GUI)
  */
+template <typename Dur1, typename Dur2>
+constexpr auto Ticks(Dur2 d)
+{
+    return std::chrono::duration_cast<Dur1>(d).count();
+}
 template <typename Duration, typename Timepoint>
 constexpr auto TicksSinceEpoch(Timepoint t)
 {
-    return std::chrono::time_point_cast<Duration>(t).time_since_epoch().count();
+    return Ticks<Duration>(t.time_since_epoch());
 }
 constexpr int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 constexpr int64_t count_milliseconds(std::chrono::milliseconds t) { return t.count(); }
