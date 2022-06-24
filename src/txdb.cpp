@@ -211,7 +211,6 @@ public:
 
     bool GetKey(COutPoint &key) const override;
     bool GetValue(Coin &coin) const override;
-    unsigned int GetValueSize() const override;
 
     bool Valid() const override;
     void Next() override;
@@ -255,11 +254,6 @@ bool CCoinsViewDBCursor::GetKey(COutPoint &key) const
 bool CCoinsViewDBCursor::GetValue(Coin &coin) const
 {
     return pcursor->GetValue(coin);
-}
-
-unsigned int CCoinsViewDBCursor::GetValueSize() const
-{
-    return pcursor->GetValueSize();
 }
 
 bool CCoinsViewDBCursor::Valid() const
