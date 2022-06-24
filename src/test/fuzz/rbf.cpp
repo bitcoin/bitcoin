@@ -8,6 +8,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 
 #include <cstdint>
@@ -15,7 +16,17 @@
 #include <string>
 #include <vector>
 
-FUZZ_TARGET(rbf)
+namespace {
+const BasicTestingSetup* g_setup;
+} // namespace
+
+void initialize_rbf()
+{
+    static const auto testing_setup = MakeNoLogFileContext<>();
+    g_setup = testing_setup.get();
+}
+
+FUZZ_TARGET_INIT(rbf, initialize_rbf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
