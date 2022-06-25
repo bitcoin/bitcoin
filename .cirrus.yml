@@ -179,7 +179,7 @@ task:
   build_script:
     - '%x64_NATIVE_TOOLS%'
     - cd %CIRRUS_WORKING_DIR%
-    - ccache --zero-stats
+    - ccache --zero-stats --max-size=%CCACHE_SIZE%
     - python build_msvc\msvc-autogen.py -toolset v143
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
