@@ -215,6 +215,13 @@ chain for " target " development."))
       (base32
        "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
    (build-system python-build-system)
+   (arguments
+    `(#:phases
+      (modify-phases %standard-phases
+        (add-after 'unpack 'parallel-jobs
+          ;; build with multiple cores
+          (lambda _
+            (substitute* "setup.py" (("self.parallel if self.parallel else 1") (number->string (parallel-job-count)))))))))
    (native-inputs
     `(("cmake" ,cmake)))
    (home-page "https://github.com/lief-project/LIEF")
