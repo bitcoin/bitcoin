@@ -50,7 +50,7 @@ Building
 1. Use Python to generate `*.vcxproj` for the Visual Studio 2022 toolchain from Makefile:
 
 ```cmd
-python build_msvc\msvc-autogen.py -toolset v143
+python build_msvc\msvc-autogen.py
 ```
 
 2. An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set. To specify a non-default path to a static Qt package directory, use the `QTBASEDIR` environment variable.
