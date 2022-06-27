@@ -76,7 +76,7 @@ errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 INIT_DATA=$(docker run \
     --rm \
     "${ITCOIN_IMAGE}" \
-    create-keypair.sh
+    create-initdata.sh
 )
 
 BLOCKSCRIPT=$(echo "${INIT_DATA}" | jq --raw-output '.blockscript')

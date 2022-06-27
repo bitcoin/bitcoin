@@ -25,7 +25,7 @@
 #   make install
 #
 # USAGE:
-#     create-keypair.sh
+#     create-initdata.sh
 #
 #     If you want to run this inside the itcoin container, do something along
 #     the lines of:
@@ -33,7 +33,7 @@
 #     docker run \
 #         --rm \
 #         arthub.azurecr.io/itcoin-core:git-abcdef \
-#         create-keypair.sh
+#         create-initdata.sh
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
 
@@ -49,7 +49,7 @@ cleanup() {
     # stop the ephemeral daemon
     "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest stop >/dev/null
     # destroy the temporary wallet.
-    errecho "create-keypair: cleaning up (deleting temporary directory ${TMPDIR})"
+    errecho "create-initdata: cleaning up (deleting temporary directory ${TMPDIR})"
     rm -rf "${TMPDIR}"
 }
 
@@ -72,9 +72,9 @@ checkPrerequisites() {
 startEphemeralDaemon() {
     "${PATH_TO_BINARIES}"/bitcoind -daemon -datadir="${TMPDIR}" -regtest >/dev/null
 
-    errecho "create-keypair: waiting (at most 10 seconds) for itcoin daemon to warmup"
+    errecho "create-initdata: waiting (at most 10 seconds) for itcoin daemon to warmup"
     timeout 10 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-    errecho "create-keypair: warmed up"
+    errecho "create-initdata: warmed up"
 
     "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -named createwallet wallet_name=mywallet descriptors=false >/dev/null
 } # startEphemeralDaemon()
