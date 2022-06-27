@@ -313,7 +313,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         peerman.ReceivedResponse(from, hash);
     }
     CheckActiveState();
-    
+    PeerRef peer = peerman.GetPeerRef(from);
     bool bReturn = false;
     {
         LOCK(cs);
@@ -359,7 +359,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the expected block's height (%d)\n",
                     __func__, clsig.ToString(), pindexSig->nHeight);
             if (from != -1) {
-                peerman.Misbehaving(from, 10, "invalid CLSIG");
+                if(peer)
+                    peerman.Misbehaving(*peer, 10, "invalid CLSIG");
             }
             return;
         }
@@ -371,7 +372,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
     if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
-        peerman.Misbehaving(from, 10, "invalid CLSIG");
+        if(peer)
+            peerman.Misbehaving(*peer, 10, "invalid CLSIG");
         return;
     }
     if (from == -1 || signers_count == 1) {
@@ -381,7 +383,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret)) {
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             if (from != -1) {
-                peerman.Misbehaving(from, 10, "invalid CLSIG");
+                if(peer)
+                    peerman.Misbehaving(*peer, 10, "invalid CLSIG");
             }
             return;
         }
@@ -435,7 +438,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         if (!VerifyAggregatedChainLock(clsig, pindexScan)) {
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             if (from != -1) {
-                peerman.Misbehaving(from, 10, "invalid CLSIG");
+                if(peer)
+                    peerman.Misbehaving(*peer, 10, "invalid CLSIG");
             }
             return;
         }

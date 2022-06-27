@@ -171,16 +171,18 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         pfrom->qwatch = true;
         return;
     }
-
+    PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
     if (vRecv.empty()) {
-        peerman.Misbehaving(pfrom->GetId(), 100, "invalid recv size for DKG session");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "invalid recv size for DKG session");
         return;
     }
 
     // peek into the message and see which uint8_t it is. First byte of all messages is always the uint8_t
     uint8_t llmqType = static_cast<uint8_t>(*vRecv.begin());
     if (!dkgSessionHandlers.count(llmqType)) {
-        peerman.Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ type");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "DKG session invalid LLMQ type");
         return;
     }
 

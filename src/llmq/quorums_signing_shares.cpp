@@ -1425,8 +1425,9 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     if (nodeId == -1) {
         return;
     }
-
-    peerman.Misbehaving(nodeId, 100, "banning node from sigshares manager");
+    PeerRef peer = peerman.GetPeerRef(nodeId);
+    if(peer)
+        peerman.Misbehaving(*peer, 100, "banning node from sigshares manager");
 
     LOCK(cs);
     auto it = nodeStates.find(nodeId);

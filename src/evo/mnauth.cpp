@@ -62,26 +62,30 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
     CMNAuth mnauth;
     vRecv >> mnauth;
-
+    PeerRef peer = peerman.GetPeerRef(pnode->GetId());
     // only one MNAUTH allowed
     if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
-        peerman.Misbehaving(pnode->GetId(), 100, "duplicate mnauth");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "duplicate mnauth");
         return;
     }
 
     if ((~pnode->nServices) & NODE_NETWORK) {
         // NODE_NETWORK bit is missing in node's services
-        peerman.Misbehaving(pnode->GetId(), 100, "mnauth from a node with invalid services");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "mnauth from a node with invalid services");
         return;
     }
 
     if (mnauth.proRegTxHash.IsNull()) {
-        peerman.Misbehaving(pnode->GetId(), 100, "empty mnauth proRegTxHash");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "empty mnauth proRegTxHash");
         return;
     }
 
     if (!mnauth.sig.IsValid()) {
-        peerman.Misbehaving(pnode->GetId(), 100, "invalid mnauth signature");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "invalid mnauth signature");
         return;
     }
     auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -90,7 +94,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
         // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
         // low DoS score.
-        peerman.Misbehaving(pnode->GetId(), 10, "missing mnauth masternode");
+        if(peer)
+            peerman.Misbehaving(*peer, 10, "missing mnauth masternode");
         return;
     }
 
@@ -110,7 +115,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
         // Same as above, MN seems to not know its fate yet, so give it a chance to update. If this is a
         // malicious node (DoSing us), it'll get banned soon.
-        peerman.Misbehaving(pnode->GetId(), 10, "mnauth signature verification failed");
+        if(peer)
+            peerman.Misbehaving(*peer, 10, "mnauth signature verification failed");
         return;
     }
 

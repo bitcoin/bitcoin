@@ -421,9 +421,11 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     preverifiedMessages.reserve(msgs.size());
 
     for (const auto& p : msgs) {
+        PeerRef peer = peerman.GetPeerRef(p.first);
         if (!p.second) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
-            peerman.Misbehaving(p.first, 100, "failed to deserialize message");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "failed to deserialize message");
             continue;
         }
         const auto& msg = *p.second;
@@ -442,7 +444,8 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
                     pendingMessages.peerman.ForgetTxHash(p.first, hash);
                 }
                 LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
-                peerman.Misbehaving(p.first, 100, "banning node due to failed preverification");
+                if(peer)
+                    peerman.Misbehaving(*peer, 100, "banning node due to failed preverification");
             }
             LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
             continue;
@@ -461,8 +464,10 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     auto badNodes = BatchVerifyMessageSigs(session, preverifiedMessages);
     if (!badNodes.empty()) {
         for (auto nodeId : badNodes) {
+            PeerRef peer = peerman.GetPeerRef(nodeId);
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
-            peerman.Misbehaving(nodeId, 100, "failed to verify signature");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "failed to verify signature");
         }
     }
 
@@ -475,8 +480,10 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         bool ban = false;
         session.ReceiveMessage(hashes[i], msg, ban);
         if (ban) {
+            PeerRef peer = peerman.GetPeerRef(nodeId);
             LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
-            peerman.Misbehaving(nodeId, 100, "banning node after ReceiveMessage failed");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "banning node after ReceiveMessage failed");
             badNodes.emplace(nodeId);
         }
     }

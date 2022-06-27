@@ -125,7 +125,8 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             peerman.ForgetTxHash(pfrom->GetId(), hash);
         }
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
-        peerman.Misbehaving(pfrom->GetId(), 100, "spork too far into the future");
+        if(peer)
+            peerman.Misbehaving(*peer, 100, "spork too far into the future");
         return;
     }
 
@@ -137,7 +138,8 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
             LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
-            peerman.Misbehaving(pfrom->GetId(), 100, "invalid spork signature");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "invalid spork signature");
             return;
         }
         bool bSeen = false;

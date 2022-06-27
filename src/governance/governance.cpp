@@ -191,7 +191,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
-                peerman.Misbehaving(pfrom->GetId(), 20, "invalid governance object");
+                if(peer)
+                    peerman.Misbehaving(*peer, 20, "invalid governance object");
             }
             return;
         }
@@ -241,7 +242,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                     LOCK(cs_main);
                     peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 }
-                peerman.Misbehaving(pfrom->GetId(), exception.GetNodePenalty(), "rejected vote");
+                if(peer)
+                    peerman.Misbehaving(*peer, exception.GetNodePenalty(), "rejected vote");
             }
             return;
         }
@@ -649,11 +651,12 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman, PeerManage
 {
     // do not provide any data until our node is synced
     if (!masternodeSync.IsSynced()) return;
-
+    PeerRef peer = peerman.GetPeerRef(pnode->GetId());
     if (netfulfilledman.HasFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        peerman.Misbehaving(pnode->GetId(), 20, "peer already asked for list");
+        if(peer)
+            peerman.Misbehaving(*peer, 20, "peer already asked for list");
         return;
     }
     netfulfilledman.AddFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC);
@@ -682,7 +685,6 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman, PeerManage
 
         // Push the inventory budget proposal message over to the other client
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, pnode->GetId());
-        PeerRef peer = peerman.GetPeerRef(pnode->GetId());
         if(peer) {
             LOCK(cs_main);
             peerman.PushTxInventoryOther(*peer, CInv(MSG_GOVERNANCE_OBJECT, nHash));

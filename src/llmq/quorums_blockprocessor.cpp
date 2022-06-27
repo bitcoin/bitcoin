@@ -59,7 +59,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
-            peerman.Misbehaving(pfrom->GetId(), 100, "null commitment from peer");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "null commitment from peer");
             return;
         }
 
@@ -70,7 +71,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
-            peerman.Misbehaving(pfrom->GetId(), 100, "invalid commitment type");
+            if(peer)
+                peerman.Misbehaving(*peer, 100, "invalid commitment type");
             return;
         }
         auto type = qc.llmqType;
@@ -98,7 +100,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                             qc.quorumHash.ToString(), pfrom->GetId());
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
-                peerman.Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
+                if(peer)
+                    peerman.Misbehaving(*peer, 100, "not in first block of DKG interval");
                 return;
             }
         }
@@ -127,8 +130,9 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             {
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
-            }                     
-            peerman.Misbehaving(pfrom->GetId(), 100, "invalid commitment for quorum");
+            }
+            if(peer)                  
+                peerman.Misbehaving(*peer, 100, "invalid commitment for quorum");
             return;
         }
 
