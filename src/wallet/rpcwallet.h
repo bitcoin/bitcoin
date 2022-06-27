@@ -19,6 +19,8 @@ class CTransaction;
 struct PartiallySignedTransaction;
 struct WalletContext;
 
+static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
+
 namespace util {
 class Ref;
 } // namespace util
@@ -33,7 +35,6 @@ Span<const CRPCCommand> GetWalletRPCCommands();
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
-std::string HelpRequiringPassphrase();
 void EnsureWalletIsUnlocked(CWallet *);
 WalletContext& EnsureWalletContext(const util::Ref& context);
 

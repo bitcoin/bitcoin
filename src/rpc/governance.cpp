@@ -130,7 +130,7 @@ static void gobject_prepare_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject prepare",
         "Prepare governance object by signing and creating tx\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"parent-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the parent object, \"0\" is root"},
             {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "object revision in the system"},
@@ -253,7 +253,7 @@ static void gobject_list_prepared_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject list-prepared",
         "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"count", RPCArg::Type::NUM, /* default */ "10", "Maximum number of objects to return."},
         },
@@ -591,7 +591,7 @@ static void gobject_vote_many_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-many",
         "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
@@ -645,7 +645,7 @@ static void gobject_vote_alias_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-alias",
         "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},

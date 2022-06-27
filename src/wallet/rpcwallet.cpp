@@ -70,11 +70,6 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
     return false;
 }
 
-std::string HelpRequiringPassphrase()
-{
-    return "\nRequires wallet passphrase to be set with walletpassphrase call.";
-}
-
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
 {
     std::string wallet_name;
@@ -336,7 +331,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
 
     RPCHelpMan{"sendtoaddress",
         "\nSend an amount to a given address." +
-            HelpRequiringPassphrase() + "\n",
+                HELP_REQUIRING_PASSPHRASE,
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The dash address to send to."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
@@ -536,7 +531,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
 {
     RPCHelpMan{"signmessage",
         "\nSign a message with the private key of an address" +
-            HelpRequiringPassphrase() + "\n",
+                HELP_REQUIRING_PASSPHRASE,
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The dash address to use for the private key."},
             {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
@@ -816,7 +811,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
 {
     RPCHelpMan{"sendmany",
                 "\nSend multiple times. Amounts are double-precision floating point numbers." +
-                    HelpRequiringPassphrase() + "\n",
+                        HELP_REQUIRING_PASSPHRASE,
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", "\"\""},
                     {"amounts", RPCArg::Type::OBJ, RPCArg::Optional::NO, "A json object with addresses and amounts",
@@ -1814,7 +1809,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
 {
     RPCHelpMan{"keypoolrefill",
         "\nFills the keypool."+
-            HelpRequiringPassphrase() + "\n",
+                HELP_REQUIRING_PASSPHRASE,
         {
             {"newsize", RPCArg::Type::NUM, /* default */ itostr(DEFAULT_KEYPOOL_SIZE), "The new keypool size"},
         },
@@ -3263,7 +3258,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
         "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
         "The second optional argument (may be null) is an array of previous transaction outputs that\n"
         "this transaction depends on but may not yet be in the block chain." +
-            HelpRequiringPassphrase() + "\n",
+                HELP_REQUIRING_PASSPHRASE,
         {
             {"hexstring", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction hex string"},
             {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of previous dependent transaction outputs",
@@ -3735,7 +3730,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     RPCHelpMan{"walletprocesspsbt",
         "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
         "that we can sign for." +
-            HelpRequiringPassphrase() + "\n",
+                HELP_REQUIRING_PASSPHRASE,
         {
             {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
             {"sign", RPCArg::Type::BOOL, /* default */ "true", "Also sign the transaction when updating"},
