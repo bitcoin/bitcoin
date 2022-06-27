@@ -472,11 +472,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
             # Now attempt to submit a tx that double-spends all the root tx inputs, which
             # would invalidate `num_txs_invalidated` transactions.
-            double_tx = wallet.create_self_transfer_multi(
+            tx_hex = wallet.create_self_transfer_multi(
                 utxos_to_spend=root_utxos,
                 fee_per_output=10_000_000,  # absurdly high feerate
-            )
-            tx_hex = double_tx.serialize().hex()
+            )["hex"]
 
             if failure_expected:
                 assert_raises_rpc_error(
