@@ -212,10 +212,9 @@ void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& 
     }
 }
 
-static GlobalMutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
 static Synced<std::set<std::string>> g_loading_wallet_set;
-static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_mutex);
+static Synced<std::set<std::string>> g_unloading_wallet_set;
 
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
@@ -225,12 +224,9 @@ static void ReleaseWallet(CWallet* wallet)
     wallet->Flush();
     delete wallet;
     // Wallet is now released, notify UnloadWallet, if any.
-    {
-        LOCK(g_wallet_release_mutex);
-        if (g_unloading_wallet_set.erase(name) == 0) {
-            // UnloadWallet was not called for this wallet, all done.
-            return;
-        }
+    if (WITH_SYNCED_LOCK(g_unloading_wallet_set, p, return p->erase(name) == 0)) {
+        // UnloadWallet was not called for this wallet, all done.
+        return;
     }
     g_wallet_release_cv.notify_all();
 }
@@ -240,8 +236,8 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
     // Mark wallet for unloading.
     const std::string name = wallet->GetName();
     {
-        LOCK(g_wallet_release_mutex);
-        auto it = g_unloading_wallet_set.insert(name);
+        SYNCED_LOCK(g_unloading_wallet_set, p);
+        auto it = p->insert(name);
         assert(it.second);
     }
     // The wallet can be in use so it's not possible to explicitly unload here.
@@ -252,10 +248,8 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
     // Time to ditch our shared_ptr and wait for ReleaseWallet call.
     wallet.reset();
     {
-        WAIT_LOCK(g_wallet_release_mutex, lock);
-        while (g_unloading_wallet_set.count(name) == 1) {
-            g_wallet_release_cv.wait(lock);
-        }
+        SYNCED_LOCK(g_unloading_wallet_set, lock);
+        g_wallet_release_cv.wait(lock, [&lock, &name]() { return lock->count(name) == 0; });
     }
 }
 
