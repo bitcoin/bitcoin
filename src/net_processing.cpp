@@ -429,7 +429,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     // SYSCOIN
-    void SendBlockTransactions(CNode& pfrom,  Peer& peer, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent = true) EXCLUSIVE_LOCKS_REQUIRED(m_most_recent_block_mutex);
+    void SendBlockTransactions(CNode& pfrom,  Peer& peer, const CBlock& block, const BlockTransactionsRequest& req, bool bRecent = true) EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
     template <typename T>
     bool PrepareNEVMBlock(T &block, bool bRecent) EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
     /** Register with TxRequestTracker that an INV has been received from a
