@@ -212,10 +212,9 @@ void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& 
     }
 }
 
-static GlobalMutex g_loading_wallet_mutex;
 static GlobalMutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
-static std::set<std::string> g_loading_wallet_set GUARDED_BY(g_loading_wallet_mutex);
+static Synced<std::set<std::string>> g_loading_wallet_set;
 static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_mutex);
 
 // Custom deleter for shared_ptr<CWallet>.
@@ -359,14 +358,14 @@ private:
 
 std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
-    auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
+    auto result = WITH_SYNCED_LOCK(g_loading_wallet_set, p, return p->insert(name));
     if (!result.second) {
         error = Untranslated("Wallet already loading.");
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }
     auto wallet = LoadWalletInternal(context, name, load_on_start, options, status, error, warnings);
-    WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
+    WITH_SYNCED_LOCK(g_loading_wallet_set, p, p->erase(result.first));
     return wallet;
 }
 
