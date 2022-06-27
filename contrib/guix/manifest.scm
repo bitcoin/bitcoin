@@ -200,10 +200,14 @@ chain for " target " development."))
   (package-with-extra-patches base-nsis
     (search-our-patches "nsis-gcc-10-memmove.patch")))
 
+(define (fix-ppc64-nx-default lief)
+  (package-with-extra-patches lief
+    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
+
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.12.0")
+   (version "0.12.1")
    (source
     (origin
      (method git-fetch)
@@ -213,7 +217,7 @@ chain for " target " development."))
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
+       "1xzbh3bxy4rw1yamnx68da1v5s56ay4g081cyamv67256g0qy2i1"))))
    (build-system python-build-system)
    (arguments
     `(#:phases
@@ -602,7 +606,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git
         ;; Tests
-        lief)
+        (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
