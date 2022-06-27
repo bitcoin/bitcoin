@@ -1338,6 +1338,11 @@ AX_BOOST_FILESYSTEM
 AX_BOOST_THREAD
 
 if test x$suppress_external_warnings != xno; then
+    dnl Prevent use of std::unary_function, which was removed in C++17,
+    dnl and will generate warnings with newer compilers.
+    dnl See: https://github.com/boostorg/container_hash/issues/22.
+    BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
+
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
 fi
 
