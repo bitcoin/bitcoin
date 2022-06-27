@@ -20,7 +20,7 @@ CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
 ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
-    "^src/(bls/|secp256k1/|minisketch/|univalue/|test/fuzz/FuzzedDataProvider.h)"
+    "^src/(secp256k1/|minisketch/|univalue/|test/fuzz/FuzzedDataProvider.h)"
 )
 ALLOWED_PERMISSION_NON_EXECUTABLES = 644
 ALLOWED_PERMISSION_EXECUTABLES = 755
@@ -28,6 +28,7 @@ ALLOWED_EXECUTABLE_SHEBANG = {
     "py": [b"#!/usr/bin/env python3"],
     "sh": [b"#!/usr/bin/env bash", b"#!/bin/sh"],
 }
+EXCLUDED_DIRS = ["src/bls/"]
 
 
 class FileMeta(object):
@@ -73,7 +74,8 @@ def check_all_filenames() -> int:
     Checks every file in the repository against an allowed regexp to make sure only lowercase or uppercase
     alphanumerics (a-zA-Z0-9), underscores (_), hyphens (-), at (@) and dots (.) are used in repository filenames.
     """
-    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+    filenames = check_output(CMD_ALL_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_FILENAME_REGEXP)
     failed_tests = 0
     for filename in filenames:
@@ -92,7 +94,8 @@ def check_source_filenames() -> int:
 
     Additionally there is an exception regexp for directories or files which are excepted from matching this regexp.
     """
-    filenames = check_output(CMD_SOURCE_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+    filenames = check_output(CMD_SOURCE_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_SOURCE_FILENAME_REGEXP)
     filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
     failed_tests = 0
@@ -111,7 +114,8 @@ def check_all_file_permissions() -> int:
 
     Additionally checks that for executable files, the file contains a shebang line
     """
-    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+    filenames = check_output(CMD_ALL_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
     failed_tests = 0
     for filename in filenames:
         file_meta = FileMeta(filename)
@@ -156,7 +160,8 @@ def check_shebang_file_permissions() -> int:
     """
     Checks every file that contains a shebang line to ensure it has an executable permission
     """
-    filenames = check_output(CMD_SHEBANG_FILES, shell=True).decode("utf8").strip().split("\n")
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+    filenames = check_output(CMD_SHEBANG_FILES + exclude_args, shell=True).decode("utf8").strip().split("\n")
 
     # The git grep command we use returns files which contain a shebang on any line within the file
     # so we need to filter the list to only files with the shebang on the first line
