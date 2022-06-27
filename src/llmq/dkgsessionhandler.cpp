@@ -103,7 +103,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
         phase = static_cast<QuorumPhase>(phaseInt);
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - quorumIndex=%d, currentHeight=%d, pQuorumBaseBlockIndex->nHeight=%d, oldPhase=%d, newPhase=%d\n", __func__,
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] currentHeight=%d, pQuorumBaseBlockIndex->nHeight=%d, oldPhase=%d, newPhase=%d\n", __func__,
              params.name, quorumIndex, currentHeight, pQuorumBaseBlockIndex->nHeight, int(oldPhase), int(phase));
 }
 
@@ -127,7 +127,7 @@ void CDKGSessionHandler::StartThread()
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
     }
 
-    std::string threadName = strprintf("llmq-%d", (uint8_t)params.type);
+    std::string threadName = strprintf("llmq-%d-%d", (uint8_t)params.type, quorumIndex);
     phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName, std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
 }
 
@@ -149,10 +149,10 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 
     auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pQuorumBaseBlockIndex);
     if (!curSession->Init(pQuorumBaseBlockIndex, mns, WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash), quorumIndex)) {
-        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization failed for %s mns[%d]\n", __func__, pQuorumBaseBlockIndex->nHeight, curSession->params.name, mns.size());
+        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization failed for %s qi[%d] mns[%d]\n", __func__, pQuorumBaseBlockIndex->nHeight, curSession->params.name, quorumIndex, mns.size());
         return false;
     } else {
-        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization OK for %s\n", __func__, pQuorumBaseBlockIndex->nHeight, curSession->params.name);
+        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization OK for %s qi[%d]\n", __func__, pQuorumBaseBlockIndex->nHeight, curSession->params.name, quorumIndex);
     }
 
     return true;
@@ -172,23 +172,23 @@ void CDKGSessionHandler::WaitForNextPhase(std::optional<QuorumPhase> curPhase,
                                           const uint256& expectedQuorumHash,
                                           const WhileWaitFunc& shouldNotWait) const
 {
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, quorumIndex, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
 
     while (true) {
         if (stopRequested) {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due to stop/shutdown requested\n", __func__, params.name, quorumIndex);
             throw AbortPhaseException();
         }
         auto [_phase, _quorumHash] = GetPhaseAndQuorumHash();
         if (!expectedQuorumHash.IsNull() && _quorumHash != expectedQuorumHash) {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due unexpected expectedQuorumHash change\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due unexpected expectedQuorumHash change\n", __func__, params.name, quorumIndex);
             throw AbortPhaseException();
         }
         if (_phase == nextPhase) {
             break;
         }
         if (curPhase.has_value() && _phase != curPhase) {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due unexpected phase change\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due unexpected phase change, _phase=%d, curPhase=%d\n", __func__, params.name, quorumIndex, int(_phase), curPhase.has_value() ? int(*curPhase) : -1);
             throw AbortPhaseException();
         }
         if (!shouldNotWait()) {
@@ -196,7 +196,7 @@ void CDKGSessionHandler::WaitForNextPhase(std::optional<QuorumPhase> curPhase,
         }
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, quorumIndex, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
 
     if (nextPhase == QuorumPhase::Initialized) {
         quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumIndex);
@@ -211,21 +211,21 @@ void CDKGSessionHandler::WaitForNextPhase(std::optional<QuorumPhase> curPhase,
 
 void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash) const
 {
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting\n", __func__, params.name);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d]- starting\n", __func__, params.name, quorumIndex);
 
     while (true) {
         if (stopRequested) {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due to stop/shutdown requested\n", __func__, params.name, quorumIndex);
             throw AbortPhaseException();
         }
-        auto p = GetPhaseAndQuorumHash();
-        if (p.second != oldQuorumHash) {
+        auto [_, _quorumHash] = GetPhaseAndQuorumHash();
+        if (_quorumHash != oldQuorumHash) {
             break;
         }
         UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done\n", __func__, params.name);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - done\n", __func__, params.name, quorumIndex);
 }
 
 // Sleep some time to not fully overload the whole network
@@ -264,11 +264,11 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
         heightTmp = heightStart = currentHeight;
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, sleepTime, int(curPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, quorumIndex, sleepTime, int(curPhase));
 
     while (GetTimeMillis() < endTime) {
         if (stopRequested) {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due to stop/shutdown requested\n", __func__, params.name, quorumIndex);
             throw AbortPhaseException();
         }
         {
@@ -284,7 +284,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
             }
             if (phase != curPhase || quorumHash != expectedQuorumHash) {
                 // Something went wrong and/or we missed quite a few blocks and it's just too late now
-                LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due unexpected phase/expectedQuorumHash change\n", __func__, params.name);
+                LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due unexpected phase/expectedQuorumHash change\n", __func__, params.name, quorumIndex);
                 throw AbortPhaseException();
             }
         }
@@ -293,7 +293,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
         }
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d\n", __func__, params.name, int(curPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - done, curPhase=%d\n", __func__, params.name, quorumIndex, int(curPhase));
 }
 
 void CDKGSessionHandler::HandlePhase(QuorumPhase curPhase,
@@ -303,13 +303,13 @@ void CDKGSessionHandler::HandlePhase(QuorumPhase curPhase,
                                      const StartPhaseFunc& startPhaseFunc,
                                      const WhileWaitFunc& runWhileWaiting)
 {
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, int(curPhase), int(nextPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, quorumIndex, int(curPhase), int(nextPhase));
 
     SleepBeforePhase(curPhase, expectedQuorumHash, randomSleepFactor, runWhileWaiting);
     startPhaseFunc();
     WaitForNextPhase(curPhase, nextPhase, expectedQuorumHash, runWhileWaiting);
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, int(curPhase), int(nextPhase));
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, quorumIndex, int(curPhase), int(nextPhase));
 }
 
 // returns a set of NodeIds which sent invalid messages
@@ -544,14 +544,14 @@ void CDKGSessionHandler::PhaseHandlerThread()
 {
     while (!stopRequested) {
         try {
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - starting HandleDKGRound\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] - starting HandleDKGRound\n", __func__, params.name, quorumIndex);
             HandleDKGRound();
         } catch (AbortPhaseException& e) {
             quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
                 status.aborted = true;
                 return true;
             });
-            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - aborted current DKG session\n", __func__, params.name);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] - aborted current DKG session\n", __func__, params.name, quorumIndex);
         }
     }
 }

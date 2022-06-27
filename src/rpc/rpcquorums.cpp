@@ -196,8 +196,10 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     UniValue quorumArrConnections(UniValue::VARR);
     for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
+        bool rotation_enabled = llmq::CLLMQUtils::IsQuorumRotationEnabled(type, pindexTip);
+        size_t quorums_num = rotation_enabled ? llmq_params.signingActiveQuorumCount : 1;
 
-        for (int quorumIndex = 0; quorumIndex < llmq_params.signingActiveQuorumCount; ++quorumIndex) {
+        for (int quorumIndex = 0; quorumIndex < quorums_num; ++quorumIndex) {
             UniValue obj(UniValue::VOBJ);
             obj.pushKV("llmqType", std::string(llmq_params.name));
             obj.pushKV("quorumIndex", quorumIndex);
@@ -240,9 +242,6 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                 }
             }
             quorumArrConnections.push_back(obj);
-            if (!llmq::CLLMQUtils::IsQuorumRotationEnabled(type, pindexTip)) {
-                break;
-            }
         }
 
         LOCK(cs_main);
