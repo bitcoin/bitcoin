@@ -3,8 +3,21 @@
 # ItCoin
 #
 # Starts an ephemeral local itcoin daemon, and computes the information
-# necessary to perform a first initialization of the system.
+# necessary to perform a first initialization of a 1-of-1 signet.
 # At script exit the temporary data is deleted and the itcoin daemon is killed.
+#
+# Diagnostic messages are printed on stderr, the output (in case of success) is
+# printed on stdout.
+#
+# If the script succeeds, it exits with 0 and prints a minified JSON object with
+# the following structure:
+#     {
+#       "privkey": "cNEKqnR6iSx51ZZfjnW8StSm5DAatJuWJ4wzARpodFT43KbqmUtu",
+#       "pubkey": "0360e9b3dbeff4cf5c51ec07f5984efd4ab242f763a50c3489b8d13ff2adbb5b42",
+#       "blockscript": "51210360e9b3dbeff4cf5c51ec07f5984efd4ab242f763a50c3489b8d13ff2adbb5b4251ae"
+#     }
+#
+# In case of error, the script exits with non-zero exit code.
 #
 # REQUIREMENTS:
 # - jq
