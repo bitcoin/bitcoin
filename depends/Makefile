@@ -131,7 +131,7 @@ build_id_string+=system_clang
 $(host_arch)_$(host_os)_id_string+=system_clang
 endif
 
-qrencode_packages_$(NO_QR) = $(qrencode_packages)
+qrencode_packages_$(NO_QR) = $(qrencode_$(host_os)_packages)
 
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
 
