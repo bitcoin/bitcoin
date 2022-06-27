@@ -45,6 +45,9 @@ struct LLMQParams {
     // not consensus critical, only used in logging, RPC and UI
     std::string_view name;
 
+    // Whether this is a DIP0024 quorum or not
+    bool useRotation;
+
     // the size of the quorum, e.g. 50 or 400
     int size;
 
@@ -113,6 +116,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST,
         .name = "llmq_test",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -137,6 +141,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_INSTANTSEND,
         .name = "llmq_test_instantsend",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -161,6 +166,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_V17,
         .name = "llmq_test_v17",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -185,14 +191,15 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_DIP0024,
         .name = "llmq_test_dip0024",
+        .useRotation = true,
         .size = 4,
         .minSize = 3,
         .threshold = 2,
 
         .dkgInterval = 24, // DKG cycle
         .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
+        .dkgMiningWindowStart = 12, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 20,
         .dkgBadVotesThreshold = 2,
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
@@ -209,6 +216,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_DEVNET,
         .name = "llmq_devnet",
+        .useRotation = false,
         .size = 12,
         .minSize = 7,
         .threshold = 6,
@@ -259,6 +267,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_50_60,
         .name = "llmq_50_60",
+        .useRotation = false,
         .size = 50,
         .minSize = 40,
         .threshold = 30,
@@ -283,14 +292,15 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_60_75,
         .name = "llmq_60_75",
+        .useRotation = true,
         .size = 60,
         .minSize = 50,
         .threshold = 45,
 
         .dkgInterval = 24 * 12, // DKG cycle every 12 hours
         .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
+        .dkgMiningWindowStart = 42, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 50,
         .dkgBadVotesThreshold = 48,
 
         .signingActiveQuorumCount = 32,
@@ -307,6 +317,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_400_60,
         .name = "llmq_400_60",
+        .useRotation = false,
         .size = 400,
         .minSize = 300,
         .threshold = 240,
@@ -333,6 +344,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_400_85,
         .name = "llmq_400_85",
+        .useRotation = false,
         .size = 400,
         .minSize = 350,
         .threshold = 340,
@@ -359,6 +371,7 @@ static constexpr std::array<LLMQParams, 11> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_100_67,
         .name = "llmq_100_67",
+        .useRotation = false,
         .size = 100,
         .minSize = 80,
         .threshold = 67,

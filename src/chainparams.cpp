@@ -1223,6 +1223,9 @@ void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
         if (params.name == strLLMQType) {
+            if (params.useRotation) {
+                throw std::runtime_error("LLMQ type specified for -llmqchainlocks must NOT use rotation");
+            }
             llmqType = params.type;
         }
     }
@@ -1242,6 +1245,9 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
         if (params.name == strLLMQType) {
+            if (params.useRotation) {
+                throw std::runtime_error("LLMQ type specified for -llmqinstantsend must NOT use rotation");
+            }
             llmqType = params.type;
         }
     }
@@ -1261,6 +1267,9 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendDIP0024FromArgs(const ArgsManager
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
     for (const auto& params : consensus.llmqs) {
         if (params.name == strLLMQType) {
+            if (!params.useRotation) {
+                throw std::runtime_error("LLMQ type specified for -llmqinstantsenddip0024 must use rotation");
+            }
             llmqType = params.type;
         }
     }

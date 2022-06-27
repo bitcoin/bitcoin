@@ -252,7 +252,9 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return true;
     }
 
-    if (llmq::CLLMQUtils::IsQuorumRotationEnabled(llmq_params.type, pQuorumBaseBlockIndex)) {
+    bool rotation_enabled = CLLMQUtils::IsQuorumRotationEnabled(llmq_params.type, pQuorumBaseBlockIndex);
+
+    if (rotation_enabled) {
         LogPrint(BCLog::LLMQ, "[ProcessCommitment] height[%d] pQuorumBaseBlockIndex[%d] quorumIndex[%d] qversion[%d] Built\n",
                  nHeight, pQuorumBaseBlockIndex->nHeight, qc.quorumIndex, qc.nVersion);
     }
@@ -261,7 +263,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     auto cacheKey = std::make_pair(llmq_params.type, quorumHash);
     evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, cacheKey), std::make_pair(qc, blockHash));
 
-    if (llmq::CLLMQUtils::IsQuorumRotationEnabled(llmq_params.type, pQuorumBaseBlockIndex)) {
+    if (rotation_enabled) {
         evoDb.Write(BuildInversedHeightKeyIndexed(llmq_params.type, nHeight, int(qc.quorumIndex)), pQuorumBaseBlockIndex->nHeight);
     } else {
         evoDb.Write(BuildInversedHeightKey(llmq_params.type, nHeight), pQuorumBaseBlockIndex->nHeight);
@@ -415,23 +417,16 @@ bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParam
 
     // Note: This function can be called for new blocks
     assert(nHeight <= ::ChainActive().Height() + 1);
-    const auto pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
-    if (CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex)) {
-        int quorumCycleStartHeight = nHeight - (nHeight % llmqParams.dkgInterval);
-        int quorumCycleMiningStartHeight = quorumCycleStartHeight + llmqParams.signingActiveQuorumCount + (5 * llmqParams.dkgPhaseBlocks) + 1;
-        int quorumCycleMiningEndHeight = quorumCycleMiningStartHeight + (llmqParams.dkgMiningWindowEnd - llmqParams.dkgMiningWindowStart);
-        LogPrint(BCLog::LLMQ, "[IsMiningPhase] nHeight[%d] quorumCycleStartHeight[%d] -- mining[%d-%d]\n", nHeight, quorumCycleStartHeight, quorumCycleMiningStartHeight, quorumCycleMiningEndHeight);
+    int quorumCycleStartHeight = nHeight - (nHeight % llmqParams.dkgInterval);
+    int quorumCycleMiningStartHeight = quorumCycleStartHeight + llmqParams.dkgMiningWindowStart;
+    int quorumCycleMiningEndHeight = quorumCycleStartHeight + llmqParams.dkgMiningWindowEnd;
 
-        if (nHeight >= quorumCycleMiningStartHeight && nHeight <= quorumCycleMiningEndHeight) {
-            return true;
-        }
-    } else {
-        int phaseIndex = nHeight % llmqParams.dkgInterval;
-        if (phaseIndex >= llmqParams.dkgMiningWindowStart && phaseIndex <= llmqParams.dkgMiningWindowEnd) {
-            return true;
-        }
+    if (nHeight >= quorumCycleMiningStartHeight && nHeight <= quorumCycleMiningEndHeight) {
+        LogPrint(BCLog::LLMQ, "[IsMiningPhase] nHeight[%d] llmqType[%d] quorumCycleStartHeight[%d] -- mining[%d-%d]\n", nHeight, int(llmqParams.type), quorumCycleStartHeight, quorumCycleMiningStartHeight, quorumCycleMiningEndHeight);
+        return true;
     }
+    LogPrint(BCLog::LLMQ, "[IsMiningPhase] nHeight[%d] llmqType[%d] quorumCycleStartHeight[%d] -- NOT mining[%d-%d]\n", nHeight, int(llmqParams.type), quorumCycleStartHeight, quorumCycleMiningStartHeight, quorumCycleMiningEndHeight);
 
     return false;
 }
@@ -446,13 +441,13 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(const Consensus::LLMQParams& ll
     assert(nHeight <= ::ChainActive().Height() + 1);
     const auto pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
-    for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+    bool rotation_enabled = CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex);
+    size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
+
+    for (int quorumIndex = 0; quorumIndex < quorums_num; ++quorumIndex) {
         uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
         if (quorumHash.IsNull()) return false;
         if (HasMinedCommitment(llmqParams.type, quorumHash)) return false;
-        if (!CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex)) {
-            break;
-        }
     }
 
     return true;
@@ -725,8 +720,11 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     assert(nHeight <= ::ChainActive().Height() + 1);
     const auto pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
+    bool rotation_enabled = CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex);
+    size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
+
     std::stringstream ss;
-    for (int quorumIndex = 0; quorumIndex < llmqParams.signingActiveQuorumCount; ++quorumIndex) {
+    for (int quorumIndex = 0; quorumIndex < quorums_num; ++quorumIndex) {
         CFinalCommitment cf;
 
         uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
@@ -742,7 +740,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
             // null commitment required
             cf = CFinalCommitment(llmqParams, quorumHash);
             cf.quorumIndex = static_cast<int16_t>(quorumIndex);
-            if (CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex)) {
+            if (rotation_enabled) {
                 cf.nVersion = CFinalCommitment::INDEXED_QUORUM_VERSION;
             }
             ss << "{ created nversion[" << cf.nVersion << "] quorumIndex[" << cf.quorumIndex << "] }";
@@ -752,9 +750,6 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
         }
 
         ret.push_back(std::move(cf));
-        if (!CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex)) {
-            break;
-        }
     }
 
     LogPrint(BCLog::LLMQ, "GetMineableCommitments cf height[%d] content: %s\n", nHeight, ss.str());
