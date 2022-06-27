@@ -14,20 +14,16 @@
 
 namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
- * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
- * size of the input spend. This should only be set when watch-only outputs are allowed */
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
-
+ * Use CoinControl to determine whether to expect signature grinding when calculating the size of the input spend. */
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 struct TxSize {
     int64_t vsize{-1};
     int64_t weight{-1};
 };
 
-/** Calculate the size of the transaction assuming all signatures are max size
-* Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
-* NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-* be AllInputsMine). */
+/** Calculate the size of the transaction using CoinControl to determine
+ * whether to expect signature grinding when calculating the size of the input spend. */
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 
