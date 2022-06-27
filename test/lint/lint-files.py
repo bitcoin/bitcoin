@@ -14,9 +14,9 @@ from subprocess import check_output
 from typing import Optional, NoReturn
 
 CMD_TOP_LEVEL = ["git", "rev-parse", "--show-toplevel"]
-CMD_ALL_FILES = "git ls-files -z --full-name"
-CMD_SOURCE_FILES = 'git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"'
-CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
+CMD_ALL_FILES = ["git ls-files -z --full-name"]
+CMD_SOURCE_FILES = ['git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"']
+CMD_SHEBANG_FILES = ["git grep --full-name --line-number -I '^#!'"]
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
 ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
