@@ -88,7 +88,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # is cleared. This will move the versionbit state to ACTIVE.
         self.generatetoaddress(node, VB_PERIOD, node_deterministic_address)
 
-        # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
+        # Stop-start the node. This is required because navcoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
         # Generating one block guarantees that we'll get out of IBD

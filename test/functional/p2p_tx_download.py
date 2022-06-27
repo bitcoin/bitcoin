@@ -266,7 +266,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_large_inv_batch()
         self.test_spurious_notfound()
 
-        # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
+        # Run each test against new navcoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.
         for test in [self.test_in_flight_max, self.test_inv_block, self.test_tx_requests]:
             self.stop_nodes()

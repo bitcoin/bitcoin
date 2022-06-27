@@ -138,7 +138,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_navcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
@@ -174,7 +174,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         invalid_tx.vin[0].prevout.hash = int(block_1_coinbase_txid, 16)
 
         self.log.info("hooking into the utxocache:uncache tracepoint")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(path=str(self.options.navcoind))
         ctx.enable_probe(probe="utxocache:uncache",
                          fn_name="trace_utxocache_uncache")
         bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0)
@@ -239,7 +239,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         self.log.info(
             "hook into the utxocache:add and utxocache:spent tracepoints")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(path=str(self.options.navcoind))
         ctx.enable_probe(probe="utxocache:add", fn_name="trace_utxocache_add")
         ctx.enable_probe(probe="utxocache:spent",
                          fn_name="trace_utxocache_spent")
@@ -335,7 +335,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         self.log.info("test the utxocache:flush tracepoint API")
         self.log.info("hook into the utxocache:flush tracepoint")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(path=str(self.options.navcoind))
         ctx.enable_probe(probe="utxocache:flush",
                          fn_name="trace_utxocache_flush")
         bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0)

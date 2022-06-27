@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
 
-Verify that a bitcoind node can load multiple wallet files
+Verify that a navcoind node can load multiple wallet files
 """
 from decimal import Decimal
 from threading import Thread
