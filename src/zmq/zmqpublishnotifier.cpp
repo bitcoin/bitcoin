@@ -372,9 +372,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash;
-    if(nHeight >= (uint32_t)Params().GetConsensus().nPODAStartBlock)
-        ss << NEVMDataVecOut;
+    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-not-sent");
 

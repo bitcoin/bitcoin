@@ -1924,10 +1924,13 @@ static RPCHelpMan syscoincreaterawnevmblob()
 { 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-
+    if(chainman.ActiveChain().Tip()->nHeight < Params().GetConsensus().nPODAStartBlock) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "PoDA not active yet");
+    }
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
     const std::vector<unsigned char> &vchData = ParseHex(request.params[1].get_str());
