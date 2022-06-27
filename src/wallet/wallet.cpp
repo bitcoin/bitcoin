@@ -1538,13 +1538,16 @@ void CWallet::InitWalletFlags(uint64_t flags)
 }
 
 // Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
-// or a max-sized low-S signature (e.g. 72 bytes) if use_max_sig is true
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig)
+// or a max-sized low-S signature (e.g. 72 bytes) depending on coin_control
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control)
 {
     // Fill in dummy signatures for fee calculation.
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
+    // Use max sig if watch only inputs were used or if this particular input is an external input
+    // to ensure a sufficient fee is attained for the requested feerate.
+    const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(tx_in.prevout));
     if (!ProduceSignature(provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
     }
@@ -1560,12 +1563,9 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
     for (const auto& txout : txouts)
     {
         CTxIn& txin = txNew.vin[nIn];
-        // Use max sig if watch only inputs were used or if this particular input is an external input
-        // to ensure a sufficient fee is attained for the requested feerate.
-        const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(txin.prevout));
         const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
-        if (!provider || !DummySignInput(*provider, txin, txout, use_max_sig)) {
-            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, use_max_sig)) {
+        if (!provider || !DummySignInput(*provider, txin, txout, coin_control)) {
+            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, coin_control)) {
                 return false;
             }
         }

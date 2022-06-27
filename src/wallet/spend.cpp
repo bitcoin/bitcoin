@@ -28,25 +28,20 @@ using interfaces::FoundBlock;
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig)
-{
-    return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, use_max_sig);
-}
-
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* provider, bool use_max_sig)
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* provider, const CCoinControl* coin_control)
 {
     CMutableTransaction txn;
-    txn.vin.push_back(CTxIn(COutPoint()));
-    if (!provider || !DummySignInput(*provider, txn.vin[0], txout, use_max_sig)) {
+    txn.vin.push_back(CTxIn(outpoint));
+    if (!provider || !DummySignInput(*provider, txn.vin[0], txout, coin_control)) {
         return -1;
     }
     return ::GetSerializeSize(txn.vin[0], PROTOCOL_VERSION);
 }
 
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, const CCoinControl* coin_control)
 {
     const std::unique_ptr<SigningProvider> provider = wallet->GetSolvingProvider(txout.scriptPubKey);
-    return CalculateMaximumSignedInputSize(txout, provider.get(), use_max_sig);
+    return CalculateMaximumSignedInputSize(txout, COutPoint(), provider.get(), coin_control);
 }
 
 // txouts needs to be in the order of tx.vin
@@ -197,7 +192,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Filter by spendable outputs only
             if (!spendable && only_spendable) continue;
 
-            int input_bytes = GetTxSpendSize(wallet, wtx, i, (coinControl && coinControl->fAllowWatchOnly));
+            int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), coinControl);
             result.coins.emplace_back(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
             result.total_amount += output.nValue;
 
@@ -286,8 +281,9 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
             ) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
+                    const auto out = wtx.tx->vout.at(output.n);
                     result[address].emplace_back(
-                        COutPoint(wtx.GetHash(), output.n), wtx.tx->vout.at(output.n), depth, GetTxSpendSize(wallet, wtx, output.n), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
+                            COutPoint(wtx.GetHash(), output.n), out, depth, CalculateMaximumSignedInputSize(out, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
                 }
             }
         }
@@ -463,14 +459,14 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             if (ptr_wtx->tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, *ptr_wtx, outpoint.n, false);
             txout = ptr_wtx->tx->vout.at(outpoint.n);
+            input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
         } else {
             // The input is external. We did not find the tx in mapWallet.
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
                 return std::nullopt;
             }
-            input_bytes = CalculateMaximumSignedInputSize(txout, &coin_control.m_external_provider, /*use_max_sig=*/ true);
+            input_bytes = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
         }
         if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
             // Make sure to include mixed preset inputs only,
