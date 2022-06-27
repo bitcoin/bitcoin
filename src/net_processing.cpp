@@ -2343,7 +2343,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom.GetId());
 
-        // If this looks like it could be a block announcement (nCount <
+        // If this looks like it could be a block announcement (nCount <=
         // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
         // don't connect:
         // - Send a getheaders message in response to try to connect the chain.
@@ -2351,7 +2351,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         //   don't connect before giving DoS points
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
-        if (!m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock) && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
+        if (!m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock) && nCount <= MAX_BLOCKS_TO_ANNOUNCE) {
             nodestate->nUnconnectingHeaders++;
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, m_chainman.ActiveChain().GetLocator(m_chainman.m_best_header), uint256()));
             LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending getheaders (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
@@ -5103,7 +5103,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         // SYSCOIN
         if (pto->CanRelay()) {
-            // If we have less than MAX_BLOCKS_TO_ANNOUNCE in our
+            // If we have no more than MAX_BLOCKS_TO_ANNOUNCE in our
             // list of block hashes we're relaying, and our peer wants
             // headers announcements, then find the first header
             // not yet known to our peer but would connect, and send.
