@@ -453,6 +453,8 @@ protected:
 
     bool m_is_loaded GUARDED_BY(cs){false};
 
+    CFeeRate GetMinFee(size_t sizelimit) const;
+
 public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
@@ -707,7 +709,6 @@ public:
     CFeeRate GetMinFee() const {
         return GetMinFee(m_max_size_bytes);
     }
-    CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints
