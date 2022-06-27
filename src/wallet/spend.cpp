@@ -27,11 +27,6 @@ using interfaces::FoundBlock;
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig)
-{
-    return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, use_max_sig);
-}
-
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* provider, bool use_max_sig)
 {
     CMutableTransaction txn;
@@ -198,7 +193,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Filter by spendable outputs only
             if (!spendable && only_spendable) continue;
 
-            int input_bytes = GetTxSpendSize(wallet, wtx, i, (coinControl && coinControl->fAllowWatchOnly));
+            int input_bytes = CalculateMaximumSignedInputSize(output, provider.get(), coinControl && coinControl->fAllowWatchOnly);
             result.coins.emplace_back(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
             result.total_amount += output.nValue;
 
@@ -289,8 +284,9 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
             ) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
+                    const auto out = wtx.tx->vout.at(output.n);
                     result[address].emplace_back(
-                        COutPoint(wtx.GetHash(), output.n), wtx.tx->vout.at(output.n), depth, GetTxSpendSize(wallet, wtx, output.n), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
+                            COutPoint(wtx.GetHash(), output.n), out, depth, CalculateMaximumSignedInputSize(out, &wallet, false), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
                 }
             }
         }
@@ -447,7 +443,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             if (ptr_wtx->tx->vout.size() <= outpoint.n) {
                 return std::nullopt;
             }
-            input_bytes = GetTxSpendSize(wallet, *ptr_wtx, outpoint.n, false);
+            input_bytes = CalculateMaximumSignedInputSize(ptr_wtx->tx->vout[outpoint.n], &wallet, false);
             txout = ptr_wtx->tx->vout.at(outpoint.n);
         } else {
             // The input is external. We did not find the tx in mapWallet.
