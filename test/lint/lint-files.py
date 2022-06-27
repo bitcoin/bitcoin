@@ -14,9 +14,9 @@ from subprocess import check_output
 from typing import Optional, NoReturn
 
 CMD_TOP_LEVEL = ["git", "rev-parse", "--show-toplevel"]
-CMD_ALL_FILES = ["git ls-files -z --full-name"]
-CMD_SOURCE_FILES = ['git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"']
-CMD_SHEBANG_FILES = ["git grep --full-name --line-number -I '^#!'"]
+CMD_ALL_FILES = 'git ls-files -z --full-name'
+CMD_SOURCE_FILES = 'git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"'
+CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
 ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
@@ -28,7 +28,7 @@ ALLOWED_EXECUTABLE_SHEBANG = {
     "py": [b"#!/usr/bin/env python3"],
     "sh": [b"#!/usr/bin/env bash", b"#!/bin/sh"],
 }
-EXCLUDED_DIRS = ["src/bls/"]
+EXCLUDED_DIRS = ("^src/bls/")
 
 
 class FileMeta(object):
@@ -74,8 +74,7 @@ def check_all_filenames() -> int:
     Checks every file in the repository against an allowed regexp to make sure only lowercase or uppercase
     alphanumerics (a-zA-Z0-9), underscores (_), hyphens (-), at (@) and dots (.) are used in repository filenames.
     """
-    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
-    filenames = check_output(CMD_ALL_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
+    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_FILENAME_REGEXP)
     failed_tests = 0
     for filename in filenames:
@@ -94,8 +93,7 @@ def check_source_filenames() -> int:
 
     Additionally there is an exception regexp for directories or files which are excepted from matching this regexp.
     """
-    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
-    filenames = check_output(CMD_SOURCE_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
+    filenames = check_output(CMD_SOURCE_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_SOURCE_FILENAME_REGEXP)
     filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
     failed_tests = 0
@@ -114,10 +112,12 @@ def check_all_file_permissions() -> int:
 
     Additionally checks that for executable files, the file contains a shebang line
     """
-    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
-    filenames = check_output(CMD_ALL_FILES + exclude_args, shell=True).decode("utf8").rstrip("\0").split("\0")
+    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
+    filename_exclude_dir_regex = re.compile(EXCLUDED_DIRS)
     failed_tests = 0
     for filename in filenames:
+        if filename_exclude_dir_regex.match(filename):
+            continue
         file_meta = FileMeta(filename)
         if file_meta.permissions == ALLOWED_PERMISSION_EXECUTABLES:
             with open(filename, "rb") as f:
@@ -160,8 +160,7 @@ def check_shebang_file_permissions() -> int:
     """
     Checks every file that contains a shebang line to ensure it has an executable permission
     """
-    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
-    filenames = check_output(CMD_SHEBANG_FILES + exclude_args, shell=True).decode("utf8").strip().split("\n")
+    filenames = check_output(CMD_SHEBANG_FILES, shell=True).decode("utf8").strip().split("\n")
 
     # The git grep command we use returns files which contain a shebang on any line within the file
     # so we need to filter the list to only files with the shebang on the first line
