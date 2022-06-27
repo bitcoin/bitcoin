@@ -108,7 +108,7 @@ COPY \
     /opt/itcoin-core
 
 COPY \
-    /infra/create-keypair.sh \
+    /infra/create-initdata.sh \
     /infra/entrypoint.sh \
     /infra/render-template.sh \
     /opt/itcoin-core/bin/
@@ -116,15 +116,15 @@ COPY \
 # Put a symlink to the bitcoin* programs in /usr/local/bin, so that they can be
 # easily executed from anywhere, including from outside the container.
 RUN \
-    ln -s /opt/itcoin-core/bin/bitcoin-cli    /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/bitcoin-tx     /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/bitcoin-util   /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/bitcoin-wallet /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/bitcoind       /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/miner          /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoin-cli        /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoin-tx         /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoin-util       /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoin-wallet     /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoind           /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/miner              /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/render-template.sh /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/create-keypair.sh  /usr/local/bin/ && \
-    ln -s /opt/itcoin-core/bin/entrypoint.sh  /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/create-initdata.sh /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/entrypoint.sh      /usr/local/bin/ && \
     echo "The bitcoin* programs are in the PATH: they can be executed from anywhere, even outside the container"
 
 ENTRYPOINT [ "/opt/itcoin-core/bin/entrypoint.sh" ]
