@@ -136,7 +136,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-werror glibc-2.24))
+                                       (base-libc (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.24)))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -523,6 +523,9 @@ inspecting signatures in Mach-O binaries.")
 (define (make-glibc-with-stack-protector glibc)
   (package-with-extra-configure-variable glibc "--enable-stack-protector" "all"))
 
+(define (make-glibc-with-bind-now glibc)
+  (package-with-extra-configure-variable glibc "--enable-bind-now" "yes"))
+
 (define-public glibc-2.24
   (package
     (inherit glibc-2.31)
@@ -610,7 +613,8 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc (make-glibc-with-stack-protector (make-glibc-without-werror glibc-2.27/bitcoin-patched))))
+                                                      #:base-libc (make-glibc-with-stack-protector
+                                                        (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.27/bitcoin-patched)))))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
