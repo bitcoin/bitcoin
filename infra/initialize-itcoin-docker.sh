@@ -73,14 +73,14 @@ checkPrerequisites
 ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
 errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
-KEYPAIR=$(docker run \
+INIT_DATA=$(docker run \
     --rm \
     "${ITCOIN_IMAGE}" \
     create-keypair.sh
 )
 
-BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
-PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
+BLOCKSCRIPT=$(echo "${INIT_DATA}" | jq --raw-output '.blockscript')
+PRIVKEY=$(echo     "${INIT_DATA}" | jq --raw-output '.privkey')
 
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
 mkdir "${EXTERNAL_DATADIR}"

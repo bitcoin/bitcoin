@@ -65,10 +65,10 @@ BITCOIN_CLI="${PATH_TO_BINARIES}/bitcoin-cli"
 BITCOIN_UTIL="${PATH_TO_BINARIES}/bitcoin-util"
 MINER="${PATH_TO_BINARIES}/miner"
 
-KEYPAIR=$("${MYDIR}/create-keypair.sh")
+INIT_DATA=$("${MYDIR}/create-keypair.sh")
 
-export BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
-PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
+export BLOCKSCRIPT=$(echo "${INIT_DATA}" | jq --raw-output '.blockscript')
+PRIVKEY=$(echo            "${INIT_DATA}" | jq --raw-output '.privkey')
 
 errecho "Creating datadir ${DATADIR}. If it already exists this script will fail"
 mkdir "${DATADIR}"
