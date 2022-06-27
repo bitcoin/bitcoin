@@ -42,22 +42,20 @@
 #include <shlobj.h> /* For SHGetSpecialFolderPathW */
 #endif // WIN32
 
-/** Mutex to protect g_dir_locks. */
-static GlobalMutex cs_dir_locks;
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
  * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
  * is called.
  */
-static std::map<std::string, std::unique_ptr<fsbridge::FileLock>> g_dir_locks GUARDED_BY(cs_dir_locks);
+static Synced<std::map<std::string, std::unique_ptr<fsbridge::FileLock>>> g_dir_locks;
 namespace util {
 LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only)
 {
-    LOCK(cs_dir_locks);
+    SYNCED_LOCK(g_dir_locks, g_dir_locks_locked);
     fs::path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (g_dir_locks.count(fs::PathToString(pathLockFile))) {
+    if (g_dir_locks_locked->count(fs::PathToString(pathLockFile))) {
         return LockResult::Success;
     }
 
@@ -74,21 +72,19 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
     }
     if (!probe_only) {
         // Lock successful and we're not just probing, put it into the map
-        g_dir_locks.emplace(fs::PathToString(pathLockFile), std::move(lock));
+        g_dir_locks_locked->emplace(fs::PathToString(pathLockFile), std::move(lock));
     }
     return LockResult::Success;
 }
 } // namespace util
 void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name)
 {
-    LOCK(cs_dir_locks);
-    g_dir_locks.erase(fs::PathToString(directory / lockfile_name));
+    WITH_SYNCED_LOCK(g_dir_locks, p, p->erase(fs::PathToString(directory / lockfile_name)));
 }
 
 void ReleaseDirectoryLocks()
 {
-    LOCK(cs_dir_locks);
-    g_dir_locks.clear();
+    WITH_SYNCED_LOCK(g_dir_locks, p, p->clear());
 }
 
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
