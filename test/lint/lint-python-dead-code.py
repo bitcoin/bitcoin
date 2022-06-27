@@ -11,6 +11,7 @@ Find dead Python code.
 from subprocess import check_output, STDOUT, CalledProcessError
 
 FILES_ARGS = ['git', 'ls-files', '--', '*.py']
+EXCLUDED_DIRS = ["src/bls/"]
 
 
 def check_vulture_install():
@@ -24,7 +25,8 @@ def check_vulture_install():
 def main():
     check_vulture_install()
 
-    files = check_output(FILES_ARGS).decode("utf-8").splitlines()
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+    files = check_output(FILES_ARGS + exclude_args).decode("utf-8").splitlines()
     # --min-confidence 100 will only report code that is guaranteed to be unused within the analyzed files.
     # Any value below 100 introduces the risk of false positives, which would create an unacceptable maintenance burden.
     vulture_args = ['vulture', '--min-confidence=100'] + files
