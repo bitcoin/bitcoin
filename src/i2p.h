@@ -5,7 +5,7 @@
 #ifndef BITCOIN_I2P_H
 #define BITCOIN_I2P_H
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <fs.h>
 #include <netaddress.h>
 #include <sync.h>
