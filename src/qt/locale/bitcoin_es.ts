@@ -379,7 +379,7 @@ Firmar solo es posible con direcciones del tipo Legacy.</translation>
         <translation type="unfinished">El archivo de configuración no puede escribirse</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <source>%s corrupt. Try using the wallet tool navcoin-wallet to salvage or restoring a backup.</source>
         <translation type="unfinished">%s corrupto. Intenta utilizar la herramienta del monedero bitcoin-monedero para salvar o restaurar una copia de seguridad.</translation>
     </message>
     <message>
