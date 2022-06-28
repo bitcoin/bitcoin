@@ -9,7 +9,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <coins.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <key_io.h>

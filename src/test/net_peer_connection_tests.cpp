@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>

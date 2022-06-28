@@ -8,7 +8,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <logging.h>
 #include <util/strencodings.h>
 #include <util/system.h>

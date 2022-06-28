@@ -11,7 +11,7 @@
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
-#include <compat.h> // for Windows API
+#include <compat/compat.h>
 #include <wincrypt.h>
 #endif
 #include <logging.h>
