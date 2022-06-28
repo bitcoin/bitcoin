@@ -192,11 +192,11 @@ public:
     }
 
     //! Reserve an address
-    util::Result<CTxDestination> GetReservedDestination(bool internal);
+    util::Result<CTxDestination> GetReservedDestination(WalletBatch& batch, bool internal);
     //! Return reserved address
     void ReturnDestination();
     //! Keep the address. Do not return its key to the keypool when this object goes out of scope
-    void KeepDestination();
+    void KeepDestination(WalletBatch& batch);
 };
 
 /**

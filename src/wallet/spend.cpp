@@ -855,6 +855,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         }
     }
 
+    // Db handler for this specific process
+    WalletBatch batch(wallet.GetDatabase());
+
     // Create change script that will be used if we need change
     CScript scriptChange;
     bilingual_str error; // possible error str
@@ -873,7 +876,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         // Reserve a new key pair from key pool. If it fails, provide a dummy
         // destination in case we don't need change.
         CTxDestination dest;
-        auto op_dest = reservedest.GetReservedDestination(true);
+        auto op_dest = reservedest.GetReservedDestination(batch, true);
         if (!op_dest) {
             error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + util::ErrorString(op_dest);
         } else {
@@ -1117,7 +1120,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Before we return success, we assume any change key will be used to prevent
     // accidental re-use.
-    reservedest.KeepDestination();
+    reservedest.KeepDestination(batch);
 
     wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               current_fee, nBytes, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
