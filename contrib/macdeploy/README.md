@@ -20,7 +20,7 @@ can be extracted from
 [Xcode_12.2.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
 
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
-and search for [`Xcode_12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
+and search for [`Xcode 12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
 
 An Apple ID and cookies enabled for the hostname are needed to download this.
 

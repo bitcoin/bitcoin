@@ -66,6 +66,16 @@ int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
     return connect(m_socket, addr, addr_len);
 }
 
+int Sock::Bind(const sockaddr* addr, socklen_t addr_len) const
+{
+    return bind(m_socket, addr, addr_len);
+}
+
+int Sock::Listen(int backlog) const
+{
+    return listen(m_socket, backlog);
+}
+
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
 #ifdef WIN32
@@ -100,6 +110,11 @@ int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len)
 int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const
 {
     return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
+}
+
+int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    return getsockname(m_socket, name, name_len);
 }
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const

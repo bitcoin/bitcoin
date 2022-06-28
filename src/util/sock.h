@@ -87,6 +87,18 @@ public:
     [[nodiscard]] virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * bind(2) wrapper. Equivalent to `bind(this->Get(), addr, addr_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
+
+    /**
+     * listen(2) wrapper. Equivalent to `listen(this->Get(), backlog)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int Listen(int backlog) const;
+
+    /**
      * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(this->Get(), addr, addr_len))`.
      * Code that uses this wrapper can be unit tested if this method is overridden by a mock Sock
      * implementation.
@@ -113,6 +125,13 @@ public:
                                          int opt_name,
                                          const void* opt_val,
                                          socklen_t opt_len) const;
+
+    /**
+     * getsockname(2) wrapper. Equivalent to
+     * `getsockname(this->Get(), name, name_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
 
     using Event = uint8_t;
 

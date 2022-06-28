@@ -123,6 +123,10 @@ public:
 
     int Connect(const sockaddr*, socklen_t) const override { return 0; }
 
+    int Bind(const sockaddr*, socklen_t) const override { return 0; }
+
+    int Listen(int) const override { return 0; }
+
     std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
     {
         if (addr != nullptr) {
@@ -147,6 +151,12 @@ public:
     }
 
     int SetSockOpt(int, int, const void*, socklen_t) const override { return 0; }
+
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override
+    {
+        std::memset(name, 0x0, *name_len);
+        return 0;
+    }
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,

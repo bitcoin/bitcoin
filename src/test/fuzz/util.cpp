@@ -155,6 +155,45 @@ int FuzzedSock::Connect(const sockaddr*, socklen_t) const
     return 0;
 }
 
+int FuzzedSock::Bind(const sockaddr*, socklen_t) const
+{
+    // Have a permanent error at bind_errnos[0] because when the fuzzed data is exhausted
+    // SetFuzzedErrNo() will always set the global errno to bind_errnos[0]. We want to
+    // avoid this method returning -1 and setting errno to a temporary error (like EAGAIN)
+    // repeatedly because proper code should retry on temporary errors, leading to an
+    // infinite loop.
+    constexpr std::array bind_errnos{
+        EACCES,
+        EADDRINUSE,
+        EADDRNOTAVAIL,
+        EAGAIN,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, bind_errnos);
+        return -1;
+    }
+    return 0;
+}
+
+int FuzzedSock::Listen(int) const
+{
+    // Have a permanent error at listen_errnos[0] because when the fuzzed data is exhausted
+    // SetFuzzedErrNo() will always set the global errno to listen_errnos[0]. We want to
+    // avoid this method returning -1 and setting errno to a temporary error (like EAGAIN)
+    // repeatedly because proper code should retry on temporary errors, leading to an
+    // infinite loop.
+    constexpr std::array listen_errnos{
+        EADDRINUSE,
+        EINVAL,
+        EOPNOTSUPP,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, listen_errnos);
+        return -1;
+    }
+    return 0;
+}
+
 std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
     constexpr std::array accept_errnos{
@@ -198,6 +237,20 @@ int FuzzedSock::SetSockOpt(int, int, const void*, socklen_t) const
         SetFuzzedErrNo(m_fuzzed_data_provider, setsockopt_errnos);
         return -1;
     }
+    return 0;
+}
+
+int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    constexpr std::array getsockname_errnos{
+        ECONNRESET,
+        ENOBUFS,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
+        return -1;
+    }
+    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
     return 0;
 }
 
