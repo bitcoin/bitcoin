@@ -3585,6 +3585,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
 
+    WalletBatch batch(GetDatabase());
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
             auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
@@ -3596,7 +3597,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
                     throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
                 }
             }
-            spk_manager->SetupDescriptorGeneration(master_key, t, internal);
+            spk_manager->SetupDescriptorGeneration(batch, master_key, t, internal);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
             AddActiveScriptPubKeyMan(id, t, internal);
