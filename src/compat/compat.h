@@ -65,9 +65,14 @@ typedef unsigned int SOCKET;
 #define S_IRUSR             0400
 #define S_IWUSR             0200
 #endif
-#else
+#endif
+
+// Windows defines MAX_PATH as it's maximum path length.
+// We define MAX_PATH for use on non-Windows systems.
+#ifndef WIN32
 #define MAX_PATH            1024
 #endif
+
 #ifdef _MSC_VER
 #if !defined(ssize_t)
 #ifdef _WIN64
