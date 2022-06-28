@@ -3491,15 +3491,15 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
     // Enforce BIP113 (Median Time Past).
-    int nLockTimeFlags = 0;
+    bool enforce_locktime_median_time_past{false};
     if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CSV)) {
         assert(pindexPrev != nullptr);
-        nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
+        enforce_locktime_median_time_past = true;
     }
 
-    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                              ? pindexPrev->GetMedianTimePast()
-                              : block.GetBlockTime();
+    const int64_t nLockTimeCutoff{enforce_locktime_median_time_past ?
+                                      pindexPrev->GetMedianTimePast() :
+                                      block.GetBlockTime()};
 
     // Check that all transactions are finalized
     for (const auto& tx : block.vtx) {
