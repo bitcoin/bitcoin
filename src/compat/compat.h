@@ -85,6 +85,8 @@ typedef int32_t ssize_t;
 #endif
 #endif
 
+// The type of the option value passed to getsockopt & setsockopt
+// differs between Windows and non-Windows.
 #ifndef WIN32
 typedef void* sockopt_arg_type;
 #else
