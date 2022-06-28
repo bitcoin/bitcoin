@@ -201,6 +201,20 @@ int FuzzedSock::SetSockOpt(int, int, const void*, socklen_t) const
     return 0;
 }
 
+int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    constexpr std::array getsockname_errnos{
+        ECONNRESET,
+        ENOBUFS,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
+        return -1;
+    }
+    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
+    return 0;
+}
+
 bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     constexpr std::array wait_errnos{
