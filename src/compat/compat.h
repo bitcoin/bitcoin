@@ -37,9 +37,12 @@
 #include <unistd.h>
 #endif
 
+// We map Linux / BSD error functions and codes, to the equivalent
+// Windows definitions, and use the WSA* names throughout our code.
+// Note that glibc defines EWOULDBLOCK as EAGAIN (see errno.h).
 #ifndef WIN32
 typedef unsigned int SOCKET;
-#include <errno.h>
+#include <cerrno>
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
 #define WSAEWOULDBLOCK      EWOULDBLOCK
@@ -51,12 +54,11 @@ typedef unsigned int SOCKET;
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
 #else
-#ifndef WSAEAGAIN
+// WSAEAGAIN doesn't exist on Windows
 #ifdef EAGAIN
 #define WSAEAGAIN EAGAIN
 #else
 #define WSAEAGAIN WSAEWOULDBLOCK
-#endif
 #endif
 #endif
 
