@@ -2496,9 +2496,10 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
         return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
     }
 
+    WalletBatch batch(GetDatabase());
     auto op_dest = spk_man->GetNewDestination(type);
     if (op_dest) {
-        SetAddressBook(*op_dest, label, AddressPurpose::RECEIVE);
+        SetAddressBookWithDB(batch, *op_dest, label, AddressPurpose::RECEIVE);
     }
 
     return op_dest;
@@ -3793,7 +3794,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
             for (const auto& script : script_pub_keys) {
                 CTxDestination dest;
                 if (ExtractDestination(script, dest)) {
-                    SetAddressBook(dest, label, AddressPurpose::RECEIVE);
+                    SetAddressBookWithDB(batch, dest, label, AddressPurpose::RECEIVE);
                 }
             }
         }
