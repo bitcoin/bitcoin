@@ -12,10 +12,11 @@ endef
 define $(package)_config_cmds
   CC_FOR_BUILD="$(CC)" \
     CXX_FOR_BUILD="$(CXX)" \
-    AR_FOR_BUILD="$(AR)" \
-    NM_FOR_BUILD="$(NM)" \
-    RANLIB_FOR_BUILD="$(RANLIB)" \
-    STRIP_FOR_BUILD="$(STRIP)" \
+    AR="$(AR)" \
+    NM="$(NM)" \
+    RANLIB="$(RANLIB)" \
+    LD="$(LD)" \
+    STRIP="$(STRIP)" \
     $($(package)_autoconf)
 endef
 
