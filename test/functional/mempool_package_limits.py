@@ -45,17 +45,12 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         assert_equal(0, node.getmempoolinfo()["size"])
         chain_hex = []
 
-        chaintip_utxo = None
-        for i in range(mempool_count + package_count):
+        chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=mempool_count)
+        # in-package transactions
+        for _ in range(package_count):
             tx = self.wallet.create_self_transfer(utxo_to_spend=chaintip_utxo)
             chaintip_utxo = tx["new_utxo"]
-            if i < mempool_count:
-                # in-mempool transactions
-                txid = self.wallet.sendrawtransaction(from_node=node, tx_hex=tx["hex"])
-                assert_equal(node.getmempoolentry(txid)["ancestorcount"], i + 1)
-            else:
-                # in-package transactions
-                chain_hex.append(tx["hex"])
+            chain_hex.append(tx["hex"])
         testres_too_long = node.testmempoolaccept(rawtxs=chain_hex)
         for txres in testres_too_long:
             assert_equal(txres["package-error"], "package-mempool-limits")
@@ -104,25 +99,17 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
         package_hex = []
-        # Chain A
-        chain_a_utxo = m1_utxos[0]
-        for i in range(12):
-            tx = self.wallet.create_self_transfer(utxo_to_spend=chain_a_utxo)
-            chain_a_utxo = tx["new_utxo"]
-            if i < 11: # M2a... M12a
-                self.wallet.sendrawtransaction(from_node=node, tx_hex=tx["hex"])
-            else: # Pa
-                package_hex.append(tx["hex"])
+        # Chain A (M2a... M12a)
+        chain_a_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=11, utxo_to_spend=m1_utxos[0])
+        # Pa
+        pa_hex = self.wallet.create_self_transfer(utxo_to_spend=chain_a_tip_utxo)["hex"]
+        package_hex.append(pa_hex)
 
-        # Chain B
-        chain_b_utxo = m1_utxos[1]
-        for i in range(13):
-            tx = self.wallet.create_self_transfer(utxo_to_spend=chain_b_utxo)
-            chain_b_utxo = tx["new_utxo"]
-            if i < 12: # M3b... M13b
-                self.wallet.sendrawtransaction(from_node=node, tx_hex=tx["hex"])
-            else: # Pb
-                package_hex.append(tx["hex"])
+        # Chain B (M2b... M13b)
+        chain_b_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12, utxo_to_spend=m1_utxos[1])
+        # Pb
+        pb_hex = self.wallet.create_self_transfer(utxo_to_spend=chain_b_tip_utxo)["hex"]
+        package_hex.append(pb_hex)
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
@@ -158,9 +145,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
         # Chain M2...M24
-        chain_utxo = m1_utxos[0]
-        for _ in range(23): # M2...M24
-            chain_utxo = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=chain_utxo)["new_utxo"]
+        self.wallet.send_self_transfer_chain(from_node=node, chain_length=23, utxo_to_spend=m1_utxos[0])
 
         # P1
         p1_tx = self.wallet.create_self_transfer(utxo_to_spend=m1_utxos[1])
@@ -206,15 +191,11 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
         # Two chains of 13 transactions each
         for _ in range(2):
-            chaintip_utxo = None
-            for i in range(13):
-                tx = self.wallet.create_self_transfer(utxo_to_spend=chaintip_utxo)
-                chaintip_utxo = tx["new_utxo"]
-                if i < 12:
-                    self.wallet.sendrawtransaction(from_node=node, tx_hex=tx["hex"])
-                else: # Save the 13th transaction for the package
-                    package_hex.append(tx["hex"])
-                    pc_parent_utxos.append(chaintip_utxo)
+            chain_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)
+            # Save the 13th transaction for the package
+            tx = self.wallet.create_self_transfer(utxo_to_spend=chain_tip_utxo)
+            package_hex.append(tx["hex"])
+            pc_parent_utxos.append(tx["new_utxo"])
 
         # Child Pc
         pc_hex = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)["hex"]
@@ -253,12 +234,9 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
         # Two chains of 12 transactions each
         for _ in range(2):
-            chaintip_utxo = None
-            for i in range(12):
-                chaintip_utxo = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=chaintip_utxo)["new_utxo"]
-                if i == 11:
-                    # last 2 transactions will be the parents of Pc
-                    pc_parent_utxos.append(chaintip_utxo)
+            chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)
+            # last 2 transactions will be the parents of Pc
+            pc_parent_utxos.append(chaintip_utxo)
 
         # Child Pc
         pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)

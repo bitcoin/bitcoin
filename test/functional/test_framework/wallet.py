@@ -335,6 +335,18 @@ class MiniWallet:
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
 
+    def send_self_transfer_chain(self, *, from_node, chain_length, utxo_to_spend=None):
+        """Create and send a "chain" of chain_length transactions. The nth transaction in
+        the chain is a child of the n-1th transaction and parent of the n+1th transaction.
+
+        Returns the chaintip (nth) utxo
+        """
+        chaintip_utxo = utxo_to_spend or self.get_utxo()
+        for _ in range(chain_length):
+            chaintip_utxo = self.send_self_transfer(utxo_to_spend=chaintip_utxo, from_node=from_node)["new_utxo"]
+        return chaintip_utxo
+
+
 def getnewdestination(address_type='bech32m'):
     """Generate a random destination of the specified type and return the
        corresponding public key, scriptPubKey and address. Supported types are
