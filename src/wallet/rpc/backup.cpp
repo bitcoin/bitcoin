@@ -1561,16 +1561,19 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s'", descriptor));
         }
 
+        // db handler
+        WalletBatch batch(wallet.GetDatabase(), /*fFlushOnClose=*/true, /*initialize=*/false);
+
         // Set descriptor as active if necessary
         if (active) {
             if (!w_desc.descriptor->GetOutputType()) {
                 warnings.push_back("Unknown output type, cannot set descriptor to active.");
             } else {
-                wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
+                wallet.AddActiveScriptPubKeyMan(batch, spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
         } else {
             if (w_desc.descriptor->GetOutputType()) {
-                wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
+                wallet.DeactivateScriptPubKeyMan(batch, spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
         }
 

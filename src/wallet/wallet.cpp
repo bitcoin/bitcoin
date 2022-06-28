@@ -3600,7 +3600,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
             spk_manager->SetupDescriptorGeneration(batch, master_key, t, internal);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
-            AddActiveScriptPubKeyMan(id, t, internal);
+            AddActiveScriptPubKeyMan(batch, id, t, internal);
         }
     }
 }
@@ -3627,8 +3627,9 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         // TODO: add account parameter
         int account = 0;
         UniValue signer_res = signer.GetDescriptors(account);
-
         if (!signer_res.isObject()) throw std::runtime_error(std::string(__func__) + ": Unexpected result");
+
+        WalletBatch batch(GetDatabase());
         for (bool internal : {false, true}) {
             const UniValue& descriptor_vals = find_value(signer_res, internal ? "internal" : "receive");
             if (!descriptor_vals.isArray()) throw std::runtime_error(std::string(__func__) + ": Unexpected result");
@@ -3643,20 +3644,19 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                 if (!desc->GetOutputType()) {
                     continue;
                 }
-                OutputType t =  *desc->GetOutputType();
+                OutputType t = *desc->GetOutputType();
                 auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, m_keypool_size));
-                spk_manager->SetupDescriptor(std::move(desc));
+                spk_manager->SetupDescriptor(batch, std::move(desc));
                 uint256 id = spk_manager->GetID();
                 m_spk_managers[id] = std::move(spk_manager);
-                AddActiveScriptPubKeyMan(id, t, internal);
+                AddActiveScriptPubKeyMan(batch, id, t, internal);
             }
         }
     }
 }
 
-void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
+void CWallet::AddActiveScriptPubKeyMan(WalletBatch& batch, uint256 id, OutputType type, bool internal)
 {
-    WalletBatch batch(GetDatabase());
     if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
         throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
     }
@@ -3683,12 +3683,11 @@ void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool intern
     NotifyCanGetAddressesChanged();
 }
 
-void CWallet::DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal)
+void CWallet::DeactivateScriptPubKeyMan(WalletBatch& batch, uint256 id, OutputType type, bool internal)
 {
     auto spk_man = GetScriptPubKeyMan(type, internal);
     if (spk_man != nullptr && spk_man->GetID() == id) {
         WalletLogPrintf("Deactivate spkMan: id = %s, type = %s, internal = %s\n", id.ToString(), FormatOutputType(type), internal ? "true" : "false");
-        WalletBatch batch(GetDatabase());
         if (!batch.EraseActiveScriptPubKeyMan(static_cast<uint8_t>(type), internal)) {
             throw std::runtime_error(std::string(__func__) + ": erasing active ScriptPubKeyMan id failed");
         }
