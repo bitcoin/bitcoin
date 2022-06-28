@@ -366,7 +366,7 @@ endif
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_bitcoin ..."
+	@echo "Running bench/bench_navcoin ..."
 	$(BENCH_BINARY) > /dev/null
 endif
 endif
