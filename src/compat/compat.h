@@ -10,14 +10,17 @@
 #include <config/bitcoin-config.h>
 #endif
 
+// Windows defines FD_SETSIZE to 64 (see _fd_types.h in mingw-w64),
+// which is too small for our usage, but allows us to redefine it safely.
+// We redefine it to be 1024, to match glibc, see typesizes.h.
 #ifdef WIN32
 #ifdef FD_SETSIZE
-#undef FD_SETSIZE // prevent redefinition compiler warning
+#undef FD_SETSIZE
 #endif
-#define FD_SETSIZE 1024 // max number of fds in fd_set
+#define FD_SETSIZE 1024
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdint.h>
+#include <cstdint>
 #else
 #include <fcntl.h>
 #include <sys/mman.h>
