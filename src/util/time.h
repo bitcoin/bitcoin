@@ -57,11 +57,6 @@ constexpr int64_t count_microseconds(std::chrono::microseconds t) { return t.cou
 using SecondsDouble = std::chrono::duration<double, std::chrono::seconds::period>;
 
 /**
- * Helper to count the seconds in any std::chrono::duration type
- */
-inline double CountSecondsDouble(SecondsDouble t) { return t.count(); }
-
-/**
  * DEPRECATED
  * Use either ClockType::now() or Now<TimePointType>() if a cast is needed.
  * ClockType is
