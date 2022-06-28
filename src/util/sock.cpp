@@ -66,6 +66,16 @@ int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
     return connect(m_socket, addr, addr_len);
 }
 
+int Sock::Bind(const sockaddr* addr, socklen_t addr_len) const
+{
+    return bind(m_socket, addr, addr_len);
+}
+
+int Sock::Listen(int backlog) const
+{
+    return listen(m_socket, backlog);
+}
+
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
 #ifdef WIN32

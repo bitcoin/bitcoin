@@ -61,6 +61,10 @@ public:
 
     int Connect(const sockaddr*, socklen_t) const override;
 
+    int Bind(const sockaddr*, socklen_t) const override;
+
+    int Listen(int backlog) const override;
+
     std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
 
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
