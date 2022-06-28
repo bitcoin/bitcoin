@@ -42,14 +42,12 @@ typedef unsigned int SOCKET;
 #include <errno.h>
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
-#define WSAEALREADY         EALREADY
 #define WSAEWOULDBLOCK      EWOULDBLOCK
 #define WSAEAGAIN           EAGAIN
 #define WSAEMSGSIZE         EMSGSIZE
 #define WSAEINTR            EINTR
 #define WSAEINPROGRESS      EINPROGRESS
 #define WSAEADDRINUSE       EADDRINUSE
-#define WSAENOTSOCK         EBADF
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
 #else
