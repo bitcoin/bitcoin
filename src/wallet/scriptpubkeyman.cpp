@@ -2646,10 +2646,9 @@ bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc
     return m_wallet_descriptor.descriptor != nullptr && desc.descriptor != nullptr && m_wallet_descriptor.descriptor->ToString() == desc.descriptor->ToString();
 }
 
-void DescriptorScriptPubKeyMan::WriteDescriptor()
+void DescriptorScriptPubKeyMan::WriteDescriptor(WalletBatch& batch)
 {
     LOCK(cs_desc_man);
-    WalletBatch batch(m_storage.GetDatabase());
     if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
     }

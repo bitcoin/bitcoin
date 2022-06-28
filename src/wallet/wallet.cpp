@@ -3802,7 +3802,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     }
 
     // Save the descriptor to DB
-    spk_man->WriteDescriptor();
+    spk_man->WriteDescriptor(batch);
 
     return spk_man;
 }
