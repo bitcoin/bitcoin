@@ -1204,7 +1204,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 for (const auto& spk_man : GetScriptPubKeyMans(txout.scriptPubKey)) {
-                    for (auto &dest : spk_man->MarkUnusedAddresses(txout.scriptPubKey)) {
+                    for (auto &dest : spk_man->MarkUnusedAddresses(batch, txout.scriptPubKey)) {
                         // If internal flag is not defined try to infer it from the ScriptPubKeyMan
                         if (!dest.internal.has_value()) {
                             dest.internal = IsInternalScriptPubKeyMan(spk_man);
@@ -2480,9 +2480,10 @@ unsigned int CWallet::GetKeyPoolSize() const
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
     LOCK(cs_wallet);
+    WalletBatch batch(GetDatabase());
     bool res = true;
     for (auto spk_man : GetActiveScriptPubKeyMans()) {
-        res &= spk_man->TopUp(kpSize);
+        res &= spk_man->TopUp(batch, kpSize);
     }
     return res;
 }
@@ -3770,8 +3771,11 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         spk_man->AddDescriptorKey(key, key.GetPubKey());
     }
 
+    // Db handler
+    WalletBatch batch(GetDatabase());
+
     // Top up key pool, the manager will generate new scriptPubKeys internally
-    if (!spk_man->TopUp()) {
+    if (!spk_man->TopUp(batch)) {
         WalletLogPrintf("Could not top up scriptPubKeys\n");
         return nullptr;
     }

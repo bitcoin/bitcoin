@@ -187,7 +187,7 @@ public:
       * when something from the address pool is removed, excluding GetNewDestination and GetReservedDestination.
       * External wallet code is primarily responsible for topping up prior to fetching new addresses
       */
-    virtual bool TopUp(unsigned int size = 0) { return false; }
+    virtual bool TopUp(WalletBatch& batch, unsigned int size = 0) { return false; }
 
     /** Mark unused addresses as being used
      * Affects all keys up to and including the one determined by provided script.
@@ -196,7 +196,7 @@ public:
      *
      * @return All of the addresses affected
      */
-    virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
+    virtual std::vector<WalletDestination> MarkUnusedAddresses(WalletBatch& batch, const CScript& script) { return {}; }
 
     /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
       * Returns false if already setup or setup fails, true if setup is successful
@@ -378,9 +378,9 @@ public:
     void KeepDestination(WalletBatch& batch, int64_t index, const OutputType& type) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination&) override;
 
-    bool TopUp(unsigned int size = 0) override;
+    bool TopUp(WalletBatch& batch, unsigned int size = 0) override;
 
-    std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+    std::vector<WalletDestination> MarkUnusedAddresses(WalletBatch& batch, const CScript& script) override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata();
@@ -603,9 +603,9 @@ public:
     // and is used to expand the descriptor in GetNewDestination. DescriptorScriptPubKeyMan relies
     // more on ephemeral data than LegacyScriptPubKeyMan. For wallets using unhardened derivation
     // (with or without private keys), the "keypool" is a single xpub.
-    bool TopUp(unsigned int size = 0) override;
+    bool TopUp(WalletBatch& batch, unsigned int size = 0) override;
 
-    std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+    std::vector<WalletDestination> MarkUnusedAddresses(WalletBatch& batch, const CScript& script) override;
 
     bool IsHDEnabled() const override;
 

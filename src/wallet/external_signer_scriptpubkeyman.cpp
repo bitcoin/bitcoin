@@ -33,7 +33,7 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> 
     }
 
     // TopUp
-    TopUp();
+    TopUp(batch);
 
     m_storage.UnsetBlankWalletFlag(batch);
     return true;
