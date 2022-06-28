@@ -362,10 +362,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256(); // 838467 // TODO revert this
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000141f25d13472"); // 838467
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256(); // 838467 // TODO revert this
+        consensus.defaultAssumeValid = uint256S("0x0000003243223caf052c7e5e6710fae794dbdc10949a594550f073dbf5755bd4"); // 838467
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -376,14 +376,13 @@ public:
         consensus.vchSYSXBurnMethodSignature = ParseHex("54c988ff");
         consensus.vchSYSXERC20Manager = ParseHex("A738a563F9ecb55e0b2245D1e9E380f0fE455ea1");
         consensus.vchTokenFreezeMethod = ParseHex("7ca654cf9212e4c3cf0164a529dd6159fc71113f867d0b09fdeb10aa65780732");
-        consensus.nBridgeStartBlock = 215;
-        // TODO revert this
-        consensus.nNEVMStartBlock = 215;
-        consensus.nUTXOAssetsBlock = 215;
+        consensus.nBridgeStartBlock = 1000;
+        consensus.nNEVMStartBlock = 840000;
+        consensus.nUTXOAssetsBlock = 545000;
         consensus.nPODAStartBlock = 995000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
-        consensus.DIP0003Height = 215;
-        consensus.DIP0003EnforcementHeight = 215;
+        consensus.DIP0003Height = 545000;
+        consensus.DIP0003EnforcementHeight = 545000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
@@ -392,13 +391,12 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
-        // TODO revert this
-        genesis = CreateGenesisBlock(1576000001, 500647, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1576000000, 297648, 0x1e0fffff, 1, 50 * COIN);
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000009e79cfb8c84bb786380480ecfd98d04a51bfbfd39e1ac496fb621fabb4b"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000066e1a6b9cfeac8295dce0cc8d9170690a74bc4878cf8a0b412554f5c222"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
@@ -431,26 +429,24 @@ public:
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
-        // TODO revert this
-        /*checkpointData = {
+        checkpointData = {
             {
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
                 {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
                 {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
                 {838467, uint256S("0x0000003243223caf052c7e5e6710fae794dbdc10949a594550f073dbf5755bd4")},
             }
-        };*/
+        };
 
         m_assumeutxo_data = MapAssumeutxo{
             // TODO to be specified in a future patch.
         };
-        // TODO revert this
-        //chainTxData = ChainTxData{
+        chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
-           // /* nTime    */ 1610136593,
-           // /* nTxCount */ 538904,
-           // /* dTxRate  */ 0.01666588574531774
-        //};
+            /* nTime    */ 1610136593,
+            /* nTxCount */ 538904,
+            /* dTxRate  */ 0.01666588574531774
+        };
     }
 };
 
