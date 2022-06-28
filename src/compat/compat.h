@@ -60,6 +60,8 @@ typedef unsigned int SOCKET;
 #endif
 #endif
 
+// Windows doesn't define S_IRUSR or S_IWUSR. We define both
+// here, with the same values as glibc (see stat.h).
 #ifdef WIN32
 #ifndef S_IRUSR
 #define S_IRUSR             0400
