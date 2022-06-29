@@ -73,7 +73,8 @@ static void InterpretFeeEstimationInstructions(const UniValue& conf_target, cons
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
     }
 }
-static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, const CMutableTransaction& rawTx)
+// SYSCOIN rawTx unref to copy data avoiding data-race condition with mutating in FillNEVMData
+static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, const CMutableTransaction rawTx)
 {
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);
