@@ -499,7 +499,8 @@ def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
 
 
 # Create large OP_RETURN txouts that can be appended to a transaction
-# to make it large (helper for constructing large transactions).
+# to make it large (helper for constructing large transactions). The
+# total serialized size of the txouts is about 66k vbytes.
 def gen_return_txouts():
     # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
     # So we have big transactions (and therefore can't fit very many into each block)
@@ -515,6 +516,7 @@ def gen_return_txouts():
     txout.scriptPubKey = bytes.fromhex(script_pubkey)
     for _ in range(128):
         txouts.append(txout)
+    assert_equal(sum([len(txout.serialize()) for txout in txouts]), 67456)
     return txouts
 
 
