@@ -16,7 +16,6 @@ FUZZ_TARGET(netaddress)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetHash();
     (void)net_addr.GetNetClass();
     if (net_addr.GetNetwork() == Network::NET_IPV4) {
         assert(net_addr.IsIPv4());
@@ -84,6 +83,8 @@ FUZZ_TARGET(netaddress)
     (void)service.ToString();
     (void)service.ToStringIPPort();
     (void)service.ToStringPort();
+    (void)CServiceHash()(service);
+    (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
     (void)net_addr.GetReachabilityFrom(&other_net_addr);

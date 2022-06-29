@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Widecoin Core developers
+// Copyright (c) 2015-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -157,4 +157,4 @@ public:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-#endif /* WIDECOIN_TORCONTROL_H */
+#endif // WIDECOIN_TORCONTROL_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Widecoin Core developers
+// Copyright (c) 2018-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,16 +63,27 @@ using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeHandler;
 using interfaces::Node;
-using interfaces::WalletClient;
+using interfaces::WalletLoader;
 
 namespace node {
 namespace {
+#ifdef ENABLE_EXTERNAL_SIGNER
+class ExternalSignerImpl : public interfaces::ExternalSigner
+{
+public:
+    ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
+    std::string getName() override { return m_signer.m_name; }
+private:
+    ::ExternalSigner m_signer;
+};
+#endif
+
 class NodeImpl : public Node
 {
 private:
     ChainstateManager& chainman() { return *Assert(m_context->chainman); }
 public:
-    explicit NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext& context) { setContext(&context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
@@ -102,7 +113,7 @@ public:
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
-    bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
+    bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(ConnectionDirection flags) override
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
@@ -172,14 +183,18 @@ public:
         }
         return false;
     }
-    std::vector<ExternalSigner> externalSigners() override
+    std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
     {
 #ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
         const std::string command = gArgs.GetArg("-signer", "");
-        if (command == "") return signers;
+        if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
-        return signers;
+        std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
+        for (auto& signer : signers) {
+            result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
+        }
+        return result;
 #else
         // This result is indistinguishable from a successful call that returns
         // no signers. For the current GUI this doesn't matter, because the wallet
@@ -234,8 +249,8 @@ public:
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
-    bool getReindex() override { return ::fReindex; }
-    bool getImporting() override { return ::fImporting; }
+    bool getReindex() override { return node::fReindex; }
+    bool getImporting() override { return node::fImporting; }
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {
@@ -261,9 +276,13 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output, coin);
     }
-    WalletClient& walletClient() override
+    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
     {
-        return *Assert(m_context->wallet_client);
+        return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, /*relay=*/ true, /*wait_callback=*/ false);
+    }
+    WalletLoader& walletLoader() override
+    {
+        return *Assert(m_context->wallet_loader);
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
@@ -280,6 +299,10 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(::uiInterface.ShowProgress_connect(fn));
+    }
+    std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
+    {
+        return MakeHandler(::uiInterface.InitWallet_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
@@ -334,6 +357,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
         REVERSE_LOCK(lock);
         if (!ReadBlockFromDisk(*block.m_data, index, Params().GetConsensus())) block.m_data->SetNull();
     }
+    block.found = true;
     return true;
 }
 
@@ -462,16 +486,11 @@ public:
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
         return active.GetLocator();
     }
-    bool checkFinalTx(const CTransaction& tx) override
-    {
-        LOCK(cs_main);
-        return CheckFinalTx(chainman().ActiveChain().Tip(), tx);
-    }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (CBlockIndex* fork = m_node.chainman->m_blockman.FindForkInGlobalIndex(active, locator)) {
+        const CChainState& active = Assert(m_node.chainman)->ActiveChainstate();
+        if (CBlockIndex* fork = active.FindForkInGlobalIndex(locator)) {
             return fork->nHeight;
         }
         return std::nullopt;
@@ -516,8 +535,11 @@ public:
         const CBlockIndex* block2 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash2);
         const CBlockIndex* ancestor = block1 && block2 ? LastCommonAncestor(block1, block2) : nullptr;
         // Using & instead of && below to avoid short circuiting and leaving
-        // output uninitialized.
-        return FillBlock(ancestor, ancestor_out, lock, active) & FillBlock(block1, block1_out, lock, active) & FillBlock(block2, block2_out, lock, active);
+        // output uninitialized. Cast bool to int to avoid -Wbitwise-instead-of-logical
+        // compiler warnings.
+        return int{FillBlock(ancestor, ancestor_out, lock, active)} &
+               int{FillBlock(block1, block1_out, lock, active)} &
+               int{FillBlock(block2, block2_out, lock, active)};
     }
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
@@ -554,7 +576,7 @@ public:
     {
         if (!m_node.mempool) return false;
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->exists(txid);
+        return m_node.mempool->exists(GenTxid::Txid(txid));
     }
     bool hasDescendantsInMempool(const uint256& txid) override
     {
@@ -574,16 +596,16 @@ public:
         // that Chain clients do not need to know about.
         return TransactionError::OK == err;
     }
-    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
+    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize, CAmount* ancestorfees) override
     {
         ancestors = descendants = 0;
         if (!m_node.mempool) return;
-        m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants);
+        m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants, ancestorsize, ancestorfees);
     }
     void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) override
     {
-        limit_ancestor_count = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
-        limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        limit_ancestor_count = gArgs.GetIntArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        limit_descendant_count = gArgs.GetIntArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
     }
     bool checkChainLimits(const CTransactionRef& tx) override
     {
@@ -591,10 +613,10 @@ public:
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
         CTxMemPool::setEntries ancestors;
-        auto limit_ancestor_count = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
-        auto limit_ancestor_size = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
-        auto limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
-        auto limit_descendant_size = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
+        auto limit_ancestor_count = gArgs.GetIntArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        auto limit_ancestor_size = gArgs.GetIntArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
+        auto limit_descendant_count = gArgs.GetIntArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        auto limit_descendant_size = gArgs.GetIntArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
         std::string unused_error_string;
         LOCK(m_node.mempool->cs);
         return m_node.mempool->CalculateMemPoolAncestors(
@@ -614,7 +636,7 @@ public:
     CFeeRate mempoolMinFee() override
     {
         if (!m_node.mempool) return {};
-        return m_node.mempool->GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        return m_node.mempool->GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
@@ -622,14 +644,13 @@ public:
     bool havePruned() override
     {
         LOCK(cs_main);
-        return ::fHavePruned;
+        return node::fHavePruned;
     }
-    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
+    bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
-    int64_t getAdjustedTime() override { return GetAdjustedTime(); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
     void initWarning(const bilingual_str& message) override { InitWarning(message); }
     void initError(const bilingual_str& message) override { InitError(message); }
@@ -660,6 +681,14 @@ public:
         RPCRunLater(name, std::move(fn), seconds);
     }
     int rpcSerializationFlags() override { return RPCSerializationFlags(); }
+    util::SettingsValue getSetting(const std::string& name) override
+    {
+        return gArgs.GetSetting(name);
+    }
+    std::vector<util::SettingsValue> getSettingsList(const std::string& name) override
+    {
+        return gArgs.GetSettingsList(name);
+    }
     util::SettingsValue getRwSetting(const std::string& name) override
     {
         util::SettingsValue result;
@@ -670,7 +699,7 @@ public:
         });
         return result;
     }
-    bool updateRwSetting(const std::string& name, const util::SettingsValue& value) override
+    bool updateRwSetting(const std::string& name, const util::SettingsValue& value, bool write) override
     {
         gArgs.LockSettings([&](util::Settings& settings) {
             if (value.isNull()) {
@@ -679,7 +708,7 @@ public:
                 settings.rw_settings[name] = value;
             }
         });
-        return gArgs.WriteSettingsFile();
+        return !write || gArgs.WriteSettingsFile();
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {
@@ -689,18 +718,12 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
         }
     }
-    bool isTaprootActive() const override
-    {
-        LOCK(::cs_main);
-        const CBlockIndex* tip = Assert(m_node.chainman)->ActiveChain().Tip();
-        return DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_TAPROOT);
-    }
     NodeContext& m_node;
 };
 } // namespace
 } // namespace node
 
 namespace interfaces {
-std::unique_ptr<Node> MakeNode(NodeContext* context) { return std::make_unique<node::NodeImpl>(context); }
-std::unique_ptr<Chain> MakeChain(NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
+std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
+std::unique_ptr<Chain> MakeChain(node::NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
 } // namespace interfaces

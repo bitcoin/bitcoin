@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -83,6 +83,11 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
+    if (!settings.contains("enable_psbt_controls")) {
+        settings.setValue("enable_psbt_controls", false);
+    }
+    m_enable_psbt_controls = settings.value("enable_psbt_controls", false).toBool();
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -124,6 +129,11 @@ void OptionsModel::Init(bool resetSettings)
     if (!gArgs.SoftSetArg("-signer", settings.value("external_signer_path").toString().toStdString())) {
         addOverriddenOption("-signer");
     }
+
+    if (!settings.contains("SubFeeFromAmount")) {
+        settings.setValue("SubFeeFromAmount", false);
+    }
+    m_sub_fee_from_amount = settings.value("SubFeeFromAmount", false).toBool();
 #endif
 
     // Network
@@ -141,8 +151,18 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fListen"))
         settings.setValue("fListen", DEFAULT_LISTEN);
-    if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool()))
+    if (!gArgs.SoftSetBoolArg("-listen", settings.value("fListen").toBool())) {
         addOverriddenOption("-listen");
+    } else if (!settings.value("fListen").toBool()) {
+        gArgs.SoftSetBoolArg("-listenonion", false);
+    }
+
+    if (!settings.contains("server")) {
+        settings.setValue("server", false);
+    }
+    if (!gArgs.SoftSetBoolArg("-server", settings.value("server").toBool())) {
+        addOverriddenOption("-server");
+    }
 
     if (!settings.contains("fUseProxy"))
         settings.setValue("fUseProxy", false);
@@ -192,8 +212,8 @@ static void CopySettings(QSettings& dst, const QSettings& src)
 /** Back up a QSettings to an ini-formatted file. */
 static void BackupSettings(const fs::path& filename, const QSettings& src)
 {
-    qInfo() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
-    QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
+    qInfo() << "Backing up GUI settings to" << GUIUtil::PathToQString(filename);
+    QSettings dst(GUIUtil::PathToQString(filename), QSettings::IniFormat);
     dst.clear();
     CopySettings(dst, src);
 }
@@ -335,6 +355,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("bSpendZeroConfChange");
         case ExternalSignerPath:
             return settings.value("external_signer_path");
+        case SubFeeFromAmount:
+            return m_sub_fee_from_amount;
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -346,6 +368,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return m_use_embedded_monospaced_font;
         case CoinControlFeatures:
             return fCoinControlFeatures;
+        case EnablePSWCNontrols:
+            return settings.value("enable_psbt_controls");
         case Prune:
             return settings.value("bPrune");
         case PruneSize:
@@ -356,6 +380,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+        case Server:
+            return settings.value("server");
         default:
             return QVariant();
         }
@@ -460,6 +486,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case SubFeeFromAmount:
+            m_sub_fee_from_amount = value.toBool();
+            settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
+            break;
 #endif
         case DisplayUnit:
             setDisplayUnit(value);
@@ -486,6 +516,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
+            break;
+        case EnablePSWCNontrols:
+            m_enable_psbt_controls = value.toBool();
+            settings.setValue("enable_psbt_controls", m_enable_psbt_controls);
             break;
         case Prune:
             if (settings.value("bPrune") != value) {
@@ -514,6 +548,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Listen:
             if (settings.value("fListen") != value) {
                 settings.setValue("fListen", value);
+                setRestartRequired(true);
+            }
+            break;
+        case Server:
+            if (settings.value("server") != value) {
+                settings.setValue("server", value);
                 setRestartRequired(true);
             }
             break;

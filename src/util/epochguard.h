@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,6 +40,9 @@ public:
     Epoch() = default;
     Epoch(const Epoch&) = delete;
     Epoch& operator=(const Epoch&) = delete;
+    Epoch(Epoch&&) = delete;
+    Epoch& operator=(Epoch&&) = delete;
+    ~Epoch() = default;
 
     bool guarded() const { return m_guarded; }
 
@@ -51,6 +54,13 @@ public:
         // only allow modification via Epoch member functions
         friend class Epoch;
         Marker& operator=(const Marker&) = delete;
+
+    public:
+        Marker() = default;
+        Marker(const Marker&) = default;
+        Marker(Marker&&) = delete;
+        Marker& operator=(Marker&&) = delete;
+        ~Marker() = default;
     };
 
     class SCOPED_LOCKABLE Guard

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Widecoin Core developers
+# Copyright (c) 2018-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
@@ -16,7 +16,7 @@ def expect_http_status(expected_http_status, expected_rpc_code,
                        fcn, *args):
     try:
         fcn(*args)
-        raise AssertionError("Expected RPC error %d, got none" % expected_rpc_code)
+        raise AssertionError(f"Expected RPC error {expected_rpc_code}, got none")
     except JSONRPCException as exc:
         assert_equal(exc.error["code"], expected_rpc_code)
         assert_equal(exc.http_status, expected_http_status)

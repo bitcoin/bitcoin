@@ -168,6 +168,7 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
      * that the Z coordinate was 1, use affine addition formulae, and correct
      * the Z coordinate of the result once at the end.
      */
+    VERIFY_CHECK(!a->infinity);
     secp256k1_gej_set_ge(r, a);
     secp256k1_ecmult_odd_multiples_table_globalz_windowa(pre_a, &Z, r);
     for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {

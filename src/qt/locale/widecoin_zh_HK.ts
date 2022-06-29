@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>新增一個位址</translation>
+        <translation type="unfinished">新增一個位址</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>複製目前選擇的位址到系統剪貼簿</translation>
+        <translation type="unfinished">複製目前選擇的位址到系統剪貼簿</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>把目前選擇的位址從列表中刪除</translation>
+        <translation type="unfinished">把目前選擇的位址從列表中刪除</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>把目前分頁的資料匯出至檔案</translation>
+        <translation type="unfinished">把目前分頁的資料匯出至檔案</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>匯出 &amp;E</translation>
+        <translation type="unfinished">匯出 &amp;E</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>刪除 &amp;D</translation>
+        <translation type="unfinished">刪除 &amp;D</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -114,19 +114,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>複雜密碼對話方塊</translation>
+        <translation type="unfinished">複雜密碼對話方塊</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>請輸入密碼</translation>
+        <translation type="unfinished">請輸入密碼</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>新密碼</translation>
+        <translation type="unfinished">新密碼</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>重複新密碼</translation>
+        <translation type="unfinished">重複新密碼</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -275,13 +275,13 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -318,27 +318,27 @@
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>總覽 &amp;O</translation>
+        <translation type="unfinished">總覽 &amp;O</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>顯示錢包一般總覽</translation>
+        <translation type="unfinished">顯示錢包一般總覽</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>交易 &amp;T</translation>
+        <translation type="unfinished">交易 &amp;T</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>瀏覽交易紀錄</translation>
+        <translation type="unfinished">瀏覽交易紀錄</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>結束 &amp;x</translation>
+        <translation type="unfinished">結束 &amp;x</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>結束應用程式</translation>
+        <translation type="unfinished">結束應用程式</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -350,11 +350,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>關於 Qt &amp;Q</translation>
+        <translation type="unfinished">關於 Qt &amp;Q</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>顯示 Qt 相關資訊</translation>
+        <translation type="unfinished">顯示 Qt 相關資訊</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -370,43 +370,35 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>付款至一個 Widecoin 位址</translation>
+        <translation type="unfinished">付款至一個 Widecoin 位址</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>把錢包備份到其它地方</translation>
+        <translation type="unfinished">把錢包備份到其它地方</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>改變錢包加密用的密碼</translation>
+        <translation type="unfinished">改變錢包加密用的密碼</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>付款 &amp;S</translation>
+        <translation type="unfinished">付款 &amp;S</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>收款 &amp;R</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>顯示 / 隱藏 &amp;S</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>顯示或隱藏主視窗</translation>
+        <translation type="unfinished">收款 &amp;R</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>檔案 &amp;F</translation>
+        <translation type="unfinished">檔案 &amp;F</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>設定 &amp;S</translation>
+        <translation type="unfinished">設定 &amp;S</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>說明 &amp;H</translation>
+        <translation type="unfinished">說明 &amp;H</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -414,25 +406,25 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>錯誤</translation>
+        <translation type="unfinished">錯誤</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>警告</translation>
+        <translation type="unfinished">警告</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>資訊</translation>
+        <translation type="unfinished">資訊</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>已更新至最新版本</translation>
+        <translation type="unfinished">已更新至最新版本</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -491,6 +483,11 @@
         <source>default wallet</source>
         <translation type="unfinished">預設錢包</translation>
     </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">開啟錢包</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -510,7 +507,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>錯誤</translation>
+        <translation type="unfinished">錯誤</translation>
     </message>
     </context>
 <context>
@@ -549,7 +546,7 @@
     <name>RPCConsole</name>
     <message>
         <source>&amp;Information</source>
-        <translation>資訊 &amp;I</translation>
+        <translation type="unfinished">資訊 &amp;I</translation>
     </message>
     <message>
         <source>General</source>
@@ -590,7 +587,7 @@
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -602,18 +599,8 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">開放至 %1</translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -623,16 +610,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">標記</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">開放至 %1</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -664,7 +641,11 @@
         <source>Create a new wallet</source>
         <translation type="unfinished">新增一個錢包</translation>
     </message>
-</context>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">錯誤</translation>
+    </message>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -681,10 +662,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">把目前分頁的資料匯出至檔案</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">錯誤</translation>
     </message>
     </context>
 </TS>

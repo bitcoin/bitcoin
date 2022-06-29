@@ -1,22 +1,22 @@
-Bitcoin Core version 0.14.0 is now available from:
+Widecoin Core version 0.14.0 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.0/>
+  <https://widecoin.org/bin/widecoin-core-0.14.0/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/widecoin/widecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://widecoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Widecoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later.
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
@@ -24,7 +24,7 @@ No attempt is made to prevent installing or running the software on Windows XP, 
 can still do so at your own risk but be aware that there are known instabilities and issues.
 Please do not report issues about Windows XP to the issue tracker.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Widecoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
@@ -55,7 +55,7 @@ improved, leading to much shorter sync and initial block download times.
 Manual Pruning
 --------------
 
-Bitcoin Core has supported automatically pruning the blockchain since 0.11. Pruning
+Widecoin Core has supported automatically pruning the blockchain since 0.11. Pruning
 the blockchain allows for significant storage space savings as the vast majority of
 the downloaded data can be discarded after processing so very little of it remains
 on the disk.
@@ -96,7 +96,7 @@ ZMQ On Windows
 
 Previously the ZeroMQ notification system was unavailable on Windows
 due to various issues with ZMQ. These have been fixed upstream and
-now ZMQ can be used on Windows. Please see [this document](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md) for
+now ZMQ can be used on Windows. Please see [this document](https://github.com/widecoin/widecoin/blob/master/doc/zmq.md) for
 help with using ZMQ in general.
 
 Nested RPC Commands in Debug Console
@@ -129,7 +129,7 @@ the same thing as the GUI icon. The command takes one boolean parameter,
 Out-of-sync Modal Info Layer
 ----------------------------
 
-When Bitcoin Core is out-of-sync on startup, a semi-transparent information
+When Widecoin Core is out-of-sync on startup, a semi-transparent information
 layer will be shown over top of the normal display. This layer contains
 details about the current sync progress and estimates the amount of time
 remaining to finish syncing. This layer can also be hidden and subsequently
@@ -138,19 +138,19 @@ unhidden by clicking on the progress bar at the bottom of the window.
 Support for JSON-RPC Named Arguments
 ------------------------------------
 
-Commands sent over the JSON-RPC interface and through the `bitcoin-cli` binary
+Commands sent over the JSON-RPC interface and through the `widecoin-cli` binary
 can now use named arguments. This follows the [JSON-RPC specification](http://www.jsonrpc.org/specification)
 for passing parameters by-name with an object.
 
-`bitcoin-cli` has been updated to support this by parsing `name=value` arguments
+`widecoin-cli` has been updated to support this by parsing `name=value` arguments
 when the `-named` option is given.
 
 Some examples:
 
-    src/bitcoin-cli -named help command="help"
-    src/bitcoin-cli -named getblockhash height=0
-    src/bitcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-    src/bitcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
+    src/widecoin-cli -named help command="help"
+    src/widecoin-cli -named getblockhash height=0
+    src/widecoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+    src/widecoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
 
 The order of arguments doesn't matter in this case. Named arguments are also
 useful to leave out arguments that should stay at their default value. The
@@ -189,7 +189,7 @@ commands such as `prioritisetransaction` so that those changes will not be lost.
 Final Alert
 -----------
 
-The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
+The Alert System was [disabled and deprecated](https://widecoin.org/en/alert/2016-11-01-alert-retirement) in Widecoin Core 0.12.1 and removed in 0.13.0. 
 The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
@@ -241,8 +241,8 @@ Low-level RPC changes
    the mempool or if `txindex` is enabled.
 
  - A new RPC command `getmemoryinfo` has been added which will return information
-   about the memory usage of Bitcoin Core. This was added in conjunction with
-   optimizations to memory management. See [Pull #8753](https://github.com/bitcoin/bitcoin/pull/8753)
+   about the memory usage of Widecoin Core. This was added in conjunction with
+   optimizations to memory management. See [Pull #8753](https://github.com/widecoin/widecoin/pull/8753)
    for more information.
 
  - A new RPC command `bumpfee` has been added which allows replacing an
@@ -367,7 +367,7 @@ and git merge commit are mentioned.
 - #8421 `b77bb95` httpserver: drop boost dependency (theuni)
 - #8638 `f061415` rest.cpp: change `HTTP_INTERNAL_SERVER_ERROR` to `HTTP_BAD_REQUEST` (djpnewton)
 - #8272 `91990ee` Make the dummy argument to getaddednodeinfo optional (sipa)
-- #8722 `bb843ad` bitcoin-cli: More detailed error reporting (laanwj)
+- #8722 `bb843ad` widecoin-cli: More detailed error reporting (laanwj)
 - #6996 `7f71a3c` Add preciousblock RPC (sipa)
 - #8788 `97c7f73` Give RPC commands more information about the RPC request (jonasschnelli)
 - #7948 `5d2c8e5` Augment getblockchaininfo bip9\_softforks data (mruddy)
@@ -402,7 +402,7 @@ and git merge commit are mentioned.
 - #9133 `434e683` Unset fImporting for loading mempool (morcos)
 - #9179 `b9a87b4` Set `DEFAULT_LIMITFREERELAY` = 0 kB/minute (MarcoFalke)
 - #9239 `3fbf079` Disable fee estimates for 1-block target (morcos)
-- #7562 `1eef038` Bump transaction version default to 2 (btcdrak)
+- #7562 `1eef038` Bump transaction version default to 2 (wcndrak)
 - #9313,#9367 If we don't allow free txs, always send a fee filter (morcos)
 - #9346 `b99a093` Batch construct batches (sipa)
 - #9262 `5a70572` Prefer coins that have fewer ancestors, sanity check txn before ATMP (instagibbs)
@@ -504,7 +504,7 @@ and git merge commit are mentioned.
 - #8604 `f256843` build,doc: Update for 0.13.0+ and OpenBSD 5.9 (laanwj)
 - #8640 `2663e51` depends: Remove Qt46 package (fanquake)
 - #8645 `8ea4440` Remove unused Qt 4.6 patch (droark)
-- #8608 `7e9ab95` Install manpages via make install, also add some autogenerated manpages (nomnombtc)
+- #8608 `7e9ab95` Install manpages via make install, also add some autogenerated manpages (nomnomwcn)
 - #8781 `ca69ef4` contrib: delete `qt_translations.py` (MarcoFalke)
 - #8783 `64dc645` share: remove qt/protobuf.pri (MarcoFalke)
 - #8423 `3166dff` depends: expat 2.2.0, ccache 3.3.1, fontconfig 2.12.1 (fanquake)
@@ -514,7 +514,7 @@ and git merge commit are mentioned.
 - #8819 `c841816` depends: Boost 1.61.0 (fanquake)
 - #8826 `f560d95` Do not include `env_win.cc` on non-Windows systems (paveljanik)
 - #8948 `e077e00` Reorder Windows gitian build order to match Linux (Michagogo)
-- #8568 `078900d` new var `DIST_CONTRIB` adds useful things for packagers from contrib (nomnombtc)
+- #8568 `078900d` new var `DIST_CONTRIB` adds useful things for packagers from contrib (nomnomwcn)
 - #9114 `21e6c6b` depends: Set `OSX_MIN_VERSION` to 10.8 (fanquake)
 - #9140 `018a4eb` Bugfix: Correctly replace generated headers and fail cleanly (luke-jr)
 - #9156 `a8b2a82` Add compile and link options echo to configure (jonasschnelli)
@@ -626,21 +626,21 @@ and git merge commit are mentioned.
 - #8680 `666eaf0` Address Travis spurious failures (theuni)
 - #8789 `e31a43c` pull-tester: Only print output when failed (MarcoFalke)
 - #8810 `14e8f99` tests: Add exception error message for JSONRPCException (laanwj)
-- #8830 `ef0801b` test: Add option to run bitcoin-util-test.py manually (jnewbery)
-- #8881 `e66cc1d` Add some verbose logging to bitcoin-util-test.py (jnewbery)
+- #8830 `ef0801b` test: Add option to run widecoin-util-test.py manually (jnewbery)
+- #8881 `e66cc1d` Add some verbose logging to widecoin-util-test.py (jnewbery)
 - #8922 `0329511` Send segwit-encoded blocktxn messages in p2p-compactblocks (TheBlueMatt)
 - #8873 `74dc388` Add microbenchmarks to profile more code paths (ryanofsky)
 - #9032 `6a8be7b` test: Add format-dependent comparison to bctest (laanwj)
-- #9023 `774db92` Add logging to bitcoin-util-test.py (jnewbery)
+- #9023 `774db92` Add logging to widecoin-util-test.py (jnewbery)
 - #9065 `c9bdf9a` Merge `doc/unit-tests.md` into `src/test/README.md` (laanwj)
-- #9069 `ed64bce` Clean up bctest.py and bitcoin-util-test.py (jnewbery)
+- #9069 `ed64bce` Clean up bctest.py and widecoin-util-test.py (jnewbery)
 - #9095 `b8f43e3` test: Fix test\_random includes (MarcoFalke)
 - #8894 `faec09b` Testing: Include fRelay in mininode version messages (jnewbery)
 - #9097 `e536499` Rework `sync_*` and preciousblock.py (MarcoFalke)
 - #9049 `71bc39e` Remove duplicatable duplicate-input check from CheckTransaction (TheBlueMatt)
 - #9136 `b422913` sync\_blocks cleanup (ryanofsky)
 - #9151 `4333b1c` proxy\_test: Calculate hardcoded port numbers (MarcoFalke)
-- #9206 `e662d28` Make test constant consistent with consensus.h (btcdrak)
+- #9206 `e662d28` Make test constant consistent with consensus.h (wcndrak)
 - #9139 `0de7fd3` Change sync\_blocks to pick smarter maxheight (on top of #9196) (ryanofsky)
 - #9100 `97ec6e5` tx\_valid: re-order inputs to how they are encoded (dcousens)
 - #9202 `e56cf67` bench: Add support for measuring CPU cycles (laanwj)
@@ -665,7 +665,7 @@ and git merge commit are mentioned.
 - #9628 `f895023` Increase a sync\_blocks timeout in pruning.py (sdaftuar)
 - #9638 `a7ea2f8` Actually test assertions in pruning.py (MarcoFalke)
 - #9647 `e99f0d7` Skip RAII event tests if libevent is built without `event_set_mem_functions` (luke-jr)
-- #9691 `fc67cd2` Init ECC context for `test_bitcoin_fuzzy` (gmaxwell)
+- #9691 `fc67cd2` Init ECC context for `test_widecoin_fuzzy` (gmaxwell)
 - #9712 `d304fef` bench: Fix initialization order in registration (laanwj)
 - #9707 `b860915` Fix RPC failure testing (jnewbery)
 - #9269 `43e8150` Align struct COrphan definition (sipa)
@@ -711,25 +711,25 @@ and git merge commit are mentioned.
 - #8965 `23e03f8` Mention that PPA doesn't support Debian (anduck)
 - #9115 `bfc7aad` Mention reporting security issues responsibly (paveljanik)
 - #9840 `08e0690` Update sendfrom RPC help to correct coin selection misconception (ryanofsky)
-- #9865 `289204f` Change bitcoin address in RPC help message (marijnfs)
+- #9865 `289204f` Change widecoin address in RPC help message (marijnfs)
 
 ### Miscellaneous
 - #8274 `7a2d402` util: Update tinyformat (laanwj)
 - #8291 `5cac8b1` util: CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 - #8557 `44691f3` contrib: Rework verifybinaries (MarcoFalke)
 - #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
-- #8813 `fb24d7e` bitcoind: Daemonize using daemon(3) (laanwj)
+- #8813 `fb24d7e` widecoind: Daemonize using daemon(3) (laanwj)
 - #9004 `67728a3` Clarify `listenonion` (unsystemizer)
 - #8674 `bae81b8` tools for analyzing, updating and adding copyright headers in source files (isle2983)
 - #8976 `8c6218a` libconsensus: Add input validation of flags (laanwj)
 - #9112 `46027e8` Avoid ugly exception in log on unknown inv type (laanwj)
-- #8837 `2108911` Allow bitcoin-tx to parse partial transactions (jnewbery)
+- #8837 `2108911` Allow widecoin-tx to parse partial transactions (jnewbery)
 - #9204 `74ced54` Clarify CreateTransaction error messages (instagibbs)
-- #9265 `31bcc66` bitcoin-cli: Make error message less confusing (laanwj)
+- #9265 `31bcc66` widecoin-cli: Make error message less confusing (laanwj)
 - #9303 `72bf1b3` Update comments in ctaes (sipa)
 - #9417 `c4b7d4f` Do not evaluate hidden LogPrint arguments (sipa)
 - #9506 `593a00c` RFC: Improve style for if indentation (sipa)
-- #8883 `d5d4ad8` Add all standard TXO types to bitcoin-tx (jnewbery)
+- #8883 `d5d4ad8` Add all standard TXO types to widecoin-tx (jnewbery)
 - #9531 `23281a4` Release notes for estimation changes  (morcos)
 - #9486 `f62bc10` Make peer=%d log prints consistent (TheBlueMatt)
 - #9552 `41cb05c` Add IPv6 support to qos.sh (jamesmacwhite)
@@ -779,7 +779,7 @@ Thanks to everyone who directly contributed to this release:
 - anduck
 - Anthony Towns
 - Brian Deery
-- BtcDrak
+- WcnDrak
 - Chris Moore
 - Chris Stewart
 - Christian Barcenas
@@ -841,7 +841,7 @@ Thanks to everyone who directly contributed to this release:
 - mrbandrews
 - mruddy
 - Nicolas DORIER
-- nomnombtc
+- nomnomwcn
 - Patrick Strateman
 - Pavel Janík
 - Pedro Branco
@@ -870,4 +870,4 @@ Thanks to everyone who directly contributed to this release:
 - wodry
 - Zak Wilcox
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/widecoin/).

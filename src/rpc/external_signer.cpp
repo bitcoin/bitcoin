@@ -24,8 +24,11 @@ static RPCHelpMan enumeratesigners()
             {
                 {RPCResult::Type::ARR, "signers", /* optional */ false, "",
                 {
-                    {RPCResult::Type::STR_HEX, "masterkeyfingerprint", "Master key fingerprint"},
-                    {RPCResult::Type::STR, "name", "Device name"},
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "fingerprint", "Master key fingerprint"},
+                        {RPCResult::Type::STR, "name", "Device name"},
+                    }},
                 },
                 }
             }

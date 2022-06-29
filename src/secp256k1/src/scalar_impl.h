@@ -74,7 +74,7 @@ static void secp256k1_scalar_split_lambda_verify(const secp256k1_scalar *r1, con
  * Both lambda and beta are primitive cube roots of unity.  That is lamba^3 == 1 mod n and
  * beta^3 == 1 mod p, where n is the curve order and p is the field order.
  *
- * Futhermore, because (X^3 - 1) = (X - 1)(X^2 + X + 1), the primitive cube roots of unity are
+ * Furthermore, because (X^3 - 1) = (X - 1)(X^2 + X + 1), the primitive cube roots of unity are
  * roots of X^2 + X + 1.  Therefore lambda^2 + lamba == -1 mod n and beta^2 + beta == -1 mod p.
  * (The other primitive cube roots of unity are lambda^2 and beta^2 respectively.)
  *

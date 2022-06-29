@@ -18,12 +18,11 @@
 
 
 # Maintainers
+#   @achow101
 #   @fanquake
 #   @hebasto
-#   @jonasschnelli
 #   @laanwj
 #   @marcofalke
-#   @meshcollider
 #   @sipa
 
 # Docs
@@ -41,7 +40,6 @@
 /doc/dependencies.md                        @fanquake
 /doc/developer-notes.md                     @laanwj
 /doc/files.md                               @hebasto
-/doc/gitian-building.md                     @laanwj
 /doc/reduce-memory.md                       @fanquake
 /doc/reduce-traffic.md                      @jonasschnelli
 /doc/release-process.md                     @laanwj
@@ -77,8 +75,7 @@
 /contrib/devtools/test-security-check.py    @fanquake
 /contrib/devtools/symbol-check.py           @fanquake
 
-# Gitian/Guix
-/contrib/gitian-build.py                    @hebasto
+# Guix
 /contrib/guix/                              @dongcarl
 
 # Compatibility
@@ -136,3 +133,8 @@
 /src/script/interpreter.*                   @sipa
 /src/validation.*                           @sipa
 /src/consensus/                             @sipa
+
+# Tracing
+/doc/tracing.md                             @jb55 @0xB10C
+/src/util/trace.h                           @jb55 @0xB10C
+/contrib/tracing/                           @jb55 @0xB10C

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Widecoin Core developers
+# Copyright (c) 2015-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
 
-from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+)
 from test_framework.address import (
     script_to_p2sh,
     script_to_p2wsh,
@@ -15,7 +17,6 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
-    hex_str_to_bytes,
 )
 from test_framework.messages import (
     CTxInWitness,
@@ -24,12 +25,12 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_CHECKLOCKTIMEVERIFY,
-    OP_CHECKSIG,
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
     OP_TRUE,
 )
 from test_framework.script_util import (
+    key_to_p2pk_script,
     key_to_p2pkh_script,
     script_to_p2sh_p2wsh_script,
     script_to_p2wsh_script,
@@ -180,7 +181,7 @@ class SignRawTransactionsTest(WidecoinTestFramework):
     def test_fully_signed_tx(self):
         self.log.info("Test signing a fully signed transaction does nothing")
         self.nodes[0].walletpassphrase("password", 9999)
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
         fundedtx = self.nodes[0].fundrawtransaction(rawtx)
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
@@ -199,10 +200,9 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "p2sh-segwit")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
         # Get the UTXO info from scantxoutset
         unspent_output = self.nodes[1].scantxoutset('start', [p2sh_p2wsh_address['descriptor']])['unspents'][0]
         spk = script_to_p2sh_p2wsh_script(p2sh_p2wsh_address['redeemScript']).hex()
@@ -228,7 +228,7 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         witness_script = {
             'P2PKH': key_to_p2pkh_script(embedded_pubkey).hex(),
-            'P2PK': CScript([hex_str_to_bytes(embedded_pubkey), OP_CHECKSIG]).hex()
+            'P2PK': key_to_p2pk_script(embedded_pubkey).hex()
         }.get(tx_type, "Invalid tx_type")
         redeem_script = script_to_p2wsh_script(witness_script).hex()
         addr = script_to_p2sh(redeem_script)
@@ -236,7 +236,7 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         # Fund that address
         txid = self.nodes[0].sendtoaddress(addr, 10)
         vout = find_vout_for_address(self.nodes[0], txid, addr)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): Decimal("9.999")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [{'txid': txid, 'vout': vout, 'scriptPubKey': script_pub_key, 'redeemScript': redeem_script, 'witnessScript': witness_script, 'amount': 10}])
@@ -270,7 +270,7 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         getcontext().prec = 8
 
         # Make sure CSV is active
-        self.nodes[0].generate(500)
+        assert self.nodes[0].getdeploymentinfo()['deployments']['csv']['active']
 
         # Create a P2WSH script with CSV
         script = CScript([1, OP_CHECKSEQUENCEVERIFY, OP_DROP])
@@ -279,7 +279,7 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
@@ -304,17 +304,17 @@ class SignRawTransactionsTest(WidecoinTestFramework):
         self.nodes[0].walletpassphrase("password", 9999)
         getcontext().prec = 8
 
-        # Make sure CSV is active
-        self.nodes[0].generate(1500)
+        # Make sure CLTV is active
+        assert self.nodes[0].getdeploymentinfo()['deployments']['bip65']['active']
 
         # Create a P2WSH script with CLTV
-        script = CScript([1000, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
+        script = CScript([100, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
         address = script_to_p2wsh(script)
 
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(

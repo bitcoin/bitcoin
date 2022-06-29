@@ -15,11 +15,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Allattorsimaffimminngaanniit toqqakkat peeruk</translation>
+        <translation type="unfinished">Allattorsimaffimminngaanniit toqqakkat peeruk</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Peeruk</translation>
+        <translation type="unfinished">&amp;Peeruk</translation>
     </message>
     </context>
 <context>
@@ -33,15 +33,15 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Enter passphrase</source>
-        <translation>Isissutissaq allaguk</translation>
+        <translation type="unfinished">Isissutissaq allaguk</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Isissutissaq nutaaq sanajuk</translation>
+        <translation type="unfinished">Isissutissaq nutaaq sanajuk</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Isissutissaq ilaaqqiguk</translation>
+        <translation type="unfinished">Isissutissaq ilaaqqiguk</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -84,14 +84,14 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -131,13 +131,9 @@
         <source>Wallet:</source>
         <translation type="unfinished">Aningaasivik:</translation>
     </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Nuisiguk / Tarrisiguk</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -189,10 +185,18 @@
     </message>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Ammaruk aningaasivik</translation>
+    </message>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Taajuut</translation>
+        <translation type="unfinished">&amp;Taajuut</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -211,7 +215,7 @@
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Tikilluarit</translation>
+        <translation type="unfinished">Tikilluarit</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -229,7 +233,7 @@
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Toqqagassat</translation>
+        <translation type="unfinished">Toqqagassat</translation>
     </message>
     </context>
 <context>
@@ -273,7 +277,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -281,20 +285,13 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">Ulloq</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -313,13 +310,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Taaguut</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     </context>
 <context>

@@ -1,10 +1,11 @@
-// Copyright (c) 2015-2020 The Widecoin Core developers
+// Copyright (c) 2015-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef WIDECOIN_BENCH_BENCH_H
 #define WIDECOIN_BENCH_BENCH_H
 
+#include <fs.h>
 #include <util/macros.h>
 
 #include <chrono>
@@ -41,11 +42,12 @@ using ankerl::nanobench::Bench;
 typedef std::function<void(Bench&)> BenchFunction;
 
 struct Args {
-    std::string regex_filter;
     bool is_list_only;
+    std::chrono::milliseconds min_time;
     std::vector<double> asymptote;
-    std::string output_csv;
-    std::string output_json;
+    fs::path output_csv;
+    fs::path output_json;
+    std::string regex_filter;
 };
 
 class BenchRunner

@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>አዲስ አድራሻ ፍጠር</translation>
+        <translation type="unfinished">አዲስ አድራሻ ፍጠር</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>አሁን የተመረጠውን አድራሻ ወደ ሲስተሙ ቅንጥብ ሰሌዳ ቅዳ</translation>
+        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ወደ ሲስተሙ ቅንጥብ ሰሌዳ ቅዳ</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,19 +27,19 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>አሁን የተመረጠውን አድራሻ ከዝርዝሩ ውስጥ ሰርዝ</translation>
+        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ከዝርዝሩ ውስጥ ሰርዝ</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
+        <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;ላክ</translation>
+        <translation type="unfinished">&amp;ላክ</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;ሰርዝ</translation>
+        <translation type="unfinished">&amp;ሰርዝ</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -110,19 +110,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>የይለፍ-ሐረግ ንግግር</translation>
+        <translation type="unfinished">የይለፍ-ሐረግ ንግግር</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>የይለፍ-ሐረግዎን ያስገቡ</translation>
+        <translation type="unfinished">የይለፍ-ሐረግዎን ያስገቡ</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>አዲስ የይለፍ-ሐረግ</translation>
+        <translation type="unfinished">አዲስ የይለፍ-ሐረግ</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>አዲስ የይለፍ-ሐረጉን ይድገሙት</translation>
+        <translation type="unfinished">አዲስ የይለፍ-ሐረጉን ይድገሙት</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -212,14 +212,14 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -257,27 +257,27 @@
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;አጠቃላይ እይታ</translation>
+        <translation type="unfinished">&amp;አጠቃላይ እይታ</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>የቦርሳ አጠቃላይ እይታ ኣሳይ</translation>
+        <translation type="unfinished">የቦርሳ አጠቃላይ እይታ ኣሳይ</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;ግብይቶች</translation>
+        <translation type="unfinished">&amp;ግብይቶች</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>የግብይት ታሪክ ያስሱ</translation>
+        <translation type="unfinished">የግብይት ታሪክ ያስሱ</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>ውጣ</translation>
+        <translation type="unfinished">ውጣ</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>አፕሊኬሽኑን አቁም</translation>
+        <translation type="unfinished">አፕሊኬሽኑን አቁም</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -289,11 +289,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>ስለ &amp;Qt</translation>
+        <translation type="unfinished">ስለ &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>ስለ Qt መረጃ አሳይ</translation>
+        <translation type="unfinished">ስለ Qt መረጃ አሳይ</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -305,46 +305,42 @@
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;ላክ</translation>
+        <translation type="unfinished">&amp;ላክ</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;ተቀበል</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;አሳይ/ ደብቅ</translation>
+        <translation type="unfinished">&amp;ተቀበል</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;ፋይል</translation>
+        <translation type="unfinished">&amp;ፋይል</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;ቅንብሮች</translation>
+        <translation type="unfinished">&amp;ቅንብሮች</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;እርዳታ</translation>
+        <translation type="unfinished">&amp;እርዳታ</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>ስህተት</translation>
+        <translation type="unfinished">ስህተት</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>ማሳስቢያ</translation>
+        <translation type="unfinished">ማሳስቢያ</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>መረጃ</translation>
+        <translation type="unfinished">መረጃ</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -361,10 +357,6 @@
     <message>
         <source>default wallet</source>
         <translation type="unfinished">መደበኛ ዋሌት</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">አሳንስ</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -454,6 +446,11 @@
         <source>default wallet</source>
         <translation type="unfinished">መደበኛ ዋሌት</translation>
     </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">ዋሌት ክፈት</translation>
+    </message>
     </context>
 <context>
     <name>WalletController</name>
@@ -477,7 +474,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
-        <translation>ስም</translation>
+        <translation type="unfinished">ስም</translation>
     </message>
     </context>
 <context>
@@ -496,11 +493,11 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>ስህተት</translation>
+        <translation type="unfinished">ስህተት</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>እንኳን ደህና መጣህ</translation>
+        <translation type="unfinished">እንኳን ደህና መጣህ</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -540,7 +537,7 @@
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>ከ</translation>
+        <translation type="unfinished">ከ</translation>
     </message>
     </context>
 <context>
@@ -605,7 +602,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -617,20 +614,13 @@
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">ቀን</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -649,13 +639,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">መለያ ስም</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -687,7 +670,11 @@
         <source>Create a new wallet</source>
         <translation type="unfinished">አዲስ ዋሌት ፍጠር</translation>
     </message>
-</context>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">ስህተት</translation>
+    </message>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -704,10 +691,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">ስህተት</translation>
     </message>
     </context>
 </TS>

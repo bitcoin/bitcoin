@@ -1,9 +1,10 @@
-// Copyright (c) 2020 The Widecoin Core developers
+// Copyright (c) 2020-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
 #include <test/fuzz/fuzz.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <vector>
@@ -42,13 +43,13 @@ FUZZ_TARGET(asmap)
             asmap.push_back((buffer[1 + i] >> j) & 1);
         }
     }
-    if (!SanityCheckASMap(asmap)) return;
+    if (!SanityCheckASMap(asmap, 128)) return;
 
     const uint8_t* addr_data = buffer.data() + 1 + asmap_size;
     CNetAddr net_addr;
     if (ipv6) {
         assert(addr_size == ADDR_IPV6_SIZE);
-        net_addr.SetLegacyIPv6(Span<const uint8_t>(addr_data, addr_size));
+        net_addr.SetLegacyIPv6({addr_data, addr_size});
     } else {
         assert(addr_size == ADDR_IPV4_SIZE);
         in_addr ipv4;

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Widecoin Core developers
+// Copyright (c) 2016-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,14 +15,17 @@
 
 #include <memory>
 
+namespace wallet {
 /** Testing setup and teardown for wallet.
  */
 struct WalletTestingSetup : public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    ~WalletTestingSetup();
 
-    std::unique_ptr<interfaces::WalletClient> m_wallet_client = interfaces::MakeWalletClient(*m_node.chain, *Assert(m_node.args));
+    std::unique_ptr<interfaces::WalletLoader> m_wallet_loader = interfaces::MakeWalletLoader(*m_node.chain, *Assert(m_node.args));
     CWallet m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };
+} // namespace wallet
 
 #endif // WIDECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H

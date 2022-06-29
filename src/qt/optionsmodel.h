@@ -1,11 +1,10 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef WIDECOIN_QT_OPTIONSMODEL_H
 #define WIDECOIN_QT_OPTIONSMODEL_H
 
-#include <amount.h>
 #include <cstdint>
 #include <qt/guiconstants.h>
 
@@ -61,6 +60,7 @@ public:
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
         CoinControlFeatures,    // bool
+        SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
         PruneSize,              // int
@@ -68,6 +68,8 @@ public:
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        Server,                 // bool
+        EnablePSWCNontrols,     // bool
         OptionIDRowCount,
     };
 
@@ -88,6 +90,8 @@ public:
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
+    bool getEnablePSWCNontrols() const { return m_enable_psbt_controls; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Explicit setters */
@@ -112,6 +116,8 @@ private:
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
+    bool m_sub_fee_from_amount;
+    bool m_enable_psbt_controls;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 

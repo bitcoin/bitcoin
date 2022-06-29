@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Widecoin Core developers
+// Copyright (c) 2018-2022 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -259,7 +259,15 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
-        if (!arg.GetKey(m_pubkey.GetID(), key)) return false;
+        if (m_xonly) {
+            for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
+                arg.GetKey(keyid, key);
+                if (key.IsValid()) break;
+            }
+        } else {
+            arg.GetKey(m_pubkey.GetID(), key);
+        }
+        if (!key.IsValid()) return false;
         ret = EncodeSecret(key);
         return true;
     }
@@ -631,7 +639,7 @@ public:
             out.origins.emplace(entry.first.GetID(), std::make_pair<CPubKey, KeyOriginInfo>(CPubKey(entry.first), std::move(entry.second)));
         }
 
-        output_scripts = MakeScripts(pubkeys, MakeSpan(subscripts), out);
+        output_scripts = MakeScripts(pubkeys, Span{subscripts}, out);
         return true;
     }
 
@@ -851,6 +859,7 @@ protected:
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
         out.tr_spenddata[output].Merge(builder.GetSpendData());
+        out.pubkeys.emplace(keys[0].GetID(), keys[0]);
         return Vector(GetScriptForDestination(output));
     }
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
@@ -973,10 +982,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
     }
     KeyPath path;
     DeriveType type = DeriveType::NO;
-    if (split.back() == MakeSpan("*").first(1)) {
+    if (split.back() == Span{"*"}.first(1)) {
         split.pop_back();
         type = DeriveType::UNHARDENED;
-    } else if (split.back() == MakeSpan("*'").first(2) || split.back() == MakeSpan("*h").first(2)) {
+    } else if (split.back() == Span{"*'"}.first(2) || split.back() == Span{"*h"}.first(2)) {
         split.pop_back();
         type = DeriveType::HARDENED;
     }
@@ -1221,7 +1230,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "A function is needed within P2WSH";
         return nullptr;
     }
-    error = strprintf("%s is not a valid descriptor function", std::string(expr.begin(), expr.end()));
+    error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
     return nullptr;
 }
 
@@ -1242,14 +1251,8 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
     CPubKey pubkey(full_key);
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
     KeyOriginInfo info;
-    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
+    if (provider.GetKeyOriginByXOnly(xkey, info)) {
         return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-    } else {
-        full_key[0] = 0x03;
-        pubkey = CPubKey(full_key);
-        if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-            return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-        }
     }
     return key_provider;
 }
@@ -1257,8 +1260,8 @@ std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseS
 std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
-        XOnlyPubKey key{Span<const unsigned char>{script.data() + 1, script.data() + 33}};
-        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider));
+        XOnlyPubKey key{Span{script}.subspan(1, 32)};
+        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
     }
 
     std::vector<std::vector<unsigned char>> data;

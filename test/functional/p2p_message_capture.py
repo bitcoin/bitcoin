@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Widecoin Core developers
+# Copyright (c) 2020-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test per-peer message capture capability.
@@ -20,7 +20,7 @@ LENGTH_SIZE = 4
 MSGTYPE_SIZE = 12
 
 def mini_parser(dat_file):
-    """Parse a data file created by CaptureMessage.
+    """Parse a data file created by CaptureMessageToFile.
 
     From the data file we'll only check the structure.
 

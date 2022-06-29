@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Widecoin Core developers
+# Copyright (c) 2018-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test createwallet arguments.
@@ -24,7 +24,7 @@ class CreateWalletTest(WidecoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        node.generate(1) # Leave IBD for sethdseed
+        self.generate(node, 1) # Leave IBD for sethdseed
 
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')
@@ -146,7 +146,7 @@ class CreateWalletTest(WidecoinTestFramework):
         w6.keypoolrefill(1)
         # There should only be 1 key for legacy, 3 for descriptors
         walletinfo = w6.getwalletinfo()
-        keys = 3 if self.options.descriptors else 1
+        keys = 4 if self.options.descriptors else 1
         assert_equal(walletinfo['keypoolsize'], keys)
         assert_equal(walletinfo['keypoolsize_hd_internal'], keys)
         # Allow empty passphrase, but there should be a warning

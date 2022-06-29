@@ -1,11 +1,15 @@
-// Copyright (c) 2012-2020 The Widecoin Core developers
+// Copyright (c) 2012-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
+#include <util/translation.h>
 
 #include <tinyformat.h>
 
+#include <sstream>
+#include <string>
+#include <vector>
 
 /**
  * Name of client reported in the 'version' message. Report the same name
@@ -24,8 +28,7 @@ const std::string CLIENT_NAME("WidecoinCore");
 //   - "// No build information available", if proper git information is not available
 #endif
 
-//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. 
-#define GIT_COMMIT_ID "a0988140b71485ad12c3c3a4a9573f7c21b1eff8"
+//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. $Format:%n#define GIT_COMMIT_ID "%H"$
 
 #ifdef BUILD_GIT_TAG
     #define BUILD_DESC BUILD_GIT_TAG
@@ -41,10 +44,7 @@ const std::string CLIENT_NAME("WidecoinCore");
     #else
         #define BUILD_SUFFIX "-unk"
     #endif
-    #define BUILD_SUFFIX ""
 #endif
-
-const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
 
 static std::string FormatVersion(int nVersion)
 {
@@ -53,6 +53,7 @@ static std::string FormatVersion(int nVersion)
 
 std::string FormatFullVersion()
 {
+    static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
     return CLIENT_BUILD;
 }
 
@@ -74,4 +75,44 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     }
     ss << "/";
     return ss.str();
+}
+
+std::string CopyrightHolders(const std::string& strPrefix)
+{
+
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
+    std::string strCopyrightHolders = strPrefix + copyright_devs;
+
+    // Make sure Bitcoin Core copyright is not removed by accident
+    if (copyright_devs.find("Widecoin Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + "The Widecoin Core developers";
+    }
+    std::string strYear = strPrefix;
+    strYear.replace(strYear.find("2020"), sizeof("2020")-1, "2009");
+
+    strCopyrightHolders += "\n" + strYear + "The Bitcoin Core developers";
+    return strCopyrightHolders;
+
+}
+
+std::string LicenseInfo()
+{
+
+    const std::string URL_SOURCE_CODE = "<https://github.com/widecoin-project/widecoin>";
+    const std::string URL_WEBSITE = "<https://widecoin.org>";
+
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2020, COPYRIGHT_YEAR) + " ") + "\n" +
+           "\n" +
+           strprintf(_("Please contribute if you find %s useful. "
+                       "Visit %s for further information about the software.").translated,
+               PACKAGE_NAME, URL_WEBSITE) +
+           "\n" +
+           strprintf(_("The source code is available from %s.").translated,
+               URL_SOURCE_CODE) +
+           "\n" +
+           "\n" +
+           _("This is experimental software.").translated + "\n" +
+           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
+           "\n";
+
 }

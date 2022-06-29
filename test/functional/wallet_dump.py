@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Widecoin Core developers
+# Copyright (c) 2016-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
@@ -134,7 +134,7 @@ class WalletDumpTest(WidecoinTestFramework):
         self.log.info('Mine a block one second before the wallet is dumped')
         dump_time = int(time.time())
         self.nodes[0].setmocktime(dump_time - 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].setmocktime(dump_time)
         dump_time_str = '# * Created on {}Z'.format(
             datetime.datetime.fromtimestamp(

@@ -14,6 +14,10 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 "%s corrupt. Try using the wallet tool widecoin-wallet to salvage or restoring "
 "a backup."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
+"%s request to listen on port %u. This port is considered \"bad\" and thus it "
+"is unlikely that any Widecoin Core peers connect to it. See doc/p2p-bad-ports."
+"md for details and a full list."),
+QT_TRANSLATE_NOOP("widecoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
@@ -23,7 +27,7 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Cannot provide specific connections and have addrman find outgoing "
-"connections at the same."),
+"connections at the same time."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Cannot upgrade a non HD split wallet from version %i to version %i without "
 "upgrading to support pre-split keypool. Please use version %i or no version "
@@ -32,8 +36,14 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
 QT_TRANSLATE_NOOP("widecoin-core", ""
+"Error loading %s: External signer wallet being loaded without external "
+"signer support compiled"),
+QT_TRANSLATE_NOOP("widecoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
+QT_TRANSLATE_NOOP("widecoin-core", ""
+"Error reading %s! Transaction data may be missing or incorrect. Rescanning "
+"wallet."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
@@ -47,6 +57,9 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Error: Listening for incoming connections failed (listen returned error %s)"),
 QT_TRANSLATE_NOOP("widecoin-core", ""
+"Failed to rename invalid peers.dat file. Please move or delete it and try "
+"again."),
+QT_TRANSLATE_NOOP("widecoin-core", ""
 "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -"
 "fallbackfee."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
@@ -55,6 +68,10 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
+QT_TRANSLATE_NOOP("widecoin-core", ""
+"Invalid or corrupt peers.dat (%s). If you believe this is a bug, please "
+"report it to %s. As a workaround, you can move the file (%s) out of the way "
+"(rename, move, or delete) to have a new one created on the next start."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "More than one onion bind address is provided. Using %s for the automatically "
 "created Tor onion service."),
@@ -66,6 +83,10 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "No wallet file format provided. To use createfromdump, -format=<format> must "
 "be provided."),
+QT_TRANSLATE_NOOP("widecoin-core", ""
+"Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
+"reaching the Tor network is not provided (no -proxy= and no -onion= given) "
+"or it is explicitly forbidden (-onion=0)"),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
@@ -81,10 +102,17 @@ QT_TRANSLATE_NOOP("widecoin-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("widecoin-core", ""
+"The -txindex upgrade started by a previous version cannot be completed. "
+"Restart with the previous version or run a full -reindex."),
+QT_TRANSLATE_NOOP("widecoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
+QT_TRANSLATE_NOOP("widecoin-core", ""
+"The block index db contains a legacy 'txindex'. To clear the occupied disk "
+"space, run a full -reindex, otherwise ignore this error. This error message "
+"will not be displayed again."),
 QT_TRANSLATE_NOOP("widecoin-core", ""
 "The transaction amount is too small to send after the fee has been deducted"),
 QT_TRANSLATE_NOOP("widecoin-core", ""
@@ -129,9 +157,9 @@ QT_TRANSLATE_NOOP("widecoin-core", "%s is set very high!"),
 QT_TRANSLATE_NOOP("widecoin-core", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("widecoin-core", "A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("widecoin-core", "Cannot resolve -%s address: '%s'"),
+QT_TRANSLATE_NOOP("widecoin-core", "Cannot set -forcednsseed to true when setting -dnsseed to false."),
 QT_TRANSLATE_NOOP("widecoin-core", "Cannot set -peerblockfilters without -blockfilterindex."),
 QT_TRANSLATE_NOOP("widecoin-core", "Cannot write to data directory '%s'; check permissions."),
-QT_TRANSLATE_NOOP("widecoin-core", "Change index out of range"),
 QT_TRANSLATE_NOOP("widecoin-core", "Config setting for %s only applied on %s network when in [%s] section."),
 QT_TRANSLATE_NOOP("widecoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("widecoin-core", "Corrupted block database detected"),
@@ -171,6 +199,7 @@ QT_TRANSLATE_NOOP("widecoin-core", "Ignoring duplicate -wallet %s."),
 QT_TRANSLATE_NOOP("widecoin-core", "Importing…"),
 QT_TRANSLATE_NOOP("widecoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("widecoin-core", "Initialization sanity check failed. %s is shutting down."),
+QT_TRANSLATE_NOOP("widecoin-core", "Input not found or already spent"),
 QT_TRANSLATE_NOOP("widecoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("widecoin-core", "Invalid -i2psam address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("widecoin-core", "Invalid -onion address or hostname: '%s'"),
@@ -185,7 +214,10 @@ QT_TRANSLATE_NOOP("widecoin-core", "Loading P2P addresses…"),
 QT_TRANSLATE_NOOP("widecoin-core", "Loading banlist…"),
 QT_TRANSLATE_NOOP("widecoin-core", "Loading block index…"),
 QT_TRANSLATE_NOOP("widecoin-core", "Loading wallet…"),
+QT_TRANSLATE_NOOP("widecoin-core", "Missing amount"),
+QT_TRANSLATE_NOOP("widecoin-core", "Missing solving data for estimating transaction size"),
 QT_TRANSLATE_NOOP("widecoin-core", "Need to specify a port with -whitebind: '%s'"),
+QT_TRANSLATE_NOOP("widecoin-core", "No addresses available"),
 QT_TRANSLATE_NOOP("widecoin-core", "No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>."),
 QT_TRANSLATE_NOOP("widecoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("widecoin-core", "Prune cannot be configured with a negative value."),
@@ -215,9 +247,10 @@ QT_TRANSLATE_NOOP("widecoin-core", "This is the minimum transaction fee you pay 
 QT_TRANSLATE_NOOP("widecoin-core", "This is the transaction fee you will pay if you send a transaction."),
 QT_TRANSLATE_NOOP("widecoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("widecoin-core", "Transaction amounts must not be negative"),
+QT_TRANSLATE_NOOP("widecoin-core", "Transaction change output index out of range"),
 QT_TRANSLATE_NOOP("widecoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("widecoin-core", "Transaction must have at least one recipient"),
-QT_TRANSLATE_NOOP("widecoin-core", "Transaction needs a change address, but we can't generate it. %s"),
+QT_TRANSLATE_NOOP("widecoin-core", "Transaction needs a change address, but we can't generate it."),
 QT_TRANSLATE_NOOP("widecoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to bind to %s on this computer. %s is probably already running."),
@@ -225,6 +258,7 @@ QT_TRANSLATE_NOOP("widecoin-core", "Unable to create the PID file '%s': %s"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to generate keys"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to open %s for writing"),
+QT_TRANSLATE_NOOP("widecoin-core", "Unable to parse -maxuploadtarget: '%s'"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("widecoin-core", "Unknown -blockfilterindex value %s."),
 QT_TRANSLATE_NOOP("widecoin-core", "Unknown address type '%s'"),
@@ -233,7 +267,6 @@ QT_TRANSLATE_NOOP("widecoin-core", "Unknown network specified in -onlynet: '%s'"
 QT_TRANSLATE_NOOP("widecoin-core", "Unknown new rules activated (versionbit %i)"),
 QT_TRANSLATE_NOOP("widecoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("widecoin-core", "Upgrading UTXO database"),
-QT_TRANSLATE_NOOP("widecoin-core", "Upgrading txindex database"),
 QT_TRANSLATE_NOOP("widecoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("widecoin-core", "Verifying blocks…"),
 QT_TRANSLATE_NOOP("widecoin-core", "Verifying wallet(s)…"),

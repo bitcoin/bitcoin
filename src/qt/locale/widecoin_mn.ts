@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
-        <translation>Шинэ хаяг нээх</translation>
+        <translation type="unfinished">Шинэ хаяг нээх</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
+        <translation type="unfinished">Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Одоо сонгогдсон байгаа хаягуудыг жагсаалтаас устгах</translation>
+        <translation type="unfinished">Одоо сонгогдсон байгаа хаягуудыг жагсаалтаас устгах</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -31,15 +31,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+        <translation type="unfinished">Сонгогдсон таб дээрхи дата-г экспортлох</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Экспортдлох</translation>
+        <translation type="unfinished">&amp;Экспорт</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Устгах</translation>
+        <translation type="unfinished">&amp;Устгах</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -101,15 +101,15 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Enter passphrase</source>
-        <translation>Нууц үгийг оруул</translation>
+        <translation type="unfinished">Нууц үгийг оруул</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Шинэ нууц үг</translation>
+        <translation type="unfinished">Шинэ нууц үг</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Шинэ нууц үгийг давтана уу</translation>
+        <translation type="unfinished">Шинэ нууц үгийг давтана уу</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -163,6 +163,10 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Алдаа: %1</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation type="unfinished">үл мэдэгдэх</translation>
     </message>
@@ -176,14 +180,14 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -218,69 +222,105 @@
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Ачааллаж дууслаа</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Transactions</source>
-        <translation>Гүйлгээнүүд</translation>
+        <translation type="unfinished">Гүйлгээнүүд</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Гүйлгээнүүдийн түүхийг харах</translation>
+        <translation type="unfinished">Гүйлгээнүүдийн түүхийг харах</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>Гарах</translation>
+        <translation type="unfinished">Гарах</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Програмаас Гарах</translation>
+        <translation type="unfinished">Програмаас Гарах</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>&amp;Клиентийн тухай</translation>
+        <translation type="unfinished">&amp;Клиентийн тухай</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Клиентийн тухай мэдээллийг харуул</translation>
+        <translation type="unfinished">Клиентийн тухай мэдээллийг харуул</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Хэтэвч:</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
+        <translation type="unfinished">Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
     <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Харуул / Нуу</translation>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;Илгээх
+ </translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Хүлээж авах</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Баталгаажуулах мэссэж</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Хэтэвч хаах…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Хэтэвч үүсгэх…</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Файл</translation>
+        <translation type="unfinished">&amp;Файл</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Тохиргоо</translation>
+        <translation type="unfinished">&amp;Тохиргоо</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Тусламж</translation>
+        <translation type="unfinished">&amp;Тусламж</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Алдаа</translation>
+        <translation type="unfinished">Алдаа</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Анхааруулга</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Мэдээллэл</translation>
+        <translation type="unfinished">Мэдээллэл</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Шинэчлэгдсэн</translation>
+        <translation type="unfinished">Шинэчлэгдсэн</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Widecoin network.</source>
@@ -291,20 +331,24 @@
         </translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Алдаа: %1</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
-        <translation>Гадагшаа гүйлгээ</translation>
+        <translation type="unfinished">Гадагшаа гүйлгээ</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Дотогшоо гүйлгээ</translation>
+        <translation type="unfinished">Дотогшоо гүйлгээ</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
+        <translation type="unfinished">Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;онгорхой&lt;/b&gt; байна</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
+        <translation type="unfinished">Түрүйвч &lt;b&gt;цоожтой&lt;/b&gt; ба одоогоор цоож &lt;b&gt;хаалттай&lt;/b&gt; байна</translation>
     </message>
     </context>
 <context>
@@ -357,15 +401,15 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Хаягийг ѳѳрчлѳх</translation>
+        <translation type="unfinished">Хаягийг ѳѳрчлѳх</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Шошго</translation>
+        <translation type="unfinished">&amp;Шошго</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Хаяг</translation>
+        <translation type="unfinished">&amp;Хаяг</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -404,7 +448,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Алдаа</translation>
+        <translation type="unfinished">Алдаа</translation>
     </message>
     </context>
 <context>
@@ -429,10 +473,18 @@
     </message>
     </context>
 <context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Копидсон хаягийг буулгах</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Сонголтууд</translation>
+        <translation type="unfinished">Сонголтууд</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -440,7 +492,7 @@
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>Сүлжээ</translation>
+        <translation type="unfinished">Сүлжээ</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -490,20 +542,20 @@
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Сүлжээ</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>Алга Байна</translation>
+        <translation type="unfinished">Алга Байна</translation>
     </message>
     <message>
         <source>Client version</source>
-        <translation>Клиентийн хувилбар</translation>
+        <translation type="unfinished">Клиентийн хувилбар</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Мэдээллэл</translation>
+        <translation type="unfinished">&amp;Мэдээллэл</translation>
     </message>
     <message>
         <source>General</source>
@@ -511,7 +563,7 @@
     </message>
     <message>
         <source>Network</source>
-        <translation>Сүлжээ</translation>
+        <translation type="unfinished">Сүлжээ</translation>
     </message>
     <message>
         <source>Name</source>
@@ -519,27 +571,27 @@
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Холболтын тоо</translation>
+        <translation type="unfinished">Холболтын тоо</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Блокийн цуваа</translation>
+        <translation type="unfinished">Блокийн цуваа</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Сүүлийн блокийн хугацаа</translation>
+        <translation type="unfinished">Сүүлийн блокийн хугацаа</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Нээх</translation>
+        <translation type="unfinished">&amp;Нээх</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>&amp;Консол</translation>
+        <translation type="unfinished">&amp;Консол</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Консолыг цэвэрлэх</translation>
+        <translation type="unfinished">Консолыг цэвэрлэх</translation>
     </message>
     </context>
 <context>
@@ -584,6 +636,10 @@
         <translation type="unfinished">Зурвас:</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Хэтэвч:</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Хаягийг &amp;Хуулбарлах</translation>
     </message>
@@ -615,7 +671,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Зоос явуулах</translation>
+        <translation type="unfinished">Зоос явуулах</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -635,27 +691,27 @@
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Нэгэн зэрэг олон хүлээн авагчруу явуулах</translation>
+        <translation type="unfinished">Нэгэн зэрэг олон хүлээн авагчруу явуулах</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>&amp;Хүлээн авагчийг Нэмэх</translation>
+        <translation type="unfinished">&amp;Хүлээн авагчийг Нэмэх</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
+        <translation type="unfinished">&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Баланс:</translation>
+        <translation type="unfinished">Баланс:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Явуулах үйлдлийг баталгаажуулна уу</translation>
+        <translation type="unfinished">Явуулах үйлдлийг баталгаажуулна уу</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>Яв&amp;уул</translation>
+        <translation type="unfinished">Яв&amp;уул</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -687,7 +743,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -705,19 +761,19 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>Дүн:</translation>
+        <translation type="unfinished">Дүн:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Тѳлѳх &amp;хаяг:</translation>
+        <translation type="unfinished">Тѳлѳх &amp;хаяг:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Шошго:</translation>
+        <translation type="unfinished">&amp;Шошго:</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Копидсон хаягийг буулгах</translation>
+        <translation type="unfinished">Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -732,26 +788,15 @@
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Копидсон хаягийг буулгах</translation>
+        <translation type="unfinished">Копидсон хаягийг буулгах</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Бүгдийг Цэвэрлэ</translation>
+        <translation type="unfinished">&amp;Бүгдийг Цэвэрлэ</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">%1 хүртэл нээлттэй</translation>
-    </message>
     <message>
         <source>%1/unconfirmed</source>
         <translation type="unfinished">%1/баталгаажаагүй</translation>
@@ -770,7 +815,7 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -792,7 +837,7 @@
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
+        <translation type="unfinished">Гүйлгээний дэлгэрэнгүйг энэ бичил цонх харуулж байна</translation>
     </message>
     </context>
 <context>
@@ -808,17 +853,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Шошго</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">%1 хүртэл нээлттэй</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -965,6 +999,13 @@
     </message>
 </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Алдаа</translation>
+    </message>
+    </context>
+<context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
@@ -975,26 +1016,11 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Экспортдлох</translation>
+        <translation type="unfinished">&amp;Экспорт</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Сонгогдсон таб дээрхи дата-г экспортлох</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Алдаа</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Ачааллаж дууслаа</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
     </context>
 </TS>

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -266,47 +266,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     assert(false);
 }
 
-// TODO: from v23 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
-bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
-{
-    addressRet.clear();
-    std::vector<valtype> vSolutions;
-    typeRet = Solver(scriptPubKey, vSolutions);
-    if (typeRet == TxoutType::NONSTANDARD) {
-        return false;
-    } else if (typeRet == TxoutType::NULL_DATA) {
-        // This is data, not addresses
-        return false;
-    }
-
-    if (typeRet == TxoutType::MULTISIG)
-    {
-        nRequiredRet = vSolutions.front()[0];
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-            CPubKey pubKey(vSolutions[i]);
-            if (!pubKey.IsValid())
-                continue;
-
-            CTxDestination address = PKHash(pubKey);
-            addressRet.push_back(address);
-        }
-
-        if (addressRet.empty())
-            return false;
-    }
-    else
-    {
-        nRequiredRet = 1;
-        CTxDestination address;
-        if (!ExtractDestination(scriptPubKey, address))
-           return false;
-        addressRet.push_back(address);
-    }
-
-    return true;
-}
-
 namespace {
 class CScriptVisitor
 {
@@ -504,6 +463,7 @@ WitnessV1Taproot TaprootBuilder::GetOutput() { return WitnessV1Taproot{m_output_
 
 TaprootSpendData TaprootBuilder::GetSpendData() const
 {
+    assert(IsComplete());
     TaprootSpendData spd;
     spd.merkle_root = m_branch.size() == 0 ? uint256() : m_branch[0]->hash;
     spd.internal_key = m_internal_key;

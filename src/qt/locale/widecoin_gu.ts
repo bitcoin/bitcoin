@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>નવું સરનામું બનાવો</translation>
+        <translation type="unfinished">નવું સરનામું બનાવો</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>હાલમાં પસંદ કરેલા સરનામાંને સિસ્ટમ ક્લિપબોર્ડ પર નકલ કરો</translation>
+        <translation type="unfinished">હાલમાં પસંદ કરેલા સરનામાંને સિસ્ટમ ક્લિપબોર્ડ પર નકલ કરો</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>સૂચિમાંથી હાલમાં પસંદ કરેલું સરનામું કાઢી નાખો</translation>
+        <translation type="unfinished">સૂચિમાંથી હાલમાં પસંદ કરેલું સરનામું કાઢી નાખો</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>હાલ માં પસંદ કરેલ માહિતી ને ફાઇલમાં નિકાસ કરો</translation>
+        <translation type="unfinished">હાલ માં પસંદ કરેલ માહિતી ને ફાઇલમાં નિકાસ કરો</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp; નિકાસ કરો</translation>
+        <translation type="unfinished">&amp; નિકાસ કરો</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp; કાઢી નાખો</translation>
+        <translation type="unfinished">&amp; કાઢી નાખો</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -115,19 +115,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>ગુપ્ત શબ્દ માટે નુ ડાયલોગ</translation>
+        <translation type="unfinished">ગુપ્ત શબ્દ માટે નુ ડાયલોગ</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>ગુપ્ત શબ્દ દાખલ કરો </translation>
+        <translation type="unfinished">ગુપ્ત શબ્દ દાખલ કરો </translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>નવો ગુપ્ત શબ્દ</translation>
+        <translation type="unfinished">નવો ગુપ્ત શબ્દ</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>ગુપ્ત શબ્દ ફરી નાખો</translation>
+        <translation type="unfinished">ગુપ્ત શબ્દ ફરી નાખો</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -170,14 +170,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -215,7 +215,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>WidecoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -270,7 +270,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -283,15 +283,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -302,13 +295,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label</source>
         <translation type="unfinished">ચિઠ્ઠી</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>(no label)</source>

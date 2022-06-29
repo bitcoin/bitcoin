@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Widecoin Core developers
+# Copyright (c) 2020-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Script for verifying Bitoin Core release binaries
+"""Script for verifying Widecoin Core release binaries
 
 This script attempts to download the signature file SHA256SUMS.asc from
 widecoincore.org and widecoin.org and compares them.

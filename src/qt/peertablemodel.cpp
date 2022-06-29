@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -72,8 +72,13 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         case NetNodeId:
             return (qint64)rec->nodeStats.nodeid;
         case Address:
-            // prepend to peer address down-arrow symbol for inbound connection and up-arrow for outbound connection
-            return QString::fromStdString((rec->nodeStats.fInbound ? "↓ " : "↑ ") + rec->nodeStats.addrName);
+            return QString::fromStdString(rec->nodeStats.m_addr_name);
+        case Direction:
+            return QString(rec->nodeStats.fInbound ?
+                               //: An Inbound Connection from a Peer.
+                               tr("Inbound") :
+                               //: An Outbound Connection to a Peer.
+                               tr("Outbound"));
         case ConnectionType:
             return GUIUtil::ConnectionTypeToQString(rec->nodeStats.m_conn_type, /* prepend_direction */ false);
         case Network:
@@ -94,6 +99,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
             return QVariant(Qt::AlignRight | Qt::AlignVCenter);
         case Address:
             return {};
+        case Direction:
         case ConnectionType:
         case Network:
             return QVariant(Qt::AlignCenter);

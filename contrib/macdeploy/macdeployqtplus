@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, re, os, shutil, stat, os.path
+import sys, re, os, platform, shutil, stat, subprocess, os.path
 from argparse import ArgumentParser
 from ds_store import DSStore
 from mac_alias import Alias
@@ -244,49 +244,47 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
-    
-    if not os.path.exists(fromPath):
-        raise RuntimeError(f"No file at {fromPath}")
-    
-    if os.path.exists(toPath):
-        return None # Already there
-    
-    if not os.path.exists(toDir):
-        os.makedirs(toDir)
-    
-    shutil.copy2(fromPath, toPath)
-    if verbose:
-        print("Copied:", fromPath)
-        print(" to:", toPath)
+
+    if framework.isDylib():
+        if not os.path.exists(fromPath):
+            raise RuntimeError(f"No file at {fromPath}")
+
+        if os.path.exists(toPath):
+            return None # Already there
+
+        if not os.path.exists(toDir):
+            os.makedirs(toDir)
+
+        shutil.copy2(fromPath, toPath)
+        if verbose:
+            print("Copied:", fromPath)
+            print(" to:", toPath)
+    else:
+        to_dir = os.path.join(path, "Contents", "Frameworks", framework.frameworkName)
+        if os.path.exists(to_dir):
+            return None # Already there
+
+        from_dir = framework.frameworkPath
+        if not os.path.exists(from_dir):
+            raise RuntimeError(f"No directory at {from_dir}")
+
+        shutil.copytree(from_dir, to_dir, symlinks=True)
+        if verbose:
+            print("Copied:", from_dir)
+            print(" to:", to_dir)
+
+        headers_link = os.path.join(to_dir, "Headers")
+        if os.path.exists(headers_link):
+            os.unlink(headers_link)
+
+        headers_dir = os.path.join(to_dir, framework.binaryDirectory, "Headers")
+        if os.path.exists(headers_dir):
+            shutil.rmtree(headers_dir)
 
     permissions = os.stat(toPath)
     if not permissions.st_mode & stat.S_IWRITE:
       os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
 
-    if not framework.isDylib(): # Copy resources for real frameworks
-
-        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
-        linkto = framework.version
-        if not os.path.exists(linkfrom):
-            os.symlink(linkto, linkfrom)
-            print("Linked:", linkfrom, "->", linkto)
-        fromResourcesDir = framework.sourceResourcesDirectory
-        if os.path.exists(fromResourcesDir):
-            toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
-            shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
-            if verbose:
-                print("Copied resources:", fromResourcesDir)
-                print(" to:", toResourcesDir)
-        fromContentsDir = framework.sourceVersionContentsDirectory
-        if not os.path.exists(fromContentsDir):
-            fromContentsDir = framework.sourceContentsDirectory
-        if os.path.exists(fromContentsDir):
-            toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
-            shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
-            if verbose:
-                print("Copied Contents:", fromContentsDir)
-                print(" to:", toContentsDir)
-    
     return toPath
 
 def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
@@ -543,6 +541,9 @@ ds.close()
 
 # ------------------------------------------------
 
+if platform.system() == "Darwin":
+    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
+
 if config.dmg is not None:
 
     print("+ Preparing .dmg disk image +")
@@ -575,7 +576,7 @@ if config.dmg is not None:
     os.mkdir(os.path.dirname(bg_path))
     if verbose:
         print('background.tiff', "->", bg_path)
-    shutil.copy2('background.tiff', bg_path)
+    shutil.copy2('contrib/macdeploy/background.tiff', bg_path)
 
     os.symlink("/Applications", os.path.join(disk_root, "Applications"))
 

@@ -31,13 +31,13 @@ class UTXOSetHashTest(WidecoinTestFramework):
 
         # Generate 100 blocks and remove the first since we plan to spend its
         # coinbase
-        block_hashes = wallet.generate(1) + node.generate(99)
+        block_hashes = self.generate(wallet, 1) + self.generate(node, 99)
         blocks = list(map(lambda block: from_hex(CBlock(), node.getblock(block, False)), block_hashes))
         blocks.pop(0)
 
         # Create a spending transaction and mine a block which includes it
         txid = wallet.send_self_transfer(from_node=node)['txid']
-        tx_block = node.generateblock(output=wallet.get_address(), transactions=[txid])
+        tx_block = self.generateblock(node, output=wallet.get_address(), transactions=[txid])
         blocks.append(from_hex(CBlock(), node.getblock(tx_block['hash'], False)))
 
         # Serialize the outputs that should be in the UTXO set and add them to
@@ -69,8 +69,8 @@ class UTXOSetHashTest(WidecoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
         self.log.info("Test deterministic UTXO set hash results")
-        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "5b1b44097406226c0eb8e1362cd17a1f346522cf9390a8175a57a5262cb1963f")
-        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "4b8803075d7151d06fad3e88b68ba726886794873fbfa841d12aefb2cc2b881b")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "3a570529b4c32e77268de1f81b903c75cc2da53c48df0d125c1e697ba7c8c7b7")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "a13e0e70eb8acc786549596e3bc154623f1a5a622ba2f70715f6773ec745f435")
 
     def run_test(self):
         self.test_muhash_implementation()

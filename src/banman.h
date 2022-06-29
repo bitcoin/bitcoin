@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef WIDECOIN_BANMAN_H
 #define WIDECOIN_BANMAN_H
 
 #include <addrdb.h>
-#include <bloom.h>
+#include <common/bloom.h>
 #include <fs.h>
 #include <net_types.h> // For banmap_t
 #include <sync.h>
@@ -88,11 +88,11 @@ private:
 
     RecursiveMutex m_cs_banned;
     banmap_t m_banned GUARDED_BY(m_cs_banned);
-    bool m_is_dirty GUARDED_BY(m_cs_banned);
+    bool m_is_dirty GUARDED_BY(m_cs_banned){false};
     CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     const int64_t m_default_ban_time;
     CRollingBloomFilter m_discouraged GUARDED_BY(m_cs_banned) {50000, 0.000001};
 };
 
-#endif
+#endif // WIDECOIN_BANMAN_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Widecoin Core developers
+// Copyright (c) 2015-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <netbase.h>
 #include <node/blockstorage.h>
 #include <rpc/server.h>
 #include <streams.h>
@@ -21,6 +22,8 @@
 #include <optional>
 #include <string>
 #include <utility>
+
+using node::ReadBlockFromDisk;
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -73,6 +76,20 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
     return 0;
 }
 
+static bool IsZMQAddressIPV6(const std::string &zmq_address)
+{
+    const std::string tcp_prefix = "tcp://";
+    const size_t tcp_index = zmq_address.rfind(tcp_prefix);
+    const size_t colon_index = zmq_address.rfind(":");
+    if (tcp_index == 0 && colon_index != std::string::npos) {
+        const std::string ip = zmq_address.substr(tcp_prefix.length(), colon_index - tcp_prefix.length());
+        CNetAddr addr;
+        LookupHost(ip, addr, false);
+        if (addr.IsIPv6()) return true;
+    }
+    return false;
+}
+
 bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
 {
     assert(!psocket);
@@ -103,6 +120,15 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         rc = zmq_setsockopt(psocket, ZMQ_TCP_KEEPALIVE, &so_keepalive_option, sizeof(so_keepalive_option));
         if (rc != 0) {
             zmqError("Failed to set SO_KEEPALIVE");
+            zmq_close(psocket);
+            return false;
+        }
+
+        // On some systems (e.g. OpenBSD) the ZMQ_IPV6 must not be enabled, if the address to bind isn't IPv6
+        const int enable_ipv6 { IsZMQAddressIPV6(address) ? 1 : 0};
+        rc = zmq_setsockopt(psocket, ZMQ_IPV6, &enable_ipv6, sizeof(enable_ipv6));
+        if (rc != 0) {
+            zmqError("Failed to set ZMQ_IPV6");
             zmq_close(psocket);
             return false;
         }
@@ -183,9 +209,10 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashblock %s to %s\n", hash.GetHex(), this->address);
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
+    uint8_t data[32];
+    for (unsigned int i = 0; i < 32; i++) {
         data[31 - i] = hash.begin()[i];
+    }
     return SendZmqMessage(MSG_HASHBLOCK, data, 32);
 }
 
@@ -193,9 +220,10 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtx %s to %s\n", hash.GetHex(), this->address);
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
+    uint8_t data[32];
+    for (unsigned int i = 0; i < 32; i++) {
         data[31 - i] = hash.begin()[i];
+    }
     return SendZmqMessage(MSG_HASHTX, data, 32);
 }
 

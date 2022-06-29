@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@
 #include <netbase.h>
 #include <util/system.h>
 #include <util/threadnames.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <stdint.h>
@@ -216,17 +217,17 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(GetStartupTime()).toString();
+    return QDateTime::fromSecsSinceEpoch(GetStartupTime()).toString();
 }
 
 QString ClientModel::dataDir() const
 {
-    return GUIUtil::boostPathToQString(gArgs.GetDataDirNet());
+    return GUIUtil::PathToQString(gArgs.GetDataDirNet());
 }
 
 QString ClientModel::blocksDir() const
 {
-    return GUIUtil::boostPathToQString(gArgs.GetBlocksDirPath());
+    return GUIUtil::PathToQString(gArgs.GetBlocksDirPath());
 }
 
 void ClientModel::updateBanlist()
@@ -288,13 +289,13 @@ static void BlockTipChanged(ClientModel* clientmodel, SynchronizationState sync_
     const bool throttle = (sync_state != SynchronizationState::POST_INIT && !fHeader) || sync_state == SynchronizationState::INIT_REINDEX;
     const int64_t now = throttle ? GetTimeMillis() : 0;
     int64_t& nLastUpdateNotification = fHeader ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
-    if (throttle && now < nLastUpdateNotification + MODEL_UPDATE_DELAY) {
+    if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;
     }
 
     bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
         Q_ARG(int, tip.block_height),
-        Q_ARG(QDateTime, QDateTime::fromTime_t(tip.block_time)),
+        Q_ARG(QDateTime, QDateTime::fromSecsSinceEpoch(tip.block_time)),
         Q_ARG(double, verificationProgress),
         Q_ARG(bool, fHeader),
         Q_ARG(SynchronizationState, sync_state));
@@ -328,7 +329,7 @@ void ClientModel::unsubscribeFromCoreSignals()
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
 {
-    proxyType ipv4, ipv6;
+    Proxy ipv4, ipv6;
     if (m_node.getProxy((Network) 1, ipv4) && m_node.getProxy((Network) 2, ipv6)) {
       ip_port = ipv4.proxy.ToStringIPPort();
       return true;

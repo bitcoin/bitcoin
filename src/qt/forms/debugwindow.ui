@@ -1355,10 +1355,10 @@
                <item row="13" column="0">
                 <widget class="QLabel" name="peerLastTxLabel">
                  <property name="toolTip">
-                  <string>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</string>
+                  <string extracomment="Tooltip text for the Last Transaction field in the peer details area.">Elapsed time since a novel transaction accepted into our mempool was received from this peer.</string>
                  </property>
                  <property name="text">
-                  <string>Last Tx</string>
+                  <string>Last Transaction</string>
                  </property>
                 </widget>
                </item>
@@ -1592,6 +1592,84 @@
                 </widget>
                </item>
                <item row="23" column="0">
+                <widget class="QLabel" name="peerAddrRelayEnabledLabel">
+                 <property name="toolTip">
+                  <string extracomment="Tooltip text for the Address Relay field in the peer details area.">Whether we relay addresses to this peer.</string>
+                 </property>
+                 <property name="text">
+                  <string>Address Relay</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="23" column="1">
+                <widget class="QLabel" name="peerAddrRelayEnabled">
+                 <property name="cursor">
+                  <cursorShape>IBeamCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>N/A</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="24" column="0">
+                <widget class="QLabel" name="peerAddrProcessedLabel">
+                 <property name="toolTip">
+                  <string extracomment="Tooltip text for the Addresses Processed field in the peer details area.">Total number of addresses processed, excluding those dropped due to rate-limiting.</string>
+                 </property>
+                 <property name="text">
+                  <string>Addresses Processed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="24" column="1">
+                <widget class="QLabel" name="peerAddrProcessed">
+                 <property name="cursor">
+                  <cursorShape>IBeamCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>N/A</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="25" column="0">
+                <widget class="QLabel" name="peerAddrRateLimitedLabel">
+                 <property name="toolTip">
+                  <string extracomment="Tooltip text for the Addresses Rate-Limited field in the peer details area.">Total number of addresses dropped due to rate-limiting.</string>
+                 </property>
+                 <property name="text">
+                  <string>Addresses Rate-Limited</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="25" column="1">
+                <widget class="QLabel" name="peerAddrRateLimited">
+                 <property name="cursor">
+                  <cursorShape>IBeamCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>N/A</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="26" column="0">
                 <spacer name="verticalSpacer_3">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>

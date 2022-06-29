@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Widecoin Core developers
+# Copyright (c) 2017-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
@@ -21,7 +21,7 @@ class DeprecatedRpcTest(WidecoinTestFramework):
         # In run_test:
         # self.log.info("Test generate RPC")
         # assert_raises_rpc_error(-32, 'The wallet generate rpc method is deprecated', self.nodes[0].rpc.generate, 1)
-        # self.nodes[1].generate(1)
+        # self.generate(self.nodes[1], 1)
 
         self.log.info("No tested deprecated RPC methods")
 

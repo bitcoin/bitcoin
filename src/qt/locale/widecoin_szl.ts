@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Zrychtuj nowõ adresã</translation>
+        <translation type="unfinished">Zrychtuj nowõ adresã</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Skopiyruj aktualnie ôbranõ adresã do skrytki</translation>
+        <translation type="unfinished">Skopiyruj aktualnie ôbranõ adresã do skrytki</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Wychrōń zaznaczōnõ adresã z brify</translation>
+        <translation type="unfinished">Wychrōń zaznaczōnõ adresã z brify</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksportuj dane z aktywnyj szkarty do zbioru</translation>
+        <translation type="unfinished">Eksportuj dane z aktywnyj szkarty do zbioru</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksportuj</translation>
+        <translation type="unfinished">&amp;Eksportuj</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Wychrōń</translation>
+        <translation type="unfinished">&amp;Wychrōń</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -114,19 +114,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Ôkiynko Hasła</translation>
+        <translation type="unfinished">Ôkiynko Hasła</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Wkludź hasło</translation>
+        <translation type="unfinished">Wkludź hasło</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nowe hasło</translation>
+        <translation type="unfinished">Nowe hasło</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Powtōrz nowe hasło</translation>
+        <translation type="unfinished">Powtōrz nowe hasło</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -224,21 +224,23 @@
     </message>
     <message>
         <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">Wchodowy</translation>
     </message>
     <message>
         <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
         <translation type="unfinished">Wychodowy</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -268,30 +270,93 @@
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">Twōrcy %s</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished">Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Pozōr: Wykryto było klucze prywatne w portmanyju {%s} kery mŏ zastawiōne klucze prywatne</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Wgrŏwanie zakōńczōne</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">Feler wgrŏwaniŏ %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">Feler wgrŏwaniŏ %s: Klucze prywatne mogōm być zastawiōne ino w czasie tworzyniŏ</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished">Feler wgrŏwaniŏ %s: Portmanyj poprzniōny</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished">Feler wgrŏwaniŏ %s: Portmanyj fołdruje nowszyj wersyje %s</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Feler wgrŏwaniŏ bazy blokōw</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Feler: Za mało wolnego placu na dysku dlŏ %s</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Szkryftniyńcie transakcyji niy podarziło sie</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">To je eksperymyntalny softwer.</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakcyjŏ za srogŏ</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Niyznōmy nec ôkryślōny w -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">Niypodpiyranŏ kategoryjŏ registrowaniŏ %s=%s.</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Podsumowanie</translation>
+        <translation type="unfinished">&amp;Podsumowanie</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Pokazuje ôgōlny widok portmanyja</translation>
+        <translation type="unfinished">Pokazuje ôgōlny widok portmanyja</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transakcyje</translation>
+        <translation type="unfinished">&amp;Transakcyje</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Przeglōndej historyjõ transakcyji</translation>
+        <translation type="unfinished">Przeglōndej historyjõ transakcyji</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Zakōńcz</translation>
+        <translation type="unfinished">&amp;Zakōńcz</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Zawrzij aplikacyjõ</translation>
+        <translation type="unfinished">Zawrzij aplikacyjõ</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -303,11 +368,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Ô &amp;Qt</translation>
+        <translation type="unfinished">Ô &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Pokŏż informacyje ô Qt</translation>
+        <translation type="unfinished">Pokŏż informacyje ô Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -328,59 +393,51 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Poślij mōnety na adresã Widecoin</translation>
+        <translation type="unfinished">Poślij mōnety na adresã Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Ibryczny portmanyj w inkszyj lokalizacyje</translation>
+        <translation type="unfinished">Ibryczny portmanyj w inkszyj lokalizacyje</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Pōmiyń hasło użyte do szyfrowaniŏ portmanyja</translation>
+        <translation type="unfinished">Pōmiyń hasło użyte do szyfrowaniŏ portmanyja</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Poślij</translation>
+        <translation type="unfinished">&amp;Poślij</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>Ôd&amp;bier</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>Pokŏż / &amp;Skryj</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Pokazuje abo skrywŏ bazowe ôkno</translation>
+        <translation type="unfinished">Ôd&amp;bier</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Szyfruj klucze prywatne, kere sōm we twojim portmanyju</translation>
+        <translation type="unfinished">Szyfruj klucze prywatne, kere sōm we twojim portmanyju</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Podpisz wiadōmości swojōm adresōm coby dowiyść jejich posiadanie</translation>
+        <translation type="unfinished">Podpisz wiadōmości swojōm adresōm coby dowiyść jejich posiadanie</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Zweryfikuj wiadōmość, coby wejzdrzeć sie, iże ôstała podpisanŏ podanōm adresōm Widecoin.</translation>
+        <translation type="unfinished">Zweryfikuj wiadōmość, coby wejzdrzeć sie, iże ôstała podpisanŏ podanōm adresōm Widecoin.</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Zbiōr</translation>
+        <translation type="unfinished">&amp;Zbiōr</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Nasztalowania</translation>
+        <translation type="unfinished">&amp;Nasztalowania</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>Pō&amp;moc</translation>
+        <translation type="unfinished">Pō&amp;moc</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Lajsta szkart</translation>
+        <translation type="unfinished">Lajsta szkart</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -400,37 +457,37 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 za</translation>
+        <translation type="unfinished">%1 za</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Ôstatni dostany blok ôstoł wygynerowany %1 tymu.</translation>
+        <translation type="unfinished">Ôstatni dostany blok ôstoł wygynerowany %1 tymu.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transakcyje po tym mōmyncie niy bydōm jeszcze widzialne.</translation>
+        <translation type="unfinished">Transakcyje po tym mōmyncie niy bydōm jeszcze widzialne.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Feler</translation>
+        <translation type="unfinished">Feler</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Pozōr</translation>
+        <translation type="unfinished">Pozōr</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Informacyjŏ</translation>
+        <translation type="unfinished">Informacyjŏ</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Terŏźny</translation>
+        <translation type="unfinished">Terŏźny</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
@@ -501,11 +558,11 @@
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Transakcyjŏ wysłanŏ</translation>
+        <translation type="unfinished">Transakcyjŏ wysłanŏ</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transakcyjŏ przichodzōncŏ</translation>
+        <translation type="unfinished">Transakcyjŏ przichodzōncŏ</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -517,11 +574,11 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Portmanyj je &lt;b&gt;zaszyfrowany&lt;/b&gt; i terŏźnie &lt;b&gt;ôdszperowany&lt;/b&gt;</translation>
+        <translation type="unfinished">Portmanyj je &lt;b&gt;zaszyfrowany&lt;/b&gt; i terŏźnie &lt;b&gt;ôdszperowany&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Portmanyj je &lt;b&gt;zaszyfrowany&lt;/b&gt; i terŏźnie &lt;b&gt;zaszperowany&lt;/b&gt;</translation>
+        <translation type="unfinished">Portmanyj je &lt;b&gt;zaszyfrowany&lt;/b&gt; i terŏźnie &lt;b&gt;zaszperowany&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -673,11 +730,11 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Edytuj adresã</translation>
+        <translation type="unfinished">Edytuj adresã</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Etyketa</translation>
+        <translation type="unfinished">&amp;Etyketa</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -689,7 +746,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Adresa</translation>
+        <translation type="unfinished">&amp;Adresa</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -728,19 +785,19 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Bydzie zrychtowany nowy folder danych.</translation>
+        <translation type="unfinished">Bydzie zrychtowany nowy folder danych.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>miano</translation>
+        <translation type="unfinished">miano</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Katalog już je. Przidej %1 jeźli mŏsz zastrojynie zrychtować tukej nowy katalog.</translation>
+        <translation type="unfinished">Katalog już je. Przidej %1 jeźli mŏsz zastrojynie zrychtować tukej nowy katalog.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Niy idzie było tukej zrychtować folderu datōw.</translation>
+        <translation type="unfinished">Niy idzie było tukej zrychtować folderu datōw.</translation>
     </message>
 </context>
 <context>
@@ -774,11 +831,11 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Feler</translation>
+        <translation type="unfinished">Feler</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Witej</translation>
+        <translation type="unfinished">Witej</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -802,11 +859,11 @@
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Użyj wychodnego folderu datōw</translation>
+        <translation type="unfinished">Użyj wychodnego folderu datōw</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Użyj ôbranego folderu datōw</translation>
+        <translation type="unfinished">Użyj ôbranego folderu datōw</translation>
     </message>
 </context>
 <context>
@@ -867,11 +924,11 @@
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Ôpcyje</translation>
+        <translation type="unfinished">Ôpcyje</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Bazowe</translation>
+        <translation type="unfinished">&amp;Bazowe</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -907,15 +964,15 @@
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Prziwrōć wszyjske wychodne ustawiyniŏ klijynta.</translation>
+        <translation type="unfinished">Prziwrōć wszyjske wychodne ustawiyniŏ klijynta.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Resetuj Ôpcyje</translation>
+        <translation type="unfinished">&amp;Resetuj Ôpcyje</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Nec</translation>
+        <translation type="unfinished">&amp;Nec</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -951,11 +1008,11 @@
     </message>
     <message>
         <source>Automatically open the Widecoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Autōmatycznie ôdewrzij port klijynta Widecoin na routerze. Ta ôpcyjŏ funguje ino jeźli twōj router podpiyrŏ UPnP i je ôno zapuszczone.</translation>
+        <translation type="unfinished">Autōmatycznie ôdewrzij port klijynta Widecoin na routerze. Ta ôpcyjŏ funguje ino jeźli twōj router podpiyrŏ UPnP i je ôno zapuszczone.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Mapuj port przi używaniu &amp;UPnP</translation>
+        <translation type="unfinished">Mapuj port przi używaniu &amp;UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -975,15 +1032,15 @@
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Port ôd proxy (bp. 9050)</translation>
+        <translation type="unfinished">Port ôd proxy (bp. 9050)</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>Ô&amp;kno</translation>
+        <translation type="unfinished">Ô&amp;kno</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Gŏdka &amp;używŏcza:</translation>
+        <translation type="unfinished">Gŏdka &amp;używŏcza:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -991,11 +1048,11 @@
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Pociep</translation>
+        <translation type="unfinished">&amp;Pociep</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>wychodny</translation>
+        <translation type="unfinished">wychodny</translation>
     </message>
     <message>
         <source>none</source>
@@ -1003,7 +1060,12 @@
     </message>
     <message>
         <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
         <translation type="unfinished">Ôpcyje kōnfiguracyje</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Pociep</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1014,11 +1076,11 @@
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formular</translation>
+        <translation type="unfinished">Formular</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Widecoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Wyświytlanŏ informacyjŏ może być niyterŏźnŏ. Twōj portmanyj synchrōnizuje sie autōmatycznie z necym widecoin zarŏz po tym, jak zrychtowane je skuplowanie, ale proces tyn niy ôstoł jeszcze skōńczōny.</translation>
+        <translation type="unfinished">Wyświytlanŏ informacyjŏ może być niyterŏźnŏ. Twōj portmanyj synchrōnizuje sie autōmatycznie z necym widecoin zarŏz po tym, jak zrychtowane je skuplowanie, ale proces tyn niy ôstoł jeszcze skōńczōny.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1034,11 +1096,11 @@
     </message>
     <message>
         <source>Total:</source>
-        <translation>Cuzamyn:</translation>
+        <translation type="unfinished">Cuzamyn:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Twoje terŏźne saldo</translation>
+        <translation type="unfinished">Twoje terŏźne saldo</translation>
     </message>
     </context>
 <context>
@@ -1071,6 +1133,11 @@
         <translation type="unfinished">Agynt Używŏcza</translation>
     </message>
     <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation type="unfinished">Richtōng</translation>
+    </message>
+    <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation type="unfinished">Ôdebrane</translation>
@@ -1090,6 +1157,16 @@
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Nec</translation>
     </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">Wchodowy</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">Wychodowy</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1106,7 +1183,7 @@
     <name>RPCConsole</name>
     <message>
         <source>Client version</source>
-        <translation>Wersyjŏ klijynta</translation>
+        <translation type="unfinished">Wersyjŏ klijynta</translation>
     </message>
     <message>
         <source>Datadir</source>
@@ -1114,11 +1191,11 @@
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Czŏs sztartniyńciŏ</translation>
+        <translation type="unfinished">Czŏs sztartniyńciŏ</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Nec</translation>
+        <translation type="unfinished">Nec</translation>
     </message>
     <message>
         <source>Name</source>
@@ -1126,11 +1203,11 @@
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Wielość skuplowań</translation>
+        <translation type="unfinished">Wielość skuplowań</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Keta blokōw</translation>
+        <translation type="unfinished">Keta blokōw</translation>
     </message>
     <message>
         <source>Current number of transactions</source>
@@ -1162,11 +1239,11 @@
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Czas ôstatnigo bloku</translation>
+        <translation type="unfinished">Czas ôstatnigo bloku</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>Ô&amp;dewrzij</translation>
+        <translation type="unfinished">Ô&amp;dewrzij</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1218,10 +1295,6 @@
     <message>
         <source>Clear</source>
         <translation type="unfinished">Wypucuj</translation>
-    </message>
-    <message>
-        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation type="unfinished">Natywne adresy segwit (aka Bech32 abo BIP-173) zmyńszajōm niyskorzij twoje ôpłŏcki za transakcyje i dadzōm lepsze zabezpieczynie przed chybami, ale stare portmanyje jejich niy podpiyrajōm. Jeźli ôdznaczōne, zrychtowanŏ ôstanie adresa kōmpatybilnŏ ze starszymi portmanyjami.</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1290,7 +1363,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Poślij mōnety</translation>
+        <translation type="unfinished">Poślij mōnety</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1342,7 +1415,7 @@
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Saldo:</translation>
+        <translation type="unfinished">Saldo:</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1386,7 +1459,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -1407,7 +1480,7 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etyketa:</translation>
+        <translation type="unfinished">&amp;Etyketa:</translation>
     </message>
     <message>
         <source>The Widecoin address to send the payment to</source>
@@ -1430,19 +1503,19 @@
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Szkryfki - Podpisz / Zweryfikuj Wiadōmość</translation>
+        <translation type="unfinished">Szkryfki - Podpisz / Zweryfikuj Wiadōmość</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Szkryftnij Wiadōmość</translation>
+        <translation type="unfinished">&amp;Szkryftnij Wiadōmość</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Szkryftnij &amp;Wiadōmość</translation>
+        <translation type="unfinished">Szkryftnij &amp;Wiadōmość</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Weryfikuj Wiadōmość</translation>
+        <translation type="unfinished">&amp;Weryfikuj Wiadōmość</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -1459,12 +1532,6 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Status</source>
         <translation type="unfinished">Sztatus</translation>
@@ -1495,7 +1562,7 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -1529,12 +1596,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Etyketa</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1605,6 +1666,13 @@
     </message>
 </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Feler</translation>
+    </message>
+    </context>
+<context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
@@ -1630,10 +1698,6 @@
         <translation type="unfinished">Eksportuj dane z aktywnyj szkarty do zbioru</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Feler</translation>
-    </message>
-    <message>
         <source>Backup Failed</source>
         <translation type="unfinished">Backup niy podarził sie</translation>
     </message>
@@ -1642,67 +1706,4 @@
         <translation type="unfinished">Pociep</translation>
     </message>
 </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">Twōrcy %s</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Pozōr: Wykryto było klucze prywatne w portmanyju {%s} kery mŏ zastawiōne klucze prywatne</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Wgrŏwanie zakōńczōne</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ %s: Klucze prywatne mogōm być zastawiōne ino w czasie tworzyniŏ</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ %s: Portmanyj poprzniōny</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ %s: Portmanyj fołdruje nowszyj wersyje %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ bazy blokōw</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Feler: Za mało wolnego placu na dysku dlŏ %s</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Szkryftniyńcie transakcyji niy podarziło sie</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">To je eksperymyntalny softwer.</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transakcyjŏ za srogŏ</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Niyznōmy nec ôkryślōny w -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Niypodpiyranŏ kategoryjŏ registrowaniŏ %s=%s.</translation>
-    </message>
-    </context>
 </TS>

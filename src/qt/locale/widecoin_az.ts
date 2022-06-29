@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yeni bir ünvan yaradın</translation>
+        <translation type="unfinished">Yeni bir ünvan yaradın</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Hazırki seçilmiş ünvanı sistem lövhəsinə kopyalayın</translation>
+        <translation type="unfinished">Hazırki seçilmiş ünvanı sistem lövhəsinə kopyalayın</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Hazırki seçilmiş ünvanı siyahıdan sil</translation>
+        <translation type="unfinished">Hazırki seçilmiş ünvanı siyahıdan sil</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
+        <translation type="unfinished">Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;İxrac</translation>
+        <translation type="unfinished">&amp;İxrac</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Sil</translation>
+        <translation type="unfinished">&amp;Sil</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -120,19 +120,19 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Şifrə İfadə Dialoqu</translation>
+        <translation type="unfinished">Şifrə İfadə Dialoqu</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Şifrə ifadəsini daxil edin</translation>
+        <translation type="unfinished">Şifrə ifadəsini daxil edin</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Yeni şifrə ifadəsi</translation>
+        <translation type="unfinished">Yeni şifrə ifadəsi</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Şifrə ifadəsini təkrarlayın</translation>
+        <translation type="unfinished">Şifrə ifadəsini təkrarlayın</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -174,19 +174,23 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <source>Your wallet is now encrypted. </source>
         <translation type="unfinished">Cüzdanınız artıq şifrələnib.</translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">Xəbərdarlıq: Caps Lock düyməsi yanılıdır!</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -221,29 +225,56 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation type="unfinished">Ödəniş təxmin edilmədi. Fallbackfee sıradan çıxarıldı. Bir neçə blok gözləyin və ya Fallbackfee-ni fəallaşdırın.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Yükləmə tamamlandı</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Yetərsiz balans</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Mənbə kodu %s-dən əldə edilə bilər.</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Tənzimləmələr</translation>
+        <translation type="unfinished">&amp;Tənzimləmələr</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Xəta</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Xəbərdarlıq</translation>
+        <translation type="unfinished">Xəbərdarlıq</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Məlumat</translation>
+        <translation type="unfinished">Məlumat</translation>
     </message>
     <message>
         <source>Open a wallet</source>
@@ -285,7 +316,7 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Xəta</translation>
+        <translation type="unfinished">Xəta</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -300,7 +331,7 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>&amp;UPnP istifadə edən xəritə portu</translation>
+        <translation type="unfinished">&amp;UPnP istifadə edən xəritə portu</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -349,7 +380,7 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -362,15 +393,8 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -381,13 +405,6 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     <message>
         <source>Label</source>
         <translation type="unfinished">Etiket</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -414,6 +431,13 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     </message>
     </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Xəta</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -422,37 +446,6 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Hazırki vərəqdəki verilənləri fayla ixrac edin</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Xəta</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Ödəniş təxmin edilmədi. Fallbackfee sıradan çıxarıldı. Bir neçə blok gözləyin və ya Fallbackfee-ni fəallaşdırın.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Xəbərdarlıq: Gizli açarlar, sıradan çıxarılmış gizli açarlar ilə {%s} pulqabısında aşkarlandı.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">'%s' verilənlər kateqoriyasına yazıla bilmir; icazələri yoxlayın.</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Yükləmə tamamlandı</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Yetərsiz balans</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Mənbə kodu %s-dən əldə edilə bilər.</translation>
     </message>
     </context>
 </TS>

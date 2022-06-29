@@ -21,7 +21,7 @@
     <ProjectReference Include="..\libwidecoin_crypto\libwidecoin_crypto.vcxproj">
       <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libwidecoin_server\libwidecoin_server.vcxproj">
+    <ProjectReference Include="..\libwidecoin_node\libwidecoin_node.vcxproj">
       <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libwidecoin_util\libwidecoin_util.vcxproj">

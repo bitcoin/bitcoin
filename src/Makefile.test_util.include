@@ -9,6 +9,7 @@ EXTRA_LIBRARIES += \
 
 TEST_UTIL_H = \
     test/util/blockfilter.h \
+    test/util/chainstate.h \
     test/util/logging.h \
     test/util/mining.h \
     test/util/net.h \
@@ -34,7 +35,7 @@ libtest_util_a_SOURCES = \
   test/util/wallet.cpp \
   $(TEST_UTIL_H)
 
-LIBTEST_UTIL += $(LIBWIDECOIN_SERVER)
+LIBTEST_UTIL += $(LIBWIDECOIN_NODE)
 LIBTEST_UTIL += $(LIBWIDECOIN_COMMON)
 LIBTEST_UTIL += $(LIBWIDECOIN_UTIL)
 LIBTEST_UTIL += $(LIBWIDECOIN_CRYPTO_BASE)

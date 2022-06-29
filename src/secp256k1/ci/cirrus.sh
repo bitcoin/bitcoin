@@ -25,62 +25,42 @@ valgrind --version || true
 make
 
 # Print information about binaries so that we can see that the architecture is correct
-file *tests || true
-file bench_* || true
+file *tests* || true
+file bench* || true
 file .libs/* || true
 
-if [ -n "$BUILD" ]
-then
-    make "$BUILD"
-fi
+# This tells `make check` to wrap test invocations.
+export LOG_COMPILER="$WRAPPER_CMD"
 
-if [ "$RUN_VALGRIND" = "yes" ]
-then
-    # the `--error-exitcode` is required to make the test fail if valgrind found errors, otherwise it'll return 0 (https://www.valgrind.org/docs/manual/manual-core.html)
-    valgrind --error-exitcode=42 ./tests 16
-    valgrind --error-exitcode=42 ./exhaustive_tests
-fi
-
-if [ -n "$QEMU_CMD" ]
-then
-    $QEMU_CMD ./tests 16
-    $QEMU_CMD ./exhaustive_tests
-fi
+make "$BUILD"
 
 if [ "$BENCH" = "yes" ]
 then
     # Using the local `libtool` because on macOS the system's libtool has nothing to do with GNU libtool
     EXEC='./libtool --mode=execute'
-    if [ -n "$QEMU_CMD" ]
+    if [ -n "$WRAPPER_CMD" ]
     then
-       EXEC="$EXEC $QEMU_CMD"
+        EXEC="$EXEC $WRAPPER_CMD"
     fi
-    if [ "$RUN_VALGRIND" = "yes" ]
-    then
-        EXEC="$EXEC valgrind --error-exitcode=42"
-    fi
-    # This limits the iterations in the benchmarks below to ITER iterations.
-    export SECP256K1_BENCH_ITERS="$ITERS"
     {
         $EXEC ./bench_ecmult
         $EXEC ./bench_internal
-        $EXEC ./bench_sign
-        $EXEC ./bench_verify
+        $EXEC ./bench
     } >> bench.log 2>&1
-    if [ "$RECOVERY" = "yes" ]
-    then
-        $EXEC ./bench_recover >> bench.log 2>&1
-    fi
-    if [ "$ECDH" = "yes" ]
-    then
-        $EXEC ./bench_ecdh >> bench.log 2>&1
-    fi
-    if [ "$SCHNORRSIG" = "yes" ]
-    then
-        $EXEC ./bench_schnorrsig >> bench.log 2>&1
-    fi
 fi
+
 if [ "$CTIMETEST" = "yes" ]
 then
     ./libtool --mode=execute valgrind --error-exitcode=42 ./valgrind_ctime_test > valgrind_ctime_test.log 2>&1
 fi
+
+# Rebuild precomputed files (if not cross-compiling).
+if [ -z "$HOST" ]
+then
+    make clean-precomp
+    make precomp
+fi
+
+# Check that no repo files have been modified by the build.
+# (This fails for example if the precomp files need to be updated in the repo.)
+git diff --exit-code

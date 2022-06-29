@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Widecoin Core developers
+# Copyright (c) 2019-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC misc output."""
@@ -50,16 +50,27 @@ class RpcMiscTest(WidecoinTestFramework):
             assert_equal(tree.tag, 'malloc')
         except JSONRPCException:
             self.log.info('getmemoryinfo(mode="mallocinfo") not available')
-            assert_raises_rpc_error(-8, 'mallocinfo is only available when compiled with glibc 2.10+', node.getmemoryinfo, mode="mallocinfo")
+            assert_raises_rpc_error(-8, 'mallocinfo mode not available', node.getmemoryinfo, mode="mallocinfo")
 
         assert_raises_rpc_error(-8, "unknown mode foobar", node.getmemoryinfo, mode="foobar")
 
-        self.log.info("test logging")
+        self.log.info("test logging rpc and help")
+
+        # Test toggling a logging category on/off/on with the logging RPC.
         assert_equal(node.logging()['qt'], True)
         node.logging(exclude=['qt'])
         assert_equal(node.logging()['qt'], False)
         node.logging(include=['qt'])
         assert_equal(node.logging()['qt'], True)
+
+        # Test logging RPC returns the logging categories in alphabetical order.
+        sorted_logging_categories = sorted(node.logging())
+        assert_equal(list(node.logging()), sorted_logging_categories)
+
+        # Test logging help returns the logging categories string in alphabetical order.
+        categories = ', '.join(sorted_logging_categories)
+        logging_help = self.nodes[0].help('logging')
+        assert f"valid logging categories are: {categories}" in logging_help
 
         self.log.info("test echoipc (testing spawned process in multiprocess build)")
         assert_equal(node.echoipc("hello"), "hello")

@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Krijo një adresë të re</translation>
+        <translation type="unfinished">Krijo një adresë të re</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopjo adresën e zgjedhur në memorjen e sistemit </translation>
+        <translation type="unfinished">Kopjo adresën e zgjedhur në memorjen e sistemit </translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Fshi adresen e selektuar nga lista</translation>
+        <translation type="unfinished">Fshi adresen e selektuar nga lista</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+        <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksporto</translation>
+        <translation type="unfinished">&amp;Eksporto</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Fshi</translation>
+        <translation type="unfinished">&amp;Fshi</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -119,19 +119,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Dialog i Fjalëkalimit</translation>
+        <translation type="unfinished">Dialog i Fjalëkalimit</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Futni fjalëkalimin</translation>
+        <translation type="unfinished">Futni fjalëkalimin</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Fjalëkalimi i ri</translation>
+        <translation type="unfinished">Fjalëkalimi i ri</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Përsërisni fjalëkalimin e ri</translation>
+        <translation type="unfinished">Përsërisni fjalëkalimin e ri</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -218,14 +218,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -264,85 +264,88 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Fonde te pamjaftueshme</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Përmbledhje</translation>
+        <translation type="unfinished">&amp;Përmbledhje</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Trego një përmbledhje te përgjithshme të portofolit</translation>
+        <translation type="unfinished">Trego një përmbledhje te përgjithshme të portofolit</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaksionet</translation>
+        <translation type="unfinished">&amp;Transaksionet</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Shfleto historinë e transaksioneve</translation>
+        <translation type="unfinished">Shfleto historinë e transaksioneve</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Mbyllni aplikacionin</translation>
+        <translation type="unfinished">Mbyllni aplikacionin</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Shfaq informacion rreth Qt</translation>
+        <translation type="unfinished">Shfaq informacion rreth Qt</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
+        <translation type="unfinished">Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Dergo</translation>
+        <translation type="unfinished">&amp;Dergo</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Merr</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Shfaq / Fsheh</translation>
+        <translation type="unfinished">&amp;Merr</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Skedar</translation>
+        <translation type="unfinished">&amp;Skedar</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Konfigurimet</translation>
+        <translation type="unfinished">&amp;Konfigurimet</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Ndihmë</translation>
+        <translation type="unfinished">&amp;Ndihmë</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Shiriti i mjeteve</translation>
+        <translation type="unfinished">Shiriti i mjeteve</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 Pas</translation>
+        <translation type="unfinished">%1 Pas</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Problem</translation>
+        <translation type="unfinished">Problem</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Informacion</translation>
+        <translation type="unfinished">Informacion</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>I azhornuar</translation>
+        <translation type="unfinished">I azhornuar</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Widecoin network.</source>
@@ -354,19 +357,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Dërgo transaksionin</translation>
+        <translation type="unfinished">Dërgo transaksionin</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transaksion në ardhje</translation>
+        <translation type="unfinished">Transaksion në ardhje</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Portofoli po &lt;b&gt; enkriptohet&lt;/b&gt; dhe është &lt;b&gt; i ç'kyçur&lt;/b&gt;</translation>
+        <translation type="unfinished">Portofoli po &lt;b&gt; enkriptohet&lt;/b&gt; dhe është &lt;b&gt; i ç'kyçur&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Portofoli po &lt;b&gt; enkriptohet&lt;/b&gt; dhe është &lt;b&gt; i kyçur&lt;/b&gt;</translation>
+        <translation type="unfinished">Portofoli po &lt;b&gt; enkriptohet&lt;/b&gt; dhe është &lt;b&gt; i kyçur&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -411,15 +414,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Ndrysho Adresën</translation>
+        <translation type="unfinished">Ndrysho Adresën</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Etiketë</translation>
+        <translation type="unfinished">&amp;Etiketë</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Adresa</translation>
+        <translation type="unfinished">&amp;Adresa</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -446,7 +449,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
-        <translation>emri</translation>
+        <translation type="unfinished">emri</translation>
     </message>
     </context>
 <context>
@@ -461,11 +464,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error</source>
-        <translation>Problem</translation>
+        <translation type="unfinished">Problem</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Miresevini</translation>
+        <translation type="unfinished">Miresevini</translation>
     </message>
     </context>
 <context>
@@ -483,10 +486,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Ngjit nga memorja e sistemit</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Opsionet</translation>
+        <translation type="unfinished">Opsionet</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -501,7 +512,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formilarë</translation>
+        <translation type="unfinished">Formilarë</translation>
     </message>
     </context>
 <context>
@@ -521,11 +532,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>RPCConsole</name>
     <message>
         <source>&amp;Information</source>
-        <translation>Informacion</translation>
+        <translation type="unfinished">Informacion</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Hap</translation>
+        <translation type="unfinished">&amp;Hap</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -581,7 +592,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Dërgo Monedha</translation>
+        <translation type="unfinished">Dërgo Monedha</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -593,15 +604,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Dërgo marrësve të ndryshëm njëkohësisht</translation>
+        <translation type="unfinished">Dërgo marrësve të ndryshëm njëkohësisht</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Balanca:</translation>
+        <translation type="unfinished">Balanca:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Konfirmo veprimin e dërgimit</translation>
+        <translation type="unfinished">Konfirmo veprimin e dërgimit</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -613,7 +624,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -627,19 +638,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>Sh&amp;uma:</translation>
+        <translation type="unfinished">Sh&amp;uma:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Paguaj &amp;drejt:</translation>
+        <translation type="unfinished">Paguaj &amp;drejt:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiketë:</translation>
+        <translation type="unfinished">&amp;Etiketë:</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Ngjit nga memorja e sistemit</translation>
+        <translation type="unfinished">Ngjit nga memorja e sistemit</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -650,22 +661,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Ngjit nga memorja e sistemit</translation>
+        <translation type="unfinished">Ngjit nga memorja e sistemit</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Hapur deri më %1</translation>
-    </message>
     <message>
         <source>%1/unconfirmed</source>
         <translation type="unfinished">%1/I pakonfirmuar</translation>
@@ -684,7 +684,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -702,7 +702,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Ky panel tregon një përshkrim të detajuar të transaksionit</translation>
+        <translation type="unfinished">Ky panel tregon një përshkrim të detajuar të transaksionit</translation>
     </message>
     </context>
 <context>
@@ -718,17 +718,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label</source>
         <translation type="unfinished">Etiketë</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Hapur deri më %1</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -799,6 +788,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Problem</translation>
+    </message>
+    </context>
+<context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
@@ -814,17 +810,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Problem</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 </TS>

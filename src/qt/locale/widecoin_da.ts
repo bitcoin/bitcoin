@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Opret en ny adresse</translation>
+        <translation type="unfinished">Opret en ny adresse</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopiér den valgte adresse til systemets udklipsholder</translation>
+        <translation type="unfinished">Kopiér den valgte adresse til systemets udklipsholder</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Slet den markerede adresse fra listen</translation>
+        <translation type="unfinished">Slet den markerede adresse fra listen</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksportér den aktuelle visning til en fil</translation>
+        <translation type="unfinished">Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksportér</translation>
+        <translation type="unfinished">&amp;Eksportér</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Slet</translation>
+        <translation type="unfinished">&amp;Slet</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -92,7 +92,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">Kommasepareret fil</translation>
     </message>
     <message>
@@ -124,19 +124,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Adgangskodedialog</translation>
+        <translation type="unfinished">Adgangskodedialog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Indtast adgangskode</translation>
+        <translation type="unfinished">Indtast adgangskode</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Ny adgangskode</translation>
+        <translation type="unfinished">Ny adgangskode</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Gentag ny adgangskode</translation>
+        <translation type="unfinished">Gentag ny adgangskode</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -245,6 +245,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>WidecoinApplication</name>
     <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Runaway undtagelse</translation>
+    </message>
+    <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">Der skete en fatal fejl. %1 kan ikke længere fortsætte sikkert og vil afslutte.</translation>
     </message>
@@ -252,9 +256,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Internal error</source>
         <translation type="unfinished">Intern fejl</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Der skete en intern fejl. %1 vil prøve at forsætte på sikker vis. Dette er en uventet fejl som kan reporteres som beskrevet under. </translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Vil du nulstille indstillinger til standardværdier eller afbryde uden at foretage ændringer?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Der opstod en fatal fejl. Tjek at indstillingsfilen er skrivbar, eller prøv at anvend -nosettings.</translation>
+    </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">Fejl: Angivet datamappe “%1” eksisterer ikke.</translation>
@@ -268,8 +286,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Fejl: %1</translation>
     </message>
     <message>
-        <source>Error initializing settings: %1</source>
-        <translation type="unfinished">Fejl ved initialisering af indstillinger: %1</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 har endnu ikke afsluttet på sikker vis…</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -284,23 +302,46 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Indtast en Widecoin-adresse (fx %1)</translation>
     </message>
     <message>
+        <source>Unroutable</source>
+        <translation type="unfinished">Urutebar</translation>
+    </message>
+    <message>
         <source>Internal</source>
         <translation type="unfinished">Intern</translation>
     </message>
     <message>
         <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">Indkommende</translation>
     </message>
     <message>
         <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
         <translation type="unfinished">Udgående</translation>
     </message>
     <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation type="unfinished">Fuld Videresende</translation>
+    </message>
+    <message>
+        <source>Block Relay</source>
+        <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation type="unfinished">Blok Vidersend</translation>
+    </message>
+    <message>
         <source>Manual</source>
+        <extracomment>Peer connection type established manually through one of several methods.</extracomment>
         <translation type="unfinished">Brugervejledning</translation>
     </message>
     <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Føler</translation>
+    </message>
+    <message>
         <source>Address Fetch</source>
+        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
         <translation type="unfinished">Adresse Indhentning</translation>
     </message>
     <message>
@@ -313,37 +354,37 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
+        <translation type="unfinished">
+            <numerusform>%n sekund(er)</numerusform>
+            <numerusform>%n sekund(er)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
+        <translation type="unfinished">
+            <numerusform>%n minut(er)</numerusform>
+            <numerusform>%n minut(er)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n time(r)</numerusform>
+            <numerusform>%n time(r)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dag(e)</numerusform>
+            <numerusform>%n dag(e)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n uge(r)</numerusform>
+            <numerusform>%n uge(r)</numerusform>
         </translation>
     </message>
     <message>
@@ -353,36 +394,703 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n år</numerusform>
+            <numerusform>%n år</numerusform>
         </translation>
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Indstillingsfilen kunne ikke læses</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Indstillingsfilen kunne ikke skrives</translation>
+    </message>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">Udviklerne af %s</translation>
+    </message>
+    <message>
+        <source>%s corrupt. Try using the wallet tool widecoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s beskadiget. Prøv at bruge pung-værktøjet widecoin-wallet til, at bjærge eller gendanne en sikkerhedskopi.</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">-maxtxfee er sat meget højt! Gebyrer så store risikeres betalt på en enkelt transaktion.</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation type="unfinished">Kan ikke nedgradere tegnebogen fra version %i til version %i. Wallet-versionen uændret.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation type="unfinished">Kan ikke opnå en lås på datamappe %s. %s kører sansynligvis allerede.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
+        <translation type="unfinished">Kan ikke opgradere en ikke-HD split wallet fra version %i til version %i uden at opgradere til at understøtte pre-split keypool. Brug venligst version %i eller ingen version angivet.</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation type="unfinished">Distribueret under MIT-softwarelicensen; se den vedlagte fil %s eller %s</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished">Fejl under læsning af %s! Alle nøgler blev læst korrekt, men transaktionsdata eller indgange i adressebogen kan mangle eller være ukorrekte.</translation>
+    </message>
+    <message>
+        <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
+        <translation type="unfinished">Fejl ved læsning %s! Transaktionsdata kan mangle eller være forkerte. Genscanner tegnebogen.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
+        <translation type="unfinished">Fejl: Dumpfilformatposten er forkert. Fik "%s", forventet "format".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation type="unfinished">Fejl: Dumpfilformat posten er forkert. Fik "%s", forventet "%s".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of widecoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">Fejl: Dumpfil-versionen understøttes ikke. Denne version af widecoin-tegnebog understøtter kun version 1 dumpfiler. Fik dumpfil med version %s$</translation>
+    </message>
+    <message>
+        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
+        <translation type="unfinished">Fejl: Ældre tegnebøger understøtter kun adressetyperne "legacy", "p2sh-segwit" og "bech32"</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished">Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation type="unfinished">Estimering af gebyr mislykkedes. Tilbagefaldsgebyr er deaktiveret. Vent et par blokke eller aktiver -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation type="unfinished">Fil %s eksisterer allerede. Hvis du er sikker på, at det er det, du vil have, så flyt det af vejen først.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished">Ugyldigt beløb for -maxtxfee=&lt;beløb&gt;: “%s” (skal være på mindst minrelay-gebyret på %s for at undgå hængende transaktioner)</translation>
+    </message>
+    <message>
+        <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
+        <translation type="unfinished">Ugyldige eller korrupte peers.dat (%s). Hvis du mener, at dette er en fejl, bedes du rapportere det til %s. Som en løsning kan du flytte filen (%s) ud af vejen (omdøbe, flytte eller slette) for at få oprettet en ny ved næste start.</translation>
+    </message>
+    <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation type="unfinished">Mere end én onion-bindingsadresse er opgivet. Bruger %s til den automatiske oprettelse af Tor-onion-tjeneste.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Der er ikke angivet nogen dumpfil. For at bruge createfromdump skal -dumpfile= &lt;filename&gt; angives.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Der er ikke angivet nogen dumpfil. For at bruge dump skal -dumpfile= &lt;filename&gt; angives.</translation>
+    </message>
+    <message>
+        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
+        <translation type="unfinished">Der er ikke angivet noget tegnebogs-filformat. For at bruge createfromdump skal -format=&lt;format&gt; angives.</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation type="unfinished">Undersøg venligst at din computers dato og klokkeslet er korrekt indstillet! Hvis der er fejl i disse, vil %s ikke fungere korrekt.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation type="unfinished">Overvej venligst at bidrage til udviklingen, hvis du finder %s brugbar. Besøg %s for yderligere information om softwaren.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished">Beskæring er sat under minimumsgrænsen på %d MiB. Brug venligst et større tal.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished">Beskæring: Seneste synkronisering rækker udover beskårne data. Du er nødt til at bruge -reindex (downloade hele blokkæden igen i fald af beskåret knude)</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation type="unfinished">SQLiteDatabase: Ukendt sqlite-pung-skemaversion %d. Kun version %d understøttes</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation type="unfinished">Blokdatabasen indeholder en blok, som ser ud til at være fra fremtiden. Dette kan skyldes, at din computers dato og tid ikke er sat korrekt. Genopbyg kun blokdatabasen, hvis du er sikker på, at din computers dato og tid er korrekt</translation>
+    </message>
+    <message>
+        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
+        <translation type="unfinished">Blokindekset db indeholder et ældre 'txindex'. For at rydde den optagede diskplads skal du køre en fuld -reindex, ellers ignorere denne fejl. Denne fejlmeddelelse vil ikke blive vist igen.</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation type="unfinished">Transaktionsbeløbet er for lille til at sende, når gebyret er trukket fra</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation type="unfinished">Denne fejl kunne finde sted hvis denne pung ikke blev lukket rent ned og sidst blev indlæst vha. en udgave med en nyere version af Berkeley DB. Brug i så fald venligst den programvare, som sidst indlæste denne pung</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished">Dette er en foreløbig testudgivelse – brug på eget ansvar – brug ikke til mining eller handelsprogrammer</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation type="unfinished">Dette er det maksimale transaktionsgebyr, du betaler (ud over det normale gebyr) for, at prioritere partisk forbrugsafvigelse over almindelig møntudvælgelse.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation type="unfinished">Dette er det transaktionsgebyr, du kan kassere, hvis byttepengene er mindre end støv på dette niveau</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">Dette er transaktionsgebyret, du kan betale, når gebyrestimeringer ikke er tilgængelige.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished">Den totale længde på netværksversionsstrengen (%i) overstiger maksimallængden (%i). Reducér antaller af eller størrelsen på uacomments.</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation type="unfinished">Kan ikke genafspille blokke. Du er nødt til at genopbytte databasen ved hjælp af -reindex-chainstate.</translation>
+    </message>
+    <message>
+        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
+        <translation type="unfinished">Ukendt tegnebogsfilformat "%s" angivet. Angiv en af "bdb" eller "sqlite".</translation>
+    </message>
+    <message>
+        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
+        <translation type="unfinished">Advarsel: Dumpfile tegnebogsformatet "%s" matcher ikke kommandolinjens specificerede format "%s".</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Advarsel: Private nøgler opdaget i tegnebog {%s} med deaktiverede private nøgler</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished">Advarsel: Vi ser ikke ud til at være fuldt ud enige med andre knuder! Du kan være nødt til at opgradere, eller andre knuder kan være nødt til at opgradere.</translation>
+    </message>
+    <message>
+        <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
+        <translation type="unfinished">Vidnedata for blokke efter højde %d kræver validering. Genstart venligst med -reindex.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation type="unfinished">Du er nødt til at genopbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation type="unfinished">%s er meget højt sat!</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished">-maxmempool skal være mindst %d MB</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished">Der er sket en fatal intern fejl, se debug.log for detaljer</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation type="unfinished">Kan ikke finde -%s-adressen: “%s”</translation>
+    </message>
+    <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation type="unfinished">Kan ikke indstille -forcednsseed til true, når -dnsseed indstilles til false.</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">Kan ikke indstille -peerblockfilters uden -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">Kan ikke skrive til datamappe '%s'; tjek tilladelser.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation type="unfinished">Opgraderingen af -txindex som er startet af en tidligere version kan ikke fuldføres. Genstart med den tidligere version eller kør en fuld -reindex.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Kan ikke levere specifikke forbindelser og få adrman til at finde udgående forbindelser på samme tid.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">Fejlindlæsning %s: Ekstern underskriver-tegnebog indlæses uden ekstern underskriverunderstøttelse kompileret</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished">Opsætningen af %s bliver kun udført på %s-netværk under [%s]-sektionen.</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation type="unfinished">Ophavsret © %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Ødelagt blokdatabase opdaget</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">Kan ikke finde asmap-filen %s </translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished">Kan ikke fortolke asmap-filen %s</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">Fejl: Disk pladsen er for lav!</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">Ønsker du at genopbygge blokdatabasen nu?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Indlæsning gennemført</translation>
+    </message>
+    <message>
+        <source>Dump file %s does not exist.</source>
+        <translation type="unfinished">Dumpfil %s findes ikke.</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">Fejl skaber %s</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Klargøring af blokdatabase mislykkedes</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Klargøring af tegnebogsdatabasemiljøet %s mislykkedes!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">Fejl under indlæsning af %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">Fejl ved indlæsning af %s: Private nøgler kan kun deaktiveres under oprettelse</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished">Fejl under indlæsning af %s: Tegnebog ødelagt</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished">Fejl under indlæsning af %s: Tegnebog kræver nyere version af %s</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Indlæsning af blokdatabase mislykkedes</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Åbning af blokdatabase mislykkedes</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">Fejl under læsning fra database; lukker ned.</translation>
+    </message>
+    <message>
+        <source>Error reading next record from wallet database</source>
+        <translation type="unfinished">Fejl ved læsning af næste post fra tegnebogsdatabase</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation type="unfinished">Fejl under opgradering af kædetilstandsdatabase</translation>
+    </message>
+    <message>
+        <source>Error: Couldn't create cursor into database</source>
+        <translation type="unfinished">Fejl: Kunne ikke oprette markøren i databasen</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Fejl: Disk plads er lavt for %s</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
+        <translation type="unfinished">Fejl: Dumpfil kontrolsum stemmer ikke overens. Beregnet %s, forventet %s</translation>
+    </message>
+    <message>
+        <source>Error: Got key that was not hex: %s</source>
+        <translation type="unfinished">Fejl: Fik nøgle, der ikke var hex: %s</translation>
+    </message>
+    <message>
+        <source>Error: Got value that was not hex: %s</source>
+        <translation type="unfinished">Fejl: Fik værdi, der ikke var hex: %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished">Fejl: Nøglepøl løb tør, tilkald venligst keypoolrefill først</translation>
+    </message>
+    <message>
+        <source>Error: Missing checksum</source>
+        <translation type="unfinished">Fejl: Manglende kontrolsum</translation>
+    </message>
+    <message>
+        <source>Error: No %s addresses available.</source>
+        <translation type="unfinished">Fejl: Ingen tilgængelige %s adresser.</translation>
+    </message>
+    <message>
+        <source>Error: Unable to parse version %u as a uint32_t</source>
+        <translation type="unfinished">Fejl: Kan ikke parse version %u som en uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write record to new wallet</source>
+        <translation type="unfinished">Fejl: Kan ikke skrive post til ny tegnebog</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Lytning på enhver port mislykkedes. Brug -listen=0, hvis du ønsker dette.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation type="unfinished">Genindlæsning af tegnebogen under initialisering mislykkedes</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation type="unfinished">Kunne ikke verificere databasen</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation type="unfinished">Gebyrrate (%s) er lavere end den minimale gebyrrate-indstilling (%s)</translation>
+    </message>
+    <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation type="unfinished">Ignorerer duplikeret -pung %s.</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">Importerer...</translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished">Ukorrekt eller ingen tilblivelsesblok fundet. Forkert datamappe for netværk?</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation type="unfinished">Sundhedstjek under initialisering mislykkedes. %s lukker ned.</translation>
+    </message>
+    <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">Input ikke fundet eller allerede brugt</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Manglende dækning</translation>
+    </message>
+    <message>
+        <source>Invalid -i2psam address or hostname: '%s'</source>
+        <translation type="unfinished">Ugyldig -i2psam-adresse eller værtsnavn: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">Ugyldig -onion-adresse eller værtsnavn: “%s”</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">Ugyldig -proxy-adresse eller værtsnavn: “%s”</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation type="unfinished">Invalid P2P tilladelse: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Ugyldigt beløb for -%s=&lt;beløb&gt;: “%s”</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Ugyldigt beløb for -discardfee=&lt;amount&gt;: “%s”</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Ugyldigt beløb for -fallbackfee=&lt;beløb&gt;: “%s”</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Ugyldigt beløb for -paytxfee=&lt;beløb&gt;: “%s” (skal være mindst %s)</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation type="unfinished">Ugyldig netmaske angivet i -whitelist: “%s”</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">Indlæser P2P-adresser...</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">Indlæser bandlysningsliste…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">Indlæser blokindeks...</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">Indlæser tegnebog...</translation>
+    </message>
+    <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">Manglende beløb</translation>
+    </message>
+    <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">Manglende løsningsdata til estimering af transaktionsstørrelse</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation type="unfinished">Nødt til at angive en port med -whitebinde: “%s”</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Ingen adresser tilgængelige</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation type="unfinished">Ingen proxyserver specificeret. Brug -proxy=&lt;ip&gt; eller -proxy=&lt;ip:port&gt;.</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">For få tilgængelige fildeskriptorer.</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished">Beskæring kan ikke opsættes med en negativ værdi.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -coinstatsindex.</source>
+        <translation type="unfinished">Beskæringstilstand er inkompatibel med -coinstatsindex.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished">Beskæringstilstand er ikke kompatibel med -txindex.</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">Beskærer bloklager…</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">Reducerer -maxconnections fra %d til %d på grund af systembegrænsninger.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Genafspiller blokke...</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Genindlæser…</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Udførelse af udtryk for, at bekræfte database mislykkedes: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Forberedelse af udtryk på, at bekræfte database mislykkedes: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Indlæsning af database-bekræftelsesfejl mislykkedes: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation type="unfinished">SQLiteDatabase: Uventet applikations-ID. Ventede %u, fik %u</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Sektion [%s] er ikke genkendt.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Signering af transaktion mislykkedes</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">Angivet -walletdir “%s” eksisterer ikke</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">Angivet -walletdir “%s” er en relativ sti</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">Angivet -walletdir “%s” er ikke en mappe</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">Angivet blokmappe “%s” eksisterer ikke.</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Starter netværkstråde...</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Kildekoden er tilgængelig fra %s.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Den angivne konfigurationsfil %s findes ikke</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">Transaktionsbeløbet er for lille til at betale gebyret</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">Tegnebogen vil undgå at betale mindre end minimum-videresendelsesgebyret.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">Dette er eksperimentelt software.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">Dette er det transaktionsgebyr, du minimum betaler for hver transaktion.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">Dette er transaktionsgebyret, som betaler, når du sender en transaktion.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Transaktionsbeløb er for lavt</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">Transaktionsbeløb må ikke være negative</translation>
+    </message>
+    <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">Transaktions byttepenge outputindeks uden for intervallet</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">Transaktionen har en for lang hukommelsespuljekæde</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">Transaktionen skal have mindst én modtager</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Transaktionen behøver en byttepenge adresse, men vi kan ikke generere den.</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transaktionen er for stor</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished">Ikke i stand til at tildele til %s på denne computer. %s kører formodentlig allerede.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">Ikke i stand til at oprette PID fil '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">Kan ikke generere indledningsvise nøgler</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">U-istand til at generere nøgler</translation>
+    </message>
+    <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">Kan ikke åbne %s til skrivning</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation type="unfinished">Kan ikke parse -maxuploadtarget: '%s'</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">Kunne ikke starte HTTP-server. Se fejlretningslog for detaljer.</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">Ukendt -blockfilterindex værdi %s.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">Ukendt adressetype ‘%s’</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">Ukendt byttepengetype ‘%s’</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Ukendt netværk anført i -onlynet: “%s”</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Ukendte nye regler aktiveret (versionsbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">Ikke understøttet logningskategori %s=%s.</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation type="unfinished">Opgraderer UTXO-database</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished">Brugeragent-kommentar (%s) indeholder usikre tegn.</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Verificerer blokke…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Bekræfter tegnebog (/bøger)...</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">Det var nødvendigt at genskrive tegnebogen: Genstart %s for at gennemføre</translation>
+    </message>
+</context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Oversigt</translation>
+        <translation type="unfinished">&amp;Oversigt</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Vis generel oversigt over tegnebog</translation>
+        <translation type="unfinished">Vis generel oversigt over tegnebog</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaktioner</translation>
+        <translation type="unfinished">&amp;Transaktioner</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Gennemse transaktionshistorik</translation>
+        <translation type="unfinished">Gennemse transaktionshistorik</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Luk</translation>
+        <translation type="unfinished">&amp;Luk</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Afslut program</translation>
+        <translation type="unfinished">Afslut program</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -394,11 +1102,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Om &amp;Qt</translation>
+        <translation type="unfinished">Om &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Vis informationer om Qt</translation>
+        <translation type="unfinished">Vis informationer om Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -407,6 +1115,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Opret en ny tegnebog</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Minimér</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -423,31 +1135,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Send widecoins til en Widecoin-adresse</translation>
+        <translation type="unfinished">Send widecoins til en Widecoin-adresse</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Lav sikkerhedskopi af tegnebogen til et andet sted</translation>
+        <translation type="unfinished">Lav sikkerhedskopi af tegnebogen til et andet sted</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Skift adgangskode anvendt til tegnebogskryptering</translation>
+        <translation type="unfinished">Skift adgangskode anvendt til tegnebogskryptering</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Modtag</translation>
+        <translation type="unfinished">&amp;Modtag</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
         <translation type="unfinished">&amp;Indstillinger...</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Vis / skjul</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Vis eller skjul hovedvinduet</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
@@ -455,15 +1159,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Kryptér de private nøgler, der hører til din tegnebog</translation>
+        <translation type="unfinished">Kryptér de private nøgler, der hører til din tegnebog</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
         <translation type="unfinished">&amp;Sikkerhedskopiér Tegnebog</translation>
     </message>
     <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;Skift adgangskode</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Signér &amp;besked</translation>
+    </message>
+    <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Signér beskeder med dine Widecoin-adresser for at bevise, at de tilhører dig</translation>
+        <translation type="unfinished">Signér beskeder med dine Widecoin-adresser for at bevise, at de tilhører dig</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
@@ -471,7 +1183,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Verificér beskeder for at sikre, at de er signeret med de angivne Widecoin-adresser</translation>
+        <translation type="unfinished">Verificér beskeder for at sikre, at de er signeret med de angivne Widecoin-adresser</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">&amp;Indlæs PSBT fra fil...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Åben &amp;URI...</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -487,23 +1207,39 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Fil</translation>
+        <translation type="unfinished">&amp;Fil</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Opsætning</translation>
+        <translation type="unfinished">&amp;Opsætning</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Hjælp</translation>
+        <translation type="unfinished">&amp;Hjælp</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Faneværktøjslinje</translation>
+        <translation type="unfinished">Faneværktøjslinje</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Synkroniserer hoveder (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished">Synkroniserer med netværk …</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Indekserer blokke på disken…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Bearbejder blokke på disken…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation type="unfinished">Genindekserer blokke på disken…</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -527,14 +1263,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
-            <numerusform />
-            <numerusform />
+        <translation type="unfinished">
+            <numerusform>Behandlede %n blok(e) af transaktionshistorik.</numerusform>
+            <numerusform>Behandlede %n blok(e) af transaktionshistorik.</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 bagud</translation>
+        <translation type="unfinished">%1 bagud</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -542,27 +1278,31 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Senest modtagne blok blev genereret for %1 siden.</translation>
+        <translation type="unfinished">Senest modtagne blok blev genereret for %1 siden.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transaktioner herefter vil endnu ikke være synlige.</translation>
+        <translation type="unfinished">Transaktioner herefter vil endnu ikke være synlige.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Fejl</translation>
+        <translation type="unfinished">Fejl</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Advarsel</translation>
+        <translation type="unfinished">Advarsel</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Opdateret</translation>
+        <translation type="unfinished">Opdateret</translation>
     </message>
     <message>
         <source>Load Partially Signed Widecoin Transaction</source>
         <translation type="unfinished">Indlæs Partvist Signeret Widecoin-Transaktion</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">Indlæs PSBT fra &amp;clipboard</translation>
     </message>
     <message>
         <source>Load Partially Signed Widecoin Transaction from clipboard</source>
@@ -629,10 +1369,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Vindue</translation>
     </message>
     <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Minimér</translation>
-    </message>
-    <message>
         <source>Main Window</source>
         <translation type="unfinished">Hoved Vindue</translation>
     </message>
@@ -640,13 +1376,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 client</source>
         <translation type="unfinished">%1-klient</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Skjul</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">&amp;Vis</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Widecoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n aktiv(e) forbindelse(r) til Widecoin-netværket.</numerusform>
+            <numerusform>%n aktiv(e) forbindelse(r) til Widecoin-netværket.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">Click for flere aktioner.</translation>
     </message>
     <message>
         <source>Show Peers tab</source>
@@ -703,11 +1452,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Afsendt transaktion</translation>
+        <translation type="unfinished">Afsendt transaktion</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Indgående transaktion</translation>
+        <translation type="unfinished">Indgående transaktion</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -723,11 +1472,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;ulåst&lt;/b&gt;</translation>
+        <translation type="unfinished">Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;ulåst&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;låst&lt;/b&gt;</translation>
+        <translation type="unfinished">Tegnebog er &lt;b&gt;krypteret&lt;/b&gt; og i øjeblikket &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Original message:</source>
@@ -816,6 +1565,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopiér beløb</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopiér adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopiér &amp;mærkat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopiér &amp;beløb</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Kopiér transaktion &amp;ID og outputindeks</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">&amp;Fastlås ubrugte</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Lås ubrugte op</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopiér mængde</translation>
     </message>
@@ -875,7 +1648,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">Opret tegnebog</translation>
+    </message>
+    <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation type="unfinished">Opretter Tegnebog &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -886,7 +1665,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create wallet warning</source>
         <translation type="unfinished">Advarsel for oprettelse af tegnebog</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Kan ikke liste underskrivere</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Indlæs Tegnebøger</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Indlæser tegnebøger...</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -901,7 +1697,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>default wallet</source>
         <translation type="unfinished">Standard tegnebog</translation>
     </message>
-    </context>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Åben Tegnebog</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
+        <translation type="unfinished">Åbner Tegnebog &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -976,6 +1782,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Beskriver-Pung</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Brug en ekstern signeringsenhed som en hardwaretegnebog. Konfigurer den eksterne underskriver skript i tegnebogspræferencerne først.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Ekstern underskriver</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Opret</translation>
     </message>
@@ -983,16 +1797,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation type="unfinished">Kompileret uden sqlite-understøttelse (krævet til beskriver-punge)</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Kompileret uden ekstern underskriver understøttelse (nødvendig for ekstern underskriver)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Redigér adresse</translation>
+        <translation type="unfinished">Redigér adresse</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Mærkat</translation>
+        <translation type="unfinished">&amp;Mærkat</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -1004,7 +1823,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Adresse</translation>
+        <translation type="unfinished">&amp;Adresse</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -1043,27 +1862,39 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>En ny datamappe vil blive oprettet.</translation>
+        <translation type="unfinished">En ny datamappe vil blive oprettet.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>navn</translation>
+        <translation type="unfinished">navn</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Mappe eksisterer allerede. Tilføj %1, hvis du vil oprette en ny mappe her.</translation>
+        <translation type="unfinished">Mappe eksisterer allerede. Tilføj %1, hvis du vil oprette en ny mappe her.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Sti eksisterer allerede og er ikke en mappe.</translation>
+        <translation type="unfinished">Sti eksisterer allerede og er ikke en mappe.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Kan ikke oprette en mappe her.</translation>
+        <translation type="unfinished">Kan ikke oprette en mappe her.</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>%1 GB of space available</source>
+        <translation type="unfinished">%1 GB af fri plads tilgængelig</translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation type="unfinished">(ud af %1 GB behøvet)</translation>
+    </message>
+    <message>
+        <source>(%1 GB needed for full chain)</source>
+        <translation type="unfinished">(%1 GB nødvendig for komplet kæde)</translation>
+    </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Mindst %1 GB data vil blive gemt i denne mappe, og det vil vokse over tid.</translation>
@@ -1076,8 +1907,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(tilstrækkelig for at gendanne backups %n dag(e) gammel)</numerusform>
+            <numerusform>(tilstrækkelig for at gendanne backups %n dag(e) gammel)</numerusform>
         </translation>
     </message>
     <message>
@@ -1094,11 +1925,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Error</source>
-        <translation>Fejl</translation>
+        <translation type="unfinished">Fejl</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Velkommen</translation>
+        <translation type="unfinished">Velkommen</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -1113,8 +1944,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Når du klikker OK, vil %1 begynde at downloade og bearbejde den fulde %4-blokkæde (%2 GB), startende med de tidligste transaktioner i %3, da %4 først startede.</translation>
     </message>
     <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Begræns blokkæde opbevaring til</translation>
+    </message>
+    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">Ændring af denne indstilling senere kræver gendownload af hele blokkæden. Det er hurtigere at downloade den komplette kæde først og beskære den senere. Slår nogle avancerede funktioner fra.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1126,11 +1965,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Brug standardmappen for data</translation>
+        <translation type="unfinished">Brug standardmappen for data</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Brug tilpasset mappe for data:</translation>
+        <translation type="unfinished">Brug tilpasset mappe for data:</translation>
     </message>
 </context>
 <context>
@@ -1146,6 +1985,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 lukker ned…</translation>
+    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation type="unfinished">Luk ikke computeren ned, før dette vindue forsvinder.</translation>
@@ -1201,23 +2044,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
         <translation type="unfinished">%1 synkroniserer lige nu. Hoveder og blokke bliver downloadet og valideret fra andre knuder. Processen fortsætter indtil den seneste blok nås.</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Ukendt. Synkroniserer Hoveder (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open widecoin URI</source>
         <translation type="unfinished">Åbn widecoin-URI</translation>
     </message>
-    </context>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Indsæt adresse fra udklipsholderen</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Indstillinger</translation>
+        <translation type="unfinished">Indstillinger</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Generelt</translation>
+        <translation type="unfinished">&amp;Generelt</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1226,6 +2078,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Start %1 on system login</source>
         <translation type="unfinished">&amp;Start %1 ved systemlogin</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">Aktivering af beskæring reducerer betydeligt den diskplads, der kræves til at gemme transaktioner. Alle blokke er stadig fuldt validerede. Gendannelse af denne indstilling kræver gendownload af hele blokkæden.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1248,10 +2104,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Minimér i stedet for at lukke applikationen, når vinduet lukkes. Når denne indstilling er aktiveret, vil applikationen først blive lukket, når Afslut vælges i menuen.</translation>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">Tredjeparts-URL'er (fx et blokhåndteringsværktøj), der vises i transaktionsfanen som genvejsmenupunkter. %s i URL'en erstattes med transaktionens hash. Flere URL'er separeres med en lodret streg |.</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Åbn konfigurationsfilen for %1 fra arbejdsmappen.</translation>
     </message>
@@ -1261,15 +2113,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Nulstil alle klientindstillinger til deres standard.</translation>
+        <translation type="unfinished">Nulstil alle klientindstillinger til deres standard.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Nulstil indstillinger</translation>
+        <translation type="unfinished">&amp;Nulstil indstillinger</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Netværk</translation>
+        <translation type="unfinished">&amp;Netværk</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -1280,12 +2132,42 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ændring af denne indstilling senere kræver download af hele blokkæden igen.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maksimal størrelse på databasecache. En større cache kan bidrage til hurtigere synkronisering, hvorefter fordelen er mindre synlig i de fleste tilfælde. Sænkning af cachestørrelsen vil reducere hukommelsesforbruget. Ubrugt mempool-hukommelse deles for denne cache.</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Indstil antallet af scriptbekræftelsestråde. Negative værdier svarer til antallet af kerner, du ønsker at lade være frie til systemet.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = auto, &lt;0 = efterlad så mange kerner fri)</translation>
     </message>
     <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Dette giver dig eller et tredjepartsværktøj mulighed for at kommunikere med knuden gennem kommandolinje- og JSON-RPC-kommandoer.</translation>
+    </message>
+    <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation type="unfinished">Aktiver &amp;RPC-server</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">&amp;Tegnebog</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Hvorvidt der skal trækkes gebyr fra beløb som standard eller ej.</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Træk &amp;gebyr fra beløbet som standard</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1304,12 +2186,42 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Brug ubekræftede byttepenge</translation>
     </message>
     <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">Aktiver &amp;PSBT styring</translation>
+    </message>
+    <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">Om PSBT styring skal vises.</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Ekstern underskriver (e.g. hardwaretegnebog)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;Ekstern underskrivers scriptsti</translation>
+    </message>
+    <message>
+        <source>Full path to a Widecoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Fuld sti til et Widecoin Core-kompatibelt script (f.eks. C:\Downloads\hwi.exe eller /Users/you/Downloads/hwi.py). Pas på: malware kan stjæle dine mønter!</translation>
+    </message>
+    <message>
         <source>Automatically open the Widecoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Åbn automatisk Widecoin-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
+        <translation type="unfinished">Åbn automatisk Widecoin-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Konfigurér port vha. &amp;UPnP</translation>
+        <translation type="unfinished">Konfigurér port vha. &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Automatically open the Widecoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Åbn automatisk Widecoin-klientporten på routeren. Dette virker kun, når din router understøtter NAT-PMP, og den er aktiveret. Den eksterne port kan være tilfældig.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished">Kortport ved hjælp af NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1329,11 +2241,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy-&amp;IP:</translation>
+        <translation type="unfinished">Proxy-&amp;IP:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Port for proxyen (fx 9050)</translation>
+        <translation type="unfinished">Port for proxyen (fx 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1341,27 +2253,35 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Vindue</translation>
+        <translation type="unfinished">&amp;Vindue</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">Vis ikonet i proceslinjen.</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">&amp;Vis bakkeikon</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Vis kun et statusikon efter minimering af vinduet.</translation>
+        <translation type="unfinished">Vis kun et statusikon efter minimering af vinduet.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimér til statusfeltet i stedet for proceslinjen</translation>
+        <translation type="unfinished">&amp;Minimér til statusfeltet i stedet for proceslinjen</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimér ved lukning</translation>
+        <translation type="unfinished">M&amp;inimér ved lukning</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Visning</translation>
+        <translation type="unfinished">&amp;Visning</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Sprog for brugergrænseflade:</translation>
+        <translation type="unfinished">&amp;Sprog for brugergrænseflade:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1369,11 +2289,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Enhed, som beløb vises i:</translation>
+        <translation type="unfinished">&amp;Enhed, som beløb vises i:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Vælg standard for underopdeling af enhed, som skal vises i brugergrænsefladen og ved afsendelse af widecoins.</translation>
+        <translation type="unfinished">Vælg standard for underopdeling af enhed, som skal vises i brugergrænsefladen og ved afsendelse af widecoins.</translation>
+    </message>
+    <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">Tredjeparts-URL'er (f.eks. en blokudforsker), der vises på fanen Transaktioner som genvejsmenupunkter. %s i URL'en erstattes af transaktions-hash. Flere URL'er er adskilt af lodret streg |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">&amp;Tredjeparts transaktions-URL'er</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1388,8 +2316,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Brug separate SOCKS&amp;5 proxy, for at nå fælle via Tor-onion-tjenester:</translation>
     </message>
     <message>
-        <source>&amp;Third party transaction URLs</source>
-        <translation type="unfinished">&amp;Tredjeparts-transaktions-URL'er</translation>
+        <source>Monospaced font in the Overview tab:</source>
+        <translation type="unfinished">Monospaced skrifttype på fanen Oversigt:</translation>
+    </message>
+    <message>
+        <source>embedded "%1"</source>
+        <translation type="unfinished">indlejret "%1"</translation>
+    </message>
+    <message>
+        <source>closest matching "%1"</source>
+        <translation type="unfinished">tættest matchende "%1"</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
@@ -1397,15 +2333,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>&amp;Ok</translation>
+        <translation type="unfinished">&amp;Ok</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Annullér</translation>
+        <translation type="unfinished">&amp;Annullér</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Kompileret uden ekstern underskriver understøttelse (nødvendig for ekstern underskriver)</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>standard</translation>
+        <translation type="unfinished">standard</translation>
     </message>
     <message>
         <source>none</source>
@@ -1413,7 +2354,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Bekræft nulstilling af indstillinger</translation>
+        <translation type="unfinished">Bekræft nulstilling af indstillinger</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1425,11 +2366,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
         <translation type="unfinished">Konfigurationsindstillinger</translation>
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">Konfigurationsfilen bruges til at opsætte avancerede brugerindstillinger, som tilsidesætter indstillingerne i den grafiske brugerflade. Derudover vil eventuelle kommandolinjetilvalg tilsidesætte denne konfigurationsfil.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Forsæt</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Fortryd</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1445,18 +2396,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Den angivne proxy-adresse er ugyldig.</translation>
+        <translation type="unfinished">Den angivne proxy-adresse er ugyldig.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formular</translation>
+        <translation type="unfinished">Formular</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Widecoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Den viste information kan være forældet. Din tegnebog synkroniserer automatisk med Widecoin-netværket, når en forbindelse etableres, men denne proces er ikke gennemført endnu.</translation>
+        <translation type="unfinished">Den viste information kan være forældet. Din tegnebog synkroniserer automatisk med Widecoin-netværket, når en forbindelse etableres, men denne proces er ikke gennemført endnu.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1468,7 +2419,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Din nuværende tilgængelige saldo</translation>
+        <translation type="unfinished">Din nuværende tilgængelige saldo</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1476,15 +2427,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total saldo for transaktioner, som ikke er blevet bekræftet endnu, og som ikke endnu er en del af den tilgængelige saldo</translation>
+        <translation type="unfinished">Total saldo for transaktioner, som ikke er blevet bekræftet endnu, og som ikke endnu er en del af den tilgængelige saldo</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Umodne:</translation>
+        <translation type="unfinished">Umodne:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Minet saldo, som endnu ikke er modnet</translation>
+        <translation type="unfinished">Minet saldo, som endnu ikke er modnet</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1492,7 +2443,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Din nuværende totale saldo</translation>
+        <translation type="unfinished">Din nuværende totale saldo</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
@@ -1554,6 +2505,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kunne ikke signere transaktion: %1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Kan ikke signere inputs, mens tegnebogen er låst.</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Kunne ikke signere flere input.</translation>
     </message>
@@ -1584,6 +2539,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">Gem Transaktionsdata</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Delvist underskrevet transaktion (Binær)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
@@ -1622,6 +2582,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Transaktion mangler stadig signatur(er).</translation>
     </message>
     <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(Men ingen tegnebog er indlæst.)</translation>
+    </message>
+    <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(Men denne tegnebog kan ikke signere transaktioner.)</translation>
     </message>
@@ -1657,6 +2621,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">'widecoin://' er ikke et gyldigt URI. Brug 'widecoin:' istedet.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.
+Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
+If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation type="unfinished">Kan ikke behandle betalingsanmodning, fordi BIP70 ikke understøttes.
+På grund af udbredte sikkerhedsfejl i BIP70 anbefales det på det kraftigste, at enhver købmands instruktioner om at skifte tegnebog ignoreres.
+Hvis du modtager denne fejl, skal du anmode forhandleren om en BIP21-kompatibel URI.</translation>
+    </message>
+    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Widecoin address or malformed URI parameters.</source>
         <translation type="unfinished">URI kan ikke tolkes! Dette kan skyldes en ugyldig Widecoin-adresse eller forkert udformede URL-parametre.</translation>
     </message>
@@ -1678,6 +2650,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Knude</translation>
     </message>
     <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation type="unfinished">Retning</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation type="unfinished">Sendt</translation>
@@ -1696,6 +2673,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Network</source>
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Netværk</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">Indkommende</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">Udgående</translation>
     </message>
 </context>
 <context>
@@ -1726,7 +2713,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>PNG Image</source>
-        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <extracomment>Expanded name of the PNG file format. See: https://en.wikipedia.org/wiki/Portable_Network_Graphics.</extracomment>
         <translation type="unfinished">PNG Billede</translation>
     </message>
 </context>
@@ -1734,7 +2721,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>RPCConsole</name>
     <message>
         <source>Client version</source>
-        <translation>Klientversion</translation>
+        <translation type="unfinished">Klientversion</translation>
     </message>
     <message>
         <source>General</source>
@@ -1758,11 +2745,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Opstartstidspunkt</translation>
+        <translation type="unfinished">Opstartstidspunkt</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Netværk</translation>
+        <translation type="unfinished">Netværk</translation>
     </message>
     <message>
         <source>Name</source>
@@ -1770,11 +2757,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Antal forbindelser</translation>
+        <translation type="unfinished">Antal forbindelser</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Blokkæde</translation>
+        <translation type="unfinished">Blokkæde</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1833,12 +2820,43 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Synkroniserede blokke</translation>
     </message>
     <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">Sidste transaktion</translation>
+    </message>
+    <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
         <translation type="unfinished">Afbildning fra Autonome Systemer (et Internet-Protocol-rutefindingsprefiks) til IP-adresser som bruges til at diversificere knudeforbindelser. Den engelske betegnelse er "asmap".</translation>
     </message>
     <message>
         <source>Mapped AS</source>
         <translation type="unfinished">Autonomt-System-afbildning</translation>
+    </message>
+    <message>
+        <source>Whether we relay addresses to this peer.</source>
+        <extracomment>Tooltip text for the Address Relay field in the peer details area.</extracomment>
+        <translation type="unfinished">Om vi videresender adresser til denne peer.</translation>
+    </message>
+    <message>
+        <source>Address Relay</source>
+        <translation type="unfinished">Adresserelæ</translation>
+    </message>
+    <message>
+        <source>Total number of addresses processed, excluding those dropped due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area.</extracomment>
+        <translation type="unfinished">Samlet antal behandlede adresser, ekskl. adresser, der er droppet på grund af hastighedsbegrænsning.</translation>
+    </message>
+    <message>
+        <source>Addresses Processed</source>
+        <translation type="unfinished">Adresser Behandlet</translation>
+    </message>
+    <message>
+        <source>Total number of addresses dropped due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area.</extracomment>
+        <translation type="unfinished">Samlet antal adresser droppet på grund af hastighedsbegrænsning.</translation>
+    </message>
+    <message>
+        <source>Addresses Rate-Limited</source>
+        <translation type="unfinished">Adresser Hastighedsbegrænset</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1869,16 +2887,49 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Tilladelser</translation>
     </message>
     <message>
+        <source>The direction and type of peer connection: %1</source>
+        <translation type="unfinished">Retningen og typen af peer-forbindelse: %1</translation>
+    </message>
+    <message>
+        <source>Direction/Type</source>
+        <translation type="unfinished">Retning/Type</translation>
+    </message>
+    <message>
+        <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
+        <translation type="unfinished">Netværksprotokollen, som denne peer er forbundet via: IPv4, IPv6, Onion, I2P eller CJDNS.</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation type="unfinished">Tjenester</translation>
+    </message>
+    <message>
+        <source>Whether the peer requested us to relay transactions.</source>
+        <translation type="unfinished">Om peeren anmodede os om at videresende transaktioner.</translation>
+    </message>
+    <message>
+        <source>Wants Tx Relay</source>
+        <translation type="unfinished">Vil have transaktion videresend</translation>
+    </message>
+    <message>
+        <source>High Bandwidth</source>
+        <translation type="unfinished">Højt Bredbånd</translation>
     </message>
     <message>
         <source>Connection Time</source>
         <translation type="unfinished">Forbindelsestid</translation>
     </message>
     <message>
+        <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
+        <translation type="unfinished">Forløbet tid siden en ny blok, der bestod indledende gyldighedstjek, blev modtaget fra denne peer.</translation>
+    </message>
+    <message>
         <source>Last Block</source>
         <translation type="unfinished">Sidste Blok</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
+        <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
+        <translation type="unfinished">Forløbet tid siden en ny transaktion, der blev accepteret i vores mempool, blev modtaget fra denne peer.</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -1910,15 +2961,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Tidsstempel for seneste blok</translation>
+        <translation type="unfinished">Tidsstempel for seneste blok</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Åbn</translation>
+        <translation type="unfinished">&amp;Åbn</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>&amp;Konsol</translation>
+        <translation type="unfinished">&amp;Konsol</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1930,11 +2981,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Fejlsøgningslogfil</translation>
+        <translation type="unfinished">Fejlsøgningslogfil</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Ryd konsol</translation>
+        <translation type="unfinished">Ryd konsol</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1945,6 +2996,53 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Udgående:</translation>
     </message>
     <message>
+        <source>Inbound: initiated by peer</source>
+        <extracomment>Explanatory text for an inbound peer connection.</extracomment>
+        <translation type="unfinished">Indgående: initieret af peer</translation>
+    </message>
+    <message>
+        <source>Outbound Full Relay: default</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays all network information. This is the default behavior for outbound connections.</extracomment>
+        <translation type="unfinished">Udgående fuld relæ: standard</translation>
+    </message>
+    <message>
+        <source>Outbound Block Relay: does not relay transactions or addresses</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation type="unfinished">Udgående blokrelæ: videresender ikke transaktioner eller adresser</translation>
+    </message>
+    <message>
+        <source>Outbound Manual: added using RPC %1 or %2/%3 configuration options</source>
+        <extracomment>Explanatory text for an outbound peer connection that was established manually through one of several methods. The numbered arguments are stand-ins for the methods available to establish manual connections.</extracomment>
+        <translation type="unfinished">Udgående manual: tilføjet ved hjælp af RPC %1 eller %2/%3 konfigurationsmuligheder</translation>
+    </message>
+    <message>
+        <source>Outbound Feeler: short-lived, for testing addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to test the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Udgående fejl: kortvarig, til test af adresser</translation>
+    </message>
+    <message>
+        <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
+        <translation type="unfinished">Udgående adressehentning: kortvarig, til at anmode om adresser</translation>
+    </message>
+    <message>
+        <source>we selected the peer for high bandwidth relay</source>
+        <translation type="unfinished">vi valgte denne peer for høj bredbånd relæ</translation>
+    </message>
+    <message>
+        <source>the peer selected us for high bandwidth relay</source>
+        <translation type="unfinished">peeren valgte os til høj bredbånd relæ</translation>
+    </message>
+    <message>
+        <source>no high bandwidth relay selected</source>
+        <translation type="unfinished">ingen høj bredbånd relæ valgt</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Kopiér adresse</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">&amp;Afbryd forbindelse</translation>
     </message>
@@ -1953,12 +3051,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">1 &amp;time</translation>
     </message>
     <message>
+        <source>1 d&amp;ay</source>
+        <translation type="unfinished">1 &amp;dag</translation>
+    </message>
+    <message>
         <source>1 &amp;week</source>
         <translation type="unfinished">1 &amp;uge</translation>
     </message>
     <message>
         <source>1 &amp;year</source>
         <translation type="unfinished">1 &amp;år</translation>
+    </message>
+    <message>
+        <source>&amp;Copy IP/Netmask</source>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
+        <translation type="unfinished">&amp;Kopiér IP/Netmask</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -1975,6 +3082,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Executing command using "%1" wallet</source>
         <translation type="unfinished">Eksekverer kommando ved brug af "%1" tegnebog</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.
+Use up and down arrows to navigate history, and %2 to clear screen.
+Use %3 and %4 to increase or decrease the font size.
+Type %5 for an overview of available commands.
+For more information on using this console, type %6.
+
+%7WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.%8</source>
+        <extracomment>RPC console welcome message. Placeholders %7 and %8 are style tags for the warning content, and they are not space separated from the rest of the text intentionally.</extracomment>
+        <translation type="unfinished">Velkommen til %1 RPC-konsollen.
+Brug op- og nedpilene til at navigere i historikken og %2 til at rydde skærmen.
+Brug %3 og %4 til at øge eller formindske skriftstørrelsen.
+Skriv %5 for at få en oversigt over tilgængelige kommandoer.
+For mere information om brug af denne konsol, skriv %6.
+
+%7 ADVARSEL: Svindlere har været aktive og bedt brugerne om at skrive kommandoer her og stjæle deres tegnebogsindhold. Brug ikke denne konsol uden fuldt ud at forstå konsekvenserne af en kommando.%8</translation>
+    </message>
+    <message>
+        <source>Executing…</source>
+        <extracomment>A console message indicating an entered command is currently being executed.</extracomment>
+        <translation type="unfinished">Udfører...</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -2056,14 +3185,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ryd</translation>
     </message>
     <message>
-        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation type="unfinished">Rene segwit-adresser (kendt som Bech32 eller BIP-173) reducerer dine transaktionsgebyrer i det lange løb og giver bedre beskyttelse imod tastefejl, men gamle tegnebøger understøtter dem ikke. Hvis dette ikke vælges, vil i stedet en adresse, der fungerer med ældre tegnebøger, oprettes.</translation>
-    </message>
-    <message>
-        <source>Generate native segwit (Bech32) address</source>
-        <translation type="unfinished">Generér rene segwit-adresser (Bech32)</translation>
-    </message>
-    <message>
         <source>Requested payments history</source>
         <translation type="unfinished">Historik over betalingsanmodninger</translation>
     </message>
@@ -2086,6 +3207,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">Kopiér &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopiér adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopiér &amp;mærkat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">Kopiér &amp;besked</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopiér &amp;beløb</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -2129,6 +3266,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Kopiér &amp;adresse</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Verificér</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Bekræft denne adresse på f.eks. en hardwaretegnebogs skærm</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2178,7 +3323,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Send widecoins</translation>
+        <translation type="unfinished">Send widecoins</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2254,11 +3399,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Send til flere modtagere på en gang</translation>
+        <translation type="unfinished">Send til flere modtagere på en gang</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>Tilføj &amp;modtager</translation>
+        <translation type="unfinished">Tilføj &amp;modtager</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2281,12 +3426,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Skjul indstillinger for transaktionsgebyr</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation type="unfinished">Angiv et brugerdefineret gebyr pr. kB (1.000 bytes) af transaktionens virtuelle størrelse.
+
+Bemærk: Da gebyret beregnes på per-byte-basis, ville en gebyrsats på "100 satoshis pr. kvB" for en transaktionsstørrelse på 500 virtuelle bytes (halvdelen af 1 kvB) i sidste ende kun give et gebyr på 50 satoshis.</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for widecoin transactions than the network can process.</source>
         <translation type="unfinished">På tidspunkter, hvor der er færre transaktioner, end der er plads til i nye blokke, kan minere og videresendende knuder gennemtvinge et minimumsgebyr. Du kan vælge kun at betale dette minimumsgebyr, men vær opmærksom på, at det kan resultere i en transaktion, der aldrig bliver bekræftet, hvis mængden af nye widecoin-transaktioner stiger til mere, end hvad netværket kan behandle ad gangen.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
         <translation type="unfinished">Et for lavt gebyr kan resultere i en transaktion, der aldrig bekræftes (læs værktøjstippet)</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation type="unfinished">(Smart gebyr er ikke initialiseret endnu. Dette tager normalt et par blokke...)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2302,19 +3459,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Ryd &amp;alle</translation>
+        <translation type="unfinished">Ryd &amp;alle</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Saldo:</translation>
+        <translation type="unfinished">Saldo:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Bekræft afsendelsen</translation>
+        <translation type="unfinished">Bekræft afsendelsen</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>&amp;Afsend</translation>
+        <translation type="unfinished">&amp;Afsend</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -2349,6 +3506,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 (%2 blokke)</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation type="unfinished">Underskriv på enhed</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Tilslut din hardwaretegnebog først.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Indstil ekstern underskriver scriptsti i Indstillinger -&gt; Tegnebog</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">L&amp;av usigneret</translation>
     </message>
@@ -2365,24 +3536,39 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 til %2</translation>
     </message>
     <message>
-        <source>Do you want to draft this transaction?</source>
-        <translation type="unfinished">Vil du lave et udkast til denne transaktion?</translation>
+        <source>To review recipient list click "Show Details…"</source>
+        <translation type="unfinished">For at vurdere modtager listen tryk "Vis Detaljer..."</translation>
     </message>
     <message>
-        <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Er du sikker på, at du vil sende?</translation>
+        <source>Sign failed</source>
+        <translation type="unfinished">Underskrivningen fejlede</translation>
     </message>
     <message>
-        <source>Create Unsigned</source>
-        <translation type="unfinished">Opret Usigneret</translation>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Ekstern underskriver ikke fundet</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Ekstern underskriver fejl</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">Gem Transaktionsdata</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Delvist underskrevet transaktion (Binær)</translation>
+    </message>
+    <message>
         <source>PSBT saved</source>
         <translation type="unfinished">PSBT gemt</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation type="unfinished">Ekstern balance:</translation>
     </message>
     <message>
         <source>or</source>
@@ -2394,10 +3580,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Widecoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Gennemse venligst dit transaktionsforslag. Dette vil producere en Partvist Signeret Widecoin Transaktion (PSBT), som du kan gemme eller kopiere, og så signere med f.eks. en offline %1 pung, eller en PSBT-kompatibel maskinelpung.</translation>
     </message>
     <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Vil du oprette denne transaktion?</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Widecoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
+        <translation type="unfinished">Gennemgå venligst din transaktion. Du kan oprette og sende denne transaktion eller oprette en delvist underskrevet Widecoin-transaktion (PSBT), som du kan gemme eller kopiere og derefter underskrive med, f.eks. en offline %1 tegnebog eller en PSBT-kompatibel hardwaretegnebog.</translation>
+    </message>
+    <message>
         <source>Please, review your transaction.</source>
+        <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">Venligst, vurder din transaktion.</translation>
     </message>
     <message>
@@ -2415,10 +3613,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Confirm send coins</source>
         <translation type="unfinished">Bekræft afsendelse af widecoins</translation>
-    </message>
-    <message>
-        <source>Confirm transaction proposal</source>
-        <translation type="unfinished">Bekræft transaktionsudkast</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -2458,9 +3652,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
-            <numerusform />
-            <numerusform />
+        <translation type="unfinished">
+            <numerusform>Anslået at begynde bekræftelse inden for %n blok(e).</numerusform>
+            <numerusform>Anslået at begynde bekræftelse inden for %n blok(e).</numerusform>
         </translation>
     </message>
     <message>
@@ -2488,15 +3682,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Beløb:</translation>
+        <translation type="unfinished">&amp;Beløb:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Betal &amp;til:</translation>
+        <translation type="unfinished">Betal &amp;til:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Mærkat:</translation>
+        <translation type="unfinished">&amp;Mærkat:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2508,7 +3702,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Indsæt adresse fra udklipsholderen</translation>
+        <translation type="unfinished">Indsæt adresse fra udklipsholderen</translation>
     </message>
     <message>
         <source>Remove this entry</source>
@@ -2556,14 +3750,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Afsend</translation>
+    </message>
+    <message>
+        <source>Create Unsigned</source>
+        <translation type="unfinished">Opret Usigneret</translation>
+    </message>
+</context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Signaturer – Underskriv/verificér en besked</translation>
+        <translation type="unfinished">Signaturer – Underskriv/verificér en besked</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Singér besked</translation>
+        <translation type="unfinished">&amp;Singér besked</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive widecoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
@@ -2579,39 +3784,39 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Indsæt adresse fra udklipsholderen</translation>
+        <translation type="unfinished">Indsæt adresse fra udklipsholderen</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Indtast her beskeden, du ønsker at signere</translation>
+        <translation type="unfinished">Indtast her beskeden, du ønsker at signere</translation>
     </message>
     <message>
         <source>Signature</source>
-        <translation>Signatur</translation>
+        <translation type="unfinished">Signatur</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Kopiér den nuværende signatur til systemets udklipsholder</translation>
+        <translation type="unfinished">Kopiér den nuværende signatur til systemets udklipsholder</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Widecoin address</source>
-        <translation>Signér denne besked for at bevise, at Widecoin-adressen tilhører dig</translation>
+        <translation type="unfinished">Signér denne besked for at bevise, at Widecoin-adressen tilhører dig</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Signér &amp;besked</translation>
+        <translation type="unfinished">Signér &amp;besked</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Nulstil alle “signér besked”-felter</translation>
+        <translation type="unfinished">Nulstil alle “signér besked”-felter</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Ryd &amp;alle</translation>
+        <translation type="unfinished">Ryd &amp;alle</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verificér besked</translation>
+        <translation type="unfinished">&amp;Verificér besked</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
@@ -2631,15 +3836,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Widecoin address</source>
-        <translation>Verificér beskeden for at sikre, at den er signeret med den angivne Widecoin-adresse</translation>
+        <translation type="unfinished">Verificér beskeden for at sikre, at den er signeret med den angivne Widecoin-adresse</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Verificér &amp;besked</translation>
+        <translation type="unfinished">Verificér &amp;besked</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Nulstil alle “verificér besked”-felter</translation>
+        <translation type="unfinished">Nulstil alle “verificér besked”-felter</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
@@ -2699,18 +3904,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
+    <name>SplashScreen</name>
+    <message>
+        <source>(press q to shutdown and continue later)</source>
+        <translation type="unfinished">(tast q for at lukke ned og fortsætte senere)</translation>
     </message>
     <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Åben indtil %1</translation>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">tryk på q for at lukke</translation>
     </message>
+</context>
+<context>
+    <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
         <translation type="unfinished">i konflikt med en transaktion, der har %1 bekræftelser</translation>
@@ -2781,9 +3986,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
+        <translation type="unfinished">
+            <numerusform>modnes i yderligere %n blok(e)</numerusform>
+            <numerusform>modnes i yderligere %n blok(e)</numerusform>
         </translation>
     </message>
     <message>
@@ -2875,7 +4080,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Denne rude viser en detaljeret beskrivelse af transaktionen</translation>
+        <translation type="unfinished">Denne rude viser en detaljeret beskrivelse af transaktionen</translation>
     </message>
     <message>
         <source>Details for %1</source>
@@ -2891,17 +4096,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label</source>
         <translation type="unfinished">Mærkat</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Åben indtil %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -3043,12 +4237,57 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Interval...</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Kopiér adresse</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Kopiér &amp;mærkat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Kopiér &amp;beløb</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID</source>
+        <translation type="unfinished">Kopiér transaktion &amp;ID</translation>
+    </message>
+    <message>
+        <source>Copy &amp;raw transaction</source>
+        <translation type="unfinished">Kopiér &amp;rå transaktion</translation>
+    </message>
+    <message>
+        <source>Copy full transaction &amp;details</source>
+        <translation type="unfinished">Kopiér alle transaktion &amp;oplysninger </translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">&amp;Vis transaktionsoplysninger</translation>
+    </message>
+    <message>
+        <source>Increase transaction &amp;fee</source>
+        <translation type="unfinished">Hæv transaktions &amp;gebyr</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">&amp;Opgiv transaction</translation>
+    </message>
+    <message>
+        <source>&amp;Edit address label</source>
+        <translation type="unfinished">&amp;Rediger adresseetiket</translation>
+    </message>
+    <message>
+        <source>Show in %1</source>
+        <extracomment>Transactions table context menu action to show the selected transaction in a third-party block explorer. %1 is a stand-in argument for the URL of the explorer.</extracomment>
+        <translation type="unfinished">Vis på %1</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Eksportér transaktionshistorik</translation>
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">Kommasepareret fil</translation>
     </message>
     <message>
@@ -3110,76 +4349,6 @@ Gå til Fil &gt; Åbn Pung for, at indlæse en pung.
         <source>Create a new wallet</source>
         <translation type="unfinished">Opret en ny tegnebog</translation>
     </message>
-</context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation type="unfinished">Send widecoins</translation>
-    </message>
-    <message>
-        <source>Fee bump error</source>
-        <translation type="unfinished">Fejl ved gebyrforøgelse</translation>
-    </message>
-    <message>
-        <source>Increasing transaction fee failed</source>
-        <translation type="unfinished">Forøgelse af transaktionsgebyr mislykkedes</translation>
-    </message>
-    <message>
-        <source>Do you want to increase the fee?</source>
-        <translation type="unfinished">Vil du forøge gebyret?</translation>
-    </message>
-    <message>
-        <source>Do you want to draft a transaction with fee increase?</source>
-        <translation type="unfinished">Vil du lave et transaktionsudkast med øget gebyr?</translation>
-    </message>
-    <message>
-        <source>Current fee:</source>
-        <translation type="unfinished">Aktuelt gebyr:</translation>
-    </message>
-    <message>
-        <source>Increase:</source>
-        <translation type="unfinished">Forøgelse:</translation>
-    </message>
-    <message>
-        <source>New fee:</source>
-        <translation type="unfinished">Nyt gebyr:</translation>
-    </message>
-    <message>
-        <source>Confirm fee bump</source>
-        <translation type="unfinished">Bekræft gebyrforøgelse</translation>
-    </message>
-    <message>
-        <source>Can't draft transaction.</source>
-        <translation type="unfinished">Kan ikke lave transaktionsudkast.</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation type="unfinished">PSBT kopieret</translation>
-    </message>
-    <message>
-        <source>Can't sign transaction.</source>
-        <translation type="unfinished">Kan ikke signere transaktionen.</translation>
-    </message>
-    <message>
-        <source>Could not commit transaction</source>
-        <translation type="unfinished">Kunne ikke gennemføre transaktionen</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Standard tegnebog</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Eksportér</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Eksportér den aktuelle visning til en fil</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation type="unfinished">Fejl</translation>
@@ -3203,6 +4372,81 @@ Gå til Fil &gt; Åbn Pung for, at indlæse en pung.
     <message>
         <source>Unable to decode PSBT</source>
         <translation type="unfinished">Kunne ikke afkode PSBT</translation>
+    </message>
+</context>
+<context>
+    <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation type="unfinished">Send widecoins</translation>
+    </message>
+    <message>
+        <source>Fee bump error</source>
+        <translation type="unfinished">Fejl ved gebyrforøgelse</translation>
+    </message>
+    <message>
+        <source>Increasing transaction fee failed</source>
+        <translation type="unfinished">Forøgelse af transaktionsgebyr mislykkedes</translation>
+    </message>
+    <message>
+        <source>Do you want to increase the fee?</source>
+        <extracomment>Asks a user if they would like to manually increase the fee of a transaction that has already been created.</extracomment>
+        <translation type="unfinished">Vil du forøge gebyret?</translation>
+    </message>
+    <message>
+        <source>Current fee:</source>
+        <translation type="unfinished">Aktuelt gebyr:</translation>
+    </message>
+    <message>
+        <source>Increase:</source>
+        <translation type="unfinished">Forøgelse:</translation>
+    </message>
+    <message>
+        <source>New fee:</source>
+        <translation type="unfinished">Nyt gebyr:</translation>
+    </message>
+    <message>
+        <source>Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy.</source>
+        <translation type="unfinished">Advarsel: Dette kan betale det ekstra gebyr ved at reducere byttepengesoutputs eller tilføje inputs, når det er nødvendigt. Det kan tilføje et nyt byttepengesoutput, hvis et ikke allerede eksisterer. Disse ændringer kan potentielt lække privatlivets fred.</translation>
+    </message>
+    <message>
+        <source>Confirm fee bump</source>
+        <translation type="unfinished">Bekræft gebyrforøgelse</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation type="unfinished">Kan ikke lave transaktionsudkast.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation type="unfinished">PSBT kopieret</translation>
+    </message>
+    <message>
+        <source>Can't sign transaction.</source>
+        <translation type="unfinished">Kan ikke signere transaktionen.</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation type="unfinished">Kunne ikke gennemføre transaktionen</translation>
+    </message>
+    <message>
+        <source>Can't display address</source>
+        <translation type="unfinished">Adressen kan ikke vises</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Standard tegnebog</translation>
+    </message>
+</context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp;Eksportér</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Eksportér den aktuelle visning til en fil</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3232,493 +4476,6 @@ Gå til Fil &gt; Åbn Pung for, at indlæse en pung.
     <message>
         <source>Cancel</source>
         <translation type="unfinished">Fortryd</translation>
-    </message>
-</context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">Udviklerne af %s</translation>
-    </message>
-    <message>
-        <source>%s corrupt. Try using the wallet tool widecoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s beskadiget. Prøv at bruge pung-værktøjet widecoin-wallet til, at bjærge eller gendanne en sikkerhedskopi.</translation>
-    </message>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee er sat meget højt! Gebyrer så store risikeres betalt på en enkelt transaktion.</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Kan ikke opnå en lås på datamappe %s. %s kører sansynligvis allerede.</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation type="unfinished">Kan ikke give specifikke forbindelser og få addrman til at finde udgående forbindelser på samme tid.</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">Distribueret under MIT-softwarelicensen; se den vedlagte fil %s eller %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Fejl under læsning af %s! Alle nøgler blev læst korrekt, men transaktionsdata eller indgange i adressebogen kan mangle eller være ukorrekte.</translation>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Fejl: Lytning efter indkommende forbindelser mislykkedes (lytning resultarede i fejl %s)</translation>
-    </message>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Estimering af gebyr mislykkedes. Tilbagefaldsgebyr er deaktiveret. Vent et par blokke eller aktiver -fallbackfee.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">Ugyldigt beløb for -maxtxfee=&lt;beløb&gt;: “%s” (skal være på mindst minrelay-gebyret på %s for at undgå hængende transaktioner)</translation>
-    </message>
-    <message>
-        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
-        <translation type="unfinished">Mere end én onion-bindingsadresse er opgivet. Bruger %s til den automatiske oprettelse af Tor-onion-tjeneste.</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Undersøg venligst at din computers dato og klokkeslet er korrekt indstillet! Hvis der er fejl i disse, vil %s ikke fungere korrekt.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">Overvej venligst at bidrage til udviklingen, hvis du finder %s brugbar. Besøg %s for yderligere information om softwaren.</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">Beskæring er sat under minimumsgrænsen på %d MiB. Brug venligst et større tal.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Beskæring: Seneste synkronisering rækker udover beskårne data. Du er nødt til at bruge -reindex (downloade hele blokkæden igen i fald af beskåret knude)</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
-        <translation type="unfinished">SQLiteDatabase: Ukendt sqlite-pung-skemaversion %d. Kun version %d understøttes</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation type="unfinished">Blokdatabasen indeholder en blok, som ser ud til at være fra fremtiden. Dette kan skyldes, at din computers dato og tid ikke er sat korrekt. Genopbyg kun blokdatabasen, hvis du er sikker på, at din computers dato og tid er korrekt</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">Transaktionsbeløbet er for lille til at sende, når gebyret er trukket fra</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">Denne fejl kunne finde sted hvis denne pung ikke blev lukket rent ned og sidst blev indlæst vha. en udgave med en nyere version af Berkeley DB. Brug i så fald venligst den programvare, som sidst indlæste denne pung</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">Dette er en foreløbig testudgivelse – brug på eget ansvar – brug ikke til mining eller handelsprogrammer</translation>
-    </message>
-    <message>
-        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
-        <translation type="unfinished">Dette er det maksimale transaktionsgebyr, du betaler (ud over det normale gebyr) for, at prioritere partisk forbrugsafvigelse over almindelig møntudvælgelse.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation type="unfinished">Dette er det transaktionsgebyr, du kan kassere, hvis byttepengene er mindre end støv på dette niveau</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">Dette er transaktionsgebyret, du kan betale, når gebyrestimeringer ikke er tilgængelige.</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Den totale længde på netværksversionsstrengen (%i) overstiger maksimallængden (%i). Reducér antaller af eller størrelsen på uacomments.</translation>
-    </message>
-    <message>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation type="unfinished">Kan ikke genafspille blokke. Du er nødt til at genopbytte databasen ved hjælp af -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Advarsel: Private nøgler opdaget i tegnebog {%s} med deaktiverede private nøgler</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Advarsel: Vi ser ikke ud til at være fuldt ud enige med andre knuder! Du kan være nødt til at opgradere, eller andre knuder kan være nødt til at opgradere.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished">Du er nødt til at genopbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation type="unfinished">%s er meget højt sat!</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-maxmempool skal være mindst %d MB</translation>
-    </message>
-    <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Der er sket en fatal intern fejl, se debug.log for detaljer</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">Kan ikke finde -%s-adressen: “%s”</translation>
-    </message>
-    <message>
-        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation type="unfinished">Kan ikke indstille -peerblockfilters uden -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Kan ikke skrive til datamappe '%s'; tjek tilladelser.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation type="unfinished">Ændr indeks uden for interval</translation>
-    </message>
-    <message>
-        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
-        <translation type="unfinished">Opsætningen af %s bliver kun udført på %s-netværk under [%s]-sektionen.</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation type="unfinished">Ophavsret © %i-%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Ødelagt blokdatabase opdaget</translation>
-    </message>
-    <message>
-        <source>Could not find asmap file %s</source>
-        <translation type="unfinished">Kan ikke finde asmap-filen %s </translation>
-    </message>
-    <message>
-        <source>Could not parse asmap file %s</source>
-        <translation type="unfinished">Kan ikke fortolke asmap-filen %s</translation>
-    </message>
-    <message>
-        <source>Disk space is too low!</source>
-        <translation type="unfinished">Fejl: Disk pladsen er for lav!</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ønsker du at genopbygge blokdatabasen nu?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Indlæsning gennemført</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Klargøring af blokdatabase mislykkedes</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Klargøring af tegnebogsdatabasemiljøet %s mislykkedes!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">Fejl under indlæsning af %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Fejl ved indlæsning af %s: Private nøgler kan kun deaktiveres under oprettelse</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">Fejl under indlæsning af %s: Tegnebog ødelagt</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">Fejl under indlæsning af %s: Tegnebog kræver nyere version af %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Indlæsning af blokdatabase mislykkedes</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Åbning af blokdatabase mislykkedes</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">Fejl under læsning fra database; lukker ned.</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Fejl under opgradering af kædetilstandsdatabase</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Fejl: Disk plads er lavt for %s</translation>
-    </message>
-    <message>
-        <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished">Fejl: Nøglepøl løb tør, tilkald venligst keypoolrefill først</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Lytning på enhver port mislykkedes. Brug -listen=0, hvis du ønsker dette.</translation>
-    </message>
-    <message>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Genindlæsning af tegnebogen under initialisering mislykkedes</translation>
-    </message>
-    <message>
-        <source>Failed to verify database</source>
-        <translation type="unfinished">Kunne ikke verificere databasen</translation>
-    </message>
-    <message>
-        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
-        <translation type="unfinished">Gebyrrate (%s) er lavere end den minimale gebyrrate-indstilling (%s)</translation>
-    </message>
-    <message>
-        <source>Ignoring duplicate -wallet %s.</source>
-        <translation type="unfinished">Ignorerer duplikeret -pung %s.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Importerer...</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Ukorrekt eller ingen tilblivelsesblok fundet. Forkert datamappe for netværk?</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished">Sundhedstjek under initialisering mislykkedes. %s lukker ned.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Manglende dækning</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Ugyldig -onion-adresse eller værtsnavn: “%s”</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">Ugyldig -proxy-adresse eller værtsnavn: “%s”</translation>
-    </message>
-    <message>
-        <source>Invalid P2P permission: '%s'</source>
-        <translation type="unfinished">Invalid P2P tilladelse: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Ugyldigt beløb for -%s=&lt;beløb&gt;: “%s”</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Ugyldigt beløb for -discardfee=&lt;amount&gt;: “%s”</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Ugyldigt beløb for -fallbackfee=&lt;beløb&gt;: “%s”</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Ugyldigt beløb for -paytxfee=&lt;beløb&gt;: “%s” (skal være mindst %s)</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">Ugyldig netmaske angivet i -whitelist: “%s”</translation>
-    </message>
-    <message>
-        <source>Loading P2P addresses…</source>
-        <translation type="unfinished">Indlæser P2P-adresser...</translation>
-    </message>
-    <message>
-        <source>Loading banlist…</source>
-        <translation type="unfinished">Indlæser bandlysningsliste…</translation>
-    </message>
-    <message>
-        <source>Loading block index…</source>
-        <translation type="unfinished">Indlæser blokindeks...</translation>
-    </message>
-    <message>
-        <source>Loading wallet…</source>
-        <translation type="unfinished">Indlæser tegnebog...</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">Nødt til at angive en port med -whitebinde: “%s”</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation type="unfinished">Ingen proxyserver specificeret. Brug -proxy=&lt;ip&gt; eller -proxy=&lt;ip:port&gt;.</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">For få tilgængelige fildeskriptorer.</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">Beskæring kan ikke opsættes med en negativ værdi.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">Beskæringstilstand er ikke kompatibel med -txindex.</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore…</source>
-        <translation type="unfinished">Beskærer bloklager…</translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Reducerer -maxconnections fra %d til %d på grund af systembegrænsninger.</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">Genindlæser…</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Udførelse af udtryk for, at bekræfte database mislykkedes: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Forberedelse af udtryk på, at bekræfte database mislykkedes: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Indlæsning af database-bekræftelsesfejl mislykkedes: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation type="unfinished">SQLiteDatabase: Uventet applikations-ID. Ventede %u, fik %u</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Sektion [%s] er ikke genkendt.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Signering af transaktion mislykkedes</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Angivet -walletdir “%s” eksisterer ikke</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Angivet -walletdir “%s” er en relativ sti</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Angivet -walletdir “%s” er ikke en mappe</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Angivet blokmappe “%s” eksisterer ikke.</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Kildekoden er tilgængelig fra %s.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Transaktionsbeløbet er for lille til at betale gebyret</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Tegnebogen vil undgå at betale mindre end minimum-videresendelsesgebyret.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">Dette er eksperimentelt software.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Dette er det transaktionsgebyr, du minimum betaler for hver transaktion.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Dette er transaktionsgebyret, som betaler, når du sender en transaktion.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Transaktionsbeløb er for lavt</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Transaktionsbeløb må ikke være negative</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transaktionen har en for lang hukommelsespuljekæde</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Transaktionen skal have mindst én modtager</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transaktionen er for stor</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">Ikke i stand til at tildele til %s på denne computer. %s kører formodentlig allerede.</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">Ikke i stand til at oprette PID fil '%s': %s</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Kan ikke generere indledningsvise nøgler</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">U-istand til at generere nøgler</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">Kunne ikke starte HTTP-server. Se fejlretningslog for detaljer.</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">Ukendt -blockfilterindex værdi %s.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Ukendt adressetype ‘%s’</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">Ukendt byttepengetype ‘%s’</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Ukendt netværk anført i -onlynet: “%s”</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Ikke understøttet logningskategori %s=%s.</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">Opgraderer UTXO-database</translation>
-    </message>
-    <message>
-        <source>Upgrading txindex database</source>
-        <translation type="unfinished">Opgraderer txindex database</translation>
-    </message>
-    <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">Brugeragent-kommentar (%s) indeholder usikre tegn.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Bekræfter tegnebog (/bøger)...</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Det var nødvendigt at genskrive tegnebogen: Genstart %s for at gennemføre</translation>
     </message>
 </context>
 </TS>

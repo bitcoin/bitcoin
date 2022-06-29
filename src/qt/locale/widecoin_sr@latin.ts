@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Kreiraj novu adresu</translation>
+        <translation type="unfinished">Kreiraj novu adresu</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopiraj selektovanu adresu u sistemski klipbord</translation>
+        <translation type="unfinished">Kopiraj selektovanu adresu u sistemski klipbord</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Briše trenutno izabranu adresu sa liste</translation>
+        <translation type="unfinished">Briše trenutno izabranu adresu sa liste</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Izvoz podataka iz trenutne kartice u datoteku</translation>
+        <translation type="unfinished">Izvoz podataka iz trenutne kartice u datoteku</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Izvoz</translation>
+        <translation type="unfinished">&amp;Izvoz</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Izbrisati</translation>
+        <translation type="unfinished">&amp;Izbrisati</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -114,19 +114,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Dialog pristupne fraze</translation>
+        <translation type="unfinished">Dialog pristupne fraze</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Unesi pristupnu frazu</translation>
+        <translation type="unfinished">Unesi pristupnu frazu</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nova pristupna fraza</translation>
+        <translation type="unfinished">Nova pristupna fraza</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Ponovo unesite pristupnu frazu</translation>
+        <translation type="unfinished">Ponovo unesite pristupnu frazu</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -232,7 +232,7 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -240,7 +240,7 @@
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -280,30 +280,41 @@
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Zavrseno ucitavanje</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Nedovoljno sredstava</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Pregled</translation>
+        <translation type="unfinished">&amp;Pregled</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Prikaži opšti pregled novčanika</translation>
+        <translation type="unfinished">Prikaži opšti pregled novčanika</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transakcije</translation>
+        <translation type="unfinished">&amp;Transakcije</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Pregled istorije transakcija</translation>
+        <translation type="unfinished">Pregled istorije transakcija</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>I&amp;zađi</translation>
+        <translation type="unfinished">I&amp;zađi</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Isključi aplikaciju</translation>
+        <translation type="unfinished">Isključi aplikaciju</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -315,11 +326,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>O &amp;Qt</translation>
+        <translation type="unfinished">O &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Prikaži informacije o Qt</translation>
+        <translation type="unfinished">Prikaži informacije o Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -336,59 +347,51 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Pošalji novčiće na Widecoin adresu</translation>
+        <translation type="unfinished">Pošalji novčiće na Widecoin adresu</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Napravite rezervnu kopiju novčanika na drugom mestu</translation>
+        <translation type="unfinished">Napravite rezervnu kopiju novčanika na drugom mestu</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Promenite pristupnu frazu za enkiptovanje novčanika</translation>
+        <translation type="unfinished">Promenite pristupnu frazu za enkiptovanje novčanika</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Pošalji</translation>
+        <translation type="unfinished">&amp;Pošalji</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Primi</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Prikazati / Sakriti</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Prikaži ili sakrij glavni prozor</translation>
+        <translation type="unfinished">&amp;Primi</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Enkriptuj privatne ključeve novčanika</translation>
+        <translation type="unfinished">Enkriptuj privatne ključeve novčanika</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Potpišite poruke sa svojim Widecoin adresama da biste dokazali njihovo vlasništvo</translation>
+        <translation type="unfinished">Potpišite poruke sa svojim Widecoin adresama da biste dokazali njihovo vlasništvo</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Proverite poruke da biste utvrdili sa kojim Widecoin adresama su potpisane</translation>
+        <translation type="unfinished">Proverite poruke da biste utvrdili sa kojim Widecoin adresama su potpisane</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Fajl</translation>
+        <translation type="unfinished">&amp;Fajl</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Podešavanja</translation>
+        <translation type="unfinished">&amp;Podešavanja</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Pomoć</translation>
+        <translation type="unfinished">&amp;Pomoć</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Alatke za tabove</translation>
+        <translation type="unfinished">Alatke za tabove</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -396,7 +399,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -404,15 +407,15 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Greska</translation>
+        <translation type="unfinished">Greska</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Upozorenje</translation>
+        <translation type="unfinished">Upozorenje</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Informacije</translation>
+        <translation type="unfinished">Informacije</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -494,6 +497,14 @@
     </message>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Otvori novčanik</translation>
+    </message>
+    </context>
+<context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Wallet</source>
@@ -508,15 +519,15 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Izmeni Adresu</translation>
+        <translation type="unfinished">Izmeni Adresu</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Oznaka</translation>
+        <translation type="unfinished">&amp;Oznaka</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Adresa</translation>
+        <translation type="unfinished">&amp;Adresa</translation>
     </message>
     </context>
 <context>
@@ -532,7 +543,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Greska</translation>
+        <translation type="unfinished">Greska</translation>
     </message>
     </context>
 <context>
@@ -620,7 +631,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -633,14 +644,6 @@
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>%1/unconfirmed</source>
         <translation type="unfinished">%1/nepotvrdjeno</translation>
@@ -695,7 +698,7 @@
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -780,14 +783,6 @@
         <source>Label</source>
         <translation type="unfinished">Oznaka</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Received with</source>
         <translation type="unfinished">Primljeno uz</translation>
@@ -853,6 +848,13 @@
     </message>
     </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Greska</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -861,21 +863,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Izvoz podataka iz trenutne kartice u datoteku</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Greska</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Zavrseno ucitavanje</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Nedovoljno sredstava</translation>
     </message>
     </context>
 </TS>

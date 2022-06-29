@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Widecoin Core developers
+# Copyright (c) 2017-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various command line arguments and configuration file parameters."""
@@ -83,7 +83,7 @@ class SettingsTest(WidecoinTestFramework):
         with altsettings.open("w") as fp:
             fp.write('{"key": "value"}')
         with node.assert_debug_log(expected_msgs=['Setting file arg: key = "value"']):
-            self.start_node(0, extra_args=["-settings={}".format(altsettings)])
+            self.start_node(0, extra_args=[f"-settings={altsettings}"])
             self.stop_node(0)
 
 

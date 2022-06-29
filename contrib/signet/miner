@@ -8,14 +8,13 @@ import base64
 import json
 import logging
 import math
-import os.path
+import os
 import re
 import struct
 import sys
 import time
 import subprocess
 
-from binascii import unhexlify
 from io import BytesIO
 
 PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -202,7 +201,7 @@ def finish_block(block, signet_solution, grind_cmd):
 
 def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     signet_spk = tmpl["signet_challenge"]
-    signet_spk_bin = unhexlify(signet_spk)
+    signet_spk_bin = bytes.fromhex(signet_spk)
 
     cbtx = create_coinbase(height=tmpl["height"], value=tmpl["coinbasevalue"], spk=reward_spk)
     cbtx.vin[0].nSequence = 2**32-2
@@ -258,7 +257,7 @@ def get_reward_addr_spk(args, height):
         return args.address, args.reward_spk
 
     reward_addr = get_reward_address(args, height)
-    reward_spk = unhexlify(json.loads(args.bcli("getaddressinfo", reward_addr))["scriptPubKey"])
+    reward_spk = bytes.fromhex(json.loads(args.bcli("getaddressinfo", reward_addr))["scriptPubKey"])
     if args.address is not None:
         # will always be the same, so cache
         args.reward_spk = reward_spk
@@ -494,10 +493,11 @@ def do_generate(args):
         logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
         mined_blocks += 1
         psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
-        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=psbt.encode('utf8')))
+        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
         if not psbt_signed.get("complete",False):
             logging.debug("Generated PSBT: %s" % (psbt,))
-            sys.stderr.write("PSBT signing failed")
+            sys.stderr.write("PSBT signing failed\n")
             return 1
         block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
         block = finish_block(block, signet_solution, args.grind_cmd)

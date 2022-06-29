@@ -10,21 +10,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <time.h>
-
-#undef USE_ECMULT_STATIC_PRECOMPUTATION
 
 #ifndef EXHAUSTIVE_TEST_ORDER
 /* see group_impl.h for allowable values */
 #define EXHAUSTIVE_TEST_ORDER 13
 #endif
 
-#include "include/secp256k1.h"
+#include "secp256k1.c"
+#include "../include/secp256k1.h"
 #include "assumptions.h"
 #include "group.h"
-#include "secp256k1.c"
 #include "testrand_impl.h"
+#include "ecmult_gen_prec_impl.h"
 
 static int count = 2;
 
@@ -164,7 +162,7 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
     }
 }
 
-void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *group, const secp256k1_gej *groupj) {
+void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_gej *groupj) {
     int i, j, r_log;
     uint64_t iter = 0;
     for (r_log = 1; r_log < EXHAUSTIVE_TEST_ORDER; r_log++) {
@@ -176,7 +174,7 @@ void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *gr
                 secp256k1_scalar_set_int(&na, i);
                 secp256k1_scalar_set_int(&ng, j);
 
-                secp256k1_ecmult(&ctx->ecmult_ctx, &tmp, &groupj[r_log], &na, &ng);
+                secp256k1_ecmult(&tmp, &groupj[r_log], &na, &ng);
                 ge_equals_gej(&group[(i * r_log + j) % EXHAUSTIVE_TEST_ORDER], &tmp);
 
                 if (i > 0) {
@@ -220,7 +218,7 @@ void test_exhaustive_ecmult_multi(const secp256k1_context *ctx, const secp256k1_
                         data.pt[0] = group[x];
                         data.pt[1] = group[y];
 
-                        secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
+                        secp256k1_ecmult_multi_var(&ctx->error_callback, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
                         ge_equals_gej(&group[(i * x + j * y + k) % EXHAUSTIVE_TEST_ORDER], &tmp);
                     }
                 }
@@ -303,6 +301,7 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
             if (skip_section(&iter)) continue;
             for (k = 1; k < EXHAUSTIVE_TEST_ORDER; k++) {  /* nonce */
                 const int starting_k = k;
+                int ret;
                 secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
@@ -311,7 +310,8 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
                 secp256k1_scalar_get_b32(sk32, &sk);
                 secp256k1_scalar_get_b32(msg32, &msg);
 
-                secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                ret = secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+                CHECK(ret == 1);
 
                 secp256k1_ecdsa_signature_load(ctx, &r, &s, &sig);
                 /* Note that we compute expected_r *after* signing -- this is important
@@ -389,6 +389,9 @@ int main(int argc, char** argv) {
         printf("running tests for core %lu (out of [0..%lu])\n", (unsigned long)this_core, (unsigned long)num_cores - 1);
     }
 
+    /* Recreate the ecmult_gen table using the right generator (as selected via EXHAUSTIVE_TEST_ORDER) */
+    secp256k1_ecmult_gen_create_prec_table(&secp256k1_ecmult_gen_prec_table[0][0], &secp256k1_ge_const_g, ECMULT_GEN_PREC_BITS);
+
     while (count--) {
         /* Build context */
         ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
@@ -429,7 +432,7 @@ int main(int argc, char** argv) {
         /* Run the tests */
         test_exhaustive_endomorphism(group);
         test_exhaustive_addition(group, groupj);
-        test_exhaustive_ecmult(ctx, group, groupj);
+        test_exhaustive_ecmult(group, groupj);
         test_exhaustive_ecmult_multi(ctx, group);
         test_exhaustive_sign(ctx, group);
         test_exhaustive_verify(ctx, group);

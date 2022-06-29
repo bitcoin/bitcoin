@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Widecoin Core developers
+# Copyright (c) 2020-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests that a mempool transaction expires after a given timeout and that its
@@ -36,8 +36,8 @@ class MempoolExpiryTest(WidecoinTestFramework):
         self.wallet = MiniWallet(node)
 
         # Add enough mature utxos to the wallet so that all txs spend confirmed coins.
-        self.wallet.generate(4)
-        node.generate(COINBASE_MATURITY)
+        self.generate(self.wallet, 4)
+        self.generate(node, COINBASE_MATURITY)
 
         # Send a parent transaction that will expire.
         parent_txid = self.wallet.send_self_transfer(from_node=node)['txid']

@@ -17,6 +17,7 @@ Features:
 * Suitable for embedded systems.
 * Optional module for public key recovery.
 * Optional module for ECDH key exchange.
+* Optional module for Schnorr signatures according to [BIP-340](https://github.com/widecoin/bips/blob/master/bip-0340.mediawiki) (experimental).
 
 Experimental features have not received enough scrutiny to satisfy the standard of quality of this library but are made available for testing and review by the community. The APIs of these features should not be considered stable.
 
@@ -65,17 +66,8 @@ libsecp256k1 is built using autotools:
     $ ./autogen.sh
     $ ./configure
     $ make
-    $ make check
+    $ make check  # run the test suite
     $ sudo make install  # optional
-
-Exhaustive tests
------------
-
-    $ ./exhaustive_tests
-
-With valgrind, you might need to increase the max stack size:
-
-    $ valgrind --max-stackframe=2500000 ./exhaustive_tests
 
 Test coverage
 -----------
@@ -96,7 +88,20 @@ To create a report, `gcovr` is recommended, as it includes branch coverage repor
 
 To create a HTML report with coloured and annotated source code:
 
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage.html
+    $ mkdir -p coverage
+    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
+
+Benchmark
+------------
+If configured with `--enable-benchmark` (which is the default), binaries for benchmarking the libsecp256k1 functions will be present in the root directory after the build.
+
+To print the benchmark result to the command line:
+
+    $ ./bench_name
+
+To create a CSV file for the benchmark result :
+
+    $ ./bench_name | sed '2d;s/ \{1,\}//g' > bench_name.csv
 
 Reporting a vulnerability
 ------------
