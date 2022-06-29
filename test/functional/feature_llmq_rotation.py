@@ -53,7 +53,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(16, 15, fast_dip3_enforcement=True)
+        self.set_dash_test_params(9, 8, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):
@@ -124,23 +124,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
         expectedNew = [q_100_1, q_102_1, q_103_1_0, q_103_1_1]
         quorumList = self.test_getmnlistdiff_quorums(b_1, b_2, quorumList, expectedDeleted, expectedNew)
 
-        (quorum_info_2_0, quorum_info_2_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
-        quorum_members_2_0 = extract_quorum_members(quorum_info_2_0)
-        quorum_members_2_1 = extract_quorum_members(quorum_info_2_1)
-        assert_equal(len(intersection(quorum_members_2_0, quorum_members_2_1)), 0)
-        self.log.info("Quorum #2_0 members: " + str(quorum_members_2_0))
-        self.log.info("Quorum #2_1 members: " + str(quorum_members_2_1))
-
-        q_100_2 = QuorumId(100, int(quorum_info_2_0["quorumHash"], 16))
-        q_102_2 = QuorumId(102, int(quorum_info_2_0["quorumHash"], 16))
-        q_103_2_0 = QuorumId(103, int(quorum_info_2_0["quorumHash"], 16))
-        q_103_2_1 = QuorumId(103, int(quorum_info_2_1["quorumHash"], 16))
-
-        b_3 = self.nodes[0].getbestblockhash()
-        expectedDeleted = [q_100_0, q_102_0, q_103_1_0, q_103_1_1]
-        expectedNew = [q_100_2, q_102_2, q_103_2_0, q_103_2_1]
-        quorumList = self.test_getmnlistdiff_quorums(b_2, b_3, quorumList, expectedDeleted, expectedNew)
-
         mninfos_online = self.mninfo.copy()
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
         sync_blocks(nodes)
@@ -151,12 +134,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         assert_greater_than_or_equal(len(intersection(quorum_members_0_0, quorum_members_1_0)), 3)
         assert_greater_than_or_equal(len(intersection(quorum_members_0_1, quorum_members_1_1)), 3)
-
-        assert_greater_than_or_equal(len(intersection(quorum_members_0_0, quorum_members_2_0)), 2)
-        assert_greater_than_or_equal(len(intersection(quorum_members_0_1, quorum_members_2_1)), 2)
-
-        assert_greater_than_or_equal(len(intersection(quorum_members_1_0, quorum_members_2_0)), 3)
-        assert_greater_than_or_equal(len(intersection(quorum_members_1_1, quorum_members_2_1)), 3)
 
         self.log.info("Mine a quorum to invalidate")
         (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
