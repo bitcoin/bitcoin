@@ -827,6 +827,7 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
+        case Consensus::LLMQType::LLMQ_DEVNET:
         case Consensus::LLMQType::LLMQ_50_60: {
             if (IsInstantSendLLMQTypeShared()) {
                 break;
@@ -853,6 +854,7 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
             }
             break;
         case Consensus::LLMQType::LLMQ_60_75:
+        case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
         case Consensus::LLMQType::LLMQ_TEST_DIP0024: {
             bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : CLLMQUtils::IsDIP0024Active(pindex);
             if (!fDIP0024IsActive) {
@@ -860,8 +862,6 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
             }
             break;
         }
-        case Consensus::LLMQType::LLMQ_DEVNET:
-            break;
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType)));
     }

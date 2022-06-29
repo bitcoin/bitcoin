@@ -720,6 +720,7 @@ public:
         AddLLMQ(Consensus::LLMQType::LLMQ_400_85);
         AddLLMQ(Consensus::LLMQType::LLMQ_100_67);
         AddLLMQ(Consensus::LLMQType::LLMQ_DEVNET);
+        AddLLMQ(Consensus::LLMQType::LLMQ_DEVNET_DIP0024);
         consensus.llmqTypeChainLocks = Consensus::LLMQType::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQType::LLMQ_50_60;
         consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_60_75;

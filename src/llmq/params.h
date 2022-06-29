@@ -24,14 +24,17 @@ enum class LLMQType : uint8_t {
     LLMQ_TEST = 100, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
     // for devnets only
-    LLMQ_DEVNET = 101, // 10 members, 6 (60%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
+    LLMQ_DEVNET = 101, // 12 members, 6 (50%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
 
     // for testing activation of new quorums only
     LLMQ_TEST_V17 = 102, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
+    // for testing only
     LLMQ_TEST_DIP0024 = 103, // 4 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
-
     LLMQ_TEST_INSTANTSEND = 104, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestinstantsendparams is used
+
+    // for devnets only. rotated version (v2) for devnets
+    LLMQ_DEVNET_DIP0024 = 105 // 8 members, 4 (50%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
 };
 
 // Configures a LLMQ and its DKG
@@ -103,7 +106,7 @@ struct LLMQParams {
 };
 
 
-static constexpr std::array<LLMQParams, 10> available_llmqs = {
+static constexpr std::array<LLMQParams, 11> available_llmqs = {
 
     /**
      * llmq_test
@@ -193,7 +196,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
         .minSize = 3,
         .threshold = 2,
 
-        .dkgInterval = 24, // one DKG per hour
+        .dkgInterval = 24, // DKG cycle
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 12, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 20,
@@ -228,6 +231,31 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
 
         .keepOldConnections = 5,
         .recoveryMembers = 6,
+    },
+
+    /**
+     * llmq_devnet_dip0024
+     * This quorum is only used for testing on devnets
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_DEVNET_DIP0024,
+        .name = "llmq_devnet_dip0024",
+        .useRotation = true,
+        .size = 8,
+        .minSize = 6,
+        .threshold = 4,
+
+        .dkgInterval = 48, // DKG cycle
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 12, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 20,
+        .dkgBadVotesThreshold = 7,
+
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+        .keepOldConnections = 4,
+        .recoveryMembers = 4,
     },
 
     /**
@@ -269,7 +297,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
         .minSize = 50,
         .threshold = 45,
 
-        .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgInterval = 24 * 12, // DKG cycle every 12 hours
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 42, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 50,
