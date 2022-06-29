@@ -2496,8 +2496,8 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
         return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
     }
 
-    WalletBatch batch(GetDatabase());
-    auto op_dest = spk_man->GetNewDestination(type);
+    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/true, /*initialize=*/false);
+    auto op_dest = spk_man->GetNewDestination(batch, type);
     if (op_dest) {
         SetAddressBookWithDB(batch, *op_dest, label, AddressPurpose::RECEIVE);
     }

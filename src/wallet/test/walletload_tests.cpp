@@ -90,7 +90,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));
 
         // Get the first key in the wallet
-        CTxDestination dest = *Assert(legacy_spkm->GetNewDestination(OutputType::LEGACY));
+        WalletBatch batch(wallet->GetDatabase());
+        CTxDestination dest = *Assert(legacy_spkm->GetNewDestination(batch, OutputType::LEGACY));
         CKeyID key_id = GetKeyForDestination(*legacy_spkm, dest);
         BOOST_CHECK(legacy_spkm->GetKey(key_id, first_key));
 
