@@ -94,6 +94,11 @@ class TimeoutsTest(BitcoinTestFramework):
             no_version_node.wait_for_disconnect(timeout=1)
             no_send_node.wait_for_disconnect(timeout=1)
 
+        self.stop_nodes(0)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: peertimeout cannot be configured with a negative value.',
+            extra_args=['-peertimeout=-1'],
+        )
 
 if __name__ == '__main__':
     TimeoutsTest().main()
