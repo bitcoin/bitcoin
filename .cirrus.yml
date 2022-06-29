@@ -18,7 +18,7 @@ persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  skip: $CIRRUS_REPO_FULL_NAME == "navcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
   stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
 base_template: &BASE_TEMPLATE
@@ -56,7 +56,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'navcoin/navcoin' && $CIRRUS_PR != ""
 
 task:
   name: 'lint [bionic]'
@@ -176,8 +176,8 @@ task:
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
   unit_tests_script:
-    - src\test_bitcoin.exe -l test_suite
-    - src\bench_bitcoin.exe > NUL
+    - src\test_navcoin.exe -l test_suite
+    - src\bench_navcoin.exe > NUL
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:

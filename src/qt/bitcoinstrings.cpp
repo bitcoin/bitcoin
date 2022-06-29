@@ -11,7 +11,7 @@
 static const char UNUSED *bitcoin_strings[] = {
 QT_TRANSLATE_NOOP("bitcoin-core", "The %s developers"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring "
+"%s corrupt. Try using the wallet tool navcoin-wallet to salvage or restoring "
 "a backup."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
@@ -45,7 +45,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: Dumpfile version is not supported. This version of bitcoin-wallet "
+"Error: Dumpfile version is not supported. This version of navcoin-wallet "
 "only supports version 1 dumpfiles. Got dumpfile with version %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and "

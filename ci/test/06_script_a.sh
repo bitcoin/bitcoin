@@ -33,7 +33,7 @@ CI_EXEC "${BASE_ROOT_DIR}/configure" --cache-file=config.cache "$BITCOIN_CONFIG_
 
 CI_EXEC make distdir VERSION="$HOST"
 
-export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST"
+export P_CI_DIR="${BASE_BUILD_DIR}/navcoin-$HOST"
 
 CI_EXEC ./configure --cache-file=../config.cache "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (CI_EXEC cat config.log) && false)
 

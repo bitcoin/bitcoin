@@ -10,7 +10,14 @@ $(package)_cflags_armv7l_linux+=-march=armv7-a
 endef
 
 define $(package)_config_cmds
-  CC_FOR_BUILD="$(CC)" CXX_FOR_BUILD="$(CXX)" $($(package)_autoconf)
+  CC_FOR_BUILD="$(CC)" \
+    CXX_FOR_BUILD="$(CXX)" \
+    AR="$(AR)" \
+    NM="$(NM)" \
+    RANLIB="$(RANLIB)" \
+    LD="$(LD)" \
+    STRIP="$(STRIP)" \
+    $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds

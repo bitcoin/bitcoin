@@ -397,8 +397,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Vývojári %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s je poškodený. Skúste použiť nástroj peňaženky bitcoin-wallet na záchranu alebo obnovu zálohy.</translation>
+        <source>%s corrupt. Try using the wallet tool navcoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s je poškodený. Skúste použiť nástroj peňaženky navcoin-wallet na záchranu alebo obnovu zálohy.</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -433,7 +433,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Chyba: Záznam identifikátora v súbore dumpu je nesprávny. Obdržaný "%s", očakávaný "%s".</translation>
     </message>
     <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <source>Error: Dumpfile version is not supported. This version of navcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation type="unfinished">Chyba: Verzia súboru dumpu nie je podporovaná. Táto verzia peňaženky bitcoin podporuje iba súbory dumpu verzie 1. Obdržal som súbor s verziou %s</translation>
     </message>
     <message>

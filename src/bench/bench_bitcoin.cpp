@@ -56,12 +56,12 @@ int main(int argc, char** argv)
     }
 
     if (HelpRequested(argsman)) {
-        std::cout << "Usage:  bench_bitcoin [options]\n"
+        std::cout << "Usage:  bench_navcoin [options]\n"
                      "\n"
                   << argsman.GetHelpMessage()
                   << "Description:\n"
                      "\n"
-                     "  bench_bitcoin executes microbenchmarks. The quality of the benchmark results\n"
+                     "  bench_navcoin executes microbenchmarks. The quality of the benchmark results\n"
                      "  highly depend on the stability of the machine. It can sometimes be difficult\n"
                      "  to get stable, repeatable results, so here are a few tips:\n"
                      "\n"
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
                      "  * If results are still not reliable, increase runtime with e.g.\n"
                      "    -min_time=5000 to let a benchmark run for at least 5 seconds.\n"
                      "\n"
-                     "  * bench_bitcoin uses nanobench [3] for which there is extensive\n"
+                     "  * bench_navcoin uses nanobench [3] for which there is extensive\n"
                      "    documentation available online.\n"
                      "\n"
                      "Environment Variables:\n"
@@ -83,12 +83,12 @@ int main(int argc, char** argv)
                      "  To attach a profiler you can run a benchmark in endless mode. This can be\n"
                      "  done with the environment variable NANOBENCH_ENDLESS. E.g. like so:\n"
                      "\n"
-                     "    NANOBENCH_ENDLESS=MuHash ./bench_bitcoin -filter=MuHash\n"
+                     "    NANOBENCH_ENDLESS=MuHash ./bench_navcoin -filter=MuHash\n"
                      "\n"
                      "  In rare cases it can be useful to suppress stability warnings. This can be\n"
                      "  done with the environment variable NANOBENCH_SUPPRESS_WARNINGS, e.g:\n"
                      "\n"
-                     "    NANOBENCH_SUPPRESS_WARNINGS=1 ./bench_bitcoin\n"
+                     "    NANOBENCH_SUPPRESS_WARNINGS=1 ./bench_navcoin\n"
                      "\n"
                      "Notes:\n"
                      "\n"

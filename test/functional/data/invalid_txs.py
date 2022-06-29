@@ -62,7 +62,7 @@ class BadTxTemplate:
     """Allows simple construction of a certain kind of invalid tx. Base class to be subclassed."""
     __metaclass__ = abc.ABCMeta
 
-    # The expected error code given by bitcoind upon submission of the tx.
+    # The expected error code given by navcoind upon submission of the tx.
     reject_reason: Optional[str] = ""
 
     # Only specified if it differs from mempool acceptance error.

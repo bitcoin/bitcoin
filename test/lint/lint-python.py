@@ -16,6 +16,7 @@ import sys
 DEPS = ['flake8', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
 FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
+EXCLUDED_DIRS = ["src/bls/"]
 
 ENABLED = (
     'E101,'  # indentation contains mixed spaces and tabs
@@ -103,11 +104,13 @@ def check_dependencies():
 def main():
     check_dependencies()
 
+    exclude_args = [":(exclude)" + dir for dir in EXCLUDED_DIRS]
+
     if len(sys.argv) > 1:
         flake8_files = sys.argv[1:]
     else:
         files_args = ['git', 'ls-files', '*.py']
-        flake8_files = subprocess.check_output(files_args).decode("utf-8").splitlines()
+        flake8_files = subprocess.check_output(files_args + exclude_args).decode("utf-8").splitlines()
 
     flake8_args = ['flake8', '--ignore=B,C,E,F,I,N,W', f'--select={ENABLED}'] + flake8_files
     flake8_env = os.environ.copy()

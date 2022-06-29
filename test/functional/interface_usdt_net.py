@@ -86,7 +86,7 @@ class NetTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_navcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
@@ -109,7 +109,7 @@ class NetTracepointTest(BitcoinTestFramework):
 
         self.log.info(
             "hook into the net:inbound_message and net:outbound_message tracepoints")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(path=str(self.options.navcoind))
         ctx.enable_probe(probe="net:inbound_message",
                          fn_name="trace_inbound_message")
         ctx.enable_probe(probe="net:outbound_message",
@@ -152,7 +152,7 @@ class NetTracepointTest(BitcoinTestFramework):
         bpf["inbound_messages"].open_perf_buffer(handle_inbound)
         bpf["outbound_messages"].open_perf_buffer(handle_outbound)
 
-        self.log.info("connect a P2P test node to our bitcoind node")
+        self.log.info("connect a P2P test node to our navcoind node")
         test_node = P2PInterface()
         self.nodes[0].add_p2p_connection(test_node)
         bpf.perf_buffer_poll(timeout=200)

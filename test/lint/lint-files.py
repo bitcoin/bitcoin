@@ -14,7 +14,7 @@ from subprocess import check_output
 from typing import Optional, NoReturn
 
 CMD_TOP_LEVEL = ["git", "rev-parse", "--show-toplevel"]
-CMD_ALL_FILES = "git ls-files -z --full-name"
+CMD_ALL_FILES = 'git ls-files -z --full-name'
 CMD_SOURCE_FILES = 'git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"'
 CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
@@ -28,6 +28,7 @@ ALLOWED_EXECUTABLE_SHEBANG = {
     "py": [b"#!/usr/bin/env python3"],
     "sh": [b"#!/usr/bin/env bash", b"#!/bin/sh"],
 }
+EXCLUDED_DIRS = ("^src/bls/")
 
 
 class FileMeta(object):
@@ -112,8 +113,11 @@ def check_all_file_permissions() -> int:
     Additionally checks that for executable files, the file contains a shebang line
     """
     filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
+    filename_exclude_dir_regex = re.compile(EXCLUDED_DIRS)
     failed_tests = 0
     for filename in filenames:
+        if filename_exclude_dir_regex.match(filename):
+            continue
         file_meta = FileMeta(filename)
         if file_meta.permissions == ALLOWED_PERMISSION_EXECUTABLES:
             with open(filename, "rb") as f:

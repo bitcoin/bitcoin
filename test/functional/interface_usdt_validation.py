@@ -56,7 +56,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_navcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
@@ -94,7 +94,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
         expected_blocks = list()
 
         self.log.info("hook into the validation:block_connected tracepoint")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(path=str(self.options.navcoind))
         ctx.enable_probe(probe="validation:block_connected",
                          fn_name="trace_block_connected")
         bpf = BPF(text=validation_blockconnected_program,
