@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     expected_result.Clear();
 
     // Select 5 Cent
-    add_coin(4 * CENT, 4, expected_result);
-    add_coin(1 * CENT, 1, expected_result);
+    add_coin(3 * CENT, 3, expected_result);
+    add_coin(2 * CENT, 2, expected_result);
     const auto result3 = SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT);
     BOOST_CHECK(result3);
     BOOST_CHECK(EquivalentResult(expected_result, *result3));
@@ -232,8 +232,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     // Select 10 Cent
     add_coin(5 * CENT, 5, utxo_pool);
-    add_coin(5 * CENT, 5, expected_result);
     add_coin(4 * CENT, 4, expected_result);
+    add_coin(3 * CENT, 3, expected_result);
+    add_coin(2 * CENT, 2, expected_result);
     add_coin(1 * CENT, 1, expected_result);
     const auto result5 = SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT);
     BOOST_CHECK(result5);
