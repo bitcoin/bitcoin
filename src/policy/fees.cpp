@@ -31,8 +31,6 @@
 #include <stdexcept>
 #include <utility>
 
-static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
-
 static constexpr double INF_FEERATE = 1e99;
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
@@ -529,8 +527,8 @@ bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
     }
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator()
-    : nBestSeenHeight(0), firstRecordedHeight(0), historicalFirst(0), historicalBest(0), trackedTxs(0), untrackedTxs(0)
+CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath)
+    : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
@@ -548,10 +546,9 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     longStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
 
     // If the fee estimation file is present, read recorded estimations
-    fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_file(fsbridge::fopen(est_filepath, "rb"), SER_DISK, CLIENT_VERSION);
+    CAutoFile est_file(fsbridge::fopen(m_estimation_filepath, "rb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Read(est_file)) {
-        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(est_filepath));
+        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     }
 }
 
@@ -907,10 +904,9 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 void CBlockPolicyEstimator::Flush() {
     FlushUnconfirmed();
 
-    fs::path est_filepath = gArgs.GetDataDirNet() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
+    CAutoFile est_file(fsbridge::fopen(m_estimation_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(est_filepath));
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     }
 }
 

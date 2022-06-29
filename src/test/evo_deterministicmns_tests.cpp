@@ -479,7 +479,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 {
     int nHeight = *m_node.chain->getHeight();
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
-
     CKey ownerKey;
     CKey payoutKey;
     CKey collateralKey;
@@ -525,7 +524,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
     SetTxPayload(tx_reg, payload);
     SignTransaction(m_node, tx_reg, coinbaseKey);
 
-    CTxMemPool testPool;
+    CTxMemPool testPool{MemPoolOptionsForTest(m_node)};
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
     // Create ProUpServ and test block reorg which double-spend ProRegTx
@@ -592,7 +591,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
     SetTxPayload(tx_reg2, payload);
     SignTransaction(m_node, tx_reg2, coinbaseKey);
 
-    CTxMemPool testPool;
+    CTxMemPool testPool{MemPoolOptionsForTest(m_node)};
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
 

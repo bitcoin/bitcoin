@@ -25,8 +25,8 @@ static_assert(MAX_PACKAGE_SIZE * WITNESS_SCALE_FACTOR * 1000 >= MAX_STANDARD_TX_
 // defaults reflect this constraint.
 static_assert(DEFAULT_DESCENDANT_LIMIT >= MAX_PACKAGE_COUNT);
 static_assert(DEFAULT_ANCESTOR_LIMIT >= MAX_PACKAGE_COUNT);
-static_assert(DEFAULT_ANCESTOR_SIZE_LIMIT >= MAX_PACKAGE_SIZE);
-static_assert(DEFAULT_DESCENDANT_SIZE_LIMIT >= MAX_PACKAGE_SIZE);
+static_assert(DEFAULT_ANCESTOR_SIZE_LIMIT_KVB >= MAX_PACKAGE_SIZE);
+static_assert(DEFAULT_DESCENDANT_SIZE_LIMIT_KVB >= MAX_PACKAGE_SIZE);
 
 /** A "reason" why a package was invalid. It may be that one or more of the included
  * transactions is invalid or the package itself violates our rules.

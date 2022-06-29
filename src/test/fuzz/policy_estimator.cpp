@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees.h>
+#include <policy/fees_args.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -15,15 +16,20 @@
 #include <string>
 #include <vector>
 
+namespace {
+const BasicTestingSetup* g_setup;
+} // namespace
+
 void initialize_policy_estimator()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    CBlockPolicyEstimator block_policy_estimator;
+    CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args)};
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,

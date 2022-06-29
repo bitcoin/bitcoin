@@ -531,7 +531,7 @@ public:
 
 BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
 {
-  CTxMemPool mempool;
+  CTxMemPool mempool{MemPoolOptionsForTest(m_node)};
   AuxpowMinerForTest miner;
   LOCK (miner.cs);
 
@@ -593,7 +593,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE (auxpow_miner_createAndLookupBlock, TestChain100Setup)
 {
-  CTxMemPool mempool;
+  CTxMemPool mempool{MemPoolOptionsForTest(m_node)};
   AuxpowMinerForTest miner;
   LOCK (miner.cs);
 
