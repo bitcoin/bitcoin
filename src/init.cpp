@@ -122,7 +122,6 @@
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
 #include <curl/curl.h>
-#include <node/context.h>
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
 using node::CacheSizes;
