@@ -23,6 +23,7 @@ class NEVMDataTest(DashTestFramework):
         blobDataMax = secrets.token_hex(MAX_NEVM_DATA_BLOB)
         print('Creating large blob (2MB)...')
         self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
+        self.sync_mempools()
         print('Generating block...')
         self.generate(self.nodes[0], 1)
         print('Testing nodes to see if blob exists...')
@@ -41,6 +42,7 @@ class NEVMDataTest(DashTestFramework):
             vh = secrets.token_hex(32)
             self.blobVHs.append(vh)
             self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
+        self.sync_mempools()
         print('Generating block...')
         tip = self.generate(self.nodes[0], 1)[-1]
         rpc_details = self.nodes[0].getblock(tip, True)
@@ -75,6 +77,7 @@ class NEVMDataTest(DashTestFramework):
             vh = secrets.token_hex(32)
             self.blobVHs.append(vh)
             self.nodes[0].syscoincreaterawnevmblob(vh,  secrets.token_hex(55))
+        self.sync_mempools()
         print('Generating block...')
         self.generate(self.nodes[0], 1)
         foundCount = 0
