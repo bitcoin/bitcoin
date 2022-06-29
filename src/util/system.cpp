@@ -610,35 +610,75 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
 
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
+    return GetArg(strArg).value_or(strDefault);
+}
+
+std::optional<std::string> ArgsManager::GetArg(const std::string& strArg) const
+{
     const util::SettingsValue value = GetSetting(strArg);
-    return SettingToString(value, strDefault);
+    return SettingToString(value);
+}
+
+std::optional<std::string> SettingToString(const util::SettingsValue& value)
+{
+    if (value.isNull()) return std::nullopt;
+    if (value.isFalse()) return "0";
+    if (value.isTrue()) return "1";
+    if (value.isNum()) return value.getValStr();
+    return value.get_str();
 }
 
 std::string SettingToString(const util::SettingsValue& value, const std::string& strDefault)
 {
-    return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.isNum() ? value.getValStr() : value.get_str();
+    return SettingToString(value).value_or(strDefault);
 }
 
 int64_t ArgsManager::GetIntArg(const std::string& strArg, int64_t nDefault) const
 {
+    return GetIntArg(strArg).value_or(nDefault);
+}
+
+std::optional<int64_t> ArgsManager::GetIntArg(const std::string& strArg) const
+{
     const util::SettingsValue value = GetSetting(strArg);
-    return SettingToInt(value, nDefault);
+    return SettingToInt(value);
+}
+
+std::optional<int64_t> SettingToInt(const util::SettingsValue& value)
+{
+    if (value.isNull()) return std::nullopt;
+    if (value.isFalse()) return 0;
+    if (value.isTrue()) return 1;
+    if (value.isNum()) return value.getInt<int64_t>();
+    return LocaleIndependentAtoi<int64_t>(value.get_str());
 }
 
 int64_t SettingToInt(const util::SettingsValue& value, int64_t nDefault)
 {
-    return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.getInt<int64_t>() : LocaleIndependentAtoi<int64_t>(value.get_str());
+    return SettingToInt(value).value_or(nDefault);
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
+    return GetBoolArg(strArg).value_or(fDefault);
+}
+
+std::optional<bool> ArgsManager::GetBoolArg(const std::string& strArg) const
+{
     const util::SettingsValue value = GetSetting(strArg);
-    return SettingToBool(value, fDefault);
+    return SettingToBool(value);
+}
+
+std::optional<bool> SettingToBool(const util::SettingsValue& value)
+{
+    if (value.isNull()) return std::nullopt;
+    if (value.isBool()) return value.get_bool();
+    return InterpretBool(value.get_str());
 }
 
 bool SettingToBool(const util::SettingsValue& value, bool fDefault)
 {
-    return value.isNull() ? fDefault : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
+    return SettingToBool(value).value_or(fDefault);
 }
 
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)

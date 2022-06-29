@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_FEES_H
 
 #include <consensus/amount.h>
+#include <fs.h>
 #include <policy/feerate.h>
 #include <random.h>
 #include <sync.h>
@@ -179,9 +180,10 @@ private:
      */
     static constexpr double FEE_SPACING = 1.05;
 
+    const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator();
+    CBlockPolicyEstimator(const fs::path& estimation_filepath);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
