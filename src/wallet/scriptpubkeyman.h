@@ -511,7 +511,7 @@ public:
      *
      * @return All affected keys
      */
-    std::vector<CKeyPool> MarkReserveKeysAsUsed(int64_t keypool_id) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    std::vector<CKeyPool> MarkReserveKeysAsUsed(WalletBatch& batch, int64_t keypool_id) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
 
     std::set<CKeyID> GetKeys() const override;

@@ -345,7 +345,7 @@ std::vector<WalletDestination> LegacyScriptPubKeyMan::MarkUnusedAddresses(Wallet
         std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
         if (mi != m_pool_key_to_index.end()) {
             WalletLogPrintf("%s: Detected a used keypool key, mark all keypool keys up to this key as used\n", __func__);
-            for (const auto& keypool : MarkReserveKeysAsUsed(mi->second)) {
+            for (const auto& keypool : MarkReserveKeysAsUsed(batch, mi->second)) {
                 // derive all possible destinations as any of them could have been used
                 for (const auto& type : LEGACY_OUTPUT_TYPES) {
                     const auto& dest = GetDestinationForKey(keypool.vchPubKey, type);
@@ -1469,7 +1469,7 @@ void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
     LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
 }
 
-std::vector<CKeyPool> LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
+std::vector<CKeyPool> LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(WalletBatch& batch, int64_t keypool_id)
 {
     AssertLockHeld(cs_KeyStore);
     bool internal = setInternalKeyPool.count(keypool_id);
@@ -1478,7 +1478,6 @@ std::vector<CKeyPool> LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypo
     auto it = setKeyPool->begin();
 
     std::vector<CKeyPool> result;
-    WalletBatch batch(m_storage.GetDatabase());
     while (it != std::end(*setKeyPool)) {
         const int64_t& index = *(it);
         if (index > keypool_id) break; // set*KeyPool is ordered
