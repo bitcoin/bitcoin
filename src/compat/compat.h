@@ -77,14 +77,10 @@ typedef unsigned int SOCKET;
 #define MAX_PATH            1024
 #endif
 
+// ssize_t is POSIX, and not present when using MSVC.
 #ifdef _MSC_VER
-#if !defined(ssize_t)
-#ifdef _WIN64
-typedef int64_t ssize_t;
-#else
-typedef int32_t ssize_t;
-#endif
-#endif
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
 #endif
 
 // The type of the option value passed to getsockopt & setsockopt
