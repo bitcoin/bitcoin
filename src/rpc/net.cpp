@@ -690,7 +690,7 @@ static RPCHelpMan getnetworkinfo()
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(g_maplocalhost_mutex);
-        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost)
+        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : g_my_net_addr)
         {
             UniValue rec(UniValue::VOBJ);
             rec.pushKV("address", item.first.ToStringAddr());

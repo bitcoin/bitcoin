@@ -114,7 +114,7 @@ static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256
 bool fDiscover = true;
 bool fListen = true;
 GlobalMutex g_maplocalhost_mutex;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
+std::map<CNetAddr, LocalServiceInfo> g_my_net_addr GUARDED_BY(g_maplocalhost_mutex);
 std::string strSubVersion;
 
 size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
@@ -167,7 +167,7 @@ uint16_t GetListenPort()
     int nBestReachability = -1;
     {
         LOCK(g_maplocalhost_mutex);
-        for (const auto& [local_addr, local_service_info] : mapLocalHost) {
+        for (const auto& [local_addr, local_service_info] : g_my_net_addr) {
             // For privacy reasons, don't advertise our privacy-network address
             // to other networks and don't advertise our other-network address
             // to privacy networks.
@@ -222,8 +222,8 @@ CService GetLocalAddress(const CNode& peer)
 static int GetnScore(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    const auto it = mapLocalHost.find(addr);
-    return (it != mapLocalHost.end()) ? it->second.nScore : 0;
+    const auto it = g_my_net_addr.find(addr);
+    return (it != g_my_net_addr.end()) ? it->second.nScore : 0;
 }
 
 // Is our peer's addrLocal potentially useful as an external IP source?
@@ -287,7 +287,7 @@ bool AddLocal(const CService& addr_, int nScore)
 
     {
         LOCK(g_maplocalhost_mutex);
-        const auto [it, is_newly_added] = mapLocalHost.emplace(addr, LocalServiceInfo());
+        const auto [it, is_newly_added] = g_my_net_addr.emplace(addr, LocalServiceInfo());
         LocalServiceInfo &info = it->second;
         if (is_newly_added || nScore >= info.nScore) {
             info.nScore = nScore + (is_newly_added ? 0 : 1);
@@ -307,15 +307,15 @@ void RemoveLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
     LogPrintf("RemoveLocal(%s)\n", addr.ToStringAddrPort());
-    mapLocalHost.erase(addr);
+    g_my_net_addr.erase(addr);
 }
 
 /** vote for a local address */
 bool SeenLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    const auto it = mapLocalHost.find(addr);
-    if (it == mapLocalHost.end()) return false;
+    const auto it = g_my_net_addr.find(addr);
+    if (it == g_my_net_addr.end()) return false;
     ++it->second.nScore;
     return true;
 }
@@ -325,7 +325,7 @@ bool SeenLocal(const CService& addr)
 bool IsLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    return mapLocalHost.count(addr) > 0;
+    return g_my_net_addr.count(addr) > 0;
 }
 
 CNode* CConnman::FindNode(const CNetAddr& ip)
