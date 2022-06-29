@@ -24,14 +24,17 @@ enum class LLMQType : uint8_t {
     LLMQ_TEST = 100, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
     // for devnets only
-    LLMQ_DEVNET = 101, // 10 members, 6 (60%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
+    LLMQ_DEVNET = 101, // 12 members, 6 (50%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
 
     // for testing activation of new quorums only
     LLMQ_TEST_V17 = 102, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
+    // for testing only
     LLMQ_TEST_DIP0024 = 103, // 4 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
-
     LLMQ_TEST_INSTANTSEND = 104, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestinstantsendparams is used
+
+    // for devnets only. rotated version (v2) for devnets
+    LLMQ_DEVNET_DIP0024 = 105 // 8 members, 4 (50%) threshold, one per hour. Params might differ when -llmqdevnetparams is used
 };
 
 // Configures a LLMQ and its DKG
@@ -41,6 +44,9 @@ struct LLMQParams {
 
     // not consensus critical, only used in logging, RPC and UI
     std::string_view name;
+
+    // Whether this is a DIP0024 quorum or not
+    bool useRotation;
 
     // the size of the quorum, e.g. 50 or 400
     int size;
@@ -90,8 +96,9 @@ struct LLMQParams {
     // Number of quorums to consider "active" for signing sessions
     int signingActiveQuorumCount;
 
-    // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections. This
-    // should be at least one more then the active quorums set.
+    // Used for intra-quorum communication. This is the number of quorums for which we should keep old connections.
+    // For non-rotated quorums it should be at least one more than the active quorums set.
+    // For rotated quorums it should be equal to 2 x active quorums set.
     int keepOldConnections;
 
     // How many members should we try to send all sigShares to before we give up.
@@ -99,7 +106,7 @@ struct LLMQParams {
 };
 
 
-static constexpr std::array<LLMQParams, 10> available_llmqs = {
+static constexpr std::array<LLMQParams, 11> available_llmqs = {
 
     /**
      * llmq_test
@@ -109,6 +116,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST,
         .name = "llmq_test",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -133,6 +141,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_INSTANTSEND,
         .name = "llmq_test_instantsend",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -157,6 +166,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_V17,
         .name = "llmq_test_v17",
+        .useRotation = false,
         .size = 3,
         .minSize = 2,
         .threshold = 2,
@@ -181,14 +191,15 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_DIP0024,
         .name = "llmq_test_dip0024",
+        .useRotation = true,
         .size = 4,
         .minSize = 3,
         .threshold = 2,
 
-        .dkgInterval = 24, // one DKG per hour
+        .dkgInterval = 24, // DKG cycle
         .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
+        .dkgMiningWindowStart = 12, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 20,
         .dkgBadVotesThreshold = 2,
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
@@ -205,6 +216,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_DEVNET,
         .name = "llmq_devnet",
+        .useRotation = false,
         .size = 12,
         .minSize = 7,
         .threshold = 6,
@@ -222,6 +234,31 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     },
 
     /**
+     * llmq_devnet_dip0024
+     * This quorum is only used for testing on devnets
+     *
+     */
+    LLMQParams{
+        .type = LLMQType::LLMQ_DEVNET_DIP0024,
+        .name = "llmq_devnet_dip0024",
+        .useRotation = true,
+        .size = 8,
+        .minSize = 6,
+        .threshold = 4,
+
+        .dkgInterval = 48, // DKG cycle
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 12, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 20,
+        .dkgBadVotesThreshold = 7,
+
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+        .keepOldConnections = 4,
+        .recoveryMembers = 4,
+    },
+
+    /**
      * llmq_50_60
      * This quorum is deployed on mainnet and requires
      * 40 - 50 participants
@@ -230,6 +267,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_50_60,
         .name = "llmq_50_60",
+        .useRotation = false,
         .size = 50,
         .minSize = 40,
         .threshold = 30,
@@ -254,14 +292,15 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_60_75,
         .name = "llmq_60_75",
+        .useRotation = true,
         .size = 60,
         .minSize = 50,
         .threshold = 45,
 
-        .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgInterval = 24 * 12, // DKG cycle every 12 hours
         .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
+        .dkgMiningWindowStart = 42, // signingActiveQuorumCount + dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 50,
         .dkgBadVotesThreshold = 48,
 
         .signingActiveQuorumCount = 32,
@@ -278,6 +317,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_400_60,
         .name = "llmq_400_60",
+        .useRotation = false,
         .size = 400,
         .minSize = 300,
         .threshold = 240,
@@ -304,6 +344,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_400_85,
         .name = "llmq_400_85",
+        .useRotation = false,
         .size = 400,
         .minSize = 350,
         .threshold = 340,
@@ -330,6 +371,7 @@ static constexpr std::array<LLMQParams, 10> available_llmqs = {
     LLMQParams{
         .type = LLMQType::LLMQ_100_67,
         .name = "llmq_100_67",
+        .useRotation = false,
         .size = 100,
         .minSize = 80,
         .threshold = 67,

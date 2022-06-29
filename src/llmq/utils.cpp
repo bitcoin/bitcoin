@@ -534,7 +534,7 @@ bool CLLMQUtils::IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBl
 {
     assert(pindex);
 
-    if (llmqType != Params().GetConsensus().llmqTypeDIP0024InstantSend) {
+    if (!GetLLMQParams(llmqType).useRotation) {
         return false;
     }
 
@@ -646,13 +646,19 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(const Consensus::LLMQParams&
         int k = 0;
         while ((gap_max >>= 1) || k <= 1) {
             size_t idx = (i + gap) % mns.size();
+            // It doesn't matter if this node is going to be added to the resulting set or not,
+            // we should always bump the gap and the k (step count) regardless.
+            // Refusing to bump the gap results in an incomplete set in the best case scenario
+            // (idx won't ever change again once we hit `==`). Not bumping k guarantees an endless
+            // loop when the first or the second node we check is the one that should be skipped
+            // (k <= 1 forever).
+            gap <<= 1;
+            k++;
             const auto& otherDmn = mns[idx];
             if (otherDmn->proTxHash == proTxHash) {
                 continue;
             }
             r.emplace(otherDmn->proTxHash);
-            gap <<= 1;
-            k++;
         }
         return r;
     };
@@ -797,6 +803,7 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
+        case Consensus::LLMQType::LLMQ_DEVNET:
         case Consensus::LLMQType::LLMQ_50_60: {
             if (IsInstantSendLLMQTypeShared()) {
                 break;
@@ -823,6 +830,7 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
             }
             break;
         case Consensus::LLMQType::LLMQ_60_75:
+        case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
         case Consensus::LLMQType::LLMQ_TEST_DIP0024: {
             bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : CLLMQUtils::IsDIP0024Active(pindex);
             if (!fDIP0024IsActive) {
@@ -830,8 +838,6 @@ bool CLLMQUtils::IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const
             }
             break;
         }
-        case Consensus::LLMQType::LLMQ_DEVNET:
-            break;
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType)));
     }

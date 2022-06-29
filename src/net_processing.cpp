@@ -3312,7 +3312,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStrea
                     LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
                 }
             }
-            llmq::quorumInstantSendManager->TransactionRemovedFromMempool(ptx);
         }
 
         // If a tx has been detected by recentRejects, we will have reached
@@ -3345,6 +3344,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStrea
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
             }
+            llmq::quorumInstantSendManager->TransactionRemovedFromMempool(ptx);
         }
         return true;
     }
