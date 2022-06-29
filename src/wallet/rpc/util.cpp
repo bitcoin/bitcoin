@@ -123,6 +123,15 @@ std::string LabelFromValue(const UniValue& value)
     return label;
 }
 
+void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry)
+{
+    UniValue parent_descs(UniValue::VARR);
+    for (const auto& desc: wallet.GetWalletDescriptors(script_pubkey)) {
+        parent_descs.push_back(desc.descriptor->ToString());
+    }
+    entry.pushKV("parent_descs", parent_descs);
+}
+
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
 {
     if (!wallet) {
