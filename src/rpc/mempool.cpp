@@ -772,7 +772,7 @@ static RPCHelpMan submitpackage()
             HelpExampleCli("testmempoolaccept", "[rawtx1, rawtx2]") +
             HelpExampleCli("submitpackage", "[rawtx1, rawtx2]")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
             if (!Params().IsMockableChain()) {
                 throw std::runtime_error("submitpackage is for regression testing (-regtest mode) only");
