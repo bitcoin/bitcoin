@@ -401,11 +401,19 @@ void OptionsDialog::on_resetButton_clicked()
 {
     if (model) {
         // confirmation dialog
+        /*: Text explaining that the settings changed will not come into effect
+            until the client is restarted. */
+        QString reset_dialog_text = tr("Client restart required to activate changes.") + "<br><br>";
+        /*: Text explaining to the user that the client's current settings
+            will be backed up at a specific location. %1 is a stand-in
+            argument for the backup location's path. */
+        reset_dialog_text.append(tr("Current settings will be backed up at \"%1\".").arg(m_client_model->dataDir()) + "<br><br>");
+        /*: Text asking the user to confirm if they would like to proceed
+            with a client shutdown. */
+        reset_dialog_text.append(tr("Client will be shut down. Do you want to proceed?"));
+        //: Window title text of pop-up window shown when the user has chosen to reset options.
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" +
-            tr("Current settings will be backed up at \"%1\".").arg(m_client_model->dataDir()) + "<br><br>" +
-            tr("Client will be shut down. Do you want to proceed?"),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+            reset_dialog_text, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
         if (btnRetVal == QMessageBox::Cancel)
             return;
