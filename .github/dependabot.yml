@@ -10,3 +10,4 @@ updates:
     schedule:
       interval: "daily"
 dependabot.yml
+dependabot.yml
