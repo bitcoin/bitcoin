@@ -5,12 +5,13 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <consensus/amount.h>
-#include <net.h>        // For NodeId
-#include <net_types.h>  // For banmap_t
-#include <netaddress.h> // For Network
-#include <netbase.h>    // For ConnectionDirection
+#include <consensus/amount.h>          // For CAmount
+#include <net.h>                       // For NodeId
+#include <net_types.h>                 // For banmap_t
+#include <netaddress.h>                // For Network
+#include <netbase.h>                   // For ConnectionDirection
 #include <support/allocators/secure.h> // For SecureString
+#include <util/settings.h>             // For util::SettingsValue
 #include <util/translation.h>
 
 #include <functional>
@@ -96,6 +97,24 @@ public:
 
     //! Return whether shutdown was requested.
     virtual bool shutdownRequested() = 0;
+
+    //! Return whether a particular setting in <datadir>/settings.json is or
+    //! would be ignored because it is also specified in the command line.
+    virtual bool isSettingIgnored(const std::string& name) = 0;
+
+    //! Return setting value from <datadir>/settings.json or bitcoin.conf.
+    virtual util::SettingsValue getPersistentSetting(const std::string& name) = 0;
+
+    //! Update a setting in <datadir>/settings.json.
+    virtual void updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
+
+    //! Force a setting value to be applied, overriding any other configuration
+    //! source, but not being persisted.
+    virtual void forceSetting(const std::string& name, const util::SettingsValue& value) = 0;
+
+    //! Clear all settings in <datadir>/settings.json and store a backup of
+    //! previous settings in <datadir>/settings.json.bak.
+    virtual void resetSettings() = 0;
 
     //! Map port.
     virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;

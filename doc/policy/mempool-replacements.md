@@ -51,6 +51,13 @@ other consensus and policy rules, each of the following conditions are met:
    significant portions of the node's mempool using replacements with multiple directly conflicting
    transactions, each with large descendant sets.
 
+6. The replacement transaction's feerate is greater than the feerates of all directly conflicting
+   transactions.
+
+   *Rationale*: This rule was originally intended to ensure that the replacement transaction is
+   preferable for block-inclusion, compared to what would be removed from the mempool. This rule
+   predates ancestor feerate-based transaction selection.
+
 This set of rules is similar but distinct from BIP125.
 
 ## History

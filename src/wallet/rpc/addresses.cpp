@@ -264,7 +264,7 @@ RPCHelpMan addmultisigaddress()
     if (!request.params[2].isNull())
         label = LabelFromValue(request.params[2]);
 
-    int required = request.params[0].get_int();
+    int required = request.params[0].getInt<int>();
 
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
@@ -302,11 +302,11 @@ RPCHelpMan addmultisigaddress()
     result.pushKV("descriptor", descriptor->ToString());
 
     UniValue warnings(UniValue::VARR);
-    if (!request.params[3].isNull() && OutputTypeFromDestination(dest) != output_type) {
+    if (descriptor->GetOutputType() != output_type) {
         // Only warns if the user has explicitly chosen an address type we cannot generate
         warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
     }
-    if (warnings.size()) result.pushKV("warnings", warnings);
+    if (!warnings.empty()) result.pushKV("warnings", warnings);
 
     return result;
 },
@@ -340,9 +340,9 @@ RPCHelpMan keypoolrefill()
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
     unsigned int kpSize = 0;
     if (!request.params[0].isNull()) {
-        if (request.params[0].get_int() < 0)
+        if (request.params[0].getInt<int>() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-        kpSize = (unsigned int)request.params[0].get_int();
+        kpSize = (unsigned int)request.params[0].getInt<int>();
     }
 
     EnsureWalletIsUnlocked(*pwallet);

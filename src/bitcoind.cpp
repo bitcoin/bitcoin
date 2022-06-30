@@ -14,7 +14,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <node/context.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <noui.h>
 #include <shutdown.h>
 #include <util/check.h>
@@ -188,11 +188,14 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (!AppInitSanityChecks())
+
+        node.kernel = std::make_unique<kernel::Context>();
+        if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
+
         if (args.GetBoolArg("-daemon", DEFAULT_DAEMON) || args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
 #if HAVE_DECL_FORK
             tfm::format(std::cout, PACKAGE_NAME " starting\n");
@@ -253,7 +256,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     return fRet;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;

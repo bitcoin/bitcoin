@@ -321,7 +321,7 @@ struct StringContentsSerializer {
     // Used to make two serialized objects the same while letting them have different lengths
     // This is a terrible idea
     std::string str;
-    StringContentsSerializer() {}
+    StringContentsSerializer() = default;
     explicit StringContentsSerializer(const std::string& inp) : str(inp) {}
 
     StringContentsSerializer& operator+=(const std::string& s) {

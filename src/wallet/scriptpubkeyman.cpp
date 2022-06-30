@@ -2180,6 +2180,19 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
                     *keys = Merge(*keys, *pk_keys);
                 }
             }
+            for (const auto& pk_pair : input.m_tap_bip32_paths) {
+                const XOnlyPubKey& pubkey = pk_pair.first;
+                for (unsigned char prefix : {0x02, 0x03}) {
+                    unsigned char b[33] = {prefix};
+                    std::copy(pubkey.begin(), pubkey.end(), b + 1);
+                    CPubKey fullpubkey;
+                    fullpubkey.Set(b, b + 33);
+                    std::unique_ptr<FlatSigningProvider> pk_keys = GetSigningProvider(fullpubkey);
+                    if (pk_keys) {
+                        *keys = Merge(*keys, *pk_keys);
+                    }
+                }
+            }
         }
 
         SignPSBTInput(HidingSigningProvider(keys.get(), !sign, !bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);

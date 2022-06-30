@@ -1,10 +1,9 @@
-// Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_COINSTATS_H
-#define BITCOIN_NODE_COINSTATS_H
+#ifndef BITCOIN_KERNEL_COINSTATS_H
+#define BITCOIN_KERNEL_COINSTATS_H
 
 #include <chain.h>
 #include <coins.h>
@@ -20,7 +19,7 @@ namespace node {
 class BlockManager;
 } // namespace node
 
-namespace node {
+namespace kernel {
 enum class CoinStatsHashType {
     HASH_SERIALIZED,
     MUHASH,
@@ -28,9 +27,6 @@ enum class CoinStatsHashType {
 };
 
 struct CCoinsStats {
-    //! Which hash type to use
-    const CoinStatsHashType m_hash_type;
-
     int nHeight{0};
     uint256 hashBlock{};
     uint64_t nTransactions{0};
@@ -44,8 +40,6 @@ struct CCoinsStats {
     //! The number of coins contained.
     uint64_t coins_count{0};
 
-    //! Signals if the coinstatsindex should be used (when available).
-    bool index_requested{true};
     //! Signals if the coinstatsindex was used to retrieve the statistics.
     bool index_used{false};
 
@@ -70,15 +64,15 @@ struct CCoinsStats {
     //! Total cumulative amount of coins lost due to unclaimed miner rewards up to and including this block
     CAmount total_unspendables_unclaimed_rewards{0};
 
-    CCoinsStats(CoinStatsHashType hash_type) : m_hash_type(hash_type) {}
+    CCoinsStats() = default;
+    CCoinsStats(int block_height, const uint256& block_hash);
 };
-
-//! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView* view, node::BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point = {}, const CBlockIndex* pindex = nullptr);
 
 uint64_t GetBogoSize(const CScript& script_pub_key);
 
 CDataStream TxOutSer(const COutPoint& outpoint, const Coin& coin);
-} // namespace node
 
-#endif // BITCOIN_NODE_COINSTATS_H
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point = {});
+} // namespace kernel
+
+#endif // BITCOIN_KERNEL_COINSTATS_H

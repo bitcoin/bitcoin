@@ -35,6 +35,8 @@
  */
 template<unsigned int N, typename T, typename Size = uint32_t, typename Diff = int32_t>
 class prevector {
+    static_assert(std::is_trivially_copyable_v<T>);
+
 public:
     typedef Size size_type;
     typedef Diff difference_type;
@@ -411,15 +413,7 @@ public:
         // representation (with capacity N and size <= N).
         iterator p = first;
         char* endp = (char*)&(*end());
-        if (!std::is_trivially_destructible<T>::value) {
-            while (p != last) {
-                (*p).~T();
-                _size--;
-                ++p;
-            }
-        } else {
-            _size -= last - p;
-        }
+        _size -= last - p;
         memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
     }
@@ -465,9 +459,6 @@ public:
     }
 
     ~prevector() {
-        if (!std::is_trivially_destructible<T>::value) {
-            clear();
-        }
         if (!is_direct()) {
             free(_union.indirect_contents.indirect);
             _union.indirect_contents.indirect = nullptr;

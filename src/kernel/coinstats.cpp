@@ -1,14 +1,12 @@
-// Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/coinstats.h>
+#include <kernel/coinstats.h>
 
 #include <coins.h>
 #include <crypto/muhash.h>
 #include <hash.h>
-#include <index/coinstatsindex.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/overflow.h>
@@ -17,7 +15,12 @@
 
 #include <map>
 
-namespace node {
+namespace kernel {
+
+CCoinsStats::CCoinsStats(int block_height, const uint256& block_hash)
+    : nHeight(block_height),
+      hashBlock(block_hash) {}
+
 // Database-independent metric indicating the UTXO set size
 uint64_t GetBogoSize(const CScript& script_pub_key)
 {
@@ -93,23 +96,10 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
+static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
-
-    if (!pindex) {
-        LOCK(cs_main);
-        pindex = blockman.LookupBlockIndex(view->GetBestBlock());
-    }
-    stats.nHeight = Assert(pindex)->nHeight;
-    stats.hashBlock = pindex->GetBlockHash();
-
-    // Use CoinStatsIndex if it is requested and available and a hash_type of Muhash or None was requested
-    if ((stats.m_hash_type == CoinStatsHashType::MUHASH || stats.m_hash_type == CoinStatsHashType::NONE) && g_coin_stats_index && stats.index_requested) {
-        stats.index_used = true;
-        return g_coin_stats_index->LookUpStats(pindex, stats);
-    }
 
     PrepareHash(hash_obj, stats);
 
@@ -141,25 +131,36 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     FinalizeHash(hash_obj, stats);
 
     stats.nDiskSize = view->EstimateSize();
+
     return true;
 }
 
-bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, const std::function<void()>& interruption_point, const CBlockIndex* pindex)
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    switch (stats.m_hash_type) {
-    case(CoinStatsHashType::HASH_SERIALIZED): {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        return GetUTXOStats(view, blockman, stats, ss, interruption_point, pindex);
+    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+    CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
+
+    bool success = [&]() -> bool {
+        switch (hash_type) {
+        case(CoinStatsHashType::HASH_SERIALIZED): {
+            CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+            return ComputeUTXOStats(view, stats, ss, interruption_point);
+        }
+        case(CoinStatsHashType::MUHASH): {
+            MuHash3072 muhash;
+            return ComputeUTXOStats(view, stats, muhash, interruption_point);
+        }
+        case(CoinStatsHashType::NONE): {
+            return ComputeUTXOStats(view, stats, nullptr, interruption_point);
+        }
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }();
+
+    if (!success) {
+        return std::nullopt;
     }
-    case(CoinStatsHashType::MUHASH): {
-        MuHash3072 muhash;
-        return GetUTXOStats(view, blockman, stats, muhash, interruption_point, pindex);
-    }
-    case(CoinStatsHashType::NONE): {
-        return GetUTXOStats(view, blockman, stats, nullptr, interruption_point, pindex);
-    }
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    return stats;
 }
 
 // The legacy hash serializes the hashBlock
@@ -182,4 +183,5 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
     stats.hashSerialized = out;
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
-} // namespace node
+
+} // namespace kernel

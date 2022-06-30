@@ -23,7 +23,6 @@ EXCLUDE_FILES_WITH_PREFIX = ['src/crypto/ctaes',
                              'src/secp256k1',
                              'src/bls',
                              'src/minisketch',
-                             'src/univalue',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
                              'src/test/fuzz/FuzzedDataProvider.h']

@@ -66,14 +66,16 @@ int AddrInfo::GetBucketPosition(const uint256& nKey, bool fNew, int nBucket) con
 
 bool AddrInfo::IsTerrible(int64_t nNow) const
 {
-    if (nLastTry && nLastTry >= nNow - 60) // never remove things tried in the last minute
+    if (nNow - nLastTry <= 60) { // never remove things tried in the last minute
         return false;
+    }
 
     if (nTime > nNow + 10 * 60) // came in a flying DeLorean
         return true;
 
-    if (nTime == 0 || nNow - nTime > ADDRMAN_HORIZON_DAYS * 24 * 60 * 60) // not seen in recent history
+    if (nNow - nTime > ADDRMAN_HORIZON_DAYS * 24 * 60 * 60) { // not seen in recent history
         return true;
+    }
 
     if (nLastSuccess == 0 && nAttempts >= ADDRMAN_RETRIES) // tried N times and never a success
         return true;
@@ -557,15 +559,17 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         // periodically update nTime
         bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
         int64_t nUpdateInterval = (fCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-        if (addr.nTime && (!pinfo->nTime || pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty))
+        if (pinfo->nTime < addr.nTime - nUpdateInterval - nTimePenalty) {
             pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
+        }
 
         // add services
         pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
         // do not update if no new information is present
-        if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
+        if (addr.nTime <= pinfo->nTime) {
             return false;
+        }
 
         // do not update if the entry was already in the "tried" table
         if (pinfo->fInTried)
@@ -866,25 +870,27 @@ void AddrManImpl::ResolveCollisions_()
                 int id_old = vvTried[tried_bucket][tried_bucket_pos];
                 AddrInfo& info_old = mapInfo[id_old];
 
+                const auto current_time{GetAdjustedTime()};
+
                 // Has successfully connected in last X hours
-                if (GetAdjustedTime() - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
+                if (current_time - info_old.nLastSuccess < ADDRMAN_REPLACEMENT_HOURS*(60*60)) {
                     erase_collision = true;
-                } else if (GetAdjustedTime() - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
+                } else if (current_time - info_old.nLastTry < ADDRMAN_REPLACEMENT_HOURS*(60*60)) { // attempted to connect and failed in last X hours
 
                     // Give address at least 60 seconds to successfully connect
-                    if (GetAdjustedTime() - info_old.nLastTry > 60) {
+                    if (current_time - info_old.nLastTry > 60) {
                         LogPrint(BCLog::ADDRMAN, "Replacing %s with %s in tried table\n", info_old.ToString(), info_new.ToString());
 
                         // Replaces an existing address already in the tried table with the new address
-                        Good_(info_new, false, GetAdjustedTime());
+                        Good_(info_new, false, current_time);
                         erase_collision = true;
                     }
-                } else if (GetAdjustedTime() - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
+                } else if (current_time - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
                     // If the collision hasn't resolved in some reasonable amount of time,
                     // just evict the old entry -- we must not be able to
                     // connect to it for some reason.
                     LogPrint(BCLog::ADDRMAN, "Unable to test; replacing %s with %s in tried table anyway\n", info_old.ToString(), info_new.ToString());
-                    Good_(info_new, false, GetAdjustedTime());
+                    Good_(info_new, false, current_time);
                     erase_collision = true;
                 }
             } else { // Collision is not actually a collision anymore

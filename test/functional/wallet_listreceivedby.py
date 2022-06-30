@@ -18,8 +18,6 @@ from test_framework.wallet_util import test_address
 class ReceivedByTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        # Test deprecated exclude coinbase on second node
-        self.extra_args = [[], ["-deprecatedrpc=exclude_coinbase"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -130,6 +128,9 @@ class ReceivedByTest(BitcoinTestFramework):
 
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
+
+        # getreceivedbylabel returns an error if the wallet doesn't own the label
+        assert_raises_rpc_error(-4, "Label not found in wallet", self.nodes[0].getreceivedbylabel, "dummy")
 
         # listreceivedbylabel should return received_by_label_json because of 0 confirmations
         assert_array_result(self.nodes[1].listreceivedbylabel(),
@@ -249,35 +250,6 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_array_result(self.nodes[0].listreceivedbylabel(minconf=0, include_immature_coinbase=True),
                             {"label": label},
                             {}, True)
-
-        # Test exclude_coinbase
-        address2 = self.nodes[1].getnewaddress(label)
-        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, address2, sync_fun=self.no_op)
-
-        self.log.info("getreceivedbyaddress returns nothing when excluding coinbase")
-        balance = self.nodes[1].getreceivedbyaddress(address2)
-        assert_equal(balance, 0)
-
-        self.log.info("getreceivedbylabel returns nothing when excluding coinbase")
-        balance = self.nodes[1].getreceivedbylabel("label")
-        assert_equal(balance, 0)
-
-        self.log.info("listreceivedbyaddress does not include address when excluding coinbase")
-        assert_array_result(self.nodes[1].listreceivedbyaddress(),
-                            {"address": address2},
-                            {}, True)
-
-        self.log.info("listreceivedbylabel does not include label when excluding coinbase")
-        assert_array_result(self.nodes[1].listreceivedbylabel(),
-                            {"label": label},
-                            {}, True)
-
-        self.log.info("getreceivedbyaddress throws when setting include_immature_coinbase with deprecated exclude_coinbase")
-        assert_raises_rpc_error(-8, 'include_immature_coinbase is incompatible with deprecated exclude_coinbase', self.nodes[1].getreceivedbyaddress, address2, 1, True)
-
-
-        self.log.info("listreceivedbyaddress throws when setting include_immature_coinbase with deprecated exclude_coinbase")
-        assert_raises_rpc_error(-8, 'include_immature_coinbase is incompatible with deprecated exclude_coinbase', self.nodes[1].listreceivedbyaddress, 1, False, False, "", True)
 
 
 if __name__ == '__main__':

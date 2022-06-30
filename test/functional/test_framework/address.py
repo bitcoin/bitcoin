@@ -47,8 +47,7 @@ def create_deterministic_address_bcrt1_p2tr_op_true():
     Returns a tuple with the generated address and the internal key.
     """
     internal_key = (1).to_bytes(32, 'big')
-    scriptPubKey = taproot_construct(internal_key, [(None, CScript([OP_TRUE]))]).scriptPubKey
-    address = encode_segwit_address("bcrt", 1, scriptPubKey[2:])
+    address = output_key_to_p2tr(taproot_construct(internal_key, [(None, CScript([OP_TRUE]))]).output_pubkey)
     assert_equal(address, 'bcrt1p9yfmy5h72durp7zrhlw9lf7jpwjgvwdg0jr0lqmmjtgg83266lqsekaqka')
     return (address, internal_key)
 
@@ -140,6 +139,10 @@ def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh(p2shscript, main)
+
+def output_key_to_p2tr(key, main=False):
+    assert len(key) == 32
+    return program_to_witness(1, key, main)
 
 def check_key(key):
     if (type(key) is str):

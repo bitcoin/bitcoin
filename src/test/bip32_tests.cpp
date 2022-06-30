@@ -120,8 +120,9 @@ const std::vector<std::string> TEST5 = {
     "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHL"
 };
 
-void RunTest(const TestVector &test) {
-    std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
+void RunTest(const TestVector& test)
+{
+    std::vector<std::byte> seed{ParseHex<std::byte>(test.strHexMaster)};
     CExtKey key;
     CExtPubKey pubkey;
     key.SetSeed(seed);

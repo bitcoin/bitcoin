@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 #ifdef _MSC_VER
-#  include <compat.h>
+#  include <BaseTsd.h>
+   typedef SSIZE_T ssize_t;
 #else
 #  include <unistd.h>
 #endif

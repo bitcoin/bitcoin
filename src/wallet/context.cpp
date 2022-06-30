@@ -5,6 +5,6 @@
 #include <wallet/context.h>
 
 namespace wallet {
-WalletContext::WalletContext() {}
-WalletContext::~WalletContext() {}
+WalletContext::WalletContext() = default;
+WalletContext::~WalletContext() = default;
 } // namespace wallet

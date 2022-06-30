@@ -8,6 +8,7 @@
 #include <core_io.h>
 #include <fs.h>
 #include <policy/rbf.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -15,7 +16,6 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
-#include <validation.h>
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::NodeContext;
@@ -229,23 +229,12 @@ static std::vector<RPCResult> MempoolEntryDescription()
     return {
         RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
         RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
-        RPCResult{RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true,
-                  "transaction fee, denominated in " + CURRENCY_UNIT + " (DEPRECATED, returned only if config option -deprecatedrpc=fees is passed)"},
-        RPCResult{RPCResult::Type::STR_AMOUNT, "modifiedfee", /*optional=*/true,
-                  "transaction fee with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT +
-                      " (DEPRECATED, returned only if config option -deprecatedrpc=fees is passed)"},
         RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
         RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
         RPCResult{RPCResult::Type::NUM, "descendantcount", "number of in-mempool descendant transactions (including this one)"},
         RPCResult{RPCResult::Type::NUM, "descendantsize", "virtual transaction size of in-mempool descendants (including this one)"},
-        RPCResult{RPCResult::Type::STR_AMOUNT, "descendantfees", /*optional=*/true,
-                  "transaction fees of in-mempool descendants (including this one) with fee deltas used for mining priority, denominated in " +
-                      CURRENCY_ATOM + "s (DEPRECATED, returned only if config option -deprecatedrpc=fees is passed)"},
         RPCResult{RPCResult::Type::NUM, "ancestorcount", "number of in-mempool ancestor transactions (including this one)"},
         RPCResult{RPCResult::Type::NUM, "ancestorsize", "virtual transaction size of in-mempool ancestors (including this one)"},
-        RPCResult{RPCResult::Type::STR_AMOUNT, "ancestorfees", /*optional=*/true,
-                  "transaction fees of in-mempool ancestors (including this one) with fee deltas used for mining priority, denominated in " +
-                      CURRENCY_ATOM + "s (DEPRECATED, returned only if config option -deprecatedrpc=fees is passed)"},
         RPCResult{RPCResult::Type::STR_HEX, "wtxid", "hash of serialized transaction, including witness data"},
         RPCResult{RPCResult::Type::OBJ, "fees", "",
             {
@@ -269,24 +258,12 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
 
     info.pushKV("vsize", (int)e.GetTxSize());
     info.pushKV("weight", (int)e.GetTxWeight());
-    // TODO: top-level fee fields are deprecated. deprecated_fee_fields_enabled blocks should be removed in v24
-    const bool deprecated_fee_fields_enabled{IsDeprecatedRPCEnabled("fees")};
-    if (deprecated_fee_fields_enabled) {
-        info.pushKV("fee", ValueFromAmount(e.GetFee()));
-        info.pushKV("modifiedfee", ValueFromAmount(e.GetModifiedFee()));
-    }
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", (int)e.GetHeight());
     info.pushKV("descendantcount", e.GetCountWithDescendants());
     info.pushKV("descendantsize", e.GetSizeWithDescendants());
-    if (deprecated_fee_fields_enabled) {
-        info.pushKV("descendantfees", e.GetModFeesWithDescendants());
-    }
     info.pushKV("ancestorcount", e.GetCountWithAncestors());
     info.pushKV("ancestorsize", e.GetSizeWithAncestors());
-    if (deprecated_fee_fields_enabled) {
-        info.pushKV("ancestorfees", e.GetModFeesWithAncestors());
-    }
     info.pushKV("wtxid", pool.vTxHashes[e.vTxHashesIdx].first.ToString());
 
     UniValue fees(UniValue::VOBJ);
@@ -587,6 +564,89 @@ static RPCHelpMan getmempoolentry()
     };
 }
 
+static RPCHelpMan gettxspendingprevout()
+{
+    return RPCHelpMan{"gettxspendingprevout",
+        "Scans the mempool to find transactions spending any of the given outputs",
+        {
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction outputs that we want to check, and within each, the txid (string) vout (numeric).",
+                {
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                        },
+                    },
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "the transaction id of the checked output"},
+                    {RPCResult::Type::NUM, "vout", "the vout value of the checked output"},
+                    {RPCResult::Type::STR_HEX, "spendingtxid", /*optional=*/true, "the transaction id of the mempool transaction spending this output (omitted if unspent)"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+            + HelpExampleRpc("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            RPCTypeCheckArgument(request.params[0], UniValue::VARR);
+            const UniValue& output_params = request.params[0];
+            if (output_params.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing");
+            }
+
+            std::vector<COutPoint> prevouts;
+            prevouts.reserve(output_params.size());
+
+            for (unsigned int idx = 0; idx < output_params.size(); idx++) {
+                const UniValue& o = output_params[idx].get_obj();
+
+                RPCTypeCheckObj(o,
+                                {
+                                    {"txid", UniValueType(UniValue::VSTR)},
+                                    {"vout", UniValueType(UniValue::VNUM)},
+                                }, /*fAllowNull=*/false, /*fStrict=*/true);
+
+                const uint256 txid(ParseHashO(o, "txid"));
+                const int nOutput{find_value(o, "vout").getInt<int>()};
+                if (nOutput < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
+                }
+
+                prevouts.emplace_back(txid, nOutput);
+            }
+
+            const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+            LOCK(mempool.cs);
+
+            UniValue result{UniValue::VARR};
+
+            for (const COutPoint& prevout : prevouts) {
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("txid", prevout.hash.ToString());
+                o.pushKV("vout", (uint64_t)prevout.n);
+
+                const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
+                if (spendingTx != nullptr) {
+                    o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                }
+
+                result.push_back(o);
+            }
+
+            return result;
+        },
+    };
+}
+
 UniValue MempoolInfoToJSON(const CTxMemPool& pool)
 {
     // Make sure this call is atomic in the pool.
@@ -597,10 +657,10 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
     ret.pushKV("total_fee", ValueFromAmount(pool.GetTotalFee()));
-    int64_t maxmempool{gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000};
-    ret.pushKV("maxmempool", maxmempool);
-    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
+    ret.pushKV("maxmempool", pool.m_max_size_bytes);
+    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(), ::minRelayTxFee).GetFeePerK()));
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
+    ret.pushKV("incrementalrelayfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     return ret;
 }
@@ -608,7 +668,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
 static RPCHelpMan getmempoolinfo()
 {
     return RPCHelpMan{"getmempoolinfo",
-        "\nReturns details on the active state of the TX memory pool.\n",
+        "Returns details on the active state of the TX memory pool.",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -621,7 +681,8 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
                 {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kvB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
                 {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
-                {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"}
+                {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
+                {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")
@@ -677,6 +738,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getmempoolancestors},
         {"blockchain", &getmempooldescendants},
         {"blockchain", &getmempoolentry},
+        {"blockchain", &gettxspendingprevout},
         {"blockchain", &getmempoolinfo},
         {"blockchain", &getrawmempool},
         {"blockchain", &savemempool},

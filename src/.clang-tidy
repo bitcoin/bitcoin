@@ -1,11 +1,13 @@
 Checks: '
 -*,
 bugprone-argument-comment,
+modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-redundant-declaration,
 '
 WarningsAsErrors: '
 bugprone-argument-comment,
+modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-redundant-declaration,
 '

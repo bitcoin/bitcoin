@@ -127,6 +127,7 @@ SettingsValue GetSetting(const Settings& settings,
     const std::string& section,
     const std::string& name,
     bool ignore_default_section_config,
+    bool ignore_nonpersistent,
     bool get_chain_name)
 {
     SettingsValue result;
@@ -161,6 +162,9 @@ SettingsValue GetSetting(const Settings& settings,
             !never_ignore_negated_setting) {
             return;
         }
+
+        // Ignore nonpersistent settings if requested.
+        if (ignore_nonpersistent && (source == Source::COMMAND_LINE || source == Source::FORCED)) return;
 
         // Skip negated command line settings.
         if (skip_negated_command_line && span.last_negated()) return;

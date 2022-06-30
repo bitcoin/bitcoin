@@ -3,6 +3,7 @@ ba
 blockin
 cachable
 creat
+desig
 fo
 fpr
 hights
@@ -11,6 +12,7 @@ inout
 invokable
 keypair
 mor
+nd
 nin
 ser
 unparseable
