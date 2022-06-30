@@ -130,6 +130,7 @@ BASE_SCRIPTS = [
     'wallet_address_types.py --descriptors',
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
+    'rpc_packages.py',
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
@@ -231,7 +232,6 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
-    'rpc_packages.py',
     'mempool_package_limits.py',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
