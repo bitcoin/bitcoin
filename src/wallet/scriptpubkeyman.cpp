@@ -28,6 +28,9 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const Outp
     }
     assert(type != OutputType::BECH32M);
 
+    // Fill-up keypool if needed
+    TopUp();
+
     LOCK(cs_KeyStore);
 
     // Generate a new key that is added to wallet
@@ -303,6 +306,9 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const
     if (!CanGetAddresses(internal)) {
         return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
+
+    // Fill-up keypool if needed
+    TopUp();
 
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
         return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
