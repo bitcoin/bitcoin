@@ -1374,7 +1374,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
 
 void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
     LOCK(cs_wallet);
-    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false);
+    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false, /*is_txn=*/true);
     SyncTransaction(tx, TxStateInMempool{}, batch);
 
     auto it = mapWallet.find(tx->GetHash());
@@ -1416,7 +1416,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
         // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
-        WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false);
+        WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false, /*is_txn=*/true);
         SyncTransaction(tx, TxStateInactive{}, batch);
     }
 }
@@ -1428,7 +1428,7 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
 
     m_last_block_processed_height = block.height;
     m_last_block_processed = block.hash;
-    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false);
+    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false, /*is_txn=*/true);
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
         SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, batch);
         transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
@@ -1446,7 +1446,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // future with a stickier abandoned state or even removing abandontransaction call.
     m_last_block_processed_height = block.height - 1;
     m_last_block_processed = *Assert(block.prev_hash);
-    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false);
+    WalletBatch batch(GetDatabase(), /*fFlushOnClose=*/false, /*initialize=*/false, /*is_txn=*/true);
     for (const CTransactionRef& ptx : Assert(block.data)->vtx) {
         SyncTransaction(ptx, TxStateInactive{}, batch);
     }

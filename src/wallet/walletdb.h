@@ -236,12 +236,17 @@ public:
      * Allowing an entire process to use the same handler, perform batched operations and
      * avoid db access acquisition if no write occurs.
      *
-     * Db access will be initialized before the first write/erase operation.
+     * The first time that a write/erase/read operation is performed:
+     * 1) Db access will be initialized.
+     * 2) A db txn will be created (if configured => is_txn = true).
+     *
+     * Note: If configured (is_txn=true), the db txn will be committed when the object is destructed.
     */
     explicit WalletBatch(WalletDatabase& database, bool fFlushOnClose = true,
-                         bool initialize = true) :
+                         bool initialize = true, bool is_txn = false) :
                          m_database(database),
-                         m_flush_on_close(fFlushOnClose)
+                         m_flush_on_close(fFlushOnClose),
+                         m_is_txn(is_txn)
     {
         if (initialize) {
             TryInit();
@@ -249,6 +254,13 @@ public:
     }
     WalletBatch(const WalletBatch&) = delete;
     WalletBatch& operator=(const WalletBatch&) = delete;
+
+    ~WalletBatch()
+    {
+        if (m_batch && m_is_txn) {
+            assert(TxnCommit());
+        }
+    }
 
     /**
      *  Initialize the wallet batch on-demand.
@@ -258,6 +270,7 @@ public:
     {
         if (m_batch) return false;
         m_batch = m_database.MakeBatch(m_flush_on_close);
+        if (m_is_txn) assert(TxnBegin());
         return true;
     }
 
@@ -334,6 +347,9 @@ private:
     WalletDatabase& m_database;
     // Whether it should flush to db at every write or not (only useful for bdb)
     bool m_flush_on_close{false};
+    // Whether it should create a db txn at initialization
+    bool m_is_txn{false};
+
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
