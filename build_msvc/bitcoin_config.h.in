@@ -50,8 +50,8 @@
 /* Define this symbol if the consensus lib has been built */
 #define HAVE_CONSENSUS_LIB 1
 
-/* define if the compiler supports basic C++17 syntax */
-#define HAVE_CXX17 1
+/* define if the compiler supports basic C++20 syntax */
+#define HAVE_CXX20 1
 
 /* Define to 1 if you have the declaration of `be16toh', and to 0 if you
    don't. */
