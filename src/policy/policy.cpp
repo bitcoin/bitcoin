@@ -84,7 +84,7 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
             return false;
     // SYSCOIN MAX_SCRIPT_SIZE vs nMaxDatacarrierBytes
     } else if (whichType == TxoutType::NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > MAX_SCRIPT_SIZE )) {
+               (!fAcceptDatacarrier || scriptPubKey.size() > std::max<unsigned int>(nMaxDatacarrierBytes, MAX_SCRIPT_SIZE) )) {
           return false;
     }
 
