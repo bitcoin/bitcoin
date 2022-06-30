@@ -178,8 +178,8 @@ bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
 
 bool WalletBatch::ReadBestBlock(CBlockLocator& locator)
 {
-    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
-    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    if (ReadIC(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
+    return ReadIC(DBKeys::BESTBLOCK_NOMERKLE, locator);
 }
 
 bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
@@ -189,7 +189,7 @@ bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
 
 bool WalletBatch::ReadPool(int64_t nPool, CKeyPool& keypool)
 {
-    return m_batch->Read(std::make_pair(DBKeys::POOL, nPool), keypool);
+    return ReadIC(std::make_pair(DBKeys::POOL, nPool), keypool);
 }
 
 bool WalletBatch::WritePool(int64_t nPool, const CKeyPool& keypool)

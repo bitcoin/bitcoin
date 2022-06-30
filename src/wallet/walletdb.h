@@ -218,6 +218,14 @@ private:
         return true;
     }
 
+    template <typename K, typename T>
+    bool ReadIC(const K& key, T& value)
+    {
+        TryInit(); // only if on-demand mode is configured
+
+        return m_batch->Read(key, value);
+    }
+
 public:
 
     /**
