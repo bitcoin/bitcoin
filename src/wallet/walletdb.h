@@ -266,13 +266,7 @@ public:
      *  Initialize the wallet batch on-demand.
      *  no-op if batch was already initialized.
      */
-    bool TryInit()
-    {
-        if (m_batch) return false;
-        m_batch = m_database.MakeBatch(m_flush_on_close);
-        if (m_is_txn) assert(TxnBegin());
-        return true;
-    }
+    bool TryInit();
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);

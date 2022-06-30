@@ -66,6 +66,19 @@ const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULT
 // WalletBatch
 //
 
+bool WalletBatch::TryInit()
+{
+    if (m_batch) return false;
+    m_batch = m_database.MakeBatch(m_flush_on_close);
+    if (m_is_txn) {
+        if (!TxnBegin()) {
+            LogPrintf("%s: txn begin failed, reverting to synchronized write mode\n", __func__);
+            m_is_txn = false;
+        }
+    }
+    return true;
+}
+
 bool WalletBatch::WriteName(const std::string& strAddress, const std::string& strName)
 {
     return WriteIC(std::make_pair(DBKeys::NAME, strAddress), strName);
