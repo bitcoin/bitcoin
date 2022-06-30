@@ -46,16 +46,13 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
-        const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
-        p2p_node.fSuccessfullyConnected = successfully_connected;
-        p2p_node.fPauseSend = false;
         g_setup->m_node.peerman->InitializeNode(&p2p_node);
-        FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
+        FillNode(fuzzed_data_provider, connman, *g_setup->m_node.peerman, p2p_node);
 
         connman.AddTestNode(p2p_node);
     }
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
 
         const auto mock_time = ConsumeTime(fuzzed_data_provider);

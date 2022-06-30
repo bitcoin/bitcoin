@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Widecoin Core developers
+// Copyright (c) 2020-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,4 +42,4 @@
 #endif
 
 
-#endif /* WIDECOIN_UTIL_TRACE_H */
+#endif // WIDECOIN_UTIL_TRACE_H

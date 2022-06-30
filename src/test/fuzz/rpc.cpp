@@ -41,13 +41,17 @@ struct RPCFuzzTestingSetup : public TestingSetup {
     {
     }
 
-    UniValue CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
+    void CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
     {
         JSONRPCRequest request;
         request.context = &m_node;
         request.strMethod = rpc_method;
-        request.params = RPCConvertValues(rpc_method, arguments);
-        return tableRPC.execute(request);
+        try {
+            request.params = RPCConvertValues(rpc_method, arguments);
+        } catch (const std::runtime_error&) {
+            return;
+        }
+        tableRPC.execute(request);
     }
 
     std::vector<std::string> GetRPCCommands() const
@@ -110,11 +114,13 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getblockfilter",
     "getblockhash",
     "getblockheader",
+    "getblockfrompeer", // when no peers are connected, no p2p message is sent
     "getblockstats",
     "getblocktemplate",
     "getchaintips",
     "getchaintxstats",
     "getconnectioncount",
+    "getdeploymentinfo",
     "getdescriptorinfo",
     "getdifficulty",
     "getindexinfo",
@@ -266,7 +272,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
             }
             CDataStream data_stream{SER_NETWORK, PROTOCOL_VERSION};
             data_stream << *opt_psbt;
-            r = EncodeBase64({data_stream.begin(), data_stream.end()});
+            r = EncodeBase64(data_stream);
         },
         [&] {
             // base58 encoded key
@@ -294,7 +300,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
 std::string ConsumeArrayRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
 {
     std::vector<std::string> scalar_arguments;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         scalar_arguments.push_back(ConsumeScalarRPCArgument(fuzzed_data_provider));
     }
     return "[\"" + Join(scalar_arguments, "\",\"") + "\"]";
@@ -348,12 +354,18 @@ FUZZ_TARGET_INIT(rpc, initialize_rpc)
         return;
     }
     std::vector<std::string> arguments;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         arguments.push_back(ConsumeRPCArgument(fuzzed_data_provider));
     }
     try {
         rpc_testing_setup->CallRPC(rpc_command, arguments);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
+    } catch (const UniValue& json_rpc_error) {
+        const std::string error_msg{find_value(json_rpc_error, "message").get_str()};
+        // Once c++20 is allowed, starts_with can be used.
+        // if (error_msg.starts_with("Internal bug detected")) {
+        if (0 == error_msg.rfind("Internal bug detected", 0)) {
+            // Only allow the intentional internal bug
+            assert(error_msg.find("trigger_internal_bug") != std::string::npos);
+        }
     }
 }

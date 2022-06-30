@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Creu cyfeiriad newydd</translation>
+        <translation type="unfinished">Creu cyfeiriad newydd</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copio'r cyfeiriad sydd wedi'i ddewis i'r clipfwrdd system</translation>
+        <translation type="unfinished">Copio'r cyfeiriad sydd wedi'i ddewis i'r clipfwrdd system</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Dileu'r cyfeiriad presennol wedi ei ddewis o'r rhestr</translation>
+        <translation type="unfinished">Dileu'r cyfeiriad presennol wedi ei ddewis o'r rhestr</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Allforio'r data yn y tab presennol i ffeil</translation>
+        <translation type="unfinished">Allforio'r data yn y tab presennol i ffeil</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Allforio</translation>
+        <translation type="unfinished">&amp;Allforio</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Dileu</translation>
+        <translation type="unfinished">&amp;Dileu</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -110,19 +110,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Deialog Cyfrinair</translation>
+        <translation type="unfinished">Deialog Cyfrinair</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Teipiwch gyfrinymadrodd</translation>
+        <translation type="unfinished">Teipiwch gyfrinymadrodd</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Cyfrinymadrodd newydd</translation>
+        <translation type="unfinished">Cyfrinymadrodd newydd</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Ailadroddwch gyfrinymadrodd newydd</translation>
+        <translation type="unfinished">Ailadroddwch gyfrinymadrodd newydd</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -216,7 +216,7 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -226,7 +226,7 @@
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -283,27 +283,27 @@
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Trosolwg</translation>
+        <translation type="unfinished">&amp;Trosolwg</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Dangos trosolwg cyffredinol y waled</translation>
+        <translation type="unfinished">Dangos trosolwg cyffredinol y waled</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Trafodion</translation>
+        <translation type="unfinished">&amp;Trafodion</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Pori hanes trafodion</translation>
+        <translation type="unfinished">Pori hanes trafodion</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>A&amp;llanfa</translation>
+        <translation type="unfinished">A&amp;llanfa</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Gadael rhaglen</translation>
+        <translation type="unfinished">Gadael rhaglen</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -315,11 +315,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Ynghylch &amp;Qt</translation>
+        <translation type="unfinished">Ynghylch &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Dangos gwybodaeth am Qt</translation>
+        <translation type="unfinished">Dangos gwybodaeth am Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -336,59 +336,51 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Anfon arian i gyfeiriad Widecoin</translation>
+        <translation type="unfinished">Anfon arian i gyfeiriad Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Bacio fyny'r waled i leoliad arall</translation>
+        <translation type="unfinished">Bacio fyny'r waled i leoliad arall</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Newid y cyfrinair ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
+        <translation type="unfinished">Newid y cyfrinair ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Anfon</translation>
+        <translation type="unfinished">&amp;Anfon</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Derbyn</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Dangos / Cuddio</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Dangos neu guddio y brif Ffenest</translation>
+        <translation type="unfinished">&amp;Derbyn</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Amgryptio'r allweddi preifat sy'n perthyn i'ch waled</translation>
+        <translation type="unfinished">Amgryptio'r allweddi preifat sy'n perthyn i'ch waled</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Arwyddo negeseuon gyda eich cyfeiriadau Widecoin i brofi mae chi sy'n berchen arnynt</translation>
+        <translation type="unfinished">Arwyddo negeseuon gyda eich cyfeiriadau Widecoin i brofi mae chi sy'n berchen arnynt</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Gwirio negeseuon i sicrhau eu bod wedi eu harwyddo gyda cyfeiriadau Widecoin penodol</translation>
+        <translation type="unfinished">Gwirio negeseuon i sicrhau eu bod wedi eu harwyddo gyda cyfeiriadau Widecoin penodol</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Ffeil</translation>
+        <translation type="unfinished">&amp;Ffeil</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Gosodiadau</translation>
+        <translation type="unfinished">&amp;Gosodiadau</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Cymorth</translation>
+        <translation type="unfinished">&amp;Cymorth</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Bar offer tabiau</translation>
+        <translation type="unfinished">Bar offer tabiau</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -408,7 +400,7 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -418,31 +410,31 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 Tu ôl</translation>
+        <translation type="unfinished">%1 Tu ôl</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Cafodd y bloc olaf i'w dderbyn ei greu %1 yn ôl.</translation>
+        <translation type="unfinished">Cafodd y bloc olaf i'w dderbyn ei greu %1 yn ôl.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Ni fydd trafodion ar ôl hyn yn weledol eto.</translation>
+        <translation type="unfinished">Ni fydd trafodion ar ôl hyn yn weledol eto.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Gwall</translation>
+        <translation type="unfinished">Gwall</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Rhybudd</translation>
+        <translation type="unfinished">Rhybudd</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Gwybodaeth</translation>
+        <translation type="unfinished">Gwybodaeth</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Cyfamserol</translation>
+        <translation type="unfinished">Cyfamserol</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -511,11 +503,11 @@
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Trafodiad anfonwyd</translation>
+        <translation type="unfinished">Trafodiad anfonwyd</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Trafodiad sy'n cyrraedd</translation>
+        <translation type="unfinished">Trafodiad sy'n cyrraedd</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -527,11 +519,11 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;heb ei gloi&lt;/b&gt; ar hyn o bryd</translation>
+        <translation type="unfinished">Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;heb ei gloi&lt;/b&gt; ar hyn o bryd</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
+        <translation type="unfinished">Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
     </message>
     </context>
 <context>
@@ -606,6 +598,14 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Agor Waled</translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
@@ -623,11 +623,11 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Golygu'r cyfeiriad</translation>
+        <translation type="unfinished">Golygu'r cyfeiriad</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Cyfeiriad</translation>
+        <translation type="unfinished">&amp;Cyfeiriad</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -654,7 +654,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
-        <translation>enw</translation>
+        <translation type="unfinished">enw</translation>
     </message>
     </context>
 <context>
@@ -672,11 +672,11 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Gwall</translation>
+        <translation type="unfinished">Gwall</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Croeso</translation>
+        <translation type="unfinished">Croeso</translation>
     </message>
     </context>
 <context>
@@ -687,14 +687,22 @@
     </message>
     </context>
 <context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Gludo cyfeiriad o'r glipfwrdd</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Opsiynau</translation>
+        <translation type="unfinished">Opsiynau</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Rhwydwaith</translation>
+        <translation type="unfinished">&amp;Rhwydwaith</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -702,11 +710,11 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Ffenestr</translation>
+        <translation type="unfinished">&amp;Ffenestr</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Dangos</translation>
+        <translation type="unfinished">&amp;Dangos</translation>
     </message>
     <message>
         <source>Error</source>
@@ -717,7 +725,7 @@
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Ffurflen</translation>
+        <translation type="unfinished">Ffurflen</translation>
     </message>
     </context>
 <context>
@@ -737,20 +745,20 @@
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Rhwydwaith</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>&amp;Information</source>
-        <translation>Gwybodaeth</translation>
+        <translation type="unfinished">Gwybodaeth</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Rhwydwaith</translation>
+        <translation type="unfinished">Rhwydwaith</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Agor</translation>
+        <translation type="unfinished">&amp;Agor</translation>
     </message>
     </context>
 <context>
@@ -798,7 +806,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Anfon arian</translation>
+        <translation type="unfinished">Anfon arian</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -826,7 +834,7 @@
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Anfon at pobl lluosog ar yr un pryd</translation>
+        <translation type="unfinished">Anfon at pobl lluosog ar yr un pryd</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -834,11 +842,11 @@
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Gweddill:</translation>
+        <translation type="unfinished">Gweddill:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Cadarnhau'r gweithrediad anfon</translation>
+        <translation type="unfinished">Cadarnhau'r gweithrediad anfon</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -850,7 +858,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -867,11 +875,11 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Maint</translation>
+        <translation type="unfinished">&amp;Maint</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Gludo cyfeiriad o'r glipfwrdd</translation>
+        <translation type="unfinished">Gludo cyfeiriad o'r glipfwrdd</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -882,32 +890,18 @@
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Gludo cyfeiriad o'r glipfwrdd</translation>
+        <translation type="unfinished">Gludo cyfeiriad o'r glipfwrdd</translation>
     </message>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Agor tan %1</translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">Dyddiad</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
             <numerusform />
@@ -933,20 +927,6 @@
     <message>
         <source>Type</source>
         <translation type="unfinished">Math</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Agor tan %1</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -997,6 +977,13 @@
     </message>
     </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Gwall</translation>
+    </message>
+    </context>
+<context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
@@ -1024,10 +1011,6 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Allforio'r data yn y tab presennol i ffeil</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Gwall</translation>
     </message>
     </context>
 </TS>

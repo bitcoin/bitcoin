@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Widecoin Core developers
+# Copyright (c) 2018-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
@@ -79,8 +79,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         self.test_persistence()
         self.test_immutable()
 
-        self.nodes[0].generate(110)
-        self.sync_all()
+        self.generate(self.nodes[0], 110)
         self.test_change_remains_change(self.nodes[1])
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_sending_from_reused_address_without_avoid_reuse()
@@ -174,8 +173,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # listunspent should show 1 single, unused 10 wcn output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
@@ -185,8 +183,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         assert("used" not in self.nodes[0].getbalances()["mine"])
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # listunspent should show 1 single, unused 5 wcn output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
@@ -194,8 +191,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # listunspent should show 2 total outputs (5, 10 wcn), one unused (5), one reused (10)
         assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
@@ -228,8 +224,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # listunspent should show 1 single, unused 10 wcn output
         assert_unspent(self.nodes[1], total_count=1, total_sum=10, reused_supported=True, reused_count=0)
@@ -237,8 +232,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # listunspent should show 1 single, unused 5 wcn output
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
@@ -259,8 +253,7 @@ class AvoidReuseTest(WidecoinTestFramework):
                 assert_equal(second_addr_type, "legacy")
 
             self.nodes[0].sendtoaddress(new_fundaddr, 10)
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
 
             # listunspent should show 2 total outputs (5, 10 wcn), one unused (5), one reused (10)
             assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
@@ -302,8 +295,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # send transaction that should not use all the available outputs
         # per the current coin selection algorithm
@@ -334,8 +326,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # Sending a transaction that is smaller than each one of the
         # available outputs
@@ -363,8 +354,7 @@ class AvoidReuseTest(WidecoinTestFramework):
         for _ in range(202):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # Sending a transaction that needs to use the full groups
         # of 100 inputs but also the incomplete group of 2 inputs.

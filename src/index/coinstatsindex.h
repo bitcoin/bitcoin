@@ -25,14 +25,14 @@ private:
     uint64_t m_bogo_size{0};
     CAmount m_total_amount{0};
     CAmount m_total_subsidy{0};
-    CAmount m_block_unspendable_amount{0};
-    CAmount m_block_prevout_spent_amount{0};
-    CAmount m_block_new_outputs_ex_coinbase_amount{0};
-    CAmount m_block_coinbase_amount{0};
-    CAmount m_unspendables_genesis_block{0};
-    CAmount m_unspendables_bip30{0};
-    CAmount m_unspendables_scripts{0};
-    CAmount m_unspendables_unclaimed_rewards{0};
+    CAmount m_total_unspendable_amount{0};
+    CAmount m_total_prevout_spent_amount{0};
+    CAmount m_total_new_outputs_ex_coinbase_amount{0};
+    CAmount m_total_coinbase_amount{0};
+    CAmount m_total_unspendables_genesis_block{0};
+    CAmount m_total_unspendables_bip30{0};
+    CAmount m_total_unspendables_scripts{0};
+    CAmount m_total_unspendables_unclaimed_rewards{0};
 
     bool ReverseBlock(const CBlock& block, const CBlockIndex* pindex);
 
@@ -52,7 +52,7 @@ public:
     explicit CoinStatsIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Look up stats for a specific block using CBlockIndex
-    bool LookUpStats(const CBlockIndex* block_index, CCoinsStats& coins_stats) const;
+    bool LookUpStats(const CBlockIndex* block_index, node::CCoinsStats& coins_stats) const;
 };
 
 /// The global UTXO set hash object.

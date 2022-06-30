@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,11 +36,15 @@ static const int CLIENT_VERSION =
                          +       1 * CLIENT_VERSION_BUILD;
 
 extern const std::string CLIENT_NAME;
-extern const std::string CLIENT_BUILD;
 
 
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+
+std::string CopyrightHolders(const std::string& strPrefix);
+
+/** Returns licensing information (for -version) */
+std::string LicenseInfo();
 
 #endif // WINDRES_PREPROC
 

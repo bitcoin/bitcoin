@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Widecoin Core developers
+// Copyright (c) 2016-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,4 +33,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //WIDECOIN_THREADINTERRUPT_H
+#endif // WIDECOIN_THREADINTERRUPT_H

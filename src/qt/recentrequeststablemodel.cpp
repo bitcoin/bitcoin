@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -234,7 +234,7 @@ bool RecentRequestEntryLessThan::operator()(const RecentRequestEntry& left, cons
     switch(column)
     {
     case RecentRequestsTableModel::Date:
-        return pLeft->date.toTime_t() < pRight->date.toTime_t();
+        return pLeft->date.toSecsSinceEpoch() < pRight->date.toSecsSinceEpoch();
     case RecentRequestsTableModel::Label:
         return pLeft->recipient.label < pRight->recipient.label;
     case RecentRequestsTableModel::Message:

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,11 +9,14 @@
 #include <config/widecoin-config.h>
 #endif
 
-#include <QApplication>
+#include <interfaces/node.h>
+#include <qt/initexecutor.h>
+
 #include <assert.h>
 #include <memory>
+#include <optional>
 
-#include <interfaces/node.h>
+#include <QApplication>
 
 class WidecoinGUI;
 class ClientModel;
@@ -24,32 +27,10 @@ class PlatformStyle;
 class SplashScreen;
 class WalletController;
 class WalletModel;
+namespace interfaces {
+class Init;
+} // namespace interfaces
 
-
-/** Class encapsulating Widecoin Core startup and shutdown.
- * Allows running startup and shutdown in a different thread from the UI thread.
- */
-class WidecoinCore: public QObject
-{
-    Q_OBJECT
-public:
-    explicit WidecoinCore(interfaces::Node& node);
-
-public Q_SLOTS:
-    void initialize();
-    void shutdown();
-
-Q_SIGNALS:
-    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
-    void shutdownResult();
-    void runawayException(const QString &message);
-
-private:
-    /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception *e);
-
-    interfaces::Node& m_node;
-};
 
 /** Main Widecoin application object */
 class WidecoinApplication: public QApplication
@@ -73,13 +54,13 @@ public:
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
+    /// Create or spawn node
+    void createNode(interfaces::Init& init);
     /// Basic initialization, before starting initialization/shutdown thread. Return true on success.
     bool baseInitialize();
 
     /// Request core initialization
     void requestInitialize();
-    /// Request core shutdown
-    void requestShutdown();
 
     /// Get process return value
     int getReturnValue() const { return returnValue; }
@@ -91,11 +72,11 @@ public:
     void setupPlatformStyle();
 
     interfaces::Node& node() const { assert(m_node); return *m_node; }
-    void setNode(interfaces::Node& node);
 
 public Q_SLOTS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
-    void shutdownResult();
+    /// Request core shutdown
+    void requestShutdown();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
 
@@ -111,8 +92,11 @@ Q_SIGNALS:
     void splashFinished();
     void windowShown(WidecoinGUI* window);
 
+protected:
+    bool event(QEvent* e) override;
+
 private:
-    QThread *coreThread;
+    std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     WidecoinGUI *window;
@@ -125,7 +109,7 @@ private:
     const PlatformStyle *platformStyle;
     std::unique_ptr<QWidget> shutdownWindow;
     SplashScreen* m_splash = nullptr;
-    interfaces::Node* m_node = nullptr;
+    std::unique_ptr<interfaces::Node> m_node;
 
     void startThread();
 };

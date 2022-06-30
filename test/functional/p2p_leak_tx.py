@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Widecoin Core developers
+# Copyright (c) 2017-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we don't leak txs to inbound peers that we haven't yet announced to"""
@@ -27,8 +27,8 @@ class P2PLeakTxTest(WidecoinTestFramework):
         gen_node = self.nodes[0]  # The block and tx generating node
         miniwallet = MiniWallet(gen_node)
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
-        miniwallet.generate(1)
-        gen_node.generate(COINBASE_MATURITY)
+        self.generate(miniwallet, 1)
+        self.generate(gen_node, COINBASE_MATURITY)
 
         inbound_peer = self.nodes[0].add_p2p_connection(P2PNode())  # An "attacking" inbound peer
 

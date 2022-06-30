@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Widecoin Core developers
+# Copyright (c) 2015-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
-import binascii
 import decimal
 import itertools
 import json
@@ -46,8 +45,7 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
         self.check_addmultisigaddress_errors()
 
         self.log.info('Generating blocks ...')
-        node0.generate(149)
-        self.sync_all()
+        self.generate(node0, 149)
 
         self.moved = 0
         for self.nkeys in [3, 5]:
@@ -66,9 +64,9 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
 
         # decompress pk2
         pk_obj = ECPubKey()
-        pk_obj.set(binascii.unhexlify(pk2))
+        pk_obj.set(bytes.fromhex(pk2))
         pk_obj.compressed = False
-        pk2 = binascii.hexlify(pk_obj.get_bytes()).decode()
+        pk2 = pk_obj.get_bytes().hex()
 
         node0.createwallet(wallet_name='wmulti0', disable_private_keys=True)
         wmulti0 = node0.get_wallet_rpc('wmulti0')
@@ -77,13 +75,19 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
         for keys in itertools.permutations([pk0, pk1, pk2]):
             # Results should be the same as this legacy one
             legacy_addr = node0.createmultisig(2, keys, 'legacy')['address']
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'legacy')['address'])
+            result = wmulti0.addmultisigaddress(2, keys, '', 'legacy')
+            assert_equal(legacy_addr, result['address'])
+            assert 'warnings' not in result
 
             # Generate addresses with the segwit types. These should all make legacy addresses
-            assert_equal(legacy_addr, wmulti0.createmultisig(2, keys, 'bech32')['address'])
-            assert_equal(legacy_addr, wmulti0.createmultisig(2, keys, 'p2sh-segwit')['address'])
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'bech32')['address'])
-            assert_equal(legacy_addr, wmulti0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
+            for addr_type in ['bech32', 'p2sh-segwit']:
+                result = wmulti0.createmultisig(2, keys, addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
+
+                result = wmulti0.addmultisigaddress(2, keys, '', addr_type)
+                assert_equal(legacy_addr, result['address'])
+                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
@@ -117,8 +121,7 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
 
     def checkbalances(self):
         node0, node1, node2 = self.nodes
-        node0.generate(COINBASE_MATURITY)
-        self.sync_all()
+        self.generate(node0, COINBASE_MATURITY)
 
         bal0 = node0.getbalance()
         bal1 = node1.getbalance()
@@ -180,7 +183,7 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
         value = tx["vout"][vout]["value"]
         prevtxs = [{"txid": txid, "vout": vout, "scriptPubKey": scriptPubKey, "redeemScript": mredeem, "amount": value}]
 
-        node0.generate(1)
+        self.generate(node0, 1)
 
         outval = value - decimal.Decimal("0.00001000")
         rawtx = node2.createrawtransaction([{"txid": txid, "vout": vout}], [{self.final: outval}])
@@ -216,7 +219,7 @@ class RpcCreateMultiSigTest(WidecoinTestFramework):
 
         self.moved += outval
         tx = node0.sendrawtransaction(rawtx3["hex"], 0)
-        blk = node0.generate(1)[0]
+        blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
 
         txinfo = node0.getrawtransaction(tx, True, blk)

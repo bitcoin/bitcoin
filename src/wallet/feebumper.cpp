@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Widecoin Core developers
+// Copyright (c) 2017-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,8 +12,11 @@
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
+#include <wallet/receive.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -30,7 +33,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         }
     }
 
-    if (wtx.GetDepthInMainChain() != 0) {
+    if (wallet.GetTxDepthInMainChain(wtx) != 0) {
         errors.push_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
         return feebumper::Result::WALLET_ERROR;
     }
@@ -48,7 +51,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    if (!wallet.IsAllFromMe(*wtx.tx, filter)) {
+    if (!AllInputsMine(wallet, *wtx.tx, filter)) {
         errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
         return feebumper::Result::WALLET_ERROR;
     }
@@ -81,7 +84,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
 
     // Given old total fee and transaction size, calculate the old feeRate
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    CAmount old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
+    CAmount old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
     const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
     CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
@@ -174,7 +177,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // Fill in recipients(and preserve a single change key if there is one)
     std::vector<CRecipient> recipients;
     for (const auto& output : wtx.tx->vout) {
-        if (!wallet.IsChange(output)) {
+        if (!OutputIsChange(wallet, output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
         } else {
@@ -185,7 +188,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
 
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
+    old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
 
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
@@ -220,7 +223,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     int change_pos_in_out = -1; // No requested location for change
     bilingual_str fail_reason;
     FeeCalculation fee_calc_out;
-    if (!wallet.CreateTransaction(recipients, tx_new, fee_ret, change_pos_in_out, fail_reason, new_coin_control, fee_calc_out, false)) {
+    if (!CreateTransaction(wallet, recipients, tx_new, fee_ret, change_pos_in_out, fail_reason, new_coin_control, fee_calc_out, false)) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
         return Result::WALLET_ERROR;
     }
@@ -274,13 +277,10 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();
     if (!wallet.MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
-        // TODO: see if JSON-RPC has a standard way of returning a response
-        // along with an exception. It would be good to return information about
-        // wtxBumped to the caller even if marking the original transaction
-        // replaced does not succeed for some reason.
         errors.push_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
     }
     return Result::OK;
 }
 
 } // namespace feebumper
+} // namespace wallet

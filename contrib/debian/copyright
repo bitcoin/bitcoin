@@ -5,7 +5,7 @@ Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
 Source: https://github.com/widecoin/widecoin
 
 Files: *
-Copyright: 2009-2021, Widecoin Core Developers
+Copyright: 2009-2022, Widecoin Core Developers
 License: Expat
 Comment: The Widecoin Core Developers encompasses the current developers listed on widecoin.org,
          as well as the numerous contributors to the project.

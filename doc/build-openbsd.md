@@ -2,7 +2,7 @@ OpenBSD build guide
 ======================
 (updated for OpenBSD 6.9)
 
-This guide describes how to build bitcoind, bitcoin-qt, and command-line utilities on OpenBSD.
+This guide describes how to build widecoind, widecoin-qt, and command-line utilities on OpenBSD.
 
 Preparation
 -------------
@@ -17,7 +17,7 @@ pkg_add automake # (select highest version, e.g. 1.16)
 pkg_add python # (select highest version, e.g. 3.8)
 pkg_add bash
 
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/widecoin/widecoin.git
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
@@ -25,8 +25,8 @@ See [dependencies.md](dependencies.md) for a complete overview.
 **Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
 part of the base image, and while building it is necessary to make sure that
 this compiler is used and not ancient g++ 4.2.1. This is done by appending
-`CC=cc CC_FOR_BUILD=cc CXX=c++` to configuration commands. Mixing different
-compilers within the same executable will result in errors.
+`CC=cc CXX=c++` to configuration commands. Mixing different compilers within
+the same executable will result in errors.
 
 ### Building BerkeleyDB
 
@@ -48,7 +48,7 @@ from the root of the repository. Then set `BDB_PREFIX` for the next section:
 export BDB_PREFIX="$PWD/db4"
 ```
 
-### Building Bitcoin Core
+### Building Widecoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
@@ -84,7 +84,7 @@ To configure with wallet:
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no --disable-external-signer CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake
+./configure --disable-wallet --with-gui=no --disable-external-signer CC=cc CXX=c++ MAKE=gmake
 ```
 
 To configure with GUI:
@@ -112,7 +112,7 @@ The standard ulimit restrictions in OpenBSD are very strict:
     data(kbytes)         1572864
 
 This is, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
-(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
+(see issue [#6658](https://github.com/widecoin/widecoin/issues/6658)).
 If your user is in the `staff` group the limit can be raised with:
 
     ulimit -d 3000000

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Widecoin Core developers
+# Copyright (c) 2016-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test compact blocks (BIP 152).
@@ -65,6 +65,8 @@ from test_framework.util import (
     assert_equal,
     softfork_active,
 )
+from test_framework.wallet import MiniWallet
+
 
 # TestP2PConn: A peer we use to send messages to widecoind, and store responses.
 class TestP2PConn(P2PInterface):
@@ -150,9 +152,6 @@ class CompactBlocksTest(WidecoinTestFramework):
         ]]
         self.utxos = []
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def build_block_on_tip(self, node, segwit=False):
         block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         if segwit:
@@ -165,7 +164,7 @@ class CompactBlocksTest(WidecoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.segwit_node.send_and_ping(msg_no_witness_block(block))
         assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
-        self.nodes[0].generatetoaddress(COINBASE_MATURITY, self.nodes[0].getnewaddress(address_type="bech32"))
+        self.generate(self.wallet, COINBASE_MATURITY)
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -212,7 +211,7 @@ class CompactBlocksTest(WidecoinTestFramework):
 
         def check_announcement_of_new_block(node, peer, predicate):
             peer.clear_block_announcement()
-            block_hash = int(node.generate(1)[0], 16)
+            block_hash = int(self.generate(node, 1)[0], 16)
             peer.wait_for_block_announcement(block_hash, timeout=30)
             assert peer.block_announced
 
@@ -276,7 +275,7 @@ class CompactBlocksTest(WidecoinTestFramework):
 
     # This test actually causes widecoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         block = self.build_block_on_tip(self.nodes[0])
 
         cmpct_block = P2PHeaderAndShortIDs()
@@ -294,14 +293,12 @@ class CompactBlocksTest(WidecoinTestFramework):
         version = test_node.cmpct_version
         node = self.nodes[0]
         # Generate a bunch of transactions.
-        node.generate(COINBASE_MATURITY + 1)
+        self.generate(node, COINBASE_MATURITY + 1)
         num_transactions = 25
-        address = node.getnewaddress()
 
         segwit_tx_generated = False
         for _ in range(num_transactions):
-            txid = node.sendtoaddress(address, 0.1)
-            hex_tx = node.gettransaction(txid)["hex"]
+            hex_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['hex']
             tx = tx_from_hex(hex_tx)
             if not tx.wit.is_null():
                 segwit_tx_generated = True
@@ -318,7 +315,7 @@ class CompactBlocksTest(WidecoinTestFramework):
 
         # Now mine a block, and look at the resulting compact block.
         test_node.clear_block_announcement()
-        block_hash = int(node.generate(1)[0], 16)
+        block_hash = int(self.generate(node, 1)[0], 16)
 
         # Store the raw block in our internal format.
         block = from_hex(CBlock(), node.getblock("%064x" % block_hash, False))
@@ -660,7 +657,7 @@ class CompactBlocksTest(WidecoinTestFramework):
         new_blocks = []
         for _ in range(MAX_CMPCTBLOCK_DEPTH + 1):
             test_node.clear_block_announcement()
-            new_blocks.append(node.generate(1)[0])
+            new_blocks.append(self.generate(node, 1)[0])
             test_node.wait_until(test_node.received_block_announcement, timeout=30)
 
         test_node.clear_block_announcement()
@@ -668,7 +665,7 @@ class CompactBlocksTest(WidecoinTestFramework):
         test_node.wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
 
         test_node.clear_block_announcement()
-        node.generate(1)
+        self.generate(node, 1)
         test_node.wait_until(test_node.received_block_announcement, timeout=30)
         test_node.clear_block_announcement()
         with p2p_lock:
@@ -843,8 +840,7 @@ class CompactBlocksTest(WidecoinTestFramework):
         assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
 
     def run_test(self):
-        # Get the nodes out of IBD
-        self.nodes[0].generate(1)
+        self.wallet = MiniWallet(self.nodes[0])
 
         # Setup the p2p connections
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=2))

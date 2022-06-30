@@ -37,14 +37,15 @@ SECP256K1_API extern const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_func
  *
  *  Returns: 1: exponentiation was successful
  *           0: scalar was invalid (zero or overflow) or hashfp returned 0
- *  Args:    ctx:        pointer to a context object (cannot be NULL)
- *  Out:     output:     pointer to an array to be filled by hashfp
- *  In:      pubkey:     a pointer to a secp256k1_pubkey containing an
- *                       initialized public key
- *           seckey:     a 32-byte scalar with which to multiply the point
- *           hashfp:     pointer to a hash function. If NULL, secp256k1_ecdh_hash_function_sha256 is used
- *                       (in which case, 32 bytes will be written to output)
+ *  Args:    ctx:        pointer to a context object.
+ *  Out:     output:     pointer to an array to be filled by hashfp.
+ *  In:      pubkey:     a pointer to a secp256k1_pubkey containing an initialized public key.
+ *           seckey:     a 32-byte scalar with which to multiply the point.
+ *           hashfp:     pointer to a hash function. If NULL,
+ *                       secp256k1_ecdh_hash_function_sha256 is used
+ *                       (in which case, 32 bytes will be written to output).
  *           data:       arbitrary data pointer that is passed through to hashfp
+ *                       (can be NULL for secp256k1_ecdh_hash_function_sha256).
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh(
   const secp256k1_context* ctx,

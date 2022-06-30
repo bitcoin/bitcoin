@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Widecoin Core developers
+# Copyright (c) 2014-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking carve-out allowing one final transaction in
@@ -30,7 +30,7 @@ class MempoolPackagesTest(WidecoinTestFramework):
 
     def run_test(self):
         # Mine some blocks and have them mature.
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
         vout = utxo[0]['vout']
@@ -51,7 +51,7 @@ class MempoolPackagesTest(WidecoinTestFramework):
         (second_chain, second_chain_value) = chain_transaction(self.nodes[0], [utxo[1]['txid']], [utxo[1]['vout']], utxo[1]['amount'], fee, 1)
 
         # Check mempool has MAX_ANCESTORS + 1 transactions in it
-        assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 1)
+        assert_equal(len(self.nodes[0].getrawmempool()), MAX_ANCESTORS + 1)
 
         # Adding one more transaction on to the chain should fail.
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 25]", chain_transaction, self.nodes[0], [txid], [0], value, fee, 1)
@@ -74,7 +74,7 @@ class MempoolPackagesTest(WidecoinTestFramework):
         self.nodes[0].sendrawtransaction(signed_second_tx['hex'])
 
         # Finally, check that we added two transactions
-        assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 3)
+        assert_equal(len(self.nodes[0].getrawmempool()), MAX_ANCESTORS + 3)
 
 if __name__ == '__main__':
     MempoolPackagesTest().main()

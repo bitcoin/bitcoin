@@ -20,7 +20,7 @@ To fetch keys of builders and active developers, feed the list of fingerprints
 of the primary keys into gpg:
 
 ```sh
-while read fingerprint keyholder_name; do gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys ${fingerprint}; done < ./keys.txt
+while read fingerprint keyholder_name; do gpg --keyserver hkps://keys.openpgp.org --recv-keys ${fingerprint}; done < ./keys.txt
 ```
 
 Add your key to the list if you provided Guix attestations for two major or

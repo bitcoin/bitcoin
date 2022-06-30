@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Nhấn chuột phải để sửa địa chỉ hoặc nhãn</translation>
+        <translation type="unfinished">Nhấp chuột phải để sửa địa chỉ hoặc nhãn</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Tạo một địa chỉ mới</translation>
+        <translation type="unfinished">Tạo địa chỉ mới</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
+        <translation type="unfinished">Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,19 +27,19 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Xóa địa chỉ đang chọn từ danh sách</translation>
+        <translation type="unfinished">Xóa địa chỉ đang chọn từ danh sách</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Xuất dữ liệu trong thẻ hiện tại ra file</translation>
+        <translation type="unfinished">Xuất dữ liệu trong thẻ hiện tại ra file</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Xuất</translation>
+        <translation type="unfinished">&amp;Xuất</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Xóa</translation>
+        <translation type="unfinished">&amp;Xóa</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -66,6 +66,11 @@
         <translation type="unfinished">Đây là những địa chỉ đang thực hiện thanh toán. Luôn kiểm tra số lượng và địa chỉ nhận trước khi gửi coins.</translation>
     </message>
     <message>
+        <source>These are your Widecoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Đây là các địa chỉ Widecoin của bạn để nhận thanh toán. Sử dụng nút 'Tạo địa chỉ nhận mới' trong tab nhận để tạo các địa chỉ mới. Chỉ có thể gán địa chỉ với các địa chỉ thuộc loại 'kế thừa'.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">&amp;Copy Địa Chỉ</translation>
     </message>
@@ -76,6 +81,11 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Xuất List Địa Chỉ</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Tệp tách dấu phẩy</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -106,19 +116,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Log Cụm Mật Khẩu</translation>
+        <translation type="unfinished">Log Cụm Mật Khẩu</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Nhập cụm mật khẩu</translation>
+        <translation type="unfinished">Nhập cụm mật khẩu</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Cụm mật khẩu mới</translation>
+        <translation type="unfinished">Cụm mật khẩu mới</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Lặp lại cụm mật khẩu mới</translation>
+        <translation type="unfinished">Lặp lại cụm mật khẩu mới</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -139,10 +149,6 @@
     <message>
         <source>Change passphrase</source>
         <translation type="unfinished">Đổi cụm mật khẩu</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Xác nhận mã hóa ví</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR WIDECOINS&lt;/b&gt;!</source>
@@ -259,13 +265,13 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -299,30 +305,177 @@
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation type="unfinished">Dự toán phí không thành công. Fallbackfee bị vô hiệu hóa. Đợi sau một vài khối hoặc kích hoạt -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation type="unfinished">Đây là phí giao dịch tối đa bạn phải trả (ngoài phí thông thường) để ưu tiên việc tránh chi xài một phần (partial spend) so với việc lựa chọn đồng coin thông thường.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Cảnh báo: các khóa riêng tư được tìm thấy trong ví {%s} với  khóa riêng tư không kích hoạt</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished">Lỗi nghiêm trọng xảy ra, xem debug.log để biết chi tiết</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">Không thể đặt -peerblockfilters mà không có -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">Không thể ghi vào thư mục dữ liệu  '%s'; kiểm tra lại quyền.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished">Cài  dặt thuộc tính cho %s chỉ có thể áp dụng cho  mạng %s trong khi  [%s] .</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">Không tìm thấy tệp asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished">Không đọc được tệp asmap %s</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">Ổ đĩa còn quá ít</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">Lỗi tải %s: Khóa riêng tư chỉ có thể không kích hoạt trong suốt quá trình tạo.</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Lỗi: Đĩa trống ít quá cho %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished">Lỗi: Keypool đã hết, vui lòng gọi keypoolrefill trước</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation type="unfinished">Lỗi quét lại ví trong xuất quá trình khởi tạo</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation type="unfinished">Lỗi xác nhận dữ liệu</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Không đủ tiền</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation type="unfinished">Quyền P2P không hợp lệ: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation type="unfinished">Không có máy chủ proxy nào được chỉ định. Sử dụng -proxy =&lt;ip&gt; hoặc -proxy =&lt;ip:port&gt;.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Mục [%s] không được nhìn nhận.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">Thư mục ví được nêu  -walletdir "%s" không tồn tại</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">Chỉ định -walletdir "%s" là đường dẫn tương đối</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">Chỉ định -walletdir "%s" không phải là một thư mục</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">Thư mục chứa các khối được chỉ ra "%s"  không tồn tại</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">Wallet sẽ hủy thanh toán nhỏ hơn phí relay.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">Đây là minimum transaction fee bạn pay cho mỗi transaction.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">Đây là transaction fee bạn sẽ pay nếu gửi transaction.</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">Transaction amounts phải không âm</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">Transaction có chuỗi mempool chain quá dài</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">Transaction phải có ít nhất một người nhận</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">Không thể tạo tệp PID '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">Không thể tạo khóa ban đầu</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">Không thể tạo khóa</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">Không rõ giá trị  -blockfilterindex  %s.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">Không biết địa chỉ kiểu '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">Không biết thay đổi kiểu '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Unknown network được xác định trong -onlynet: '%s'</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Tổng quan</translation>
+        <translation type="unfinished">&amp;Tổng quan</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Hiển thị tổng quan ví</translation>
+        <translation type="unfinished">Hiển thị tổng quan ví</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Các Giao Dịch</translation>
+        <translation type="unfinished">&amp;Các Giao Dịch</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Trình duyệt lịch sử giao dịch</translation>
+        <translation type="unfinished">Trình duyệt lịch sử giao dịch</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>T&amp;hoát</translation>
+        <translation type="unfinished">T&amp;hoát</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Đóng ứng dụng</translation>
+        <translation type="unfinished">Đóng ứng dụng</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -334,11 +487,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Về &amp;Qt</translation>
+        <translation type="unfinished">Về &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Hiện thông tin về Qt</translation>
+        <translation type="unfinished">Hiện thông tin về Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -363,47 +516,39 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Gửi coin đến một địa chỉ Widecoin</translation>
+        <translation type="unfinished">Gửi coin đến một địa chỉ Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Backup ví đến một địa chỉ khác</translation>
+        <translation type="unfinished">Backup ví đến một địa chỉ khác</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Thay đổi cụm mật khẩu cho ví đã mã hóa</translation>
+        <translation type="unfinished">Thay đổi cụm mật khẩu cho ví đã mã hóa</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Gửi</translation>
+        <translation type="unfinished">&amp;Gửi</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Nhận</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Hiển thị / Ẩn</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Hiện hoặc ẩn cửa sổ chính</translation>
+        <translation type="unfinished">&amp;Nhận</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Mã hóa private key thuộc về ví của bạn</translation>
+        <translation type="unfinished">Mã hóa private key thuộc về ví của bạn</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Đăng ký lời nhắn với địa chỉ Widecoin của bạn để chứng minh quyền sở hữu chúng</translation>
+        <translation type="unfinished">Đăng ký lời nhắn với địa chỉ Widecoin của bạn để chứng minh quyền sở hữu chúng</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ Widecoin xác định</translation>
+        <translation type="unfinished">Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ Widecoin xác định</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Các thanh công cụ</translation>
+        <translation type="unfinished">Các thanh công cụ</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -423,37 +568,45 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 phia sau</translation>
+        <translation type="unfinished">%1 phia sau</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Khối nhận cuối cùng đã được tạo %1.</translation>
+        <translation type="unfinished">Khối nhận cuối cùng đã được tạo %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Các giao dịch sau giao dịch này sẽ không được hiển thị.</translation>
+        <translation type="unfinished">Các giao dịch sau giao dịch này sẽ không được hiển thị.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation type="unfinished">Lỗi</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <translation type="unfinished">Cảnh báo</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Thông tin</translation>
+        <translation type="unfinished">Thông tin</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Đã cập nhật</translation>
+        <translation type="unfinished">Đã cập nhật</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Widecoin Transaction</source>
+        <translation type="unfinished">Kết nối với mạng Widecoin thông qua một proxy SOCKS5 riêng cho các dịch vụ Tor hành.</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Widecoin Transaction from clipboard</source>
+        <translation type="unfinished">Tải một phần giao dịch Widecoin đã ký từ khay nhớ tạm</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -502,10 +655,6 @@
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">Không có ví nào</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Thu nhỏ</translation>
     </message>
     <message>
         <source>Zoom</source>
@@ -568,11 +717,11 @@
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Giao dịch đã gửi</translation>
+        <translation type="unfinished">Giao dịch đã gửi</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Giao dịch đang nhận</translation>
+        <translation type="unfinished">Giao dịch đang nhận</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -588,13 +737,17 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;unlocked&lt;/b&gt;</translation>
+        <translation type="unfinished">Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
+        <translation type="unfinished">Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">Tin nhắn ban đầu:</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -713,6 +866,11 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">Tạo Ví</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Tạo ví thất bại</translation>
     </message>
@@ -734,6 +892,11 @@
     <message>
         <source>default wallet</source>
         <translation type="unfinished">ví mặc định</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Mớ ví</translation>
     </message>
     </context>
 <context>
@@ -782,6 +945,10 @@
         <translation type="unfinished">Mật mã hóa ví</translation>
     </message>
     <message>
+        <source>Advanced Options</source>
+        <translation type="unfinished">Giao dịch thiếu một số thông tin về đầu vào.</translation>
+    </message>
+    <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">Tắt các khóa cá nhân cho ví này. Các ví với khóa cá nhân tắt sẽ không có các khóa cá nhân và không thể có nhân HD hoặc nhập thêm khóa cá nhân. Việc này tốt cho các ví chỉ dùng để xem.</translation>
     </message>
@@ -798,15 +965,27 @@
         <translation type="unfinished">Tạo ví trống</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation type="unfinished">Không có máy chủ proxy nào được chỉ định. Sử dụng -proxy = &lt;ip&gt; hoặc -proxy = &lt;ip: port&gt;.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation type="unfinished">Mô tả ví</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Tạo</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Biên dịch cần hỗ trợ SQLite(Bắt buộc đối với mô tả ví)</translation>
     </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>&amp;Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation type="unfinished">Nhãn dữ liệu</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -818,7 +997,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>Địa chỉ</translation>
+        <translation type="unfinished">Địa chỉ</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -857,23 +1036,23 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Một danh mục dữ liệu mới sẽ được tạo.</translation>
+        <translation type="unfinished">Một danh mục dữ liệu mới sẽ được tạo.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>tên</translation>
+        <translation type="unfinished">tên</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Danh mục đã tồn tại. Thêm %1 nếu bạn dự định creat một danh mục mới ở đây.</translation>
+        <translation type="unfinished">Danh mục đã tồn tại. Thêm %1 nếu bạn dự định creat một danh mục mới ở đây.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Path đã tồn tại, và không là danh mục.</translation>
+        <translation type="unfinished">Path đã tồn tại, và không là danh mục.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Không thể create dữ liệu danh mục tại đây.</translation>
+        <translation type="unfinished">Không thể create dữ liệu danh mục tại đây.</translation>
     </message>
 </context>
 <context>
@@ -907,7 +1086,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation type="unfinished">Lỗi</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
@@ -931,11 +1110,11 @@
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Sử dụng default danh mục đa ta</translation>
+        <translation type="unfinished">Sử dụng default danh mục đa ta</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Sử dụng custom danh mục data:</translation>
+        <translation type="unfinished">Sử dụng custom danh mục data:</translation>
     </message>
 </context>
 <context>
@@ -997,16 +1176,21 @@
         <source>Open widecoin URI</source>
         <translation type="unfinished">Mở widecoin URI</translation>
     </message>
-    </context>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Paste address từ clipboard</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Tùy chỉnh</translation>
+        <translation type="unfinished">Tùy chỉnh</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Chính</translation>
+        <translation type="unfinished">&amp;Chính</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1025,10 +1209,6 @@
         <translation type="unfinished">Minimize thay vì thoát khỏi ứng dụng khi cửa sổ đóng lại. Khi bật tùy chọn này, ứng dụng sẽ chỉ được đóng sau khi chọn Exit trong menu.</translation>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">Bên thứ ba URLs (e.g. a block explorer) xuất hiện trong thẻ giao dịch như context menu items. %s in the URL thì được thay thế bởi transaction hash. Multiple URLs are separated by vertical bar |.</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Mở %1 configuration file từ danh mục làm việc working directory.</translation>
     </message>
@@ -1038,11 +1218,11 @@
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Reset tất cả client options to default.</translation>
+        <translation type="unfinished">Reset tất cả client options to default.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Reset Tùy chọn</translation>
+        <translation type="unfinished">&amp;Reset Tùy chọn</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -1074,15 +1254,15 @@
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Hiển thị chỉ thẻ icon sau khi thu nhỏ cửa sổ.</translation>
+        <translation type="unfinished">Hiển thị chỉ thẻ icon sau khi thu nhỏ cửa sổ.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimize đến thẻ thay vì taskbar</translation>
+        <translation type="unfinished">&amp;Minimize đến thẻ thay vì taskbar</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Giao diện người dùng &amp;language:</translation>
+        <translation type="unfinished">Giao diện người dùng &amp;language:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1090,19 +1270,23 @@
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Unit để hiện số lượng tại đây:</translation>
+        <translation type="unfinished">&amp;Unit để hiện số lượng tại đây:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Chọn default đơn vị phân chia để hiện giao diện và đang gửi coins.</translation>
+        <translation type="unfinished">Chọn default đơn vị phân chia để hiện giao diện và đang gửi coins.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Cho hiển thị tính năng coin control hoặc không.</translation>
     </message>
     <message>
-        <source>&amp;Third party transaction URLs</source>
-        <translation type="unfinished">&amp;Các URL giao dịch của bên thứ ba</translation>
+        <source>Connect to the Widecoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Kết nối với mạng Widecoin thông qua proxy SOCKS5 riêng cho các dịch vụ Tor</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation type="unfinished">Sử dụng proxy SOCKS&amp;5 riêng biệt để tiếp cận các đối tác ngang hàng thông qua các dịch vụ Tor Onion.</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
@@ -1110,7 +1294,7 @@
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Hủy</translation>
+        <translation type="unfinished">&amp;Hủy</translation>
     </message>
     <message>
         <source>none</source>
@@ -1118,7 +1302,7 @@
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Confirm tùy chọn reset</translation>
+        <translation type="unfinished">Confirm tùy chọn reset</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1130,11 +1314,17 @@
     </message>
     <message>
         <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
         <translation type="unfinished">Tùy chọn cấu hình</translation>
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">File cấu hình được sử dụng để chỉ định các tùy chọn nâng cao của người dùng mà ghi đè GUI settings. Ngoài ra, bất kỳ tùy chọn dòng lệnh sẽ ghi đè lên tập tin cấu hình này.</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Hủy</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1150,14 +1340,14 @@
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Cung cấp proxy address thì invalid.</translation>
+        <translation type="unfinished">Cung cấp proxy address thì invalid.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Widecoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với Widecoin network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
+        <translation type="unfinished">Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với Widecoin network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1169,7 +1359,7 @@
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Số dư khả dụng:</translation>
+        <translation type="unfinished">Số dư khả dụng:</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1177,15 +1367,15 @@
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Tất cả giao dịch vẫn chưa được confirmed, và chưa tính vào số dư có thể chi tiêu</translation>
+        <translation type="unfinished">Tất cả giao dịch vẫn chưa được confirmed, và chưa tính vào số dư có thể chi tiêu</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Chưa hoàn thiện:</translation>
+        <translation type="unfinished">Chưa hoàn thiện:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Mined balance chưa matured hẳn</translation>
+        <translation type="unfinished">Mined balance chưa matured hẳn</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1193,11 +1383,11 @@
     </message>
     <message>
         <source>Total:</source>
-        <translation>Tổng cộng:</translation>
+        <translation type="unfinished">Tổng cộng:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Tổng số dư hiện tại</translation>
+        <translation type="unfinished">Tổng số dư hiện tại</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
@@ -1235,6 +1425,10 @@
         <translation type="unfinished">Đăng ký Tx</translation>
     </message>
     <message>
+        <source>Broadcast Tx</source>
+        <translation type="unfinished">Truyền phát Tx</translation>
+    </message>
+    <message>
         <source>Copy to Clipboard</source>
         <translation type="unfinished">Lưu vào bảng tạm</translation>
     </message>
@@ -1243,8 +1437,32 @@
         <translation type="unfinished">Đóng</translation>
     </message>
     <message>
+        <source>Failed to load transaction: %1</source>
+        <translation type="unfinished">Tải giao dịch thất bại: %1</translation>
+    </message>
+    <message>
         <source>Failed to sign transaction: %1</source>
         <translation type="unfinished">Đăng ký giao dịch thất bại :%1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation type="unfinished">Không thể thêm bất cứ nguồn vào nào.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation type="unfinished">Nguồn %1 đã nạp, nhưng vẫn cần thêm các nguồn khác.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">Lỗi không xác định xử lý giao dịch</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation type="unfinished">Giao dịch dã được truyền thành công: Mã giao dịch: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation type="unfinished">Giao dịch truyền phát không thành công: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -1263,6 +1481,10 @@
         <translation type="unfinished">*Gửi %1 tới %2</translation>
     </message>
     <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation type="unfinished">Không thể tính phí giao dịch hoặc tổng số tiền giao dịch.</translation>
+    </message>
+    <message>
         <source>Pays transaction fee: </source>
         <translation type="unfinished">Trả phí giao dịch</translation>
     </message>
@@ -1275,12 +1497,20 @@
         <translation type="unfinished">hoặc</translation>
     </message>
     <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation type="unfinished">Giao dịch thiếu một số thông tin về đầu vào.</translation>
+    </message>
+    <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">Giao dịch cần chữ ký</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(Nhưng ví này không thể đăng ký giao dịch.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation type="unfinished">(Nhưng ví này không có chìa khóa phù hợp.)</translation>
     </message>
     <message>
         <source>Transaction is fully signed and ready for broadcast.</source>
@@ -1333,7 +1563,7 @@
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Mạng</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1361,7 +1591,7 @@
     <name>RPCConsole</name>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Thông tin</translation>
+        <translation type="unfinished">&amp;Thông tin</translation>
     </message>
     <message>
         <source>General</source>
@@ -1381,11 +1611,11 @@
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Startup lúc</translation>
+        <translation type="unfinished">Startup lúc</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Mạng</translation>
+        <translation type="unfinished">Mạng</translation>
     </message>
     <message>
         <source>Name</source>
@@ -1393,7 +1623,7 @@
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Số lượng connections</translation>
+        <translation type="unfinished">Số lượng connections</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1517,19 +1747,19 @@
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Thời gian block cuối cùng</translation>
+        <translation type="unfinished">Thời gian block cuối cùng</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>&amp;BangDieuKhien</translation>
+        <translation type="unfinished">&amp;BangDieuKhien</translation>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Debug file log</translation>
+        <translation type="unfinished">Debug file log</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Xóa console</translation>
+        <translation type="unfinished">Xóa console</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -1581,14 +1811,6 @@
     <message>
         <source>Clear</source>
         <translation type="unfinished">Xóa</translation>
-    </message>
-    <message>
-        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation type="unfinished">Các địa chỉ segwit gốc (còn gọi là Bech32 hoặc BIP-173) sẽ giảm phí giao dịch của bạn sau này và bảo vệ tốt hơn trước các lỗi chính tả, nhưng ví cũ không hỗ trợ chúng. Khi không được chọn, một địa chỉ tương thích với ví cũ sẽ được tạo thay thế.</translation>
-    </message>
-    <message>
-        <source>Generate native segwit (Bech32) address</source>
-        <translation type="unfinished">Tạo địa chỉ segwit (Bech32) riêng</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -1697,7 +1919,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Gửi Coins</translation>
+        <translation type="unfinished">Gửi Coins</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1757,7 +1979,7 @@
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Gửi đến tập thể người nhận một lần</translation>
+        <translation type="unfinished">Gửi đến tập thể người nhận một lần</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1793,11 +2015,11 @@
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Số dư:</translation>
+        <translation type="unfinished">Số dư:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Confirm hành động gửi</translation>
+        <translation type="unfinished">Confirm hành động gửi</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1848,14 +2070,6 @@
         <translation type="unfinished">%1 đến%2</translation>
     </message>
     <message>
-        <source>Do you want to draft this transaction?</source>
-        <translation type="unfinished">Bạn có muốn tạo tạm thời dao dịch này?</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Bạn chắc chắn muốn gửi chứ?</translation>
-    </message>
-    <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">Lưu trữ giao dịch</translation>
     </message>
@@ -1873,6 +2087,7 @@
     </message>
     <message>
         <source>Please, review your transaction.</source>
+        <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">Làm ơn xem xét đánh giá giao dịch của bạn.</translation>
     </message>
     <message>
@@ -1886,10 +2101,6 @@
     <message>
         <source>Confirm send coins</source>
         <translation type="unfinished">Confirm gửi coins</translation>
-    </message>
-    <message>
-        <source>Confirm transaction proposal</source>
-        <translation type="unfinished">Xác nhận đề xuất giao dịch</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -1929,7 +2140,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -1958,7 +2169,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Paste address từ clipboard</translation>
+        <translation type="unfinished">Paste address từ clipboard</translation>
     </message>
     <message>
         <source>Remove this entry</source>
@@ -2010,14 +2221,21 @@
     </message>
 </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Gửi</translation>
+    </message>
+    </context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Chữ ký - Sign / Verify a Message</translation>
+        <translation type="unfinished">Chữ ký - Sign / Verify a Message</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Sign Tin nhắn</translation>
+        <translation type="unfinished">&amp;Sign Tin nhắn</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive widecoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
@@ -2033,27 +2251,27 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Paste address từ clipboard</translation>
+        <translation type="unfinished">Paste address từ clipboard</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Nhập tin nhắn bạn muốn ký tại đây</translation>
+        <translation type="unfinished">Nhập tin nhắn bạn muốn ký tại đây</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copy hiện tại signature tới system clipboard</translation>
+        <translation type="unfinished">Copy hiện tại signature tới system clipboard</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Widecoin address</source>
-        <translation>Ký tin nhắn để chứng minh bạn sở hữu Widecoin address này</translation>
+        <translation type="unfinished">Ký tin nhắn để chứng minh bạn sở hữu Widecoin address này</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Reset tất cả khoảng chữ ký nhắn</translation>
+        <translation type="unfinished">Reset tất cả khoảng chữ ký nhắn</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verify Tin nhắn</translation>
+        <translation type="unfinished">&amp;Verify Tin nhắn</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
@@ -2073,11 +2291,11 @@
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Widecoin address</source>
-        <translation>Verify tin nhắn để chắc rằng nó đã được ký với xác định Widecoin address</translation>
+        <translation type="unfinished">Verify tin nhắn để chắc rằng nó đã được ký với xác định Widecoin address</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Reset tất cả verify khoảng trống nhắn</translation>
+        <translation type="unfinished">Reset tất cả verify khoảng trống nhắn</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
@@ -2110,19 +2328,13 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">Ngày</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -2152,12 +2364,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Nhãn</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -2195,8 +2401,17 @@
         <translation type="unfinished">Năm nay</translation>
     </message>
     <message>
+        <source>Other</source>
+        <translation type="unfinished">Khác</translation>
+    </message>
+    <message>
         <source>Enter address, transaction id, or label to search</source>
         <translation type="unfinished">Nhập địa chỉ, số id giao dịch, hoặc nhãn để tìm kiếm</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Tệp tách dấu phẩy</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -2222,8 +2437,34 @@
 <context>
     <name>WalletFrame</name>
     <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation type="unfinished">Chưa có ví nào được tải. Đi tới Tệp&gt; Mở Ví để nạp ví.- HOẶC -</translation>
+    </message>
+    <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Tạo một ví mới</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation type="unfinished">Tải thông tin giao dịch</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation type="unfinished">Giao dịch được đăng ký một phần (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation type="unfinished">Tệp PSBT phải nhỏ hơn 100 MiB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation type="unfinished">Không thể giải mã PSBT</translation>
     </message>
 </context>
 <context>
@@ -2235,10 +2476,6 @@
     <message>
         <source>Fee bump error</source>
         <translation type="unfinished">Fee bơm error</translation>
-    </message>
-    <message>
-        <source>Do you want to draft a transaction with fee increase?</source>
-        <translation type="unfinished">Bạn có muốn tạo tạm thời một giao dịch với phí tăng?</translation>
     </message>
     <message>
         <source>Can't draft transaction.</source>
@@ -2264,159 +2501,8 @@
         <translation type="unfinished">Xuất dữ liệu trong thẻ hiện tại ra file</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Lỗi</translation>
-    </message>
-    <message>
-        <source>Load Transaction Data</source>
-        <translation type="unfinished">Tải thông tin giao dịch</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (*.psbt)</source>
-        <translation type="unfinished">Giao dịch được đăng ký một phần (*.psbt)</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation type="unfinished">Hủy</translation>
     </message>
 </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation type="unfinished">Không thể cung cấp kết nối nào và có addrman tìm kết nối đi cùng một lúc.</translation>
-    </message>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Dự toán phí không thành công. Fallbackfee bị vô hiệu hóa. Đợi sau một vài khối hoặc kích hoạt -fallbackfee.</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Cảnh báo: các khóa riêng tư được tìm thấy trong ví {%s} với  khóa riêng tư không kích hoạt</translation>
-    </message>
-    <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Lỗi nghiêm trọng xảy ra, xem debug.log để biết chi tiết</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Không thể ghi vào thư mục dữ liệu  '%s'; kiểm tra lại quyền.</translation>
-    </message>
-    <message>
-        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
-        <translation type="unfinished">Cài  dặt thuộc tính cho %s chỉ có thể áp dụng cho  mạng %s trong khi  [%s] .</translation>
-    </message>
-    <message>
-        <source>Could not find asmap file %s</source>
-        <translation type="unfinished">Không tìm thấy tệp asmap %s</translation>
-    </message>
-    <message>
-        <source>Could not parse asmap file %s</source>
-        <translation type="unfinished">Không đọc được tệp asmap %s</translation>
-    </message>
-    <message>
-        <source>Disk space is too low!</source>
-        <translation type="unfinished">Ổ đĩa còn quá ít</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Lỗi tải %s: Khóa riêng tư chỉ có thể không kích hoạt trong suốt quá trình tạo.</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Lỗi: Đĩa trống ít quá cho %s</translation>
-    </message>
-    <message>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Lỗi quét lại ví trong xuất quá trình khởi tạo</translation>
-    </message>
-    <message>
-        <source>Failed to verify database</source>
-        <translation type="unfinished">Lỗi xác nhận dữ liệu</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Không đủ tiền</translation>
-    </message>
-    <message>
-        <source>Invalid P2P permission: '%s'</source>
-        <translation type="unfinished">Quyền P2P không hợp lệ: '%s'</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Mục [%s] không được nhìn nhận.</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Thư mục ví được nêu  -walletdir "%s" không tồn tại</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Chỉ định -walletdir "%s" là đường dẫn tương đối</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Chỉ định -walletdir "%s" không phải là một thư mục</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Thư mục chứa các khối được chỉ ra "%s"  không tồn tại</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Wallet sẽ hủy thanh toán nhỏ hơn phí relay.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Đây là minimum transaction fee bạn pay cho mỗi transaction.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Đây là transaction fee bạn sẽ pay nếu gửi transaction.</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Transaction amounts phải không âm</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transaction có chuỗi mempool chain quá dài</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Transaction phải có ít nhất một người nhận</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">Không thể tạo tệp PID '%s': %s</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Không thể tạo khóa ban đầu</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Không thể tạo khóa</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">Không rõ giá trị  -blockfilterindex  %s.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Không biết địa chỉ kiểu '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">Không biết thay đổi kiểu '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Unknown network được xác định trong -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Upgrading txindex database</source>
-        <translation type="unfinished">Đang nâng cấp dữ liệu txindex</translation>
-    </message>
-    </context>
 </TS>

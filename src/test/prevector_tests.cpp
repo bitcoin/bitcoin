@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
         prevector_tester<8, int> test;
         for (int i = 0; i < 2048; i++) {
             if (InsecureRandBits(2) == 0) {
-                test.insert(InsecureRandRange(test.size() + 1), InsecureRand32());
+                test.insert(InsecureRandRange(test.size() + 1), int(InsecureRand32()));
             }
             if (test.size() > 0 && InsecureRandBits(2) == 1) {
                 test.erase(InsecureRandRange(test.size()));
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.resize(new_size);
             }
             if (InsecureRandBits(3) == 3) {
-                test.insert(InsecureRandRange(test.size() + 1), 1 + InsecureRandBool(), InsecureRand32());
+                test.insert(InsecureRandRange(test.size() + 1), 1 + InsecureRandBool(), int(InsecureRand32()));
             }
             if (InsecureRandBits(3) == 4) {
                 int del = std::min<int>(test.size(), 1 + (InsecureRandBool()));
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.erase(beg, beg + del);
             }
             if (InsecureRandBits(4) == 5) {
-                test.push_back(InsecureRand32());
+                test.push_back(int(InsecureRand32()));
             }
             if (test.size() > 0 && InsecureRandBits(4) == 6) {
                 test.pop_back();
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 int values[4];
                 int num = 1 + (InsecureRandBits(2));
                 for (int k = 0; k < num; k++) {
-                    values[k] = InsecureRand32();
+                    values[k] = int(InsecureRand32());
                 }
                 test.insert_range(InsecureRandRange(test.size() + 1), values, values + num);
             }
@@ -263,13 +263,13 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
                 test.shrink_to_fit();
             }
             if (test.size() > 0) {
-                test.update(InsecureRandRange(test.size()), InsecureRand32());
+                test.update(InsecureRandRange(test.size()), int(InsecureRand32()));
             }
             if (InsecureRandBits(10) == 11) {
                 test.clear();
             }
             if (InsecureRandBits(9) == 12) {
-                test.assign(InsecureRandBits(5), InsecureRand32());
+                test.assign(InsecureRandBits(5), int(InsecureRand32()));
             }
             if (InsecureRandBits(3) == 3) {
                 test.swap();
@@ -283,8 +283,8 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (InsecureRandBits(5) == 19) {
                 unsigned int num = 1 + (InsecureRandBits(4));
                 std::vector<int> values(num);
-                for (auto &v : values) {
-                    v = InsecureRand32();
+                for (int& v : values) {
+                    v = int(InsecureRand32());
                 }
                 test.resize_uninitialized(values);
             }

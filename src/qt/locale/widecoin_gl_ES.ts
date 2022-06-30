@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crea un novo enderezo</translation>
+        <translation type="unfinished">Crea un novo enderezo</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copia o enderezo seleccionado ao portapapeis do sistema</translation>
+        <translation type="unfinished">Copia o enderezo seleccionado ao portapapeis do sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Borra o enderezo seleccionado actualmente da lista</translation>
+        <translation type="unfinished">Borra o enderezo seleccionado actualmente da lista</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exporta os datos na pestana actual a un ficheiro</translation>
+        <translation type="unfinished">Exporta os datos na pestana actual a un ficheiro</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>Exportar</translation>
+        <translation type="unfinished">Exportar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>Borrar</translation>
+        <translation type="unfinished">Borrar</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -114,19 +114,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Diálogo de Frase Contrasinal</translation>
+        <translation type="unfinished">Diálogo de Frase Contrasinal</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Introduce a frase contrasinal</translation>
+        <translation type="unfinished">Introduce a frase contrasinal</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nova frase contrasinal</translation>
+        <translation type="unfinished">Nova frase contrasinal</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repite a frase contrasinal</translation>
+        <translation type="unfinished">Repite a frase contrasinal</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -240,14 +240,14 @@
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -285,27 +285,27 @@
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;visión xeral</translation>
+        <translation type="unfinished">&amp;visión xeral</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Mostra una visión xeral da carteira</translation>
+        <translation type="unfinished">Mostra una visión xeral da carteira</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaccións</translation>
+        <translation type="unfinished">&amp;Transaccións</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Busca no historial de transaccións</translation>
+        <translation type="unfinished">Busca no historial de transaccións</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>S&amp;aír</translation>
+        <translation type="unfinished">S&amp;aír</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Saír da aplicación</translation>
+        <translation type="unfinished">Saír da aplicación</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -317,11 +317,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Acerca de &amp;Qt</translation>
+        <translation type="unfinished">Acerca de &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Mostra información acerca de Qt</translation>
+        <translation type="unfinished">Mostra información acerca de Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -346,59 +346,51 @@
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Envía moedas a un enderezo de Widecoin</translation>
+        <translation type="unfinished">Envía moedas a un enderezo de Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Respalda a carteira noutro destino</translation>
+        <translation type="unfinished">Respalda a carteira noutro destino</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambia a frase contrasinal usada para a encriptación da carteira</translation>
+        <translation type="unfinished">Cambia a frase contrasinal usada para a encriptación da carteira</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Envía</translation>
+        <translation type="unfinished">&amp;Envía</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Recibir</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Mostra / Agocha</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Mostra ou agocha a xanela principal</translation>
+        <translation type="unfinished">&amp;Recibir</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encripta as claves privadas que pertencen á túa carteira</translation>
+        <translation type="unfinished">Encripta as claves privadas que pertencen á túa carteira</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Asina mensaxes cos teus enderezos de Widecoin para probar que che pertencen</translation>
+        <translation type="unfinished">Asina mensaxes cos teus enderezos de Widecoin para probar que che pertencen</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Verifica mensaxes para asegurar que foron asinados cos enderezos de Widecoin especificados</translation>
+        <translation type="unfinished">Verifica mensaxes para asegurar que foron asinados cos enderezos de Widecoin especificados</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Arquivo</translation>
+        <translation type="unfinished">&amp;Arquivo</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Opcións</translation>
+        <translation type="unfinished">&amp;Opcións</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Axuda</translation>
+        <translation type="unfinished">&amp;Axuda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barra de ferramentas das pestanas</translation>
+        <translation type="unfinished">Barra de ferramentas das pestanas</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -418,34 +410,34 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 tras</translation>
+        <translation type="unfinished">%1 tras</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>O último bloque recibido foi xerado fai %1.</translation>
+        <translation type="unfinished">O último bloque recibido foi xerado fai %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transaccións despois desta non serán aínda visibles.</translation>
+        <translation type="unfinished">Transaccións despois desta non serán aínda visibles.</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Aviso</translation>
+        <translation type="unfinished">Aviso</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Información</translation>
+        <translation type="unfinished">Información</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Actualizado</translation>
+        <translation type="unfinished">Actualizado</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -494,10 +486,6 @@
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Xanela</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Minimizar</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -557,11 +545,11 @@
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Transacción enviada</translation>
+        <translation type="unfinished">Transacción enviada</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transacción entrante</translation>
+        <translation type="unfinished">Transacción entrante</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -577,11 +565,11 @@
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>A carteira está &lt;b&gt;encrypted&lt;/b&gt; e actualmente &lt;b&gt;desbloqueada&lt;/b&gt;</translation>
+        <translation type="unfinished">A carteira está &lt;b&gt;encrypted&lt;/b&gt; e actualmente &lt;b&gt;desbloqueada&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>A carteira está &lt;b&gt;encriptada&lt;/b&gt; e actualmente &lt;b&gt;bloqueada&lt;/b&gt;</translation>
+        <translation type="unfinished">A carteira está &lt;b&gt;encriptada&lt;/b&gt; e actualmente &lt;b&gt;bloqueada&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -710,6 +698,11 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">Crea unha Carteira</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Creación de carteira fallida</translation>
     </message>
@@ -723,6 +716,11 @@
     <message>
         <source>default wallet</source>
         <translation type="unfinished">Carteira por defecto</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Abrir carteira</translation>
     </message>
     </context>
 <context>
@@ -775,11 +773,11 @@
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Editar Enderezo</translation>
+        <translation type="unfinished">Editar Enderezo</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Etiqueta</translation>
+        <translation type="unfinished">&amp;Etiqueta</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -791,7 +789,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Enderezo</translation>
+        <translation type="unfinished">&amp;Enderezo</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -837,7 +835,7 @@
     <name>OptionsDialog</name>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Xanela</translation>
+        <translation type="unfinished">&amp;Xanela</translation>
     </message>
     </context>
 <context>
@@ -951,7 +949,7 @@
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -963,20 +961,13 @@
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">Data</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -995,13 +986,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Etiqueta</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1037,7 +1021,7 @@
         <source>Create a new wallet</source>
         <translation type="unfinished">Crear unha nova carteira</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>

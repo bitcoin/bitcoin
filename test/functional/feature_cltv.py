@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Widecoin Core developers
+# Copyright (c) 2015-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP65 (CHECKLOCKTIMEVERIFY).
 
-Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
-1351.
+Test that the CHECKLOCKTIMEVERIFY soft-fork activates.
 """
 
 from test_framework.blocktools import (
@@ -14,6 +13,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CTransaction,
+    SEQUENCE_FINAL,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
@@ -30,8 +30,6 @@ from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
-
-CLTV_HEIGHT = 1351
 
 
 # Helper function to modify a transaction by
@@ -56,16 +54,16 @@ def cltv_invalidate(tx, failure_reason):
     # 3) the lock-time type (height vs. timestamp) of the top stack item and the
     #    nLockTime field are not the same
     # 4) the top stack item is greater than the transaction's nLockTime field
-    # 5) the nSequence field of the txin is 0xffffffff
+    # 5) the nSequence field of the txin is 0xffffffff (SEQUENCE_FINAL)
     assert failure_reason in range(5)
     scheme = [
         # | Script to prepend to scriptSig                  | nSequence  | nLockTime    |
         # +-------------------------------------------------+------------+--------------+
         [[OP_CHECKLOCKTIMEVERIFY],                            None,       None],
         [[OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP],       None,       None],
-        [[CScriptNum(1000), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0,          1296688602],  # timestamp of genesis block
-        [[CScriptNum(1000), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0,          500],
-        [[CScriptNum(500),  OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0xffffffff, 500],
+        [[CScriptNum(100), OP_CHECKLOCKTIMEVERIFY, OP_DROP],  0,          1296688602],  # timestamp of genesis block
+        [[CScriptNum(100), OP_CHECKLOCKTIMEVERIFY, OP_DROP],  0,          50],
+        [[CScriptNum(50),  OP_CHECKLOCKTIMEVERIFY, OP_DROP],  SEQUENCE_FINAL, 50],
     ][failure_reason]
 
     cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
@@ -78,10 +76,14 @@ def cltv_validate(tx, height):
     cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
+CLTV_HEIGHT = 111
+
+
 class BIP65Test(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
+            f'-testactivationheight=cltv@{CLTV_HEIGHT}',
             '-whitelist=noban@127.0.0.1',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
@@ -90,7 +92,7 @@ class BIP65Test(WidecoinTestFramework):
         self.rpc_timeout = 480
 
     def test_cltv_info(self, *, is_active):
-        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip65'], {
+        assert_equal(self.nodes[0].getdeploymentinfo()['deployments']['bip65'], {
                 "active": is_active,
                 "height": CLTV_HEIGHT,
                 "type": "buried",
@@ -104,24 +106,22 @@ class BIP65Test(WidecoinTestFramework):
         self.test_cltv_info(is_active=False)
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
-        wallet.generate(10)
-        self.nodes[0].generate(CLTV_HEIGHT - 2 - 10)
+        self.generate(wallet, 10)
+        self.generate(self.nodes[0], CLTV_HEIGHT - 2 - 10)
+        assert_equal(self.nodes[0].getblockcount(), CLTV_HEIGHT - 2)
 
         self.log.info("Test that invalid-according-to-CLTV transactions can still appear in a block")
 
         # create one invalid tx per CLTV failure reason (5 in total) and collect them
         invalid_cltv_txs = []
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
             invalid_cltv_txs.append(spendtx)
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
-        block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        block.nVersion = 3
-        block.vtx.extend(invalid_cltv_txs)
-        block.hashMerkleRoot = block.calc_merkle_root()
+        block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time, version=3, txlist=invalid_cltv_txs)
         block.solve()
 
         self.test_cltv_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
@@ -132,11 +132,10 @@ class BIP65Test(WidecoinTestFramework):
         self.log.info("Test that blocks must now be at least version 4")
         tip = block.sha256
         block_time += 1
-        block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        block.nVersion = 3
+        block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time, version=3)
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00000003)'.format(block.hash)]):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'{block.hash}, bad-version(0x00000003)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()
@@ -147,7 +146,7 @@ class BIP65Test(WidecoinTestFramework):
 
         # create and test one invalid tx per CLTV failure reason (5 in total)
         for i in range(5):
-            spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
+            spendtx = wallet.create_self_transfer()['tx']
             cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [
@@ -174,8 +173,7 @@ class BIP65Test(WidecoinTestFramework):
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
 
-            with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputScripts on {} failed with {}'.format(
-                                                block.vtx[-1].hash, expected_cltv_reject_reason)]):
+            with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with {expected_cltv_reject_reason}']):
                 peer.send_and_ping(msg_block(block))
                 assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
                 peer.sync_with_ping()

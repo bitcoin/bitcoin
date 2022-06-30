@@ -12,8 +12,15 @@ define $(package)_set_vars
   $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
   $(package)_config_opts_release=--disable-debug-mode
   $(package)_config_opts_linux=--with-pic
+  $(package)_config_opts_freebsd=--with-pic
+  $(package)_config_opts_netbsd=--with-pic
+  $(package)_config_opts_openbsd=--with-pic
   $(package)_config_opts_android=--with-pic
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
+endef
+
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux
 endef
 
 define $(package)_config_cmds

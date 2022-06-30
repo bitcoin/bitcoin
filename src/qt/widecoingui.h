@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsdialog.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QLabel>
 #include <QMainWindow>
@@ -137,7 +137,6 @@ private:
     QAction* historyAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsAction = nullptr;
-    QAction* sendCoinsMenuAction = nullptr;
     QAction* usedSendingAddressesAction = nullptr;
     QAction* usedReceivingAddressesAction = nullptr;
     QAction* signMessageAction = nullptr;
@@ -146,9 +145,7 @@ private:
     QAction* m_load_psbt_clipboard_action = nullptr;
     QAction* aboutAction = nullptr;
     QAction* receiveCoinsAction = nullptr;
-    QAction* receiveCoinsMenuAction = nullptr;
     QAction* optionsAction = nullptr;
-    QAction* toggleHideAction = nullptr;
     QAction* encryptWalletAction = nullptr;
     QAction* backupWalletAction = nullptr;
     QAction* changePassphraseAction = nullptr;
@@ -214,6 +211,7 @@ private:
     void openOptionsDialogWithTab(OptionsDialog::Tab tab);
 
 Q_SIGNALS:
+    void quitRequested();
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
     /** Signal raised when RPC console shown */
@@ -301,13 +299,6 @@ public Q_SLOTS:
     void showDebugWindowActivateConsole();
     /** Show help message dialog */
     void showHelpMessageClicked();
-#ifndef Q_OS_MAC
-    /** Handle tray icon clicked */
-    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-#else
-    /** Handle macOS Dock icon clicked */
-    void macosDockIconActivated();
-#endif
 
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
     void showNormalIfMinimized() { showNormalIfMinimized(false); }

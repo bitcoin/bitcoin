@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Widecoin Core developers
+# Copyright (c) 2014-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Linux network utilities.
@@ -12,7 +12,6 @@ import socket
 import struct
 import array
 import os
-from binascii import unhexlify
 
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
@@ -44,7 +43,7 @@ def _remove_empty(array):
 def _convert_ip_port(array):
     host,port = array.split(':')
     # convert host from mangled-per-four-bytes form as used by kernel
-    host = unhexlify(host)
+    host = bytes.fromhex(host)
     host_out = ''
     for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
@@ -145,7 +144,6 @@ def test_ipv6_local():
     '''
     Check for (local) IPv6 support.
     '''
-    import socket
     # By using SOCK_DGRAM this will not actually make a connection, but it will
     # fail if there is no route to IPv6 localhost.
     have_ipv6 = True

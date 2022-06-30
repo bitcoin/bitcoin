@@ -7,6 +7,7 @@ TESTS += qt/test/test_widecoin-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_apptests.cpp \
+  qt/test/moc_optiontests.cpp \
   qt/test/moc_rpcnestedtests.cpp \
   qt/test/moc_uritests.cpp
 
@@ -19,6 +20,7 @@ endif # ENABLE_WALLET
 TEST_QT_H = \
   qt/test/addressbooktests.h \
   qt/test/apptests.h \
+  qt/test/optiontests.h \
   qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
   qt/test/util.h \
@@ -28,7 +30,9 @@ qt_test_test_widecoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(WIDECO
   $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
 qt_test_test_widecoin_qt_SOURCES = \
+  init/widecoin-qt.cpp \
   qt/test/apptests.cpp \
+  qt/test/optiontests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
@@ -43,7 +47,7 @@ endif # ENABLE_WALLET
 
 nodist_qt_test_test_widecoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_test_widecoin_qt_LDADD = $(LIBWIDECOINQT) $(LIBWIDECOIN_SERVER) $(LIBTEST_UTIL)
+qt_test_test_widecoin_qt_LDADD = $(LIBWIDECOINQT) $(LIBWIDECOIN_NODE) $(LIBTEST_UTIL)
 if ENABLE_WALLET
 qt_test_test_widecoin_qt_LDADD += $(LIBWIDECOIN_UTIL) $(LIBWIDECOIN_WALLET)
 endif
@@ -51,7 +55,7 @@ if ENABLE_ZMQ
 qt_test_test_widecoin_qt_LDADD += $(LIBWIDECOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_test_test_widecoin_qt_LDADD += $(LIBWIDECOIN_CLI) $(LIBWIDECOIN_COMMON) $(LIBWIDECOIN_UTIL) $(LIBWIDECOIN_CONSENSUS) $(LIBWIDECOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) $(QT_LIBS) \
+  $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(QT_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) \
   $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(SQLITE_LIBS)
 qt_test_test_widecoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)

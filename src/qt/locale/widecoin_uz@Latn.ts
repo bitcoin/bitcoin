@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yangi manzil yaratish</translation>
+        <translation type="unfinished">Yangi manzil yaratish</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;O'chirish</translation>
+        <translation type="unfinished">&amp;O'chirish</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -45,14 +45,14 @@
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -90,7 +90,7 @@
     <name>WidecoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -134,7 +134,7 @@
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -143,15 +143,8 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -162,13 +155,6 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">Yorliq</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
     </message>
     </context>
 <context>

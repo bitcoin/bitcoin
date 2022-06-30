@@ -1,11 +1,11 @@
-// Copyright (c) 2017-2020 The Widecoin Core developers
+// Copyright (c) 2017-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef WIDECOIN_CONSENSUS_TX_VERIFY_H
 #define WIDECOIN_CONSENSUS_TX_VERIFY_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <stdint.h>
 #include <vector>
@@ -49,10 +49,10 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * Compute total signature operation cost of a transaction.
  * @param[in] tx     Transaction for which we are computing the cost
  * @param[in] inputs Map of previous transactions that have outputs we're spending
- * @param[out] flags Script verification flags
+ * @param[in] flags Script verification flags
  * @return Total signature operation cost of tx
  */
-int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, uint32_t flags);
 
 /**
  * Check if transaction is final and can be included in a block with the

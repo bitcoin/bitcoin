@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Widecoin Core developers
+# Copyright (c) 2017-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
@@ -27,6 +27,9 @@ class RPCSignerTest(WidecoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 4
+        # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
+        # invokes execve).
+        self.disable_syscall_sandbox = True
 
         self.extra_args = [
             [],
@@ -53,8 +56,12 @@ class RPCSignerTest(WidecoinTestFramework):
         )
 
         # Handle script missing:
-        assert_raises_rpc_error(-1, 'execve failed: No such file or directory',
-            self.nodes[3].enumeratesigners
+        assert_raises_rpc_error(
+            -1,
+            "CreateProcess failed: The system cannot find the file specified."
+            if platform.system() == "Windows"
+            else "execve failed: No such file or directory",
+            self.nodes[3].enumeratesigners,
         )
 
         # Handle error thrown by script

@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Cipta alamat baru</translation>
+        <translation type="unfinished">Cipta alamat baru</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Salin alamat terpilih ke dalam sistem papan klip</translation>
+        <translation type="unfinished">Salin alamat terpilih ke dalam sistem papan klip</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
+        <translation type="unfinished">Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -36,16 +36,16 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>
+        <translation type="unfinished">
 Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksport</translation>
+        <translation type="unfinished">&amp;Eksport</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Padam</translation>
+        <translation type="unfinished">&amp;Padam</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -108,19 +108,19 @@ Alihkan fail data ke dalam tab semasa</translation>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Dialog frasa laluan</translation>
+        <translation type="unfinished">Dialog frasa laluan</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>memasukkan frasa laluan</translation>
+        <translation type="unfinished">memasukkan frasa laluan</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Frasa laluan baru</translation>
+        <translation type="unfinished">Frasa laluan baru</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Ulangi frasa laluan baru</translation>
+        <translation type="unfinished">Ulangi frasa laluan baru</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -198,13 +198,13 @@ Alihkan fail data ke dalam tab semasa</translation>
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -234,30 +234,37 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Baca Selesai</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Gambaran Keseluruhan</translation>
+        <translation type="unfinished">&amp;Gambaran Keseluruhan</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Tunjuk gambaran keseluruhan umum dompet</translation>
+        <translation type="unfinished">Tunjuk gambaran keseluruhan umum dompet</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transaksi</translation>
+        <translation type="unfinished">&amp;Transaksi</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Menyemak imbas sejarah transaksi</translation>
+        <translation type="unfinished">Menyemak imbas sejarah transaksi</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Keluar</translation>
+        <translation type="unfinished">&amp;Keluar</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Berhenti aplikasi</translation>
+        <translation type="unfinished">Berhenti aplikasi</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -269,11 +276,11 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Mengenai &amp;Qt</translation>
+        <translation type="unfinished">Mengenai &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Menunjuk informasi megenai Qt</translation>
+        <translation type="unfinished">Menunjuk informasi megenai Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -290,59 +297,51 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Menghantar koin kepada alamat Widecoin</translation>
+        <translation type="unfinished">Menghantar koin kepada alamat Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Wallet sandaran ke lokasi lain</translation>
+        <translation type="unfinished">Wallet sandaran ke lokasi lain</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Tukar kata laluan untuk dompet disulitkan</translation>
+        <translation type="unfinished">Tukar kata laluan untuk dompet disulitkan</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>hantar</translation>
+        <translation type="unfinished">hantar</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>terima</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;tunjuk/sembunyi</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>tunjuk atau sembunyi tetingkap utama</translation>
+        <translation type="unfinished">terima</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>sulitkan kata laluan milik peribadi anda</translation>
+        <translation type="unfinished">sulitkan kata laluan milik peribadi anda</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>sahkan mesej bersama alamat widecoin anda untuk menunjukkan alamat ini anda punya</translation>
+        <translation type="unfinished">sahkan mesej bersama alamat widecoin anda untuk menunjukkan alamat ini anda punya</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Sahkan mesej untuk memastikan mereka telah ditandatangani dengan alamat Widecoin yang ditentukan</translation>
+        <translation type="unfinished">Sahkan mesej untuk memastikan mereka telah ditandatangani dengan alamat Widecoin yang ditentukan</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>fail</translation>
+        <translation type="unfinished">fail</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>tetapan</translation>
+        <translation type="unfinished">tetapan</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>tolong</translation>
+        <translation type="unfinished">tolong</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Bar alat tab
+        <translation type="unfinished">Bar alat tab
 </translation>
     </message>
     <message>
@@ -357,25 +356,25 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Ralat</translation>
+        <translation type="unfinished">Ralat</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Amaran</translation>
+        <translation type="unfinished">Amaran</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Notis</translation>
+        <translation type="unfinished">Notis</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Terkini</translation>
+        <translation type="unfinished">Terkini</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -412,6 +411,11 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">dompet lalai
 </translation>
     </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Buka Wallet</translation>
+    </message>
     </context>
 <context>
     <name>WalletController</name>
@@ -431,11 +435,11 @@ Alihkan fail data ke dalam tab semasa</translation>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Alamat</translation>
+        <translation type="unfinished">Alamat</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>Alamat</translation>
+        <translation type="unfinished">Alamat</translation>
     </message>
     </context>
 <context>
@@ -449,7 +453,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Ralat</translation>
+        <translation type="unfinished">Ralat</translation>
     </message>
     </context>
 <context>
@@ -489,11 +493,11 @@ Alihkan fail data ke dalam tab semasa</translation>
     <name>SendCoinsDialog</name>
     <message>
         <source>Balance:</source>
-        <translation>Baki</translation>
+        <translation type="unfinished">Baki</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -505,26 +509,14 @@ Alihkan fail data ke dalam tab semasa</translation>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation type="unfinished">(tiada label)</translation>
@@ -539,6 +531,13 @@ Alihkan fail data ke dalam tab semasa</translation>
     <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Mengeksport Gagal</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Ralat</translation>
     </message>
     </context>
 <context>
@@ -559,17 +558,6 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">
 Alihkan fail data ke dalam tab semasa</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Ralat</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Baca Selesai</translation>
     </message>
     </context>
 </TS>

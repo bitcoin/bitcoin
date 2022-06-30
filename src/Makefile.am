@@ -6,29 +6,18 @@
 print-%: FORCE
 	@echo '$*'='$($*)'
 
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS)
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
-if EMBEDDED_UNIVALUE
-LIBUNIVALUE = univalue/libunivalue.la
+WIDECOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
-$(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-else
-LIBUNIVALUE = $(UNIVALUE_LIBS)
-endif
-
-WIDECOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
-
-WIDECOIN_INCLUDES += $(UNIVALUE_CFLAGS)
-
-LIBWIDECOIN_SERVER=libwidecoin_server.a
+LIBWIDECOIN_NODE=libwidecoin_node.a
 LIBWIDECOIN_COMMON=libwidecoin_common.a
 LIBWIDECOIN_CONSENSUS=libwidecoin_consensus.a
 LIBWIDECOIN_CLI=libwidecoin_cli.a
@@ -57,9 +46,13 @@ if ENABLE_AVX2
 LIBWIDECOIN_CRYPTO_AVX2 = crypto/libwidecoin_crypto_avx2.a
 LIBWIDECOIN_CRYPTO += $(LIBWIDECOIN_CRYPTO_AVX2)
 endif
-if ENABLE_SHANI
-LIBWIDECOIN_CRYPTO_SHANI = crypto/libwidecoin_crypto_shani.a
-LIBWIDECOIN_CRYPTO += $(LIBWIDECOIN_CRYPTO_SHANI)
+if ENABLE_X86_SHANI
+LIBWIDECOIN_CRYPTO_X86_SHANI = crypto/libwidecoin_crypto_x86_shani.a
+LIBWIDECOIN_CRYPTO += $(LIBWIDECOIN_CRYPTO_X86_SHANI)
+endif
+if ENABLE_ARM_SHANI
+LIBWIDECOIN_CRYPTO_ARM_SHANI = crypto/libwidecoin_crypto_arm_shani.a
+LIBWIDECOIN_CRYPTO += $(LIBWIDECOIN_CRYPTO_ARM_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -72,7 +65,7 @@ EXTRA_LIBRARIES += \
   $(LIBWIDECOIN_UTIL) \
   $(LIBWIDECOIN_COMMON) \
   $(LIBWIDECOIN_CONSENSUS) \
-  $(LIBWIDECOIN_SERVER) \
+  $(LIBWIDECOIN_NODE) \
   $(LIBWIDECOIN_CLI) \
   $(LIBWIDECOIN_IPC) \
   $(LIBWIDECOIN_WALLET) \
@@ -80,6 +73,7 @@ EXTRA_LIBRARIES += \
   $(LIBWIDECOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBWIDECOINCONSENSUS)
+noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -117,13 +111,13 @@ endif
 WIDECOIN_CORE_H = \
   addrdb.h \
   addrman.h \
+  addrman_impl.h \
   attributes.h \
   banman.h \
   base58.h \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
-  bloom.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -131,6 +125,7 @@ WIDECOIN_CORE_H = \
   checkqueue.h \
   clientversion.h \
   coins.h \
+  common/bloom.h \
   compat.h \
   compat/assumptions.h \
   compat/byteswap.h \
@@ -175,7 +170,6 @@ WIDECOIN_CORE_H = \
   mapport.h \
   memusage.h \
   merkleblock.h \
-  miner.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -184,9 +178,13 @@ WIDECOIN_CORE_H = \
   netbase.h \
   netmessagemaker.h \
   node/blockstorage.h \
+  node/caches.h \
+  node/chainstate.h \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
+  node/miner.h \
+  node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -208,12 +206,12 @@ WIDECOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/mining.h \
-  rpc/net.h \
   rpc/protocol.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
   rpc/request.h \
   rpc/server.h \
+  rpc/server_util.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
@@ -246,6 +244,7 @@ WIDECOIN_CORE_H = \
   util/check.h \
   util/epochguard.h \
   util/error.h \
+  util/fastrange.h \
   util/fees.h \
   util/getuniquepath.h \
   util/golombrice.h \
@@ -254,6 +253,8 @@ WIDECOIN_CORE_H = \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
+  util/overflow.h \
+  util/overloaded.h \
   util/rbf.h \
   util/readwritefile.h \
   util/serfloat.h \
@@ -261,6 +262,7 @@ WIDECOIN_CORE_H = \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
+  util/syscall_sandbox.h \
   util/system.h \
   util/thread.h \
   util/threadnames.h \
@@ -268,6 +270,7 @@ WIDECOIN_CORE_H = \
   util/tokenpipe.h \
   util/trace.h \
   util/translation.h \
+  util/types.h \
   util/ui_change_type.h \
   util/url.h \
   util/vector.h \
@@ -287,7 +290,8 @@ WIDECOIN_CORE_H = \
   wallet/ismine.h \
   wallet/load.h \
   wallet/receive.h \
-  wallet/rpcwallet.h \
+  wallet/rpc/util.h \
+  wallet/rpc/wallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
   wallet/spend.h \
@@ -318,9 +322,9 @@ ipc/capnp/libwidecoin_ipc_a-ipc.$(OBJEXT): $(libwidecoin_ipc_mpgen_input:=.h)
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libwidecoin_common or libwidecoin_util libraries, instead.
-libwidecoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libwidecoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libwidecoin_server_a_SOURCES = \
+libwidecoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libwidecoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libwidecoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
@@ -340,14 +344,17 @@ libwidecoin_server_a_SOURCES = \
   index/txindex.cpp \
   init.cpp \
   mapport.cpp \
-  miner.cpp \
   net.cpp \
   net_processing.cpp \
   node/blockstorage.cpp \
+  node/caches.cpp \
+  node/chainstate.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
   node/context.cpp \
   node/interfaces.cpp \
+  node/miner.cpp \
+  node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \
@@ -364,6 +371,7 @@ libwidecoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/server_util.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   signet.cpp \
@@ -379,10 +387,10 @@ libwidecoin_server_a_SOURCES = \
   $(WIDECOIN_CORE_H)
 
 if ENABLE_WALLET
-libwidecoin_server_a_SOURCES += wallet/init.cpp
+libwidecoin_node_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
-libwidecoin_server_a_SOURCES += dummywallet.cpp
+libwidecoin_node_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
@@ -413,8 +421,15 @@ libwidecoin_wallet_a_SOURCES = \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/receive.cpp \
-  wallet/rpcdump.cpp \
-  wallet/rpcwallet.cpp \
+  wallet/rpc/addresses.cpp \
+  wallet/rpc/backup.cpp \
+  wallet/rpc/coins.cpp \
+  wallet/rpc/encrypt.cpp \
+  wallet/rpc/spend.cpp \
+  wallet/rpc/signmessage.cpp \
+  wallet/rpc/transactions.cpp \
+  wallet/rpc/util.cpp \
+  wallet/rpc/wallet.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/spend.cpp \
   wallet/transaction.cpp \
@@ -487,19 +502,25 @@ crypto_libwidecoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libwidecoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 crypto_libwidecoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libwidecoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libwidecoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libwidecoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libwidecoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libwidecoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libwidecoin_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libwidecoin_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libwidecoin_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libwidecoin_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libwidecoin_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+
+crypto_libwidecoin_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libwidecoin_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libwidecoin_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libwidecoin_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libwidecoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libwidecoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 libwidecoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwidecoin_consensus_a_SOURCES = \
-  amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  consensus/amount.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -536,9 +557,9 @@ libwidecoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwidecoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
-  bloom.cpp \
   chainparams.cpp \
   coins.cpp \
+  common/bloom.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
@@ -548,6 +569,7 @@ libwidecoin_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
+  net_types.cpp \
   netaddress.cpp \
   netbase.cpp \
   net_permissions.cpp \
@@ -569,7 +591,7 @@ libwidecoin_common_a_SOURCES = \
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
-# backward-compatibility objects and their sanity checks are linked.
+# sanity checks are linked.
 libwidecoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 libwidecoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwidecoin_util_a_SOURCES = \
@@ -609,17 +631,13 @@ libwidecoin_util_a_SOURCES = \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
+  util/syscall_sandbox.cpp \
   util/time.cpp \
   util/tokenpipe.cpp \
   $(WIDECOIN_CORE_H)
 
 if USE_LIBEVENT
 libwidecoin_util_a_SOURCES += util/url.cpp
-endif
-
-if GLIBC_BACK_COMPAT
-libwidecoin_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between widecoin-cli and widecoin-qt
@@ -657,19 +675,19 @@ widecoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-widecoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+widecoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 widecoind_SOURCES = $(widecoin_daemon_sources) init/widecoind.cpp
 widecoind_CPPFLAGS = $(widecoin_bin_cppflags)
 widecoind_CXXFLAGS = $(widecoin_bin_cxxflags)
 widecoind_LDFLAGS = $(widecoin_bin_ldflags)
-widecoind_LDADD = $(LIBWIDECOIN_SERVER) $(widecoin_bin_ldadd)
+widecoind_LDADD = $(LIBWIDECOIN_NODE) $(widecoin_bin_ldadd)
 
 widecoin_node_SOURCES = $(widecoin_daemon_sources) init/widecoin-node.cpp
 widecoin_node_CPPFLAGS = $(widecoin_bin_cppflags)
 widecoin_node_CXXFLAGS = $(widecoin_bin_cxxflags)
 widecoin_node_LDFLAGS = $(widecoin_bin_ldflags)
-widecoin_node_LDADD = $(LIBWIDECOIN_SERVER) $(widecoin_bin_ldadd) $(LIBWIDECOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+widecoin_node_LDADD = $(LIBWIDECOIN_NODE) $(widecoin_bin_ldadd) $(LIBWIDECOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # widecoin-cli binary #
 widecoin_cli_SOURCES = widecoin-cli.cpp
@@ -687,7 +705,7 @@ widecoin_cli_LDADD = \
   $(LIBWIDECOIN_UTIL) \
   $(LIBWIDECOIN_CRYPTO)
 
-widecoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
+widecoin_cli_LDADD += $(EVENT_LIBS)
 #
 
 # widecoin-tx binary #
@@ -707,16 +725,25 @@ widecoin_tx_LDADD = \
   $(LIBWIDECOIN_CONSENSUS) \
   $(LIBWIDECOIN_CRYPTO) \
   $(LIBSECP256K1)
-
-widecoin_tx_LDADD += $(BOOST_LIBS)
 #
 
 # widecoin-wallet binary #
 widecoin_wallet_SOURCES = widecoin-wallet.cpp
+widecoin_wallet_SOURCES += init/widecoin-wallet.cpp
 widecoin_wallet_CPPFLAGS = $(widecoin_bin_cppflags)
 widecoin_wallet_CXXFLAGS = $(widecoin_bin_cxxflags)
 widecoin_wallet_LDFLAGS = $(widecoin_bin_ldflags)
-widecoin_wallet_LDADD = $(LIBWIDECOIN_WALLET_TOOL) $(widecoin_bin_ldadd)
+widecoin_wallet_LDADD = \
+  $(LIBWIDECOIN_WALLET_TOOL) \
+  $(LIBWIDECOIN_WALLET) \
+  $(LIBWIDECOIN_COMMON) \
+  $(LIBWIDECOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBWIDECOIN_CONSENSUS) \
+  $(LIBWIDECOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(BDB_LIBS) \
+  $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
 widecoin_wallet_SOURCES += widecoin-wallet-res.rc
@@ -740,18 +767,12 @@ widecoin_util_LDADD = \
   $(LIBWIDECOIN_CONSENSUS) \
   $(LIBWIDECOIN_CRYPTO) \
   $(LIBSECP256K1)
-
-widecoin_util_LDADD += $(BOOST_LIBS)
 #
 
 # widecoinconsensus library #
 if BUILD_WIDECOIN_LIBS
 include_HEADERS = script/widecoinconsensus.h
 libwidecoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libwidecoin_crypto_base_a_SOURCES) $(libwidecoin_consensus_a_SOURCES)
-
-if GLIBC_BACK_COMPAT
-  libwidecoinconsensus_la_SOURCES += compat/glibc_compat.cpp
-endif
 
 libwidecoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libwidecoinconsensus_la_LIBADD = $(LIBSECP256K1)
@@ -801,7 +822,6 @@ $(top_srcdir)/$(subdir)/config/widecoin-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
-	-$(MAKE) -C univalue clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
@@ -812,20 +832,8 @@ clean-local:
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
 check-symbols: $(bin_PROGRAMS)
-if TARGET_DARWIN
-	@echo "Checking macOS dynamic libraries..."
+	@echo "Running symbol and dynamic library checks..."
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
-
-if TARGET_WINDOWS
-	@echo "Checking Windows dynamic libraries..."
-	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
-
-if TARGET_LINUX
-	@echo "Checking glibc back compat..."
-	$(AM_V_at) CPPFILT='$(CPPFILT)' $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
-endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
@@ -842,9 +850,11 @@ EXTRA_DIST += $(libwidecoin_ipc_mpgen_input)
 if BUILD_MULTIPROCESS
 LIBWIDECOIN_IPC=libwidecoin_ipc.a
 libwidecoin_ipc_a_SOURCES = \
+  ipc/capnp/context.h \
   ipc/capnp/init-types.h \
   ipc/capnp/protocol.cpp \
   ipc/capnp/protocol.h \
+  ipc/context.h \
   ipc/exception.h \
   ipc/interfaces.cpp \
   ipc/process.cpp \
@@ -866,10 +876,10 @@ nodist_libwidecoin_ipc_a_SOURCES = $(libwidecoin_ipc_mpgen_output)
 CLEANFILES += $(libwidecoin_ipc_mpgen_output)
 endif
 
-if EMBEDDED_LEVELDB
+include Makefile.minisketch.include
+
 include Makefile.crc32c.include
 include Makefile.leveldb.include
-endif
 
 include Makefile.test_util.include
 include Makefile.test_fuzz.include
@@ -889,3 +899,5 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+include Makefile.univalue.include

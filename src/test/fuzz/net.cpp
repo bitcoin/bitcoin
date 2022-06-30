@@ -14,6 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <optional>
@@ -31,22 +32,15 @@ FUZZ_TARGET_INIT(net, initialize_net)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     CNode node{ConsumeNode(fuzzed_data_provider)};
     node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
                 node.CloseSocketDisconnect();
             },
             [&] {
-                node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
-            },
-            [&] {
-                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (!SanityCheckASMap(asmap)) {
-                    return;
-                }
                 CNodeStats stats;
-                node.copyStats(stats, asmap);
+                node.CopyStats(stats);
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();
@@ -82,7 +76,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
     }
 
     (void)node.GetAddrLocal();
-    (void)node.GetAddrName();
     (void)node.GetId();
     (void)node.GetLocalNonce();
     (void)node.GetLocalServices();

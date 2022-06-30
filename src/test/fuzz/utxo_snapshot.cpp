@@ -4,6 +4,8 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <fs.h>
+#include <node/utxo_snapshot.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -11,6 +13,8 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+using node::SnapshotMetadata;
 
 namespace {
 
@@ -37,7 +41,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
     {
         CAutoFile outfile{fsbridge::fopen(snapshot_path, "wb"), SER_DISK, CLIENT_VERSION};
         const auto file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
-        outfile << Span<const uint8_t>{file_data};
+        outfile << Span{file_data};
     }
 
     const auto ActivateFuzzedSnapshot{[&] {
@@ -48,7 +52,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
         } catch (const std::ios_base::failure&) {
             return false;
         }
-        return chainman.ActivateSnapshot(infile, metadata, /* in_memory */ true);
+        return chainman.ActivateSnapshot(infile, metadata, /*in_memory=*/true);
     }};
 
     if (fuzzed_data_provider.ConsumeBool()) {

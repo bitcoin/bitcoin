@@ -62,7 +62,7 @@ if test -z "$with_gui" && test -n "@no_qt@"; then
   with_gui=no
 fi
 
-if test -n "@debug@" && test -z "@no_qt@" && test "x$with_gui" != xno; then
+if test -n "@debug@" && test -z "@no_qt@" && test "$with_gui" != "no"; then
   with_gui=qt5_debug
 fi
 
@@ -70,9 +70,12 @@ if test -z "$enable_zmq" && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
+if test -z "$enable_usdt" && test -n "@no_usdt@"; then
+  enable_usdt=no
+fi
+
 if test "@host_os@" = darwin; then
   BREW=no
-  PORT=no
 fi
 
 PATH="${depends_prefix}/native/bin:${PATH}"

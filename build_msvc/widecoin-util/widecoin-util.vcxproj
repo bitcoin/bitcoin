@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\common.init.vcxproj" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}</ProjectGuid>
+    <ProjectGuid>{57A04EC9-542A-4E40-83D0-AC3BE1F36805}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

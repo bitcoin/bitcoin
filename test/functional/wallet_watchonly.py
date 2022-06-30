@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Widecoin Core developers
+# Copyright (c) 2018-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test createwallet watchonly arguments.
@@ -37,11 +37,11 @@ class CreateWalletWatchonlyTest(WidecoinTestFramework):
         wo_wallet.importpubkey(pubkey=def_wallet.getaddressinfo(wo_change)['pubkey'])
 
         # generate some wcn for testing
-        node.generatetoaddress(COINBASE_MATURITY + 1, a1)
+        self.generatetoaddress(node, COINBASE_MATURITY + 1, a1)
 
         # send 1 wcn to our watch-only address
         txid = def_wallet.sendtoaddress(wo_addr, 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         # getbalance
         self.log.info('include_watchonly should default to true for watch-only wallets')

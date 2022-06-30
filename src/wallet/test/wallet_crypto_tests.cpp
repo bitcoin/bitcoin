@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(wallet_crypto_tests, BasicTestingSetup)
 
 class TestCrypter
@@ -124,3 +125,4 @@ BOOST_AUTO_TEST_CASE(decrypt) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

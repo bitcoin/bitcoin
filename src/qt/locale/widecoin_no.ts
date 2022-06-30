@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Lag en ny adresse</translation>
+        <translation type="unfinished">Lag en ny adresse</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -16,7 +16,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopier den valgte adressen til systemutklippstavlen</translation>
+        <translation type="unfinished">Kopier den valgte adressen til systemutklippstavlen</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -28,7 +28,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Slett den valgte adressen fra listen </translation>
+        <translation type="unfinished">Slett den valgte adressen fra listen </translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -36,15 +36,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksporter dataen i gjeldende fane til en fil </translation>
+        <translation type="unfinished">Eksporter dataen i gjeldende fane til en fil </translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Eksporter</translation>
+        <translation type="unfinished">&amp;Eksporter</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Slett</translation>
+        <translation type="unfinished">&amp;Slett</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -90,14 +90,14 @@
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -135,7 +135,7 @@
     <name>WidecoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -172,7 +172,7 @@
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -181,25 +181,8 @@
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    </context>
-<context>
-    <name>TransactionTableModel</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>

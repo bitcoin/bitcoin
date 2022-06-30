@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Widecoin Core developers
+// Copyright (c) 2011-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 
 #include <base58.h>
 #include <chainparams.h>
+#include <fs.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <policy/policy.h>
@@ -20,6 +21,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -36,6 +38,7 @@
 #include <QClipboard>
 #include <QDateTime>
 #include <QDesktopServices>
+#include <QDialog>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -64,6 +67,10 @@
 
 #include <cassert>
 #include <chrono>
+#include <exception>
+#include <fstream>
+#include <string>
+#include <vector>
 
 #if defined(Q_OS_MAC)
 
@@ -81,7 +88,7 @@ QString dateTimeStr(const QDateTime &date)
 
 QString dateTimeStr(qint64 nTime)
 {
-    return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
+    return dateTimeStr(QDateTime::fromSecsSinceEpoch(nTime));
 }
 
 QFont fixedPitchFont(bool use_embedded_font)
@@ -271,9 +278,15 @@ bool hasEntryData(const QAbstractItemView *view, int column, int role)
     return !selection.at(0).data(role).toString().isEmpty();
 }
 
+void LoadFont(const QString& file_name)
+{
+    const int id = QFontDatabase::addApplicationFont(file_name);
+    assert(id != -1);
+}
+
 QString getDefaultDataDirectory()
 {
-    return boostPathToQString(GetDefaultDataDir());
+    return PathToQString(GetDefaultDataDir());
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -410,7 +423,7 @@ void openDebugLogfile()
 
     /* Open debug.log with the associated application */
     if (fs::exists(pathDebug))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathDebug)));
 }
 
 bool openWidecoinConf()
@@ -418,7 +431,7 @@ bool openWidecoinConf()
     fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", WIDECOIN_CONF_FILENAME));
 
     /* Create the file */
-    fsbridge::ofstream configFile(pathConfig, std::ios_base::app);
+    std::ofstream configFile{pathConfig, std::ios_base::app};
 
     if (!configFile.good())
         return false;
@@ -426,11 +439,11 @@ bool openWidecoinConf()
     configFile.close();
 
     /* Open widecoin.conf with the associated application */
-    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathConfig)));
 #ifdef Q_OS_MAC
     // Workaround for macOS-specific behavior; see #15409.
     if (!res) {
-        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
+        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", PathToQString(pathConfig)});
     }
 #endif
 
@@ -578,7 +591,7 @@ fs::path static GetAutostartFilePath()
 
 bool GetStartOnSystemStartup()
 {
-    fsbridge::ifstream optionFile(GetAutostartFilePath());
+    std::ifstream optionFile{GetAutostartFilePath()};
     if (!optionFile.good())
         return false;
     // Scan through file for "Hidden=true":
@@ -609,7 +622,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
         fs::create_directories(GetAutostartDir());
 
-        fsbridge::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc);
+        std::ofstream optionFile{GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc};
         if (!optionFile.good())
             return false;
         std::string chain = gArgs.GetChainName();
@@ -644,14 +657,14 @@ void setClipboard(const QString& str)
     }
 }
 
-fs::path qstringToBoostPath(const QString &path)
+fs::path QStringToPath(const QString &path)
 {
-    return fs::path(path.toStdString());
+    return fs::u8path(path.toStdString());
 }
 
-QString boostPathToQString(const fs::path &path)
+QString PathToQString(const fs::path &path)
 {
-    return QString::fromStdString(path.string());
+    return QString::fromStdString(path.u8string());
 }
 
 QString NetworkToQString(Network net)
@@ -673,21 +686,34 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
 {
     QString prefix;
     if (prepend_direction) {
-        prefix = (conn_type == ConnectionType::INBOUND) ? QObject::tr("Inbound") : QObject::tr("Outbound") + " ";
+        prefix = (conn_type == ConnectionType::INBOUND) ?
+                     /*: An inbound connection from a peer. An inbound connection
+                         is a connection initiated by a peer. */
+                     QObject::tr("Inbound") :
+                     /*: An outbound connection to a peer. An outbound connection
+                         is a connection initiated by us. */
+                     QObject::tr("Outbound") + " ";
     }
     switch (conn_type) {
     case ConnectionType::INBOUND: return prefix;
+    //: Peer connection type that relays all network information.
     case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
+    /*: Peer connection type that relays network information about
+        blocks and not transactions or addresses. */
     case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
+    //: Peer connection type established manually through one of several methods.
     case ConnectionType::MANUAL: return prefix + QObject::tr("Manual");
+    //: Short-lived peer connection type that tests the aliveness of known addresses.
     case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
+    //: Short-lived peer connection type that solicits known addresses from a peer.
     case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-QString formatDurationStr(int secs)
+QString formatDurationStr(std::chrono::seconds dur)
 {
+    const auto secs = count_seconds(dur);
     QStringList strList;
     int days = secs / 86400;
     int hours = (secs % 86400) / 3600;
@@ -956,6 +982,13 @@ void PrintSlotException(
     description += "->";
     description += receiver->metaObject()->className();
     PrintExceptionContinue(exception, description.c_str());
+}
+
+void ShowModalDialogAsynchronously(QDialog* dialog)
+{
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::ApplicationModal);
+    dialog->show();
 }
 
 } // namespace GUIUtil

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Widecoin Core developers
+// Copyright (c) 2012-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -339,11 +339,13 @@ BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
     BOOST_CHECK_EQUAL(ParseNetwork("ipv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("onion"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_ONION);
+    BOOST_CHECK_EQUAL(ParseNetwork("cjdns"), NET_CJDNS);
 
     BOOST_CHECK_EQUAL(ParseNetwork("IPv4"), NET_IPV4);
     BOOST_CHECK_EQUAL(ParseNetwork("IPv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("ONION"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_ONION);
+    BOOST_CHECK_EQUAL(ParseNetwork("CJDNS"), NET_CJDNS);
 
     BOOST_CHECK_EQUAL(ParseNetwork(":)"), NET_UNROUTABLE);
     BOOST_CHECK_EQUAL(ParseNetwork("tÖr"), NET_UNROUTABLE);
@@ -572,6 +574,26 @@ BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
 
     s >> addresses_unserialized;
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
+}
+
+BOOST_AUTO_TEST_CASE(isbadport)
+{
+    BOOST_CHECK(IsBadPort(1));
+    BOOST_CHECK(IsBadPort(22));
+    BOOST_CHECK(IsBadPort(6000));
+
+    BOOST_CHECK(!IsBadPort(80));
+    BOOST_CHECK(!IsBadPort(443));
+    BOOST_CHECK(!IsBadPort(8333));
+
+    // Check all ports, there must be 80 bad ports in total.
+    size_t total_bad_ports{0};
+    for (uint16_t port = std::numeric_limits<uint16_t>::max(); port > 0; --port) {
+        if (IsBadPort(port)) {
+            ++total_bad_ports;
+        }
+    }
+    BOOST_CHECK_EQUAL(total_bad_ports, 80);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

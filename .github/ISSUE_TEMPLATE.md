@@ -1,13 +1,13 @@
-<!-- This issue tracker is only for technical issues related to Bitcoin Core.
+<!-- This issue tracker is only for technical issues related to Widecoin Core.
 
-General bitcoin questions and/or support requests are best directed to the Bitcoin StackExchange at https://bitcoin.stackexchange.com.
+General widecoin questions and/or support requests are best directed to the Widecoin StackExchange at https://widecoin.stackexchange.com.
 
-For reporting security issues, please read instructions at https://bitcoincore.org/en/contact/.
+For reporting security issues, please read instructions at https://widecoincore.org/en/contact/.
 
 If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue!
 
 Any report, issue or feature request related to the GUI should be reported at
-https://github.com/bitcoin-core/gui/issues/
+https://github.com/widecoin-core/gui/issues/
 -->
 
 <!-- Describe the issue -->
@@ -17,7 +17,7 @@ https://github.com/bitcoin-core/gui/issues/
 
 <!--- How reliably can you reproduce the issue, what are the steps to do so? -->
 
-<!-- What version of Bitcoin Core are you using, where did you get it (website, self-compiled, etc)? -->
+<!-- What version of Widecoin Core are you using, where did you get it (website, self-compiled, etc)? -->
 
 <!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
 

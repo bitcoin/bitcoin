@@ -69,10 +69,10 @@ public:
         consensus.BIP16Exception = uint256S("0x0000000b9fe756297c4f3b60ed7f55169680f8277812855ec546d5cb888c93a6");
         consensus.BIP34Height = 2294;
         consensus.BIP34Hash = uint256S("0x0000000b9fe756297c4f3b60ed7f55169680f8277812855ec546d5cb888c93a6");
-        consensus.BIP65Height = 2294;
-        consensus.BIP66Height = 2294;
-        consensus.CSVHeight = 2294;
-        consensus.SegwitHeight = 0;
+        consensus.BIP65Height = 2294; 
+        consensus.BIP66Height = 2294; 
+        consensus.CSVHeight = 2294; 
+        consensus.SegwitHeight = 0; 
         consensus.MinBIP9WarningHeight = 120; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hour
@@ -90,7 +90,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632;
 
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000017c5953833ff7e9098");
         consensus.defaultAssumeValid = uint256S("0x000000000000067565350a3898e1667b95b4157df514f4045394525f311cac4d"); // 281247
@@ -150,11 +150,11 @@ public:
         };
 
         m_assumeutxo_data = MapAssumeutxo{
-         // TODO to be specified in a future patch.2
+         // TODO to be specified in a future patch.
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000008a89e854d57e5667df88f1cdef6fde2fbca1de5b639ad
+            // Data from RPC: getchaintxstats 4096 000000000000000000052d314a259755ca65944e68df6b12a067ea8f1f5a7091
             /* nTime    */ 1627560852,
             /* nTxCount */ 333769,
             /* dTxRate  */ 0.03335011704430017,
@@ -175,11 +175,11 @@ public:
         consensus.BIP16Exception = uint256S("0x");
         consensus.BIP34Height = 0;
         consensus.BIP34Hash = uint256S("0x");
-        consensus.BIP65Height = 0;
-        consensus.BIP66Height = 0;
-        consensus.CSVHeight = 0;
-        consensus.SegwitHeight = 0;
-        consensus.MinBIP9WarningHeight = 0;
+        consensus.BIP65Height = 0; 
+        consensus.BIP66Height = 0; 
+        consensus.CSVHeight = 0; 
+        consensus.SegwitHeight = 0; 
+        consensus.MinBIP9WarningHeight = 0; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 1 * 60 * 60; // 5 hours
         consensus.nPowTargetSpacing = 0.5 * 60;
@@ -238,7 +238,7 @@ public:
 
         checkpointData = {
             {
-                {546, uint256S("0x000008aad534f457cf11da13a6f3c90d34fe5c090595ae06d3e246cfb6222903")},
+                {0, uint256S("0x")},
             }
         };
 
@@ -247,7 +247,7 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 0000000000004ae2f3896ca8ecd41c460a35bf6184e145d91558cece1c688a76
+            // Data from RPC: getchaintxstats 4096 00000000d18cfe81cbeea665076807789bd8f831d557632e635bc6e3c003069e
             /* nTime    */ 1616884884,
             /* nTxCount */ 0,
             /* dTxRate  */ 0.1232886622799463,
@@ -266,16 +266,18 @@ public:
 
         if (!args.IsArgSet("-signetchallenge")) {
             bin = ParseHex("512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae");
+            //vSeeds.emplace_back("seed.signet.widecoin.sprovoost.nl.");
+
+            // Hardcoded nodes can be removed once there are more DNS seeds
             //vSeeds.emplace_back("178.128.221.177");
-            //vSeeds.emplace_back("2a01:7c8:d005:390::5");
             //vSeeds.emplace_back("v7ajjeirttkbnt32wpy3c6w3emwnfr3fkla7hpxcfokr3ysd3kqtzmqd.onion:38333");
 
             consensus.nMinimumChainWork = uint256S("0x");
-            consensus.defaultAssumeValid = uint256S("0x");
+            consensus.defaultAssumeValid = uint256S("0x"); // 78788
             m_assumed_blockchain_size = 1;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 000000187d4440e5bff91488b700a140441e089a8aaea707414982460edbfe54
+                // Data from RPC: getchaintxstats 4096 0000003d9144c56ac110ae04a0c271a0acce2f14f426b39fdf0d938c96d2eb09
                 /* nTime    */ 1617605541,
                 /* nTxCount */ 0,
                 /* dTxRate  */ 0.00159272030651341,
@@ -315,7 +317,7 @@ public:
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
         consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hour
-        consensus.nPowTargetSpacing = 0.5 * 60;;
+        consensus.nPowTargetSpacing = 0.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 95; // 79% of 120
@@ -376,19 +378,19 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP16Exception = uint256();
-        consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
+        consensus.BIP34Height = 1; // Always active unless overridden
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
-        consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
-        consensus.CSVHeight = 432; // CSV activated on regtest (Used in rpc activation tests)
-        consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
+        consensus.BIP65Height = 1;  // Always active unless overridden
+        consensus.BIP66Height = 1;  // Always active unless overridden
+        consensus.CSVHeight = 1;    // Always active unless overridden
+        consensus.SegwitHeight = 0; // Always active unless overridden
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 1 * 60 * 60; // 1 hours
-        consensus.nPowTargetSpacing =  0.5 * 60;
+        consensus.nPowTargetSpacing = 0.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        consensus.nRuleChangeActivationThreshold =  95; // 79% for testchains
+        consensus.nRuleChangeActivationThreshold = 95; // 79% for testchains
         consensus.nMinerConfirmationWindow = 120; // Faster than normal for regtest (144 instead of 2016)
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -421,7 +423,7 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x1cbadb12d0d8056ff2318318d9a88c0270dbc8d90aa655e4f8c9cc8b7e2b326e"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
-        vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
+        vSeeds.clear();
 
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
@@ -430,12 +432,19 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x7d5b2e9dbe250acf5b6f09509981873ec4f1b310933c4b971f9b01d77e4630f7")},
+                {0, uint256S("0x")},
             }
         };
 
         m_assumeutxo_data = MapAssumeutxo{
-            // TODO to be specified in a future patch.
+            {
+                110,
+                {AssumeutxoHash{uint256S("0x1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618")}, 110},
+            },
+            {
+                200,
+                {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
+            },
         };
 
         chainTxData = ChainTxData{
@@ -445,7 +454,7 @@ public:
         };
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,65);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
@@ -453,7 +462,7 @@ public:
         bech32_hrp = "wcrt";
     }
 
-    /**b
+    /**
      * Allows modifying the Version Bits regtest parameters.
      */
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int min_activation_height)
@@ -465,18 +474,38 @@ public:
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
+static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& consensus)
+{
+    for (const std::string& arg : args.GetArgs("-testactivationheight")) {
+        const auto found{arg.find('@')};
+        if (found == std::string::npos) {
+            throw std::runtime_error(strprintf("Invalid format (%s) for -testactivationheight=name@height.", arg));
+        }
+        const auto name{arg.substr(0, found)};
+        const auto value{arg.substr(found + 1)};
+        int32_t height;
+        if (!ParseInt32(value, &height) || height < 0 || height >= std::numeric_limits<int>::max()) {
+            throw std::runtime_error(strprintf("Invalid height value (%s) for -testactivationheight=name@height.", arg));
+        }
+        if (name == "segwit") {
+            consensus.SegwitHeight = int{height};
+        } else if (name == "bip34") {
+            consensus.BIP34Height = int{height};
+        } else if (name == "dersig") {
+            consensus.BIP66Height = int{height};
+        } else if (name == "cltv") {
+            consensus.BIP65Height = int{height};
+        } else if (name == "csv") {
+            consensus.CSVHeight = int{height};
+        } else {
+            throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
+        }
+    }
+}
+
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
-    if (args.IsArgSet("-segwitheight")) {
-        int64_t height = args.GetArg("-segwitheight", consensus.SegwitHeight);
-        if (height < -1 || height >= std::numeric_limits<int>::max()) {
-            throw std::runtime_error(strprintf("Activation height %ld for segwit is out of valid range. Use -1 to disable segwit.", height));
-        } else if (height == -1) {
-            LogPrintf("Segwit disabled for testing\n");
-            height = std::numeric_limits<int>::max();
-        }
-        consensus.SegwitHeight = static_cast<int>(height);
-    }
+    MaybeUpdateHeights(args, consensus);
 
     if (!args.IsArgSet("-vbparams")) return;
 

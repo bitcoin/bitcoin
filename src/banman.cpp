@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <netaddress.h>
 #include <node/ui_interface.h>
+#include <sync.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -18,7 +19,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
     if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…").translated);
 
     int64_t n_start = GetTimeMillis();
-    if (m_ban_db.Read(m_banned, m_is_dirty)) {
+    if (m_ban_db.Read(m_banned)) {
         SweepBanned(); // sweep out unused entries
 
         LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
@@ -39,16 +40,21 @@ BanMan::~BanMan()
 
 void BanMan::DumpBanlist()
 {
-    SweepBanned(); // clean unused entries (if bantime has expired)
-
-    if (!BannedSetIsDirty()) return;
-
-    int64_t n_start = GetTimeMillis();
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
 
     banmap_t banmap;
-    GetBanned(banmap);
-    if (m_ban_db.Write(banmap)) {
+    {
+        LOCK(m_cs_banned);
+        SweepBanned();
+        if (!BannedSetIsDirty()) return;
+        banmap = m_banned;
         SetBannedSetDirty(false);
+    }
+
+    int64_t n_start = GetTimeMillis();
+    if (!m_ban_db.Write(banmap)) {
+        SetBannedSetDirty(true);
     }
 
     LogPrint(BCLog::NET, "Flushed %d banned node addresses/subnets to disk  %dms\n", banmap.size(),

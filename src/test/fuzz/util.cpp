@@ -2,12 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
 #include <pubkey.h>
 #include <test/fuzz/util.h>
 #include <test/util/script.h>
+#include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/time.h>
 #include <version.h>
+
+#include <memory>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
     : m_fuzzed_data_provider{fuzzed_data_provider}
@@ -154,6 +160,20 @@ int FuzzedSock::Connect(const sockaddr*, socklen_t) const
     return 0;
 }
 
+std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+    constexpr std::array accept_errnos{
+        ECONNABORTED,
+        EINTR,
+        ENOMEM,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, accept_errnos);
+        return std::unique_ptr<FuzzedSock>();
+    }
+    return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
+}
+
 int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     constexpr std::array getsockopt_errnos{
@@ -199,22 +219,57 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
     return false;
 }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept
 {
+    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
     const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     const int32_t version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
     const bool filter_txs = fuzzed_data_provider.ConsumeBool();
 
-    node.nServices = remote_services;
-    node.m_permissionFlags = permission_flags;
-    if (init_version) {
-        node.nVersion = version;
-        node.SetCommonVersion(std::min(version, PROTOCOL_VERSION));
+    const CNetMsgMaker mm{0};
+
+    CSerializedNetMsg msg_version{
+        mm.Make(NetMsgType::VERSION,
+                version,                                        //
+                Using<CustomUintFormatter<8>>(remote_services), //
+                int64_t{},                                      // dummy time
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // dummy
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // ignored
+                uint64_t{1},                                    // dummy nonce
+                std::string{},                                  // dummy subver
+                int32_t{},                                      // dummy starting_height
+                filter_txs),
+    };
+
+    (void)connman.ReceiveMsgFrom(node, msg_version);
+    node.fPauseSend = false;
+    connman.ProcessMessagesOnce(node);
+    {
+        LOCK(node.cs_sendProcessing);
+        peerman.SendMessages(&node);
     }
+    if (node.fDisconnect) return;
+    assert(node.nVersion == version);
+    assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
+    assert(node.nServices == remote_services);
     if (node.m_tx_relay != nullptr) {
         LOCK(node.m_tx_relay->cs_filter);
-        node.m_tx_relay->fRelayTxes = filter_txs;
+        assert(node.m_tx_relay->fRelayTxes == filter_txs);
+    }
+    node.m_permissionFlags = permission_flags;
+    if (successfully_connected) {
+        CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
+        (void)connman.ReceiveMsgFrom(node, msg_verack);
+        node.fPauseSend = false;
+        connman.ProcessMessagesOnce(node);
+        {
+            LOCK(node.cs_sendProcessing);
+            peerman.SendMessages(&node);
+        }
+        assert(node.fSuccessfullyConnected == true);
     }
 }
 
@@ -226,8 +281,8 @@ CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::option
 int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
 {
     // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
-    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
-    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
+    static const int64_t time_min{ParseISO8601DateTime("2000-01-01T00:00:01Z")};
+    static const int64_t time_max{ParseISO8601DateTime("2100-12-31T23:59:59Z")};
     return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
 }
 
@@ -266,7 +321,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
         const auto amount = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-10, 50 * COIN + 10);
         const auto script_pk = p2wsh_op_true ?
                                    P2WSH_OP_TRUE :
-                                   ConsumeScript(fuzzed_data_provider, /* max_length */ 128, /* maybe_p2wsh */ true);
+                                   ConsumeScript(fuzzed_data_provider, /*maybe_p2wsh=*/true);
         tx_mut.vout.emplace_back(amount, script_pk);
     }
     return tx_mut;
@@ -282,10 +337,63 @@ CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, co
     return ret;
 }
 
-CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length, const bool maybe_p2wsh) noexcept
+CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe_p2wsh) noexcept
 {
-    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
-    CScript r_script{b.begin(), b.end()};
+    CScript r_script{};
+    {
+        // Keep a buffer of bytes to allow the fuzz engine to produce smaller
+        // inputs to generate CScripts with repeated data.
+        static constexpr unsigned MAX_BUFFER_SZ{128};
+        std::vector<uint8_t> buffer(MAX_BUFFER_SZ, uint8_t{'a'});
+        while (fuzzed_data_provider.ConsumeBool()) {
+            CallOneOf(
+                fuzzed_data_provider,
+                [&] {
+                    // Insert byte vector directly to allow malformed or unparsable scripts
+                    r_script.insert(r_script.end(), buffer.begin(), buffer.begin() + fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BUFFER_SZ));
+                },
+                [&] {
+                    // Push a byte vector from the buffer
+                    r_script << std::vector<uint8_t>{buffer.begin(), buffer.begin() + fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BUFFER_SZ)};
+                },
+                [&] {
+                    // Push multisig
+                    // There is a special case for this to aid the fuzz engine
+                    // navigate the highly structured multisig format.
+                    r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
+                    int num_data{fuzzed_data_provider.ConsumeIntegralInRange(1, 22)};
+                    std::vector<uint8_t> pubkey_comp{buffer.begin(), buffer.begin() + CPubKey::COMPRESSED_SIZE};
+                    pubkey_comp.front() = fuzzed_data_provider.ConsumeIntegralInRange(2, 3); // Set first byte for GetLen() to pass
+                    std::vector<uint8_t> pubkey_uncomp{buffer.begin(), buffer.begin() + CPubKey::SIZE};
+                    pubkey_uncomp.front() = fuzzed_data_provider.ConsumeIntegralInRange(4, 7); // Set first byte for GetLen() to pass
+                    while (num_data--) {
+                        auto& pubkey{fuzzed_data_provider.ConsumeBool() ? pubkey_uncomp : pubkey_comp};
+                        if (fuzzed_data_provider.ConsumeBool()) {
+                            pubkey.back() = num_data; // Make each pubkey different
+                        }
+                        r_script << pubkey;
+                    }
+                    r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
+                },
+                [&] {
+                    // Mutate the buffer
+                    const auto vec{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/MAX_BUFFER_SZ)};
+                    std::copy(vec.begin(), vec.end(), buffer.begin());
+                },
+                [&] {
+                    // Push an integral
+                    r_script << fuzzed_data_provider.ConsumeIntegral<int64_t>();
+                },
+                [&] {
+                    // Push an opcode
+                    r_script << ConsumeOpcodeType(fuzzed_data_provider);
+                },
+                [&] {
+                    // Push a scriptnum
+                    r_script << ConsumeScriptNum(fuzzed_data_provider);
+                });
+        }
+    }
     if (maybe_p2wsh && fuzzed_data_provider.ConsumeBool()) {
         uint256 script_hash;
         CSHA256().Write(r_script.data(), r_script.size()).Finalize(script_hash.begin());
@@ -300,7 +408,7 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray({
                    CTxIn::SEQUENCE_FINAL,
-                   CTxIn::SEQUENCE_FINAL - 1,
+                   CTxIn::MAX_SEQUENCE_NONFINAL,
                    MAX_BIP125_RBF_SEQUENCE,
                }) :
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
@@ -458,7 +566,7 @@ ssize_t FuzzedFileProvider::write(void* cookie, const char* buf, size_t size)
     SetFuzzedErrNo(fuzzed_file->m_fuzzed_data_provider);
     const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
     if (AdditionOverflow(fuzzed_file->m_offset, (int64_t)n)) {
-        return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
+        return 0;
     }
     fuzzed_file->m_offset += n;
     return n;

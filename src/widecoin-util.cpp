@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,10 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
     if (HelpRequested(args) || args.IsArgSet("-version")) {
         // First part of help message is specific to this utility
         std::string strUsage = PACKAGE_NAME " widecoin-util utility version " + FormatFullVersion() + "\n";
-        if (!args.IsArgSet("-version")) {
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                 "Usage:  widecoin-util [options] [commands]  Do stuff\n";
             strUsage += "\n" + args.GetHelpMessage();

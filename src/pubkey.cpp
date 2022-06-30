@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -180,6 +180,23 @@ XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
     std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
 }
 
+std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
+{
+    std::vector<CKeyID> out;
+    // For now, use the old full pubkey-based key derivation logic. As it is indexed by
+    // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
+    // with 0x03.
+    unsigned char b[33] = {0x02};
+    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
+    CPubKey fullpubkey;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey.GetID());
+    b[0] = 0x03;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey.GetID());
+    return out;
+}
+
 bool XOnlyPubKey::IsFullyValid() const
 {
     secp256k1_xonly_pubkey pubkey;
@@ -191,7 +208,7 @@ bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> si
     assert(sigbytes.size() == 64);
     secp256k1_xonly_pubkey pubkey;
     if (!secp256k1_xonly_pubkey_parse(secp256k1_context_verify, &pubkey, m_keydata.data())) return false;
-    return secp256k1_schnorrsig_verify(secp256k1_context_verify, sigbytes.data(), msg.begin(), &pubkey);
+    return secp256k1_schnorrsig_verify(secp256k1_context_verify, sigbytes.data(), msg.begin(), 32, &pubkey);
 }
 
 static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
@@ -320,8 +337,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
 void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
     memcpy(code+1, vchFingerprint, 4);
-    code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
-    code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
+    WriteBE32(code+5, nChild);
     memcpy(code+9, chaincode.begin(), 32);
     assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
     memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
@@ -330,9 +346,22 @@ void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
 void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
     memcpy(vchFingerprint, code+1, 4);
-    nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
+    nChild = ReadBE32(code+5);
     memcpy(chaincode.begin(), code+9, 32);
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
+    if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
+}
+
+void CExtPubKey::EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const
+{
+    memcpy(code, version, 4);
+    Encode(&code[4]);
+}
+
+void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE])
+{
+    memcpy(version, code, 4);
+    Decode(&code[4]);
 }
 
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {

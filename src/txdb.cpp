@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Widecoin Core developers
+// Copyright (c) 2009-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <txdb.h>
 
+#include <chain.h>
 #include <node/ui_interface.h>
 #include <pow.h>
 #include <random.h>
@@ -26,6 +27,28 @@ static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
+
+// Keys used in previous version that might still be found in the DB:
+static constexpr uint8_t DB_TXINDEX_BLOCK{'T'};
+//               uint8_t DB_TXINDEX{'t'}
+
+std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db)
+{
+    CBlockLocator ignored{};
+    if (block_tree_db.Read(DB_TXINDEX_BLOCK, ignored)) {
+        return _("The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.");
+    }
+    bool txindex_legacy_flag{false};
+    block_tree_db.ReadFlag("txindex", txindex_legacy_flag);
+    if (txindex_legacy_flag) {
+        // Disable legacy txindex and warn once about occupied disk space
+        if (!block_tree_db.WriteFlag("txindex", false)) {
+            return Untranslated("Failed to write block index db flag 'txindex'='0'");
+        }
+        return _("The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.");
+    }
+    return std::nullopt;
+}
 
 namespace {
 
@@ -84,8 +107,8 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     CDBBatch batch(*m_db);
     size_t count = 0;
     size_t changed = 0;
-    size_t batch_size = (size_t)gArgs.GetArg("-dbbatchsize", nDefaultDbBatchSize);
-    int crash_simulate = gArgs.GetArg("-dbcrashratio", 0);
+    size_t batch_size = (size_t)gArgs.GetIntArg("-dbbatchsize", nDefaultDbBatchSize);
+    int crash_simulate = gArgs.GetIntArg("-dbcrashratio", 0);
     assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();
@@ -273,8 +296,8 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
 
 bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
+    AssertLockHeld(::cs_main);
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
-
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load m_block_index
@@ -299,8 +322,9 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
+                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
+                }
 
                 pcursor->Next();
             } else {

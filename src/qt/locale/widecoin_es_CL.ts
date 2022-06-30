@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crear una nueva dirección</translation>
+        <translation type="unfinished">Crear una nueva dirección</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiar la dirección actualmente seleccionada al sistema de portapapeles</translation>
+        <translation type="unfinished">Copiar la dirección actualmente seleccionada al sistema de portapapeles</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Borrar la dirección actualmente seleccionada de la lista</translation>
+        <translation type="unfinished">Borrar la dirección actualmente seleccionada de la lista</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,16 +35,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>
-Exportar los datos en la pestaña actual a un archivo</translation>
+        <translation type="unfinished">Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportar</translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Borrar</translation>
+        <translation type="unfinished">&amp;Borrar</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -121,19 +120,19 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Diálogo de contraseña</translation>
+        <translation type="unfinished">Diálogo de contraseña</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Poner contraseña</translation>
+        <translation type="unfinished">Poner contraseña</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nueva contraseña</translation>
+        <translation type="unfinished">Nueva contraseña</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repetir nueva contraseña</translation>
+        <translation type="unfinished">Repetir nueva contraseña</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -242,10 +241,18 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
 <context>
     <name>WidecoinApplication</name>
     <message>
-        <source>Internal error</source>
-        <translation type="unfinished">error interno</translation>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Se ha producido un error garrafal. %1Ya no podrá continuar de manera segura y abandonará.</translation>
     </message>
-    </context>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Error interno</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Se ha producido un error interno. 1%1 Se intentará continuar de manera segura. Este es un error inesperado que se puede reportar como se describe a continuación.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -266,10 +273,12 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">Entrante</translation>
     </message>
     <message>
         <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
         <translation type="unfinished">Salida</translation>
     </message>
     <message>
@@ -286,14 +295,14 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -332,30 +341,241 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     </context>
 <context>
+    <name>widecoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">Los desarrolladores de %s</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">-maxtxfee tiene un valor muy elevado! Comisiones muy grandes podrían ser pagadas en una única transacción.</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation type="unfinished">Distribuido bajo la licencia de software MIT, vea el archivo adjunto %s o %s</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished">La Poda se ha configurado por debajo del mínimo de %d MiB. Por favor utiliza un valor mas alto.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation type="unfinished">Esta es la cuota de transacción que puede descartar si el cambio es más pequeño que el polvo a este nivel.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">Impuesto por transacción que pagarás cuando la estimación de impuesto no esté disponible.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished">La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation type="unfinished">¡%s esta configurado muy alto!</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished">-maxmempool debe ser por lo menos de %d MB</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation type="unfinished">No se puede resolver -%s direccion: '%s'</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Corrupción de base de datos de bloques detectada.</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">¿Quieres reconstruir la base de datos de bloques ahora?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Listo Cargando</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Error al inicializar la base de datos de bloques</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Error al iniciar el entorno de la base de datos del monedero %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">Error cargando %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished">Error cargando %s: Monedero corrupto</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished">Error cargando %s: Monedero requiere una versión mas reciente de %s</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Error cargando blkindex.dat</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Error cargando base de datos de bloques</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">Error al leer la base de datos, cerrando aplicación.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation type="unfinished">Error actualizando la base de datos chainstate</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Ha fallado la escucha en todos los puertos. Usa -listen=0 si desea esto.</translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished">Incorrecto o bloque de génesis no encontrado. ¿datadir equivocada para la red?</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation type="unfinished">La inicialización de la verificación de validez falló. Se está apagando %s.</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Fondos Insuficientes</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">Dirección de -onion o dominio '%s' inválido</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">Dirección de -proxy o dominio ' %s' inválido</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Monto invalido para -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Monto invalido para -discardfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Monto invalido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Cantidad inválida para -paytxfee=&lt;amount&gt;: '%s' (debe ser por lo menos %s)</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation type="unfinished">Máscara de red inválida especificada en -whitelist: '%s'</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation type="unfinished">Necesita especificar un puerto con -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">No hay suficientes descriptores de archivo disponibles.</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">Reduciendo -maxconnections de %d a %d, debido a limitaciones del sistema.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Firma de transacción fallida</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">El código fuente esta disponible desde %s.</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">El monto a transferir es muy pequeño para pagar el impuesto</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">La billetera no permitirá pagar menos que la fee de transmisión mínima (relay fee).</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">Este es un software experimental.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">Mínimo de impuesto que pagarás con cada transacción.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">Impuesto por transacción a pagar si envías una transacción.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Monto a transferir muy pequeño</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">El monto de la transacción no puede ser negativo</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">La transacción tiene demasiado tiempo de una cadena de mempool</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">La transacción debe incluir al menos un destinatario.</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transacción muy grande</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">No es posible conectar con %s en este sistema (bind ha devuelto el error %s)</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">No se ha podido iniciar el servidor HTTP. Ver debug log para detalles.</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">La red especificada en -onlynet: '%s' es desconocida</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation type="unfinished">Actualizando la base de datos UTXO</translation>
+    </message>
+    </context>
+<context>
     <name>WidecoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Visión de conjunto</translation>
+        <translation type="unfinished">&amp;Visión de conjunto</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Mostrar vista general de la billetera</translation>
+        <translation type="unfinished">Mostrar vista general de la billetera</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transacciones</translation>
+        <translation type="unfinished">&amp;Transacciones</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Examinar el historial de transacciones</translation>
+        <translation type="unfinished">Examinar el historial de transacciones</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>S&amp;alir</translation>
+        <translation type="unfinished">S&amp;alir</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Salir de la aplicación</translation>
+        <translation type="unfinished">Salir de la aplicación</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -367,11 +587,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Acerca de &amp;Qt</translation>
+        <translation type="unfinished">Acerca de &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Mostrar información sobre Qt</translation>
+        <translation type="unfinished">Mostrar información sobre Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -396,59 +616,51 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Send coins to a Widecoin address</source>
-        <translation>Enviando monedas a una dirección de Widecoin</translation>
+        <translation type="unfinished">Enviando monedas a una dirección de Widecoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Monedero de respaldo a otra ubicación</translation>
+        <translation type="unfinished">Monedero de respaldo a otra ubicación</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambiar la contraseña usando la encriptación de la billetera</translation>
+        <translation type="unfinished">Cambiar la contraseña usando la encriptación de la billetera</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Enviar</translation>
+        <translation type="unfinished">&amp;Enviar</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Recibir</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Mostrar / Ocultar</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Mostrar u ocultar la Ventana Principal</translation>
+        <translation type="unfinished">&amp;Recibir</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encripta las claves privadas que pertenecen a tu billetera</translation>
+        <translation type="unfinished">Encripta las claves privadas que pertenecen a tu billetera</translation>
     </message>
     <message>
         <source>Sign messages with your Widecoin addresses to prove you own them</source>
-        <translation>Firme mensajes con sus direcciones de Widecoin para demostrar que los posee</translation>
+        <translation type="unfinished">Firme mensajes con sus direcciones de Widecoin para demostrar que los posee</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Widecoin addresses</source>
-        <translation>Verifique los mensajes para asegurarse de que fueron firmados con las direcciones de Widecoin especificadas</translation>
+        <translation type="unfinished">Verifique los mensajes para asegurarse de que fueron firmados con las direcciones de Widecoin especificadas</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Archivo</translation>
+        <translation type="unfinished">&amp;Archivo</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Configuraciones</translation>
+        <translation type="unfinished">&amp;Configuraciones</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Ayuda</translation>
+        <translation type="unfinished">&amp;Ayuda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barra de herramientas de pestañas</translation>
+        <translation type="unfinished">Barra de herramientas de pestañas</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and widecoin: URIs)</source>
@@ -468,34 +680,34 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 detrás</translation>
+        <translation type="unfinished">%1 detrás</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>El último bloque recibido se generó hace %1.</translation>
+        <translation type="unfinished">El último bloque recibido se generó hace %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Las transacciones posteriores a esto aún no estarán visibles.</translation>
+        <translation type="unfinished">Las transacciones posteriores a esto aún no estarán visibles.</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Advertencia</translation>
+        <translation type="unfinished">Advertencia</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Información</translation>
+        <translation type="unfinished">Información</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>A hoy</translation>
+        <translation type="unfinished">A hoy</translation>
     </message>
     <message>
         <source>Load Partially Signed Widecoin Transaction</source>
@@ -524,10 +736,6 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">Ventana</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation type="unfinished">Minimizar</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -583,11 +791,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Transacción enviada</translation>
+        <translation type="unfinished">Transacción enviada</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transacción entrante</translation>
+        <translation type="unfinished">Transacción entrante</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
@@ -603,11 +811,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>La billetera está &lt;b&gt; encriptada &lt;/ b&gt; y actualmente &lt;b&gt; desbloqueada &lt;/ b&gt;</translation>
+        <translation type="unfinished">La billetera está &lt;b&gt; encriptada &lt;/ b&gt; y actualmente &lt;b&gt; desbloqueada &lt;/ b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>La billetera está &lt;b&gt; encriptada &lt;/ b&gt; y actualmente está &lt;b&gt; bloqueada &lt;/ b&gt;</translation>
+        <translation type="unfinished">La billetera está &lt;b&gt; encriptada &lt;/ b&gt; y actualmente está &lt;b&gt; bloqueada &lt;/ b&gt;</translation>
     </message>
     </context>
 <context>
@@ -743,6 +951,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">Crear Billetera</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Crear billetera falló</translation>
     </message>
@@ -756,6 +969,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <message>
         <source>default wallet</source>
         <translation type="unfinished">billetera predeterminada</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Abrir billetera</translation>
     </message>
     </context>
 <context>
@@ -784,11 +1002,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Editar dirección</translation>
+        <translation type="unfinished">Editar dirección</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>Y etiqueta</translation>
+        <translation type="unfinished">Y etiqueta</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
@@ -800,7 +1018,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>Y dirección</translation>
+        <translation type="unfinished">Y dirección</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -831,23 +1049,23 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Se creará un nuevo directorio de datos.</translation>
+        <translation type="unfinished">Se creará un nuevo directorio de datos.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>nombre</translation>
+        <translation type="unfinished">nombre</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>El directorio ya existe. Agregue %1 si tiene la intención de crear un nuevo directorio aquí.</translation>
+        <translation type="unfinished">El directorio ya existe. Agregue %1 si tiene la intención de crear un nuevo directorio aquí.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>La ruta ya existe, y no es un directorio ...</translation>
+        <translation type="unfinished">La ruta ya existe, y no es un directorio ...</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>No se puede crear el directorio de datos aquí.</translation>
+        <translation type="unfinished">No se puede crear el directorio de datos aquí.</translation>
     </message>
 </context>
 <context>
@@ -882,7 +1100,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Welcome</source>
-        <translation>bienvenido</translation>
+        <translation type="unfinished">bienvenido</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -906,11 +1124,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Use el directorio de datos predeterminado</translation>
+        <translation type="unfinished">Use el directorio de datos predeterminado</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Use un directorio de datos personalizado:</translation>
+        <translation type="unfinished">Use un directorio de datos personalizado:</translation>
     </message>
 </context>
 <context>
@@ -975,14 +1193,22 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     </context>
 <context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">Pega dirección desde portapapeles</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Opciones</translation>
+        <translation type="unfinished">Opciones</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Principal</translation>
+        <translation type="unfinished">&amp;Principal</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1013,10 +1239,6 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
         <translation type="unfinished">Minimice en lugar de salir de la aplicación cuando la ventana esté cerrada. Cuando esta opción está habilitada, la aplicación se cerrará solo después de seleccionar Salir en el menú.</translation>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">URL de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. %s en la URL se reemplaza por hash de transacción. Varias URL están separadas por una barra vertical |.</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Abrir el archivo de configuración %1 en el directorio de trabajo.</translation>
     </message>
@@ -1026,15 +1248,15 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Restablecer todas las opciones del cliente a los valores predeterminados.</translation>
+        <translation type="unfinished">Restablecer todas las opciones del cliente a los valores predeterminados.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Y Restablecer opciones</translation>
+        <translation type="unfinished">Y Restablecer opciones</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Red</translation>
+        <translation type="unfinished">&amp;Red</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1062,11 +1284,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Automatically open the Widecoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abra automáticamente el puerto cliente de Widecoin en el enrutador. Esto solo funciona cuando su enrutador admite UPnP y está habilitado.</translation>
+        <translation type="unfinished">Abra automáticamente el puerto cliente de Widecoin en el enrutador. Esto solo funciona cuando su enrutador admite UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Puerto de mapa usando &amp; UPnP</translation>
+        <translation type="unfinished">Puerto de mapa usando &amp; UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1086,11 +1308,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>Puerto:</translation>
+        <translation type="unfinished">Puerto:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Puerto del proxy (por ejemplo, 9050)</translation>
+        <translation type="unfinished">Puerto del proxy (por ejemplo, 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1098,27 +1320,27 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>Ventana</translation>
+        <translation type="unfinished">Ventana</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Mostrar solo un icono de bandeja después de minimizar la ventana.</translation>
+        <translation type="unfinished">Mostrar solo un icono de bandeja después de minimizar la ventana.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>Minimice la bandeja en lugar de la barra de tareas</translation>
+        <translation type="unfinished">Minimice la bandeja en lugar de la barra de tareas</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>Minimice al cerrar</translation>
+        <translation type="unfinished">Minimice al cerrar</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>Monitor</translation>
+        <translation type="unfinished">Monitor</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Interfaz de usuario e idioma:</translation>
+        <translation type="unfinished">Interfaz de usuario e idioma:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1126,27 +1348,23 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Unidad para mostrar montos en:</translation>
+        <translation type="unfinished">Unidad para mostrar montos en:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Elija la unidad de subdivisión predeterminada para mostrar en la interfaz y al enviar monedas.</translation>
+        <translation type="unfinished">Elija la unidad de subdivisión predeterminada para mostrar en la interfaz y al enviar monedas.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Ya sea para mostrar las funciones de control de monedas o no.</translation>
     </message>
     <message>
-        <source>&amp;Third party transaction URLs</source>
-        <translation type="unfinished">URLs de transacciones de terceros</translation>
-    </message>
-    <message>
         <source>&amp;Cancel</source>
-        <translation>Cancelar</translation>
+        <translation type="unfinished">Cancelar</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>defecto</translation>
+        <translation type="unfinished">defecto</translation>
     </message>
     <message>
         <source>none</source>
@@ -1154,7 +1372,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Confirmar restablecimiento de opciones</translation>
+        <translation type="unfinished">Confirmar restablecimiento de opciones</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1166,10 +1384,12 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
         <translation type="unfinished">Opciones de configuración</translation>
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">El archivo de configuración se utiliza para especificar opciones de usuario avanzadas que anulan la configuración de la GUI. Además, cualquier opción de línea de comandos anulará este archivo de configuración.</translation>
     </message>
     <message>
@@ -1182,18 +1402,18 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>La dirección proxy suministrada no es válida.</translation>
+        <translation type="unfinished">La dirección proxy suministrada no es válida.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Configurar</translation>
+        <translation type="unfinished">Configurar</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Widecoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>La información mostrada puede estar desactualizada. Su billetera se sincroniza automáticamente con la red de Widecoin después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
+        <translation type="unfinished">La información mostrada puede estar desactualizada. Su billetera se sincroniza automáticamente con la red de Widecoin después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1205,7 +1425,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Su saldo disponible actual</translation>
+        <translation type="unfinished">Su saldo disponible actual</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1213,19 +1433,19 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total de transacciones que aún no se han confirmado y aún no cuentan para el saldo disponible</translation>
+        <translation type="unfinished">Total de transacciones que aún no se han confirmado y aún no cuentan para el saldo disponible</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Inmaduro:</translation>
+        <translation type="unfinished">Inmaduro:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Balance minero que aún no ha madurado</translation>
+        <translation type="unfinished">Balance minero que aún no ha madurado</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Su saldo total actual</translation>
+        <translation type="unfinished">Su saldo total actual</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
@@ -1306,6 +1526,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
         <translation type="unfinished">Agente de usuario</translation>
     </message>
     <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation type="unfinished">Dirección</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation type="unfinished">Expedido</translation>
@@ -1330,6 +1555,16 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">Red</translation>
     </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">Entrante</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">Salida</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1350,23 +1585,23 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>N/D</translation>
+        <translation type="unfinished">N/D</translation>
     </message>
     <message>
         <source>Client version</source>
-        <translation>Versión cliente</translation>
+        <translation type="unfinished">Versión cliente</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>Información</translation>
+        <translation type="unfinished">Información</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Tiempo de inicio</translation>
+        <translation type="unfinished">Tiempo de inicio</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Red</translation>
+        <translation type="unfinished">Red</translation>
     </message>
     <message>
         <source>Name</source>
@@ -1374,11 +1609,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Número de conexiones</translation>
+        <translation type="unfinished">Número de conexiones</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Cadena de bloques</translation>
+        <translation type="unfinished">Cadena de bloques</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1478,15 +1713,15 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Hora del último bloque</translation>
+        <translation type="unfinished">Hora del último bloque</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>Abierto</translation>
+        <translation type="unfinished">Abierto</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>Consola</translation>
+        <translation type="unfinished">Consola</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1498,11 +1733,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Archivo de registro de depuración</translation>
+        <translation type="unfinished">Archivo de registro de depuración</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Consola limpia</translation>
+        <translation type="unfinished">Consola limpia</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1706,7 +1941,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Enviar monedas</translation>
+        <translation type="unfinished">Enviar monedas</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1770,11 +2005,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Enviar a múltiples destinatarios</translation>
+        <translation type="unfinished">Enviar a múltiples destinatarios</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>&amp;Agrega destinatario</translation>
+        <translation type="unfinished">&amp;Agrega destinatario</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1790,15 +2025,15 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Borra todos</translation>
+        <translation type="unfinished">&amp;Borra todos</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Confirma el envio</translation>
+        <translation type="unfinished">Confirma el envio</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>&amp;Envía</translation>
+        <translation type="unfinished">&amp;Envía</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1835,10 +2070,6 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <message>
         <source>%1 to %2</source>
         <translation type="unfinished">%1 a %2</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation type="unfinished">¿Seguro que quiere enviar?</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -1890,7 +2121,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -1920,15 +2151,15 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>Cantidad:</translation>
+        <translation type="unfinished">Cantidad:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Pagar a:</translation>
+        <translation type="unfinished">&amp;Pagar a:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>Etiqueta:</translation>
+        <translation type="unfinished">Etiqueta:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1940,7 +2171,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pega dirección desde portapapeles</translation>
+        <translation type="unfinished">Pega dirección desde portapapeles</translation>
     </message>
     <message>
         <source>Remove this entry</source>
@@ -1975,11 +2206,11 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Firmas - Firmar / verificar un mensaje</translation>
+        <translation type="unfinished">Firmas - Firmar / verificar un mensaje</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Firmar Mensaje</translation>
+        <translation type="unfinished">&amp;Firmar Mensaje</translation>
     </message>
     <message>
         <source>The Widecoin address to sign the message with</source>
@@ -1991,39 +2222,39 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pega dirección desde portapapeles</translation>
+        <translation type="unfinished">Pega dirección desde portapapeles</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Escriba el mensaje que desea firmar</translation>
+        <translation type="unfinished">Escriba el mensaje que desea firmar</translation>
     </message>
     <message>
         <source>Signature</source>
-        <translation>Firma</translation>
+        <translation type="unfinished">Firma</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copiar la firma actual al portapapeles del sistema</translation>
+        <translation type="unfinished">Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Widecoin address</source>
-        <translation>Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
+        <translation type="unfinished">Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Firmar Mensaje</translation>
+        <translation type="unfinished">Firmar Mensaje</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Limpiar todos los campos de la firma de mensaje</translation>
+        <translation type="unfinished">Limpiar todos los campos de la firma de mensaje</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Borra todos</translation>
+        <translation type="unfinished">&amp;Borra todos</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Firmar Mensaje</translation>
+        <translation type="unfinished">&amp;Firmar Mensaje</translation>
     </message>
     <message>
         <source>The Widecoin address the message was signed with</source>
@@ -2031,15 +2262,15 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Widecoin address</source>
-        <translation>Verifica el mensaje para asegurar que fue firmado con la dirección de Widecoin especificada.</translation>
+        <translation type="unfinished">Verifica el mensaje para asegurar que fue firmado con la dirección de Widecoin especificada.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>&amp;Firmar Mensaje</translation>
+        <translation type="unfinished">&amp;Firmar Mensaje</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Limpiar todos los campos de la verificación de mensaje</translation>
+        <translation type="unfinished">Limpiar todos los campos de la verificación de mensaje</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
@@ -2095,18 +2326,14 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
 </context>
 <context>
-    <name>TransactionDesc</name>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
+    <name>SplashScreen</name>
     <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Abierto hasta %1</translation>
+        <source>(press q to shutdown and continue later)</source>
+        <translation type="unfinished">(presione la tecla q para apagar y continuar después)</translation>
     </message>
+    </context>
+<context>
+    <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
         <translation type="unfinished">Hay un conflicto con la traducción de las confirmaciones %1</translation>
@@ -2181,7 +2408,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
             <numerusform />
         </translation>
@@ -2263,7 +2490,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Esta ventana muestra información detallada sobre la transacción</translation>
+        <translation type="unfinished">Esta ventana muestra información detallada sobre la transacción</translation>
     </message>
     <message>
         <source>Details for %1</source>
@@ -2283,17 +2510,6 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     <message>
         <source>Label</source>
         <translation type="unfinished">Etiqueta</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation type="unfinished">Abierto hasta %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2473,7 +2689,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
         <source>Create a new wallet</source>
         <translation type="unfinished">Crear una nueva billetera</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2490,6 +2706,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
+        <extracomment>Asks a user if they would like to manually increase the fee of a transaction that has already been created.</extracomment>
         <translation type="unfinished">¿Desea incrementar la cuota?</translation>
     </message>
     <message>
@@ -2529,8 +2746,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">
-Exportar los datos en la pestaña actual a un archivo</translation>
+        <translation type="unfinished">Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2551,221 +2767,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation type="unfinished">Los datos del monedero se han guardado con éxito en %1.</translation>
-    </message>
-    </context>
-<context>
-    <name>widecoin-core</name>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">Los desarrolladores de %s</translation>
-    </message>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee tiene un valor muy elevado! Comisiones muy grandes podrían ser pagadas en una única transacción.</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">Distribuido bajo la licencia de software MIT, vea el archivo adjunto %s o %s</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">La Poda se ha configurado por debajo del mínimo de %d MiB. Por favor utiliza un valor mas alto.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation type="unfinished">Esta es la cuota de transacción que puede descartar si el cambio es más pequeño que el polvo a este nivel.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">Impuesto por transacción que pagarás cuando la estimación de impuesto no esté disponible.</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation type="unfinished">¡%s esta configurado muy alto!</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-maxmempool debe ser por lo menos de %d MB</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">No se puede resolver -%s direccion: '%s'</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation type="unfinished">Cambio de indice fuera de rango</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Corrupción de base de datos de bloques detectada.</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">¿Quieres reconstruir la base de datos de bloques ahora?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Listo Cargando</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Error al inicializar la base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Error al iniciar el entorno de la base de datos del monedero %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">Error cargando %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">Error cargando %s: Monedero corrupto</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">Error cargando %s: Monedero requiere una versión mas reciente de %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Error cargando blkindex.dat</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Error cargando base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">Error al leer la base de datos, cerrando aplicación.</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Error actualizando la base de datos chainstate</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Ha fallado la escucha en todos los puertos. Usa -listen=0 si desea esto.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Incorrecto o bloque de génesis no encontrado. ¿datadir equivocada para la red?</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished">La inicialización de la verificación de validez falló. Se está apagando %s.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Fondos Insuficientes</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Dirección de -onion o dominio '%s' inválido</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">Dirección de -proxy o dominio ' %s' inválido</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Monto invalido para -%s=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Monto invalido para -discardfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Monto invalido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Cantidad inválida para -paytxfee=&lt;amount&gt;: '%s' (debe ser por lo menos %s)</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">Máscara de red inválida especificada en -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">Necesita especificar un puerto con -whitebind: '%s'</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">No hay suficientes descriptores de archivo disponibles.</translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Reduciendo -maxconnections de %d a %d, debido a limitaciones del sistema.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Firma de transacción fallida</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">El código fuente esta disponible desde %s.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">El monto a transferir es muy pequeño para pagar el impuesto</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">La billetera no permitirá pagar menos que la fee de transmisión mínima (relay fee).</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">Este es un software experimental.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Mínimo de impuesto que pagarás con cada transacción.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Impuesto por transacción a pagar si envías una transacción.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Monto a transferir muy pequeño</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">El monto de la transacción no puede ser negativo</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">La transacción tiene demasiado tiempo de una cadena de mempool</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">La transacción debe incluir al menos un destinatario.</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transacción muy grande</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">No es posible conectar con %s en este sistema (bind ha devuelto el error %s)</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">No se ha podido iniciar el servidor HTTP. Ver debug log para detalles.</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">La red especificada en -onlynet: '%s' es desconocida</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">Actualizando la base de datos UTXO</translation>
     </message>
     </context>
 </TS>

@@ -5,6 +5,8 @@
 #ifndef WIDECOIN_UTIL_GOLOMBRICE_H
 #define WIDECOIN_UTIL_GOLOMBRICE_H
 
+#include <util/fastrange.h>
+
 #include <streams.h>
 
 #include <cstdint>

@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # These environment variables are set by the build process and read by
-# test/functional/test_runner.py and test/util/widecoin-util-test.py
+# test/*/test_runner.py and test/util/rpcauth-test.py
 
 [environment]
 PACKAGE_NAME=@PACKAGE_NAME@
@@ -24,3 +24,4 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 @ENABLE_FUZZ_TRUE@ENABLE_FUZZ=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true
 @ENABLE_EXTERNAL_SIGNER_TRUE@ENABLE_EXTERNAL_SIGNER=true
+@ENABLE_SYSCALL_SANDBOX_TRUE@ENABLE_SYSCALL_SANDBOX=true

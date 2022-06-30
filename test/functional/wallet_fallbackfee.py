@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Widecoin Core developers
+# Copyright (c) 2017-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet replace-by-fee capabilities in conjunction with the fallbackfee."""
@@ -17,7 +17,7 @@ class WalletRBFTest(WidecoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # sending a transaction without fee estimations must be possible by default on regtest
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)

@@ -2,12 +2,8 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">右击编辑地址或标签</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
-        <translation>创建一个新的地址</translation>
+        <translation type="unfinished">创建一个新的地址</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +11,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>复制选定的地址到系统剪切板</translation>
+        <translation type="unfinished">复制选定的地址到系统剪切板</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +23,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>从列表删除选定的地址</translation>
+        <translation type="unfinished">从列表删除选定的地址</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,15 +31,15 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>导出当前数据到文件</translation>
+        <translation type="unfinished">导出当前数据到文件</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>导出</translation>
+        <translation type="unfinished">导出</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>删除</translation>
+        <translation type="unfinished">删除</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -120,19 +116,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>密码对话框</translation>
+        <translation type="unfinished">密码对话框</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>输入密码</translation>
+        <translation type="unfinished">输入密码</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>新密码</translation>
+        <translation type="unfinished">新密码</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>重复输入新密码</translation>
+        <translation type="unfinished">重复输入新密码</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -150,18 +146,66 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unlock wallet</source>
         <translation type="unfinished">解锁钱包</translation>
     </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation type="unfinished">修改密码</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation type="unfinished">确认钱包加密</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR WIDECOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">注意:如果你加密了钱包又忘记了密码，你将会丢失所有的比特币！</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">你确定要将钱包加密吗？</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">钱包已加密</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">输入钱包的新密码。&lt;br/&gt;密码中请使用&lt;b&gt;10个或更多随机字符&lt;/b&gt;，或&lt;b&gt;8个或更多的单词&lt;/b&gt;。</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">输入钱包的旧密码和新密码。</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">需要加密的钱包</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">你的钱包将要被加密</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">你的钱包已被加密</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">钱包加密失败</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">钱包解锁失败</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -194,7 +238,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>WidecoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -246,7 +290,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -258,14 +302,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation>
+        <translation type="unfinished">
             <numerusform />
         </translation>
     </message>
@@ -275,12 +313,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label</source>
         <translation type="unfinished">标签</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation>
-            <numerusform />
-        </translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -307,10 +339,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Export</source>
         <translation type="unfinished">导出</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">导出当前数据到文件</translation>
     </message>
     </context>
 </TS>

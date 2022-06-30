@@ -1269,6 +1269,10 @@
 [["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
 [["00", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Invalid witness script without WITNESS"],
 [["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Witness script hash mismatch without WITNESS"],
+[["51", 0.00000000 ], "", "-1 0x021234", "P2SH,WITNESS", "WITNESS_UNEXPECTED", "OP_1NEGATE does not introduce a witness program"],
+[["51", 0.00000000 ], "00", "1 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_1 does introduce a witness program"],
+[["51", 0.00000000 ], "00", "16 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_16 does introduce a witness program"],
+[["51", 0.00000000 ], "", "NOP 0x021234", "P2SH,WITNESS", "WITNESS_UNEXPECTED", "NOP does not introduce a witness program"],
 
 ["Automatically generated test cases"],
 [

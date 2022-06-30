@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Widecoin Core developers
+// Copyright (c) 2015-2021 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,4 +25,4 @@ std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxs
  */
 bool WriteBinaryFile(const fs::path &filename, const std::string &data);
 
-#endif /* WIDECOIN_UTIL_READWRITEFILE_H */
+#endif // WIDECOIN_UTIL_READWRITEFILE_H

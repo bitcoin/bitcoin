@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Widecoin Core developers
+# Copyright (c) 2014-2021 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
@@ -25,9 +25,7 @@ class ImportPrunedFundsTest(WidecoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
-
-        self.sync_all()
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # address
         address1 = self.nodes[0].getnewaddress()
@@ -64,17 +62,17 @@ class ImportPrunedFundsTest(WidecoinTestFramework):
 
         # Send funds to self
         txnid1 = self.nodes[0].sendtoaddress(address1, 0.1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn1 = self.nodes[0].gettransaction(txnid1)['hex']
         proof1 = self.nodes[0].gettxoutproof([txnid1])
 
         txnid2 = self.nodes[0].sendtoaddress(address2, 0.05)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn2 = self.nodes[0].gettransaction(txnid2)['hex']
         proof2 = self.nodes[0].gettxoutproof([txnid2])
 
         txnid3 = self.nodes[0].sendtoaddress(address3, 0.025)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
         proof3 = self.nodes[0].gettxoutproof([txnid3])
 
