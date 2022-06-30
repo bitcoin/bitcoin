@@ -17,6 +17,7 @@
 #include <condition_variable>
 
 #include <unordered_set>
+#include <utility>
 
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 

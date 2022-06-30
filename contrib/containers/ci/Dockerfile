@@ -4,7 +4,7 @@ FROM ubuntu:focal
 ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 
 # Build and base stuff
-# (zlib1g-dev and libssl-dev are needed for the Qt host binary builds, but should not be used by target binaries)
+# (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 RUN dpkg --add-architecture i386
 RUN apt-get update && apt-get install $APT_ARGS \
@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wget \
     unzip \
     libtool \
-    libssl-dev \
     m4 \
     pkg-config \
     python3 \
