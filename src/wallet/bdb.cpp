@@ -315,12 +315,6 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, b
     env = database.env.get();
     pdb = database.m_db.get();
     strFile = fs::PathToString(database.m_filename);
-    if (!Exists(std::string("version"))) {
-        bool fTmp = fReadOnly;
-        fReadOnly = false;
-        Write(std::string("version"), CLIENT_VERSION);
-        fReadOnly = fTmp;
-    }
 }
 
 void BerkeleyDatabase::Open()
