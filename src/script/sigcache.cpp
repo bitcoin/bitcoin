@@ -93,18 +93,18 @@ static CSignatureCache signatureCache;
 
 // To be called once in AppInitMain/BasicTestingSetup to initialize the
 // signatureCache.
-bool InitSignatureCache()
+bool InitSignatureCache(int64_t max_size_bytes)
 {
     // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
     // setup_bytes creates the minimum possible cache (2 elements).
-    size_t nMaxCacheSize = std::max((int64_t)0, gArgs.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2) * ((size_t) 1 << 20);
+    size_t nMaxCacheSize = std::max<int64_t>(max_size_bytes, 0);
 
     auto setup_results = signatureCache.setup_bytes(nMaxCacheSize);
     if (!setup_results) return false;
 
     const auto [num_elems, approx_size_bytes] = *setup_results;
-    LogPrintf("Using %zu MiB out of %zu/2 requested for signature cache, able to store %zu elements\n",
-              approx_size_bytes >> 20, (nMaxCacheSize * 2) >> 20, num_elems);
+    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
+              approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
     return true;
 }
 
