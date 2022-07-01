@@ -1669,8 +1669,9 @@ bool InitScriptExecutionCache() {
     size_t nMaxCacheSize = std::max((int64_t)0, gArgs.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2) * ((size_t) 1 << 20);
 
     auto setup_results = g_scriptExecutionCache.setup_bytes(nMaxCacheSize);
+    if (!setup_results) return false;
 
-    const auto [num_elems, approx_size_bytes] = setup_results;
+    const auto [num_elems, approx_size_bytes] = *setup_results;
     LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
               approx_size_bytes >> 20, (nMaxCacheSize * 2) >> 20, num_elems);
     return true;

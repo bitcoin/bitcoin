@@ -12,7 +12,9 @@
 #include <atomic>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -359,10 +361,15 @@ public:
      * structure
      * @returns A pair of the maximum number of elements storable (see setup()
      * documentation for more detail) and the approxmiate total size of these
-     * elements in bytes.
+     * elements in bytes or std::nullopt if the size requested is too large.
      */
-    std::pair<uint32_t, size_t> setup_bytes(size_t bytes)
+    std::optional<std::pair<uint32_t, size_t>> setup_bytes(size_t bytes)
     {
+        size_t requested_num_elems = bytes / sizeof(Element);
+        if (std::numeric_limits<uint32_t>::max() < requested_num_elems) {
+            return std::nullopt;
+        }
+
         auto num_elems = setup(bytes/sizeof(Element));
 
         size_t approx_size_bytes = num_elems * sizeof(Element);
