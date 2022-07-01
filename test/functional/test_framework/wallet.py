@@ -232,12 +232,14 @@ class MiniWallet:
         *,
         utxos_to_spend: Optional[List[dict]] = None,
         num_outputs=1,
+        amount_per_output=0,
         sequence=0,
         fee_per_output=1000,
     ):
         """
         Create and return a transaction that spends the given UTXOs and creates a
-        certain number of outputs with equal amounts.
+        certain number of outputs with equal amounts. The output amounts can be
+        set by amount_per_output or automatically calculated with a fee_per_output.
         """
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
         # create simple tx template (1 input, 1 output)
@@ -258,7 +260,7 @@ class MiniWallet:
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         for o in tx.vout:
-            o.nValue = outputs_value_total // num_outputs
+            o.nValue = amount_per_output or (outputs_value_total // num_outputs)
         txid = tx.rehash()
         return {
             "new_utxos": [self._create_utxo(
