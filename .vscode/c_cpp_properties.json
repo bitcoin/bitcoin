@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/src/**",
-                "${workspaceFolder}/../itcoin-pbft/usrlocal/include",
+                "${workspaceFolder}/../itcoin-pbft/build/usrlocal/include",
                 "/usr/include",
                 "/usr/local/include"
             ],
