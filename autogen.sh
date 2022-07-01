@@ -5,12 +5,27 @@
 
 export LC_ALL=C
 set -e
-srcdir="$(dirname "$0")"
-cd "$srcdir"
+
+assert_deps() {
+  for dep; do
+    if ! command -v "$dep" > /dev/null; then
+      echo "configuration failed, please install $dep first"
+      return 1
+    fi
+  done
+}
+
+# libtoolize is glibtoolize on macOS
 if [ -z "${LIBTOOLIZE}" ] && GLIBTOOLIZE="$(command -v glibtoolize)"; then
   LIBTOOLIZE="${GLIBTOOLIZE}"
   export LIBTOOLIZE
+else
+  assert_deps libtoolize
 fi
-command -v autoreconf >/dev/null || \
-  (echo "configuration failed, please install autoconf first" && exit 1)
+
+# fail early if required deps are missing
+assert_deps aclocal autoreconf pkg-config
+
+srcdir="$(dirname "$0")"
+cd "$srcdir"
 autoreconf --install --force --warnings=all
