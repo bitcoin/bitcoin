@@ -179,7 +179,7 @@ class MiniWallet:
             return self._utxos[index]
 
     def send_self_transfer(self, *, from_node, **kwargs):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Call create_self_transfer and send the transaction."""
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
         return tx
@@ -214,21 +214,27 @@ class MiniWallet:
         *,
         utxos_to_spend: Optional[List[dict]] = None,
         num_outputs=1,
+        amount_per_output=0,
         sequence=0,
         fee_per_output=1000,
     ):
         """
         Create and return a transaction that spends the given UTXOs and creates a
-        certain number of outputs with equal amounts.
+        certain number of outputs with equal amounts. The output amounts can be
+        set by amount_per_output or automatically calculated with a fee_per_output.
         """
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
+        sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
+        assert_equal(len(utxos_to_spend), len(sequence))
         # create simple tx template (1 input, 1 output)
         tx = self.create_self_transfer(
             fee_rate=0,
-            utxo_to_spend=utxos_to_spend[0], sequence=sequence)["tx"]
+            utxo_to_spend=utxos_to_spend[0])["tx"]
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
+        for txin, seq in zip(tx.vin, sequence):
+            txin.nSequence = seq
         tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
 
         # adapt input prevouts
@@ -239,7 +245,7 @@ class MiniWallet:
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         for o in tx.vout:
-            o.nValue = outputs_value_total // num_outputs
+            o.nValue = amount_per_output or (outputs_value_total // num_outputs)
         txid = tx.rehash()
         return {
             "new_utxos": [self._create_utxo(
@@ -253,21 +259,23 @@ class MiniWallet:
             "tx": tx,
         }
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), utxo_to_spend=None, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), fee=Decimal("0"), utxo_to_spend=None, locktime=0, sequence=0):
+        """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
         utxo_to_spend = utxo_to_spend or self.get_utxo()
+        assert fee_rate >= 0
+        assert fee >= 0
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(85)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
-        send_value = utxo_to_spend["value"] - (fee_rate * vsize / 1000)
+        send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(COIN * send_value), self._scriptPubKey)]
+        tx.vout = [CTxOut(int(COIN * send_value), bytearray(self._scriptPubKey))]
         tx.nLockTime = locktime
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
