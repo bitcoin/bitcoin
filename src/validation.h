@@ -323,7 +323,7 @@ public:
 };
 
 /** Initializes the script-execution cache */
-void InitScriptExecutionCache();
+[[nodiscard]] bool InitScriptExecutionCache();
 
 /** Functions for validating blocks and updating the block tree */
 

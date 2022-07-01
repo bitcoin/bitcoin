@@ -336,8 +336,8 @@ public:
     uint32_t setup(uint32_t new_size)
     {
         // depth_limit must be at least one otherwise errors can occur.
-        depth_limit = static_cast<uint8_t>(std::log2(static_cast<float>(std::max((uint32_t)2, new_size))));
         size = std::max<uint32_t>(2, new_size);
+        depth_limit = static_cast<uint8_t>(std::log2(static_cast<float>(size)));
         table.resize(size);
         collection_flags.setup(size);
         epoch_flags.resize(size);
@@ -357,12 +357,16 @@ public:
      *
      * @param bytes the approximate number of bytes to use for this data
      * structure
-     * @returns the maximum number of elements storable (see setup()
-     * documentation for more detail)
+     * @returns A pair of the maximum number of elements storable (see setup()
+     * documentation for more detail) and the approxmiate total size of these
+     * elements in bytes.
      */
-    uint32_t setup_bytes(size_t bytes)
+    std::pair<uint32_t, size_t> setup_bytes(size_t bytes)
     {
-        return setup(bytes/sizeof(Element));
+        auto num_elems = setup(bytes/sizeof(Element));
+
+        size_t approx_size_bytes = num_elems * sizeof(Element);
+        return std::make_pair(num_elems, approx_size_bytes);
     }
 
     /** insert loops at most depth_limit times trying to insert a hash

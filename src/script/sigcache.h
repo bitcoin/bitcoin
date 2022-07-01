@@ -33,6 +33,6 @@ public:
     bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
 };
 
-void InitSignatureCache();
+[[nodiscard]] bool InitSignatureCache();
 
 #endif // BITCOIN_SCRIPT_SIGCACHE_H

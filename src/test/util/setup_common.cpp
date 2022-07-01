@@ -133,8 +133,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.kernel = std::make_unique<kernel::Context>();
     SetupEnvironment();
     SetupNetworking();
-    InitSignatureCache();
-    InitScriptExecutionCache();
+    Assert(InitSignatureCache());
+    Assert(InitScriptExecutionCache());
     m_node.chain = interfaces::MakeChain(m_node);
     fCheckBlockIndex = true;
     static bool noui_connected = false;
