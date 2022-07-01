@@ -178,7 +178,7 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[3].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[3].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         assert_equal(self.nodes[3].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
-        self.bump_mocktime(2) # push median time over expiry
+        self.bump_mocktime(5) # push median time over expiry
         time.sleep(1)
         self.generate(self.nodes[0], 5)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
