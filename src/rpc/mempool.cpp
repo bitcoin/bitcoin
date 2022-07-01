@@ -183,7 +183,7 @@ static RPCHelpMan testmempoolaccept()
                 LOCK(::cs_main);
                 if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true);
                 return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
+                                                  chainman.ProcessTransaction(/*tx=*/txns[0], /*test_accept=*/true));
             }();
 
             UniValue rpc_result(UniValue::VARR);
