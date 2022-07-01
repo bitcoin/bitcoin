@@ -328,7 +328,7 @@ public:
     }
 
     /** setup initializes the container to store no more than new_size
-     * elements.
+     * elements and no less than 2 elements.
      *
      * setup should only be called once.
      *

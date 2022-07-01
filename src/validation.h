@@ -323,7 +323,7 @@ public:
 };
 
 /** Initializes the script-execution cache */
-[[nodiscard]] bool InitScriptExecutionCache(int64_t max_size_bytes);
+[[nodiscard]] bool InitScriptExecutionCache(size_t max_size_bytes);
 
 /** Functions for validating blocks and updating the block tree */
 

@@ -8,6 +8,9 @@
 
 #include <util/system.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 
@@ -17,11 +20,14 @@ namespace node {
 void ApplyArgsManOptions(const ArgsManager& argsman, ValidationCacheSizes& cache_sizes)
 {
     if (auto max_size = argsman.GetIntArg("-maxsigcachesize")) {
-        // Multiply first, divide after to avoid integer truncation
-        int64_t size_each = *max_size * (1 << 20) / 2;
+        // 1. When supplied with a max_size of 0, both InitSignatureCache and
+        //    InitScriptExecutionCache create the minimum possible cache (2
+        //    elements). Therefore, we can use 0 as a floor here.
+        // 2. Multiply first, divide after to avoid integer truncation.
+        size_t clamped_size_each = std::max<int64_t>(*max_size, 0) * (1 << 20) / 2;
         cache_sizes = {
-            .signature_cache_bytes = size_each,
-            .script_execution_cache_bytes = size_each,
+            .signature_cache_bytes = clamped_size_each,
+            .script_execution_cache_bytes = clamped_size_each,
         };
     }
 }
