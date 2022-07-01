@@ -259,12 +259,20 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
 
 task:
-  name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:jammy
+  # We can't use a 'container' for the USDT interface tests as the CirrusCI
+  # containers don't have privileges to hook into bitcoind. CirrusCI uses
+  # Google Compute Engine instances: https://cirrus-ci.org/guide/custom-vms/
+  # Images can be found here: https://cloud.google.com/compute/docs/images/os-details
+  compute_engine_instance:
+    image_project: ubuntu-os-cloud
+    image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
+    cpu: 4
+    memory: 12G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    HOME: /root/  # Only needed for compute_engine_instance
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 
