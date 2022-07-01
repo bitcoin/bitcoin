@@ -294,7 +294,7 @@ class MiniWallet:
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(COIN * send_value), self._scriptPubKey)]
+        tx.vout = [CTxOut(int(COIN * send_value), bytearray(self._scriptPubKey))]
         tx.nLockTime = locktime
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
