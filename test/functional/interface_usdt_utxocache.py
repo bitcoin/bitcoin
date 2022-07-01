@@ -173,7 +173,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         invalid_tx.vin[0].prevout.hash = int(block_1_coinbase_txid, 16)
 
         self.log.info("hooking into the utxocache:uncache tracepoint")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:uncache",
                          fn_name="trace_utxocache_uncache")
         bpf = BPF(text=utxocache_changes_program, usdt_contexts=[ctx], debug=0)
@@ -238,7 +238,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         self.log.info(
             "hook into the utxocache:add and utxocache:spent tracepoints")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:add", fn_name="trace_utxocache_add")
         ctx.enable_probe(probe="utxocache:spent",
                          fn_name="trace_utxocache_spent")
@@ -334,7 +334,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         self.log.info("test the utxocache:flush tracepoint API")
         self.log.info("hook into the utxocache:flush tracepoint")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="utxocache:flush",
                          fn_name="trace_utxocache_flush")
         bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0)
@@ -373,6 +373,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         self.stop_node(0)
 
         bpf.perf_buffer_poll(timeout=200)
+        bpf.cleanup()
 
         self.log.info("check that we don't expect additional flushes")
         assert_equal(0, len(expected_flushes))
@@ -380,6 +381,14 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         self.log.info("restart the node with -prune")
         self.start_node(0, ["-fastprune=1", "-prune=1"])
+
+        self.log.info("test the utxocache:flush tracepoint API with pruning")
+        self.log.info("hook into the utxocache:flush tracepoint")
+        ctx = USDT(pid=self.nodes[0].process.pid)
+        ctx.enable_probe(probe="utxocache:flush",
+                         fn_name="trace_utxocache_flush")
+        bpf = BPF(text=utxocache_flushes_program, usdt_contexts=[ctx], debug=0)
+        bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
         BLOCKS_TO_MINE = 350
         self.log.info(f"mine {BLOCKS_TO_MINE} blocks to be able to prune")
