@@ -242,13 +242,17 @@ class MiniWallet:
         set by amount_per_output or automatically calculated with a fee_per_output.
         """
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
+        sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
+        assert_equal(len(utxos_to_spend), len(sequence))
         # create simple tx template (1 input, 1 output)
         tx = self.create_self_transfer(
             fee_rate=0,
-            utxo_to_spend=utxos_to_spend[0], sequence=sequence)["tx"]
+            utxo_to_spend=utxos_to_spend[0])["tx"]
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
+        for txin, seq in zip(tx.vin, sequence):
+            txin.nSequence = seq
         tx.wit.vtxinwit = [deepcopy(tx.wit.vtxinwit[0]) for _ in range(len(utxos_to_spend))]
         tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
 
