@@ -197,7 +197,7 @@ class MiniWallet:
         return utxos
 
     def send_self_transfer(self, *, from_node, **kwargs):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Call create_self_transfer and send the transaction."""
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
         return tx
@@ -272,16 +272,18 @@ class MiniWallet:
             "tx": tx,
         }
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), utxo_to_spend=None, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), fee=Decimal("0"), utxo_to_spend=None, locktime=0, sequence=0):
+        """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
         utxo_to_spend = utxo_to_spend or self.get_utxo()
+        assert fee_rate >= 0
+        assert fee >= 0
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(104)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
-        send_value = utxo_to_spend["value"] - (fee_rate * vsize / 1000)
+        send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
         assert send_value > 0
 
         tx = CTransaction()
