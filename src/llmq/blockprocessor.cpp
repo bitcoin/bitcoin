@@ -149,18 +149,18 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
             break;
         }
 
-        bool isCommitmentRequired = IsCommitmentRequired(params, pindex->nHeight);
+        const size_t numCommitmentsRequired = GetNumCommitmentsRequired(params, pindex->nHeight);
         const auto numCommitmentsInNewBlock = qcs.count(params.type);
 
-        if (!isCommitmentRequired && numCommitmentsInNewBlock > 0) {
+        if (numCommitmentsRequired < numCommitmentsInNewBlock) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-not-allowed");
         }
 
-        if (isCommitmentRequired && numCommitmentsInNewBlock == 0) {
+        if (numCommitmentsRequired > numCommitmentsInNewBlock) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-missing");
         }
         if (llmq::CLLMQUtils::IsQuorumRotationEnabled(params.type, pindex)) {
-            LogPrintf("[ProcessBlock] h[%d] isCommitmentRequired[%d] numCommitmentsInNewBlock[%d]\n", pindex->nHeight, isCommitmentRequired, numCommitmentsInNewBlock);
+            LogPrintf("[ProcessBlock] h[%d] numCommitmentsRequired[%d] numCommitmentsInNewBlock[%d]\n", pindex->nHeight, numCommitmentsRequired, numCommitmentsInNewBlock);
         }
     }
 
@@ -428,11 +428,11 @@ bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParam
     return false;
 }
 
-bool CQuorumBlockProcessor::IsCommitmentRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const
+size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const
 {
     AssertLockHeld(cs_main);
 
-    if (!IsMiningPhase(llmqParams, nHeight)) return false;
+    if (!IsMiningPhase(llmqParams, nHeight)) return 0;
 
     // Note: This function can be called for new blocks
     assert(nHeight <= ::ChainActive().Height() + 1);
@@ -440,14 +440,14 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(const Consensus::LLMQParams& ll
 
     bool rotation_enabled = CLLMQUtils::IsQuorumRotationEnabled(llmqParams.type, pindex);
     size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
+    size_t ret{0};
 
     for (const auto quorumIndex : irange::range(quorums_num)) {
         uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
-        if (quorumHash.IsNull()) return false;
-        if (HasMinedCommitment(llmqParams.type, quorumHash)) return false;
+        if (!quorumHash.IsNull() && !HasMinedCommitment(llmqParams.type, quorumHash)) ++ret;
     }
 
-    return true;
+    return ret;
 }
 
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
@@ -710,7 +710,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
 
     std::vector<CFinalCommitment> ret;
 
-    if (!IsCommitmentRequired(llmqParams, nHeight /*, 0*/)) {
+    if (GetNumCommitmentsRequired(llmqParams, nHeight) == 0) {
         // no commitment required
         return std::nullopt;
     }
