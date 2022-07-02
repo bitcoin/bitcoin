@@ -252,7 +252,7 @@ int CTransactionBuilder::GetSizeOfCompactSizeDiff(size_t nAdd) const
 
 bool CTransactionBuilder::IsDust(CAmount nAmount) const
 {
-    return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.get());
+    return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.value());
 }
 
 bool CTransactionBuilder::Commit(bilingual_str& strResult)

@@ -78,7 +78,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTxStatus result;
-    result.block_height = wallet.chain().getBlockHeight(wtx.m_confirm.hashBlock).get_value_or(std::numeric_limits<int>::max());
+    result.block_height = wallet.chain().getBlockHeight(wtx.m_confirm.hashBlock).value_or(std::numeric_limits<int>::max());
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
@@ -395,7 +395,7 @@ public:
             return false;
         }
         balances = getBalances();
-        num_blocks = m_wallet->chain().getHeight().get_value_or(-1);
+        num_blocks = m_wallet->chain().getHeight().value_or(-1);
         return true;
     }
     CAmount getBalance() override
