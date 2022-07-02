@@ -11,16 +11,19 @@ if [ -z "$NO_WERROR" ]; then
   BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-werror"
 fi
 
+CI_EXEC "ccache --zero-stats --max-size=$CCACHE_SIZE"
+PRINT_CCACHE_STATISTICS="ccache --version | head -n 1 && ccache --show-stats"
+
 if [ -n "$ANDROID_TOOLS_URL" ]; then
   CI_EXEC make distclean || true
   CI_EXEC ./autogen.sh
   CI_EXEC ./configure "$BITCOIN_CONFIG_ALL" "$BITCOIN_CONFIG" || ( (CI_EXEC cat config.log) && false)
   CI_EXEC "make $MAKEJOBS && cd src/qt && ANDROID_HOME=${ANDROID_HOME} ANDROID_NDK_HOME=${ANDROID_NDK_HOME} make apk"
+  CI_EXEC "${PRINT_CCACHE_STATISTICS}"
   exit 0
 fi
 
 BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-external-signer --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
-CI_EXEC "ccache --zero-stats --max-size=$CCACHE_SIZE"
 
 if [ -n "$CONFIG_SHELL" ]; then
   CI_EXEC "$CONFIG_SHELL" -c "./autogen.sh"
@@ -57,6 +60,6 @@ fi
 
 CI_EXEC "${MAYBE_BEAR}" "${MAYBE_TOKEN}" make "$MAKEJOBS" "$GOAL" || ( echo "Build failure. Verbose build follows." && CI_EXEC make "$GOAL" V=1 ; false )
 
-CI_EXEC "ccache --version | head -n 1 && ccache --show-stats"
+CI_EXEC "${PRINT_CCACHE_STATISTICS}"
 CI_EXEC du -sh "${DEPENDS_DIR}"/*/
 CI_EXEC du -sh "${PREVIOUS_RELEASES_DIR}"
