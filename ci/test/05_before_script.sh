@@ -6,9 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
-DOCKER_EXEC echo \> \$HOME/.dashcore  # Make sure default datadir does not exist and is never read by creating a dummy file
-OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
-OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
+# Make sure default datadir does not exist and is never read by creating a dummy file
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  echo > $HOME/Library/Application\ Support/DashCore
+else
+  DOCKER_EXEC echo \> \$HOME/.dashcore
+fi
 
 DOCKER_EXEC mkdir -p depends/SDKs depends/sdk-sources
 

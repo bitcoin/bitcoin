@@ -6,11 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
-export HOST=x86_64-unknown-linux-gnu
 export PACKAGES="clang llvm python3 libevent-dev bsdmainutils libboost-filesystem-dev libboost-test-dev libboost-thread-dev"
-export NO_DEPENDS=1
+export DEP_OPTS="NO_UPNP=1 DEBUG=1"
+export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
+export PYZMQ=true
 export RUN_UNIT_TESTS=false
-export RUN_FUNCTIONAL_TESTS=false
+export RUN_INTEGRATION_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
+export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++"

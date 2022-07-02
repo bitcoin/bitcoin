@@ -6,6 +6,7 @@ dist: xenial
 
 os: linux
 language: minimal
+arch: amd64
 
 services:
   - docker
@@ -13,7 +14,12 @@ services:
 cache:
   ccache: true
   directories:
-    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+    - $BASE_BUILD_DIR/ci/scratch/.ccache
+    # macOS
+    - $HOME/Library/Caches/Homebrew
+    - /usr/local/Homebrew
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 env:
   global:
     # DOCKER_HUB_USER
@@ -153,7 +159,7 @@ install:
     - export PULL_REQUEST="$TRAVIS_PULL_REQUEST"
     - export COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
     - export JOB_NUMBER="$TRAVIS_JOB_NUMBER"
-    - export HOST_SRC_DIR=$TRAVIS_BUILD_DIR
+    - export HOST_SRC_DIR=$BASE_BUILD_DIR
     - export HOST_CACHE_DIR=$HOME/cache
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     - source ./ci/matrix.sh
@@ -230,32 +236,42 @@ after_success:
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_qt5.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_trusty.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_trusty.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_tsan.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
 # x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_asan.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_fuzz.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
     - stage: test
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_nowallet.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
     - stage: test
       name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
+
+    - stage: test
+      name: 'macOS 10.14 native [GOAL: install] [GUI: BIP70 enabled] [no depends]'
+      os: osx
+      # Use the most recent version:
+      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # https://docs.travis-ci.com/user/reference/osx/#macos-version
+      osx_image: xcode11
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

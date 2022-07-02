@@ -179,27 +179,19 @@ i686-pc-linux-gnu:
   variables:
     HOST: i686-pc-linux-gnu
 
-x86_64-unknown-linux-gnu-debug:
+x86_64-pc-linux-gnu-debug:
   extends: .build-depends-template
   variables:
-    HOST: x86_64-unknown-linux-gnu
+    HOST: x86_64-pc-linux-gnu
     DEP_OPTS: "DEBUG=1"
 
-x86_64-unknown-linux-gnu-nowallet:
+x86_64-pc-linux-gnu-nowallet:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-unknown-linux-gnu
+    HOST: x86_64-pc-linux-gnu
     DEP_OPTS: "NO_WALLET=1"
-
-x86_64-unknown-linux-gnu-release:
-  extends:
-    - .build-depends-template
-    - .skip-in-fast-mode-template
-  variables:
-    HOST: x86_64-unknown-linux-gnu
-    DEP_OPTS: "NO_UPNP=1"
 
 x86_64-apple-darwin19:
   extends:
@@ -247,21 +239,21 @@ linux32_ubsan-build:
 linux64-build:
   extends: .build-template
   needs:
-    - x86_64-unknown-linux-gnu-debug
+    - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64
 
 linux64_cxx20-build:
   extends: .build-template
   needs:
-    - x86_64-unknown-linux-gnu-debug
+    - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64_cxx20
 
 linux64_fuzz-build:
   extends: .build-template
   needs:
-    - x86_64-unknown-linux-gnu-debug
+    - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64_fuzz
 
@@ -270,7 +262,7 @@ linux64_tsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-unknown-linux-gnu-debug
+    - x86_64-pc-linux-gnu-debug
   variables:
     BUILD_TARGET: linux64_tsan
 
@@ -279,18 +271,9 @@ linux64_nowallet-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-unknown-linux-gnu-nowallet
+    - x86_64-pc-linux-gnu-nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
-
-linux64_release-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - x86_64-unknown-linux-gnu-release
-  variables:
-    BUILD_TARGET: linux64_release
 
 mac-build:
   extends:
