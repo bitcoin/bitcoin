@@ -16,6 +16,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
+#include <univalue.h>
+
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
     if (gArgs.IsArgSet("-walletdir")) {
@@ -125,7 +127,8 @@ void UnloadWallets()
     while (!wallets.empty()) {
         auto wallet = wallets.back();
         wallets.pop_back();
-        RemoveWallet(wallet);
+        std::vector<bilingual_str> warnings;
+        RemoveWallet(wallet, nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

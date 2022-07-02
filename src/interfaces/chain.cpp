@@ -360,6 +360,27 @@ public:
     {
         RPCRunLater(name, std::move(fn), seconds);
     }
+    util::SettingsValue getRwSetting(const std::string& name) override
+    {
+        util::SettingsValue result;
+        gArgs.LockSettings([&](const util::Settings& settings) {
+            if (const util::SettingsValue* value = util::FindKey(settings.rw_settings, name)) {
+                result = *value;
+            }
+        });
+        return result;
+    }
+    bool updateRwSetting(const std::string& name, const util::SettingsValue& value) override
+    {
+        gArgs.LockSettings([&](util::Settings& settings) {
+            if (value.isNull()) {
+                settings.rw_settings.erase(name);
+            } else {
+                settings.rw_settings[name] = value;
+            }
+        });
+        return gArgs.WriteSettingsFile();
+    }
     void requestMempoolTransactions(Notifications& notifications) override
     {
         LOCK2(::cs_main, ::mempool.cs);

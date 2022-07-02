@@ -45,7 +45,6 @@ static void WaitForShutdown(NodeContext& node)
 static bool AppInit(int argc, char* argv[])
 {
     NodeContext node;
-    node.chain = interfaces::MakeChain(node);
 
     bool fRet = false;
 
@@ -102,6 +101,11 @@ static bool AppInit(int argc, char* argv[])
             }
         }
 
+        if (!gArgs.InitSettings(error)) {
+            InitError(Untranslated(error));
+            return false;
+        }
+
         // -server defaults to true for dashd but not for the GUI so do this here
         args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
@@ -145,7 +149,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitMain(context, node);
+        fRet = AppInitInterfaces(node) && AppInitMain(context, node);
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "AppInit()");
     }

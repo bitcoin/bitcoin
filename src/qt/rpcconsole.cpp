@@ -27,6 +27,7 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/db.h>
+#include <wallet/walletutil.h>
 #endif
 
 #include <QButtonGroup>
@@ -499,8 +500,18 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
 #ifdef ENABLE_WALLET
-    std::string walletPath = GetDataDir().string();
-    walletPath += QDir::separator().toLatin1() + gArgs.GetArg("-wallet", "wallet.dat");
+    // If there's no -wallet setting with a list of wallets to load, set it to
+    // load the default "" wallet.
+    if (!gArgs.IsArgSet("wallet")) {
+        gArgs.LockSettings([&](util::Settings& settings) {
+            util::SettingsValue wallets(util::SettingsValue::VARR);
+            wallets.push_back(""); // Default wallet name is ""
+            settings.rw_settings["wallet"] = wallets;
+        });
+    }
+    std::string walletName = gArgs.GetArgs("-wallet").at(0);
+    std::string walletPath = GetWalletDir().string();
+    walletPath += QDir::separator().toLatin1() + (walletName == "" ? "wallet.dat" : walletName);
     ui->wallet_path->setText(QString::fromStdString(walletPath));
 #endif
 
