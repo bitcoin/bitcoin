@@ -1416,9 +1416,6 @@
        </item>
        <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="wallet_path">
-         <property name="text">
-          <string>Wallet Path</string>
-         </property>
         </widget>
        </item>
        <item row="3" column="0">
