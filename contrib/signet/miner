@@ -21,8 +21,8 @@ PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__fi
 PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNET, "..", "..", "test", "functional"))
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
-from test_framework.blocktools import WITNESS_COMMITMENT_HEADER, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, hash256, ser_compact_size, ser_string, ser_uint256, tx_from_hex, uint256_from_str # noqa: E402
+from test_framework.blocktools import get_witness_script, script_BIP34_coinbase_height # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, ser_compact_size, ser_string, ser_uint256, tx_from_hex # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -123,10 +123,6 @@ def create_coinbase(height, value, spk):
     cb.vout = [CTxOut(value, spk)]
     return cb
 
-def get_witness_script(witness_root, witness_nonce):
-    commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
-    return b"\x6a" + CScriptOp.encode_op_pushdata(WITNESS_COMMITMENT_HEADER + ser_uint256(commitment))
-
 def signet_txs(block, challenge):
     # assumes signet solution has not been added yet so does not need
     # to be removed
@@ -222,7 +218,7 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     cbwit = CTxInWitness()
     cbwit.scriptWitness.stack = [ser_uint256(witnonce)]
     block.vtx[0].wit.vtxinwit = [cbwit]
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witroot, witnonce)))
+    block.vtx[0].vout.append(CTxOut(0, bytes(get_witness_script(witroot, witnonce))))
 
     signme, spendme = signet_txs(block, signet_spk_bin)
 
@@ -627,5 +623,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
