@@ -291,8 +291,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             if not tx.wit.is_null():
                 segwit_tx_generated = True
 
-        if use_witness_address:
-            assert segwit_tx_generated  # check that our test is not broken
+        assert segwit_tx_generated  # check that our test is not broken
 
         # Wait until we've seen the block announcement for the resulting tip
         tip = int(node.getbestblockhash(), 16)
