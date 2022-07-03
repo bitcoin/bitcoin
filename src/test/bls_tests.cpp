@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE(bls_sig_tests)
     sk1.MakeNewKey();
     sk2.MakeNewKey();
 
-    uint256 msgHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-    uint256 msgHash2 = uint256S("0000000000000000000000000000000000000000000000000000000000000002");
+    uint256 msgHash1 = uint256::ONE;
+    uint256 msgHash2 = uint256::TWO;
 
     auto sig1 = sk1.Sign(msgHash1);
     auto sig2 = sk2.Sign(msgHash1);
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(bls_key_agg_tests)
 
     BOOST_CHECK(ag_pk == ag_sk.GetPublicKey());
 
-    uint256 msgHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-    uint256 msgHash2 = uint256S("0000000000000000000000000000000000000000000000000000000000000002");
+    uint256 msgHash1 = uint256::ONE;
+    uint256 msgHash2 = uint256::TWO;
 
     auto sig = ag_sk.Sign(msgHash1);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(bls_key_agg_vec_tests)
     BOOST_CHECK(ag_sk.IsValid());
     BOOST_CHECK(ag_pk.IsValid());
 
-    uint256 msgHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-    uint256 msgHash2 = uint256S("0000000000000000000000000000000000000000000000000000000000000002");
+    uint256 msgHash1 = uint256::ONE;
+    uint256 msgHash2 = uint256::TWO;
 
     auto sig = ag_sk.Sign(msgHash1);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));

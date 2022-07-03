@@ -10,6 +10,7 @@
 #include <net.h>
 #include <node/context.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/error.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -21,9 +22,9 @@
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 
-class WalletInit : public WalletInitInterface {
+class WalletInit : public WalletInitInterface
+{
 public:
-
     //! Was the wallet component compiled in.
     bool HasWalletSupport() const override {return true;}
 
@@ -160,20 +161,21 @@ bool WalletInit::ParameterInteraction() const
 
 void WalletInit::Construct(NodeContext& node) const
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+    ArgsManager& args = *Assert(node.args);
+    if (args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
         return;
     }
     // If there's no -wallet setting with a list of wallets to load, set it to
     // load the default "" wallet.
-    if (!gArgs.IsArgSet("wallet")) {
-        gArgs.LockSettings([&](util::Settings& settings) {
+    if (!args.IsArgSet("wallet")) {
+        args.LockSettings([&](util::Settings& settings) {
             util::SettingsValue wallets(util::SettingsValue::VARR);
             wallets.push_back(""); // Default wallet name is ""
             settings.rw_settings["wallet"] = wallets;
         });
     }
-    auto wallet_client = interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet"));
+    auto wallet_client = interfaces::MakeWalletClient(*node.chain, args, args.GetArgs("-wallet"));
     node.wallet_client = wallet_client.get();
     node.chain_clients.emplace_back(std::move(wallet_client));
 }

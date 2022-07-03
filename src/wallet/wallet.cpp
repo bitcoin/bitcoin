@@ -97,9 +97,9 @@ static void UpdateWalletSetting(interfaces::Chain& chain,
                                 std::vector<bilingual_str>& warnings)
 {
     if (load_on_startup == nullopt) return;
-    if (load_on_startup.get() && !AddWalletSetting(chain, wallet_name)) {
+    if (load_on_startup.value() && !AddWalletSetting(chain, wallet_name)) {
         warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."));
-    } else if (!load_on_startup.get() && !RemoveWalletSetting(chain, wallet_name)) {
+    } else if (!load_on_startup.value() && !RemoveWalletSetting(chain, wallet_name)) {
         warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may still be loaded next node startup."));
     }
 }
@@ -326,8 +326,6 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
 
     return WalletCreationStatus::SUCCESS;
 }
-
-const uint256 CWalletTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
 /** @defgroup mapWallet
  *
@@ -2516,7 +2514,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     ShowProgress(strprintf("%s " + _("Rescanning...").translated, GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
     uint256 tip_hash;
     // The way the 'block_height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
-    Optional<int> block_height = MakeOptional(false, int());
+    Optional<int> block_height;
     double progress_begin;
     double progress_end;
     {
@@ -3560,7 +3558,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain)
         return false;
     }
     constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 8 * 60 * 60; // in seconds
-    if (chain.getBlockTime(chain.getHeight().get_value_or(-1)) < (GetTime() - MAX_ANTI_FEE_SNIPING_TIP_AGE)) {
+    if (chain.getBlockTime(chain.getHeight().value_or(-1)) < (GetTime() - MAX_ANTI_FEE_SNIPING_TIP_AGE)) {
         return false;
     }
     return true;
@@ -3594,7 +3592,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain)
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
     if (IsCurrentForAntiFeeSniping(chain)) {
-        locktime = chain.getHeight().get_value_or(-1);
+        locktime = chain.getHeight().value_or(-1);
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
         // that transactions that are delayed after signing for whatever reason,

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_CONTEXT_H
 #define BITCOIN_WALLET_CONTEXT_H
 
+class ArgsManager;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
@@ -21,6 +22,7 @@ class Chain;
 //! behavior.
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
+    ArgsManager* args{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class

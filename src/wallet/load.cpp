@@ -88,14 +88,14 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
     }
 }
 
-void StartWallets(CScheduler& scheduler)
+void StartWallets(CScheduler& scheduler, const ArgsManager& args)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
-    if (gArgs.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
+    if (args.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
         scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
     }
     scheduler.scheduleEvery(MaybeResendWalletTxs, 1000);

@@ -392,7 +392,7 @@ private:
     /** Constant used in hashBlock to indicate tx has been abandoned, only used at
      * serialization/deserialization to avoid ambiguity with conflicted.
      */
-    static const uint256 ABANDON_HASH;
+    static constexpr const uint256& ABANDON_HASH = uint256::ONE;
 
     mutable bool fIsChainlocked{false};
     mutable bool fIsInstantSendLocked{false};
