@@ -111,10 +111,10 @@ CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
     return nChange;
 }
 
-static CAmount GetCachableAmount(const CWallet& wallet, const CWalletTx& wtx, CWalletTx::AmountType type, const isminefilter& filter, bool recalculate = false)
+static CAmount GetCachableAmount(const CWallet& wallet, const CWalletTx& wtx, CWalletTx::AmountType type, const isminefilter& filter)
 {
     auto& amount = wtx.m_amounts[type];
-    if (recalculate || !amount.m_cached[filter]) {
+    if (!amount.m_cached[filter]) {
         amount.Set(filter, type == CWalletTx::DEBIT ? wallet.GetDebit(*wtx.tx, filter) : TxGetCredit(wallet, *wtx.tx, filter));
         wtx.m_is_cache_empty = false;
     }
