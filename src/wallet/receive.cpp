@@ -22,20 +22,8 @@ isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin)
 bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter)
 {
     LOCK(wallet.cs_wallet);
-
-    for (const CTxIn& txin : tx.vin)
-    {
-        auto mi = wallet.mapWallet.find(txin.prevout.hash);
-        if (mi == wallet.mapWallet.end())
-            return false; // any unknown inputs can't be from us
-
-        const CWalletTx& prev = (*mi).second;
-
-        if (txin.prevout.n >= prev.tx->vout.size())
-            return false; // invalid input!
-
-        if (!(wallet.IsMine(prev.tx->vout[txin.prevout.n]) & filter))
-            return false;
+    for (const CTxIn& txin : tx.vin) {
+        if (!(InputIsMine(wallet, txin) & filter)) return false;
     }
     return true;
 }
