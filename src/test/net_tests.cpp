@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     pnode->SetAddrLocal(addrLocal);
 
     // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    GetLocalAddrForPeer(&*pnode);
+    GetLocalAddrForPeer(*pnode);
 
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
@@ -675,13 +675,10 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     const uint16_t bind_port = 20001;
     m_node.args->ForceSetArg("-bind", strprintf("3.4.5.6:%u", bind_port));
 
-    const uint32_t current_time = static_cast<uint32_t>(GetAdjustedTime());
-    SetMockTime(current_time);
-
     // Our address:port as seen from the peer, completely different from the above.
     in_addr peer_us_addr;
     peer_us_addr.s_addr = htonl(0x02030405);
-    const CAddress peer_us{CService{peer_us_addr, 20002}, NODE_NETWORK, current_time};
+    const CService peer_us{peer_us_addr, 20002};
 
     // Create a peer with a routable IPv4 address (outbound).
     in_addr peer_out_in_addr;
@@ -700,9 +697,9 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_out.SetAddrLocal(peer_us);
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:bind_port.
-    auto chosen_local_addr = GetLocalAddrForPeer(&peer_out);
+    auto chosen_local_addr = GetLocalAddrForPeer(peer_out);
     BOOST_REQUIRE(chosen_local_addr);
-    const CAddress expected{CService{peer_us_addr, bind_port}, NODE_NETWORK, current_time};
+    const CService expected{peer_us_addr, bind_port};
     BOOST_CHECK(*chosen_local_addr == expected);
 
     // Create a peer with a routable IPv4 address (inbound).
@@ -722,7 +719,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     peer_in.SetAddrLocal(peer_us);
 
     // Without the fix peer_us:8333 is chosen instead of the proper peer_us:peer_us.GetPort().
-    chosen_local_addr = GetLocalAddrForPeer(&peer_in);
+    chosen_local_addr = GetLocalAddrForPeer(peer_in);
     BOOST_REQUIRE(chosen_local_addr);
     BOOST_CHECK(*chosen_local_addr == peer_us);
 

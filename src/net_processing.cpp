@@ -2930,7 +2930,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // indicate to the peer that we will participate in addr relay.
             if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload())
             {
-                CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
+                CAddress addr{GetLocalAddress(pfrom.addr), peer->m_our_services, (uint32_t)GetAdjustedTime()};
                 FastRandomContext insecure_rand;
                 if (addr.IsRoutable())
                 {
@@ -4685,9 +4685,10 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         if (peer.m_next_local_addr_send != 0us) {
             peer.m_addr_known->reset();
         }
-        if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(&node)) {
+        if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
+            CAddress local_addr{*local_service, peer.m_our_services, (uint32_t)GetAdjustedTime()};
             FastRandomContext insecure_rand;
-            PushAddress(peer, *local_addr, insecure_rand);
+            PushAddress(peer, local_addr, insecure_rand);
         }
         peer.m_next_local_addr_send = GetExponentialRand(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
     }
