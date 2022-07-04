@@ -164,23 +164,12 @@ CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx)
     return wtx.nChangeCached;
 }
 
-CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx)
+CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
 {
     AssertLockHeld(wallet.cs_wallet);
 
     if (wallet.IsTxImmatureCoinBase(wtx) && wallet.IsTxInMainChain(wtx)) {
-        return GetCachableAmount(wallet, wtx, CWalletTx::IMMATURE_CREDIT, ISMINE_SPENDABLE);
-    }
-
-    return 0;
-}
-
-CAmount CachedTxGetImmatureWatchOnlyCredit(const CWallet& wallet, const CWalletTx& wtx)
-{
-    AssertLockHeld(wallet.cs_wallet);
-
-    if (wallet.IsTxImmatureCoinBase(wtx) && wallet.IsTxInMainChain(wtx)) {
-        return GetCachableAmount(wallet, wtx, CWalletTx::IMMATURE_CREDIT, ISMINE_WATCH_ONLY);
+        return GetCachableAmount(wallet, wtx, CWalletTx::IMMATURE_CREDIT, filter);
     }
 
     return 0;
@@ -342,8 +331,8 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
-            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx);
-            ret.m_watchonly_immature += CachedTxGetImmatureWatchOnlyCredit(wallet, wtx);
+            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
+            ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
         }
     }
     return ret;
