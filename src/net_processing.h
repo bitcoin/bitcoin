@@ -202,6 +202,9 @@ struct Peer {
     Mutex m_getdata_requests_mutex;
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
+
+    /** Time of the last getheaders message to this peer */
+    std::atomic<NodeClock::time_point> m_last_getheaders_timestamp{NodeSeconds{}};
     // SYSCOIN
     /** This peer's a masternode connection */
     std::atomic<bool> m_masternode_connection{false};
