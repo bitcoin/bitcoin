@@ -2,8 +2,8 @@ Example scripts for User-space, Statically Defined Tracing (USDT)
 =================================================================
 
 This directory contains scripts showcasing User-space, Statically Defined
-Tracing (USDT) support for Bitcoin Core on Linux using. For more information on
-USDT support in Bitcoin Core see the [USDT documentation].
+Tracing (USDT) support for Bitcoin Core on Linux and macOS. For more
+information on USDT support in Bitcoin Core see the [USDT documentation].
 
 [USDT documentation]: ../../doc/tracing.md
 
@@ -28,6 +28,16 @@ information. For development there exist a [bpftrace Reference Guide], a
 [BCC Reference Guide]: https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md
 [bcc Python Developer Tutorial]: https://github.com/iovisor/bcc/blob/master/docs/tutorial_bcc_python_developer.md
 
+Examples of [dtrace] scripts for macOS, based on the existing bpftrace scripts,
+are also listed.
+
+*Note: On all current macOS versions System Integrity Protection (SIP) is
+enabled by default and prevents most uses of `dtrace`. The usual way to make
+`dtrace` work on macOS is to boot into recovery mode and disable some of the
+SIP protections with `csrutil enable --without dtrace`.*
+
+[dtrace]: https://illumos.org/books/dtrace/
+
 ## Examples
 
 The bpftrace examples contain a relative path to the `bitcoind` binary. By
@@ -39,15 +49,15 @@ example, to point to release builds if needed. See the
 
 [Bitcoin Core USDT documentation]: ../../doc/tracing.md#listing-available-tracepoints
 
-**WARNING: eBPF programs require root privileges to be loaded into a Linux
-kernel VM. This means the bpftrace and BCC examples must be executed with root
-privileges. Make sure to carefully review any scripts that you run with root
-privileges first!**
+**WARNING: eBPF & DTrace programs require root privileges to be loaded into the
+Linux kernel VM and macOS kernel, respectively. This means the bpftrace, BCC
+and dtrace examples must be executed with root privileges. Make sure to
+carefully review any scripts that you run with root privileges first!**
 
-### log_p2p_traffic.bt
+### log_p2p_traffic.{bt,d}
 
-A bpftrace script logging information about inbound and outbound P2P network
-messages. Based on the `net:inbound_message` and `net:outbound_message`
+A `bpftrace`/`dtrace` script logging information about inbound and outbound P2P
+network messages. Based on the `net:inbound_message` and `net:outbound_message`
 tracepoints.
 
 By default, `bpftrace` limits strings to 64 bytes due to the limited stack size
@@ -58,6 +68,9 @@ works fine).
 
 ```
 $ bpftrace contrib/tracing/log_p2p_traffic.bt
+```
+```
+$ dtrace -s contrib/tracing/log_p2p_traffic.d
 ```
 
 Output
@@ -164,11 +177,11 @@ Warning: incomplete message (only 32568 out of 53552 bytes)! inbound msg 'tx' fr
 Possibly lost 2 samples
 ```
 
-### connectblock_benchmark.bt
+### connectblock_benchmark.{bt,d}
 
-A `bpftrace` script to benchmark the `ConnectBlock()` function during, for
-example, a blockchain re-index. Based on the `validation:block_connected` USDT
-tracepoint.
+A `bpftrace`/`dtrace` script to benchmark the `ConnectBlock()` function during,
+for example, a blockchain re-index. Based on the `validation:block_connected`
+USDT tracepoint.
 
 The script takes three positional arguments. The first two arguments, the start,
 and end height indicate between which blocks the benchmark should be run. The
@@ -182,6 +195,9 @@ longer than 25ms to connect.
 
 ```
 $ bpftrace contrib/tracing/connectblock_benchmark.bt 20000 38000 25
+```
+```
+$ dtrace -s contrib/tracing/connectblock_benchmark.d 20000 38000 25
 ```
 
 In a different terminal, starting Bitcoin Core in SigNet mode and with
@@ -252,14 +268,17 @@ Duration (µs)   Mode       Coins Count     Memory Usage    Prune
 81349           ALWAYS     0               1383.49 kB      False
 ```
 
-### log_utxos.bt
+### log_utxos.{bt,d}
 
-A `bpftrace` script to log information about the coins that are added, spent, or
-uncached from the UTXO set. Based on the `utxocache:add`, `utxocache:spend` and
-`utxocache:uncache` tracepoints.
+A `bpftrace`/`dtrace` script to log information about the coins that are added,
+spent, or uncached from the UTXO set. Based on the `utxocache:add`,
+`utxocache:spend` and `utxocache:uncache` tracepoints.
 
 ```bash
 $ bpftrace contrib/tracing/log_utxos.bt
+```
+```bash
+$ dtrace -s contrib/tracing/log_utxos.d
 ```
 
 This should produce an output similar to the following. If you see bpftrace

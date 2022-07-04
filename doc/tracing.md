@@ -6,6 +6,8 @@ These tracepoints make it possible to keep track of custom statistics and
 enable detailed monitoring of otherwise hidden internals. They have
 little to no performance impact when unused.
 
+### eBPF and USDT Overview
+
 ```
 eBPF and USDT Overview
 ======================
@@ -47,11 +49,26 @@ be found in [contrib/tracing].
 
 [bpftrace]: https://github.com/iovisor/bpftrace
 [BPF Compiler Collection (BCC)]: https://github.com/iovisor/bcc
+
+### DTrace and USDT Overview
+[DTrace] supports both static and dynamic instrumentation points called probes.
+Tracepoints are [statically defined probes] that are registered with DTrace
+when the application is executed and replaced by NOPs when not in use.
+
+DTrace operates by activating tracepoints, which fire when your code goes
+through them. You use the D language to specify which tracepoints to activate
+and which actions to execute when a tracepoint fires. Those programs are
+written in a Non-Turing-complete language and run in kernel space. Examples can
+be found in [contrib/tracing].
+
+[DTrace]: https://illumos.org/books/dtrace/
+[statically defined probes]: https://illumos.org/books/dtrace/chp-usdt.html
 [contrib/tracing]: ../contrib/tracing/
 
 ## Tracepoint documentation
 
-The currently available tracepoints are listed here.
+The currently available tracepoints are listed here and also defined at
+[`util/probes.d`].
 
 ### Context `net`
 
@@ -219,8 +236,11 @@ depending on the number of arguments passed to the tracepoint. Up to 12
 arguments can be provided. The `context` and `event` specify the names by which
 the tracepoint is referred to. Please use `snake_case` and try to make sure that
 the tracepoint names make sense even without detailed knowledge of the
-implementation details. Do not forget to update the tracepoint list in this
-document.
+implementation details. Define the new probe for the tracepoint at
+[`util/probes.d`] together with a new provider if needed. Do not forget to update
+the tracepoint list in this document.
+
+
 
 ```c
 #define TRACE(context, event)
@@ -250,6 +270,8 @@ TRACE6(net, inbound_message,
     msg.data.data()
 );
 ```
+
+[`util/probes.d`]: ../src/util/probes.d
 
 ### Guidelines and best practices
 
