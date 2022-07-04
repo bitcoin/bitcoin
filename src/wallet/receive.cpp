@@ -9,15 +9,12 @@
 #include <wallet/wallet.h>
 
 namespace wallet {
-isminetype InputIsMine(const CWallet& wallet, const CTxIn &txin)
+isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin)
 {
     AssertLockHeld(wallet.cs_wallet);
-    std::map<uint256, CWalletTx>::const_iterator mi = wallet.mapWallet.find(txin.prevout.hash);
-    if (mi != wallet.mapWallet.end())
-    {
-        const CWalletTx& prev = (*mi).second;
-        if (txin.prevout.n < prev.tx->vout.size())
-            return wallet.IsMine(prev.tx->vout[txin.prevout.n]);
+    const CWalletTx* prev = wallet.GetWalletTx(txin.prevout.hash);
+    if (prev && txin.prevout.n < prev->tx->vout.size()) {
+        return wallet.IsMine(prev->tx->vout[txin.prevout.n]);
     }
     return ISMINE_NO;
 }
