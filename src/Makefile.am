@@ -328,6 +328,21 @@ BITCOIN_CORE_H = \
   zmq/zmqrpc.h \
   zmq/zmqutil.h
 
+if HAVE_DTRACE
+util/probes.h:
+	@$(MKDIR_P) $(builddir)/util
+	$(AM_V_GEN) $(DTRACE) -h -s $(srcdir)/util/probes.d -o "$(abs_top_builddir)/src/util/probes.h"
+
+# util/probes.h is listed in BUILD_SOURCES because
+# it must be created early in the build process.
+BUILT_SOURCES = util/probes.h
+BITCOIN_CORE_H += util/probes.h
+else
+# A rule to make util/probes.h is still needed thus we create an empty file
+util/probes.h:
+	@$(MKDIR_P) $(builddir)/util
+	touch "$(abs_top_builddir)/src/util/probes.h"
+endif # HAVE_DTRACE
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -979,6 +994,7 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
+CLEANFILES += util/probes.h
 
 EXTRA_DIST = $(CTAES_DIST)
 

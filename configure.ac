@@ -1390,11 +1390,24 @@ if test "$use_usdt" != "no"; then
       [#include <sys/sdt.h>],
       [DTRACE_PROBE("context", "event");]
     )],
-    [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
+    [AC_MSG_RESULT([yes]); use_usdt=yes],
     [AC_MSG_RESULT([no]); use_usdt=no;]
   )
+
+  dnl dtrace(1) is needed on darwin to support USDT
+  AC_PATH_PROG([DTRACE], [dtrace])
+  if test "$TARGET_OS" = "darwin" && test -n "$DTRACE"; then
+    use_usdt=yes
+  fi
+else
+  use_usdt=no
+fi
+
+if test x$use_usdt = xyes; then
+  AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
+AM_CONDITIONAL([HAVE_DTRACE], [test "$use_usdt" = "yes" && test -n "$DTRACE"])
 
 if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nonononononono"; then
   use_upnp=no
