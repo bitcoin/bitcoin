@@ -87,6 +87,14 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.calc_sha256()
     return block
 
+def create_large_block(hashprev=None, ntime=None, height=None, scriptPubKey=CScript([OP_RETURN] + [OP_TRUE] * 950000)):
+    coinbase_tx = create_coinbase(height)
+    coinbase_tx.vin[0].nSequence = 2 ** 32 - 1
+    coinbase_tx.vout[0].scriptPubKey = scriptPubKey
+    coinbase_tx.rehash()
+
+    return create_block(coinbase=coinbase_tx, ntime=ntime, hashprev=hashprev)
+
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce)))
     output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
