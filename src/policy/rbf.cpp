@@ -181,3 +181,36 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     }
     return std::nullopt;
 }
+
+std::optional<std::string> CheckMinerScores(CAmount replacement_fees,
+                                            int64_t replacement_vsize,
+                                            const CTxMemPool::setEntries& direct_conflicts,
+                                            const CTxMemPool::setEntries& original_transactions)
+{
+        // Note that this assumes no in-mempool ancestors
+        const CFeeRate replacement_miner_score(replacement_fees, replacement_vsize);
+
+        for (const auto& entry : direct_conflicts) {
+            const bool conflict_is_v3{entry->GetSharedTx()->nVersion == 3};
+            CFeeRate original_score(entry->GetModifiedFee(), entry->GetTxSize());
+            // If the original transaction is v3, we can calculate the exact miner score and avoid overestimating.
+            if (conflict_is_v3) {
+                original_score = std::min(original_score, CFeeRate(entry->GetModFeesWithAncestors(), entry->GetSizeWithAncestors()));
+            }
+            if (replacement_miner_score < original_score) {
+                return strprintf("replacement miner score lower than %s miner score of direct conflict; %s < %s",
+                                 conflict_is_v3 ? "calculated" : "estimated",
+                                 replacement_miner_score.ToString(),
+                                 original_score.ToString());
+            }
+        }
+        for (const auto& entry : original_transactions) {
+            const CFeeRate original_ancestor_feerate(entry->GetModFeesWithAncestors(), entry->GetSizeWithAncestors());
+            if (replacement_miner_score < original_ancestor_feerate) {
+                return strprintf("replacement miner score lower than ancestor feerate of original tx; %s < %s",
+                                 replacement_miner_score.ToString(),
+                                 original_ancestor_feerate.ToString());
+            }
+        }
+        return std::nullopt;
+}
