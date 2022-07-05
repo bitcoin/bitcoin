@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.nVersion = 0;
     CheckIsNotStandard(t, "version");
 
-    t.nVersion = 3;
+    t.nVersion = 4;
     CheckIsNotStandard(t, "version");
 
     // Allowed nVersion
@@ -801,6 +801,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t);
 
     t.nVersion = 2;
+    CheckIsStandard(t);
+
+    t.nVersion = 3;
     CheckIsStandard(t);
 
     // Check dust with odd relay fee to verify rounding:
