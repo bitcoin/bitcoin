@@ -273,6 +273,9 @@ private:
     void Close();
 };
 
+/** Enable non-blocking mode for a socket */
+bool SetSocketNonBlocking(const SOCKET& hSocket);
+
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 

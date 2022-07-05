@@ -117,6 +117,21 @@ int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
     return getsockname(m_socket, name, name_len);
 }
 
+bool SetSocketNonBlocking(const SOCKET& hSocket)
+{
+#ifdef WIN32
+    u_long nOne = 1;
+    if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
+#else
+    int fFlags = fcntl(hSocket, F_GETFL, 0);
+    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
+#endif
+        return false;
+    }
+
+    return true;
+}
+
 bool Sock::IsSelectable() const
 {
 #if defined(USE_POLL) || defined(WIN32)

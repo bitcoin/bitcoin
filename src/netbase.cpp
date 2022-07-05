@@ -717,21 +717,6 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
     return false;
 }
 
-bool SetSocketNonBlocking(const SOCKET& hSocket)
-{
-#ifdef WIN32
-    u_long nOne = 1;
-    if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
-#else
-    int fFlags = fcntl(hSocket, F_GETFL, 0);
-    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
-#endif
-        return false;
-    }
-
-    return true;
-}
-
 void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
