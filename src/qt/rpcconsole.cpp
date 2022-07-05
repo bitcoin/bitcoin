@@ -499,22 +499,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     connect(ui->btn_upgradewallet, &QPushButton::clicked, this, &RPCConsole::walletUpgrade);
     connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
 
-#ifdef ENABLE_WALLET
-    // If there's no -wallet setting with a list of wallets to load, set it to
-    // load the default "" wallet.
-    if (!gArgs.IsArgSet("wallet")) {
-        gArgs.LockSettings([&](util::Settings& settings) {
-            util::SettingsValue wallets(util::SettingsValue::VARR);
-            wallets.push_back(""); // Default wallet name is ""
-            settings.rw_settings["wallet"] = wallets;
-        });
-    }
-    std::string walletName = gArgs.GetArgs("-wallet").at(0);
-    std::string walletPath = GetWalletDir().string();
-    walletPath += QDir::separator().toLatin1() + (walletName == "" ? "wallet.dat" : walletName);
-    ui->wallet_path->setText(QString::fromStdString(walletPath));
-#endif
-
     // Register RPC timer interface
     rpcTimerInterface = new QtRPCTimerInterface();
     // avoid accidentally overwriting an existing, non QTThread
@@ -731,17 +715,27 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
 {
     // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
     ui->WalletSelector->addItem(walletModel->getDisplayName(), QVariant::fromValue(walletModel));
-    if (ui->WalletSelector->count() == 2 && !isVisible()) {
-        // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
-        ui->WalletSelector->setCurrentIndex(1);
-    }
-    if (ui->WalletSelector->count() > 2) {
+    if (ui->WalletSelector->count() == 2) {
+        if (!isVisible()) {
+            // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
+            ui->WalletSelector->setCurrentIndex(1);
+        }
+        // The only loaded wallet
+        ui->btn_rescan1->setEnabled(true);
+        ui->btn_rescan2->setEnabled(true);
+        ui->btn_upgradewallet->setEnabled(true);
+        QString wallet_path = QString::fromStdString(GetWalletDir().string() + QDir::separator().toLatin1());
+        QString wallet_name = walletModel->getWalletName().isEmpty() ? "wallet.dat" : walletModel->getWalletName();
+        ui->wallet_path->setText(wallet_path + wallet_name);
+    } else {
         ui->WalletSelector->setVisible(true);
         ui->WalletSelectorLabel->setVisible(true);
+        // No wallet recovery for multiple loaded wallets
+        ui->btn_rescan1->setEnabled(false);
+        ui->btn_rescan2->setEnabled(false);
+        ui->btn_upgradewallet->setEnabled(false);
+        ui->wallet_path->clear();
     }
-    ui->btn_rescan1->setEnabled(true);
-    ui->btn_rescan2->setEnabled(true);
-    ui->btn_upgradewallet->setEnabled(true);
 }
 
 void RPCConsole::removeWallet(WalletModel * const walletModel)
@@ -750,11 +744,20 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
     if (ui->WalletSelector->count() == 2) {
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
-    }
-    if (ui->WalletSelector->count() == 1) {
+        // Back to the only loaded wallet
+        ui->btn_rescan1->setEnabled(true);
+        ui->btn_rescan2->setEnabled(true);
+        ui->btn_upgradewallet->setEnabled(true);
+        WalletModel* wallet_model = ui->WalletSelector->itemData(1).value<WalletModel*>();
+        QString wallet_path = QString::fromStdString(GetWalletDir().string() + QDir::separator().toLatin1());
+        QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
+        ui->wallet_path->setText(wallet_path + wallet_name);
+    } else {
+        // No wallet recovery for multiple loaded wallets
         ui->btn_rescan1->setEnabled(false);
         ui->btn_rescan2->setEnabled(false);
         ui->btn_upgradewallet->setEnabled(false);
+        ui->wallet_path->clear();
     }
 }
 #endif
