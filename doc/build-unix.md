@@ -313,27 +313,3 @@ or building and depending on a local version of Berkeley DB 4.8. The readily ava
 `--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/bitcoin/trunk/PKGBUILD).
 As mentioned above, when maintaining portability of the wallet between the standard Dash Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
-
-
-ARM Cross-compilation
--------------------
-These steps can be performed on, for example, an Ubuntu VM. The depends system
-will also work on other Linux distributions, however the commands for
-installing the toolchain will be different.
-
-Make sure you install the build requirements mentioned above.
-Then, install the toolchain and curl:
-
-    sudo apt-get install g++-arm-linux-gnueabihf curl
-
-To build executables for ARM:
-
-    cd depends
-    make HOST=arm-linux-gnueabihf NO_QT=1
-    cd ..
-    ./autogen.sh
-    CONFIG_SITE=$PWD/depends/arm-linux-gnueabihf/share/config.site ./configure --enable-reduce-exports LDFLAGS=-static-libstdc++
-    make
-
-
-For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
