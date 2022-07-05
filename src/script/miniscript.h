@@ -1030,6 +1030,18 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 {
     using namespace spanparsing;
 
+    // Account for the minimum script size for all parsed fragments so far. It "borrows" 1
+    // script byte from all leaf nodes, counting it instead whenever a space for a recursive
+    // expression is added (through andor, and_*, or_*, thresh). This guarantees that all fragments
+    // increment the script_size by at least one, except for:
+    // - "0", "1": these leafs are only a single byte, so their subtracted-from increment is 0.
+    //   This is not an issue however, as "space" for them has to be created by combinators,
+    //   which do increment script_size.
+    // - "v:": the v wrapper adds nothing as in some cases it results in no opcode being added
+    //   (instead transforming another opcode into its VERIFY form). However, the v: wrapper has
+    //   to be interleaved with other fragments to be valid, so this is not a concern.
+    size_t script_size{1};
+
     // The two integers are used to hold state for thresh()
     std::vector<std::tuple<ParseContext, int64_t, int64_t>> to_parse;
     std::vector<NodeRef<Key>> constructed;
@@ -1037,14 +1049,16 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
 
     while (!to_parse.empty()) {
+        if (script_size > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
+
         // Get the current context we are decoding within
         auto [cur_context, n, k] = to_parse.back();
         to_parse.pop_back();
 
         switch (cur_context) {
         case ParseContext::WRAPPED_EXPR: {
-            int colon_index = -1;
-            for (int i = 1; i < (int)in.size(); ++i) {
+            std::optional<size_t> colon_index{};
+            for (size_t i = 1; i < in.size(); ++i) {
                 if (in[i] == ':') {
                     colon_index = i;
                     break;
@@ -1052,35 +1066,50 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 if (in[i] < 'a' || in[i] > 'z') break;
             }
             // If there is no colon, this loop won't execute
-            for (int j = 0; j < colon_index; ++j) {
+            bool last_was_v{false};
+            for (size_t j = 0; colon_index && j < *colon_index; ++j) {
+                if (script_size > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
                 if (in[j] == 'a') {
+                    script_size += 2;
                     to_parse.emplace_back(ParseContext::ALT, -1, -1);
                 } else if (in[j] == 's') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::SWAP, -1, -1);
                 } else if (in[j] == 'c') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::CHECK, -1, -1);
                 } else if (in[j] == 'd') {
+                    script_size += 3;
                     to_parse.emplace_back(ParseContext::DUP_IF, -1, -1);
                 } else if (in[j] == 'j') {
+                    script_size += 4;
                     to_parse.emplace_back(ParseContext::NON_ZERO, -1, -1);
                 } else if (in[j] == 'n') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::ZERO_NOTEQUAL, -1, -1);
                 } else if (in[j] == 'v') {
+                    // do not permit "...vv...:"; it's not valid, and also doesn't trigger early
+                    // failure as script_size isn't incremented.
+                    if (last_was_v) return {};
                     to_parse.emplace_back(ParseContext::VERIFY, -1, -1);
                 } else if (in[j] == 'u') {
+                    script_size += 4;
                     to_parse.emplace_back(ParseContext::WRAP_U, -1, -1);
                 } else if (in[j] == 't') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::WRAP_T, -1, -1);
                 } else if (in[j] == 'l') {
                     // The l: wrapper is equivalent to or_i(0,X)
+                    script_size += 4;
                     constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0));
                     to_parse.emplace_back(ParseContext::OR_I, -1, -1);
                 } else {
                     return {};
                 }
+                last_was_v = (in[j] == 'v');
             }
             to_parse.emplace_back(ParseContext::EXPR, -1, -1);
-            in = in.subspan(colon_index + 1);
+            if (colon_index) in = in.subspan(*colon_index + 1);
             break;
         }
         case ParseContext::EXPR: {
@@ -1094,48 +1123,56 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_K, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
+                script_size += 34;
             } else if (Const("pkh(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_H, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
+                script_size += 24;
             } else if (Const("pk_k(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_K, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
+                script_size += 33;
             } else if (Const("pk_h(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_H, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
+                script_size += 23;
             } else if (Const("sha256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::SHA256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 38;
             } else if (Const("ripemd160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::RIPEMD160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 26;
             } else if (Const("hash256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 38;
             } else if (Const("hash160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 26;
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
@@ -1144,6 +1181,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 if (num < 1 || num >= 0x80000000L) return {};
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::AFTER, num));
                 in = in.subspan(arg_size + 1);
+                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
@@ -1152,6 +1190,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 if (num < 1 || num >= 0x80000000L) return {};
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::OLDER, num));
                 in = in.subspan(arg_size + 1);
+                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
             } else if (Const("multi(", in)) {
                 // Get threshold
                 int next_comma = FindNextChar(in, ',');
@@ -1171,6 +1210,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 }
                 if (keys.size() < 1 || keys.size() > 20) return {};
                 if (k < 1 || k > (int64_t)keys.size()) return {};
+                script_size += 2 + (keys.size() > 16) + (k > 16) + 34 * keys.size();
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::MULTI, std::move(keys), k));
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
@@ -1181,6 +1221,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
                 to_parse.emplace_back(ParseContext::THRESH, 1, k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 2 + (k > 16);
             } else if (Const("andor(", in)) {
                 to_parse.emplace_back(ParseContext::ANDOR, -1, -1);
                 to_parse.emplace_back(ParseContext::CLOSE_BRACKET, -1, -1);
@@ -1189,21 +1230,29 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
                 to_parse.emplace_back(ParseContext::COMMA, -1, -1);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 5;
             } else {
                 if (Const("and_n(", in)) {
                     to_parse.emplace_back(ParseContext::AND_N, -1, -1);
+                    script_size += 5;
                 } else if (Const("and_b(", in)) {
                     to_parse.emplace_back(ParseContext::AND_B, -1, -1);
+                    script_size += 2;
                 } else if (Const("and_v(", in)) {
                     to_parse.emplace_back(ParseContext::AND_V, -1, -1);
+                    script_size += 1;
                 } else if (Const("or_b(", in)) {
                     to_parse.emplace_back(ParseContext::OR_B, -1, -1);
+                    script_size += 2;
                 } else if (Const("or_c(", in)) {
                     to_parse.emplace_back(ParseContext::OR_C, -1, -1);
+                    script_size += 3;
                 } else if (Const("or_d(", in)) {
                     to_parse.emplace_back(ParseContext::OR_D, -1, -1);
+                    script_size += 4;
                 } else if (Const("or_i(", in)) {
                     to_parse.emplace_back(ParseContext::OR_I, -1, -1);
+                    script_size += 4;
                 } else {
                     return {};
                 }
@@ -1239,6 +1288,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             break;
         }
         case ParseContext::VERIFY: {
+            script_size += (constructed.back()->GetType() << "x"_mst);
             constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_V, Vector(std::move(constructed.back())));
             break;
         }
@@ -1294,6 +1344,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 in = in.subspan(1);
                 to_parse.emplace_back(ParseContext::THRESH, n+1, k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 2;
             } else if (in[0] == ')') {
                 if (k > n) return {};
                 in = in.subspan(1);
@@ -1325,6 +1376,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 
     // Sanity checks on the produced miniscript
     assert(constructed.size() == 1);
+    assert(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
     const NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
@@ -1779,6 +1831,8 @@ inline NodeRef<typename Ctx::Key> FromString(const std::string& str, const Ctx& 
 template<typename Ctx>
 inline NodeRef<typename Ctx::Key> FromScript(const CScript& script, const Ctx& ctx) {
     using namespace internal;
+    // A too large Script is necessarily invalid, don't bother parsing it.
+    if (script.size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
     auto decomposed = DecomposeScript(script);
     if (!decomposed) return {};
     auto it = decomposed->begin();
