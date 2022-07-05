@@ -267,6 +267,8 @@ private:
     void Close();
 };
 
+bool IsSelectableSocket(const SOCKET& s);
+
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 

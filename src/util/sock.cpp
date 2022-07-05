@@ -117,6 +117,14 @@ int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
     return getsockname(m_socket, name, name_len);
 }
 
+bool IsSelectableSocket(const SOCKET& s) {
+#if defined(USE_POLL) || defined(WIN32)
+    return true;
+#else
+    return (s < FD_SETSIZE);
+#endif
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
