@@ -180,3 +180,43 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     }
     return std::nullopt;
 }
+
+std::optional<std::string> CheckMinerScores(CAmount replacement_fees,
+                                            int64_t replacement_vsize,
+                                            const CTxMemPool::setEntries& ancestors,
+                                            const CTxMemPool::setEntries& direct_conflicts,
+                                            const CTxMemPool::setEntries& original_transactions)
+{
+        const CFeeRate replacement_individual_feerate(replacement_fees, replacement_vsize);
+        // Ancestor feerate is the total modified fees divided by the total size. To get the
+        // ancestor feerate, add up all the individual modified fees and sizes. Don't try to use the
+        // cached ancestor fees and sizes because entries may have overlapping ancestors.
+        for (CTxMemPool::txiter it : ancestors) {
+            replacement_fees += it->GetModifiedFee();
+            replacement_vsize += it->GetTxSize();
+        }
+        const CFeeRate replacement_ancestor_feerate(replacement_fees, replacement_vsize);
+        // A package/transaction's ancestor feerate is not equivalent to the miner score; it may
+        // overestimate. Some subset of the ancestors could be included by itself if it has other
+        // high-feerate descendants or are themselves higher feerate than this package/transaction.
+        // For now, as a conservative estimate, use the minimum between the transaction's individual
+        // feerate and ancestor feerate.
+        const CFeeRate replacement_miner_score = std::min(replacement_individual_feerate, replacement_ancestor_feerate);
+        for (const auto& entry : direct_conflicts) {
+            const CFeeRate original_individual_feerate(entry->GetModifiedFee(), entry->GetTxSize());
+            if (replacement_miner_score < original_individual_feerate) {
+                return strprintf("replacement miner score lower than individual feerate of direct conflict; %s < %s",
+                                 replacement_miner_score.ToString(),
+                                 original_individual_feerate.ToString());
+            }
+        }
+        for (const auto& entry : original_transactions) {
+            const CFeeRate original_ancestor_feerate(entry->GetModFeesWithAncestors(), entry->GetSizeWithAncestors());
+            if (replacement_miner_score < original_ancestor_feerate) {
+                return strprintf("replacement miner score lower than ancestor feerate of original tx; %s < %s",
+                                 replacement_miner_score.ToString(),
+                                 original_ancestor_feerate.ToString());
+            }
+        }
+        return std::nullopt;
+}
