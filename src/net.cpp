@@ -2020,8 +2020,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         return;
     }
 
-    if (!IsSelectableSocket(sock->Get()))
-    {
+    if (!sock->IsSelectable()) {
         LogPrintf("%s: non-selectable socket\n", strDropped);
         return;
     }
