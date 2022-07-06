@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <coins.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
@@ -13,10 +14,16 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <univalue.h>
 #include <validation.h>
 #include <version.h>
 
 #include <cassert>
+
+void initialize()
+{
+    SelectParams(CBaseChainParams::REGTEST);
+}
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
@@ -78,4 +85,20 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)IsFinalTx(tx, /* nBlockHeight= */ 1024, /* nBlockTime= */ 1024);
     (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
+
+    CCoinsView coins_view;
+    const CCoinsViewCache coins_view_cache(&coins_view);
+    (void)AreInputsStandard(tx, coins_view_cache);
+
+    UniValue u(UniValue::VOBJ);
+    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
+    bool skip_tx_to_univ = false;
+    for (const CTxOut& txout : tx.vout) {
+        if (txout.nValue == std::numeric_limits<int64_t>::min()) {
+            skip_tx_to_univ = true;
+        }
+    }
+    if (!skip_tx_to_univ) {
+        TxToUniv(tx, /* hashBlock */ {}, u);
+    }
 }
