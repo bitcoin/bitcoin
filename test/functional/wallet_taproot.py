@@ -179,7 +179,7 @@ def multi_a(k, hex_keys, sort=False):
     return (None, CScript(ops))
 
 def compute_taproot_address(pubkey, scripts):
-    """Compute the address for a taproot output with given inner key and scripts."""
+    """Compute the address for a taproot output with given internal key and scripts."""
     return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
 
 class WalletTaprootTest(BitcoinTestFramework):

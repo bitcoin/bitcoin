@@ -1499,7 +1499,7 @@ class TaprootTest(BitcoinTestFramework):
         # Generate corresponding public x-only pubkeys
         pubs = [compute_xonly_pubkey(prv)[0] for prv in prvs]
         # Generate taproot objects
-        inner_keys = [pubs[i] for i in range(7)]
+        internal_keys = [pubs[i] for i in range(7)]
 
         script_lists = [
             None,
@@ -1510,7 +1510,7 @@ class TaprootTest(BitcoinTestFramework):
             [("0", CScript([pubs[54], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[55], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[56], OP_CHECKSIG]), 0xc0)]],
             [("0", CScript([pubs[57], OP_CHECKSIG]), 0xc0), [("1", CScript([pubs[58], OP_CHECKSIG]), 0xc0), ("2", CScript([pubs[59], OP_CHECKSIG]), 0xc0)]],
         ]
-        taps = [taproot_construct(inner_keys[i], script_lists[i]) for i in range(len(inner_keys))]
+        taps = [taproot_construct(internal_keys[i], script_lists[i]) for i in range(len(internal_keys))]
 
         # Require negated taps[0]
         assert taps[0].negflag
