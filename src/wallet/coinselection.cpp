@@ -156,7 +156,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
-    result.ComputeAndSetWaste(CAmount{0});
+    result.ComputeAndSetWaste(cost_of_change, cost_of_change, CAmount{0});
     assert(best_waste == result.GetWaste());
 
     return result;
@@ -406,9 +406,15 @@ CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_f
     }
 }
 
-void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
+void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee)
 {
-    m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    const CAmount change = GetChange(min_viable_change, change_fee);
+
+    if (change > 0) {
+        m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    } else {
+        m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
+    }
 }
 
 CAmount SelectionResult::GetWaste() const

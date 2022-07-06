@@ -310,7 +310,7 @@ public:
     void AddInput(const OutputGroup& group);
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
-    void ComputeAndSetWaste(CAmount change_cost);
+    void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
 
     void Merge(const SelectionResult& other);

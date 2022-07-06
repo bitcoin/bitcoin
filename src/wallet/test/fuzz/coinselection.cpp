@@ -85,11 +85,11 @@ FUZZ_TARGET(coinselection)
     const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change);
 
     auto result_srd = SelectCoinsSRD(group_pos, target, fast_random_context);
-    if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change);
+    if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
     auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context);
-    if (result_knapsack) result_knapsack->ComputeAndSetWaste(cost_of_change);
+    if (result_knapsack) result_knapsack->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
 
     // If the total balance is sufficient for the target and we are not using
     // effective values, Knapsack should always find a solution.
