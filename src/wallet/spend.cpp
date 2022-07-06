@@ -607,12 +607,15 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
         Shuffle(available_coins.other.begin(), available_coins.other.end(), coin_selection_params.rng_fast);
     }
 
+    SelectionResult preselected(preset_inputs.GetSelectionAmount(), SelectionAlgorithm::MANUAL);
+    preselected.AddInput(preset_inputs);
+
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
     std::optional<SelectionResult> res = [&] {
         // Pre-selected inputs already cover the target amount.
-        if (value_to_select <= 0) return std::make_optional(SelectionResult(nTargetValue, SelectionAlgorithm::MANUAL));
+        if (value_to_select <= 0) return std::make_optional(SelectionResult(value_to_select, SelectionAlgorithm::MANUAL));
 
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
@@ -666,7 +669,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
     if (!res) return std::nullopt;
 
     // Add preset inputs to result
-    res->AddInput(preset_inputs);
+    res->Merge(preselected);
     if (res->GetAlgo() == SelectionAlgorithm::MANUAL) {
         res->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
     }
