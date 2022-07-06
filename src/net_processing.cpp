@@ -134,7 +134,7 @@ static constexpr double BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 0.5;
 /** Maximum number of headers to announce when relaying blocks with headers message.*/
 static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 /** Maximum number of unconnecting headers announcements before DoS score */
-static const int MAX_UNCONNECTING_HEADERS = 10;
+static const int MAX_UNCONNECTING_HEADERS_MSGS{10};
 /** Minimum blocks required to signal NODE_NETWORK_LIMITED */
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 /** Average delay between local address broadcasts */
@@ -269,6 +269,9 @@ struct Peer {
     /** Timestamp after which we will send the next BIP133 `feefilter` message
       * to the peer. */
     std::chrono::microseconds m_next_send_feefilter GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
+
+    //! Length of current-streak of unconnecting headers announcements
+    int m_num_unconnecting_headers_msgs{0};
 
     struct TxRelay {
         mutable RecursiveMutex m_bloom_filter_mutex;
@@ -418,8 +421,6 @@ struct CNodeState {
     const CBlockIndex* pindexLastCommonBlock{nullptr};
     //! The best header we have sent our peer.
     const CBlockIndex* pindexBestHeaderSent{nullptr};
-    //! Length of current-streak of unconnecting headers announcements
-    int nUnconnectingHeaders{0};
     //! Whether we've started headers synchronization with this peer.
     bool fSyncStarted{false};
     //! When to potentially disconnect peer for stalling headers download
@@ -659,7 +660,7 @@ private:
     /** Potentially fetch blocks from this peer upon receipt of a new headers tip */
     void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex* pindexLast);
     /** Update peer state based on received headers message */
-    void UpdatePeerStateForReceivedHeaders(CNode& pfrom, const CBlockIndex *pindexLast, bool received_new_header, bool may_have_more_headers);
+    void UpdatePeerStateForReceivedHeaders(Peer& peer, CNode& pfrom, const CBlockIndex* pindexLast, bool received_new_header, bool may_have_more_headers);
 
     void SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req);
 
@@ -2401,28 +2402,26 @@ arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold()
  *
  * We'll send a getheaders message in response to try to connect the chain.
  *
- * The peer can send up to MAX_UNCONNECTING_HEADERS in a row that
- * don't connect before given DoS points.
+ * The peer can send up to MAX_UNCONNECTING_HEADERS_MSGS in a row that
+ * don't connect before being given DoS points.
  *
  * Once a headers message is received that is valid and does connect,
- * nUnconnectingHeaders gets reset back to 0.
+ * m_num_unconnecting_headers_msgs gets reset back to 0.
  */
 void PeerManagerImpl::HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer,
         const std::vector<CBlockHeader>& headers)
 {
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
 
+    peer.m_num_unconnecting_headers_msgs++;
     LOCK(cs_main);
-    CNodeState *nodestate = State(pfrom.GetId());
-
-    nodestate->nUnconnectingHeaders++;
     // Try to fill in the missing headers.
     if (MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), peer)) {
         LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending getheaders (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
             headers[0].GetHash().ToString(),
             headers[0].hashPrevBlock.ToString(),
             m_chainman.m_best_header->nHeight,
-            pfrom.GetId(), nodestate->nUnconnectingHeaders);
+            pfrom.GetId(), peer.m_num_unconnecting_headers_msgs);
     }
     // Set hashLastUnknownBlock for this peer, so that if we
     // eventually get the headers - even from a different peer -
@@ -2431,8 +2430,8 @@ void PeerManagerImpl::HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer,
 
     // The peer may just be broken, so periodically assign DoS points if this
     // condition persists.
-    if (nodestate->nUnconnectingHeaders % MAX_UNCONNECTING_HEADERS == 0) {
-        Misbehaving(peer, 20, strprintf("%d non-connecting headers", nodestate->nUnconnectingHeaders));
+    if (peer.m_num_unconnecting_headers_msgs % MAX_UNCONNECTING_HEADERS_MSGS == 0) {
+        Misbehaving(peer, 20, strprintf("%d non-connecting headers", peer.m_num_unconnecting_headers_msgs));
     }
 }
 
@@ -2676,15 +2675,15 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
  * whether that header was new and whether the headers message was full,
  * update the state we keep for the peer.
  */
-void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
+void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(Peer& peer, CNode& pfrom,
         const CBlockIndex *pindexLast, bool received_new_header, bool may_have_more_headers)
 {
+    if (peer.m_num_unconnecting_headers_msgs > 0) {
+        LogPrint(BCLog::NET, "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom.GetId(), peer.m_num_unconnecting_headers_msgs);
+    }
+    peer.m_num_unconnecting_headers_msgs = 0;
     LOCK(cs_main);
     CNodeState *nodestate = State(pfrom.GetId());
-    if (nodestate->nUnconnectingHeaders > 0) {
-        LogPrint(BCLog::NET, "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom.GetId(), nodestate->nUnconnectingHeaders);
-    }
-    nodestate->nUnconnectingHeaders = 0;
 
     assert(pindexLast);
     UpdateBlockAvailability(pfrom.GetId(), pindexLast->GetBlockHash());
@@ -2870,7 +2869,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
     }
 
-    UpdatePeerStateForReceivedHeaders(pfrom, pindexLast, received_new_header, nCount == MAX_HEADERS_RESULTS);
+    UpdatePeerStateForReceivedHeaders(peer, pfrom, pindexLast, received_new_header, nCount == MAX_HEADERS_RESULTS);
 
     // Consider immediately downloading blocks.
     HeadersDirectFetchBlocks(pfrom, peer, pindexLast);
