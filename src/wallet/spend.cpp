@@ -380,11 +380,15 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+    CAmount target_with_change = nTargetValue;
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
+    if (!coin_selection_params.m_subtract_fee_outputs) {
+        target_with_change += coin_selection_params.m_change_fee;
+    }
     std::set<CInputCoin> knapsack_coins;
     CAmount knapsack_value;
-    if (KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_coins, knapsack_value, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee)) {
+    if (KnapsackSolver(target_with_change, all_groups, knapsack_coins, knapsack_value, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee)) {
         const auto waste = GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, !coin_selection_params.m_subtract_fee_outputs);
         results.emplace_back(std::make_tuple(waste, std::move(knapsack_coins), knapsack_value));
     }
