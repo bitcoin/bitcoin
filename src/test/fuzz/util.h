@@ -8,9 +8,11 @@
 #include <amount.h>
 #include <attributes.h>
 #include <optional.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <version.h>
 
 #include <cstdint>
@@ -36,7 +38,7 @@
 template <typename T>
 [[ nodiscard ]] inline Optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, size_t max_length = 4096) noexcept
 {
-    const std::vector<uint8_t>& buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
+    const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
     T obj;
     try {
@@ -47,10 +49,27 @@ template <typename T>
     return obj;
 }
 
+[[ nodiscard ]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return static_cast<opcodetype>(fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, MAX_OPCODE));
+}
+
 [[ nodiscard ]] inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
 }
+
+[[ nodiscard ]] inline CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    return {b.begin(), b.end()};
+}
+
+[[ nodiscard ]] inline CScriptNum ConsumeScriptNum(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
+}
+
 
 template <typename T>
 bool MultiplicationOverflow(T i, T j)
