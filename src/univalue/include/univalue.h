@@ -82,14 +82,14 @@ public:
     bool isArray() const { return (typ == VARR); }
     bool isObject() const { return (typ == VOBJ); }
 
-    bool push_back(const UniValue& val);
-    bool push_backV(const std::vector<UniValue>& vec);
+    void push_back(const UniValue& val);
+    void push_backV(const std::vector<UniValue>& vec);
     template <class It>
-    bool push_backV(It first, It last);
+    void push_backV(It first, It last);
 
     void __pushKV(const std::string& key, const UniValue& val);
-    bool pushKV(const std::string& key, const UniValue& val);
-    bool pushKVs(const UniValue& obj);
+    void pushKV(const std::string& key, const UniValue& val);
+    void pushKVs(const UniValue& obj);
 
     std::string write(unsigned int prettyIndent = 0,
                       unsigned int indentLevel = 0) const;
@@ -140,11 +140,10 @@ public:
 };
 
 template <class It>
-bool UniValue::push_backV(It first, It last)
+void UniValue::push_backV(It first, It last)
 {
-    if (typ != VARR) return false;
+    if (typ != VARR) throw std::runtime_error{"JSON value is not an array as expected"};
     values.insert(values.end(), first, last);
-    return true;
 }
 
 enum jtokentype {
