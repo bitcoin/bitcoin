@@ -421,6 +421,11 @@ CAmount SelectionResult::GetSelectedValue() const
     return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
 }
 
+CAmount SelectionResult::GetSelectedEffectiveValue() const
+{
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.GetEffectiveValue(); });
+}
+
 void SelectionResult::Clear()
 {
     m_selected_inputs.clear();
@@ -480,4 +485,24 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     }
     assert(false);
 }
+
+CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmount change_fee) const
+{
+    // change = SUM(inputs) - SUM(outputs) - fees
+    // 1) With SFFO we don't pay any fees
+    // 2) Otherwise we pay all the fees:
+    //  - input fees are covered by GetSelectedEffectiveValue()
+    //  - non_input_fee is included in m_target
+    //  - change_fee
+    const CAmount change = m_use_effective
+                           ? GetSelectedEffectiveValue() - m_target - change_fee
+                           : GetSelectedValue() - m_target;
+
+    if (change < min_viable_change) {
+        return 0;
+    }
+
+    return change;
+}
+
 } // namespace wallet
