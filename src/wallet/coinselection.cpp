@@ -433,6 +433,16 @@ void SelectionResult::AddInput(const OutputGroup& group)
     m_use_effective = !group.m_subtract_fee_outputs;
 }
 
+void SelectionResult::Merge(const SelectionResult& other)
+{
+    m_target += other.m_target;
+    m_use_effective |= other.m_use_effective;
+    if (m_algo == SelectionAlgorithm::MANUAL) {
+        m_algo = other.m_algo;
+    }
+    util::insert(m_selected_inputs, other.m_selected_inputs);
+}
+
 const std::set<COutput>& SelectionResult::GetInputSet() const
 {
     return m_selected_inputs;
