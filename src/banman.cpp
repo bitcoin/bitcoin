@@ -38,7 +38,7 @@ void BanMan::LoadBanlist()
         LogPrint(BCLog::NET, "Loaded %d banned node addresses/subnets  %dms\n", m_banned.size(),
                  GetTimeMillis() - n_start);
     } else {
-        LogPrintf("Recreating the banlist database\n");
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Recreating the banlist database\n");
         m_banned = {};
         m_is_dirty = true;
     }

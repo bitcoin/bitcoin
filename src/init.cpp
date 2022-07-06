@@ -1257,9 +1257,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return false;
             }
             const uint256 asmap_version = SerializeHash(asmap);
-            LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
+            LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
-            LogPrintf("Using /16 prefix for IP bucketing\n");
+            LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Using /16 prefix for IP bucketing\n");
         }
 
         // Initialize netgroup manager

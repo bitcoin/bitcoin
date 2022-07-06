@@ -144,7 +144,7 @@ bool CBanDB::Write(const banmap_t& banSet)
 bool CBanDB::Read(banmap_t& banSet)
 {
     if (fs::exists(m_banlist_dat)) {
-        LogPrintf("banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Warning, "banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
     }
     // If the JSON banlist does not exist, then recreate it
     if (!fs::exists(m_banlist_json)) {
@@ -156,7 +156,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
     if (!util::ReadSettings(m_banlist_json, settings, errors)) {
         for (const auto& err : errors) {
-            LogPrintf("Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
+            LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Error, "Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
         }
         return false;
     }
@@ -164,7 +164,7 @@ bool CBanDB::Read(banmap_t& banSet)
     try {
         BanMapFromJson(settings[JSON_KEY], banSet);
     } catch (const std::runtime_error& e) {
-        LogPrintf("Cannot parse banlist %s: %s\n", fs::PathToString(m_banlist_json), e.what());
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Error, "Cannot parse banlist %s: %s\n", fs::PathToString(m_banlist_json), e.what());
         return false;
     }
 
@@ -191,11 +191,11 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
     const auto path_addr{args.GetDataDirNet() / "peers.dat"};
     try {
         DeserializeFileDB(path_addr, *addrman, CLIENT_VERSION);
-        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
     } catch (const DbNotFoundError&) {
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, /*deterministic=*/false, /*consistency_check_ratio=*/check_addrman);
-        LogPrintf("Creating peers.dat because the file was not found (%s)\n", fs::quoted(fs::PathToString(path_addr)));
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Creating peers.dat because the file was not found (%s)\n", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
     } catch (const InvalidAddrManVersionError&) {
         if (!RenameOver(path_addr, (fs::path)path_addr + ".bak")) {
@@ -204,7 +204,7 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
         }
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, /*deterministic=*/false, /*consistency_check_ratio=*/check_addrman);
-        LogPrintf("Creating new peers.dat because the file version was not compatible (%s). Original backed up to peers.dat.bak\n", fs::quoted(fs::PathToString(path_addr)));
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Warning, "Creating new peers.dat because the file version was not compatible (%s). Original backed up to peers.dat.bak\n", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         addrman = nullptr;
@@ -225,7 +225,7 @@ std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
     std::vector<CAddress> anchors;
     try {
         DeserializeFileDB(anchors_db_path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
+        LogPrintLevel(BCLog::ADDRMAN, BCLog::Level::Info, "Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
     } catch (const std::exception&) {
         anchors.clear();
     }
