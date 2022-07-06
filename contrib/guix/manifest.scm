@@ -147,7 +147,10 @@ desirable for building Bitcoin Core release binaries."
                         base-gcc))
 
 (define (make-gcc-with-pthreads gcc)
-  (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
+  (package-with-extra-configure-variable
+    (package-with-extra-patches gcc
+      (search-our-patches "gcc-10-remap-guix-store.patch"))
+    "--enable-threads" "posix"))
 
 (define (make-mingw-w64-cross-gcc cross-gcc)
   (package-with-extra-patches cross-gcc
