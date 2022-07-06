@@ -1129,9 +1129,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         nInbound--;
     }
 
-    // don't accept incoming connections until fully synced
-    if(fMasternodeMode && !masternodeSync.IsSynced()) {
-        LogPrint(BCLog::NET, "AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
+    // don't accept incoming connections until blockchain is synced
+    if(fMasternodeMode && !masternodeSync.IsBlockchainSynced()) {
+        LogPrint(BCLog::NET, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
         CloseSocket(hSocket);
         return;
     }
