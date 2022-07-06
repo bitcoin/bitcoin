@@ -855,6 +855,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
 
+    // The smallest change amount should be:
+    // 1. at least equal to dust threshold
+    // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
+    const auto dust = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
+    const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
+    coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+
     // vouts to the payees
     if (!coin_selection_params.m_subtract_fee_outputs) {
         coin_selection_params.tx_noinputs_size = 10; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
