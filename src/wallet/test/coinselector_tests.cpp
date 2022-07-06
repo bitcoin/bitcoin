@@ -250,9 +250,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     // Iteration exhaustion test
     CAmount target = make_hard_case(17, utxo_pool);
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 0)); // Should exhaust
+    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 1)); // Should exhaust
     target = make_hard_case(14, utxo_pool);
-    const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 0); // Should not exhaust
+    const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 1); // Should not exhaust
     BOOST_CHECK(result7);
 
     // Test same value early bailout optimization
@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Make sure that effective value is working in AttemptSelection when BnB is used
     CoinSelectionParams coin_selection_params_bnb{
         rand,
-        /*change_output_size=*/ 0,
-        /*change_spend_size=*/ 0,
+        /*change_output_size=*/ 31,
+        /*change_spend_size=*/ 68,
         /*min_change_target=*/ 0,
         /*effective_feerate=*/ CFeeRate(3000),
         /*long_term_feerate=*/ CFeeRate(1000),
@@ -300,6 +300,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
+    coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
+    coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
+    coin_selection_params_bnb.min_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
         wallet->LoadWallet();
@@ -779,6 +782,8 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
         };
+        cs_params.m_cost_of_change = 1;
+        cs_params.min_change = 1;
         CCoinControl cc;
         const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);
         BOOST_CHECK(result);

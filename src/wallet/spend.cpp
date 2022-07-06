@@ -394,12 +394,12 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, /*positive_only=*/false);
     if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
-        knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        knapsack_result->ComputeAndSetWaste(coin_selection_params.min_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*knapsack_result);
     }
 
     if (auto srd_result{SelectCoinsSRD(positive_groups, nTargetValue, coin_selection_params.rng_fast)}) {
-        srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        srd_result->ComputeAndSetWaste(coin_selection_params.min_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*srd_result);
     }
 
@@ -472,7 +472,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInput(preset_inputs);
         if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
-        result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        result.ComputeAndSetWaste(coin_selection_params.min_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         return result;
     }
 
@@ -564,7 +564,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     // Add preset inputs to result
     res->Merge(preselected);
     if (res->GetAlgo() == SelectionAlgorithm::MANUAL) {
-        res->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+        res->ComputeAndSetWaste(coin_selection_params.min_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
     }
 
     return res;
