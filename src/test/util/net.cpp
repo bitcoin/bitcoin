@@ -5,6 +5,7 @@
 #include <test/util/net.h>
 
 #include <chainparams.h>
+#include <node/eviction.h>
 #include <net.h>
 #include <span.h>
 
@@ -58,6 +59,8 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
             /*prefer_evict=*/random_context.randbool(),
             /*m_is_local=*/random_context.randbool(),
             /*m_network=*/ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
+            /*m_noban=*/false,
+            /*m_conn_type=*/ConnectionType::INBOUND,
         });
     }
     return candidates;
