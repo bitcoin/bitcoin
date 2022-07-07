@@ -18,7 +18,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <txorphanage.h>
+#include <node/txorphanage.h>
 #include <validationinterface.h>
 #include <version.h>
 

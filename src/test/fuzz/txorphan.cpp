@@ -14,7 +14,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <txorphanage.h>
+#include <node/txorphanage.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>

@@ -31,7 +31,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
-#include <txorphanage.h>
+#include <node/txorphanage.h>
 #include <txrequest.h>
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <txorphanage.h>
+#include <node/txorphanage.h>
 
 #include <consensus/validation.h>
 #include <logging.h>

@@ -8,7 +8,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
-#include <txorphanage.h>
+#include <node/txorphanage.h>
 
 #include <array>
 #include <cstdint>
