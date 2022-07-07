@@ -41,6 +41,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.double_spends_filtered()
         self.test_targetconfirmations()
         self.test_desc()
+        self.test_send_to_self()
 
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
@@ -422,6 +423,27 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(coin_a["parent_descs"][0], multi_a)
         coin_b = next(c for c in coins if c["amount"] == 2)
         assert_equal(coin_b["parent_descs"][0], multi_b)
+
+    def test_send_to_self(self):
+        """We can make listsinceblock output our change outputs."""
+        self.log.info("Test the inclusion of change outputs in the output.")
+
+        # Create a UTxO paying to one of our change addresses.
+        block_hash = self.nodes[2].getbestblockhash()
+        addr = self.nodes[2].getrawchangeaddress()
+        self.nodes[2].sendtoaddress(addr, 1)
+
+        # If we don't list change, we won't have an entry for it.
+        coins = self.nodes[2].listsinceblock(blockhash=block_hash)["transactions"]
+        assert not any(c["address"] == addr for c in coins)
+
+        # Now if we list change, we'll get both the send (to a change address) and
+        # the actual change.
+        res = self.nodes[2].listsinceblock(blockhash=block_hash, include_change=True)
+        coins = [entry for entry in res["transactions"] if entry["category"] == "receive"]
+        assert_equal(len(coins), 2)
+        assert any(c["address"] == addr for c in coins)
+        assert all(self.nodes[2].getaddressinfo(c["address"])["ischange"] for c in coins)
 
 
 if __name__ == '__main__':

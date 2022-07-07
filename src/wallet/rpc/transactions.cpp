@@ -315,13 +315,16 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
 template <class Vec>
-static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong, Vec& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
+                             Vec& ret, const isminefilter& filter_ismine, const std::string* filter_label,
+                             bool include_change = false)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine);
+    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
 
     bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
 
@@ -548,6 +551,7 @@ RPCHelpMan listsinceblock()
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
                     {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
                                                                        "(not guaranteed to work on pruned nodes)"},
+                    {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -628,6 +632,7 @@ RPCHelpMan listsinceblock()
     }
 
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
+    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 
@@ -637,7 +642,7 @@ RPCHelpMan listsinceblock()
         const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
+            ListTransactions(wallet, tx, 0, true, transactions, filter, nullptr /* filter_label */, /*include_change=*/include_change);
         }
     }
 
@@ -654,7 +659,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */, /*include_change=*/include_change);
             }
         }
         blockId = block.hashPrevBlock;
