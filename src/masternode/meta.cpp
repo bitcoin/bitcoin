@@ -10,7 +10,7 @@
 
 CMasternodeMetaMan mmetaman;
 
-const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-2";
+const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
 
 UniValue CMasternodeMetaInfo::ToJson() const
 {
@@ -20,6 +20,7 @@ UniValue CMasternodeMetaInfo::ToJson() const
 
     ret.pushKV("lastDSQ", nLastDsq);
     ret.pushKV("mixingTxCount", nMixingTxCount);
+    ret.pushKV("outboundAttemptCount", outboundAttemptCount);
     ret.pushKV("lastOutboundAttempt", lastOutboundAttempt);
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
     ret.pushKV("lastOutboundSuccess", lastOutboundSuccess);
