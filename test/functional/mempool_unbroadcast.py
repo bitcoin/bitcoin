@@ -102,7 +102,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
 
         # check transaction was removed from unbroadcast set due to presence in
         # a block
-        removal_reason = "Removed {} from set of unbroadcast txns before confirmation that txn was sent out".format(txhsh)
+        removal_reason = f"Removed {txhsh} from the set of unbroadcast transactions before confirmation that it was sent out"
         with node.assert_debug_log([removal_reason]):
             self.generate(node, 1, sync_fun=self.no_op)
 

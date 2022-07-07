@@ -727,7 +727,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     AssertLockHeld(::cs_main);
     LOCK(cs);
-    LogPrint(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
+    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
@@ -1039,9 +1039,9 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
 void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
     LOCK(cs);
 
-    if (m_unbroadcast_txids.erase(txid))
-    {
-        LogPrint(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
+    if (m_unbroadcast_txids.erase(txid)) {
+        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Removed %i from the set of unbroadcast transactions%s\n",
+                      txid.GetHex(), unchecked ? " before confirmation that it was sent out" : "");
     }
 }
 
@@ -1172,7 +1172,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 
     if (maxFeeRateRemoved > CFeeRate(0)) {
-        LogPrint(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Removed %u transactions, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
 

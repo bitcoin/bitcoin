@@ -35,7 +35,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     unsigned int sz = GetTransactionWeight(*tx);
     if (sz > MAX_STANDARD_TX_WEIGHT)
     {
-        LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
+        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Ignoring large orphan transaction (size: %u, hash: %s)\n", sz, hash.ToString());
         return false;
     }
 
@@ -48,8 +48,8 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
-    LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
-             m_orphans.size(), m_outpoint_to_orphan_it.size());
+    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Stored orphan transaction %s (mapsz %u outsz %u)\n",
+                  hash.ToString(), m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
 }
 
@@ -99,7 +99,9 @@ void TxOrphanage::EraseForPeer(NodeId peer)
             nErased += EraseTx(maybeErase->second.tx->GetHash());
         }
     }
-    if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
+    if (nErased > 0) {
+        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Erased %d orphan tx from peer=%d\n", nErased, peer);
+    }
 }
 
 unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
@@ -125,7 +127,9 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
         }
         // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
         nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
-        if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx due to expiration\n", nErased);
+        if (nErased > 0) {
+            LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Erased %d expired orphan transactions\n", nErased);
+        }
     }
     FastRandomContext rng;
     while (m_orphans.size() > max_orphans)
@@ -197,6 +201,7 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         for (const uint256& orphanHash : vOrphanErase) {
             nErased += EraseTx(orphanHash);
         }
-        LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
+        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "Erased %d orphan transaction%s included in or conflicted by block %s\n",
+                      nErased, nErased == 1 ? "" : "s", block.GetHash().ToString());
     }
 }
