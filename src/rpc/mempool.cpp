@@ -656,7 +656,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("loaded", pool.IsLoaded());
+    ret.pushKV("loaded", pool.GetLoadTried());
     ret.pushKV("size", (int64_t)pool.size());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
@@ -720,7 +720,7 @@ static RPCHelpMan savemempool()
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
-    if (!mempool.IsLoaded()) {
+    if (!mempool.GetLoadTried()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 

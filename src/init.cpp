@@ -249,7 +249,7 @@ void Shutdown(NodeContext& node)
     node.addrman.reset();
     node.netgroupman.reset();
 
-    if (node.mempool && node.mempool->IsLoaded() && ShouldPersistMempool(*node.args)) {
+    if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 

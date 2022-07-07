@@ -451,7 +451,7 @@ protected:
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool m_is_loaded GUARDED_BY(cs){false};
+    bool m_load_tried GUARDED_BY(cs){false};
 
     CFeeRate GetMinFee(size_t sizelimit) const;
 
@@ -729,10 +729,10 @@ public:
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) const;
 
     /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    bool GetLoadTried() const;
 
     /** Sets the current loaded state */
-    void SetIsLoaded(bool loaded);
+    void SetLoadTried(bool loaded);
 
     unsigned long size() const
     {

@@ -3869,7 +3869,7 @@ void CChainState::LoadMempool(const ArgsManager& args)
     if (args.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         ::LoadMempool(*m_mempool, *this);
     }
-    m_mempool->SetIsLoaded(!ShutdownRequested());
+    m_mempool->SetLoadTried(!ShutdownRequested());
 }
 
 bool CChainState::LoadChainTip()
