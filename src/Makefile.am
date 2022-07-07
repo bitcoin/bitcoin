@@ -187,7 +187,6 @@ SYSCOIN_CORE_H = \
   compat/byteswap.h \
   compat/cpuid.h \
   compat/endian.h \
-  compressor.h \
   node/connection_types.h \
   consensus/consensus.h \
   consensus/tx_check.h \
