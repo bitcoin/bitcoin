@@ -489,7 +489,7 @@ static void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode->m_tx_relay != nullptr, mnauthChallenge, pnode->m_masternode_connection.load()));
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && !pnode->m_block_relay_only_peer, mnauthChallenge, pnode->m_masternode_connection.load()));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -1688,7 +1688,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
             else if (inv.type == MSG_FILTERED_BLOCK) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
-                if (pfrom->m_tx_relay != nullptr) {
+                if (!pfrom->m_block_relay_only_peer) {
                     LOCK(pfrom->m_tx_relay->cs_filter);
                     if (pfrom->m_tx_relay->pfilter) {
                         sendMerkleBlock = true;
@@ -1757,11 +1757,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     std::vector<CInv> vNotFound;
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
-    // Note that if we receive a getdata for a MSG_TX or MSG_WITNESS_TX from a
-    // block-relay-only outbound peer, we will stop processing further getdata
-    // messages from this peer (likely resulting in our peer eventually
-    // disconnecting us).
-    if (pfrom->m_tx_relay != nullptr) {
+    {
         LOCK(cs_main);
 
         while (it != pfrom->vRecvGetData.end() && it->IsKnownType()) {
@@ -1773,6 +1769,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             const CInv &inv = *it;
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
+                break;
+            }
+            if (pfrom->m_block_relay_only_peer && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+                // Note that if we receive a getdata for non-block messages
+                // from a block-relay-only outbound peer that violate the policy,
+                // we will stop processing further getdata messages from this peer
+                // (likely resulting in our peer eventually disconnecting us).
                 break;
             }
             it++;
@@ -2141,7 +2144,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, ChainstateMan
             }
         }
 
-        if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && pfrom->m_tx_relay != nullptr) {
+        if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && !pfrom->m_block_relay_only_peer) {
             // If this is an outbound full-relay peer, check to see if we should protect
             // it from the bad/lagging chain logic.
             // Note that block-relay-only peers are already implicitly protected, so we
@@ -2693,7 +2696,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         // set nodes not capable of serving the complete blockchain history as "limited nodes"
         pfrom->m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
 
-        if (pfrom->m_tx_relay != nullptr) {
+        if (!pfrom->m_block_relay_only_peer) {
             LOCK(pfrom->m_tx_relay->cs_filter);
             pfrom->m_tx_relay->fRelayTxes = fRelay; // set to true after we get the first filter* message
         }
@@ -2766,6 +2769,8 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     // At this point, the outgoing message serialization version can't change.
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
+    bool fBlocksOnly = pfrom->IsBlockRelayOnly();
+
     if (msg_type == NetMsgType::VERACK)
     {
         pfrom->SetRecvVersion(std::min(pfrom->nVersion.load(), PROTOCOL_VERSION));
@@ -2777,7 +2782,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom->nVersion.load(), pfrom->nStartingHeight,
                       pfrom->GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""),
-                      pfrom->m_tx_relay == nullptr ? "block-relay" : "full-relay");
+                      pfrom->m_block_relay_only_peer ? "block-relay" : "full-relay");
         }
 
         if (!pfrom->m_masternode_probe_connection) {
@@ -2801,11 +2806,13 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
 
-        // Tell our peer that he should send us CoinJoin queue messages
-        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
-
-        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_masternode_connection) {
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
+        if (!fBlocksOnly) {
+            // Tell our peer that he should send us CoinJoin queue messages
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
+            // Tell our peer that he should send us intra-quorum messages
+            if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_masternode_connection) {
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
+            }
         }
 
         pfrom->fSuccessfullyConnected = true;
@@ -2845,6 +2852,13 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             pfrom->fDisconnect = true;
             return false;
         }
+    }
+
+    // Stop processing non-block data early in blocks only mode and for block-relay-only peers
+    if (fBlocksOnly && NetMessageViolatesBlocksOnly(msg_type)) {
+        LogPrint(BCLog::NET, "%s sent in violation of protocol peer=%d\n", msg_type, pfrom->GetId());
+        pfrom->fDisconnect = true;
+        return false;
     }
 
     if (msg_type == NetMsgType::ADDR || msg_type == NetMsgType::ADDRV2) {
@@ -2964,14 +2978,6 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             return false;
         }
 
-        // We won't accept tx inv's if we're in blocks-only mode, or this is a
-        // block-relay-only peer
-        bool fBlocksOnly = !g_relay_txes || (pfrom->m_tx_relay == nullptr);
-
-        // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
-        if (pfrom->HasPermission(PF_RELAY))
-            fBlocksOnly = false;
-
         LOCK(cs_main);
 
         const auto current_time = GetTime<std::chrono::microseconds>();
@@ -3027,11 +3033,22 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                 };
 
                 pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly) {
-                    LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom->GetId());
+                if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+                    LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom->GetId());
                     pfrom->fDisconnect = true;
                     return true;
                 } else if (!fAlreadyHave) {
+                    if (fBlocksOnly && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
+                        if (pfrom->GetRecvVersion() <= ADDRV2_PROTO_VERSION) {
+                            // It's ok to receive these invs, we just ignore them
+                            // and do not request corresponding objects.
+                            continue;
+                        }
+                        // Peers with newer versions should never send us these invs when we are in blocks-relay-only mode
+                        LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom->GetId());
+                        pfrom->fDisconnect = true;
+                        return true;
+                    }
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || !chainman.ActiveChainstate().IsInitialBlockDownload()) {
                         RequestObject(State(pfrom->GetId()), inv, current_time);
@@ -3266,16 +3283,6 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::TX || msg_type == NetMsgType::DSTX || msg_type == NetMsgType::LEGACYTXLOCKREQUEST) {
-        // Stop processing the transaction early if
-        // 1) We are in blocks only mode and peer has no relay permission
-        // 2) This peer is a block-relay-only peer
-        if ((!g_relay_txes && !pfrom->HasPermission(PF_RELAY)) || (pfrom->m_tx_relay == nullptr))
-        {
-            LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom->GetId());
-            pfrom->fDisconnect = true;
-            return true;
-        }
-
         CTransactionRef ptx;
         CCoinJoinBroadcastTx dstx;
         int nInvType = MSG_TX;
@@ -3862,7 +3869,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             return true;
         }
 
-        if (pfrom->m_tx_relay != nullptr) {
+        if (!pfrom->m_block_relay_only_peer) {
             LOCK(pfrom->m_tx_relay->cs_tx_inventory);
             pfrom->m_tx_relay->fSendMempool = true;
         }
@@ -3953,7 +3960,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
         }
-        else if (pfrom->m_tx_relay != nullptr)
+        else if (!pfrom->m_block_relay_only_peer)
         {
             LOCK(pfrom->m_tx_relay->cs_filter);
             pfrom->m_tx_relay->pfilter.reset(new CBloomFilter(filter));
@@ -3972,7 +3979,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             bad = true;
-        } else if (pfrom->m_tx_relay != nullptr) {
+        } else if (!pfrom->m_block_relay_only_peer) {
             LOCK(pfrom->m_tx_relay->cs_filter);
             if (pfrom->m_tx_relay->pfilter) {
                 pfrom->m_tx_relay->pfilter->insert(vData);
@@ -3988,7 +3995,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::FILTERCLEAR) {
-        if (pfrom->m_tx_relay == nullptr) {
+        if (pfrom->m_block_relay_only_peer) {
             return true;
         }
         LOCK(pfrom->m_tx_relay->cs_filter);
@@ -4365,7 +4372,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
             // Don't evict our block-relay-only peers.
-            if (pnode->m_tx_relay == nullptr) return;
+            if (pnode->m_block_relay_only_peer) return;
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;
@@ -4724,8 +4731,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             LOCK2(m_mempool.cs, pto->cs_inventory);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
-            if (pto->m_tx_relay != nullptr) {
-                LOCK(pto->m_tx_relay->cs_filter);
+            if (!pto->m_block_relay_only_peer) {
+                LOCK(pto->m_tx_relay->cs_tx_inventory);
                 reserve = std::min<size_t>(pto->m_tx_relay->setInventoryTxToSend.size(), reserve);
             }
             reserve = std::max<size_t>(reserve, pto->vInventoryBlockToSend.size());
@@ -4743,10 +4750,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             pto->vInventoryBlockToSend.clear();
 
             auto queueAndMaybePushInv = [this, pto, &vInv, &msgMaker](const CInv& invIn) {
-                if (pto->m_tx_relay != nullptr) {
-                    AssertLockHeld(pto->m_tx_relay->cs_tx_inventory);
-                    pto->m_tx_relay->filterInventoryKnown.insert(invIn.hash);
-                }
+                AssertLockHeld(pto->m_tx_relay->cs_tx_inventory);
+                pto->m_tx_relay->filterInventoryKnown.insert(invIn.hash);
                 LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", invIn.ToString(), vInv.size(), pto->GetId());
                 vInv.push_back(invIn);
                 if (vInv.size() == MAX_INV_SZ) {
@@ -4756,7 +4761,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 }
             };
 
-            if (pto->m_tx_relay != nullptr) {
+            if (!pto->m_block_relay_only_peer) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
@@ -4865,21 +4870,27 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         queueAndMaybePushInv(CInv(nInvType, hash));
                     }
                 }
+            }
 
+            {
                 // Send non-tx/non-block inventory items
-                for (const auto& inv : pto->vInventoryOtherToSend) {
+                LOCK2(pto->m_tx_relay->cs_tx_inventory, pto->m_tx_relay->cs_filter);
+
+                bool fSendIS = pto->m_tx_relay->fRelayTxes && !pto->IsBlockRelayOnly();
+
+                for (const auto& inv : pto->m_tx_relay->vInventoryOtherToSend) {
+                    if (!pto->m_tx_relay->fRelayTxes && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+                        continue;
+                    }
                     if (pto->m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+                        continue;
+                    }
+                    if (!fSendIS && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
                         continue;
                     }
                     queueAndMaybePushInv(inv);
                 }
-                pto->vInventoryOtherToSend.clear();
-            } else { // m_tx_relay is nullptr but we still need to send items from `vInventoryOtherToSend`
-                // Send non-tx/non-block inventory items
-                for (const auto& inv : pto->vInventoryOtherToSend) {
-                    queueAndMaybePushInv(inv);
-                }
-                pto->vInventoryOtherToSend.clear();
+                pto->m_tx_relay->vInventoryOtherToSend.clear();
             }
         }
         if (!vInv.empty())

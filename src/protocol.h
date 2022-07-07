@@ -306,6 +306,9 @@ extern const char *QUORUMROTATIONINFO;
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
 
+/* Whether the message type violates blocks-relay-only policy */
+bool NetMessageViolatesBlocksOnly(const std::string& msg_type);
+
 /** nServices flags */
 enum ServiceFlags : uint64_t {
     // NOTE: When adding here, be sure to update serviceFlagToStr too

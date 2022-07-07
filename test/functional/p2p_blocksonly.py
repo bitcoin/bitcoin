@@ -40,7 +40,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
             }],
         )['hex']
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)
-        with self.nodes[0].assert_debug_log(['transaction sent in violation of protocol peer=0']):
+        with self.nodes[0].assert_debug_log(['tx sent in violation of protocol peer=0']):
             self.nodes[0].p2p.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
             self.nodes[0].p2p.wait_for_disconnect()
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)

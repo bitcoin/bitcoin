@@ -1028,15 +1028,25 @@ public:
     int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
     int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
-    const bool m_addr_relay_peer;
-    bool IsAddrRelayPeer() const { return m_addr_relay_peer; }
+    const bool m_block_relay_only_peer;
+
+    // Don't relay addr messages to peers that we connect to as block-relay-only
+    // peers (to prevent adversaries from inferring these links from addr
+    // traffic).
+    bool IsAddrRelayPeer() const { return !m_block_relay_only_peer; }
+
+    bool IsBlockRelayOnly() const
+    {
+        // Stop processing non-block data early if
+        // 1) We are in blocks only mode and peer has no relay permission
+        // 2) This peer is a block-relay-only peer
+        return (!g_relay_txes && !HasPermission(PF_RELAY)) || m_block_relay_only_peer;
+    }
 
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
-    // List of non-tx/non-block inventory items
-    std::vector<CInv> vInventoryOtherToSend;
     CCriticalSection cs_inventory;
     /** UNIX epoch time of the last block received from this peer that we had
      * not yet seen (e.g. not already received from another peer), that passed
@@ -1066,7 +1076,9 @@ public:
         CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
         // Set of transaction ids we still have to announce.
         // They are sorted by the mempool before relay, so the order is not important.
-        std::set<uint256> setInventoryTxToSend;
+        std::set<uint256> setInventoryTxToSend GUARDED_BY(cs_tx_inventory);
+        // List of non-tx/non-block inventory items
+        std::vector<CInv> vInventoryOtherToSend GUARDED_BY(cs_tx_inventory);
         // Used for BIP35 mempool sending, also protected by cs_tx_inventory
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
@@ -1074,7 +1086,8 @@ public:
         std::chrono::microseconds nNextInvSend{0};
     };
 
-    // m_tx_relay == nullptr if we're not relaying transactions with this peer
+    // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
+    // in dash: m_tx_relay should never be nullptr, use m_block_relay_only_peer == true instead
     std::unique_ptr<TxRelay> m_tx_relay;
 
     // Used for headers announcements - unfiltered blocks to relay
@@ -1234,49 +1247,29 @@ public:
 
     void AddInventoryKnown(const uint256& hash)
     {
-        if (m_tx_relay != nullptr) {
-            LOCK(m_tx_relay->cs_tx_inventory);
-            m_tx_relay->filterInventoryKnown.insert(hash);
-        }
+        LOCK(m_tx_relay->cs_tx_inventory);
+        m_tx_relay->filterInventoryKnown.insert(hash);
     }
 
     void PushInventory(const CInv& inv)
     {
-        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
-            if (m_tx_relay != nullptr) {
-                LOCK(m_tx_relay->cs_tx_inventory);
-                if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-                    LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
-                    LOCK(m_tx_relay->cs_filter);
-                    m_tx_relay->setInventoryTxToSend.insert(inv.hash);
-                } else {
-                    LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
-                }
-            } else {
-                LogPrint(BCLog::NET, "%s -- skipping unknown inv: %s peer=%d\n", __func__, inv.ToString(), id);
-            }
-        } else if (inv.type == MSG_BLOCK) {
+        if (inv.type == MSG_BLOCK) {
             LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
             LOCK(cs_inventory);
             vInventoryBlockToSend.push_back(inv.hash);
-        } else {
-            LOCK(cs_inventory);
-            if (m_tx_relay != nullptr) {
-                LOCK(m_tx_relay->cs_tx_inventory);
-                if (!m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-                    LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
-                    vInventoryOtherToSend.push_back(inv);
-                } else {
-                    LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
-                }
-            } else {
-                // TODO KNST for this case we don't use inventory
-                // accordingly #2292 it can increase size of transmitted data.
-                // Should be added dedicated bloom filter
-                LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
-                vInventoryOtherToSend.push_back(inv);
-            }
+            return;
         }
+        LOCK(m_tx_relay->cs_tx_inventory);
+        if (m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
+            LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
+            return;
+        }
+        LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
+        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+            m_tx_relay->setInventoryTxToSend.insert(inv.hash);
+            return;
+        }
+        m_tx_relay->vInventoryOtherToSend.push_back(inv);
     }
 
     void PushBlockHash(const uint256 &hash)
