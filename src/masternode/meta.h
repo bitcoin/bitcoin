@@ -16,6 +16,7 @@
 class CConnman;
 
 static constexpr int MASTERNODE_MAX_MIXING_TXES{5};
+static constexpr int MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS{5};
 
 // Holds extra (non-deterministic) information about masternodes
 // This is mostly local information, e.g. about mixing and governance
@@ -35,6 +36,7 @@ private:
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn GUARDED_BY(cs);
 
+    std::atomic<int> outboundAttemptCount{0};
     std::atomic<int64_t> lastOutboundAttempt{0};
     std::atomic<int64_t> lastOutboundSuccess{0};
 
@@ -59,6 +61,7 @@ public:
                 obj.nLastDsq,
                 obj.nMixingTxCount,
                 obj.mapGovernanceObjectsVotedOn,
+                obj.outboundAttemptCount,
                 obj.lastOutboundAttempt,
                 obj.lastOutboundSuccess
                 );
@@ -78,9 +81,10 @@ public:
 
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
 
-    void SetLastOutboundAttempt(int64_t t) { lastOutboundAttempt = t; }
+    bool OutboundFailedTooManyTimes() const { return outboundAttemptCount > MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS; }
+    void SetLastOutboundAttempt(int64_t t) { lastOutboundAttempt = t; ++outboundAttemptCount; }
     int64_t GetLastOutboundAttempt() const { return lastOutboundAttempt; }
-    void SetLastOutboundSuccess(int64_t t) { lastOutboundSuccess = t; }
+    void SetLastOutboundSuccess(int64_t t) { lastOutboundSuccess = t; outboundAttemptCount = 0; }
     int64_t GetLastOutboundSuccess() const { return lastOutboundSuccess; }
 };
 using CMasternodeMetaInfoPtr = std::shared_ptr<CMasternodeMetaInfo>;
