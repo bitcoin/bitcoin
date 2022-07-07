@@ -10,9 +10,10 @@ First, in terms of structure, there is no particular concept of "Bitcoin Core
 developers" in the sense of privileged people. Open source often naturally
 revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
-purposes. As such, there are repository maintainers who are responsible for
-merging pull requests, the [release cycle](/doc/release-process.md), and
-moderation.
+purposes. As such, there are repository [maintainers](/MAINTAINERS.md) who are
+responsible for merging pull requests, the [release
+cycle](/doc/release-process.md), and moderation. See
+[MAINTAINERS.md](/MAINTAINERS.md) for more information on maintainers.
 
 Getting Started
 ---------------
@@ -293,12 +294,6 @@ The following applies to code changes to the Bitcoin Core project (and related
 projects such as libsecp256k1), and is not to be confused with overall Bitcoin
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge
-maintainers.
-
-Maintainers will take into consideration if a patch is in line with the general
-principles of the project; meets the minimum standards for inclusion; and will
-judge the general consensus of contributors.
 
 In general, all pull requests must:
 
@@ -318,6 +313,9 @@ extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
 other kinds of patches because of increased peer review and consensus building
 requirements.
+
+Maintainers fulfil the role of evaluating PRs having met the above conditions
+and merging, as detailed in [MAINTAINERS.md](/MAINTAINERS.md).
 
 
 ### Peer Review
