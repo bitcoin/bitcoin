@@ -2536,20 +2536,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return;
     }
-    if (!pszDest) {
-        // banned, discouraged or exact match?
-        if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect))) || FindNode(addrConnect.ToStringIPPort()))
-            return;
-        // local and not a connection to itself?
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect))
-            return;
-        // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
-        if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
-            (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
-            return;
-    } else if (FindNode(std::string(pszDest)))
-        return;
 
     auto getIpStr = [&]() {
         if (fLogIPs) {
@@ -2558,6 +2544,29 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
             return std::string("new peer");
         }
     };
+
+    if (!pszDest) {
+        // banned, discouraged or exact match?
+        if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect))) || FindNode(addrConnect.ToStringIPPort()))
+            return;
+        // local and not a connection to itself?
+        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
+        if (!fAllowLocal && IsLocal(addrConnect))
+            return;
+        // Search for IP:PORT match:
+        //  - if multiple ports for the same IP are allowed,
+        //  - for probe connections
+        // Search for IP-only match otherwise
+        bool searchIPPort = Params().AllowMultiplePorts() || masternode_probe_connection == MasternodeProbeConn::IsConnection;
+        bool skip = searchIPPort ?
+                FindNode(static_cast<CService>(addrConnect)) :
+                FindNode(static_cast<CNetAddr>(addrConnect));
+        if (skip) {
+            LogPrintf("CConnman::%s -- Failed to open new connection to %s, already connected\n", __func__, getIpStr());
+            return;
+        }
+    } else if (FindNode(std::string(pszDest)))
+        return;
 
     LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connecting to %s\n", __func__, getIpStr());
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, manual_connection, block_relay_only);
