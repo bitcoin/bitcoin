@@ -733,14 +733,14 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     // Add log hook to detect AddToWallet events from rescans, blockConnected,
     // and transactionAddedToMempool notifications
     int addtx_count = 0;
-    DebugLogHelper addtx_counter("[default wallet] AddToWallet", [&](const std::string* s) {
+    DebugLogHelper addtx_counter("[wallet: \"default wallet\"] AddToWallet", [&](const std::string* s) {
         if (s) ++addtx_count;
         return false;
     });
 
 
     bool rescan_completed = false;
-    DebugLogHelper rescan_check("[default wallet] Rescan completed", [&](const std::string* s) {
+    DebugLogHelper rescan_check("[wallet: \"default wallet\"] Rescan completed", [&](const std::string* s) {
         if (s) rescan_completed = true;
         return false;
     });

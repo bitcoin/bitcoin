@@ -808,8 +808,7 @@ public:
 
     /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
     const std::string GetDisplayName() const override {
-        std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
-        return strprintf("[%s]", wallet_name);
+        return strprintf("[wallet: \"%s\"]", GetName().empty() ? "default wallet" : GetName());
     };
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
