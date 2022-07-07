@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_FEEBUMPER_H
 
 #include <primitives/transaction.h>
+#include <wallet/wallet.h>
 
 class uint256;
 enum class FeeEstimateMode;
@@ -38,7 +39,8 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     std::vector<bilingual_str>& errors,
     CAmount& old_fee,
     CAmount& new_fee,
-    CMutableTransaction& mtx);
+    CMutableTransaction& mtx,
+    std::vector<CTxOut>& new_outputs);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was

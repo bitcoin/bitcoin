@@ -21,23 +21,14 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf)
+void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, const UniValue& locktime, bool rbf)
 {
-    if (outputs_in.isNull()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
-    }
-
     UniValue inputs;
     if (inputs_in.isNull()) {
         inputs = UniValue::VARR;
     } else {
         inputs = inputs_in.get_array();
     }
-
-    const bool outputs_is_obj = outputs_in.isObject();
-    UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
-
-    CMutableTransaction rawTx;
 
     if (!locktime.isNull()) {
         int64_t nLockTime = locktime.getInt<int64_t>();
@@ -83,6 +74,16 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
         rawTx.vin.push_back(in);
     }
+}
+
+void ReplaceOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
+{
+    if (outputs_in.isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
+    }
+
+    const bool outputs_is_obj = outputs_in.isObject();
+    UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
 
     if (!outputs_is_obj) {
         // Translate array of key-value pairs into dict
@@ -131,6 +132,14 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             rawTx.vout.push_back(out);
         }
     }
+}
+
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf)
+{
+    CMutableTransaction rawTx;
+
+    AddInputs(rawTx, inputs_in, locktime, rbf);
+    ReplaceOutputs(rawTx, outputs_in);
 
     if (rbf && rawTx.vin.size() > 0 && !SignalsOptInRBF(CTransaction(rawTx))) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");

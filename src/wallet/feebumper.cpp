@@ -14,7 +14,7 @@
 #include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
-#include <wallet/wallet.h>
+#include <key_io.h> // for EncodeDestination()
 
 namespace wallet {
 //! Check whether transaction has descendant in wallet or mempool, or has been
@@ -155,7 +155,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, std::vector<CTxOut>& new_outputs)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -176,16 +176,9 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
     // Fill in recipients(and preserve a single change key if there is one)
     std::vector<CRecipient> recipients;
-    for (const auto& output : wtx.tx->vout) {
-        if (!OutputIsChange(wallet, output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
-            recipients.push_back(recipient);
-        } else {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
-        }
-    }
+    std::set<CTxDestination> destinations;
+    std::vector<CTxOut> all_outputs;
+    all_outputs.insert(all_outputs.end(), new_outputs.begin(), new_outputs.end());
 
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
     old_fee = CachedTxGetDebit(wallet, wtx, filter) - wtx.tx->GetValueOut();
