@@ -17,10 +17,10 @@ class MemTable;
 class WriteBatchInternal {
  public:
   // Return the number of entries in the batch.
-  static int Count(const WriteBatch* batch);
+  static uint32_t Count(const WriteBatch* batch);
 
   // Set the count for the number of entries in the batch.
-  static void SetCount(WriteBatch* batch, int n);
+  static void SetCount(WriteBatch* batch, uint32_t n);
 
   // Return the sequence number for the start of this batch.
   static SequenceNumber Sequence(const WriteBatch* batch);

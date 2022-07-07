@@ -47,7 +47,7 @@ Status WriteBatch::Iterate(Handler* handler) const {
 
   input.remove_prefix(kHeader);
   Slice key, value;
-  int found = 0;
+  uint32_t found = 0;
   while (!input.empty()) {
     found++;
     char tag = input[0];
@@ -79,11 +79,11 @@ Status WriteBatch::Iterate(Handler* handler) const {
   }
 }
 
-int WriteBatchInternal::Count(const WriteBatch* b) {
+uint32_t WriteBatchInternal::Count(const WriteBatch* b) {
   return DecodeFixed32(b->rep_.data() + 8);
 }
 
-void WriteBatchInternal::SetCount(WriteBatch* b, int n) {
+void WriteBatchInternal::SetCount(WriteBatch* b, uint32_t n) {
   EncodeFixed32(&b->rep_[8], n);
 }
 
