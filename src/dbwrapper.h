@@ -224,9 +224,6 @@ private:
 public:
     using Options = kernel::DBWrapperOpts;
 
-    // REVIEW-ONLY: This particular constructor will be removed by the end of
-    //              the patchset.
-    CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
     CDBWrapper(const Options& opts);
     ~CDBWrapper();
 

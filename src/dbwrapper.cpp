@@ -128,18 +128,6 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-// REVIEW-ONLY: This particular constructor will be removed by the end of
-//              the patchset.
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : CDBWrapper{{
-            .db_path = path,
-            .cache_size = nCacheSize,
-            .in_memory = fMemory,
-            .wipe_existing = fWipe,
-            .obfuscate_data = obfuscate,
-            .do_compact = gArgs.GetBoolArg("-forcecompactdb", false),
-        }} {}
-
 CDBWrapper::CDBWrapper(const Options& opts)
     : m_name{[&]() {
         Assert(!opts.db_path.empty());
