@@ -65,8 +65,29 @@ other General Maintainers, and may be explicitly deprecated in the future.
 
 ## Self Merges
 
-There is no prohibition or process that differentiates self-merges from normal
-merges.
+Typically, a PR authored by a maintainer will be merged by a different
+maintainer. However, given that there may not be another maintainer who
+regularly works on the section of code or is familiar, self-merge is not
+forbidden. However, as a guard, self merges should usually only happen if the
+following criteria has been met:
+
+1. The PR has been reviewed and ACK'd by other regular contributors familiar
+   with that section of the code.
+1. There are no NACKs being overruled on that PR.
+1. The PR is at least 1 week old, to permit time for review.
+1. The maintainer should communicate intent to self-merge 48 hours before doing
+   so. (Regular contributors may also indicate if they think a PR can be merged     by commenting "Ready for Merge").
+
+
+It is preferred that maintainers self-merge as opposed to privately allying
+with another maintainer to avoid the self-merge decorum. This promotes
+transparency and minimizes bias in the review process. Tracking self-merges
+also helps the project demonstrate need for additional maintainers in areas where they might be frequent, which can help solve the issues around self-merges.
+
+
+These rules aren't hard and fast, but are considered a best practice to avoid
+self-merge as a convenience.
+
 
 
 ## Nomination and Selection of Maintainers
@@ -76,13 +97,33 @@ Many regular contributors who are capable or experienced enough choose not to
 be a Maintainer. Similarly, just because a regular contributor has reached a
 certain level of experience does not mean that they "deserve" to be a maintainer.
 
-Maintainers are added by a new maintainer opening a pull-request to add their
-key to the Trusted Keys file. For example, see [this pull
-request](https://github.com/bitcoin/bitcoin/pull/23798). The adding of the key
-is reviewed by the community and merged at the discretion of the existing
-maintainers. Before opening such a pull request, it is typical that the adding
-of the maintainer might be discussed in the regular Bitcoin Core IRC meeting,
-but the actual decision making process occurs in the pull request.
+Maintainers are added when there is a demonstrated need. For there to be a new
+maintainer, first an issue should be created with a "Call for Maintainer" (C4M)
+by one of the existing maintainers or regular contributors. C4Ms should specify
+if the call is for a General Maintainer, or for a Scoped Maintainer. If the
+role is for a Scoped Maintainer, the C4M should describe the need for a new
+maintainer, and link to some Pull Requests (or other material) that would be
+relevant for such a maintainer to be responsible for.
+
+Following the C4M, anyone may respond to the issue with a nomination for the
+position and a description of their qualifications. Self-nomination is
+encouraged. ACKs/co-signs of other nominations are also encouraged so that the
+maintainers may get a sense of developer sentiment towards nominees.
+Nominations must be accepted by the nominee. After 2 weeks from the date of
+issue creation, assuming there is at least 1 nomination, the maintainers may
+select one or more candidate from the nominee pool at their discretion.
+
+
+The selected candidate should create a PR for adding their key to the
+repository and to the above table (see
+https://github.com/bitcoin/bitcoin/pull/23798 for example).  During / Before
+the PR, regular contributors are encouraged to correspond with candidate(s)
+publicly about any concerns or questions.  Regular contributors are also
+encouraged to raise any concerns about the maintainers selection of candidate
+against other nominated candidates not selected.
+
+At the discretion of the maintainers, and no sooner than 2 weeks after the PR
+is opened, the candidate(s) PR may be merged.
 
 
 ## Maintainer Prioritizations
