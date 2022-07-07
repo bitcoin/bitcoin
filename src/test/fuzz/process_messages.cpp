@@ -5,6 +5,7 @@
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/txorphanage.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -13,7 +14,6 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <node/txorphanage.h>
 #include <validation.h>
 #include <validationinterface.h>
 

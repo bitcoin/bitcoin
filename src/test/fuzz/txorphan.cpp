@@ -4,8 +4,8 @@
 
 #include <consensus/amount.h>
 #include <consensus/validation.h>
-#include <net_processing.h>
 #include <node/eviction.h>
+#include <node/txorphanage.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -14,7 +14,6 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <node/txorphanage.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>

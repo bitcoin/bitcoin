@@ -199,12 +199,13 @@ BITCOIN_CORE_H = \
   node/chainstate.h \
   node/coin.h \
   node/context.h \
+  node/interface_ui.h \
   node/mempool_persist_args.h \
   node/miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
-  node/interface_ui.h \
+  node/txorphanage.h \
   node/utxo_snapshot.h \
   noui.h \
   outputtype.h \
@@ -256,7 +257,6 @@ BITCOIN_CORE_H = \
   torcontrol.h \
   txdb.h \
   txmempool.h \
-  node/txorphanage.h \
   txrequest.h \
   undo.h \
   util/asmap.h \
@@ -381,13 +381,14 @@ libbitcoin_node_a_SOURCES = \
   node/connection_types.cpp \
   node/context.cpp \
   node/eviction.cpp \
+  node/interface_ui.cpp \
   node/interfaces.cpp \
   node/mempool_persist_args.cpp \
   node/miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
-  node/interface_ui.cpp \
+  node/txorphanage.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
@@ -415,7 +416,6 @@ libbitcoin_node_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  node/txorphanage.cpp \
   txrequest.cpp \
   validation.cpp \
   validationinterface.cpp \

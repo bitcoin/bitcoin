@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/txorphanage.h>
 #include <protocol.h>
 #include <scheduler.h>
 #include <script/script.h>
@@ -18,7 +19,6 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <node/txorphanage.h>
 #include <validationinterface.h>
 #include <version.h>
 

@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <node/txorphanage.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
-#include <node/txorphanage.h>
 
 #include <array>
 #include <cstdint>

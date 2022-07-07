@@ -44,6 +44,7 @@
 #include <node/interface_ui.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
+#include <node/txorphanage.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -63,7 +64,6 @@
 #include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <node/txorphanage.h>
 #include <util/asmap.h>
 #include <util/check.h>
 #include <util/moneystr.h>

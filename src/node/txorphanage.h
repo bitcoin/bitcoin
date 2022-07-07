@@ -10,6 +10,9 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 
+/** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
+static constexpr unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
+
 /** Guards orphan transactions and extra txs for compact blocks */
 extern RecursiveMutex g_cs_orphans;
 
