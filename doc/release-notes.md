@@ -87,8 +87,8 @@ New settings
 ------------
 
 - A new `mempoolfullrbf` option has been added, which enables the mempool to
-  accept transaction replacement without enforcing the opt-in replaceability
-  signal. (#25353)
+  accept transaction replacement without enforcing BIP125 replaceability
+  signaling. (#25353)
 
 Tools and Utilities
 -------------------
