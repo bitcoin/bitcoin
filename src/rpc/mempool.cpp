@@ -663,6 +663,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     ret.pushKV("incrementalrelayfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
+    ret.pushKV("fullrbf", pool.m_full_rbf);
     return ret;
 }
 
@@ -684,6 +685,7 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
                 {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
                 {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
+                {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection"},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")

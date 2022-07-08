@@ -773,8 +773,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // from BIP125's inherited signaling description (see CVE-2021-31876).
                 // Applications relying on first-seen mempool behavior should
                 // check all unconfirmed ancestors; otherwise an opt-in ancestor
-                // might be replaced, causing removal of this descendant.               
-                if (!SignalsOptInRBF(*ptxConflicting)) {
+                // might be replaced, causing removal of this descendant.
+                //
+                // If replaceability signaling is ignored due to node setting,
+                // replacement is always allowed.
+                if (!m_pool.m_full_rbf && !SignalsOptInRBF(*ptxConflicting)) {
                     // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(IsZTx){
