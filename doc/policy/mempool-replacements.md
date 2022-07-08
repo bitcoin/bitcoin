@@ -15,8 +15,8 @@ other consensus and policy rules, each of the following conditions are met:
 
    *Rationale*: See [BIP125
    explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).
-   The Bitcoin Core implementation offers a node setting (`mempoolfullrbf`) to allow transaction
-   replacement without enforcement of the opt-in signaling rule.
+   Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
+   opt-in signaling rule.
 
 2. The replacement transaction only include an unconfirmed input if that input was included in
    one of the directly conflicting transactions. An unconfirmed input spends an output from a
