@@ -738,7 +738,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # dashd binary #
-dashd_SOURCES = dashd.cpp
+dashd_SOURCES = bitcoind.cpp
 dashd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 dashd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dashd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -767,7 +767,7 @@ dashd_LDADD = \
 dashd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # dash-cli binary #
-dash_cli_SOURCES = dash-cli.cpp
+dash_cli_SOURCES = bitcoin-cli.cpp
 dash_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 dash_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dash_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -785,7 +785,7 @@ dash_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP
 #
 
 # dash-tx binary #
-dash_tx_SOURCES = dash-tx.cpp
+dash_tx_SOURCES = bitcoin-tx.cpp
 dash_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 dash_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dash_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -806,7 +806,7 @@ dash_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # dash-wallet binary #
-dash_wallet_SOURCES = dash-wallet.cpp
+dash_wallet_SOURCES = bitcoin-wallet.cpp
 dash_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 dash_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dash_wallet_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
