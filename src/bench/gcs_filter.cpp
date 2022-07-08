@@ -28,7 +28,7 @@ static void GCSBlockFilterGetHash(benchmark::Bench& bench)
     auto elements = GenerateGCSTestElements();
 
     GCSFilter filter({0, 0, BASIC_FILTER_P, BASIC_FILTER_M}, elements);
-    BlockFilter block_filter(BlockFilterType::BASIC, {}, filter.GetEncoded(), /*skip_decode_check=*/false);
+    BlockFilter block_filter(BlockFilterType::BASIC_FILTER, {}, filter.GetEncoded(), /*skip_decode_check=*/false);
 
     bench.run([&] {
         block_filter.GetHash();
