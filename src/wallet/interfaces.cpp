@@ -191,29 +191,27 @@ public:
         std::string* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto it = m_wallet->m_address_book.find(dest);
-        if (it == m_wallet->m_address_book.end() || it->second.IsChange()) {
-            return false;
-        }
+        const auto& entry = m_wallet->FindAddressBookEntry(dest, /*allow_change=*/false);
+        if (!entry) return false; // addr not found
         if (name) {
-            *name = it->second.GetLabel();
+            *name = entry->GetLabel();
         }
         if (is_mine) {
             *is_mine = m_wallet->IsMine(dest);
         }
         if (purpose) {
-            *purpose = it->second.purpose;
+            *purpose = entry->purpose;
         }
         return true;
     }
-    std::vector<WalletAddress> getAddresses() override
+    std::vector<WalletAddress> getAddresses() const override
     {
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletAddress> result;
-        for (const auto& item : m_wallet->m_address_book) {
-            if (item.second.IsChange()) continue;
-            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
-        }
+        m_wallet->ForEachAddrBookEntry([&](const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change) EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet) {
+            if (is_change) return;
+            result.emplace_back(dest, m_wallet->IsMine(dest), label, purpose);
+        });
         return result;
     }
     std::vector<std::string> getAddressReceiveRequests() override {

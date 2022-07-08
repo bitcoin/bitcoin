@@ -57,6 +57,11 @@ class ReceivedByTest(BitcoinTestFramework):
                             {"address": empty_addr},
                             {"address": empty_addr, "label": "", "amount": 0, "confirmations": 0, "txids": []})
 
+        # No returned addy should be a change addr
+        for node in self.nodes:
+            for addr_obj in node.listreceivedbyaddress():
+                assert_equal(node.getaddressinfo(addr_obj["address"])["ischange"], False)
+
         # Test Address filtering
         # Only on addr
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]}
