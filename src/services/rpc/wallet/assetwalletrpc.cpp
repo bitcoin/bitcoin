@@ -2034,8 +2034,9 @@ static RPCHelpMan syscoincreatenevmblob()
     int nSize = vchData.size() + numMultiples;
     int modDataFill = 0;
     // fill up to factor of 32 with 0
-    if((nSize % 32) != 0)
+    if((nSize % 32) != 0) {
         modDataFill = 32 - (nSize % 32);
+    }
     std::vector<unsigned char> vchFill(modDataFill, 0);
     std::vector<unsigned char> newVchData;
     auto it = vchData.begin();
@@ -2049,6 +2050,13 @@ static RPCHelpMan syscoincreatenevmblob()
     newVchData.insert(newVchData.end(), it, std::end(vchData));
     // fill with 0's to make sure we are using divisor of 32
     newVchData.insert(newVchData.end(), std::begin(vchFill), std::end((vchFill)));
+    // make sure we are atleast 1024 bytes (32 multiples of 32 bytes) long to ensure KZG commitment verification works
+    const int numNewMultiples = (newVchData.size() / 32);
+    if(numNewMultiples < 32) {
+        const int numNewFillBytes = 32*(32 - numNewMultiples);
+         std::vector<unsigned char> vchNewFill(numNewFillBytes, 0);
+        newVchData.insert(newVchData.end(), std::begin(vchNewFill), std::end((vchNewFill)));
+    }
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmData;
