@@ -83,6 +83,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
+        self.log.info("Running test full replace by fee...")
+        self.test_fullrbf()
+
         self.log.info("Passed")
 
     def make_utxo(self, node, amount, *, confirmed=True, scriptPubKey=None):
@@ -697,6 +700,34 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()["incrementalrelayfee"], Decimal("0.00001"))
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+
+    def test_fullrbf(self):
+        txid = self.wallet.send_self_transfer(from_node=self.nodes[0])['txid']
+        self.generate(self.nodes[0], 1)
+        confirmed_utxo = self.wallet.get_utxo(txid=txid)
+
+        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
+
+        # Create an explicitly opt-out transaction
+        optout_tx = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=SEQUENCE_FINAL,
+            fee_rate=Decimal('0.01'),
+        )
+        assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
+
+        conflicting_tx = self.wallet.create_self_transfer(
+                utxo_to_spend=confirmed_utxo,
+                sequence=SEQUENCE_FINAL,
+                fee_rate=Decimal('0.02'),
+        )
+
+        # Send the replacement transaction, conflicting with the optout_tx.
+        self.nodes[0].sendrawtransaction(conflicting_tx['hex'], 0)
+
+        # Optout_tx is not anymore in the mempool.
+        assert optout_tx['txid'] not in self.nodes[0].getrawmempool()
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
