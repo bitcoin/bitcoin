@@ -231,6 +231,24 @@ struct PackageMempoolAcceptResult
 };
 
 /**
+ * Criteria for bypassing mempool checks.
+ */
+struct MemPoolBypass {
+    //! When true, run validation checks but don't submit to mempool.
+    bool m_test_accept{false};
+
+    //! When true, don't enforce mempool fee and capacity limits.
+    //! This is used to indicate that mempool limiting based on feerate should be bypassed.
+    //! This does not prevent mempool from accepting the transaction.
+    bool m_bypass_limits{false};
+
+    MemPoolBypass() {}
+
+    MemPoolBypass(bool test_accept, bool bypass_limits) :
+        m_test_accept(test_accept), m_bypass_limits(bypass_limits) {}
+};
+
+/**
  * Try to add a transaction to the mempool. This is an internal function and is exposed only for testing.
  * Client code should use ChainstateManager::ProcessTransaction()
  *
