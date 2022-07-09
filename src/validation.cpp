@@ -434,7 +434,9 @@ public:
     struct ATMPArgs {
         const CChainParams& m_chainparams;
         const int64_t m_accept_time;
-        const bool m_bypass_limits;
+
+        //! Criteria for bypassing mempool checks.
+        const MemPoolBypass m_mempool_bypass;
         /*
          * Return any outpoints which were not previously present in the coins
          * cache, but were added as a result of validating the tx for mempool
@@ -443,7 +445,6 @@ public:
          * the mempool.
          */
         std::vector<COutPoint>& m_coins_to_uncache;
-        const bool m_test_accept;
         /** Whether we allow transactions to replace mempool transactions by BIP125 rules. If false,
          * any transaction spending the same inputs as a transaction in the mempool is considered
          * a conflict. */
@@ -459,14 +460,13 @@ public:
         const bool m_package_feerates;
 
         /** Parameters for single transaction mempool validation. */
-        static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
-                                     bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
-                                     bool test_accept) {
+        static ATMPArgs SingleAccept(const CChainParams& chainparams, const int64_t accept_time,
+                                     const std::optional<MemPoolBypass>& mempool_bypass,
+                                     std::vector<COutPoint>& coins_to_uncache) {
             return ATMPArgs{/* m_chainparams */ chainparams,
                             /* m_accept_time */ accept_time,
-                            /* m_bypass_limits */ bypass_limits,
+                            /* m_mempool_bypass */ mempool_bypass,
                             /* m_coins_to_uncache */ coins_to_uncache,
-                            /* m_test_accept */ test_accept,
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false,
@@ -474,13 +474,13 @@ public:
         }
 
         /** Parameters for test package mempool validation through testmempoolaccept. */
-        static ATMPArgs PackageTestAccept(const CChainParams& chainparams, int64_t accept_time,
+        static ATMPArgs PackageTestAccept(const CChainParams& chainparams, const int64_t accept_time,
                                           std::vector<COutPoint>& coins_to_uncache) {
+            const MemPoolBypass mempool_bypass{/*test_accept=*/true, /*bypass_limits=*/false};
             return ATMPArgs{/* m_chainparams */ chainparams,
                             /* m_accept_time */ accept_time,
-                            /* m_bypass_limits */ false,
+                            /* m_mempool_bypass */ mempool_bypass,
                             /* m_coins_to_uncache */ coins_to_uncache,
-                            /* m_test_accept */ true,
                             /* m_allow_bip125_replacement */ false,
                             /* m_package_submission */ false, // not submitting to mempool
                             /* m_package_feerates */ false,
@@ -492,9 +492,8 @@ public:
                                                 std::vector<COutPoint>& coins_to_uncache) {
             return ATMPArgs{/* m_chainparams */ chainparams,
                             /* m_accept_time */ accept_time,
-                            /* m_bypass_limits */ false,
+                            /* m_mempool_bypass */ std::nullopt,
                             /* m_coins_to_uncache */ coins_to_uncache,
-                            /* m_test_accept */ false,
                             /* m_allow_bip125_replacement */ false,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
@@ -505,9 +504,8 @@ public:
         static ATMPArgs SingleInPackageAccept(const ATMPArgs& package_args) {
             return ATMPArgs{/* m_chainparams */ package_args.m_chainparams,
                             /* m_accept_time */ package_args.m_accept_time,
-                            /* m_bypass_limits */ false,
+                            /* m_mempool_bypass */ package_args.m_mempool_bypass,
                             /* m_coins_to_uncache */ package_args.m_coins_to_uncache,
-                            /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_bip125_replacement */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false, // only 1 transaction
@@ -518,18 +516,16 @@ public:
         // Private ctor to avoid exposing details to clients and allowing the possibility of
         // mixing up the order of the arguments. Use static functions above instead.
         ATMPArgs(const CChainParams& chainparams,
-                 int64_t accept_time,
-                 bool bypass_limits,
+                 const int64_t accept_time,
+                 const std::optional<MemPoolBypass>& mempool_bypass,
                  std::vector<COutPoint>& coins_to_uncache,
-                 bool test_accept,
-                 bool allow_bip125_replacement,
-                 bool package_submission,
-                 bool package_feerates)
+                 const bool allow_bip125_replacement,
+                 const bool package_submission,
+                 const bool package_feerates)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
-              m_bypass_limits{bypass_limits},
+              m_mempool_bypass{mempool_bypass.value_or(MemPoolBypass())},
               m_coins_to_uncache{coins_to_uncache},
-              m_test_accept{test_accept},
               m_allow_bip125_replacement{allow_bip125_replacement},
               m_package_submission{package_submission},
               m_package_feerates{package_feerates}
@@ -679,7 +675,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Copy/alias what we need out of args
     const int64_t nAcceptTime = args.m_accept_time;
-    const bool bypass_limits = args.m_bypass_limits;
+    const bool bypass_limits = args.m_mempool_bypass.m_bypass_limits;
     std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
@@ -1044,7 +1040,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
-    const bool bypass_limits = args.m_bypass_limits;
+    const bool bypass_limits = args.m_mempool_bypass.m_bypass_limits;
 
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
@@ -1177,7 +1173,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     if (!ConsensusScriptChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     // Tx was accepted, but not added
-    if (args.m_test_accept) {
+    if (args.m_mempool_bypass.m_test_accept) {
         return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees);
     }
 
@@ -1250,7 +1246,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
             return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
         }
-        if (args.m_test_accept) {
+        if (args.m_mempool_bypass.m_test_accept) {
             // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
             // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
             results.emplace(ws.m_ptx->GetWitnessHash(),
@@ -1259,7 +1255,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         }
     }
 
-    if (args.m_test_accept) return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
+    if (args.m_mempool_bypass.m_test_accept) return PackageMempoolAcceptResult(package_state, package_feerate, std::move(results));
 
     if (!SubmitPackage(args, workspaces, package_state, results)) {
         // PackageValidationState filled in by SubmitPackage().
@@ -1412,11 +1408,8 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTr
     assert(active_chainstate.GetMempool() != nullptr);
     CTxMemPool& pool{*active_chainstate.GetMempool()};
 
-    const bool bypass_limits = mempool_bypass.has_value() ? mempool_bypass->m_bypass_limits: false;
-    const bool test_accept = mempool_bypass.has_value() ? mempool_bypass->m_test_accept : false;
-
     std::vector<COutPoint> coins_to_uncache;
-    auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept);
+    auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, mempool_bypass, coins_to_uncache);
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
         // Remove coins that were not present in the coins cache before calling
