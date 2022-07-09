@@ -994,9 +994,9 @@ public:
      * Try to add a transaction to the memory pool.
      *
      * @param[in]  tx              The transaction to submit for mempool acceptance.
-     * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+     * @param[in]  mempool_bypass     Criteria for bypassing mempool checks
      */
-    [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, bool test_accept)
+    [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, const std::optional<MemPoolBypass>& mempool_bypass)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex

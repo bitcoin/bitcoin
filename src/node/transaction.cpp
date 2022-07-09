@@ -71,7 +71,9 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             if (max_tx_fee > 0) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
-                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/true);
+
+                const MemPoolBypass mempool_bypass{/*test_accept=*/true, /*bypass_limits=*/false};
+                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, mempool_bypass);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
                 } else if (result.m_base_fees.value() > max_tx_fee) {
@@ -79,7 +81,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 }
             }
             // Try to submit the transaction to the mempool.
-            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/false);
+            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*mempool_bypass=*/std::nullopt);
             if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                 return HandleATMPError(result.m_state, err_string);
             }

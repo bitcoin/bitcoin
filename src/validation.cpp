@@ -3806,7 +3806,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
     return true;
 }
 
-MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
+MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, const std::optional<MemPoolBypass>& mempool_bypass)
 {
     AssertLockHeld(cs_main);
     CChainState& active_chainstate = ActiveChainstate();
@@ -3815,7 +3815,6 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
-    const MemPoolBypass mempool_bypass{/*test_accept=*/test_accept, /*bypass_limits=*/false};
     auto result = AcceptToMemoryPool(/*active_chainstate=*/active_chainstate, tx, /*accept_time=*/GetTime(), mempool_bypass);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
