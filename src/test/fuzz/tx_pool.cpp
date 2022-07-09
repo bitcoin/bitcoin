@@ -244,8 +244,9 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 
         // Make sure ProcessNewPackage on one transaction works.
         // The result is not guaranteed to be the same as what is returned by ATMP.
+        const MemPoolBypass mempool_bypass1{.m_test_accept=true, .m_bypass_limits=bypass_limits};
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true));
+                                              return ProcessNewPackage(/*active_chainstate=*/chainstate, /*pool=*/tx_pool, /*package=*/{tx}, mempool_bypass1));
         // If something went wrong due to a package-specific policy, it might not return a
         // validation result for the transaction.
         if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {

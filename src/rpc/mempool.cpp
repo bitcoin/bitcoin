@@ -188,15 +188,15 @@ static RPCHelpMan testmempoolaccept()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "maxfeerate must be of type object or number.");
             }
 
-            std::vector<CTransactionRef> txns;
-            txns.reserve(raw_transactions.size());
+            std::vector<CTransactionRef> package;
+            package.reserve(raw_transactions.size());
             for (const auto& rawtx : raw_transactions.getValues()) {
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
                                        "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
                 }
-                txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+                package.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -205,9 +205,10 @@ static RPCHelpMan testmempoolaccept()
             CChainState& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true);
-                return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(/*tx=*/txns[0], /*test_accept=*/true));
+                const MemPoolBypass mempool_bypass{.m_test_accept=true, .m_bypass_limits=false};
+                if (package.size() > 1) return ProcessNewPackage(/*active_chainstate=*/chainstate, /*pool=*/mempool, package, mempool_bypass);
+                return PackageMempoolAcceptResult(package[0]->GetWitnessHash(),
+                                                  chainman.ProcessTransaction(/*tx=*/package[0], /*test_accept=*/true));
             }();
 
             UniValue rpc_result(UniValue::VARR);
@@ -216,7 +217,7 @@ static RPCHelpMan testmempoolaccept()
             // doesn't make sense to return a validation result for a transaction if its ancestor(s) would
             // not be submitted.
             bool exit_early{false};
-            for (const auto& tx : txns) {
+            for (const auto& tx : package) {
                 UniValue result_inner(UniValue::VOBJ);
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
                 result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
@@ -831,21 +832,21 @@ static RPCHelpMan submitpackage()
                                    "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
-            std::vector<CTransactionRef> txns;
-            txns.reserve(raw_transactions.size());
+            std::vector<CTransactionRef> package;
+            package.reserve(raw_transactions.size());
             for (const auto& rawtx : raw_transactions.getValues()) {
                 CMutableTransaction mtx;
                 if (!DecodeHexTx(mtx, rawtx.get_str())) {
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
                                        "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
                 }
-                txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+                package.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             CChainState& chainstate = EnsureChainman(node).ActiveChainstate();
-            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false));
+            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(/*active_chainstate=*/chainstate, /*pool=*/mempool, package, /*mempool_bypass=*/std::nullopt));
 
             // First catch any errors.
             switch(package_result.m_state.GetResult()) {
@@ -862,7 +863,7 @@ static RPCHelpMan submitpackage()
                 }
                 case PackageValidationResult::PCKG_TX:
                 {
-                    for (const auto& tx : txns) {
+                    for (const auto& tx : package) {
                         auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                         if (it != package_result.m_tx_results.end() && it->second.m_state.IsInvalid()) {
                             throw JSONRPCTransactionError(TransactionError::MEMPOOL_REJECTED,
@@ -873,7 +874,7 @@ static RPCHelpMan submitpackage()
                     NONFATAL_UNREACHABLE();
                 }
             }
-            for (const auto& tx : txns) {
+            for (const auto& tx : package) {
                 size_t num_submitted{0};
                 std::string err_string;
                 const auto err = BroadcastTransaction(node, tx, err_string, 0, true, true);
@@ -886,7 +887,7 @@ static RPCHelpMan submitpackage()
             UniValue rpc_result{UniValue::VOBJ};
             UniValue tx_result_map{UniValue::VOBJ};
             std::set<uint256> replaced_txids;
-            for (const auto& tx : txns) {
+            for (const auto& tx : package) {
                 auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                 CHECK_NONFATAL(it != package_result.m_tx_results.end());
                 UniValue result_inner{UniValue::VOBJ};
