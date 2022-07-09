@@ -208,7 +208,7 @@ static RPCHelpMan testmempoolaccept()
                 const MemPoolBypass mempool_bypass{.m_test_accept=true, .m_bypass_limits=false};
                 if (package.size() > 1) return ProcessNewPackage(/*active_chainstate=*/chainstate, /*pool=*/mempool, package, mempool_bypass);
                 return PackageMempoolAcceptResult(package[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(/*tx=*/package[0], /*test_accept=*/true));
+                                                  chainman.ProcessTransaction(/*tx=*/package[0], mempool_bypass));
             }();
 
             UniValue rpc_result(UniValue::VARR);

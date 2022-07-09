@@ -533,7 +533,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CTransactionRef ptx_parent2_v1 = MakeTransactionRef(mtx_parent2_v1);
     CTransactionRef ptx_parent2_v2 = MakeTransactionRef(mtx_parent2_v2);
     // Put parent2_v1 in the package, submit parent2_v2 to the mempool.
-    const MempoolAcceptResult parent2_v2_result = m_node.chainman->ProcessTransaction(/*tx=*/ptx_parent2_v2, /*test_accept=*/false);
+    const MempoolAcceptResult parent2_v2_result = m_node.chainman->ProcessTransaction(/*tx=*/ptx_parent2_v2, /*mempool_bypass=*/std::nullopt);
     BOOST_CHECK(parent2_v2_result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     package_mixed.push_back(ptx_parent2_v1);
 
