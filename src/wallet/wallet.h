@@ -21,6 +21,7 @@
 #include <util/system.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>
+#include <wallet/addressbookman.h>
 #include <wallet/crypter.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
@@ -194,28 +195,6 @@ public:
     void ReturnDestination();
     //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
     void KeepDestination();
-};
-
-/** Address book data */
-class CAddressBookData
-{
-private:
-    bool m_change{true};
-    std::string m_label;
-public:
-    std::string purpose;
-
-    CAddressBookData() : purpose("unknown") {}
-
-    typedef std::map<std::string, std::string> StringMap;
-    StringMap destdata;
-
-    bool IsChange() const { return m_change; }
-    const std::string& GetLabel() const { return m_label; }
-    void SetLabel(const std::string& label) {
-        m_change = false;
-        m_label = label;
-    }
 };
 
 struct CRecipient
