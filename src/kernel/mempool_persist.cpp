@@ -78,7 +78,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, CChainState& activ
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
                 LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                const auto& accepted = AcceptToMemoryPool(/*active_chainstate=*/active_chainstate, tx, /*accept_time=*/nTime, /*mempool_bypass=*/std::nullopt);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {

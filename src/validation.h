@@ -249,13 +249,12 @@ struct MemPoolBypass {
  * @param[in]  tx                 The transaction to submit for mempool acceptance.
  * @param[in]  accept_time        The timestamp for adding the transaction to the mempool.
  *                                It is also used to determine when the entry expires.
- * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits.
- * @param[in]  test_accept        When true, run validation checks but don't submit to mempool.
+ * @param[in]  mempool_bypass     Criteria for bypassing mempool checks
  *
  * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTransactionRef& tx,
-                                       int64_t accept_time, bool bypass_limits, bool test_accept)
+                                       int64_t accept_time, const std::optional<MemPoolBypass>& mempool_bypass)
     EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
