@@ -266,16 +266,19 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTr
     EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
-* Validate (and maybe submit) a package to the mempool. See doc/policy/packages.md for full details
-* on package validation rules.
-* @param[in]    test_accept     When true, run validation checks but don't submit to mempool.
-* @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
-* If a transaction fails, validation will exit early and some results may be missing. It is also
-* possible for the package to be partially submitted.
-*/
-PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
-                                                   const Package& txns, bool test_accept)
-                                                   EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+ * Validate (and maybe submit) a package to the mempool. See doc/policy/packages.md for full details
+ * on package validation rules.
+ * @param[in]  active_chainstate  Reference to the active chainstate.
+ * @param[in]  pool               The mempool.
+ * @param[in]  package               A package of transactions,
+ * @param[in]  mempool_bypass     Criteria for bypassing mempool checks
+ * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
+ * If a transaction fails, validation will exit early and some results may be missing. It is also
+ * possible for the package to be partially submitted.
+ */
+PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool, const Package& package,
+                                             const std::optional<MemPoolBypass>& mempool_bypass)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /* Transaction policy functions */
 

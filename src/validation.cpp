@@ -1430,12 +1430,14 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTr
     return result;
 }
 
-PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
-                                                   const Package& package, bool test_accept)
+PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool, const Package& package,
+                                             const std::optional<MemPoolBypass>& mempool_bypass)
 {
     AssertLockHeld(cs_main);
     assert(!package.empty());
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    const bool test_accept = mempool_bypass.has_value() ? mempool_bypass->m_test_accept : false;
 
     std::vector<COutPoint> coins_to_uncache;
     const CChainParams& chainparams = active_chainstate.m_params;
