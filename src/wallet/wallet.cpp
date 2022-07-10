@@ -2252,31 +2252,42 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
-    bool is_mine;
+    isminetype is_mine;
+    const std::string& dest = EncodeDestination(address);
     WalletBatch batch(GetDatabase());
     {
         LOCK(cs_wallet);
         // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
         // NOTE: This isn't a problem for sending addresses because they never have any DestData yet!
         // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
-        if (IsMine(address)) {
-            WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
+        is_mine = IsMine(address);
+        if (is_mine) {
+            WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__,
+                            PACKAGE_BUGREPORT);
             return false;
         }
+
         // Delete destdata tuples associated with address
-        std::string strAddress = EncodeDestination(address);
-        for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
-        {
-            batch.EraseDestData(strAddress, item.first);
+        for (const std::pair<const std::string, std::string> &item: m_address_book[address].destdata) {
+            if (!batch.EraseDestData(dest, item.first)) {
+                WalletLogPrintf("%s error erasing dest data\n", __func__);
+                return false;
+            }
         }
+
+        // Delete purpose and name
+        if (!batch.ErasePurpose(dest) || !batch.EraseName(dest)) {
+            WalletLogPrintf("%s error erasing purpose/name\n", __func__);
+            return false;
+        }
+
+        // finally, remove it from the map
         m_address_book.erase(address);
-        is_mine = IsMine(address) != ISMINE_NO;
     }
 
-    NotifyAddressBookChanged(address, "", is_mine, "", CT_DELETED);
-
-    batch.ErasePurpose(EncodeDestination(address));
-    return batch.EraseName(EncodeDestination(address));
+    // All good, signal changes
+    NotifyAddressBookChanged(address, "", is_mine != ISMINE_NO, "", CT_DELETED);
+    return true;
 }
 
 size_t CWallet::KeypoolCountExternalKeys() const
