@@ -140,3 +140,32 @@ bool AddressBookMan::IsDestUsed(const CTxDestination& dest) const
     }
     return false;
 }
+
+std::vector<std::string> AddressBookMan::GetEntriesByDestDataPrefix(const std::string& prefix) const
+{
+    LOCK(cs_addrbook);
+    std::vector<std::string> values;
+    for (const auto& address : m_address_book) {
+        for (const auto& data : address.second.destdata) {
+            if (!data.first.compare(0, prefix.size(), prefix)) {
+                values.emplace_back(data.second);
+            }
+        }
+    }
+    return values;
+}
+
+bool AddressBookMan::SetEntryDestData(wallet::WalletBatch& batch, const CTxDestination& dest,
+                                      const std::string key,  const std::string& id, const std::string& value)
+{
+    LOCK(cs_addrbook);
+    CAddressBookData& data = m_address_book.at(dest);
+    if (value.empty()) {
+        if (!batch.EraseDestData(EncodeDestination(dest), key)) return false;
+        data.destdata.erase(key);
+    } else {
+        if (!batch.WriteDestData(EncodeDestination(dest), key, value)) return false;
+        data.destdata[key] = value;
+    }
+    return true;
+}

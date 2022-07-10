@@ -85,6 +85,10 @@ public:
      /** Returns true if the destination was previously marked as 'used' */
      bool IsDestUsed(const CTxDestination& dest) const;
 
+     std::vector<std::string> GetEntriesByDestDataPrefix(const std::string& prefix) const;
+     bool SetEntryDestData(wallet::WalletBatch& batch, const CTxDestination& dest,
+                          const std::string key,  const std::string& id, const std::string& value);
+
      /** Adds a destination data tuple to the store, without saving it to disk */
      void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value);
      /** Adds destination label to the store, without saving it to disk */
