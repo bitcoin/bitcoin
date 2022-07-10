@@ -101,6 +101,8 @@ static RPCHelpMan testmempoolaccept()
                 {
                     {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
                     "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kvB\n"},
+                    {"bypass_absolute_timelock", RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't enforce nLocktime.\n"},
+                    {"bypass_relative_timelock", RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't consensus-enforce BIP68 relative lock-time.\n"}
                 },
                 "\"options\""
             },
@@ -151,17 +153,24 @@ static RPCHelpMan testmempoolaccept()
 
             CFeeRate max_raw_tx_fee_rate = DEFAULT_MAX_RAW_TX_FEE_RATE;
 
+            MemPoolBypass mempool_bypass{/*test_accept=*/true, /*bypass_limits=*/false};
+
             if (!request.params[1].isNull()) {
                 const UniValue& options = request.params[1];
                 RPCTypeCheckObj(options,
                     {
                         {"maxfeerate", UniValueType()}, // will be checked by AmountFromValue() below
+                        {"bypass_absolute_timelock", UniValueType(UniValue::VBOOL)},
+                        {"bypass_relative_timelock", UniValueType(UniValue::VBOOL)},
                     },
                     true, true);
 
                 if (options.exists("maxfeerate")) {
                     max_raw_tx_fee_rate = CFeeRate(AmountFromValue(options["maxfeerate"]));
                 }
+
+                mempool_bypass.m_bypass_absolute_timelock = options.exists("bypass_absolute_timelock") ? options["bypass_absolute_timelock"].get_bool() : false;
+                mempool_bypass.m_bypass_relative_timelock = options.exists("bypass_relative_timelock") ? options["bypass_relative_timelock"].get_bool() : false;
             }
 
             std::vector<CTransactionRef> package;
@@ -181,7 +190,6 @@ static RPCHelpMan testmempoolaccept()
             CChainState& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                const MemPoolBypass mempool_bypass{/*test_accept=*/true, /*bypass_limits=*/false};
                 if (package.size() > 1) return ProcessNewPackage(/*active_chainstate=*/chainstate, /*pool=*/mempool, package, mempool_bypass);
                 return PackageMempoolAcceptResult(package[0]->GetWitnessHash(),
                                                   chainman.ProcessTransaction(/*tx=*/package[0], mempool_bypass));
