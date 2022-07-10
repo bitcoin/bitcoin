@@ -2237,11 +2237,20 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
             m_address_book[address].purpose = strPurpose;
         is_mine = IsMine(address) != ISMINE_NO;
     }
+
+    if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose)) {
+        WalletLogPrintf("%s error writing purpose\n", __func__);
+        return false;
+    }
+    if (!batch.WriteName(EncodeDestination(address), strName)) {
+        WalletLogPrintf("%s error writing name\n", __func__);
+        return false;
+    }
+
+    // Only notify if db writes succeeded
     NotifyAddressBookChanged(address, strName, is_mine,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW));
-    if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
-        return false;
-    return batch.WriteName(EncodeDestination(address), strName);
+    return true;
 }
 
 bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
