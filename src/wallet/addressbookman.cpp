@@ -112,3 +112,31 @@ int AddressBookMan::GetSize() const
     LOCK(cs_addrbook);
     return m_address_book.size();
 }
+
+bool AddressBookMan::SetDestUsed(wallet::WalletBatch& batch, const CTxDestination& dest, bool used)
+{
+    const std::string key{"used"};
+    if (std::get_if<CNoDestination>(&dest))
+        return false;
+
+    LOCK(cs_addrbook);
+    if (!used) {
+        if (auto* data = GetEntry(dest)) data->destdata.erase(key);
+        return batch.EraseDestData(EncodeDestination(dest), key);
+    }
+
+    const std::string value{"1"};
+    LoadDestData(dest, key, value);
+    return batch.WriteDestData(EncodeDestination(dest), key, value);
+}
+
+bool AddressBookMan::IsDestUsed(const CTxDestination& dest) const
+{
+    const std::string key{"used"};
+    if (const auto& op_entry = Find(dest)) {
+        if (op_entry->destdata.find(key) != op_entry->destdata.end()) {
+            return true;
+        }
+    }
+    return false;
+}

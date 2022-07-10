@@ -80,6 +80,11 @@ public:
       */
      bool Delete(wallet::WalletBatch& batch, const CTxDestination& dest);
 
+     /** Marks the destination as 'used' */
+     bool SetDestUsed(wallet::WalletBatch& batch, const CTxDestination& dest, bool used);
+     /** Returns true if the destination was previously marked as 'used' */
+     bool IsDestUsed(const CTxDestination& dest) const;
+
      /** Adds a destination data tuple to the store, without saving it to disk */
      void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value);
      /** Adds destination label to the store, without saving it to disk */
