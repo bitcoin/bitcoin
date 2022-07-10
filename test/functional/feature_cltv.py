@@ -158,15 +158,17 @@ class BIP65Test(BitcoinTestFramework):
             ][i]
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
-            assert_equal(
-                [{
-                    'txid': spendtx.hash,
-                    'wtxid': spendtx.getwtxid(),
-                    'allowed': False,
-                    'reject-reason': expected_cltv_reject_reason,
-                }],
-                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate": 0}),
-            )
+            expected_testres = [{
+                'txid': spendtx.hash,
+                'wtxid': spendtx.getwtxid(),
+                'allowed': False,
+                'reject-reason': expected_cltv_reject_reason,
+            }]
+
+            assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate":0}))
+            # It still shouldn't work with bypass_absolute_timelock=True because this is a script error.
+            assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate":0, "bypass_absolute_timelock":True}))
+            assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate":0, "bypass_relative_timelock":True}))
 
             # Now we verify that a block with this transaction is also invalid.
             block.vtx[1] = spendtx
