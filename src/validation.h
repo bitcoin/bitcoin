@@ -242,10 +242,28 @@ struct MemPoolBypass {
     //! This does not prevent mempool from accepting the transaction.
     bool m_bypass_limits{false};
 
+    //! Don't enforce nLocktime
+    bool m_bypass_absolute_timelock{false};
+
+    //! Don't consensus-enforce BIP68 relative lock-time.
+    bool m_bypass_relative_timelock{false};
+
     MemPoolBypass() {}
 
     MemPoolBypass(bool test_accept, bool bypass_limits) :
         m_test_accept(test_accept), m_bypass_limits(bypass_limits) {}
+
+    bool EnsureFullyValidatedTransaction() const
+    {
+        return !m_bypass_absolute_timelock && !m_bypass_relative_timelock;
+    }
+
+    void AssertTestModeForPartialValidation() const
+    {
+        if(!EnsureFullyValidatedTransaction()) {
+            assert(m_test_accept);
+        }
+    }
 };
 
 /**
