@@ -8,6 +8,7 @@
 #include <script/standard.h>
 #include <sync.h>
 
+#include <functional>
 #include <map>
 
 /** Address book data */
@@ -58,6 +59,13 @@ public:
     bool Has(const CTxDestination& dest, bool allow_change = false) const;
 
     /**
+     * Walk-through the entries.
+     * Stops when the provided 'ListAddrBookFunc' returns false.
+     */
+    using ListAddrBookFunc = std::function<void(const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change)>;
+    void ForEachAddrBookEntry(const ListAddrBookFunc& func) const;
+
+    /**
      *  Store/Update a new entry in the address book map and database.
      *  Replacing any previously existing value.
      *
@@ -71,6 +79,7 @@ public:
       * from the map and database.
       */
      bool Delete(wallet::WalletBatch& batch, const CTxDestination& dest);
+
 
 };
 

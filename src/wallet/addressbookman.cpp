@@ -72,6 +72,15 @@ bool AddressBookMan::Delete(wallet::WalletBatch& batch, const CTxDestination& ad
     return true;
 }
 
+void AddressBookMan::ForEachAddrBookEntry(const ListAddrBookFunc& func) const
+{
+    LOCK(cs_addrbook);
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
+        const auto& entry = item.second;
+        func(item.first, entry.GetLabel(), entry.purpose, entry.IsChange());
+    }
+}
+
 CAddressBookData* AddressBookMan::GetEntry(const CTxDestination& dest)
 {
     auto address_book_it = m_address_book.find(dest);
