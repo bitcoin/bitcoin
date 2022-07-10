@@ -181,6 +181,7 @@ class NEVMDataTest(DashTestFramework):
         self.bump_mocktime(3) # push median time over expiry
         time.sleep(1)
         self.generate(self.nodes[0], 10)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.bump_mocktime(2) # push median time over expiry
         self.generate(self.nodes[0], 10)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
