@@ -38,9 +38,10 @@ bool AddressBookMan::Put(wallet::WalletBatch& batch, const CTxDestination& dest,
         }
 
         // If db write went well, update memory
-        m_address_book[dest].SetLabel(label);
-        if (!purpose.empty()) /* update purpose only if requested */
-            m_address_book[dest].purpose = purpose;
+        LoadEntryLabel(dest, label);
+        if (!purpose.empty()) { /* update purpose only if requested */
+            LoadEntryPurpose(dest, purpose);
+        }
     }
 
     // All good
@@ -86,4 +87,28 @@ CAddressBookData* AddressBookMan::GetEntry(const CTxDestination& dest)
     auto address_book_it = m_address_book.find(dest);
     if (address_book_it == m_address_book.end()) return nullptr;
     return &address_book_it->second;
+}
+
+void AddressBookMan::LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value)
+{
+    LOCK(cs_addrbook);
+    m_address_book[dest].destdata.insert(std::make_pair(key, value));
+}
+
+void AddressBookMan::LoadEntryLabel(const CTxDestination& dest, const std::string& label)
+{
+    LOCK(cs_addrbook);
+    m_address_book[dest].SetLabel(label);
+}
+
+void AddressBookMan::LoadEntryPurpose(const CTxDestination& dest, const std::string& purpose)
+{
+    LOCK(cs_addrbook);
+    m_address_book[dest].purpose = purpose;
+}
+
+int AddressBookMan::GetSize() const
+{
+    LOCK(cs_addrbook);
+    return m_address_book.size();
 }

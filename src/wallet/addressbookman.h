@@ -43,7 +43,7 @@ private:
     std::map<CTxDestination, CAddressBookData> m_address_book GUARDED_BY(cs_addrbook);
 
     // return nullptr if not found
-    CAddressBookData* GetEntry(const CTxDestination&);
+    CAddressBookData* GetEntry(const CTxDestination&) EXCLUSIVE_LOCKS_REQUIRED(cs_addrbook);
 
 public:
 
@@ -80,7 +80,14 @@ public:
       */
      bool Delete(wallet::WalletBatch& batch, const CTxDestination& dest);
 
-
+     /** Adds a destination data tuple to the store, without saving it to disk */
+     void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value);
+     /** Adds destination label to the store, without saving it to disk */
+     void LoadEntryLabel(const CTxDestination& dest, const std::string& label);
+     /** Adds destination purpose to the store, without saving it to disk */
+     void LoadEntryPurpose(const CTxDestination& dest, const std::string& purpose);
+     /** Return address book size */
+     int GetSize() const;
 };
 
 #endif // BITCOIN_WALLET_ADDRESSBOOKMAN_H
