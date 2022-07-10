@@ -65,7 +65,7 @@ static bool GetWalletAddressesForKey(const LegacyScriptPubKeyMan* spk_man, const
     CKey key;
     spk_man->GetKey(keyid, key);
     for (const auto& dest : GetAllDestinationsForKey(key.GetPubKey())) {
-        const auto* address_book_entry = wallet.FindAddressBookEntry(dest);
+        const auto& address_book_entry = wallet.FindAddressBookEntry(dest);
         if (address_book_entry) {
             if (!strAddr.empty()) {
                 strAddr += ",";

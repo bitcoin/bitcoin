@@ -199,7 +199,7 @@ RPCHelpMan listaddressgroupings()
             addressInfo.push_back(EncodeDestination(address));
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
+                const auto& address_book_entry = pwallet->FindAddressBookEntry(address);
                 if (address_book_entry) {
                     addressInfo.push_back(address_book_entry->GetLabel());
                 }
@@ -624,7 +624,7 @@ RPCHelpMan getaddressinfo()
     // stable if we allow multiple labels to be associated with an address in
     // the future.
     UniValue labels(UniValue::VARR);
-    const auto* address_book_entry = pwallet->FindAddressBookEntry(dest);
+    const auto& address_book_entry = pwallet->FindAddressBookEntry(dest);
     if (address_book_entry) {
         labels.push_back(address_book_entry->GetLabel());
     }

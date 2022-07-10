@@ -2673,29 +2673,13 @@ bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 std::vector<std::string> CWallet::GetAddressReceiveRequests() const
 {
     const std::string prefix{"rr"};
-    std::vector<std::string> values;
-    for (const auto& address : m_address_book) {
-        for (const auto& data : address.second.destdata) {
-            if (!data.first.compare(0, prefix.size(), prefix)) {
-                values.emplace_back(data.second);
-            }
-        }
-    }
-    return values;
+    return m_address_book_man.GetEntriesByDestDataPrefix(prefix);
 }
 
 bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value)
 {
     const std::string key{"rr" + id}; // "rr" prefix = "receive request" in destdata
-    CAddressBookData& data = m_address_book.at(dest);
-    if (value.empty()) {
-        if (!batch.EraseDestData(EncodeDestination(dest), key)) return false;
-        data.destdata.erase(key);
-    } else {
-        if (!batch.WriteDestData(EncodeDestination(dest), key, value)) return false;
-        data.destdata[key] = value;
-    }
-    return true;
+    return m_address_book_man.SetEntryDestData(batch, dest, key, id, value);
 }
 
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error_string)

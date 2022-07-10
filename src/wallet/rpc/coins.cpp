@@ -661,7 +661,7 @@ RPCHelpMan listunspent()
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
 
-            const auto* address_book_entry = pwallet->FindAddressBookEntry(address);
+            const auto& address_book_entry = pwallet->FindAddressBookEntry(address);
             if (address_book_entry) {
                 entry.pushKV("label", address_book_entry->GetLabel());
             }

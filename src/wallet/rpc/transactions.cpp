@@ -337,7 +337,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             MaybePushAddress(entry, s.destination);
             entry.pushKV("category", "send");
             entry.pushKV("amount", ValueFromAmount(-s.amount));
-            const auto* address_book_entry = wallet.FindAddressBookEntry(s.destination);
+            const auto& address_book_entry = wallet.FindAddressBookEntry(s.destination);
             if (address_book_entry) {
                 entry.pushKV("label", address_book_entry->GetLabel());
             }
@@ -355,7 +355,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
         for (const COutputEntry& r : listReceived)
         {
             std::string label;
-            const auto* address_book_entry = wallet.FindAddressBookEntry(r.destination);
+            const auto& address_book_entry = wallet.FindAddressBookEntry(r.destination);
             if (address_book_entry) {
                 label = address_book_entry->GetLabel();
             }
