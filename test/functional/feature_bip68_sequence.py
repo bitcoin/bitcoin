@@ -260,6 +260,10 @@ class BIP68Test(BitcoinTestFramework):
             if (orig_tx.hash in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
                 assert_raises_rpc_error(-26, NOT_FINAL_ERROR, node.sendrawtransaction, tx.serialize().hex())
+
+                # Should pass with bypass_relative_timelocks=True but not otherwise
+                assert not node.testmempoolaccept([tx.serialize().hex()])[0]["allowed"]
+                assert node.testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_relative_timelocks":True})[0]["allowed"]
             else:
                 # sendrawtransaction should succeed if the tx is not in the mempool
                 node.sendrawtransaction(tx.serialize().hex())
@@ -313,6 +317,10 @@ class BIP68Test(BitcoinTestFramework):
         tx5.vin.append(CTxIn(COutPoint(int(utxos[0]["txid"], 16), utxos[0]["vout"]), nSequence=1))
         tx5.vout[0].nValue += int(utxos[0]["amount"]*COIN)
         raw_tx5 = self.nodes[0].signrawtransactionwithwallet(tx5.serialize().hex())["hex"]
+
+        # Should pass with bypass_relative_timelocks=True but not otherwise
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[raw_tx5])[0]["allowed"]
+        assert self.nodes[0].testmempoolaccept(rawtxs=[raw_tx5], options={"bypass_relative_timelock":True})[0]["allowed"]
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
 

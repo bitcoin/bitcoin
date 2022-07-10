@@ -324,6 +324,13 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             rawtxs=[tx.serialize().hex()],
         )
 
+        # The same timelocked transaction that failed before must be accepted with the bypass_absolute_timelock option
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
+            rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0, "bypass_absolute_timelock":True}
+        )
+
         self.log.info('A transaction that is locked by BIP68 sequence logic')
         tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].nSequence = 2  # We could include it in the second block mined from now, but not the very next one
@@ -333,6 +340,11 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             options={"maxfeerate": 0},
         )
 
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.1') - Decimal('0.05')}}],
+            rawtxs=[tx.serialize().hex()],
+            options={"maxfeerate": 0, "bypass_relative_timelock":True}
+        )
 
 if __name__ == '__main__':
     MempoolAcceptanceTest().main()
