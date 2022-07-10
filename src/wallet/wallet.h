@@ -475,6 +475,10 @@ public:
 
     //! Adds a destination data tuple to the store, without saving it to disk
     void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Adds destination label to the store, without saving it to disk
+    void LoadAddrbookEntryLabel(const CTxDestination& dest, const std::string& label) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Adds destination purpose to the store, without saving it to disk
+    void LoadAddrbookEntryPurpose(const CTxDestination& dest, const std::string& purpose) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime GUARDED_BY(cs_wallet){0};
