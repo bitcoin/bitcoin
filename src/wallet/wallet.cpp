@@ -2706,6 +2706,11 @@ void CWallet::LoadAddrbookEntryPurpose(const CTxDestination& dest, const std::st
     m_address_book[dest].purpose = purpose;
 }
 
+int CWallet::GetAddrBookSize()
+{
+    return m_address_book.size();
+}
+
 bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 {
     const std::string key{"used"};
@@ -3010,7 +3015,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
         walletInstance->WalletLogPrintf("setKeyPool.size() = %u\n",      walletInstance->GetKeyPoolSize());
         walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",       walletInstance->mapWallet.size());
-        walletInstance->WalletLogPrintf("m_address_book.size() = %u\n",  walletInstance->m_address_book.size());
+        walletInstance->WalletLogPrintf("m_address_book.size() = %u\n",  walletInstance->GetAddrBookSize());
     }
 
     return walletInstance;
