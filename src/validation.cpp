@@ -705,7 +705,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    if (!CheckFinalTxAtTip(m_active_chainstate.m_chain.Tip(), tx)) {
+    if (!args.m_mempool_bypass.m_bypass_absolute_timelock && !CheckFinalTxAtTip(m_active_chainstate.m_chain.Tip(), tx)) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
     }
 
@@ -787,7 +787,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // be mined yet.
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
-    if (!CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), m_view, tx, &lp)) {
+    if (!args.m_mempool_bypass.m_bypass_relative_timelock && !CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), m_view, tx, &lp)) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
@@ -1037,6 +1037,8 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
+
+    assert(args.m_mempool_bypass.EnsureFullyValidatedTransaction());
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
@@ -1408,6 +1410,10 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTr
     assert(active_chainstate.GetMempool() != nullptr);
     CTxMemPool& pool{*active_chainstate.GetMempool()};
 
+    if (mempool_bypass.has_value()) {
+        mempool_bypass->AssertTestModeForPartialValidation();
+    }
+
     std::vector<COutPoint> coins_to_uncache;
     auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, mempool_bypass, coins_to_uncache);
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -1433,7 +1439,12 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
     assert(!package.empty());
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
 
-    const bool test_accept = mempool_bypass.has_value() ? mempool_bypass->m_test_accept : false;
+    bool test_accept = false;
+
+    if (mempool_bypass.has_value()) {
+        mempool_bypass->AssertTestModeForPartialValidation();
+        test_accept = mempool_bypass->m_test_accept;
+    }
 
     std::vector<COutPoint> coins_to_uncache;
     const CChainParams& chainparams = active_chainstate.m_params;
