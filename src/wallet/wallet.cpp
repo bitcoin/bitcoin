@@ -1120,7 +1120,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                         // If this is a receiving address and it's not in the address book yet
                         // (e.g. it wasn't generated on this node or we're restoring from backup)
                         // add it to the address book for proper transaction accounting
-                        if (!*dest.internal && !FindAddressBookEntry(dest.dest, /* allow_change= */ false)) {
+                        if (!*dest.internal && !m_address_book_man.Has(dest.dest, /* allow_change=*/false)) {
                             SetAddressBook(dest.dest, "", "receive");
                         }
                     }
@@ -2226,26 +2226,11 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
 
 bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
 {
-    bool fUpdated = false;
-    bool is_mine;
-    {
-        LOCK(cs_wallet);
-        std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
-        fUpdated = (mi != m_address_book.end() && !mi->second.IsChange());
-        m_address_book[address].SetLabel(strName);
-        if (!strPurpose.empty()) /* update purpose only if requested */
-            m_address_book[address].purpose = strPurpose;
-        is_mine = IsMine(address) != ISMINE_NO;
-    }
-
-    if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose)) {
-        WalletLogPrintf("%s error writing purpose\n", __func__);
-        return false;
-    }
-    if (!batch.WriteName(EncodeDestination(address), strName)) {
-        WalletLogPrintf("%s error writing name\n", __func__);
-        return false;
-    }
+    const std::optional<CAddressBookData>& entry = m_address_book_man.Find(address);
+    bool fUpdated = entry && !entry->IsChange();
+    bool is_mine = WITH_LOCK(cs_wallet, return IsMine(address) != ISMINE_NO);
+    // Store/Update
+    m_address_book_man.Put(batch, address, strName, strPurpose);
 
     // Only notify if db writes succeeded
     NotifyAddressBookChanged(address, strName, is_mine,
@@ -2262,7 +2247,6 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     isminetype is_mine;
-    const std::string& dest = EncodeDestination(address);
     WalletBatch batch(GetDatabase());
     {
         LOCK(cs_wallet);
@@ -2276,22 +2260,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
             return false;
         }
 
-        // Delete destdata tuples associated with address
-        for (const std::pair<const std::string, std::string> &item: m_address_book[address].destdata) {
-            if (!batch.EraseDestData(dest, item.first)) {
-                WalletLogPrintf("%s error erasing dest data\n", __func__);
-                return false;
-            }
-        }
-
-        // Delete purpose and name
-        if (!batch.ErasePurpose(dest) || !batch.EraseName(dest)) {
-            WalletLogPrintf("%s error erasing purpose/name\n", __func__);
-            return false;
-        }
-
-        // finally, remove it from the map
-        m_address_book.erase(address);
+        m_address_book_man.Delete(batch, address);
     }
 
     // All good, signal changes
@@ -2399,11 +2368,7 @@ void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations
 
 void CWallet::ForEachAddrBookEntry(const ListAddrBookFunc& func) const
 {
-    AssertLockHeld(cs_wallet);
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book) {
-        const auto& entry = item.second;
-        func(item.first, entry.GetLabel(), entry.purpose, entry.IsChange());
-    }
+    m_address_book_man.ForEachAddrBookEntry(func);
 }
 
 std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<AddrBookFilter>& _filter) const
@@ -2677,53 +2642,32 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old
 
 bool CWallet::SetAddressUsed(WalletBatch& batch, const CTxDestination& dest, bool used)
 {
-    const std::string key{"used"};
-    if (std::get_if<CNoDestination>(&dest))
-        return false;
-
-    if (!used) {
-        if (auto* data = util::FindKey(m_address_book, dest)) data->destdata.erase(key);
-        return batch.EraseDestData(EncodeDestination(dest), key);
-    }
-
-    const std::string value{"1"};
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
-    return batch.WriteDestData(EncodeDestination(dest), key, value);
+    return m_address_book_man.SetDestUsed(batch, dest, used);
 }
 
 void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
 {
-    m_address_book[dest].destdata.insert(std::make_pair(key, value));
+    m_address_book_man.LoadDestData(dest, key, value);
 }
 
 void CWallet::LoadAddrbookEntryLabel(const CTxDestination& dest, const std::string& label)
 {
-    m_address_book[dest].SetLabel(label);
+    m_address_book_man.LoadEntryLabel(dest, label);
 }
 
 void CWallet::LoadAddrbookEntryPurpose(const CTxDestination& dest, const std::string& purpose)
 {
-    m_address_book[dest].purpose = purpose;
+    m_address_book_man.LoadEntryPurpose(dest, purpose);
 }
 
 int CWallet::GetAddrBookSize()
 {
-    return m_address_book.size();
+    return m_address_book_man.GetSize();
 }
 
 bool CWallet::IsAddressUsed(const CTxDestination& dest) const
 {
-    const std::string key{"used"};
-    std::map<CTxDestination, CAddressBookData>::const_iterator i = m_address_book.find(dest);
-    if(i != m_address_book.end())
-    {
-        CAddressBookData::StringMap::const_iterator j = i->second.destdata.find(key);
-        if(j != i->second.destdata.end())
-        {
-            return true;
-        }
-    }
-    return false;
+    return m_address_book_man.IsDestUsed(dest);
 }
 
 std::vector<std::string> CWallet::GetAddressReceiveRequests() const
@@ -3127,14 +3071,14 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     return true;
 }
 
-const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest, bool allow_change) const
+const std::optional<CAddressBookData> CWallet::FindAddressBookEntry(const CTxDestination& dest, bool allow_change) const
 {
-    const auto& address_book_it = m_address_book.find(dest);
-    if (address_book_it == m_address_book.end()) return nullptr;
-    if ((!allow_change) && address_book_it->second.IsChange()) {
-        return nullptr;
+    const std::optional<CAddressBookData>& op_dest = m_address_book_man.Find(dest);
+    if (!op_dest) return std::nullopt;
+    if ((!allow_change) && op_dest->IsChange()) {
+        return std::nullopt;
     }
-    return &address_book_it->second;
+    return op_dest;
 }
 
 bool CWallet::UpgradeWallet(int version, bilingual_str& error)
