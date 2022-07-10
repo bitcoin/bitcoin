@@ -47,6 +47,7 @@
 #include <QCursor>
 #include <QDateTime>
 #include <QDragEnterEvent>
+#include <QInputDialog>
 #include <QKeySequence>
 #include <QListWidget>
 #include <QMenu>
@@ -367,6 +368,12 @@ void SyscoinGUI::createActions()
     m_create_wallet_action->setEnabled(false);
     m_create_wallet_action->setStatusTip(tr("Create a new wallet"));
 
+    //: Name of the menu item that restores wallet from a backup file.
+    m_restore_wallet_action = new QAction(tr("Restore Wallet…"), this);
+    m_restore_wallet_action->setEnabled(false);
+    //: Status tip for Restore Wallet menu item
+    m_restore_wallet_action->setStatusTip(tr("Restore a wallet from a backup file"));
+
     m_close_all_wallets_action = new QAction(tr("Close All Wallets…"), this);
     m_close_all_wallets_action->setStatusTip(tr("Close all wallets"));
 
@@ -442,6 +449,27 @@ void SyscoinGUI::createActions()
                 action->setEnabled(false);
             }
         });
+        connect(m_restore_wallet_action, &QAction::triggered, [this] {
+            //: Name of the wallet data file format.
+            QString name_data_file = tr("Wallet Data");
+
+            //: The title for Restore Wallet File Windows
+            QString title_windows = tr("Load Wallet Backup");
+
+            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
+            if (backup_file.isEmpty()) return;
+
+            bool wallet_name_ok;
+            //: Title of the Restore Wallet input dialog (where the wallet name is entered)
+            QString wallet_name = QInputDialog::getText(this, tr("Restore Name"), tr("Wallet Name:"), QLineEdit::Normal, "", &wallet_name_ok);
+            if (!wallet_name_ok || wallet_name.isEmpty()) return;
+
+            auto activity = new RestoreWalletActivity(m_wallet_controller, this);
+            connect(activity, &RestoreWalletActivity::restored, this, &BitcoinGUI::setCurrentWallet, Qt::QueuedConnection);
+
+            auto backup_file_path = fs::PathFromString(backup_file.toStdString());
+            activity->restore(backup_file_path, wallet_name.toStdString());
+        });
         connect(m_close_wallet_action, &QAction::triggered, [this] {
             m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
         });
@@ -482,8 +510,10 @@ void SyscoinGUI::createMenuBar()
         file->addAction(m_close_wallet_action);
         file->addAction(m_close_all_wallets_action);
         file->addSeparator();
-        file->addAction(openAction);
         file->addAction(backupWalletAction);
+        file->addAction(m_restore_wallet_action);
+        file->addSeparator();
+        file->addAction(openAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addAction(openRepairAction);
@@ -682,6 +712,7 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller)
     m_create_wallet_action->setEnabled(true);
     m_open_wallet_action->setEnabled(true);
     m_open_wallet_action->setMenu(m_open_wallet_menu);
+    m_restore_wallet_action->setEnabled(true);
 
     GUIUtil::ExceptionSafeConnect(wallet_controller, &WalletController::walletAdded, this, &SyscoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &SyscoinGUI::removeWallet);
