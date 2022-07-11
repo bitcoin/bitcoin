@@ -289,7 +289,7 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
     return false;
 }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept
 {
     connman.Handshake(node,
                       /*successfully_connected=*/fuzzed_data_provider.ConsumeBool(),
