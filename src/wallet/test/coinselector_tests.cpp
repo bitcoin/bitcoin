@@ -867,7 +867,23 @@ BOOST_AUTO_TEST_CASE(waste_test)
     const CAmount new_target{in_amt - fee * 2 - fee_diff * 2};
     add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change cost */ 0, new_target));
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/ 0, new_target));
+    selection.clear();
+
+    // Negative waste when the long term fee is greater than the current fee and the selected value == target
+    const CAmount exact_target1{3 * COIN - 2 * fee};
+    const CAmount target_waste1{-2 * fee_diff}; // = (2 * fee) - (2 * (fee + fee_diff))
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(target_waste1, GetSelectionWaste(selection, /*change_cost=*/ 0, exact_target1));
+    selection.clear();
+
+    // Negative waste when the long term fee is greater than the current fee and change_cost < - (inputs * (fee - long_term_fee))
+    const CAmount large_fee_diff{90};
+    const CAmount target_waste2{-2 * large_fee_diff + change_cost}; // = (2 * fee) - (2 * (fee + large_fee_diff)) + change_cost
+    add_coin(1 * COIN, 1, selection, fee, fee + large_fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
+    BOOST_CHECK_EQUAL(target_waste2, GetSelectionWaste(selection, change_cost, target));
 }
 
 BOOST_AUTO_TEST_CASE(effective_value_test)
