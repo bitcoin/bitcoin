@@ -20,23 +20,23 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
     bench.run([&] { log(); });
 }
 
-static void LoggingYoThreadNames(benchmark::Bench& bench)
+static void LogPrintfWithThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=1"}, [] { LogPrintf("%s\n", "test"); });
 }
-static void LoggingNoThreadNames(benchmark::Bench& bench)
+static void LogPrintfWithoutThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0"}, [] { LogPrintf("%s\n", "test"); });
 }
-static void LoggingYoCategory(benchmark::Bench& bench)
+static void LogPrintWithCategory(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogPrint(BCLog::NET, "%s\n", "test"); });
 }
-static void LoggingNoCategory(benchmark::Bench& bench)
+static void LogPrintWithoutCategory(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogPrint(BCLog::NET, "%s\n", "test"); });
 }
-static void LoggingNoFile(benchmark::Bench& bench)
+static void LogWithoutWriteToFile(benchmark::Bench& bench)
 {
     Logging(bench, {"-nodebuglogfile", "-debug=1"}, [] {
         LogPrintf("%s\n", "test");
@@ -44,8 +44,8 @@ static void LoggingNoFile(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(LoggingYoThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LoggingNoThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LoggingYoCategory, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LoggingNoCategory, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LoggingNoFile, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogPrintfWithThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogPrintfWithoutThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogPrintWithCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogPrintWithoutCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LogWithoutWriteToFile, benchmark::PriorityLevel::HIGH);
