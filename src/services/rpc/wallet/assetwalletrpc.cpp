@@ -2030,12 +2030,12 @@ static RPCHelpMan syscoincreatenevmblob()
     std::string strData(request.params[0].get_str());
     std::vector<unsigned char> vchData(strData.data(), strData.data() + strData.size());
     // how many 0 bytes are we going to add to each field element?
-    int numMultiples = vchData.size() / 32;
-    int nSize = vchData.size() + numMultiples;
+    int numMultiples = vchData.size() / 31;
+    int nSize = vchData.size();
     int modDataFill = 0;
     // fill up to factor of 32 with 0
-    if((nSize % 32) != 0) {
-        modDataFill = 32 - (nSize % 32);
+    if((nSize % 31) != 0) {
+        modDataFill = 32 - (nSize % 31);
     }
     std::vector<unsigned char> vchFill(modDataFill, 0);
     std::vector<unsigned char> newVchData;
@@ -2054,7 +2054,7 @@ static RPCHelpMan syscoincreatenevmblob()
     const int numNewMultiples = (newVchData.size() / 32);
     if(numNewMultiples < 32) {
         const int numNewFillBytes = 32*(32 - numNewMultiples);
-         std::vector<unsigned char> vchNewFill(numNewFillBytes, 0);
+        std::vector<unsigned char> vchNewFill(numNewFillBytes, 0);
         newVchData.insert(newVchData.end(), std::begin(vchNewFill), std::end((vchNewFill)));
     }
     // process new vector in batch checking the blobs
