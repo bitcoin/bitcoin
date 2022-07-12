@@ -379,7 +379,7 @@ public:
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 840000;
         consensus.nUTXOAssetsBlock = 545000;
-        consensus.nPODAStartBlock = 995000;
+        consensus.nPODAStartBlock = 1004000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nNEVMStartBlock + 10000;
         consensus.DIP0003Height = 545000;
         consensus.DIP0003EnforcementHeight = 545000;
