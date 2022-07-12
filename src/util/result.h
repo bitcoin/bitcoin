@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_RESULT_H
 
 #include <util/translation.h>
+
 #include <variant>
 
 /*
@@ -18,9 +19,9 @@ private:
     std::variant<bilingual_str, T> m_variant;
 
 public:
-    BResult() : m_variant(Untranslated("")) {}
-    BResult(const T& _obj) : m_variant(_obj) {}
-    BResult(const bilingual_str& error) : m_variant(error) {}
+    BResult() : m_variant{Untranslated("")} {}
+    BResult(T obj) : m_variant{std::move(obj)} {}
+    BResult(bilingual_str error) : m_variant{std::move(error)} {}
 
     /* Whether the function succeeded or not */
     bool HasRes() const { return std::holds_alternative<T>(m_variant); }
@@ -29,6 +30,11 @@ public:
     const T& GetObj() const {
         assert(HasRes());
         return std::get<T>(m_variant);
+    }
+    T ReleaseObj()
+    {
+        assert(HasRes());
+        return std::move(std::get<T>(m_variant));
     }
 
     /* In case of failure, the error cause */
