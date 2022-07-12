@@ -707,6 +707,8 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
     //: Short-lived peer connection type that solicits known addresses from a peer.
     case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
+    //: Peer connection type that is signaling service bit 26 (full-rbf).
+    case ConnectionType::FULL_RBF: return prefix + QObject::tr("Full RBF");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

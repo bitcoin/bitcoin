@@ -352,6 +352,14 @@ static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
 }
 
+/**
+ * Checks if a peer with the given service flags enables fullrbf.
+ */
+static inline bool HasFullRBFServiceFlag(ServiceFlags services)
+{
+    return (services & NODE_FULL_RBF);
+}
+
 /** A CService with information about it as peer */
 class CAddress : public CService
 {

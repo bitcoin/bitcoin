@@ -74,6 +74,12 @@ enum class ConnectionType {
      * AddrMan is empty.
      */
     ADDR_FETCH,
+
+    /**
+     * Full-rbf connections are long-lived connections used to relay transactions
+     * with peers accepting replacement without requiring replaceability signaling.
+     */
+    FULL_RBF,
 };
 
 /** Convert ConnectionType enum to a string value */
