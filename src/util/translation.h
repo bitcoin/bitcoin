@@ -6,7 +6,9 @@
 #define BITCOIN_UTIL_TRANSLATION_H
 
 #include <tinyformat.h>
+
 #include <functional>
+#include <string>
 
 /**
  * Bilingual messages:

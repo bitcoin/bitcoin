@@ -5,9 +5,15 @@
 #ifndef BITCOIN_UTIL_HASHER_H
 #define BITCOIN_UTIL_HASHER_H
 
+#include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
+
+#include <cstdint>
+#include <cstring>
+
+template <typename C> class Span;
 
 class SaltedTxidHasher
 {
