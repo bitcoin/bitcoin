@@ -57,10 +57,10 @@ data.
 `m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
 considered active. This is the "traditional" mode of operation for bitcoind.
 
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 1 |
-| active chainstate | ibd |
+|                       |     |
+| --------------------- | --- |
+| number of chainstates | 1   |
+| active chainstate     | ibd |
 
 ### User loads a UTXO snapshot via `loadtxoutset` RPC
 
@@ -69,20 +69,20 @@ snapshot contents into. During snapshot load and validation (see
 `PopulateAndValidateSnapshot()`), the new chainstate is not considered active and the
 original chainstate remains in use as active.
 
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 2 |
-| active chainstate | ibd |
+|                       |     |
+| --------------------- | --- |
+| number of chainstates | 2   |
+| active chainstate     | ibd |
 
 Once the snapshot chainstate is loaded and validated, it is promoted to active
 chainstate and a sync to tip begins. A new chainstate directory is created in the
 datadir for the snapshot chainstate called
 `chainstate_[SHA256 blockhash of snapshot base block]`.
 
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 2 |
-| active chainstate | snapshot |
+|                       |          |
+| --------------------- | -------- |
+| number of chainstates | 2        |
+| active chainstate     | snapshot |
 
 The snapshot begins to sync to tip from its base block, technically in parallel with
 the original chainstate, but it is given priority during block download and is
@@ -116,10 +116,10 @@ The background chainstate data lingers on disk until shutdown, when in
 `ValidatedSnapshotShutdownCleanup()`, which renames the `chainstate_[hash]` datadir as
 `chainstate`.
 
-|    |    |
-| ---------- | ----------- |
+|                       |                               |
+| --------------------- | ----------------------------- |
 | number of chainstates | 2 (ibd has `m_stop_use=true`) |
-| active chainstate | snapshot |
+| active chainstate     | snapshot                      |
 
 **Failure consideration:** if bitcoind unexpectedly halts after `m_stop_use` is set on
 the background chainstate but before `CompleteSnapshotValidation()` can finish, the
@@ -132,7 +132,7 @@ When bitcoind initializes again, what began as the snapshot chainstate is now
 indistinguishable from a chainstate that has been built from the traditional IBD
 process, and will be initialized as such.
 
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 1 |
-| active chainstate | ibd |
+|                       |     |
+| --------------------- | --- |
+| number of chainstates | 1   |
+| active chainstate     | ibd |
