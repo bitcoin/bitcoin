@@ -563,6 +563,10 @@ static RPCHelpMan getblockfrompeer()
         },
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
+    RPCTypeCheck(request.params, {
+        UniValue::VSTR, // blockhash
+        UniValue::VNUM, // peer_id
+    });
     const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
