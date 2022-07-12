@@ -1782,8 +1782,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
     } else {
-        auto duration_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(reserver.now() - start_time);
-        WalletLogPrintf("Rescan completed in %15dms\n", duration_milliseconds.count());
+        WalletLogPrintf("Rescan completed in %15dms\n", Ticks<std::chrono::milliseconds>(reserver.now() - start_time));
     }
     return result;
 }
