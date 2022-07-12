@@ -4,6 +4,7 @@
 
 #include <chainparamsbase.h>
 #include <mempool_args.h>
+#include <node/mempool_persist_args.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -14,6 +15,8 @@
 
 #include <cstdint>
 #include <vector>
+
+using node::MempoolPath;
 
 namespace {
 const TestingSetup* g_setup;
@@ -37,5 +40,5 @@ FUZZ_TARGET_INIT(validation_load_mempool, initialize_validation_load_mempool)
         return fuzzed_file_provider.open();
     };
     (void)LoadMempool(pool, g_setup->m_node.chainman->ActiveChainstate(), fuzzed_fopen);
-    (void)DumpMempool(pool, fuzzed_fopen, true);
+    (void)DumpMempool(pool, MempoolPath(g_setup->m_args), fuzzed_fopen, true);
 }

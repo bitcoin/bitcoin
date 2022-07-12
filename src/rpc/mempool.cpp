@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <fs.h>
+#include <node/mempool_persist_args.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
@@ -19,6 +20,8 @@
 #include <util/moneystr.h>
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::MempoolPath;
+using node::ShouldPersistMempool;
 using node::NodeContext;
 
 static RPCHelpMan sendrawtransaction()
@@ -721,12 +724,14 @@ static RPCHelpMan savemempool()
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
-    if (!DumpMempool(mempool)) {
+    const fs::path& dump_path = MempoolPath(args);
+
+    if (!DumpMempool(mempool, dump_path)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", dump_path.u8string());
 
     return ret;
 },
