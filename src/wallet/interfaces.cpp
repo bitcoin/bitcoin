@@ -146,7 +146,7 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    BResult<CTxDestination> getNewDestination(const OutputType type, const std::string label) override
+    SingeErrorResult<CTxDestination> getNewDestination(const OutputType type, const std::string label) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetNewDestination(type, label);
