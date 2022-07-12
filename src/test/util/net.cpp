@@ -7,9 +7,67 @@
 #include <chainparams.h>
 #include <node/eviction.h>
 #include <net.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
 #include <span.h>
 
 #include <vector>
+
+void ConnmanTestMsg::Handshake(CNode& node,
+                               bool successfully_connected,
+                               ServiceFlags remote_services,
+                               NetPermissionFlags permission_flags,
+                               int32_t version,
+                               bool relay_txs)
+{
+    auto& peerman{static_cast<PeerManager&>(*m_msgproc)};
+    auto& connman{*this};
+    const CNetMsgMaker mm{0};
+
+    peerman.InitializeNode(&node);
+
+    CSerializedNetMsg msg_version{
+        mm.Make(NetMsgType::VERSION,
+                version,                                        //
+                Using<CustomUintFormatter<8>>(remote_services), //
+                int64_t{},                                      // dummy time
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // dummy
+                int64_t{},                                      // ignored service bits
+                CService{},                                     // ignored
+                uint64_t{1},                                    // dummy nonce
+                std::string{},                                  // dummy subver
+                int32_t{},                                      // dummy starting_height
+                relay_txs),
+    };
+
+    (void)connman.ReceiveMsgFrom(node, msg_version);
+    node.fPauseSend = false;
+    connman.ProcessMessagesOnce(node);
+    {
+        LOCK(node.cs_sendProcessing);
+        peerman.SendMessages(&node);
+    }
+    if (node.fDisconnect) return;
+    assert(node.nVersion == version);
+    assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
+    assert(node.nServices == remote_services);
+    CNodeStateStats statestats;
+    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
+    assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
+    node.m_permissionFlags = permission_flags;
+    if (successfully_connected) {
+        CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
+        (void)connman.ReceiveMsgFrom(node, msg_verack);
+        node.fPauseSend = false;
+        connman.ProcessMessagesOnce(node);
+        {
+            LOCK(node.cs_sendProcessing);
+            peerman.SendMessages(&node);
+        }
+        assert(node.fSuccessfullyConnected == true);
+    }
+}
 
 void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const
 {
