@@ -203,9 +203,13 @@ static RPCHelpMan gobject_prepare()
         }
         outpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
     }
-    std::optional<CreatedTransactionResult> txr = GetBudgetSystemCollateralTX(*pwallet, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint);
-    CTransactionRef tx = txr->tx;
-    if (!txr) {
+    auto res = GetBudgetSystemCollateralTX(*pwallet, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint);
+    if(!res) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, res.GetError().original);
+    }
+    auto &txr = res.GetObj();
+    CTransactionRef tx = txr.tx;
+    if (!tx) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[4].isNull() && !request.params[5].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";

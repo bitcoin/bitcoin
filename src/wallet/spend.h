@@ -6,6 +6,8 @@
 #define SYSCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
+#include <policy/fees.h> // for FeeCalculation
+#include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -140,10 +142,11 @@ struct CreatedTransactionResult
 {
     CTransactionRef tx;
     CAmount fee;
+    FeeCalculation fee_calc;
     int change_pos;
 
-    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
-        : tx(tx), fee(fee), change_pos(change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, int _change_pos, const FeeCalculation& _fee_calc)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
 };
 
 /**
@@ -152,7 +155,7 @@ struct CreatedTransactionResult
  * @note passing change_pos as -1 will result in setting a random position
  */
 // SYSCOIN
-std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
+BResult<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
 
 /**
  * Insert additional inputs into the transaction by
@@ -160,6 +163,6 @@ std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const
  */
 // SYSCOIN
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl&);
-std::optional<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wallet, uint256 hash, CAmount amount, const COutPoint& outpoint);
+BResult<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wallet, uint256 hash, CAmount amount, const COutPoint& outpoint);
 } // namespace wallet
 #endif // SYSCOIN_WALLET_SPEND_H

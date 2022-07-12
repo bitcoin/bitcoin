@@ -102,9 +102,10 @@ static void FundSpecialTx(wallet::CWallet& pwallet, CMutableTransaction& tx, con
         bilingual_str error;
         CTransactionRef wtx;
         FeeCalculation fee_calc_out;
-        std::optional<CreatedTransactionResult> txr = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out);
-        if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-        wtx = txr->tx;
+        auto res = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out);
+        if (!res) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+        auto &txr = res.GetObj();
+        wtx = txr.tx;
         tx.vin = wtx->vin;
         tx.vout = wtx->vout;
     }

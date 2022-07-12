@@ -342,6 +342,7 @@ SYSCOIN_CORE_H = \
   util/rbf.h \
   util/readwritefile.h \
   util/ranges.h \
+  util/result.h \
   util/serfloat.h \
   util/settings.h \
   util/sock.h \

@@ -368,13 +368,12 @@ static RPCHelpMan syscoinburntoassetallocation()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
-    CTxDestination dest;
-    bilingual_str errorStr;
-    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
+    auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
+    if (fChangeAddress.empty() && !op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
 
-    const CScript& scriptPubKey = GetScriptForDestination(dest);
+    const CScript& scriptPubKey = GetScriptForDestination(op_dest.GetObj());
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
 
@@ -415,9 +414,10 @@ static RPCHelpMan syscoinburntoassetallocation()
     bilingual_str error;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    std::optional<CreatedTransactionResult> txr = CreateTransaction(*pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION);
-    if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    tx = txr->tx;
+    auto resTx = CreateTransaction(*pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION);
+    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    auto &txr = resTx.GetObj();
+    tx = txr.tx;
     CMutableTransaction mtx(*tx);
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
@@ -636,11 +636,12 @@ RPCHelpMan assetnew()
     if (fChangeAddress.empty() && !pwallet->CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
-    CTxDestination dest;
-    bilingual_str errorStr;
-    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
+
+    auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
+    if (fChangeAddress.empty() && !op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
+    auto dest = op_dest.GetObj();
     if(!fChangeAddress.empty())
         dest = DecodeDestination(fChangeAddress);
     if (!IsValidDestination(dest)) {
@@ -861,11 +862,11 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     }
 
     if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
-        bilingual_str errorStr;
-        if (fChangeAddress.empty() && !pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
-        }      
-        recp = { GetScriptForDestination(dest), nGas, false};  
+        auto op_dest = pwallet.GetNewChangeDestination(pwallet.m_default_address_type);
+        if (fChangeAddress.empty() && !op_dest) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        }     
+        recp = { GetScriptForDestination(op_dest.GetObj()), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
     if(nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
@@ -893,9 +894,10 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    std::optional<CreatedTransactionResult> txr = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn);
-    if (!txr) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    tx = txr->tx;
+    auto resTx = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn);
+    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    auto &txr = resTx.GetObj();
+    tx = txr.tx;
     
     CMutableTransaction mtx(*tx);
     // Script verification errors
@@ -1830,13 +1832,12 @@ static RPCHelpMan assetallocationburn()
         burnSyscoin.voutAssets.emplace_back(assetOut);
     }
     
-    CTxDestination dest;
-    bilingual_str errorStr;
-    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr.original);
+    auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
+    if (fChangeAddress.empty() && !op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
 
-    const CScript& scriptPubKey = GetScriptForDestination(dest);
+    const CScript& scriptPubKey = GetScriptForDestination(op_dest.GetObj());
     CRecipient recp = {scriptPubKey, nAmount, false };
 
     std::vector<unsigned char> data;
