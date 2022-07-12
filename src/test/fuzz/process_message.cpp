@@ -80,8 +80,7 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
     connman.AddTestNode(p2p_node);
-    g_setup->m_node.peerman->InitializeNode(&p2p_node);
-    FillNode(fuzzed_data_provider, connman, *g_setup->m_node.peerman, p2p_node);
+    FillNode(fuzzed_data_provider, connman, p2p_node);
 
     const auto mock_time = ConsumeTime(fuzzed_data_provider);
     SetMockTime(mock_time);
