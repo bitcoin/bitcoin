@@ -2718,6 +2718,25 @@ BOOST_AUTO_TEST_CASE(message_verify)
             "Hello World"),
         MessageVerificationResult::OK);
 
+
+    // Single key p2tr BIP322 signature (created with the buidl-python library)
+    // PrivateKeyWIF L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k
+    BOOST_CHECK_EQUAL(
+        MessageVerify(
+            "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3",
+            "AUHd69PrJQEv+oKTfZ8l+WROBHuy9HKrbFCJu7U1iK2iiEy1vMU5EfMtjc+VSHM7aU0SDbak5IUZRVno2P5mjSafAQ==",
+            "Hello World"),
+        MessageVerificationResult::OK);
+
+    // Same p2tr BIP322 signature as above (created with the buidl-python library)
+    // Signature should not verify against the message
+    BOOST_CHECK_EQUAL(
+        MessageVerify(
+            "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3",
+            "AUHd69PrJQEv+oKTfZ8l+WROBHuy9HKrbFCJu7U1iK2iiEy1vMU5EfMtjc+VSHM7aU0SDbak5IUZRVno2P5mjSafAQ==",
+            "Hello World - This should fail"),
+        MessageVerificationResult::ERR_INVALID);
+
     // wrong address
 
     BOOST_CHECK_EQUAL(
