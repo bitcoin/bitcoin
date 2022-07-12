@@ -909,7 +909,7 @@ RPCHelpMan rescanblockchain()
     }
 
     CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, true /* fUpdate */);
+        pwallet->ScanForWalletTransactions(start_block, start_height, stop_height, reserver, /*fUpdate=*/true, /*save_progress=*/false);
     switch (result.status) {
     case CWallet::ScanResult::SUCCESS:
         break;
