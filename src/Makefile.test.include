@@ -5,7 +5,9 @@
 
 
 FUZZ_TARGETS = \
+  test/fuzz/addition_overflow \
   test/fuzz/addr_info_deserialize \
+  test/fuzz/addrdb \
   test/fuzz/address_deserialize \
   test/fuzz/addrman_deserialize \
   test/fuzz/asmap \
@@ -17,7 +19,9 @@ FUZZ_TARGETS = \
   test/fuzz/block_deserialize \
   test/fuzz/block_file_info_deserialize \
   test/fuzz/block_filter_deserialize \
+  test/fuzz/block_header \
   test/fuzz/block_header_and_short_txids_deserialize \
+  test/fuzz/blockfilter \
   test/fuzz/blockheader_deserialize \
   test/fuzz/blocklocator_deserialize \
   test/fuzz/blockmerkleroot \
@@ -26,22 +30,30 @@ FUZZ_TARGETS = \
   test/fuzz/blockundo_deserialize \
   test/fuzz/bloom_filter \
   test/fuzz/bloomfilter_deserialize \
+  test/fuzz/checkqueue \
   test/fuzz/coins_deserialize \
+  test/fuzz/cuckoocache \
   test/fuzz/decode_tx \
   test/fuzz/descriptor_parse \
   test/fuzz/diskblockindex_deserialize \
   test/fuzz/eval_script \
+  test/fuzz/fee_rate \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
+  test/fuzz/flatfile \
   test/fuzz/float \
   test/fuzz/hex \
   test/fuzz/integer \
   test/fuzz/inv_deserialize \
   test/fuzz/key \
+  test/fuzz/key_io \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/locale \
   test/fuzz/merkle_block_deserialize \
+  test/fuzz/merkleblock \
   test/fuzz/messageheader_deserialize \
+  test/fuzz/multiplication_overflow \
+  test/fuzz/net_permissions \
   test/fuzz/netaddr_deserialize \
   test/fuzz/out_point_deserialize \
   test/fuzz/p2p_transport_deserializer \
@@ -50,21 +62,30 @@ FUZZ_TARGETS = \
   test/fuzz/parse_numbers \
   test/fuzz/parse_script \
   test/fuzz/parse_univalue \
+  test/fuzz/prevector \
   test/fuzz/partial_merkle_tree_deserialize \
   test/fuzz/partially_signed_transaction_deserialize \
+  test/fuzz/pow \
   test/fuzz/prefilled_transaction_deserialize \
+  test/fuzz/process_messages \
   test/fuzz/process_message \
   test/fuzz/psbt_input_deserialize \
   test/fuzz/psbt_output_deserialize \
   test/fuzz/pub_key_deserialize \
+  test/fuzz/random \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
   test/fuzz/script_deserialize \
   test/fuzz/script_flags \
+  test/fuzz/script_ops \
+  test/fuzz/scriptnum_ops \
   test/fuzz/service_deserialize \
+  test/fuzz/span \
   test/fuzz/spanparsing \
+  test/fuzz/string \
   test/fuzz/strprintf \
   test/fuzz/sub_net_deserialize \
+  test/fuzz/timedata \
   test/fuzz/transaction \
   test/fuzz/tx_in \
   test/fuzz/tx_in_deserialize \
@@ -271,11 +292,23 @@ test_test_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_FUZZ
+test_fuzz_addition_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addition_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_addition_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_addition_overflow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_addition_overflow_SOURCES = $(FUZZ_SUITE) test/fuzz/addition_overflow.cpp
+
 test_fuzz_addr_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDR_INFO_DESERIALIZE=1
 test_fuzz_addr_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addr_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addr_info_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_addr_info_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_addrdb_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addrdb_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_addrdb_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_addrdb_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_addrdb_SOURCES = $(FUZZ_SUITE) test/fuzz/addrdb.cpp
 
 test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
 test_fuzz_address_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -343,11 +376,23 @@ test_fuzz_block_filter_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_filter_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_block_filter_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_block_header_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_block_header_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_block_header_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_block_header_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_block_header_SOURCES = $(FUZZ_SUITE) test/fuzz/block_header.cpp
+
 test_fuzz_block_header_and_short_txids_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_HEADER_AND_SHORT_TXIDS_DESERIALIZE=1
 test_fuzz_block_header_and_short_txids_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_header_and_short_txids_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_header_and_short_txids_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_block_header_and_short_txids_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_blockfilter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_blockfilter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blockfilter_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_blockfilter_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_blockfilter_SOURCES = $(FUZZ_SUITE) test/fuzz/blockfilter.cpp
 
 test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
 test_fuzz_blockheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -397,11 +442,23 @@ test_fuzz_bloomfilter_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_bloomfilter_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_bloomfilter_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_checkqueue_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_checkqueue_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_checkqueue_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_checkqueue_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_checkqueue_SOURCES = $(FUZZ_SUITE) test/fuzz/checkqueue.cpp
+
 test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCOINS_DESERIALIZE=1
 test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_coins_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_coins_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_cuckoocache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_cuckoocache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_cuckoocache_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_cuckoocache_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_cuckoocache_SOURCES = $(FUZZ_SUITE) test/fuzz/cuckoocache.cpp
 
 test_fuzz_decode_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_decode_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -427,6 +484,12 @@ test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_eval_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_eval_script_SOURCES = $(FUZZ_SUITE) test/fuzz/eval_script.cpp
 
+test_fuzz_fee_rate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_fee_rate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_fee_rate_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_fee_rate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_fee_rate_SOURCES = $(FUZZ_SUITE) test/fuzz/fee_rate.cpp
+
 test_fuzz_fee_rate_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DFEE_RATE_DESERIALIZE=1
 test_fuzz_fee_rate_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fee_rate_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -438,6 +501,12 @@ test_fuzz_flat_file_pos_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_flat_file_pos_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_flat_file_pos_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_flat_file_pos_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_flatfile_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_flatfile_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_flatfile_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_flatfile_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_flatfile_SOURCES = $(FUZZ_SUITE) test/fuzz/flatfile.cpp
 
 test_fuzz_float_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_float_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -469,6 +538,12 @@ test_fuzz_key_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_key_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_key_SOURCES = $(FUZZ_SUITE) test/fuzz/key.cpp
 
+test_fuzz_key_io_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_key_io_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_key_io_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_key_io_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_key_io_SOURCES = $(FUZZ_SUITE) test/fuzz/key_io.cpp
+
 test_fuzz_key_origin_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DKEY_ORIGIN_INFO_DESERIALIZE=1
 test_fuzz_key_origin_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_key_origin_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -487,11 +562,29 @@ test_fuzz_merkle_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_merkle_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_merkle_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_merkleblock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_merkleblock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_merkleblock_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_merkleblock_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_merkleblock_SOURCES = $(FUZZ_SUITE) test/fuzz/merkleblock.cpp
+
 test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
 test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_messageheader_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_messageheader_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_messageheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_multiplication_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_multiplication_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_multiplication_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_multiplication_overflow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_multiplication_overflow_SOURCES = $(FUZZ_SUITE) test/fuzz/multiplication_overflow.cpp
+
+test_fuzz_net_permissions_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_net_permissions_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_net_permissions_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_net_permissions_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_net_permissions_SOURCES = $(FUZZ_SUITE) test/fuzz/net_permissions.cpp
 
 test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
 test_fuzz_netaddr_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -541,6 +634,12 @@ test_fuzz_parse_univalue_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_univalue_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_parse_univalue_SOURCES = $(FUZZ_SUITE) test/fuzz/parse_univalue.cpp
 
+test_fuzz_prevector_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_prevector_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_prevector_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_prevector_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_prevector_SOURCES = $(FUZZ_SUITE) test/fuzz/prevector.cpp
+
 test_fuzz_partial_merkle_tree_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPARTIAL_MERKLE_TREE_DESERIALIZE=1
 test_fuzz_partial_merkle_tree_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_partial_merkle_tree_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -553,11 +652,23 @@ test_fuzz_partially_signed_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMO
 test_fuzz_partially_signed_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_partially_signed_transaction_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_pow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_pow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_pow_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_pow_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_pow_SOURCES = $(FUZZ_SUITE) test/fuzz/pow.cpp
+
 test_fuzz_prefilled_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPREFILLED_TRANSACTION_DESERIALIZE=1
 test_fuzz_prefilled_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_prefilled_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_prefilled_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_prefilled_transaction_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_process_messages_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_process_messages_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_process_messages_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_process_messages_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_process_messages_SOURCES = $(FUZZ_SUITE) test/fuzz/process_messages.cpp
 
 test_fuzz_process_message_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_process_message_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -583,6 +694,12 @@ test_fuzz_pub_key_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_pub_key_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_pub_key_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_random_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_random_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_random_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_random_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_random_SOURCES = $(FUZZ_SUITE) test/fuzz/random.cpp
+
 test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_rolling_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_rolling_bloom_filter_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -607,17 +724,41 @@ test_fuzz_script_flags_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_flags_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_script_flags_SOURCES = $(FUZZ_SUITE) test/fuzz/script_flags.cpp
 
+test_fuzz_script_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_ops_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_ops_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_script_ops_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_script_ops_SOURCES = $(FUZZ_SUITE) test/fuzz/script_ops.cpp
+
+test_fuzz_scriptnum_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_scriptnum_ops_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_scriptnum_ops_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_scriptnum_ops_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_scriptnum_ops_SOURCES = $(FUZZ_SUITE) test/fuzz/scriptnum_ops.cpp
+
 test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
 test_fuzz_service_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_service_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_service_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_service_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 
+test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_span_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_span_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_span_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_span_SOURCES = $(FUZZ_SUITE) test/fuzz/span.cpp
+
 test_fuzz_spanparsing_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_spanparsing_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_spanparsing_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_spanparsing_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_spanparsing_SOURCES = $(FUZZ_SUITE) test/fuzz/spanparsing.cpp
+
+test_fuzz_string_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_string_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_string_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_string_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_string_SOURCES = $(FUZZ_SUITE) test/fuzz/string.cpp
 
 test_fuzz_strprintf_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_strprintf_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -630,6 +771,12 @@ test_fuzz_sub_net_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_sub_net_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_sub_net_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_sub_net_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+
+test_fuzz_timedata_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_timedata_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_timedata_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_timedata_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_timedata_SOURCES = $(FUZZ_SUITE) test/fuzz/timedata.cpp
 
 test_fuzz_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_transaction_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
