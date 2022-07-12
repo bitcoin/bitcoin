@@ -5,7 +5,8 @@
 #ifndef SYSCOIN_UTIL_BYTEVECTORHASH_H
 #define SYSCOIN_UTIL_BYTEVECTORHASH_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstddef>
 #include <vector>
 
 /**
