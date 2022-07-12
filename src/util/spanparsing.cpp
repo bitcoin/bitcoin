@@ -6,8 +6,9 @@
 
 #include <span.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <string>
-#include <vector>
 
 namespace spanparsing {
 

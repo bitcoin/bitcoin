@@ -9,7 +9,7 @@
 #include <compat/compat.h>
 
 #include <chrono>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 using namespace std::chrono_literals;
