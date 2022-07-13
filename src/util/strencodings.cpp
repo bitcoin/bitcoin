@@ -5,9 +5,10 @@
 
 #include <span.h>
 #include <util/strencodings.h>
-
+#include <tinyformat.h>
 #include <algorithm>
 #include <array>
+
 #include <cassert>
 #include <cstring>
 #include <limits>
