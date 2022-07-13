@@ -329,7 +329,7 @@ public:
    virtual std::string getWalletDir() = 0;
 
    //! Restore backup wallet
-   virtual BResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
+   virtual SingeErrorResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;
