@@ -249,14 +249,12 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 inline Mutex& MaybeCheckNotHeld(Mutex& cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) LOCK_RETURNED(cs) { return cs; }
 inline Mutex* MaybeCheckNotHeld(Mutex* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) LOCK_RETURNED(cs) { return cs; }
 
-// When locking a GlobalMutex, just check it is not locked in the surrounding scope
-inline GlobalMutex& MaybeCheckNotHeld(GlobalMutex& cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
-inline GlobalMutex* MaybeCheckNotHeld(GlobalMutex* cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
-
-// When locking a RecursiveMutex, it's okay to already hold the lock
-// but check that it is not known to be locked in the surrounding scope anyway
-inline RecursiveMutex& MaybeCheckNotHeld(RecursiveMutex& cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
-inline RecursiveMutex* MaybeCheckNotHeld(RecursiveMutex* cs) LOCKS_EXCLUDED(cs) LOCK_RETURNED(cs) { return cs; }
+// When locking a GlobalMutex or RecursiveMutex, just check it is not
+// locked in the surrounding scope.
+template <typename MutexType>
+inline MutexType& MaybeCheckNotHeld(MutexType& m) LOCKS_EXCLUDED(m) LOCK_RETURNED(m) { return m; }
+template <typename MutexType>
+inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNED(m) { return m; }
 
 #define LOCK(cs) DebugLock<decltype(cs)> UNIQUE_NAME(criticalblock)(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
 #define LOCK2(cs1, cs2)                                               \
