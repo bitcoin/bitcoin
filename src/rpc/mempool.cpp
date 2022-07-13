@@ -5,6 +5,8 @@
 
 #include <rpc/blockchain.h>
 
+#include <kernel/mempool_persist.h>
+
 #include <chainparams.h>
 #include <core_io.h>
 #include <fs.h>
@@ -18,6 +20,8 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
+
+using kernel::DumpMempool;
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::MempoolPath;

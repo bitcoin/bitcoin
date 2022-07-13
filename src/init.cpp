@@ -10,6 +10,7 @@
 #include <init.h>
 
 #include <kernel/checks.h>
+#include <kernel/mempool_persist.h>
 
 #include <addrman.h>
 #include <banman.h>
@@ -103,6 +104,8 @@
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
+
+using kernel::DumpMempool;
 
 using node::CacheSizes;
 using node::CalculateCacheSizes;

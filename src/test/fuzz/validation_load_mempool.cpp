@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/mempool_persist.h>
+
 #include <chainparamsbase.h>
 #include <mempool_args.h>
 #include <node/mempool_persist_args.h>
@@ -16,6 +18,8 @@
 
 #include <cstdint>
 #include <vector>
+
+using kernel::DumpMempool;
 
 using node::MempoolPath;
 

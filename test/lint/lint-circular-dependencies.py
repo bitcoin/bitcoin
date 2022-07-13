@@ -22,6 +22,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
+    "kernel/mempool_persist -> validation -> kernel/mempool_persist",
 )
 
 CODE_DIR = "src"

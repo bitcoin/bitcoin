@@ -1012,12 +1012,6 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
 
-/** Dump the mempool to disk. */
-bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen, bool skip_file_commit = false);
-
-/** Load the mempool from disk. */
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, CChainState& active_chainstate, fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen);
-
 /**
  * Return the expected assumeutxo value for a given height, if one exists.
  *
