@@ -11,8 +11,9 @@ from itertools import product
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey, H_POINT
 from test_framework.messages import (
-    ser_compact_size,
+    MAX_BIP125_RBF_SEQUENCE,
     WITNESS_SCALE_FACTOR,
+    ser_compact_size,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -27,7 +28,6 @@ from test_framework.wallet_util import bytes_to_wif
 import json
 import os
 
-MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 
 # Create one-input, one-output, no-fee transaction:
 class PSBTTest(BitcoinTestFramework):

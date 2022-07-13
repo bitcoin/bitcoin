@@ -10,7 +10,7 @@ import random
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_BIP125_RBF_SEQUENCE,
     COIN,
     CTxInWitness,
     tx_from_hex,
@@ -273,7 +273,7 @@ class RPCPackagesTest(BitcoinTestFramework):
     def test_rbf(self):
         node = self.nodes[0]
         coin = self.coins.pop()
-        inputs = [{"txid": coin["txid"], "vout": 0, "sequence": BIP125_SEQUENCE_NUMBER}]
+        inputs = [{"txid": coin["txid"], "vout": 0, "sequence": MAX_BIP125_RBF_SEQUENCE}]
         fee = Decimal('0.00125000')
         output = {node.get_deterministic_priv_key().address: 50 - fee}
         raw_replaceable_tx = node.createrawtransaction(inputs, output)
