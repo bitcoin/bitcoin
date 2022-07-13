@@ -3865,12 +3865,10 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
     }
 }
 
-void CChainState::LoadMempool(const ArgsManager& args, FopenFn mockable_fopen_function)
+void CChainState::LoadMempool(const fs::path& load_path, FopenFn mockable_fopen_function)
 {
     if (!m_mempool) return;
-    if (args.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        ::LoadMempool(*m_mempool, *this, mockable_fopen_function);
-    }
+    ::LoadMempool(*m_mempool, load_path, *this, mockable_fopen_function);
     m_mempool->SetLoadTried(!ShutdownRequested());
 }
 
@@ -4644,9 +4642,11 @@ bool CChainState::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function)
+bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, CChainState& active_chainstate, FopenFn mockable_fopen_function)
 {
-    FILE* filestr{mockable_fopen_function(gArgs.GetDataDirNet() / "mempool.dat", "rb")};
+    if (load_path.empty()) return false;
+
+    FILE* filestr{mockable_fopen_function(load_path, "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
