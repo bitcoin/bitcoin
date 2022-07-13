@@ -47,7 +47,7 @@ NEVM_DATA_EXPIRE_TIME = 21600
 COIN = 100000000  # 1 sys in satoshis
 MAX_MONEY = 1000000000000000000 - 1
 
-BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
+MAX_BIP125_RBF_SEQUENCE = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 # SYSCOIN
 MAX_PROTOCOL_MESSAGE_LENGTH = 100 * 1024 * 1024  # Maximum length of incoming protocol messages
 SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set for every input of a tx
