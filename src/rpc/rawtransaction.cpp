@@ -1017,6 +1017,112 @@ static RPCHelpMan signrawtransactionwithkey()
     };
 }
 
+const RPCResult decodepsbt_inputs{
+    RPCResult::Type::ARR, "inputs", "",
+    {
+        {RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
+            {
+                {RPCResult::Type::ELISION, "",""},
+            }},
+            {RPCResult::Type::OBJ_DYN, "partial_signatures", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "pubkey", "The public key and signature that corresponds to it."},
+            }},
+            {RPCResult::Type::STR, "sighash", /*optional=*/true, "The sighash type to be used"},
+            {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "asm", "The asm"},
+                {RPCResult::Type::STR_HEX, "hex", "The hex"},
+                {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+            }},
+            {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "pubkey", "The public key with the derivation path as the value."},
+                    {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
+                    {RPCResult::Type::STR, "path", "The path"},
+                }},
+            }},
+            {RPCResult::Type::OBJ, "final_scriptSig", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "asm", "The asm"},
+                {RPCResult::Type::STR, "hex", "The hex"},
+            }},
+            {RPCResult::Type::OBJ_DYN, "ripemd160_preimages", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+            }},
+            {RPCResult::Type::OBJ_DYN, "sha256_preimages", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+            }},
+            {RPCResult::Type::OBJ_DYN, "hash160_preimages", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+            }},
+            {RPCResult::Type::OBJ_DYN, "hash256_preimages", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+            }},
+            {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown input fields",
+            {
+                {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
+            }},
+            {RPCResult::Type::ARR, "proprietary", /*optional=*/true, "The input proprietary map",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
+                    {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
+                    {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
+                    {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
+                }},
+            }},
+        }},
+    }
+};
+
+const RPCResult decodepsbt_outputs{
+    RPCResult::Type::ARR, "outputs", "",
+    {
+        {RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR, "asm", "The asm"},
+                {RPCResult::Type::STR_HEX, "hex", "The hex"},
+                {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
+            }},
+            {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "pubkey", "The public key this path corresponds to"},
+                    {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
+                    {RPCResult::Type::STR, "path", "The path"},
+                }},
+            }},
+            {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown global fields",
+            {
+                {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
+            }},
+            {RPCResult::Type::ARR, "proprietary", /*optional=*/true, "The output proprietary map",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
+                    {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
+                    {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
+                    {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
+                }},
+            }},
+        }},
+    }
+};
+
 static RPCHelpMan decodepsbt()
 {
     return RPCHelpMan{
@@ -1056,106 +1162,8 @@ static RPCHelpMan decodepsbt()
                 {
                      {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                 }},
-                {RPCResult::Type::ARR, "inputs", "",
-                {
-                    {RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
-                        {
-                            {RPCResult::Type::ELISION, "",""},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "partial_signatures", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::STR, "pubkey", "The public key and signature that corresponds to it."},
-                        }},
-                        {RPCResult::Type::STR, "sighash", /*optional=*/true, "The sighash type to be used"},
-                        {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::STR, "asm", "The asm"},
-                            {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                            {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                        }},
-                        {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR, "pubkey", "The public key with the derivation path as the value."},
-                                {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
-                                {RPCResult::Type::STR, "path", "The path"},
-                            }},
-                        }},
-                        {RPCResult::Type::OBJ, "final_scriptSig", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::STR, "asm", "The asm"},
-                            {RPCResult::Type::STR, "hex", "The hex"},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "ripemd160_preimages", /*optional=*/ true, "",
-                        {
-                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "sha256_preimages", /*optional=*/ true, "",
-                        {
-                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "hash160_preimages", /*optional=*/ true, "",
-                        {
-                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "hash256_preimages", /*optional=*/ true, "",
-                        {
-                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
-                        {
-                            {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
-                        }},
-                        {RPCResult::Type::ARR, "proprietary", /*optional=*/ true, "The input proprietary map",
-                        {
-                            {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
-                                {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
-                                {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
-                                {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
-                            }},
-                        }},
-                    }},
-                }},
-                {RPCResult::Type::ARR, "outputs", "",
-                {
-                    {RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::STR, "asm", "The asm"},
-                            {RPCResult::Type::STR_HEX, "hex", "The hex"},
-                            {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                        }},
-                        {RPCResult::Type::ARR, "bip32_derivs", /*optional=*/true, "",
-                        {
-                            {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR, "pubkey", "The public key this path corresponds to"},
-                                {RPCResult::Type::STR, "master_fingerprint", "The fingerprint of the master key"},
-                                {RPCResult::Type::STR, "path", "The path"},
-                            }},
-                        }},
-                        {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/true, "The unknown global fields",
-                        {
-                            {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
-                        }},
-                        {RPCResult::Type::ARR, "proprietary", /*optional=*/true, "The output proprietary map",
-                        {
-                            {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
-                                {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
-                                {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
-                                {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
-                            }},
-                        }},
-                    }},
-                }},
+                decodepsbt_inputs,
+                decodepsbt_outputs,
                 {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The transaction fee paid if all UTXOs slots in the PSBT have been filled."},
             }
         },
