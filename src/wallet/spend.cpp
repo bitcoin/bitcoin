@@ -652,7 +652,7 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     }
 }
 
-static BResult<CreatedTransactionResult> CreateTransactionInternal(
+static SingeErrorResult<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
         int change_pos,
@@ -947,7 +947,7 @@ static BResult<CreatedTransactionResult> CreateTransactionInternal(
     return CreatedTransactionResult(tx, nFeeRet, nChangePosInOut, feeCalc);
 }
 
-BResult<CreatedTransactionResult> CreateTransaction(
+SingeErrorResult<CreatedTransactionResult> CreateTransaction(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
         int change_pos,
