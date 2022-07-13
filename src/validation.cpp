@@ -6336,7 +6336,7 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
                 const UniValue& binURLValue = find_value(binValue, "url");
                 if(binURLValue.isStr()) {
                     const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
-                    const UniValue& signatureValue = find_value(binValue, fTestNet? "signatureT": "signatureM");
+                    const UniValue& signatureValue = find_value(binValue, "signature");
                     if(binChecksumValue.isStr() && signatureValue.isStr()) {
                         details.version = versionValue.get_str();
                         details.binURL = binURLValue.get_str();
@@ -6394,6 +6394,12 @@ bool DownloadBinaryFromDescriptor(const fs::path &descriptorDestPath, const fs::
     LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
     return true;
 }
+std::string GetGethDescriptorURL() {
+    std::string url =  "https://raw.githubusercontent.com/syscoin/descriptors/";
+    url += fTestNet? "testnet": "master";
+    url += "/gethdescriptor.json";
+    return url;
+}
 bool CChainState::RestartGethNode() {
     const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     if(NEVMSub.empty()) {
@@ -6417,7 +6423,7 @@ bool CChainState::RestartGethNode() {
         RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
-    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
     if(!StartGethNode(gethDescriptorURL)) {
         LogPrintf("RestartGethNode: Could not start Geth\n");
         return false;
@@ -6560,7 +6566,7 @@ void DoGethMaintenance() {
         LogPrintf("%s: Stopping Geth\n", __func__); 
         StopGethNode(true);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
         if(!StartGethNode(gethDescriptorURL)) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         }
@@ -6626,7 +6632,7 @@ void DoGethMaintenance() {
             fs::remove_all(nodeKeyTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
         if(!StartGethNode(gethDescriptorURL))
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
