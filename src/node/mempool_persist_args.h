@@ -11,6 +11,12 @@ class ArgsManager;
 
 namespace node {
 
+/**
+ * Default for -persistmempool, indicating whether the node should attempt to
+ * automatically load the mempool on start and save to disk on shutdown
+ */
+static constexpr bool DEFAULT_PERSIST_MEMPOOL{true};
+
 bool ShouldPersistMempool(const ArgsManager& argsman);
 fs::path MempoolPath(const ArgsManager& argsman);
 
