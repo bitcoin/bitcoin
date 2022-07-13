@@ -7,8 +7,8 @@
 #include <txmempool.h>
 #include <script/standard.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <test/util/setup_common.h>
-#include <keystore.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -153,7 +153,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     CScript p2sh_scriptPubKey = GetScriptForDestination(CScriptID(p2pk_scriptPubKey));
     CScript p2pkh_scriptPubKey = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
 
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
     BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
 

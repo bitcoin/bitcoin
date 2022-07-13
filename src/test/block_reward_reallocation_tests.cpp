@@ -6,12 +6,12 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <keystore.h>
 #include <messagesigner.h>
 #include <miner.h>
 #include <netbase.h>
 #include <script/interpreter.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <validation.h>
 
@@ -96,7 +96,7 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
 
 static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
 {
-    CBasicKeyStore tempKeystore;
+    FillableSigningProvider tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {

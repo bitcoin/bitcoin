@@ -13,6 +13,7 @@
 #include <rpc/request.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -29,7 +30,7 @@
  */
 extern const std::string UNIX_EPOCH_TIME;
 
-class CKeyStore;
+class FillableSigningProvider;
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
@@ -83,7 +84,7 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
+CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in);
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
 
 UniValue DescribeAddress(const CTxDestination& dest);

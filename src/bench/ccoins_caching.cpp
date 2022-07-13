@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <coins.h>
 #include <policy/policy.h>
-#include <wallet/crypter.h>
+#include <script/signingprovider.h>
 
 #include <vector>
 
@@ -17,7 +17,7 @@
 // paid to a TX_PUBKEYHASH.
 //
 static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
+SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet)
 {
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -58,7 +58,7 @@ static void CCoinsCaching(benchmark::Bench& bench)
     const ECCVerifyHandle verify_handle;
     ECC_Start();
 
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);

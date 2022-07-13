@@ -195,7 +195,6 @@ BITCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   llmq/quorums.h \
@@ -263,8 +262,10 @@ BITCOIN_CORE_H = \
   saltedhasher.h \
   scheduler.h \
   script/descriptor.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
   shutdown.h \
   spork.h \
@@ -652,7 +653,6 @@ libdash_common_a_SOURCES = \
   hdchain.cpp \
   key.cpp \
   key_io.cpp \
-  keystore.cpp \
   merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
@@ -667,6 +667,7 @@ libdash_common_a_SOURCES = \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
