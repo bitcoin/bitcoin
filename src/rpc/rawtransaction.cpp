@@ -159,7 +159,8 @@ static std::vector<RPCArg> CreateTxDoc()
             },
         },
         {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
-        {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{false}, "Marks this transaction as BIP125-replaceable.\n"
+        {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"Same value as -mempoolfullrbf"},
+                "Marks this transaction as BIP125-replaceable.\n"
                 "Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible."},
     };
 }
@@ -303,11 +304,9 @@ static RPCHelpMan createrawtransaction()
         UniValue::VBOOL
         }, true
     );
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
 
-    bool rbf = false;
-    if (!request.params[3].isNull()) {
-        rbf = request.params[3].isTrue();
-    }
+    const bool rbf{request.params[3].isNull() ? args.GetBoolArg("-mempoolfullrbf", DEFAULT_MEMPOOL_FULL_RBF) : request.params[3].getBool()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
 
     return EncodeHexTx(CTransaction(rawTx));
@@ -1444,11 +1443,9 @@ static RPCHelpMan createpsbt()
         UniValue::VBOOL,
         }, true
     );
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
 
-    bool rbf = false;
-    if (!request.params[3].isNull()) {
-        rbf = request.params[3].isTrue();
-    }
+    const bool rbf{request.params[3].isNull() ? args.GetBoolArg("-mempoolfullrbf", DEFAULT_MEMPOOL_FULL_RBF) : request.params[3].getBool()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
 
     // Make a blank psbt
