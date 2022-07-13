@@ -146,7 +146,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         # Create tx2 using createrawtransaction
         inputs = [{"txid": utxo_to_use["txid"], "vout": utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.999}
-        tx2 = self.nodes[1].createrawtransaction(inputs, outputs)
+        tx2 = self.nodes[1].createrawtransaction(inputs=inputs, outputs=outputs, replaceable=False)
         tx2_signed = self.nodes[1].signrawtransactionwithwallet(tx2)["hex"]
         txid_2 = self.nodes[1].sendrawtransaction(tx2_signed)
 
@@ -178,7 +178,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[1], txid_3)
         inputs = [{"txid": txid_3, "vout": utxo_to_use["vout"]}]
         outputs = {self.nodes[0].getnewaddress(): 0.997}
-        tx4 = self.nodes[1].createrawtransaction(inputs, outputs)
+        tx4 = self.nodes[1].createrawtransaction(inputs=inputs, outputs=outputs, replaceable=False)
         tx4_signed = self.nodes[1].signrawtransactionwithwallet(tx4)["hex"]
         txid_4 = self.nodes[1].sendrawtransaction(tx4_signed)
 
