@@ -834,7 +834,7 @@ private:
     friend CChainState;
 
 public:
-    using Options = ChainstateManagerOpts;
+    using Options = kernel::ChainstateManagerOpts;
 
     explicit ChainstateManager(const Options& opts)
         : m_chainparams{opts.chainparams},
