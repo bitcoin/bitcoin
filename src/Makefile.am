@@ -679,6 +679,7 @@ libbitcoin_util_a_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
+  util/result.cpp \
   util/settings.cpp \
   util/thread.cpp \
   util/threadnames.cpp \
