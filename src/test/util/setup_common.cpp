@@ -36,7 +36,6 @@
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <util/designator.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>
@@ -174,10 +173,10 @@ BasicTestingSetup::~BasicTestingSetup()
 CTxMemPool::Options MemPoolOptionsForTest(const NodeContext& node)
 {
     CTxMemPool::Options mempool_opts{
-        Desig(estimator) node.fee_estimator.get(),
+        .estimator = node.fee_estimator.get(),
         // Default to always checking mempool regardless of
         // chainparams.DefaultConsistencyChecks for tests
-        Desig(check_ratio) 1,
+        .check_ratio = 1,
     };
     ApplyArgsManOptions(*node.args, mempool_opts);
     return mempool_opts;
