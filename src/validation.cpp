@@ -6074,7 +6074,7 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
         nLastKnownHeightOnStart = nLastHeight - 1;
     }
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
-    return WriteBatch(batch, true);	
+    return WriteBatch(batch, true);
 }	
 bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex, bool ibd){	
     if(blockIndex.empty())	
@@ -6090,7 +6090,7 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > 
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight);
     
     LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), !ibd? 1: 0);	
-    return WriteBatch(batch, !ibd);	
+    return WriteBatch(batch, !ibd);
 }
 bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
     AssertLockHeld(cs_main);

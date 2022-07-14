@@ -1163,6 +1163,8 @@ CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
 }
 bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDataToProcess) {
+    if(vecNEVMDataToProcess.empty())
+        return true;
     CDBBatch batch(*this);    
     for (const auto &dataProcess : vecNEVMDataToProcess) {
         const auto& pair = std::make_pair(dataProcess.nevmData->vchVersionHash, true);
@@ -1174,6 +1176,8 @@ bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDa
 }
 // called on connect - put median passed time into index so we can track pruning
 bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime) {
+    if(vecDataKeys.empty())
+        return true;
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
         const auto& pair = std::make_pair(key, false);
@@ -1184,6 +1188,8 @@ bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMe
     return WriteBatch(batch);
 }
 bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
+    if(vecDataKeys.empty())
+        return true;
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
         const auto& pair = std::make_pair(key, false);
@@ -1195,6 +1201,8 @@ bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
     return WriteBatch(batch);
 }
 bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
+    if(vecDataKeys.empty())
+        return true;
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
         // erase data and time keys
@@ -1232,5 +1240,5 @@ bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-    return WriteBatch(batch);
+    return batch.SizeEstimate() > 0? WriteBatch(batch): true;
 }
