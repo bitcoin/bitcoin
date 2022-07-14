@@ -732,6 +732,8 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
             break;
         }
 
+        if (HasMinedCommitment(llmqParams.type, quorumHash)) continue;
+
         LOCK(minableCommitmentsCs);
 
         auto k = std::make_pair(llmqParams.type, quorumHash);
