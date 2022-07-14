@@ -36,13 +36,41 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status
 {
     int depth = status.depth_in_main_chain;
     if (depth < 0) {
+        /*: Text explaining the current status of a transaction, shown in the
+            status field of the details window for this transaction. This status
+            represents an unconfirmed transaction that conflicts with a confirmed
+            transaction. */
         return tr("conflicted with a transaction with %1 confirmations").arg(-depth);
     } else if (depth == 0) {
-        const QString abandoned{status.is_abandoned ? QLatin1String(", ") + tr("abandoned") : QString()};
-        return tr("0/unconfirmed, %1").arg(inMempool ? tr("in memory pool") : tr("not in memory pool")) + abandoned;
+        QString s;
+        if (inMempool) {
+            /*: Text explaining the current status of a transaction, shown in the
+                status field of the details window for this transaction. This status
+                represents an unconfirmed transaction that is in the memory pool. */
+            s = tr("0/unconfirmed, in memory pool");
+        } else {
+            /*: Text explaining the current status of a transaction, shown in the
+                status field of the details window for this transaction. This status
+                represents an unconfirmed transaction that is not in the memory pool. */
+            s = tr("0/unconfirmed, not in memory pool");
+        }
+        if (status.is_abandoned) {
+            /*: Text explaining the current status of a transaction, shown in the
+                status field of the details window for this transaction. This
+                status represents an abandoned transaction. */
+            s += QLatin1String(", ") + tr("abandoned");
+        }
+        return s;
     } else if (depth < 6) {
+        /*: Text explaining the current status of a transaction, shown in the
+            status field of the details window for this transaction. This
+            status represents a transaction confirmed in at least one block,
+            but less than 6 blocks. */
         return tr("%1/unconfirmed").arg(depth);
     } else {
+        /*: Text explaining the current status of a transaction, shown in the
+            status field of the details window for this transaction. This status
+            represents a transaction confirmed in 6 or more blocks. */
         return tr("%1 confirmations").arg(depth);
     }
 }

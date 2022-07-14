@@ -1,4 +1,12 @@
-netbsd_CFLAGS=-pipe
+netbsd_CFLAGS=-pipe -std=$(C_STANDARD)
+netbsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+
+ifneq ($(LTO),)
+netbsd_CFLAGS += -flto
+netbsd_CXXFLAGS += -flto
+netbsd_LDFLAGS += -flto
+endif
+
 netbsd_CXXFLAGS=$(netbsd_CFLAGS)
 
 netbsd_release_CFLAGS=-O2

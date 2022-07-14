@@ -206,13 +206,13 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("conntime", count_seconds(stats.m_connected));
         obj.pushKV("timeoffset", stats.nTimeOffset);
         if (stats.m_last_ping_time > 0us) {
-            obj.pushKV("pingtime", CountSecondsDouble(stats.m_last_ping_time));
+            obj.pushKV("pingtime", Ticks<SecondsDouble>(stats.m_last_ping_time));
         }
         if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
-            obj.pushKV("minping", CountSecondsDouble(stats.m_min_ping_time));
+            obj.pushKV("minping", Ticks<SecondsDouble>(stats.m_min_ping_time));
         }
         if (fStateStats && statestats.m_ping_wait > 0s) {
-            obj.pushKV("pingwait", CountSecondsDouble(statestats.m_ping_wait));
+            obj.pushKV("pingwait", Ticks<SecondsDouble>(statestats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
@@ -412,7 +412,7 @@ static RPCHelpMan disconnectnode()
         success = connman.DisconnectNode(address_arg.get_str());
     } else if (!id_arg.isNull() && (address_arg.isNull() || (address_arg.isStr() && address_arg.get_str().empty()))) {
         /* handle disconnect-by-id */
-        NodeId nodeid = (NodeId) id_arg.get_int64();
+        NodeId nodeid = (NodeId) id_arg.getInt<int64_t>();
         success = connman.DisconnectNode(nodeid);
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Only one of address and nodeid should be provided.");
@@ -720,7 +720,7 @@ static RPCHelpMan setban()
 
         int64_t banTime = 0; //use standard bantime if not specified
         if (!request.params[2].isNull())
-            banTime = request.params[2].get_int64();
+            banTime = request.params[2].getInt<int64_t>();
 
         bool absolute = false;
         if (request.params[3].isTrue())
@@ -879,7 +879,7 @@ static RPCHelpMan getnodeaddresses()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    const int count{request.params[0].isNull() ? 1 : request.params[0].get_int()};
+    const int count{request.params[0].isNull() ? 1 : request.params[0].getInt<int>()};
     if (count < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
 
     const std::optional<Network> network{request.params[1].isNull() ? std::nullopt : std::optional<Network>{ParseNetwork(request.params[1].get_str())}};
@@ -932,7 +932,7 @@ static RPCHelpMan addpeeraddress()
     }
 
     const std::string& addr_string{request.params[0].get_str()};
-    const uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
+    const auto port{request.params[1].getInt<uint16_t>()};
     const bool tried{request.params[2].isTrue()};
 
     UniValue obj(UniValue::VOBJ);

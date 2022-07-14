@@ -6,7 +6,7 @@ if ENABLE_FUZZ_BINARY
 noinst_PROGRAMS += test/fuzz/fuzz
 endif
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 bin_PROGRAMS += test/test_navcoin
 endif
 
@@ -203,6 +203,7 @@ test_test_navcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EV
 test_test_navcoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_navcoin_LDADD += $(LIBBITCOIN_WALLET)
+test_test_navcoin_CPPFLAGS += $(BDB_CPPFLAGS)
 endif
 
 test_test_navcoin_LDADD += $(LIBBITCOIN_NODE) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
@@ -271,7 +272,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/locale.cpp \
  test/fuzz/merkleblock.cpp \
  test/fuzz/message.cpp \
- test/fuzz/miniscript_decode.cpp \
+ test/fuzz/miniscript.cpp \
  test/fuzz/minisketch.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \
@@ -366,13 +367,13 @@ endif
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_navcoin ..."
-	$(BENCH_BINARY) > /dev/null
+	@echo "Running bench/bench_navcoin (one iteration sanity check)..."
+	$(BENCH_BINARY) --sanity-check > /dev/null
 endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
 noinst_PROGRAMS += $(UNIVALUE_TESTS)
 TESTS += $(UNIVALUE_TESTS)

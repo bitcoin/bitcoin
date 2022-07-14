@@ -217,11 +217,11 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].get_int())};
+                COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
-                    mapprevOutValues[outpoint] = vinput[3].get_int64();
+                    mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();
                 }
             }
             if (!fValid)
@@ -305,11 +305,11 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].get_int())};
+                COutPoint outpoint{uint256S(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
-                    mapprevOutValues[outpoint] = vinput[3].get_int64();
+                    mapprevOutValues[outpoint] = vinput[3].getInt<int64_t>();
                 }
             }
             if (!fValid)

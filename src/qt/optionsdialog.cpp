@@ -10,6 +10,7 @@
 #include <qt/forms/ui_optionsdialog.h>
 
 #include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -26,7 +27,6 @@
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
-#include <QSettings>
 #include <QSystemTrayIcon>
 #include <QTimer>
 
@@ -56,10 +56,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 #ifndef USE_NATPMP
     ui->mapPortNatpmp->setEnabled(false);
 #endif
-    connect(this, &QDialog::accepted, [this](){
-        QSettings settings;
-        model->node().mapPort(settings.value("fUseUPnP").toBool(), settings.value("fUseNatpmp").toBool());
-    });
 
     ui->proxyIp->setEnabled(false);
     ui->proxyPort->setEnabled(false);
@@ -78,7 +74,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
 
     /* Window elements init */
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     /* remove Window tab on Mac */
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
     /* hide launch at startup option on macOS */
@@ -173,6 +169,11 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
+void OptionsDialog::setClientModel(ClientModel* client_model)
+{
+    m_client_model = client_model;
+}
+
 void OptionsDialog::setModel(OptionsModel *_model)
 {
     this->model = _model;
@@ -261,7 +262,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
 
     /* Window */
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         mapper->addMapping(ui->showTrayIcon, OptionsModel::ShowTrayIcon);
         mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
@@ -283,14 +284,15 @@ void OptionsDialog::setOkButtonState(bool fState)
 
 void OptionsDialog::on_resetButton_clicked()
 {
-    if(model)
-    {
+    if (model) {
         // confirmation dialog
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
+            tr("Client restart required to activate changes.") + "<br><br>" +
+            tr("Current settings will be backed up at \"%1\".").arg(m_client_model->dataDir()) + "<br><br>" +
+            tr("Client will be shut down. Do you want to proceed?"),
             QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
-        if(btnRetVal == QMessageBox::Cancel)
+        if (btnRetVal == QMessageBox::Cancel)
             return;
 
         /* reset all options and close GUI */

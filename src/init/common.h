@@ -11,13 +11,6 @@
 class ArgsManager;
 
 namespace init {
-void SetGlobals();
-void UnsetGlobals();
-/**
- *  Ensure a usable environment with all
- *  necessary library support.
- */
-bool SanityChecks();
 void AddLoggingArgs(ArgsManager& args);
 void SetLoggingOptions(const ArgsManager& args);
 void SetLoggingCategories(const ArgsManager& args);

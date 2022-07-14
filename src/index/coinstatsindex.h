@@ -9,7 +9,7 @@
 #include <crypto/muhash.h>
 #include <flatfile.h>
 #include <index/base.h>
-#include <node/coinstats.h>
+#include <kernel/coinstats.h>
 
 /**
  * CoinStatsIndex maintains statistics on the UTXO set.
@@ -56,7 +56,7 @@ public:
     explicit CoinStatsIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Look up stats for a specific block using CBlockIndex
-    bool LookUpStats(const CBlockIndex* block_index, node::CCoinsStats& coins_stats) const;
+    std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex* block_index) const;
 };
 
 /// The global UTXO set hash object.

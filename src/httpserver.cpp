@@ -11,7 +11,7 @@
 #include <chainparamsbase.h>
 #include <compat.h>
 #include <netbase.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>
@@ -73,21 +73,18 @@ private:
     Mutex cs;
     std::condition_variable cond GUARDED_BY(cs);
     std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
-    bool running GUARDED_BY(cs);
+    bool running GUARDED_BY(cs){true};
     const size_t maxDepth;
 
 public:
-    explicit WorkQueue(size_t _maxDepth) : running(true),
-                                 maxDepth(_maxDepth)
+    explicit WorkQueue(size_t _maxDepth) : maxDepth(_maxDepth)
     {
     }
     /** Precondition: worker threads have all stopped (they have been joined).
      */
-    ~WorkQueue()
-    {
-    }
+    ~WorkQueue() = default;
     /** Enqueue a work item */
-    bool Enqueue(WorkItem* item)
+    bool Enqueue(WorkItem* item) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         if (!running || queue.size() >= maxDepth) {
@@ -98,7 +95,7 @@ public:
         return true;
     }
     /** Thread function */
-    void Run()
+    void Run() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         while (true) {
             std::unique_ptr<WorkItem> i;
@@ -115,7 +112,7 @@ public:
         }
     }
     /** Interrupt and exit loops */
-    void Interrupt()
+    void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         running = false;
@@ -347,10 +344,22 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
-    if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
-        LogPrintf("libevent: %s\n", msg);
-    else
-        LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
+    BCLog::Level level;
+    switch (severity) {
+    case EVENT_LOG_DEBUG:
+        level = BCLog::Level::Debug;
+        break;
+    case EVENT_LOG_MSG:
+        level = BCLog::Level::Info;
+        break;
+    case EVENT_LOG_WARN:
+        level = BCLog::Level::Warning;
+        break;
+    default: // EVENT_LOG_ERR and others are mapped to error
+        level = BCLog::Level::Error;
+        break;
+    }
+    LogPrintLevel(BCLog::LIBEVENT, level, "%s\n", msg);
 }
 
 bool InitHTTPServer()
@@ -391,7 +400,7 @@ bool InitHTTPServer()
 
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
     int workQueueDepth = std::max((long)gArgs.GetIntArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
-    LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
+    LogPrintfCategory(BCLog::HTTP, "creating work queue of depth %d\n", workQueueDepth);
 
     g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
@@ -415,7 +424,7 @@ void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
-    LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
+    LogPrintfCategory(BCLog::HTTP, "starting %d worker threads\n", rpcThreads);
     g_thread_http = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {

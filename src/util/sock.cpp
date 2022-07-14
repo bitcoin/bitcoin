@@ -39,26 +39,17 @@ Sock::Sock(Sock&& other)
     other.m_socket = INVALID_SOCKET;
 }
 
-Sock::~Sock() { Reset(); }
+Sock::~Sock() { Close(); }
 
 Sock& Sock::operator=(Sock&& other)
 {
-    Reset();
+    Close();
     m_socket = other.m_socket;
     other.m_socket = INVALID_SOCKET;
     return *this;
 }
 
 SOCKET Sock::Get() const { return m_socket; }
-
-SOCKET Sock::Release()
-{
-    const SOCKET s = m_socket;
-    m_socket = INVALID_SOCKET;
-    return s;
-}
-
-void Sock::Reset() { CloseSocket(m_socket); }
 
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
@@ -73,6 +64,16 @@ ssize_t Sock::Recv(void* buf, size_t len, int flags) const
 int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
 {
     return connect(m_socket, addr, addr_len);
+}
+
+int Sock::Bind(const sockaddr* addr, socklen_t addr_len) const
+{
+    return bind(m_socket, addr, addr_len);
+}
+
+int Sock::Listen(int backlog) const
+{
+    return listen(m_socket, backlog);
 }
 
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
@@ -111,65 +112,110 @@ int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt
     return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
 }
 
+int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    return getsockname(m_socket, name, name_len);
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
-#ifdef USE_POLL
-    pollfd fd;
-    fd.fd = m_socket;
-    fd.events = 0;
-    if (requested & RECV) {
-        fd.events |= POLLIN;
-    }
-    if (requested & SEND) {
-        fd.events |= POLLOUT;
-    }
+    // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
+    // `this` to be destroyed when the `shared_ptr` goes out of scope at the
+    // end of this function. Create it with a custom noop deleter.
+    std::shared_ptr<const Sock> shared{this, [](const Sock*) {}};
 
-    if (poll(&fd, 1, count_milliseconds(timeout)) == SOCKET_ERROR) {
+    EventsPerSock events_per_sock{std::make_pair(shared, Events{requested})};
+
+    if (!WaitMany(timeout, events_per_sock)) {
         return false;
     }
 
     if (occurred != nullptr) {
-        *occurred = 0;
-        if (fd.revents & POLLIN) {
-            *occurred |= RECV;
+        *occurred = events_per_sock.begin()->second.occurred;
+    }
+
+    return true;
+}
+
+bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
+{
+#ifdef USE_POLL
+    std::vector<pollfd> pfds;
+    for (const auto& [sock, events] : events_per_sock) {
+        pfds.emplace_back();
+        auto& pfd = pfds.back();
+        pfd.fd = sock->m_socket;
+        if (events.requested & RECV) {
+            pfd.events |= POLLIN;
         }
-        if (fd.revents & POLLOUT) {
-            *occurred |= SEND;
+        if (events.requested & SEND) {
+            pfd.events |= POLLOUT;
         }
+    }
+
+    if (poll(pfds.data(), pfds.size(), count_milliseconds(timeout)) == SOCKET_ERROR) {
+        return false;
+    }
+
+    assert(pfds.size() == events_per_sock.size());
+    size_t i{0};
+    for (auto& [sock, events] : events_per_sock) {
+        assert(sock->m_socket == static_cast<SOCKET>(pfds[i].fd));
+        events.occurred = 0;
+        if (pfds[i].revents & POLLIN) {
+            events.occurred |= RECV;
+        }
+        if (pfds[i].revents & POLLOUT) {
+            events.occurred |= SEND;
+        }
+        if (pfds[i].revents & (POLLERR | POLLHUP)) {
+            events.occurred |= ERR;
+        }
+        ++i;
     }
 
     return true;
 #else
-    if (!IsSelectableSocket(m_socket)) {
-        return false;
-    }
+    fd_set recv;
+    fd_set send;
+    fd_set err;
+    FD_ZERO(&recv);
+    FD_ZERO(&send);
+    FD_ZERO(&err);
+    SOCKET socket_max{0};
 
-    fd_set fdset_recv;
-    fd_set fdset_send;
-    FD_ZERO(&fdset_recv);
-    FD_ZERO(&fdset_send);
-
-    if (requested & RECV) {
-        FD_SET(m_socket, &fdset_recv);
-    }
-
-    if (requested & SEND) {
-        FD_SET(m_socket, &fdset_send);
-    }
-
-    timeval timeout_struct = MillisToTimeval(timeout);
-
-    if (select(m_socket + 1, &fdset_recv, &fdset_send, nullptr, &timeout_struct) == SOCKET_ERROR) {
-        return false;
-    }
-
-    if (occurred != nullptr) {
-        *occurred = 0;
-        if (FD_ISSET(m_socket, &fdset_recv)) {
-            *occurred |= RECV;
+    for (const auto& [sock, events] : events_per_sock) {
+        const auto& s = sock->m_socket;
+        if (!IsSelectableSocket(s)) {
+            return false;
         }
-        if (FD_ISSET(m_socket, &fdset_send)) {
-            *occurred |= SEND;
+        if (events.requested & RECV) {
+            FD_SET(s, &recv);
+        }
+        if (events.requested & SEND) {
+            FD_SET(s, &send);
+        }
+        FD_SET(s, &err);
+        socket_max = std::max(socket_max, s);
+    }
+
+    timeval tv = MillisToTimeval(timeout);
+
+    if (select(socket_max + 1, &recv, &send, &err, &tv) == SOCKET_ERROR) {
+        return false;
+    }
+
+    for (auto& [sock, events] : events_per_sock) {
+        const auto& s = sock->m_socket;
+        events.occurred = 0;
+        if (FD_ISSET(s, &recv)) {
+            events.occurred |= RECV;
+        }
+        if (FD_ISSET(s, &send)) {
+            events.occurred |= SEND;
+        }
+        if (FD_ISSET(s, &err)) {
+            events.occurred |= ERR;
         }
     }
 
@@ -326,6 +372,22 @@ bool Sock::IsConnected(std::string& errmsg) const
     }
 }
 
+void Sock::Close()
+{
+    if (m_socket == INVALID_SOCKET) {
+        return;
+    }
+#ifdef WIN32
+    int ret = closesocket(m_socket);
+#else
+    int ret = close(m_socket);
+#endif
+    if (ret) {
+        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
+    }
+    m_socket = INVALID_SOCKET;
+}
+
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
@@ -349,19 +411,3 @@ std::string NetworkErrorString(int err)
     return SysErrorString(err);
 }
 #endif
-
-bool CloseSocket(SOCKET& hSocket)
-{
-    if (hSocket == INVALID_SOCKET)
-        return false;
-#ifdef WIN32
-    int ret = closesocket(hSocket);
-#else
-    int ret = close(hSocket);
-#endif
-    if (ret) {
-        LogPrintf("Socket close failed: %d. Error: %s\n", hSocket, NetworkErrorString(WSAGetLastError()));
-    }
-    hSocket = INVALID_SOCKET;
-    return ret != SOCKET_ERROR;
-}

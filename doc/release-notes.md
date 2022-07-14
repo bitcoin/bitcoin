@@ -50,6 +50,24 @@ P2P and network changes
 Updated RPCs
 ------------
 
+- The `-deprecatedrpc=softforks` configuration option has been removed.  The
+  RPC `getblockchaininfo` no longer returns the `softforks` field, which was
+  previously deprecated in 23.0. (#23508) Information on soft fork status is
+  now only available via the `getdeploymentinfo` RPC.
+
+- The `deprecatedrpc=exclude_coinbase` configuration option has been removed.
+  The `receivedby` RPCs (`listreceivedbyaddress`, `listreceivedbylabel`,
+  `getreceivedbyaddress` and `getreceivedbylabel`) now always return results
+  accounting for received coins from coinbase outputs, without an option to
+  change that behaviour. Excluding coinbases was previously deprecated in 23.0.
+  (#25171)
+
+- The `deprecatedrpc=fees` configuration option has been removed. The top-level
+  fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees` are no
+  longer returned by RPCs `getmempoolentry`, `getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`.
+  The same fee fields can be accessed through the `fees` object in the result.
+  The top-level fee fields were previously deprecated in 23.0. (#25204)
 
 Changes to wallet related RPCs can be found in the Wallet section below.
 
@@ -73,6 +91,9 @@ Tools and Utilities
 
 Wallet
 ------
+
+- RPC `getreceivedbylabel` now returns an error, "Label not found
+  in wallet" (-4), if the label is not in the address book. (#25122)
 
 GUI changes
 -----------

@@ -184,7 +184,9 @@ void TestGUI(interfaces::Node& node)
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     SendCoinsDialog sendCoinsDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
-    OptionsModel optionsModel;
+    OptionsModel optionsModel(node);
+    bilingual_str error;
+    QVERIFY(optionsModel.Init(error));
     ClientModel clientModel(node, &optionsModel);
     WalletContext& context = *node.walletLoader().context();
     AddWallet(context, wallet);
@@ -315,7 +317,7 @@ void TestGUI(interfaces::Node& node)
 
 void WalletTests::walletTests()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     if (QApplication::platformName() == "minimal") {
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
         // framework when it tries to look up unimplemented cocoa functions,

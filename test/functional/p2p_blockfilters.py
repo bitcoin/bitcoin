@@ -250,6 +250,11 @@ class CompactFiltersTest(BitcoinTestFramework):
         msg = "Error: Cannot set -peerblockfilters without -blockfilterindex."
         self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
 
+        self.log.info("Test unknown value to -blockfilterindex raises an error")
+        self.nodes[0].extra_args = ["-blockfilterindex=abc"]
+        msg = "Error: Unknown -blockfilterindex value abc."
+        self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
+
         self.log.info("Test -blockfilterindex with -reindex-chainstate raises an error")
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: -reindex-chainstate option is not compatible with -blockfilterindex. '

@@ -5,10 +5,12 @@
 #ifndef BITCOIN_POLICY_PACKAGES_H
 #define BITCOIN_POLICY_PACKAGES_H
 
+#include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 
+#include <cstdint>
 #include <vector>
 
 /** Default maximum number of transactions in a package. */
@@ -16,6 +18,15 @@ static constexpr uint32_t MAX_PACKAGE_COUNT{25};
 /** Default maximum total virtual size of transactions in a package in KvB. */
 static constexpr uint32_t MAX_PACKAGE_SIZE{101};
 static_assert(MAX_PACKAGE_SIZE * WITNESS_SCALE_FACTOR * 1000 >= MAX_STANDARD_TX_WEIGHT);
+
+// If a package is submitted, it must be within the mempool's ancestor/descendant limits. Since a
+// submitted package must be child-with-unconfirmed-parents (all of the transactions are an ancestor
+// of the child), package limits are ultimately bounded by mempool package limits. Ensure that the
+// defaults reflect this constraint.
+static_assert(DEFAULT_DESCENDANT_LIMIT >= MAX_PACKAGE_COUNT);
+static_assert(DEFAULT_ANCESTOR_LIMIT >= MAX_PACKAGE_COUNT);
+static_assert(DEFAULT_ANCESTOR_SIZE_LIMIT_KVB >= MAX_PACKAGE_SIZE);
+static_assert(DEFAULT_DESCENDANT_SIZE_LIMIT_KVB >= MAX_PACKAGE_SIZE);
 
 /** A "reason" why a package was invalid. It may be that one or more of the included
  * transactions is invalid or the package itself violates our rules.

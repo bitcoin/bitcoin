@@ -16,6 +16,12 @@ BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
 
 static constexpr auto REMOVAL_REASON_DUMMY = MemPoolRemovalReason::REPLACED;
 
+class MemPoolTest final : public CTxMemPool
+{
+public:
+    using CTxMemPool::GetMinFee;
+};
+
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 {
     // Test CTxMemPool::remove functionality
@@ -56,7 +62,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
 
 
-    CTxMemPool testPool;
+    CTxMemPool& testPool = *Assert(m_node.mempool);
     LOCK2(cs_main, testPool.cs);
 
     // Nothing in pool, remove should do nothing:
@@ -108,12 +114,12 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
 
-template<typename name>
-static void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+template <typename name>
+static void CheckSort(CTxMemPool& pool, std::vector<std::string>& sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
     typename CTxMemPool::indexed_transaction_set::index<name>::type::iterator it = pool.mapTx.get<name>().begin();
-    int count=0;
+    int count = 0;
     for (; it != pool.mapTx.get<name>().end(); ++it, ++count) {
         BOOST_CHECK_EQUAL(it->GetTx().GetHash().ToString(), sortedOrder[count]);
     }
@@ -121,7 +127,7 @@ static void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder) E
 
 BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 {
-    CTxMemPool pool;
+    CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 
@@ -294,7 +300,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
 BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
 {
-    CTxMemPool pool;
+    CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 
@@ -423,7 +429,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
 
 BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
 {
-    CTxMemPool pool;
+    auto& pool = static_cast<MemPoolTest&>(*Assert(m_node.mempool));
     LOCK2(cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 
@@ -594,7 +600,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
 {
     size_t ancestors, descendants;
 
-    CTxMemPool pool;
+    CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 
@@ -753,7 +759,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTestsDiamond)
 {
     size_t ancestors, descendants;
 
-    CTxMemPool pool;
+    CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(::cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 

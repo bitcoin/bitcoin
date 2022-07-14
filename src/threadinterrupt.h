@@ -21,11 +21,11 @@ class CThreadInterrupt
 public:
     CThreadInterrupt();
     explicit operator bool() const;
-    void operator()();
+    void operator()() EXCLUSIVE_LOCKS_REQUIRED(!mut);
     void reset();
-    bool sleep_for(std::chrono::milliseconds rel_time);
-    bool sleep_for(std::chrono::seconds rel_time);
-    bool sleep_for(std::chrono::minutes rel_time);
+    bool sleep_for(std::chrono::milliseconds rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
+    bool sleep_for(std::chrono::seconds rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
+    bool sleep_for(std::chrono::minutes rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
 
 private:
     std::condition_variable cond;

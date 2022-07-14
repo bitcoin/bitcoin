@@ -15,7 +15,7 @@
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <policy/policy.h>
 #include <util/system.h>
 #include <wallet/wallet.h>
@@ -158,9 +158,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     }
 }
 
-PaymentServer::~PaymentServer()
-{
-}
+PaymentServer::~PaymentServer() = default;
 
 //
 // OSX-specific way of handling bitcoin: URIs

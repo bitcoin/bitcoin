@@ -146,7 +146,7 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
         if (!rec.isObject()) {
             throw std::runtime_error("Batch member must be an object");
         }
-        size_t id = rec["id"].get_int();
+        size_t id = rec["id"].getInt<int>();
         if (id >= num) {
             throw std::runtime_error("Batch member id is larger than batch size");
         }

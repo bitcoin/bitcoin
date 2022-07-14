@@ -80,7 +80,10 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 
 //! Construct wallet tx status struct.
 WalletTxStatus MakeWalletTxStatus(const CWallet& wallet, const CWalletTx& wtx)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    AssertLockHeld(wallet.cs_wallet);
+
     WalletTxStatus result;
     result.block_height =
         wtx.state<TxStateConfirmed>() ? wtx.state<TxStateConfirmed>()->confirmed_block_height :
@@ -107,7 +110,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     result.txout = wtx.tx->vout[n];
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
-    result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
+    result.is_spent = wallet.IsSpent(COutPoint(wtx.GetHash(), n));
     return result;
 }
 
@@ -118,7 +121,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     result.txout = output.txout;
     result.time = output.time;
     result.depth_in_main_chain = output.depth;
-    result.is_spent = wallet.IsSpent(output.outpoint.hash, output.outpoint.n);
+    result.is_spent = wallet.IsSpent(output.outpoint);
     return result;
 }
 
@@ -242,7 +245,7 @@ public:
     bool isLockedCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->IsLockedCoin(output.hash, output.n);
+        return m_wallet->IsLockedCoin(output);
     }
     void listLockedCoins(std::vector<COutPoint>& outputs) override
     {
@@ -257,13 +260,14 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        CTransactionRef tx;
         FeeCalculation fee_calc_out;
-        if (!CreateTransaction(*m_wallet, recipients, tx, fee, change_pos,
-                fail_reason, coin_control, fee_calc_out, sign)) {
-            return {};
-        }
-        return tx;
+        std::optional<CreatedTransactionResult> txr = CreateTransaction(*m_wallet, recipients, change_pos,
+                fail_reason, coin_control, fee_calc_out, sign);
+        if (!txr) return {};
+        fee = txr->fee;
+        change_pos = txr->change_pos;
+
+        return txr->tx;
     }
     void commitTransaction(CTransactionRef tx,
         WalletValueMap value_map,

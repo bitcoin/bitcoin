@@ -77,10 +77,10 @@ bool IsHexNumber(std::string_view str)
     return str.size() > 0;
 }
 
-std::vector<unsigned char> ParseHex(std::string_view str)
+template <typename Byte>
+std::vector<Byte> ParseHex(std::string_view str)
 {
-    // convert hex dump to vector
-    std::vector<unsigned char> vch;
+    std::vector<Byte> vch;
     auto it = str.begin();
     while (it != str.end() && it + 1 != str.end()) {
         if (IsSpace(*it)) {
@@ -90,10 +90,12 @@ std::vector<unsigned char> ParseHex(std::string_view str)
         auto c1 = HexDigit(*(it++));
         auto c2 = HexDigit(*(it++));
         if (c1 < 0 || c2 < 0) break;
-        vch.push_back(uint8_t(c1 << 4) | c2);
+        vch.push_back(Byte(c1 << 4) | Byte(c2));
     }
     return vch;
 }
+template std::vector<std::byte> ParseHex(std::string_view);
+template std::vector<uint8_t> ParseHex(std::string_view);
 
 void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 {

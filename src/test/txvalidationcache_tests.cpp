@@ -15,7 +15,7 @@
 
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
-        : TestChain100Setup{{"-testactivationheight=dersig@102"}} {}
+        : TestChain100Setup{CBaseChainParams::REGTEST, {"-testactivationheight=dersig@102"}} {}
 };
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
