@@ -2396,7 +2396,7 @@ bool PeerManagerImpl::MaybeSendGetHeaders(CNode& pfrom, const CBlockLocator& loc
 
     // Only allow a new getheaders message to go out if we don't have a recent
     // one already in-flight
-    if (current_time - peer.m_last_getheaders_timestamp.load() > HEADERS_RESPONSE_TIME) {
+    if (current_time - peer.m_last_getheaders_timestamp > HEADERS_RESPONSE_TIME) {
         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETHEADERS, locator, uint256()));
         peer.m_last_getheaders_timestamp = current_time;
         return true;
@@ -4210,7 +4210,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Assume that this is in response to any outstanding getheaders
         // request we may have sent, and clear out the time of our last request
-        peer->m_last_getheaders_timestamp.store(NodeSeconds{});
+        peer->m_last_getheaders_timestamp = {};
 
         std::vector<CBlockHeader> headers;
 
