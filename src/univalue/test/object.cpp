@@ -13,9 +13,6 @@
 #include <string>
 #include <vector>
 
-#define BOOST_FIXTURE_TEST_SUITE(a, b)
-#define BOOST_AUTO_TEST_CASE(funcName) void funcName()
-#define BOOST_AUTO_TEST_SUITE_END()
 #define BOOST_CHECK(expr) assert(expr)
 #define BOOST_CHECK_EQUAL(v1, v2) assert((v1) == (v2))
 #define BOOST_CHECK_THROW(stmt, excMatch) { \
@@ -35,9 +32,7 @@
 	} \
     }
 
-BOOST_FIXTURE_TEST_SUITE(univalue_tests, BasicTestingSetup)
-
-BOOST_AUTO_TEST_CASE(univalue_constructor)
+void univalue_constructor()
 {
     UniValue v1;
     BOOST_CHECK(v1.isNull());
@@ -85,7 +80,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
-BOOST_AUTO_TEST_CASE(univalue_push_throw)
+void univalue_push_throw()
 {
     UniValue j;
     BOOST_CHECK_THROW(j.push_back(1), std::runtime_error);
@@ -95,7 +90,7 @@ BOOST_AUTO_TEST_CASE(univalue_push_throw)
     BOOST_CHECK_THROW(j.pushKVs({}), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(univalue_typecheck)
+void univalue_typecheck()
 {
     UniValue v1;
     BOOST_CHECK(v1.setNumStr("1"));
@@ -144,7 +139,7 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(univalue_set)
+void univalue_set()
 {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
@@ -203,7 +198,7 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK(v.isNull());
 }
 
-BOOST_AUTO_TEST_CASE(univalue_array)
+void univalue_array()
 {
     UniValue arr(UniValue::VARR);
 
@@ -262,7 +257,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     BOOST_CHECK_EQUAL(arr.size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(univalue_object)
+void univalue_object()
 {
     UniValue obj(UniValue::VOBJ);
     std::string strKey, strVal;
@@ -381,7 +376,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 static const char *json1 =
 "[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
 
-BOOST_AUTO_TEST_CASE(univalue_readwrite)
+void univalue_readwrite()
 {
     UniValue v;
     BOOST_CHECK(v.read(json1));
@@ -424,11 +419,10 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
     BOOST_CHECK(!v.read("{} 42"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
 int main (int argc, char *argv[])
 {
     univalue_constructor();
+    univalue_push_throw();
     univalue_typecheck();
     univalue_set();
     univalue_array();

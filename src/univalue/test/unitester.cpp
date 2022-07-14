@@ -149,6 +149,13 @@ void unescape_unicode_test()
     assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
 }
 
+void no_nul_test()
+{
+    char buf[] = "___[1,2,3]___";
+    UniValue val;
+    assert(val.read(buf + 3, 7));
+}
+
 int main (int argc, char *argv[])
 {
     for (const auto& f: filenames) {
@@ -156,6 +163,7 @@ int main (int argc, char *argv[])
     }
 
     unescape_unicode_test();
+    no_nul_test();
 
     return 0;
 }

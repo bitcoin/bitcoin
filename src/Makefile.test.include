@@ -405,7 +405,7 @@ endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
 if ENABLE_TESTS
-UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
+UNIVALUE_TESTS = univalue/test/object univalue/test/unitester
 noinst_PROGRAMS += $(UNIVALUE_TESTS)
 TESTS += $(UNIVALUE_TESTS)
 
@@ -413,11 +413,6 @@ univalue_test_unitester_SOURCES = $(UNIVALUE_TEST_UNITESTER_INT)
 univalue_test_unitester_LDADD = $(LIBUNIVALUE)
 univalue_test_unitester_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) -DJSON_TEST_SRC=\"$(srcdir)/$(UNIVALUE_TEST_DATA_DIR_INT)\"
 univalue_test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
-
-univalue_test_no_nul_SOURCES = $(UNIVALUE_TEST_NO_NUL_INT)
-univalue_test_no_nul_LDADD = $(LIBUNIVALUE)
-univalue_test_no_nul_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
-univalue_test_no_nul_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 
 univalue_test_object_SOURCES = $(UNIVALUE_TEST_OBJECT_INT)
 univalue_test_object_LDADD = $(LIBUNIVALUE)
