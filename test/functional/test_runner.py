@@ -205,6 +205,7 @@ BASE_SCRIPTS = [
     'wallet_keypool.py --legacy-wallet',
     'wallet_keypool.py --descriptors',
     'wallet_descriptor.py --descriptors',
+    'wallet_miniscript.py',
     'feature_maxtipage.py',
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
