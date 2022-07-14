@@ -46,6 +46,31 @@ static uint256 MakeQuorumKey(const CQuorum& q)
     return hw.GetHash();
 }
 
+std::string CQuorumDataRequest::GetErrorString() const
+{
+    switch (nError) {
+        case (Errors::NONE):
+            return "NONE";
+        case (Errors::QUORUM_TYPE_INVALID):
+            return "QUORUM_TYPE_INVALID";
+        case (Errors::QUORUM_BLOCK_NOT_FOUND):
+            return "QUORUM_BLOCK_NOT_FOUND";
+        case (Errors::QUORUM_NOT_FOUND):
+            return "QUORUM_NOT_FOUND";
+        case (Errors::MASTERNODE_IS_NO_MEMBER):
+            return "MASTERNODE_IS_NO_MEMBER";
+        case (Errors::QUORUM_VERIFICATION_VECTOR_MISSING):
+            return "QUORUM_VERIFICATION_VECTOR_MISSING";
+        case (Errors::ENCRYPTED_CONTRIBUTIONS_MISSING):
+            return "ENCRYPTED_CONTRIBUTIONS_MISSING";
+        case (Errors::UNDEFINED):
+            return "UNDEFINED";
+        default:
+            return "UNDEFINED";
+    }
+    return "UNDEFINED";
+}
+
 CQuorum::CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker)
 {
 }
@@ -654,7 +679,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
         }
 
         if (request.GetError() != CQuorumDataRequest::Errors::NONE) {
-            errorHandler(strprintf("Error %d", request.GetError()), 0);
+            errorHandler(strprintf("Error %d (%s)", request.GetError(), request.GetErrorString()), 0);
             return;
         }
 

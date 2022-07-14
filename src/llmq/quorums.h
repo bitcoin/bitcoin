@@ -101,6 +101,7 @@ public:
 
     void SetError(Errors nErrorIn) { nError = nErrorIn; }
     Errors GetError() const { return nError; }
+    std::string GetErrorString() const;
 
     bool IsExpired() const { return (GetTime() - nTime) >= EXPIRATION_TIMEOUT; }
     bool IsProcessed() const { return fProcessed; }
