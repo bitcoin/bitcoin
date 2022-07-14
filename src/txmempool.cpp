@@ -1216,8 +1216,8 @@ bool CTxMemPool::GetLoadTried() const
     return m_load_tried;
 }
 
-void CTxMemPool::SetLoadTried(bool loaded)
+void CTxMemPool::SetLoadTried(bool load_tried)
 {
     LOCK(cs);
-    m_load_tried = loaded;
+    m_load_tried = load_tried;
 }

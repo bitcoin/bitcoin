@@ -728,11 +728,17 @@ public:
      */
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) const;
 
-    /** @returns true if the mempool is fully loaded */
+    /**
+     * @returns true if we've made an attempt to load the mempool regardless of
+     *          whether the attempt was successful or not
+     */
     bool GetLoadTried() const;
 
-    /** Sets the current loaded state */
-    void SetLoadTried(bool loaded);
+    /**
+     * Set whether or not we've made an attempt to load the mempool (regardless
+     * of whether the attempt was successful or not)
+     */
+    void SetLoadTried(bool load_tried);
 
     unsigned long size() const
     {
