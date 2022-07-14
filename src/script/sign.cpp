@@ -150,6 +150,7 @@ static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, Signatur
     auto it = sigdata.taproot_script_sigs.find(lookup_key);
     if (it != sigdata.taproot_script_sigs.end()) {
         sig_out = it->second;
+        return true;
     }
     if (creator.CreateSchnorrSig(provider, sig_out, pubkey, &leaf_hash, nullptr, sigversion)) {
         sigdata.taproot_script_sigs[lookup_key] = sig_out;
@@ -169,6 +170,17 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
         XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
+
+        KeyOriginInfo info;
+        if (provider.GetKeyOriginByXOnly(pubkey, info)) {
+            auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
+            if (it == sigdata.taproot_misc_pubkeys.end()) {
+                sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
+            } else {
+                it->second.first.insert(leaf_hash);
+            }
+        }
+
         std::vector<unsigned char> sig;
         if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
             result = Vector(std::move(sig));
@@ -205,17 +217,29 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
 static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCreator& creator, const WitnessV1Taproot& output, SignatureData& sigdata, std::vector<valtype>& result)
 {
     TaprootSpendData spenddata;
+    TaprootBuilder builder;
 
     // Gather information about this output.
     if (provider.GetTaprootSpendData(output, spenddata)) {
         sigdata.tr_spenddata.Merge(spenddata);
     }
+    if (provider.GetTaprootBuilder(output, builder)) {
+        sigdata.tr_builder = builder;
+    }
 
     // Try key path spending.
     {
+        KeyOriginInfo info;
+        if (provider.GetKeyOriginByXOnly(sigdata.tr_spenddata.internal_key, info)) {
+            auto it = sigdata.taproot_misc_pubkeys.find(sigdata.tr_spenddata.internal_key);
+            if (it == sigdata.taproot_misc_pubkeys.end()) {
+                sigdata.taproot_misc_pubkeys.emplace(sigdata.tr_spenddata.internal_key, std::make_pair(std::set<uint256>(), info));
+            }
+        }
+
         std::vector<unsigned char> sig;
         if (sigdata.taproot_key_path_sig.size() == 0) {
-            if (creator.CreateSchnorrSig(provider, sig, spenddata.internal_key, nullptr, &spenddata.merkle_root, SigVersion::TAPROOT)) {
+            if (creator.CreateSchnorrSig(provider, sig, sigdata.tr_spenddata.internal_key, nullptr, &sigdata.tr_spenddata.merkle_root, SigVersion::TAPROOT)) {
                 sigdata.taproot_key_path_sig = sig;
             }
         }

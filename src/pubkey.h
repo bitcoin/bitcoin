@@ -286,6 +286,9 @@ public:
     bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
     bool operator!=(const XOnlyPubKey& other) const { return m_keydata != other.m_keydata; }
     bool operator<(const XOnlyPubKey& other) const { return m_keydata < other.m_keydata; }
+
+    //! Implement serialization without length prefixes since it is a fixed length
+    SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
 };
 
 struct CExtPubKey {

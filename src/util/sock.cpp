@@ -39,26 +39,17 @@ Sock::Sock(Sock&& other)
     other.m_socket = INVALID_SOCKET;
 }
 
-Sock::~Sock() { Reset(); }
+Sock::~Sock() { Close(); }
 
 Sock& Sock::operator=(Sock&& other)
 {
-    Reset();
+    Close();
     m_socket = other.m_socket;
     other.m_socket = INVALID_SOCKET;
     return *this;
 }
 
 SOCKET Sock::Get() const { return m_socket; }
-
-SOCKET Sock::Release()
-{
-    const SOCKET s = m_socket;
-    m_socket = INVALID_SOCKET;
-    return s;
-}
-
-void Sock::Reset() { CloseSocket(m_socket); }
 
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
@@ -73,6 +64,16 @@ ssize_t Sock::Recv(void* buf, size_t len, int flags) const
 int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
 {
     return connect(m_socket, addr, addr_len);
+}
+
+int Sock::Bind(const sockaddr* addr, socklen_t addr_len) const
+{
+    return bind(m_socket, addr, addr_len);
+}
+
+int Sock::Listen(int backlog) const
+{
+    return listen(m_socket, backlog);
 }
 
 std::unique_ptr<Sock> Sock::Accept(sockaddr* addr, socklen_t* addr_len) const
@@ -109,6 +110,11 @@ int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len)
 int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const
 {
     return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
+}
+
+int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    return getsockname(m_socket, name, name_len);
 }
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
@@ -366,6 +372,22 @@ bool Sock::IsConnected(std::string& errmsg) const
     }
 }
 
+void Sock::Close()
+{
+    if (m_socket == INVALID_SOCKET) {
+        return;
+    }
+#ifdef WIN32
+    int ret = closesocket(m_socket);
+#else
+    int ret = close(m_socket);
+#endif
+    if (ret) {
+        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
+    }
+    m_socket = INVALID_SOCKET;
+}
+
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
@@ -389,19 +411,3 @@ std::string NetworkErrorString(int err)
     return SysErrorString(err);
 }
 #endif
-
-bool CloseSocket(SOCKET& hSocket)
-{
-    if (hSocket == INVALID_SOCKET)
-        return false;
-#ifdef WIN32
-    int ret = closesocket(hSocket);
-#else
-    int ret = close(hSocket);
-#endif
-    if (ret) {
-        LogPrintf("Socket close failed: %d. Error: %s\n", hSocket, NetworkErrorString(WSAGetLastError()));
-    }
-    hSocket = INVALID_SOCKET;
-    return ret != SOCKET_ERROR;
-}

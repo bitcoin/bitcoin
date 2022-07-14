@@ -6,7 +6,7 @@ if ENABLE_FUZZ_BINARY
 noinst_PROGRAMS += test/fuzz/fuzz
 endif
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 bin_PROGRAMS += test/test_bitcoin
 endif
 
@@ -325,6 +325,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
  test/fuzz/tx_pool.cpp \
+ test/fuzz/txorphan.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/utxo_snapshot.cpp \
  test/fuzz/validation_load_mempool.cpp \
@@ -371,7 +372,7 @@ endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
 noinst_PROGRAMS += $(UNIVALUE_TESTS)
 TESTS += $(UNIVALUE_TESTS)

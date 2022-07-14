@@ -132,25 +132,11 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; Building glibc with stack smashing protector first landed in glibc 2.25, use
-;; this function to disable for older glibcs
-;;
-;; From glibc 2.25 changelog:
-;;
-;;   * Most of glibc can now be built with the stack smashing protector enabled.
-;;     It is recommended to build glibc with --enable-stack-protector=strong.
-;;     Implemented by Nick Alcock (Oracle).
-(define (make-glibc-without-ssp xglibc)
-  (package-with-extra-configure-variable
-   (package-with-extra-configure-variable
-    xglibc "libc_cv_ssp" "no")
-   "libc_cv_ssp_strong" "no"))
-
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-ssp (make-glibc-without-werror glibc-2.24)))
+                                       (base-libc (make-glibc-without-werror glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -161,7 +147,10 @@ desirable for building Bitcoin Core release binaries."
                         base-gcc))
 
 (define (make-gcc-with-pthreads gcc)
-  (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
+  (package-with-extra-configure-variable
+    (package-with-extra-patches gcc
+      (search-our-patches "gcc-10-remap-guix-store.patch"))
+    "--enable-threads" "posix"))
 
 (define (make-mingw-w64-cross-gcc cross-gcc)
   (package-with-extra-patches cross-gcc
@@ -200,10 +189,14 @@ chain for " target " development."))
   (package-with-extra-patches base-nsis
     (search-our-patches "nsis-gcc-10-memmove.patch")))
 
+(define (fix-ppc64-nx-default lief)
+  (package-with-extra-patches lief
+    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
+
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.12.0")
+   (version "0.12.1")
    (source
     (origin
      (method git-fetch)
@@ -213,8 +206,15 @@ chain for " target " development."))
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
+       "1xzbh3bxy4rw1yamnx68da1v5s56ay4g081cyamv67256g0qy2i1"))))
    (build-system python-build-system)
+   (arguments
+    `(#:phases
+      (modify-phases %standard-phases
+        (add-after 'unpack 'parallel-jobs
+          ;; build with multiple cores
+          (lambda _
+            (substitute* "setup.py" (("self.parallel if self.parallel else 1") (number->string (parallel-job-count)))))))))
    (native-inputs
     `(("cmake" ,cmake)))
    (home-page "https://github.com/lief-project/LIEF")
@@ -256,7 +256,7 @@ thus should be able to compile on most platforms where these exist.")
     (license license:gpl3+))) ; license is with openssl exception
 
 (define-public python-elfesteem
-  (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
+  (let ((commit "2eb1e5384ff7a220fd1afacd4a0170acff54fe56"))
     (package
       (name "python-elfesteem")
       (version (git-version "0.1" "1" commit))
@@ -269,8 +269,7 @@ thus should be able to compile on most platforms where these exist.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))
-      (patches (search-our-patches "elfsteem-value-error-python-39.patch"))))
+           "07x6p8clh11z8s1n2kdxrqwqm2almgc5qpkcr9ckb6y5ivjdr5r6"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
@@ -538,7 +537,8 @@ inspecting signatures in Mach-O binaries.")
                                            "glibc-versioned-locpath.patch"
                                            "glibc-2.24-elfm-loadaddr-dynamic-rewrite.patch"
                                            "glibc-2.24-no-build-time-cxx-header-run.patch"
-                                           "glibc-2.24-fcommon.patch"))))))
+                                           "glibc-2.24-fcommon.patch"
+                                           "glibc-2.24-guix-prefix.patch"))))))
 
 (define-public glibc-2.27/bitcoin-patched
   (package
@@ -555,7 +555,8 @@ inspecting signatures in Mach-O binaries.")
                 "1b2n1gxv9f4fd5yy68qjbnarhf8mf4vmlxk10i3328c1w5pmp0ca"))
               (patches (search-our-patches "glibc-ldd-x86_64.patch"
                                            "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
-                                           "glibc-2.27-dont-redefine-nss-database.patch"))))))
+                                           "glibc-2.27-dont-redefine-nss-database.patch"
+                                           "glibc-2.27-guix-prefix.patch"))))))
 
 (packages->manifest
  (append
@@ -581,7 +582,7 @@ inspecting signatures in Mach-O binaries.")
         xz
         ;; Build tools
         gnu-make
-        libtool
+        libtool-2.4.7
         autoconf-2.71
         automake
         pkg-config
@@ -595,7 +596,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git
         ;; Tests
-        lief)
+        (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows

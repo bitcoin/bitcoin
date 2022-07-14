@@ -104,9 +104,6 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             if (curr_waste <= best_waste) {
                 best_selection = curr_selection;
                 best_waste = curr_waste;
-                if (best_waste == 0) {
-                    break;
-                }
             }
             curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;

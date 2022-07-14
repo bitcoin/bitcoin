@@ -74,11 +74,9 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
-        CTxDestination dest;
-        bilingual_str error;
-        const bool destination_ok = wallet.GetNewDestination(OutputType::BECH32, "", dest, error);
-        assert(destination_ok);
-        tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
+        auto op_dest = wallet.GetNewDestination(OutputType::BECH32, "");
+        assert(op_dest.HasRes());
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(op_dest.GetObj());
     }
     uint256 txid = tx.GetHash();
 
@@ -86,7 +84,8 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
-    coins.emplace_back(COutPoint(wtx.GetHash(), nInput), wtx.tx->vout.at(nInput), nAge, GetTxSpendSize(wallet, wtx, nInput), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate);
+    const auto& txout = wtx.tx->vout.at(nInput);
+    coins.emplace_back(COutPoint(wtx.GetHash(), nInput), txout, nAge, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
@@ -198,8 +197,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     expected_result.Clear();
 
     // Select 5 Cent
-    add_coin(4 * CENT, 4, expected_result);
-    add_coin(1 * CENT, 1, expected_result);
+    add_coin(3 * CENT, 3, expected_result);
+    add_coin(2 * CENT, 2, expected_result);
     const auto result3 = SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT);
     BOOST_CHECK(result3);
     BOOST_CHECK(EquivalentResult(expected_result, *result3));
@@ -224,8 +223,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     // Select 10 Cent
     add_coin(5 * CENT, 5, utxo_pool);
-    add_coin(5 * CENT, 5, expected_result);
     add_coin(4 * CENT, 4, expected_result);
+    add_coin(3 * CENT, 3, expected_result);
+    add_coin(2 * CENT, 2, expected_result);
     add_coin(1 * CENT, 1, expected_result);
     const auto result5 = SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT);
     BOOST_CHECK(result5);
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         CCoinControl coin_control;
-        coin_control.fAllowOtherInputs = true;
+        coin_control.m_allow_other_inputs = true;
         coin_control.Select(coins.at(0).outpoint);
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
         const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         expected_result.Clear();
         add_coin(9 * CENT, 2, expected_result);
         add_coin(1 * CENT, 2, expected_result);
-        coin_control.fAllowOtherInputs = true;
+        coin_control.m_allow_other_inputs = true;
         coin_control.Select(coins.at(1).outpoint); // pre select 9 coin
         const auto result13 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
@@ -865,7 +865,23 @@ BOOST_AUTO_TEST_CASE(waste_test)
     const CAmount new_target{in_amt - fee * 2 - fee_diff * 2};
     add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
-    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /* change cost */ 0, new_target));
+    BOOST_CHECK_EQUAL(0, GetSelectionWaste(selection, /*change_cost=*/ 0, new_target));
+    selection.clear();
+
+    // Negative waste when the long term fee is greater than the current fee and the selected value == target
+    const CAmount exact_target1{3 * COIN - 2 * fee};
+    const CAmount target_waste1{-2 * fee_diff}; // = (2 * fee) - (2 * (fee + fee_diff))
+    add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+    BOOST_CHECK_EQUAL(target_waste1, GetSelectionWaste(selection, /*change_cost=*/ 0, exact_target1));
+    selection.clear();
+
+    // Negative waste when the long term fee is greater than the current fee and change_cost < - (inputs * (fee - long_term_fee))
+    const CAmount large_fee_diff{90};
+    const CAmount target_waste2{-2 * large_fee_diff + change_cost}; // = (2 * fee) - (2 * (fee + large_fee_diff)) + change_cost
+    add_coin(1 * COIN, 1, selection, fee, fee + large_fee_diff);
+    add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
+    BOOST_CHECK_EQUAL(target_waste2, GetSelectionWaste(selection, change_cost, target));
 }
 
 BOOST_AUTO_TEST_CASE(effective_value_test)
