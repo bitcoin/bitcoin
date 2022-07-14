@@ -56,6 +56,12 @@ const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 } // namespace DBKeys
 
+const int CHDChain::VERSION_HD_BASE;
+const int CHDChain::VERSION_HD_CHAIN_SPLIT;
+const int CHDChain::VERSION_HD_MWEB;
+const int CHDChain::VERSION_HD_MWEB_WATCH;
+const int CHDChain::CURRENT_VERSION;
+
 //
 // WalletBatch
 //
