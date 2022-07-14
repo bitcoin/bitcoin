@@ -66,7 +66,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
         wait_until(lambda: mn.node.getconnectioncount() == 0)
-        return True
+        return True, True
 
     def close_mn_port(self, mn):
         self.stop_node(mn.node.index)
@@ -77,14 +77,14 @@ class LLMQSimplePoSeTest(DashTestFramework):
             if mn2 is not mn:
                 connect_nodes(mn.node, mn2.node.index)
         self.reset_probe_timeouts()
-        return False
+        return False, False
 
     def force_old_mn_proto(self, mn):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, ["-pushversion=70216"])
         connect_nodes(mn.node, 0)
         self.reset_probe_timeouts()
-        return False
+        return False, True
 
     def test_no_banning(self, expected_connections=None):
         for i in range(3):
@@ -98,15 +98,20 @@ class LLMQSimplePoSeTest(DashTestFramework):
         expected_contributors = len(mninfos_online)
         for i in range(2):
             mn = mninfos_valid.pop()
-            went_offline = invalidate_proc(mn)
+            went_offline, instant_ban = invalidate_proc(mn)
             if went_offline:
                 mninfos_online.remove(mn)
                 expected_contributors -= 1
 
-            t = time.time()
-            while (not self.check_banned(mn)) and (time.time() - t) < 120:
-                self.reset_probe_timeouts()
-                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+            # NOTE: Min PoSe penalty is 100 (see CDeterministicMNList::CalcMaxPoSePenalty()),
+            # so nodes are PoSe-banned in the same DKG they misbehave without being PoSe-punished first.
+            if not instant_ban:
+                # it's ok to miss probes/quorum connections up to 5 times
+                for i in range(5):
+                    self.reset_probe_timeouts()
+                    self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=0, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+            self.reset_probe_timeouts()
+            self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
             assert self.check_banned(mn)
 
@@ -144,7 +149,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
-        self.bump_mocktime(50 * 60 + 1)
+        self.bump_mocktime(10 * 60 + 1)
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
 

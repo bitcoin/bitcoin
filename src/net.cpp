@@ -2517,8 +2517,7 @@ void CConnman::ThreadOpenMasternodeConnections()
             LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
             // Will take a few consequent failed attempts to PoSe-punish a MN.
             if (mmetaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
-                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- failed to connect to masternode %s too many times, resetting outbound success time\n", __func__, connectToDmn->proTxHash.ToString());
-                mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
+                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- failed to connect to masternode %s too many times\n", __func__, connectToDmn->proTxHash.ToString());
             }
         }
     }
