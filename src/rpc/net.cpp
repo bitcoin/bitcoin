@@ -66,7 +66,7 @@ static RPCHelpMan getconnectioncount()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    return (int)connman.GetNodeCount(ConnectionDirection::Both);
+    return connman.GetNodeCount(ConnectionDirection::Both);
 },
     };
 }
@@ -684,12 +684,12 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections",   (int)node.connman->GetNodeCount(ConnectionDirection::Both));
-        obj.pushKV("connections_in",   (int)node.connman->GetNodeCount(ConnectionDirection::In));
-        obj.pushKV("connections_out",   (int)node.connman->GetNodeCount(ConnectionDirection::Out));
-        obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(ConnectionDirection::Verified));
-        obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
-        obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
+        obj.pushKV("connections", node.connman->GetNodeCount(ConnectionDirection::Both));
+        obj.pushKV("connections_in", node.connman->GetNodeCount(ConnectionDirection::In));
+        obj.pushKV("connections_out", node.connman->GetNodeCount(ConnectionDirection::Out));
+        obj.pushKV("connections_mn", node.connman->GetNodeCount(ConnectionDirection::Verified));
+        obj.pushKV("connections_mn_in", node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
+        obj.pushKV("connections_mn_out", node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
         std::string_view sem_str = SEMToString(node.connman->GetSocketEventsMode());
         CHECK_NONFATAL(sem_str != "unknown");
         obj.pushKV("socketevents", std::string(sem_str));

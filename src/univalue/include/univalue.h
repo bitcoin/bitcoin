@@ -24,27 +24,25 @@ public:
         typ = initialType;
         val = initialStr;
     }
-    UniValue(uint64_t val_) {
-        setInt(val_);
-    }
-    UniValue(int64_t val_) {
-        setInt(val_);
-    }
-    UniValue(bool val_) {
-        setBool(val_);
-    }
-    UniValue(int val_) {
-        setInt(val_);
-    }
-    UniValue(double val_) {
-        setFloat(val_);
-    }
-    UniValue(const std::string& val_) {
-        setStr(val_);
-    }
-    UniValue(const char *val_) {
-        std::string s(val_);
-        setStr(s);
+    template <typename Ref, typename T = std::remove_cv_t<std::remove_reference_t<Ref>>,
+              std::enable_if_t<std::is_floating_point_v<T> ||                      // setFloat
+                                   std::is_same_v<bool, T> ||                      // setBool
+                                   std::is_signed_v<T> || std::is_unsigned_v<T> || // setInt
+                                   std::is_constructible_v<std::string, T>,        // setStr
+                               bool> = true>
+    UniValue(Ref&& val)
+    {
+        if constexpr (std::is_floating_point_v<T>) {
+            setFloat(val);
+        } else if constexpr (std::is_same_v<bool, T>) {
+            setBool(val);
+        } else if constexpr (std::is_signed_v<T>) {
+            setInt(int64_t{val});
+        } else if constexpr (std::is_unsigned_v<T>) {
+            setInt(uint64_t{val});
+        } else {
+            setStr(std::string{std::forward<Ref>(val)});
+        }
     }
 
     void clear();
