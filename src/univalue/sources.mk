@@ -25,9 +25,6 @@ UNIVALUE_TEST_UNITESTER_INT += %reldir%/test/unitester.cpp
 UNIVALUE_TEST_JSON_INT =
 UNIVALUE_TEST_JSON_INT += %reldir%/test/test_json.cpp
 
-UNIVALUE_TEST_NO_NUL_INT =
-UNIVALUE_TEST_NO_NUL_INT += %reldir%/test/no_nul.cpp
-
 UNIVALUE_TEST_OBJECT_INT =
 UNIVALUE_TEST_OBJECT_INT += %reldir%/test/object.cpp
 
