@@ -494,7 +494,12 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
             "   ],\n"
             "  \"localrelay\" : true|false,              (boolean) true if transaction relay is requested from peers\n"
             "  \"timeoffset\" : xxxxx,                   (numeric) the time offset\n"
-            "  \"connections\" : xxxxx,                  (numeric) the number of connections\n"
+            "  \"connections\" : xxxxx,                  (numeric) the number of inbound and outbound connections\n"
+            "  \"inboundconnections\" : xxxxx,           (numeric) the number of inbound connections\n"
+            "  \"outboundconnections\" : xxxxx,          (numeric) the number of outbound connections\n"
+            "  \"mnconnections\" : xxxxx,                (numeric) the number of verified mn connections\n"
+            "  \"inboundmnconnections\" : xxxxx,         (numeric) the number of inbound verified mn connections\n"
+            "  \"outboundmnconnections\" : xxxxx,        (numeric) the number of outbound verified mn connections\n"
             "  \"networkactive\" : true|false,           (boolean) whether p2p networking is enabled\n"
             "  \"socketevents\" : \"xxx/\",              (string) the socket events mode, either kqueue, epoll, poll or select\n"
             "  \"networks\" : [                          (json array) information per network\n"
@@ -542,6 +547,11 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     if (g_connman) {
         obj.pushKV("networkactive", g_connman->GetNetworkActive());
         obj.pushKV("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
+        obj.pushKV("inboundconnections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_IN));
+        obj.pushKV("outboundconnections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_OUT));
+        obj.pushKV("mnconnections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED));
+        obj.pushKV("inboundmnconnections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_IN));
+        obj.pushKV("outboundmnconnections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_OUT));
         std::string strSocketEvents;
         switch (g_connman->GetSocketEventsMode()) {
             case CConnman::SOCKETEVENTS_SELECT:
