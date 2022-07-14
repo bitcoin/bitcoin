@@ -3400,6 +3400,9 @@ size_t CConnman::GetNodeCount(NumConnections flags)
         if (pnode->fDisconnect) {
             continue;
         }
+        if ((flags & CONNECTIONS_VERIFIED) && pnode->GetVerifiedProRegTxHash().IsNull()) {
+            continue;
+        }
         if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
             nNum++;
         }
