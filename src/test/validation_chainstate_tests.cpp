@@ -24,8 +24,8 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
     const ChainstateManager::Options chainman_opts{
-        Params(),
-        GetAdjustedTime,
+        .chainparams = Params(),
+        .adjusted_time_callback = GetAdjustedTime,
     };
     ChainstateManager manager{chainman_opts};
 

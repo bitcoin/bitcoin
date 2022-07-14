@@ -1440,8 +1440,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts);
 
         const ChainstateManager::Options chainman_opts{
-            chainparams,
-            GetAdjustedTime,
+            .chainparams = chainparams,
+            .adjusted_time_callback = GetAdjustedTime,
         };
         node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
         ChainstateManager& chainman = *node.chainman;

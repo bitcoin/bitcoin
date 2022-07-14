@@ -10,6 +10,8 @@
 
 class CChainParams;
 
+namespace kernel {
+
 /**
  * An options struct for `ChainstateManager`, more ergonomically referred to as
  * `ChainstateManager::Options` due to the using-declaration in
@@ -19,5 +21,7 @@ struct ChainstateManagerOpts {
     const CChainParams& chainparams;
     const std::function<int64_t()> adjusted_time_callback{nullptr};
 };
+
+} // namespace kernel
 
 #endif // BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
