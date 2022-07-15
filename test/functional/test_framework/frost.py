@@ -14,6 +14,7 @@
 import secrets
 import unittest
 from hashlib import sha256
+from .key import TaggedHash  # ITCOIN_SPECIFIC
 
 class FROST:
     class secp256k1:
@@ -208,6 +209,7 @@ class FROST:
 
     class Aggregator:
         """Class representing the signature aggregator."""
+        CHALLENGE_CONTEXT = 'BIP0340/challenge'  # ITCOIN_SPECIFIC
 
         def __init__(self, public_key, message, nonce_commitment_pair_list, participant_indexes):
             # Y
@@ -260,13 +262,16 @@ class FROST:
         @classmethod
         def challenge_hash(self, nonce_commitment, public_key, message):
             # c = H_2(R, Y, m)
-            challenge_hash = sha256()
-            challenge_hash.update(nonce_commitment.sec_serialize())
-            challenge_hash.update(public_key.sec_serialize())
-            challenge_hash.update(message)
-            challenge_hash_bytes = challenge_hash.digest()
 
-            return int.from_bytes(challenge_hash_bytes, 'big')
+            # ITCOIN_SPECIFIC - START
+            #
+            # From BIP-340 schnorr_sign reference code: https://github.com/bitcoin/bips/blob/15c8203eb36304efa1e4588b950f62a5bb32f965/bip-0340/reference.py#L116
+            #     e = int_from_bytes(tagged_hash("BIP0340/challenge", bytes_from_point(R) + bytes_from_point(P) + msg)) % n
+            #
+            challenge_hash_bytes = TaggedHash(self.CHALLENGE_CONTEXT, nonce_commitment.x.to_bytes(32, byteorder='big') + public_key.x.to_bytes(32, byteorder='big') + message)
+            # ITCOIN_SPECIFIC - END
+
+            return int.from_bytes(challenge_hash_bytes, 'big') % FROST.secp256k1.Q  # ITCOIN_SPECIFIC: added "% FROST.secp256k1.Q"
 
         def signing_inputs(self):
             # B = ⟨(i, D_i, E_i)⟩_i∈S
