@@ -1508,7 +1508,8 @@ bool AppInitMain(NodeContext& node)
                 // block file from disk.
                 // Note that it also sets fReindex based on the disk flag!
                 // From here on out fReindex and fReset mean something different!
-                if (!LoadBlockIndex(chainparams)) {
+                bool pop_fast_load = gArgs.GetBoolArg("-popfastload", true);
+                if (!LoadBlockIndex(chainparams, pop_fast_load)) {
                     if (ShutdownRequested()) break;
                     strLoadError = _("Error loading block database").translated;
                     break;

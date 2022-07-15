@@ -45,7 +45,7 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
 bool hasPopData(CBlockTreeDB& db);
 altintegration::PopData generatePopData();
 void saveTrees(CDBBatch* batch);
-bool loadTrees();
+bool loadTrees(bool fast_load);
 
 void removePayloadsFromMempool(const altintegration::PopData& popData);
 
@@ -65,4 +65,4 @@ CAmount GetSubsidyMultiplier(int nHeight, const CChainParams& params);
 
 } // namespace VeriBlock
 
-#endif //BITCOIN_SRC_VBK_POP_SERVICE_HPP
+#endif // BITCOIN_SRC_VBK_POP_SERVICE_HPP

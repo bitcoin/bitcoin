@@ -239,7 +239,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
 bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Load the block tree and coins database from disk,
  * initializing state if we're running with -reindex. */
-bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool LoadBlockIndex(const CChainParams& chainparams, bool pop_fast_load) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
@@ -479,7 +479,8 @@ public:
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
         CBlockTreeDB& blocktree,
-        std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
+        std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates,
+        bool pop_fast_load)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Clear all data members. */

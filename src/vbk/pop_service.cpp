@@ -278,11 +278,11 @@ void saveTrees(CDBBatch* batch)
     VeriBlock::BlockBatch b(*batch);
     GetPop().saveAllTrees(b);
 }
-bool loadTrees()
+bool loadTrees(bool fast_load)
 {
     altintegration::ValidationState state;
 
-    if (!GetPop().loadAllTrees(state)) {
+    if (!GetPop().loadAllTrees(fast_load, state)) {
         return error("%s: failed to load trees %s", __func__, state.toString());
     }
 
