@@ -251,6 +251,12 @@ struct MemPoolBypass {
     //! Don't enforce the minimum mempool fee rate validation.
     bool m_bypass_feerate_accuracy{false};
 
+    //! Don't enforce CHECKLOCKTIMEVERIFY (BIP65)
+    bool m_bypass_cltv{false};
+
+    //! Don't enforce CHECKSEQUENCEVERIFY (BIP112)
+    bool m_bypass_csv{false};
+
     MemPoolBypass() {}
 
     MemPoolBypass(bool test_accept, bool bypass_limits) :
@@ -258,7 +264,11 @@ struct MemPoolBypass {
 
     bool EnsureFullyValidatedTransaction() const
     {
-        return !m_bypass_absolute_timelock && !m_bypass_relative_timelock && !m_bypass_feerate_accuracy;
+        return !m_bypass_absolute_timelock &&
+               !m_bypass_relative_timelock &&
+               !m_bypass_feerate_accuracy &&
+               !m_bypass_csv &&
+               !m_bypass_cltv;
     }
 
     void AssertTestModeForPartialValidation() const
