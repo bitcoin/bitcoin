@@ -10,6 +10,7 @@ import time
 from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
+    tx_from_hex
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -219,6 +220,11 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # This will raise an exception due to min relay fee not being met
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
         assert tx_id not in self.nodes[0].getrawmempool()
+
+        # The same transaction previously rejected should be considered valid when testing with "bypass_feerate_accuracy"
+        assert_equal(
+            self.nodes[0].testmempoolaccept(rawtxs=[tx_hex], options={"bypass_feerate_accuracy": True}),
+            [{'txid': tx_res['txid'], 'wtxid': tx_res['wtxid'],'allowed': True, 'vsize': tx_from_hex(tx_hex).get_vsize(), 'fees': { 'base': Decimal('0E-8')}}])
 
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000-byte transaction and check that it is

@@ -7,6 +7,7 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -45,7 +46,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # 1 to create a tx initially that will be evicted from the mempool later
         # 3 batches of multiple transactions with a fee rate much higher than the previous UTXO
         # And 1 more to verify that this tx does not get added to the mempool with a fee rate less than the mempoolminfee
-        self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size) + 1)
+        self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size) + 2)
 
         # Mine 99 blocks so that the UTXOs are allowed to be spent
         self.generate(node, COINBASE_MATURITY - 1)
@@ -76,6 +77,16 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
         assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee)
+
+        # Create a tx with a fee less than the minimum mempool fee and test it with "bypass_feerate_accuracy" option.
+        # This time, it should be allowed.
+        tx = miniwallet.create_self_transfer(fee_rate=relayfee)
+        c_tx = tx_from_hex(tx['hex'])
+
+        self.log.info('Check that bypass_feerate_accuracy will ignore mempoolminfee')
+        assert_equal(
+            node.testmempoolaccept(rawtxs=[tx['hex']], options={"bypass_feerate_accuracy": True}),
+            [{'txid': tx['txid'], 'wtxid': tx['wtxid'],'allowed': True, 'vsize': c_tx.get_vsize(), 'fees': { 'base': Decimal(c_tx.get_vsize()) * Decimal('0.00000001')}}])
 
         self.log.info('Test passing a value below the minimum (5 MB) to -maxmempool throws an error')
         self.stop_node(0)
