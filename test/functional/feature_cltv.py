@@ -7,6 +7,8 @@
 Test that the CHECKLOCKTIMEVERIFY soft-fork activates.
 """
 
+from decimal import Decimal
+
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
@@ -169,6 +171,13 @@ class BIP65Test(BitcoinTestFramework):
             # It still shouldn't work with bypass_absolute_timelock=True because this is a script error.
             assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate":0, "bypass_absolute_timelock":True}))
             assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"maxfeerate":0, "bypass_relative_timelock":True}))
+
+            # However with "bypass_cltv" option, the transaction should be allowed
+            assert_equal(
+                self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], options={"bypass_cltv":True}),
+                [{'txid': spendtx.hash, 'wtxid': spendtx.getwtxid(),'allowed': True, 'vsize': spendtx.get_vsize(), 'fees': { 'base': Decimal('0.00031200') }}])
+
+
 
             # Now we verify that a block with this transaction is also invalid.
             block.vtx[1] = spendtx

@@ -99,6 +99,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             '-whitelist=noban@127.0.0.1',
             f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
+            '-acceptnonstdtxn=1',
         ]]
         self.supports_cli = False
 
@@ -410,6 +411,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         assert not self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_special_v1.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
         self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_special_v1.serialize().hex()])[0]['allowed']
+        # With "bypass_csv" option, the transaction should be allowed
+        assert self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_special_v1.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         assert not self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_emptystack_v1.serialize().hex()], options={"bypass_absolute_timelock":True})[0]["allowed"]
         assert not self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_emptystack_v1.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
@@ -432,6 +436,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
             assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]['allowed']
+            # With "bypass_csv" option, the transaction should be allowed
+            assert self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         self.log.info("Test version 2 txs")
 
@@ -442,6 +449,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
                          reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_special_v2.serialize().hex()])[0]['allowed']
+        # With "bypass_csv" option, the transaction should be allowed
+        assert self.nodes[0].testmempoolaccept(rawtxs=[bip112tx_special_v2.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 2 txs should pass (all sequence locks are met)
         success_txs = [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if tx['sdf']]
@@ -460,6 +470,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
             assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]['allowed']
+            # With "bypass_csv" option, the transaction should be allowed
+            assert self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in nSequence, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if tx['sdf']]
@@ -468,6 +481,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
             assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]['allowed']
+            # With "bypass_csv" option, the transaction should be allowed
+            assert self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         # If sequencelock types mismatch, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and tx['stf']]
@@ -477,6 +493,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
             assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_relative_timelock":True})[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()])[0]['allowed']
+            # With "bypass_csv" option, the transaction should be allowed
+            assert self.nodes[0].testmempoolaccept(rawtxs=[tx.serialize().hex()], options={"bypass_csv":True})[0]['allowed']
 
         # Remaining txs should pass, just test masking works properly
         success_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and not tx['stf']]
