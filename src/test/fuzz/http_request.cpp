@@ -59,7 +59,7 @@ FUZZ_TARGET(http_request)
     const std::string body = http_request.ReadBody();
     assert(body.empty());
     const CService service = http_request.GetPeer();
-    assert(service.ToString() == "[::]:0");
+    assert(service.ToStringAddrPort() == "[::]:0");
 
     evbuffer_free(evbuf);
     evhttp_request_free(evreq);

@@ -233,7 +233,7 @@ bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 
         throw std::runtime_error(strprintf("\"%s\"", connect_reply.full));
     } catch (const std::runtime_error& e) {
-        Log("Error connecting to %s: %s", to.ToString(), e.what());
+        Log("Error connecting to %s: %s", to.ToStringAddrPort(), e.what());
         CheckControlSock();
         return false;
     }
@@ -302,7 +302,7 @@ std::unique_ptr<Sock> Session::Hello() const
     }
 
     if (!ConnectSocketDirectly(m_control_host, *sock, nConnectTimeout, true)) {
-        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToString()));
+        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToStringAddrPort()));
     }
 
     SendRequestAndGetReply(*sock, "HELLO VERSION MIN=3.1 MAX=3.1");
@@ -371,7 +371,7 @@ void Session::CreateIfNotCreatedAlready()
     const auto session_type = m_transient ? "transient" : "persistent";
     const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
 
-    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToString());
+    Log("Creating %s SAM session %s with %s", session_type, session_id, m_control_host.ToStringAddrPort());
 
     auto sock = Hello();
 
@@ -408,7 +408,7 @@ void Session::CreateIfNotCreatedAlready()
     Log("%s SAM session %s created, my address=%s",
         Capitalize(session_type),
         m_session_id,
-        m_my_addr.ToString());
+        m_my_addr.ToStringAddrPort());
 }
 
 std::unique_ptr<Sock> Session::StreamAccept()

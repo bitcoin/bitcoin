@@ -79,7 +79,6 @@ FUZZ_TARGET(netaddress)
     const CService service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     (void)service.GetKey();
     (void)service.GetPort();
-    (void)service.ToString();
     (void)service.ToStringAddrPort();
     (void)service.ToStringPort();
     (void)CServiceHash()(service);

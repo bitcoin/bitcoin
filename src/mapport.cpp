@@ -104,7 +104,7 @@ static bool NatpmpMapping(natpmp_t* natpmp, const struct in_addr& external_ipv4_
                     AddLocal(external, LOCAL_MAPPED);
                     external_ip_discovered = true;
                 }
-                LogPrintf("natpmp: Port mapping successful. External address = %s\n", external.ToString());
+                LogPrintf("natpmp: Port mapping successful. External address = %s\n", external.ToStringAddrPort());
                 return true;
             } else {
                 LogPrintf("natpmp: Port mapping failed.\n");

@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
 bool static TestParse(std::string src, std::string canon)
 {
     CService addr(LookupNumeric(src, 65535));
-    return canon == addr.ToString();
+    return canon == addr.ToStringAddrPort();
 }
 
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
