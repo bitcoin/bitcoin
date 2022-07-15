@@ -37,7 +37,7 @@ RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
 # #### some helpers that could go into test_framework
 
 # like from_hex, but without the hex part
-def FromBinary(cls, stream):
+def from_binary(cls, stream):
     """deserialize a binary stream (or bytes object) into an object"""
     # handle bytes object by turning it into a stream
     was_bytes = isinstance(stream, bytes)
@@ -89,11 +89,11 @@ class PSBT:
 
     def deserialize(self, f):
         assert f.read(5) == b"psbt\xff"
-        self.g = FromBinary(PSBTMap, f)
+        self.g = from_binary(PSBTMap, f)
         assert 0 in self.g.map
-        self.tx = FromBinary(CTransaction, self.g.map[0])
-        self.i = [FromBinary(PSBTMap, f) for _ in self.tx.vin]
-        self.o = [FromBinary(PSBTMap, f) for _ in self.tx.vout]
+        self.tx = from_binary(CTransaction, self.g.map[0])
+        self.i = [from_binary(PSBTMap, f) for _ in self.tx.vin]
+        self.o = [from_binary(PSBTMap, f) for _ in self.tx.vout]
         return self
 
     def serialize(self):
@@ -101,7 +101,7 @@ class PSBT:
         assert isinstance(self.i, list) and all(isinstance(x, PSBTMap) for x in self.i)
         assert isinstance(self.o, list) and all(isinstance(x, PSBTMap) for x in self.o)
         assert 0 in self.g.map
-        tx = FromBinary(CTransaction, self.g.map[0])
+        tx = from_binary(CTransaction, self.g.map[0])
         assert len(tx.vin) == len(self.i)
         assert len(tx.vout) == len(self.o)
 
@@ -113,7 +113,7 @@ class PSBT:
 
     @classmethod
     def from_base64(cls, b64psbt):
-        return FromBinary(cls, base64.b64decode(b64psbt))
+        return from_binary(cls, base64.b64decode(b64psbt))
 
 # #####
 
@@ -178,7 +178,7 @@ def do_decode_psbt(b64psbt):
     scriptSig = psbt.i[0].map.get(7, b"")
     scriptWitness = psbt.i[0].map.get(8, b"\x00")
 
-    return FromBinary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
+    return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
 
 def finish_block(block, signet_solution, grind_cmd):
     block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
