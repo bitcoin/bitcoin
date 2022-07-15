@@ -832,7 +832,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // No individual transactions are allowed below minRelayTxFee and mempool min fee except from
     // disconnected blocks and transactions in a package. Package transactions will be checked using
     // package feerate later.
-    if (!bypass_limits && !args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
+    if (!args.m_mempool_bypass.m_bypass_feerate_accuracy &&
+        !bypass_limits &&
+        !args.m_package_feerates &&
+        !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
     // Calculate in-mempool ancestors, up to a limit.
