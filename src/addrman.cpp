@@ -681,7 +681,7 @@ bool AddrManImpl::Add_(const std::vector<CAddress>& vAddr, const CNetAddr& sourc
         added += AddSingle(*it, source, time_penalty) ? 1 : 0;
     }
     if (added > 0) {
-        LogPrint(BCLog::ADDRMAN, "Added %i addresses (of %i) from %s: %i tried, %i new\n", added, vAddr.size(), source.ToString(), nTried, nNew);
+        LogPrint(BCLog::ADDRMAN, "Added %i addresses (of %i) from %s: %i tried, %i new\n", added, vAddr.size(), source.ToStringAddr(), nTried, nNew);
     }
     return added > 0;
 }

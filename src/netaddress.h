@@ -193,7 +193,6 @@ public:
     bool IsAddrV1Compatible() const;
 
     enum Network GetNetwork() const;
-    std::string ToString() const;
     std::string ToStringAddr() const;
     bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;

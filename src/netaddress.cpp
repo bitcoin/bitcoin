@@ -622,11 +622,6 @@ std::string CNetAddr::ToStringAddr() const
     assert(false);
 }
 
-std::string CNetAddr::ToString() const
-{
-    return ToStringAddr();
-}
-
 bool operator==(const CNetAddr& a, const CNetAddr& b)
 {
     return a.m_net == b.m_net && a.m_addr == b.m_addr;
@@ -1098,7 +1093,7 @@ std::string CSubNet::ToString() const
         break;
     }
 
-    return network.ToString() + suffix;
+    return network.ToStringAddr() + suffix;
 }
 
 bool CSubNet::IsValid() const

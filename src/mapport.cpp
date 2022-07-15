@@ -181,7 +181,7 @@ static bool ProcessUpnp()
                 if (externalIPAddress[0]) {
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString());
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToStringAddr());
                         AddLocal(resolved, LOCAL_MAPPED);
                     }
                 } else {

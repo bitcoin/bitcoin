@@ -70,7 +70,6 @@ FUZZ_TARGET(netaddress)
         assert(net_addr.GetNetwork() == Network::NET_ONION);
     }
     (void)net_addr.IsValid();
-    (void)net_addr.ToString();
     (void)net_addr.ToStringAddr();
 
     const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
