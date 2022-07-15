@@ -260,6 +260,7 @@ BASE_SCRIPTS = [
     'feature_itcoin_solution_independent_blockchain_3_of_4.py',
     'feature_itcoin_num_nodes_differs_from_num_signers.py',
     'feature_itcoin_taproot_challenge_frost_pubkey.py',
+    'feature_itcoin_taproot_challenge_frost_pubkey_tweaked.py',
     'feature_signet.py',
     'wallet_bumpfee.py --legacy-wallet',
     'wallet_bumpfee.py --descriptors',
