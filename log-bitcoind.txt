@@ -1,0 +1,150 @@
+Attaching to bitcoin-signet_bitcoind_1
+[36mbitcoind_1          |[0m /entrypoint.sh: assuming arguments for bitcoind
+[36mbitcoind_1          |[0m /entrypoint.sh: setting data directory to /home/bitcoin/.bitcoin
+[36mbitcoind_1          |[0m 
+[36mbitcoind_1          |[0m Bitcoin Core version v23.0.0 (release build)
+[36mbitcoind_1          |[0m Signet derived magic (message start): 0a03cf40
+[36mbitcoind_1          |[0m Assuming ancestors of block 00000112852484b5fe3451572368f93cfd2723279af3464e478aee35115256ef have valid signatures.
+[36mbitcoind_1          |[0m Setting nMinimumChainWork=000000000000000000000000000000000000000000000000000000de26b0e471
+[36mbitcoind_1          |[0m Using the 'x86_shani(1way,2way)' SHA256 implementation
+[36mbitcoind_1          |[0m Using RdSeed as additional entropy source
+[36mbitcoind_1          |[0m Using RdRand as an additional entropy source
+[36mbitcoind_1          |[0m Startup time: 2022-05-09T14:20:33Z
+[36mbitcoind_1          |[0m Default data directory /home/bitcoin/.bitcoin
+[36mbitcoind_1          |[0m Using data directory /home/bitcoin/.bitcoin/signet
+[36mbitcoind_1          |[0m Config file: /home/bitcoin/.bitcoin/bitcoin.conf (not found, skipping)
+[36mbitcoind_1          |[0m Command-line arg: blockfilterindex="basic"
+[36mbitcoind_1          |[0m Command-line arg: datadir="/home/bitcoin/.bitcoin"
+[36mbitcoind_1          |[0m Command-line arg: debug="tor"
+[36mbitcoind_1          |[0m Command-line arg: disablewallet="1"
+[36mbitcoind_1          |[0m Command-line arg: discover="1"
+[36mbitcoind_1          |[0m Command-line arg: dnsseed="0"
+[36mbitcoind_1          |[0m Command-line arg: i2pacceptincoming="1"
+[36mbitcoind_1          |[0m Command-line arg: i2psam="i2pd:7656"
+[36mbitcoind_1          |[0m Command-line arg: listen="1"
+[36mbitcoind_1          |[0m Command-line arg: listenonion="1"
+[36mbitcoind_1          |[0m Command-line arg: logtimestamps="0"
+[36mbitcoind_1          |[0m Command-line arg: maxconnections="32"
+[36mbitcoind_1          |[0m Command-line arg: onion="tor:9050"
+[36mbitcoind_1          |[0m Command-line arg: onlynet="i2p"
+[36mbitcoind_1          |[0m Command-line arg: onlynet="onion"
+[36mbitcoind_1          |[0m Command-line arg: par="2"
+[36mbitcoind_1          |[0m Command-line arg: peerblockfilters="1"
+[36mbitcoind_1          |[0m Command-line arg: peerbloomfilters="1"
+[36mbitcoind_1          |[0m Command-line arg: rpcallowip="0.0.0.0/0"
+[36mbitcoind_1          |[0m Command-line arg: rpcauth=****
+[36mbitcoind_1          |[0m Command-line arg: rpcbind=****
+[36mbitcoind_1          |[0m Command-line arg: rpcthreads="2"
+[36mbitcoind_1          |[0m Command-line arg: signet="1"
+[36mbitcoind_1          |[0m Command-line arg: torcontrol="tor:9051"
+[36mbitcoind_1          |[0m Command-line arg: torpassword=****
+[36mbitcoind_1          |[0m Command-line arg: txindex="1"
+[36mbitcoind_1          |[0m Using at most 32 automatic connections (1048576 file descriptors available)
+[36mbitcoind_1          |[0m Using 16 MiB out of 32/2 requested for signature cache, able to store 524288 elements
+[36mbitcoind_1          |[0m Using 16 MiB out of 32/2 requested for script execution cache, able to store 524288 elements
+[36mbitcoind_1          |[0m Script verification uses 1 additional threads
+[36mbitcoind_1          |[0m Wallet disabled!
+[36mbitcoind_1          |[0m scheduler thread start
+[36mbitcoind_1          |[0m WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet
+[36mbitcoind_1          |[0m HTTP: creating work queue of depth 16
+[36mbitcoind_1          |[0m Using random cookie authentication.
+[36mbitcoind_1          |[0m Generated RPC authentication cookie /home/bitcoin/.bitcoin/signet/.cookie
+[36mbitcoind_1          |[0m Using rpcauth authentication.
+[36mbitcoind_1          |[0m HTTP: starting 2 worker threads
+[36mbitcoind_1          |[0m Using /16 prefix for IP bucketing
+[36mbitcoind_1          |[0m init message: Loading P2P addresses…
+[36mbitcoind_1          |[0m Loaded 749 addresses from peers.dat  10ms
+[36mbitcoind_1          |[0m init message: Loading banlist…
+[36mbitcoind_1          |[0m SetNetworkActive: true
+[36mbitcoind_1          |[0m Cache configuration:
+[36mbitcoind_1          |[0m * Using 2.0 MiB for block index database
+[36mbitcoind_1          |[0m * Using 56.0 MiB for transaction index database
+[36mbitcoind_1          |[0m * Using 49.0 MiB for basic block filter index database
+[36mbitcoind_1          |[0m * Using 8.0 MiB for chain state database
+[36mbitcoind_1          |[0m * Using 335.0 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+[36mbitcoind_1          |[0m init message: Loading block index…
+[36mbitcoind_1          |[0m Switching active chainstate to Chainstate [ibd] @ height -1 (null)
+[36mbitcoind_1          |[0m Opening LevelDB in /home/bitcoin/.bitcoin/signet/blocks/index
+[36mbitcoind_1          |[0m Opened LevelDB successfully
+[36mbitcoind_1          |[0m Using obfuscation key for /home/bitcoin/.bitcoin/signet/blocks/index: 0000000000000000
+[36mbitcoind_1          |[0m LoadBlockIndexDB: last block file = 3
+[36mbitcoind_1          |[0m LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=4325, size=21014265, heights=85238...89562, time=2022-04-10...2022-05-09)
+[36mbitcoind_1          |[0m Checking all blk files are present...
+[36mbitcoind_1          |[0m Opening LevelDB in /home/bitcoin/.bitcoin/signet/chainstate
+[36mbitcoind_1          |[0m Opened LevelDB successfully
+[36mbitcoind_1          |[0m Using obfuscation key for /home/bitcoin/.bitcoin/signet/chainstate: 5f5400e5be1d375a
+[36mbitcoind_1          |[0m Loaded best chain: hashBestChain=0000000d11940feb30ab554d7f9a89b92d3a1a7bda03ef517a8db55ce302eee3 height=89562 date=2022-05-09T14:16:49Z progress=0.999981
+[36mbitcoind_1          |[0m init message: Verifying blocks…
+[36mbitcoind_1          |[0m Verifying last 6 blocks at level 3
+[36mbitcoind_1          |[0m [0%]...[16%]...[33%]...[50%]...[66%]...[83%]...[99%]...[DONE].
+[36mbitcoind_1          |[0m No coin database inconsistencies in last 6 blocks (84 transactions)
+[36mbitcoind_1          |[0m  block index            1058ms
+[36mbitcoind_1          |[0m Opening LevelDB in /home/bitcoin/.bitcoin/signet/indexes/txindex
+[36mbitcoind_1          |[0m Opened LevelDB successfully
+[36mbitcoind_1          |[0m Using obfuscation key for /home/bitcoin/.bitcoin/signet/indexes/txindex: 0000000000000000
+[36mbitcoind_1          |[0m Opening LevelDB in /home/bitcoin/.bitcoin/signet/indexes/blockfilter/basic/db
+[36mbitcoind_1          |[0m txindex thread start
+[36mbitcoind_1          |[0m txindex is enabled at height 89562
+[36mbitcoind_1          |[0m txindex thread exit
+[36mbitcoind_1          |[0m Opened LevelDB successfully
+[36mbitcoind_1          |[0m Using obfuscation key for /home/bitcoin/.bitcoin/signet/indexes/blockfilter/basic/db: 0000000000000000
+[36mbitcoind_1          |[0m basic block filter index thread start
+[36mbitcoind_1          |[0m basic block filter index is enabled at height 89562
+[36mbitcoind_1          |[0m basic block filter index thread exit
+[36mbitcoind_1          |[0m block tree size = 89568
+[36mbitcoind_1          |[0m nBestHeight = 89562
+[36mbitcoind_1          |[0m torcontrol thread start
+[36mbitcoind_1          |[0m Bound to 127.0.0.1:38334
+[36mbitcoind_1          |[0m Bound to [::]:38333
+[36mbitcoind_1          |[0m Bound to 0.0.0.0:38333
+[36mbitcoind_1          |[0m Loaded 2 addresses from "anchors.dat"
+[36mbitcoind_1          |[0m 2 block-relay-only anchors will be tried for connections.
+[36mbitcoind_1          |[0m init message: Starting network threads…
+[36mbitcoind_1          |[0m DNS seeding disabled
+[36mbitcoind_1          |[0m opencon thread start
+[36mbitcoind_1          |[0m init message: Done loading
+[36mbitcoind_1          |[0m addcon thread start
+[36mbitcoind_1          |[0m net thread start
+[36mbitcoind_1          |[0m i2paccept thread start
+[36mbitcoind_1          |[0m tor: Reading cached private key from /home/bitcoin/.bitcoin/signet/onion_v3_private_key
+[36mbitcoind_1          |[0m tor: Successfully connected!
+[36mbitcoind_1          |[0m tor: Connected to Tor version 0.4.7.7
+[36mbitcoind_1          |[0m tor: Supported authentication method: HASHEDPASSWORD
+[36mbitcoind_1          |[0m tor: Using HASHEDPASSWORD authentication
+[36mbitcoind_1          |[0m loadblk thread start
+[36mbitcoind_1          |[0m tor: Authentication successful
+[36mbitcoind_1          |[0m Leaving InitialBlockDownload (latching to false)
+[36mbitcoind_1          |[0m msghand thread start
+[36mbitcoind_1          |[0m tor: ADD_ONION successful
+[36mbitcoind_1          |[0m tor: Got service ID sxvxellncmexkds7h3kjy62vl67xwvrccqiigrdybbc4jutjf6amtuad, advertising service sxvxellncmexkds7h3kjy62vl67xwvrccqiigrdybbc4jutjf6amtuad.onion:38333
+[36mbitcoind_1          |[0m tor: Cached service private key to /home/bitcoin/.bitcoin/signet/onion_v3_private_key
+[36mbitcoind_1          |[0m AddLocal(sxvxellncmexkds7h3kjy62vl67xwvrccqiigrdybbc4jutjf6amtuad.onion:38333,4)
+[36mbitcoind_1          |[0m Imported mempool transactions from disk: 4 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+[36mbitcoind_1          |[0m loadblk thread exit
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=1 (block-relay-only)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=2 (block-relay-only)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=3 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=4 (outbound-full-relay)
+[36mbitcoind_1          |[0m Socks5() connect to ytfenxuivjc467qell574cr32catrgxgv6gtuop7kckxr37tsaugk3id.onion:38333 failed: connection refused
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=5 (outbound-full-relay)
+[36mbitcoind_1          |[0m I2P: SAM session created: session id=696dab19b2, my address=ddonuxi65lmoxwiw2bp4poa2uhw2ee2bfsriagjcdvvictyoft2q.b32.i2p:0
+[36mbitcoind_1          |[0m AddLocal(ddonuxi65lmoxwiw2bp4poa2uhw2ee2bfsriagjcdvvictyoft2q.b32.i2p:0,4)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=6 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=7 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=8 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=9 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=10 (outbound-full-relay)
+[36mbitcoind_1          |[0m Socks5() connect to lwcgdipmkfbpetiekyz43pn5vksteixawgoad3axpiz3dhr5i2t3fpid.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to 6gdhr23wpn7mxouda5p3x4nc4sn2zn4tfupgesurgmxxzxk5jf2z4oid.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to am3lpey7n7nqrab66z26hqjepbk536sqxrw3ergndrqsnsoaz5m2jfid.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=11 (outbound-full-relay)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89562, peer=12 (block-relay-only)
+[36mbitcoind_1          |[0m Socks5() connect to se5isynglydhgrjhmsqujhaks3d7xajw4fikx2m6suedwuurrd45k2ad.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to i2vjonlgc6f2325kyfw5dgwcv4ezrvh6dfgm4f6zpfhk6xhahb7hjpad.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to cripyltykgrzdcvcmvvnsgzgafhrknrafymzremqcwjpbesy3mlrpnad.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to zv7hodfndk3qn5cuhlwy7wzo2gwq4jlchjymyubmf3rmihevbrurt4qd.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m UpdateTip: new best=00000095b76ed64e87325d3db5774c4925b9bcdc1fb0a1828b6f47c4c9a76c3a height=89563 version=0x20000000 log2_work=39.978709 tx=1614375 date='2022-05-09T14:39:02Z' progress=0.999999 cache=0.0MiB(94txo)
+[36mbitcoind_1          |[0m New outbound peer connected: version: 70016, blocks=89563, peer=14 (block-relay-only)
+[36mbitcoind_1          |[0m Socks5() connect to lwcgdipmkfbpetiekyz43pn5vksteixawgoad3axpiz3dhr5i2t3fpid.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to i5um2kmzpaqwy2qtvvsyevcasnu54hvycsotcpmxqqhzlntqoipgphyd.onion:38333 failed: host unreachable
+[36mbitcoind_1          |[0m Socks5() connect to qxbjm3kpboukudbvmc3wnx4t3kwdedqqpk4kjv3ehvcnbmbpac2e23id.onion:38333 failed: host unreachable
