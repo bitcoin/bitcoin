@@ -46,6 +46,10 @@ class FROST:
             self.nonce_commitment_pairs = []
             # Y
             self.public_key = None
+            # ITCOIN_SPECIFIC - START
+            # scalar tweak bytes
+            self.tweak_bytes = None
+            # ITCOIN_SPECIFIC - END
 
         def init_keygen(self):
             Q = FROST.secp256k1.Q
@@ -155,16 +159,25 @@ class FROST:
             # Y_i = g^s_i
             return self.aggregate_share * G
 
-        def derive_public_key(self, secret_commitments):
+        def derive_public_key(self, secret_commitments, tweak_bytes=None):  # ITCOIN_SPECIFIC: added tweak_bytes parameter
             # Y = ∏ 𝜙_j_0, 1 ≤ j ≤ n
             public_key = self.coefficient_commitments[0]
             for secret_commitment in secret_commitments:
                 public_key = public_key + secret_commitment
 
             # ITCOIN_SPECIFIC - START
+            if tweak_bytes is not None:
+                self.tweak_bytes = tweak_bytes
+                G = FROST.secp256k1.G()
+                tweak_secret = int.from_bytes(tweak_bytes,"big")
+                tweak_point = tweak_secret * G
+                public_key = tweak_point + public_key
+
             if public_key.y % 2 != 0:
                 public_key = public_key.__neg__()
                 self.aggregate_share = FROST.secp256k1.Q - self.aggregate_share
+                if tweak_bytes is not None:
+                    self.tweak_bytes = (FROST.secp256k1.Q - tweak_secret).to_bytes(len(self.tweak_bytes), 'big')
             # ITCOIN_SPECIFIC - END
 
             self.public_key = public_key
