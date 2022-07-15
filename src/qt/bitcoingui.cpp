@@ -1876,6 +1876,12 @@ void BitcoinGUI::setEncryptionStatus(int status)
 {
     switch(status)
     {
+    case WalletModel::NoKeys:
+        labelWalletEncryptionIcon->hide();
+        encryptWalletAction->setChecked(false);
+        changePassphraseAction->setEnabled(false);
+        encryptWalletAction->setEnabled(false);
+        break;
     case WalletModel::Unencrypted:
         labelWalletEncryptionIcon->show();
         labelWalletEncryptionIcon->setPixmap(GUIUtil::getIcon("lock_open", GUIUtil::ThemedColor::RED).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
