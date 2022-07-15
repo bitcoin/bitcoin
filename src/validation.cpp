@@ -982,7 +982,15 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     TxValidationState& state = ws.m_state;
 
-    constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+
+    if (args.m_mempool_bypass.m_bypass_cltv) {
+        scriptVerifyFlags &= ~SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    if (args.m_mempool_bypass.m_bypass_csv) {
+        scriptVerifyFlags &= ~SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    }
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1027,6 +1035,15 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     // invalid blocks (using TestBlockValidity), however allowing such
     // transactions into the mempool can be exploited as a DoS attack.
     unsigned int currentBlockScriptVerifyFlags{GetBlockScriptFlags(*m_active_chainstate.m_chain.Tip(), m_active_chainstate.m_chainman)};
+
+    if (args.m_mempool_bypass.m_bypass_cltv) {
+        currentBlockScriptVerifyFlags &= ~SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    if (args.m_mempool_bypass.m_bypass_csv) {
+        currentBlockScriptVerifyFlags &= ~SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    }
+
     if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags,
                                         ws.m_precomputed_txdata, m_active_chainstate.CoinsTip())) {
         LogPrintf("BUG! PLEASE REPORT THIS! CheckInputScripts failed against latest-block but not STANDARD flags %s, %s\n", hash.ToString(), state.ToString());
