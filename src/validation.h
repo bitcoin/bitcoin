@@ -248,6 +248,9 @@ struct MemPoolBypass {
     //! Don't consensus-enforce BIP68 relative lock-time.
     bool m_bypass_relative_timelock{false};
 
+    //! Don't enforce the minimum mempool fee rate validation.
+    bool m_bypass_feerate_accuracy{false};
+
     MemPoolBypass() {}
 
     MemPoolBypass(bool test_accept, bool bypass_limits) :
@@ -255,7 +258,7 @@ struct MemPoolBypass {
 
     bool EnsureFullyValidatedTransaction() const
     {
-        return !m_bypass_absolute_timelock && !m_bypass_relative_timelock;
+        return !m_bypass_absolute_timelock && !m_bypass_relative_timelock && !m_bypass_feerate_accuracy;
     }
 
     void AssertTestModeForPartialValidation() const
