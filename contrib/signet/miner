@@ -15,14 +15,12 @@ import sys
 import time
 import subprocess
 
-from io import BytesIO
-
 PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNET, "..", "..", "test", "functional"))
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
 from test_framework.blocktools import get_witness_script, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_hex, deser_string, ser_compact_size, ser_string, ser_uint256, tx_from_hex # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_binary, from_hex, deser_string, ser_compact_size, ser_string, ser_uint256, tx_from_hex # noqa: E402
 from test_framework.script import CScriptOp # noqa: E402
 
 logging.basicConfig(
@@ -35,19 +33,6 @@ PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holdin
 RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
 
 # #### some helpers that could go into test_framework
-
-# like from_hex, but without the hex part
-def from_binary(cls, stream):
-    """deserialize a binary stream (or bytes object) into an object"""
-    # handle bytes object by turning it into a stream
-    was_bytes = isinstance(stream, bytes)
-    if was_bytes:
-        stream = BytesIO(stream)
-    obj = cls()
-    obj.deserialize(stream)
-    if was_bytes:
-        assert len(stream.read()) == 0
-    return obj
 
 class PSBTMap:
     """Class for serializing and deserializing PSBT maps"""

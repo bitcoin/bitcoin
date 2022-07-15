@@ -208,6 +208,20 @@ def tx_from_hex(hex_string):
     return from_hex(CTransaction(), hex_string)
 
 
+# like from_hex, but without the hex part
+def from_binary(cls, stream):
+    """deserialize a binary stream (or bytes object) into an object"""
+    # handle bytes object by turning it into a stream
+    was_bytes = isinstance(stream, bytes)
+    if was_bytes:
+        stream = BytesIO(stream)
+    obj = cls()
+    obj.deserialize(stream)
+    if was_bytes:
+        assert len(stream.read()) == 0
+    return obj
+
+
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 
 
