@@ -288,7 +288,7 @@ class FROST:
             challenge_hash = self.challenge_hash(group_commitment, self.public_key, self.message)
             # TODO: verify each signature share
             # σ = (R, z)
-            return group_commitment, sum(signature_shares)
+            return group_commitment, sum(signature_shares) % FROST.secp256k1.Q  # ITCOIN_SPECIFIC: added "% FROST.secp256k1.Q"
 
     class Point:
         """Class representing an elliptic curve point."""
