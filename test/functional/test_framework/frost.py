@@ -159,6 +159,13 @@ class FROST:
             public_key = self.coefficient_commitments[0]
             for secret_commitment in secret_commitments:
                 public_key = public_key + secret_commitment
+
+            # ITCOIN_SPECIFIC - START
+            if public_key.y % 2 != 0:
+                public_key = public_key.__neg__()
+                self.aggregate_share = FROST.secp256k1.Q - self.aggregate_share
+            # ITCOIN_SPECIFIC - END
+
             self.public_key = public_key
             return public_key
 
