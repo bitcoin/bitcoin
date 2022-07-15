@@ -1172,7 +1172,7 @@ RPCHelpMan walletcreatefundedpsbt()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    UniValue options = request.params[3];
+    UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3]};
 
     CAmount fee;
     int change_position;
