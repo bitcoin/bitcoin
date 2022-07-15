@@ -262,7 +262,7 @@ public:
             return 0;
         }
         std::memcpy(buf, random_bytes.data(), random_bytes.size());
-        if (AdditionOverflow((uint64_t)fuzzed_file->m_offset, random_bytes.size())) {
+        if (AdditionOverflow(static_cast<size_t>(fuzzed_file->m_offset), random_bytes.size())) {
             return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
         }
         fuzzed_file->m_offset += random_bytes.size();
@@ -273,7 +273,7 @@ public:
     {
         FuzzedFileProvider* fuzzed_file = (FuzzedFileProvider*)cookie;
         const ssize_t n = fuzzed_file->m_fuzzed_data_provider.ConsumeIntegralInRange<ssize_t>(0, size);
-        if (AdditionOverflow(fuzzed_file->m_offset, n)) {
+        if (AdditionOverflow(static_cast<ssize_t>(fuzzed_file->m_offset), n)) {
             return fuzzed_file->m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
         }
         fuzzed_file->m_offset += n;
