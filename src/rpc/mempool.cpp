@@ -103,7 +103,9 @@ static RPCHelpMan testmempoolaccept()
                     "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kvB\n"},
                     {"bypass_absolute_timelock", RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't enforce nLocktime.\n"},
                     {"bypass_relative_timelock", RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't consensus-enforce BIP68 relative lock-time.\n"},
-                    {"bypass_feerate_accuracy",   RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't enforce mempool minimum feerate.\n"}
+                    {"bypass_feerate_accuracy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Don't enforce mempool minimum feerate.\n"},
+                    {"bypass_cltv", RPCArg::Type::BOOL, RPCArg::Default{false}, "Bypass CLTV execution.\n"},
+                    {"bypass_csv", RPCArg::Type::BOOL, RPCArg::Default{false}, "Bypass CSV execution.\n"}
                 },
                 "\"options\""
             },
@@ -163,7 +165,9 @@ static RPCHelpMan testmempoolaccept()
                         {"maxfeerate", UniValueType()}, // will be checked by AmountFromValue() below
                         {"bypass_absolute_timelock", UniValueType(UniValue::VBOOL)},
                         {"bypass_relative_timelock", UniValueType(UniValue::VBOOL)},
-                        {"bypass_feerate_accuracy", UniValueType(UniValue::VBOOL)}
+                        {"bypass_feerate_accuracy", UniValueType(UniValue::VBOOL)},
+                        {"bypass_cltv", UniValueType(UniValue::VBOOL)},
+                        {"bypass_csv", UniValueType(UniValue::VBOOL)}
                     },
                     true, true);
 
@@ -174,6 +178,8 @@ static RPCHelpMan testmempoolaccept()
                 mempool_bypass.m_bypass_absolute_timelock = options.exists("bypass_absolute_timelock") ? options["bypass_absolute_timelock"].get_bool() : false;
                 mempool_bypass.m_bypass_relative_timelock = options.exists("bypass_relative_timelock") ? options["bypass_relative_timelock"].get_bool() : false;
                 mempool_bypass.m_bypass_feerate_accuracy = options.exists("bypass_feerate_accuracy") ? options["bypass_feerate_accuracy"].get_bool() : false;
+                mempool_bypass.m_bypass_cltv = options.exists("bypass_cltv") ? options["bypass_cltv"].get_bool() : false;
+                mempool_bypass.m_bypass_csv = options.exists("bypass_csv") ? options["bypass_csv"].get_bool() : false;
             }
 
             std::vector<CTransactionRef> package;
