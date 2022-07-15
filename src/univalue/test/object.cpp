@@ -85,6 +85,16 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
+BOOST_AUTO_TEST_CASE(univalue_push_throw)
+{
+    UniValue j;
+    BOOST_CHECK_THROW(j.push_back(1), std::runtime_error);
+    BOOST_CHECK_THROW(j.push_backV({1}), std::runtime_error);
+    BOOST_CHECK_THROW(j.__pushKV("k", 1), std::runtime_error);
+    BOOST_CHECK_THROW(j.pushKV("k", 1), std::runtime_error);
+    BOOST_CHECK_THROW(j.pushKVs({}), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(univalue_typecheck)
 {
     UniValue v1;
@@ -198,13 +208,13 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     UniValue arr(UniValue::VARR);
 
     UniValue v((int64_t)1023LL);
-    BOOST_CHECK(arr.push_back(v));
+    arr.push_back(v);
 
     std::string vStr("zippy");
-    BOOST_CHECK(arr.push_back(vStr));
+    arr.push_back(vStr);
 
     const char *s = "pippy";
-    BOOST_CHECK(arr.push_back(s));
+    arr.push_back(s);
 
     std::vector<UniValue> vec;
     v.setStr("boing");
@@ -213,13 +223,13 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     v.setStr("going");
     vec.push_back(v);
 
-    BOOST_CHECK(arr.push_backV(vec));
+    arr.push_backV(vec);
 
-    BOOST_CHECK(arr.push_back((uint64_t) 400ULL));
-    BOOST_CHECK(arr.push_back((int64_t) -400LL));
-    BOOST_CHECK(arr.push_back((int) -401));
-    BOOST_CHECK(arr.push_back(-40.1));
-    BOOST_CHECK(arr.push_back(true));
+    arr.push_back(uint64_t{400ULL});
+    arr.push_back(int64_t{-400LL});
+    arr.push_back(int{-401});
+    arr.push_back(-40.1);
+    arr.push_back(true);
 
     BOOST_CHECK_EQUAL(arr.empty(), false);
     BOOST_CHECK_EQUAL(arr.size(), 10);
@@ -260,39 +270,39 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     strKey = "age";
     v.setInt(100);
-    BOOST_CHECK(obj.pushKV(strKey, v));
+    obj.pushKV(strKey, v);
 
     strKey = "first";
     strVal = "John";
-    BOOST_CHECK(obj.pushKV(strKey, strVal));
+    obj.pushKV(strKey, strVal);
 
     strKey = "last";
-    const char *cVal = "Smith";
-    BOOST_CHECK(obj.pushKV(strKey, cVal));
+    const char* cVal = "Smith";
+    obj.pushKV(strKey, cVal);
 
     strKey = "distance";
-    BOOST_CHECK(obj.pushKV(strKey, (int64_t) 25));
+    obj.pushKV(strKey, int64_t{25});
 
     strKey = "time";
-    BOOST_CHECK(obj.pushKV(strKey, (uint64_t) 3600));
+    obj.pushKV(strKey, uint64_t{3600});
 
     strKey = "calories";
-    BOOST_CHECK(obj.pushKV(strKey, (int) 12));
+    obj.pushKV(strKey, int{12});
 
     strKey = "temperature";
-    BOOST_CHECK(obj.pushKV(strKey, (double) 90.012));
+    obj.pushKV(strKey, double{90.012});
 
     strKey = "moon";
-    BOOST_CHECK(obj.pushKV(strKey, true));
+    obj.pushKV(strKey, true);
 
     strKey = "spoon";
-    BOOST_CHECK(obj.pushKV(strKey, false));
+    obj.pushKV(strKey, false);
 
     UniValue obj2(UniValue::VOBJ);
-    BOOST_CHECK(obj2.pushKV("cat1", 9000));
-    BOOST_CHECK(obj2.pushKV("cat2", 12345));
+    obj2.pushKV("cat1", 9000);
+    obj2.pushKV("cat2", 12345);
 
-    BOOST_CHECK(obj.pushKVs(obj2));
+    obj.pushKVs(obj2);
 
     BOOST_CHECK_EQUAL(obj.empty(), false);
     BOOST_CHECK_EQUAL(obj.size(), 11);
