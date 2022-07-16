@@ -257,6 +257,7 @@ public:
 
     uint256 GetBlockHash() const
     {
+        assert(phashBlock != nullptr);
         return *phashBlock;
     }
 
@@ -393,7 +394,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 GetBlockHash() const
+    uint256 ConstructBlockHash() const
     {
         if(hash != uint256()) return hash;
         // should never really get here, keeping this as a fallback
@@ -407,8 +408,8 @@ public:
         return block.GetHash();
     }
 
-    std::string ToString() const;
-
+    uint256 GetBlockHash() = delete;
+    std::string ToString() = delete;
 };
 
 /** An in-memory indexed chain of blocks. */
