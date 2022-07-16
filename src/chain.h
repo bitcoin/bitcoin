@@ -11,7 +11,6 @@
 #include <flatfile.h>
 #include <primitives/block.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
 
 #include <vector>
@@ -302,13 +301,7 @@ public:
         return pbegin[(pend - pbegin) / 2];
     }
 
-    std::string ToString() const
-    {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
-            hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
-    }
+    std::string ToString() const;
 
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
