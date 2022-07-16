@@ -43,6 +43,7 @@ typedef std::function<void(Bench&)> BenchFunction;
 
 struct Args {
     bool is_list_only;
+    bool sanity_check;
     std::chrono::milliseconds min_time;
     std::vector<double> asymptote;
     fs::path output_csv;

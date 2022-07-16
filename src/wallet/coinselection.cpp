@@ -64,7 +64,7 @@ static const size_t TOTAL_TRIES = 100000;
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
-    SelectionResult result(selection_target);
+    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
     std::vector<size_t> curr_selection; // selected utxo indexes
 
@@ -104,9 +104,6 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             if (curr_waste <= best_waste) {
                 best_selection = curr_selection;
                 best_waste = curr_waste;
-                if (best_waste == 0) {
-                    break;
-                }
             }
             curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;
@@ -167,7 +164,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 
 std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
 {
-    SelectionResult result(target_value);
+    SelectionResult result(target_value, SelectionAlgorithm::SRD);
 
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
@@ -249,7 +246,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
                                               CAmount change_target, FastRandomContext& rng)
 {
-    SelectionResult result(nTargetValue);
+    SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;
@@ -307,7 +304,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
             }
         }
 
-        if (LogAcceptCategory(BCLog::SELECTCOINS)) {
+        if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
             std::string log_message{"Coin selection best subset: "};
             for (unsigned int i = 0; i < applicable_groups.size(); i++) {
                 if (vfBest[i]) {
@@ -328,24 +325,18 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
  ******************************************************************************/
 
 void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only) {
-    // Compute the effective value first
-    const CAmount coin_fee = output.input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.input_bytes);
-    const CAmount ev = output.txout.nValue - coin_fee;
-
     // Filter for positive only here before adding the coin
-    if (positive_only && ev <= 0) return;
+    if (positive_only && output.GetEffectiveValue() <= 0) return;
 
     m_outputs.push_back(output);
     COutput& coin = m_outputs.back();
 
-    coin.fee = coin_fee;
-    fee += coin.fee;
+    fee += coin.GetFee();
 
     coin.long_term_fee = coin.input_bytes < 0 ? 0 : m_long_term_feerate.GetFee(coin.input_bytes);
     long_term_fee += coin.long_term_fee;
 
-    coin.effective_value = ev;
-    effective_value += coin.effective_value;
+    effective_value += coin.GetEffectiveValue();
 
     m_from_me &= coin.from_me;
     m_value += coin.txout.nValue;
@@ -380,8 +371,8 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     CAmount waste = 0;
     CAmount selected_effective_value = 0;
     for (const COutput& coin : inputs) {
-        waste += coin.fee - coin.long_term_fee;
-        selected_effective_value += use_effective_value ? coin.effective_value : coin.txout.nValue;
+        waste += coin.GetFee() - coin.long_term_fee;
+        selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.txout.nValue;
     }
 
     if (change_cost) {
@@ -459,5 +450,18 @@ bool SelectionResult::operator<(SelectionResult other) const
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
+}
+
+std::string GetAlgorithmName(const SelectionAlgorithm algo)
+{
+    switch (algo)
+    {
+    case SelectionAlgorithm::BNB: return "bnb";
+    case SelectionAlgorithm::KNAPSACK: return "knapsack";
+    case SelectionAlgorithm::SRD: return "srd";
+    case SelectionAlgorithm::MANUAL: return "manual";
+    // No default case to allow for compiler to warn
+    }
+    assert(false);
 }
 } // namespace wallet

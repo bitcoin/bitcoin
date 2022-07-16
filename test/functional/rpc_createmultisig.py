@@ -43,7 +43,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         if self.is_bdb_compiled():
             self.final = node2.getnewaddress()
         else:
-            self.final = getnewdestination()[2]
+            self.final = getnewdestination('bech32')[2]
 
     def run_test(self):
         node0, node1, node2 = self.nodes
@@ -66,9 +66,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # Test mixed compressed and uncompressed pubkeys
         self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
-        pk0 = getnewdestination()[0].hex()
-        pk1 = getnewdestination()[0].hex()
-        pk2 = getnewdestination()[0].hex()
+        pk0, pk1, pk2 = [getnewdestination('bech32')[0].hex() for _ in range(3)]
 
         # decompress pk2
         pk_obj = ECPubKey()
@@ -91,15 +89,17 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                 assert 'warnings' not in result
 
             # Generate addresses with the segwit types. These should all make legacy addresses
+            err_msg = ["Unable to make chosen address type, please ensure no uncompressed public keys are present."]
+
             for addr_type in ['bech32', 'p2sh-segwit']:
-                result = self.nodes[0].createmultisig(2, keys, addr_type)
+                result = self.nodes[0].createmultisig(nrequired=2, keys=keys, address_type=addr_type)
                 assert_equal(legacy_addr, result['address'])
-                assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
+                assert_equal(result['warnings'], err_msg)
 
                 if self.is_bdb_compiled():
-                    result = wmulti0.addmultisigaddress(2, keys, '', addr_type)
+                    result = wmulti0.addmultisigaddress(nrequired=2, keys=keys, address_type=addr_type)
                     assert_equal(legacy_addr, result['address'])
-                    assert_equal(result['warnings'], ["Unable to make chosen address type, please ensure no uncompressed public keys are present."])
+                    assert_equal(result['warnings'], err_msg)
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
@@ -173,6 +173,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         desc = descsum_create(desc)
 
         msig = node2.createmultisig(self.nsigs, self.pub, self.output_type)
+        assert 'warnings' not in msig
         madd = msig["address"]
         mredeem = msig["redeemScript"]
         assert_equal(desc, msig['descriptor'])

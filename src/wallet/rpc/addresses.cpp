@@ -58,13 +58,12 @@ RPCHelpMan getnewaddress()
         output_type = parsed.value();
     }
 
-    CTxDestination dest;
-    bilingual_str error;
-    if (!pwallet->GetNewDestination(output_type, label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
+    auto op_dest = pwallet->GetNewDestination(output_type, label);
+    if (!op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
 
-    return EncodeDestination(dest);
+    return EncodeDestination(op_dest.GetObj());
 },
     };
 }
@@ -106,12 +105,11 @@ RPCHelpMan getrawchangeaddress()
         output_type = parsed.value();
     }
 
-    CTxDestination dest;
-    bilingual_str error;
-    if (!pwallet->GetNewChangeDestination(output_type, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
+    auto op_dest = pwallet->GetNewChangeDestination(output_type);
+    if (!op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
-    return EncodeDestination(dest);
+    return EncodeDestination(op_dest.GetObj());
 },
     };
 }
@@ -264,7 +262,7 @@ RPCHelpMan addmultisigaddress()
     if (!request.params[2].isNull())
         label = LabelFromValue(request.params[2]);
 
-    int required = request.params[0].get_int();
+    int required = request.params[0].getInt<int>();
 
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
@@ -302,11 +300,11 @@ RPCHelpMan addmultisigaddress()
     result.pushKV("descriptor", descriptor->ToString());
 
     UniValue warnings(UniValue::VARR);
-    if (!request.params[3].isNull() && OutputTypeFromDestination(dest) != output_type) {
+    if (descriptor->GetOutputType() != output_type) {
         // Only warns if the user has explicitly chosen an address type we cannot generate
         warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
     }
-    if (warnings.size()) result.pushKV("warnings", warnings);
+    if (!warnings.empty()) result.pushKV("warnings", warnings);
 
     return result;
 },
@@ -340,9 +338,9 @@ RPCHelpMan keypoolrefill()
     // 0 is interpreted by TopUpKeyPool() as the default keypool size given by -keypool
     unsigned int kpSize = 0;
     if (!request.params[0].isNull()) {
-        if (request.params[0].get_int() < 0)
+        if (request.params[0].getInt<int>() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size.");
-        kpSize = (unsigned int)request.params[0].get_int();
+        kpSize = (unsigned int)request.params[0].getInt<int>();
     }
 
     EnsureWalletIsUnlocked(*pwallet);
@@ -637,17 +635,6 @@ RPCHelpMan getaddressinfo()
     };
 }
 
-/** Convert CAddressBookData to JSON record.  */
-static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool verbose)
-{
-    UniValue ret(UniValue::VOBJ);
-    if (verbose) {
-        ret.pushKV("name", data.GetLabel());
-    }
-    ret.pushKV("purpose", data.purpose);
-    return ret;
-}
-
 RPCHelpMan getaddressesbylabel()
 {
     return RPCHelpMan{"getaddressesbylabel",
@@ -680,10 +667,10 @@ RPCHelpMan getaddressesbylabel()
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
-        if (item.second.IsChange()) continue;
-        if (item.second.GetLabel() == label) {
-            std::string address = EncodeDestination(item.first);
+    pwallet->ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label, const std::string& _purpose, bool _is_change) {
+        if (_is_change) return;
+        if (_label == label) {
+            std::string address = EncodeDestination(_dest);
             // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
             // case it does.
@@ -693,9 +680,11 @@ RPCHelpMan getaddressesbylabel()
             // and since duplicate addresses are unexpected (checked with
             // std::set in O(log(N))), UniValue::__pushKV is used instead,
             // which currently is O(1).
-            ret.__pushKV(address, AddressBookDataToJSON(item.second, false));
+            UniValue value(UniValue::VOBJ);
+            value.pushKV("purpose", _purpose);
+            ret.__pushKV(address, value);
         }
-    }
+    });
 
     if (ret.empty()) {
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label));
@@ -742,13 +731,7 @@ RPCHelpMan listlabels()
     }
 
     // Add to a set to sort by label name, then insert into Univalue array
-    std::set<std::string> label_set;
-    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
-        if (entry.second.IsChange()) continue;
-        if (purpose.empty() || entry.second.purpose == purpose) {
-            label_set.insert(entry.second.GetLabel());
-        }
-    }
+    std::set<std::string> label_set = pwallet->ListAddrBookLabels(purpose);
 
     UniValue ret(UniValue::VARR);
     for (const std::string& name : label_set) {

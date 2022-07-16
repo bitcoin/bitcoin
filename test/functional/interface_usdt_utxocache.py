@@ -169,8 +169,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         # Create a transaction and invalidate it by changing the txid of the previous
         # output to the coinbase txid of the block at height 1.
-        invalid_tx = self.wallet.create_self_transfer(
-            from_node=self.nodes[0])["tx"]
+        invalid_tx = self.wallet.create_self_transfer()["tx"]
         invalid_tx.vin[0].prevout.hash = int(block_1_coinbase_txid, 16)
 
         self.log.info("hooking into the utxocache:uncache tracepoint")

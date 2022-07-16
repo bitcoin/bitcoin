@@ -6,7 +6,6 @@
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
 #include <arith_uint256.h>
-#include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
 #include <compat.h>
@@ -56,13 +55,15 @@ public:
 
     FuzzedSock& operator=(Sock&& other) override;
 
-    void Reset() override;
-
     ssize_t Send(const void* data, size_t len, int flags) const override;
 
     ssize_t Recv(void* buf, size_t len, int flags) const override;
 
     int Connect(const sockaddr*, socklen_t) const override;
+
+    int Bind(const sockaddr*, socklen_t) const override;
+
+    int Listen(int backlog) const override;
 
     std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
 
@@ -70,7 +71,11 @@ public:
 
     int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;
 
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override;
+
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
+
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
     bool IsConnected(std::string& errmsg) const override;
 };
@@ -326,7 +331,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept;
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept;
 
 class FuzzedFileProvider
 {

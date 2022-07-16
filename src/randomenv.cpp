@@ -57,8 +57,7 @@
 #include <sys/auxv.h>
 #endif
 
-//! Necessary on some platforms
-extern char** environ;
+extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
 
 namespace {
 
@@ -363,10 +362,10 @@ void RandAddStaticEnv(CSHA512& hasher)
 
 #if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
     // Network interfaces
-    struct ifaddrs *ifad = NULL;
+    struct ifaddrs *ifad = nullptr;
     getifaddrs(&ifad);
     struct ifaddrs *ifit = ifad;
-    while (ifit != NULL) {
+    while (ifit != nullptr) {
         hasher.Write((const unsigned char*)&ifit, sizeof(ifit));
         hasher.Write((const unsigned char*)ifit->ifa_name, strlen(ifit->ifa_name) + 1);
         hasher.Write((const unsigned char*)&ifit->ifa_flags, sizeof(ifit->ifa_flags));

@@ -27,7 +27,7 @@ std::string FlatFilePos::ToString() const
 
 fs::path FlatFileSeq::FileName(const FlatFilePos& pos) const
 {
-    return m_dir / strprintf("%s%05u.dat", m_prefix, pos.nFile);
+    return m_dir / fs::u8path(strprintf("%s%05u.dat", m_prefix, pos.nFile));
 }
 
 FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)

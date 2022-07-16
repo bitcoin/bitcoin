@@ -4,9 +4,11 @@
 // It reads JSON input from stdin and exits with code 0 if it can be parsed
 // successfully. It also pretty prints the parsed JSON value to stdout.
 
+#include <univalue.h>
+
 #include <iostream>
+#include <iterator>
 #include <string>
-#include "univalue.h"
 
 using namespace std;
 

@@ -10,9 +10,6 @@
 #endif
 
 #ifdef WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <windows.h>
 #else
 #include <sys/mman.h> // for mmap
@@ -202,7 +199,10 @@ void Win32LockedPageAllocator::FreeLocked(void* addr, size_t len)
 
 size_t Win32LockedPageAllocator::GetLimit()
 {
-    // TODO is there a limit on Windows, how to get it?
+    size_t min, max;
+    if(GetProcessWorkingSetSize(GetCurrentProcess(), &min, &max) != 0) {
+        return min;
+    }
     return std::numeric_limits<size_t>::max();
 }
 #endif
@@ -282,9 +282,8 @@ LockedPool::LockedPool(std::unique_ptr<LockedPageAllocator> allocator_in, Lockin
 {
 }
 
-LockedPool::~LockedPool()
-{
-}
+LockedPool::~LockedPool() = default;
+
 void* LockedPool::alloc(size_t size)
 {
     std::lock_guard<std::mutex> lock(mutex);

@@ -92,11 +92,30 @@ static inline auto quoted(const std::string& s)
 }
 
 // Allow safe path append operations.
-static inline path operator+(path p1, path p2)
+static inline path operator/(path p1, path p2)
 {
-    p1 += std::move(p2);
+    p1 /= std::move(p2);
     return p1;
 }
+static inline path operator/(path p1, const char* p2)
+{
+    p1 /= p2;
+    return p1;
+}
+static inline path operator+(path p1, const char* p2)
+{
+    p1 += p2;
+    return p1;
+}
+static inline path operator+(path p1, path::value_type p2)
+{
+    p1 += p2;
+    return p1;
+}
+
+// Disallow unsafe path append operations.
+template<typename T> static inline path operator/(path p1, T p2) = delete;
+template<typename T> static inline path operator+(path p1, T p2) = delete;
 
 // Disallow implicit std::string conversion for copy_file
 // to avoid locale-dependent encoding on Windows.

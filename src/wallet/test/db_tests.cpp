@@ -15,22 +15,22 @@
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
-static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, std::string& database_filename)
+static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, fs::path& database_filename)
 {
     fs::path data_file = BDBDataFile(path);
-    database_filename = fs::PathToString(data_file.filename());
+    database_filename = data_file.filename();
     return GetBerkeleyEnv(data_file.parent_path(), false);
 }
 
 BOOST_AUTO_TEST_CASE(getwalletenv_file)
 {
-    std::string test_name = "test_name.dat";
+    fs::path test_name = "test_name.dat";
     const fs::path datadir = m_args.GetDataDirNet();
     fs::path file_path = datadir / test_name;
     std::ofstream f{file_path};
     f.close();
 
-    std::string filename;
+    fs::path filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
     BOOST_CHECK_EQUAL(filename, test_name);
     BOOST_CHECK_EQUAL(env->Directory(), datadir);
@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
 
 BOOST_AUTO_TEST_CASE(getwalletenv_directory)
 {
-    std::string expected_name = "wallet.dat";
+    fs::path expected_name = "wallet.dat";
     const fs::path datadir = m_args.GetDataDirNet();
 
-    std::string filename;
+    fs::path filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(datadir, filename);
     BOOST_CHECK_EQUAL(filename, expected_name);
     BOOST_CHECK_EQUAL(env->Directory(), datadir);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
 {
     fs::path datadir = m_args.GetDataDirNet() / "1";
     fs::path datadir_2 = m_args.GetDataDirNet() / "2";
-    std::string filename;
+    fs::path filename;
 
     std::shared_ptr<BerkeleyEnvironment> env_1 = GetWalletEnv(datadir, filename);
     std::shared_ptr<BerkeleyEnvironment> env_2 = GetWalletEnv(datadir, filename);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 {
     fs::path datadir = gArgs.GetDataDirNet() / "1";
     fs::path datadir_2 = gArgs.GetDataDirNet() / "2";
-    std::string filename;
+    fs::path filename;
 
     std::shared_ptr <BerkeleyEnvironment> env_1_a = GetWalletEnv(datadir, filename);
     std::shared_ptr <BerkeleyEnvironment> env_2_a = GetWalletEnv(datadir_2, filename);

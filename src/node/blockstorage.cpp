@@ -21,6 +21,8 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <unordered_map>
+
 namespace node {
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -224,10 +226,15 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
         }
     }
 
-    LogPrint(BCLog::PRUNE, "Prune: target=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
+    LogPrint(BCLog::PRUNE, "target=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
            nPruneTarget/1024/1024, nCurrentUsage/1024/1024,
            ((int64_t)nPruneTarget - (int64_t)nCurrentUsage)/1024/1024,
            nLastBlockWeCanPrune, count);
+}
+
+void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
+    AssertLockHeld(::cs_main);
+    m_prune_locks[name] = lock_info;
 }
 
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
@@ -290,20 +297,6 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
     return true;
 }
 
-void BlockManager::Unload()
-{
-    m_blocks_unlinked.clear();
-
-    m_block_index.clear();
-
-    m_blockfile_info.clear();
-    m_last_blockfile = 0;
-    m_dirty_blockindex.clear();
-    m_dirty_fileinfo.clear();
-
-    m_have_pruned = false;
-}
-
 bool BlockManager::WriteBlockIndexDB()
 {
     AssertLockHeld(::cs_main);
@@ -325,9 +318,9 @@ bool BlockManager::WriteBlockIndexDB()
     return true;
 }
 
-bool BlockManager::LoadBlockIndexDB()
+bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
 {
-    if (!LoadBlockIndex(::Params().GetConsensus())) {
+    if (!LoadBlockIndex(consensus_params)) {
         return false;
     }
 
@@ -395,6 +388,16 @@ bool BlockManager::IsBlockPruned(const CBlockIndex* pblockindex)
 {
     AssertLockHeld(::cs_main);
     return (m_have_pruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
+}
+
+const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& start_block)
+{
+    AssertLockHeld(::cs_main);
+    const CBlockIndex* last_block = &start_block;
+    while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        last_block = last_block->pprev;
+    }
+    return last_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

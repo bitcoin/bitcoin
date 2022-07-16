@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chainparams.h>
-#include <random.h>
-#include <uint256.h>
 #include <consensus/validation.h>
-#include <sync.h>
+#include <random.h>
 #include <rpc/blockchain.h>
+#include <sync.h>
 #include <test/util/chainstate.h>
 #include <test/util/setup_common.h>
+#include <timedata.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <vector>
@@ -22,9 +23,14 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, TestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
-    ChainstateManager manager;
+    const ChainstateManager::Options chainman_opts{
+        .chainparams = Params(),
+        .adjusted_time_callback = GetAdjustedTime,
+    };
+    ChainstateManager manager{chainman_opts};
+
     WITH_LOCK(::cs_main, manager.m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true));
-    CTxMemPool mempool;
+    CTxMemPool& mempool = *Assert(m_node.mempool);
 
     //! Create and add a Coin with DynamicMemoryUsage of 80 bytes to the given view.
     auto add_coin = [](CCoinsViewCache& coins_view) -> COutPoint {
@@ -93,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
 
     // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(chainman.IsSnapshotActive());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.IsSnapshotActive()));
 
     curr_tip = ::g_best_block;
 

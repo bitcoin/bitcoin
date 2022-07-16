@@ -31,12 +31,14 @@ private:
     FlatFilePos m_next_filter_pos;
     std::unique_ptr<FlatFileSeq> m_filter_fileseq;
 
-    bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
+    bool ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, BlockFilter& filter) const;
     size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
 
     Mutex m_cs_headers_cache;
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
     std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
+
+    bool AllowPrune() const override { return true; }
 
 protected:
     bool Init() override;
@@ -62,7 +64,7 @@ public:
     bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const;
 
     /** Get a single filter header by block. */
-    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out);
+    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) EXCLUSIVE_LOCKS_REQUIRED(!m_cs_headers_cache);
 
     /** Get a range of filters between two heights on a chain. */
     bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,

@@ -24,6 +24,7 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QMutexLocker>
 #include <QThread>
 #include <QTimer>
@@ -135,7 +136,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     // handled on the GUI event loop.
     wallet_model->moveToThread(thread());
     // setParent(parent) must be called in the thread which created the parent object. More details in #18948.
-    GUIUtil::ObjectInvoke(this, [wallet_model, this] {
+    QMetaObject::invokeMethod(this, [wallet_model, this] {
         wallet_model->setParent(this);
     }, GUIUtil::blockingGUIThreadConnection());
 
@@ -371,4 +372,48 @@ void LoadWalletsActivity::load()
 
         QTimer::singleShot(0, this, [this] { Q_EMIT finished(); });
     });
+}
+
+RestoreWalletActivity::RestoreWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
+    : WalletControllerActivity(wallet_controller, parent_widget)
+{
+}
+
+void RestoreWalletActivity::restore(const fs::path& backup_file, const std::string& wallet_name)
+{
+    QString name = QString::fromStdString(wallet_name);
+
+    showProgressDialog(
+        //: Title of progress window which is displayed when wallets are being restored.
+        tr("Restore Wallet"),
+        /*: Descriptive text of the restore wallets progress window which indicates to
+            the user that wallets are currently being restored.*/
+        tr("Restoring Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
+
+    QTimer::singleShot(0, worker(), [this, backup_file, wallet_name] {
+        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message)};
+
+        m_error_message = wallet ? bilingual_str{} : wallet.GetError();
+        if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(wallet.ReleaseObj());
+
+        QTimer::singleShot(0, this, &RestoreWalletActivity::finish);
+    });
+}
+
+void RestoreWalletActivity::finish()
+{
+    if (!m_error_message.empty()) {
+        //: Title of message box which is displayed when the wallet could not be restored.
+        QMessageBox::critical(m_parent_widget, tr("Restore wallet failed"), QString::fromStdString(m_error_message.translated));
+    } else if (!m_warning_message.empty()) {
+        //: Title of message box which is displayed when the wallet is restored with some warning.
+        QMessageBox::warning(m_parent_widget, tr("Restore wallet warning"), QString::fromStdString(Join(m_warning_message, Untranslated("\n")).translated));
+    } else {
+        //: Title of message box which is displayed when the wallet is successfully restored.
+        QMessageBox::information(m_parent_widget, tr("Restore wallet message"), QString::fromStdString(Untranslated("Wallet restored successfully \n").translated));
+    }
+
+    if (m_wallet_model) Q_EMIT restored(m_wallet_model);
+
+    Q_EMIT finished();
 }

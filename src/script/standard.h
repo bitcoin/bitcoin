@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_STANDARD_H
 #define BITCOIN_SCRIPT_STANDARD_H
 
+#include <attributes.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <uint256.h>
@@ -321,6 +322,8 @@ public:
     static bool ValidDepths(const std::vector<int>& depths);
     /** Compute spending data (after Finalize()). */
     TaprootSpendData GetSpendData() const;
+    /** Returns a vector of tuples representing the depth, leaf version, and script */
+    std::vector<std::tuple<uint8_t, uint8_t, CScript>> GetTreeTuples() const;
 };
 
 /** Given a TaprootSpendData and the output key, reconstruct its script tree.

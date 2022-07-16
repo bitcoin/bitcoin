@@ -5,13 +5,13 @@
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
-#include <qt/guiutil.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
 #include <exception>
 
 #include <QDebug>
+#include <QMetaObject>
 #include <QObject>
 #include <QString>
 #include <QThread>
@@ -39,7 +39,7 @@ void InitExecutor::handleRunawayException(const std::exception* e)
 
 void InitExecutor::initialize()
 {
-    GUIUtil::ObjectInvoke(&m_context, [this] {
+    QMetaObject::invokeMethod(&m_context, [this] {
         try {
             util::ThreadRename("qt-init");
             qDebug() << "Running initialization in thread";
@@ -56,7 +56,7 @@ void InitExecutor::initialize()
 
 void InitExecutor::shutdown()
 {
-    GUIUtil::ObjectInvoke(&m_context, [this] {
+    QMetaObject::invokeMethod(&m_context, [this] {
         try {
             qDebug() << "Running Shutdown in thread";
             m_node.appShutdown();

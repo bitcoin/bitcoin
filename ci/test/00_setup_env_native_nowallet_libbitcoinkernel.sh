@@ -11,4 +11,4 @@ export DOCKER_NAME_TAG=ubuntu:18.04  # Use bionic to have one config run the tes
 export PACKAGES="python3-zmq clang-8 llvm-8 libc++abi-8-dev libc++-8-dev"  # Use clang-8 to test C++17 compatibility, see doc/dependencies.md
 export DEP_OPTS="NO_WALLET=1 CC=clang-8 CXX='clang++-8 -stdlib=libc++'"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-reduce-exports CC=clang-8 CXX='clang++-8 -stdlib=libc++' --enable-experimental-util-chainstate"
+export BITCOIN_CONFIG="--enable-reduce-exports CC=clang-8 CXX='clang++-8 -stdlib=libc++' --enable-experimental-util-chainstate --with-experimental-kernel-lib --enable-shared"

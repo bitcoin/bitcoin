@@ -219,7 +219,7 @@ class RESTTest (BitcoinTestFramework):
 
         self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
 
-        self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
+        self.log.info("Test the /block, /blockhashbyheight, /headers, and /blockfilterheaders URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
@@ -300,6 +300,12 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(first_filter_header, rpc_blockfilter['header'])
         assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
 
+        # Test blockfilterheaders with an invalid hash and filtertype
+        resp = self.test_rest_request(f"/blockfilterheaders/{INVALID_PARAM}/{bb_hash}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Unknown filtertype {INVALID_PARAM}")
+        resp = self.test_rest_request(f"/blockfilterheaders/basic/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
@@ -324,8 +330,15 @@ class RESTTest (BitcoinTestFramework):
         # the size of the memory pool should be greater than 3x ~100 bytes
         assert_greater_than(json_obj['bytes'], 300)
 
+        mempool_info = self.nodes[0].getmempoolinfo()
+        assert_equal(json_obj, mempool_info)
+
         # Check that there are our submitted transactions in the TX memory pool
         json_obj = self.test_rest_request("/mempool/contents")
+        raw_mempool_verbose = self.nodes[0].getrawmempool(verbose=True)
+
+        assert_equal(json_obj, raw_mempool_verbose)
+
         for i, tx in enumerate(txs):
             assert tx in json_obj
             assert_equal(json_obj[tx]['spentby'], txs[i + 1:i + 2])

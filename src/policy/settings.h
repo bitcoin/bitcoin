@@ -6,14 +6,19 @@
 #ifndef BITCOIN_POLICY_SETTINGS_H
 #define BITCOIN_POLICY_SETTINGS_H
 
+#include <policy/feerate.h>
 #include <policy/policy.h>
 
-class CFeeRate;
+#include <cstdint>
+#include <string>
+
 class CTransaction;
 
 // Policy settings which are configurable at runtime.
 extern CFeeRate incrementalRelayFee;
 extern CFeeRate dustRelayFee;
+/** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+extern CFeeRate minRelayTxFee;
 extern unsigned int nBytesPerSigOp;
 extern bool fIsBareMultisigStd;
 

@@ -6,8 +6,9 @@
 
 #include <span.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <string>
-#include <vector>
 
 namespace spanparsing {
 
@@ -45,22 +46,6 @@ Span<const char> Expr(Span<const char>& sp)
     }
     Span<const char> ret = sp.first(it - sp.begin());
     sp = sp.subspan(it - sp.begin());
-    return ret;
-}
-
-std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
-{
-    std::vector<Span<const char>> ret;
-    auto it = sp.begin();
-    auto start = it;
-    while (it != sp.end()) {
-        if (*it == sep) {
-            ret.emplace_back(start, it);
-            start = it + 1;
-        }
-        ++it;
-    }
-    ret.emplace_back(start, it);
     return ret;
 }
 

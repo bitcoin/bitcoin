@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_NET_H
 
 #include <compat.h>
+#include <node/eviction.h>
 #include <netaddress.h>
 #include <net.h>
 #include <util/sock.h>
@@ -37,6 +38,13 @@ struct ConnmanTestMsg : public CConnman {
         }
         m_nodes.clear();
     }
+
+    void Handshake(CNode& node,
+                   bool successfully_connected,
+                   ServiceFlags remote_services,
+                   NetPermissionFlags permission_flags,
+                   int32_t version,
+                   bool relay_txs);
 
     void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
 
@@ -100,17 +108,12 @@ public:
         m_socket = INVALID_SOCKET - 1;
     }
 
-    ~StaticContentsSock() override { Reset(); }
+    ~StaticContentsSock() override { m_socket = INVALID_SOCKET; }
 
     StaticContentsSock& operator=(Sock&& other) override
     {
         assert(false && "Move of Sock into MockSock not allowed.");
         return *this;
-    }
-
-    void Reset() override
-    {
-        m_socket = INVALID_SOCKET;
     }
 
     ssize_t Send(const void*, size_t len, int) const override { return len; }
@@ -126,6 +129,10 @@ public:
     }
 
     int Connect(const sockaddr*, socklen_t) const override { return 0; }
+
+    int Bind(const sockaddr*, socklen_t) const override { return 0; }
+
+    int Listen(int) const override { return 0; }
 
     std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
     {
@@ -152,12 +159,27 @@ public:
 
     int SetSockOpt(int, int, const void*, socklen_t) const override { return 0; }
 
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override
+    {
+        std::memset(name, 0x0, *name_len);
+        return 0;
+    }
+
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
               Event* occurred = nullptr) const override
     {
         if (occurred != nullptr) {
             *occurred = requested;
+        }
+        return true;
+    }
+
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override
+    {
+        for (auto& [sock, events] : events_per_sock) {
+            (void)sock;
+            events.occurred = events.requested;
         }
         return true;
     }

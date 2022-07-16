@@ -5,12 +5,19 @@
 #ifndef BITCOIN_POLICY_RBF_H
 #define BITCOIN_POLICY_RBF_H
 
+#include <consensus/amount.h>
 #include <primitives/transaction.h>
+#include <threadsafety.h>
 #include <txmempool.h>
-#include <uint256.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <optional>
+#include <set>
 #include <string>
+
+class CFeeRate;
+class uint256;
 
 /** Maximum number of transactions that can be replaced by BIP125 RBF (Rule #5). This includes all
  * mempool conflicts and their descendants. */

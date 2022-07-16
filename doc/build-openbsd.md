@@ -1,6 +1,6 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.0](https://www.openbsd.org/70.html)**
+**Updated for OpenBSD [7.1](https://www.openbsd.org/71.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
 
@@ -34,7 +34,7 @@ It is not necessary to build wallet functionality to run either `bitcoind` or `b
 `sqlite3` is required to support [descriptor wallets](descriptors.md).
 
 ``` bash
-pkg_add install sqlite3
+pkg_add sqlite3
 ```
 
 ###### Legacy Wallet Support
@@ -78,12 +78,9 @@ export AUTOMAKE_VERSION=1.16
 
 ### 1. Configuration
 
-Note that building with external signer support currently fails on OpenBSD,
-hence you have to explicitly disable it by passing the parameter
-`--disable-external-signer` to the configure script. The feature requires the
-header-only library boost::process, which is available on OpenBSD, but contains
-certain system calls and preprocessor defines like `waitid()` and `WEXITED` that
-are not available.
+Note that external signer support is currently not available on OpenBSD, since
+the used header-only library Boost.Process fails to compile (certain system
+calls and preprocessor defines like `waitid()` and `WEXITED` are missing).
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
@@ -91,14 +88,14 @@ There are many ways to configure Bitcoin Core, here are a few common examples:
 This enables the GUI and descriptor wallet support, assuming `sqlite` and `qt5` are installed.
 
 ```bash
-./configure --disable-external-signer MAKE=gmake
+./configure MAKE=gmake
 ```
 
 ##### Descriptor & Legacy Wallet. No GUI:
 This enables support for both wallet types and disables the GUI:
 
 ```bash
-./configure --disable-external-signer --with-gui=no \
+./configure --with-gui=no \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
     BDB_CFLAGS="-I${BDB_PREFIX}/include" \
     MAKE=gmake

@@ -19,8 +19,9 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     {
         std::string strEnc = EncodeBase64(vstrIn[i]);
         BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
-        std::string strDec = DecodeBase64(strEnc);
-        BOOST_CHECK_EQUAL(strDec, vstrIn[i]);
+        auto dec = DecodeBase64(strEnc);
+        BOOST_REQUIRE(dec);
+        BOOST_CHECK_MESSAGE(MakeByteSpan(*dec) == MakeByteSpan(vstrIn[i]), vstrOut[i]);
     }
 
     {
@@ -34,15 +35,10 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     }
 
     // Decoding strings with embedded NUL characters should fail
-    bool failure;
-    (void)DecodeBase64("invalid\0"s, &failure);
-    BOOST_CHECK(failure);
-    (void)DecodeBase64("nQB/pZw="s, &failure);
-    BOOST_CHECK(!failure);
-    (void)DecodeBase64("nQB/pZw=\0invalid"s, &failure);
-    BOOST_CHECK(failure);
-    (void)DecodeBase64("nQB/pZw=invalid\0"s, &failure);
-    BOOST_CHECK(failure);
+    BOOST_CHECK(!DecodeBase64("invalid\0"s));
+    BOOST_CHECK(DecodeBase64("nQB/pZw="s));
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s));
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

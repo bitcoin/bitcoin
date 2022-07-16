@@ -18,11 +18,10 @@ export COMMIT_RANGE
 test/lint/git-subtree-check.sh src/crypto/ctaes
 test/lint/git-subtree-check.sh src/secp256k1
 test/lint/git-subtree-check.sh src/minisketch
-test/lint/git-subtree-check.sh src/univalue
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/git-subtree-check.sh src/crc32c
 test/lint/check-doc.py
-test/lint/lint-all.sh
+test/lint/all-lint.py
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "$CIRRUS_PR" = "" ] ; then
     # Sanity check only the last few commits to get notified of missing sigs,

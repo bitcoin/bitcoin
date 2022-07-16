@@ -23,7 +23,7 @@
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
-static Mutex g_sqlite_mutex;
+static GlobalMutex g_sqlite_mutex;
 static int g_sqlite_count GUARDED_BY(g_sqlite_mutex) = 0;
 
 static void ErrorLogCallback(void* arg, int code, const char* msg)
@@ -405,7 +405,7 @@ bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
         return false;
     }
     // Leftmost column in result is index 0
-    const std::byte* data{BytePtr(sqlite3_column_blob(m_read_stmt, 0))};
+    const std::byte* data{AsBytePtr(sqlite3_column_blob(m_read_stmt, 0))};
     size_t data_size(sqlite3_column_bytes(m_read_stmt, 0));
     value.write({data, data_size});
 
@@ -497,10 +497,10 @@ bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& compl
     }
 
     // Leftmost column in result is index 0
-    const std::byte* key_data{BytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
+    const std::byte* key_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 0))};
     size_t key_data_size(sqlite3_column_bytes(m_cursor_stmt, 0));
     key.write({key_data, key_data_size});
-    const std::byte* value_data{BytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
+    const std::byte* value_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
     size_t value_data_size(sqlite3_column_bytes(m_cursor_stmt, 1));
     value.write({value_data, value_data_size});
     return true;

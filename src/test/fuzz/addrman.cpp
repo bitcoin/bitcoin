@@ -37,11 +37,19 @@ void initialize_addrman()
     g_setup = testing_setup.get();
 }
 
+[[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
+    return NetGroupManager(asmap);
+}
+
 FUZZ_TARGET_INIT(data_stream_addr_man, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CDataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
-    AddrMan addr_man{/*asmap=*/std::vector<bool>(), /*deterministic=*/false, GetCheckRatio()};
+    NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
+    AddrMan addr_man(netgroupman, /*deterministic=*/false, GetCheckRatio());
     try {
         ReadFromStream(addr_man, data_stream);
     } catch (const std::exception&) {
@@ -124,8 +132,8 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
 class AddrManDeterministic : public AddrMan
 {
 public:
-    explicit AddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
-        : AddrMan{std::move(asmap), /*deterministic=*/true, GetCheckRatio()}
+    explicit AddrManDeterministic(const NetGroupManager& netgroupman, FuzzedDataProvider& fuzzed_data_provider)
+        : AddrMan(netgroupman, /*deterministic=*/true, GetCheckRatio())
     {
         WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
     }
@@ -223,19 +231,12 @@ public:
     }
 };
 
-[[nodiscard]] inline std::vector<bool> ConsumeAsmap(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
-    return asmap;
-}
-
 FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
-    auto addr_man_ptr = std::make_unique<AddrManDeterministic>(asmap, fuzzed_data_provider);
+    NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
+    auto addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
@@ -244,7 +245,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         try {
             ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man_ptr = std::make_unique<AddrManDeterministic>(asmap, fuzzed_data_provider);
+            addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider);
         }
     }
     AddrManDeterministic& addr_man = *addr_man_ptr;
@@ -313,9 +314,9 @@ FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
-    AddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
-    AddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
+    NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
+    AddrManDeterministic addr_man1{netgroupman, fuzzed_data_provider};
+    AddrManDeterministic addr_man2{netgroupman, fuzzed_data_provider};
 
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
 

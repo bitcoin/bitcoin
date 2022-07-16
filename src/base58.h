@@ -14,7 +14,6 @@
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
 
-#include <attributes.h>
 #include <span.h>
 
 #include <string>

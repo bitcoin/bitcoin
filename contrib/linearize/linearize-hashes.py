@@ -98,19 +98,18 @@ if __name__ == '__main__':
         print("Usage: linearize-hashes.py CONFIG-FILE")
         sys.exit(1)
 
-    f = open(sys.argv[1], encoding="utf8")
-    for line in f:
-        # skip comment lines
-        m = re.search(r'^\s*#', line)
-        if m:
-            continue
+    with open(sys.argv[1], encoding="utf8") as f:
+        for line in f:
+            # skip comment lines
+            m = re.search(r'^\s*#', line)
+            if m:
+                continue
 
-        # parse key=value lines
-        m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
-        if m is None:
-            continue
-        settings[m.group(1)] = m.group(2)
-    f.close()
+            # parse key=value lines
+            m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
+            if m is None:
+                continue
+            settings[m.group(1)] = m.group(2)
 
     if 'host' not in settings:
         settings['host'] = '127.0.0.1'

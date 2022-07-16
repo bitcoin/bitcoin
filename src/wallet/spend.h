@@ -6,36 +6,52 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
+#include <policy/fees.h> // for FeeCalculation
+#include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <optional>
+
 namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
- * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
- * size of the input spend. This should only be set when watch-only outputs are allowed */
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
-
-//Get the marginal bytes of spending the specified output
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
-
+ * Use CoinControl to determine whether to expect signature grinding when calculating the size of the input spend. */
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 struct TxSize {
     int64_t vsize{-1};
     int64_t weight{-1};
 };
 
-/** Calculate the size of the transaction assuming all signatures are max size
-* Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
-* NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-* be AllInputsMine). */
+/** Calculate the size of the transaction using CoinControl to determine
+ * whether to expect signature grinding when calculating the size of the input spend. */
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
 TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 
+struct CoinsResult {
+    std::vector<COutput> coins;
+    // Sum of all the coins amounts
+    CAmount total_amount{0};
+};
 /**
- * populate vCoins with vector of available COutputs.
+ * Return vector of available COutputs.
+ * By default, returns only the spendable coins.
  */
-void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+CoinsResult AvailableCoins(const CWallet& wallet,
+                           const CCoinControl* coinControl = nullptr,
+                           std::optional<CFeeRate> feerate = std::nullopt,
+                           const CAmount& nMinimumAmount = 1,
+                           const CAmount& nMaximumAmount = MAX_MONEY,
+                           const CAmount& nMinimumSumAmount = MAX_MONEY,
+                           const uint64_t nMaximumCount = 0,
+                           bool only_spendable = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
+ * Wrapper function for AvailableCoins which skips the `feerate` parameter. Use this function
+ * to list all available coins (e.g. listunspent RPC) while not intending to fund a transaction.
+ */
+CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
 
@@ -82,12 +98,23 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    FeeCalculation fee_calc;
+    int change_pos;
+
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, int _change_pos, const FeeCalculation& _fee_calc)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+};
+
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
- * @note passing nChangePosInOut as -1 will result in setting a random position
+ * @note passing change_pos as -1 will result in setting a random position
  */
-bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
+BResult<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, const CCoinControl& coin_control, bool sign = true);
 
 /**
  * Insert additional inputs into the transaction by

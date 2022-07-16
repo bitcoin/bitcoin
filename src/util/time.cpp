@@ -8,16 +8,19 @@
 #endif
 
 #include <compat.h>
+#include <tinyformat.h>
 #include <util/time.h>
-
 #include <util/check.h>
 
-#include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <ctime>
-#include <thread>
 
-#include <tinyformat.h>
+#include <atomic>
+#include <chrono>
+#include <ctime>
+#include <locale>
+#include <thread>
+#include <sstream>
+#include <string>
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
@@ -66,20 +69,16 @@ bool ChronoSanityCheck()
     return true;
 }
 
-template <typename T>
-T GetTime()
+NodeClock::time_point NodeClock::now() noexcept
 {
     const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
     const auto ret{
         mocktime.count() ?
             mocktime :
-            std::chrono::duration_cast<T>(std::chrono::system_clock::now().time_since_epoch())};
+            std::chrono::system_clock::now().time_since_epoch()};
     assert(ret > 0s);
-    return ret;
-}
-template std::chrono::seconds GetTime();
-template std::chrono::milliseconds GetTime();
-template std::chrono::microseconds GetTime();
+    return time_point{ret};
+};
 
 template <typename T>
 static T GetSystemTime()
@@ -113,11 +112,6 @@ int64_t GetTimeMillis()
 int64_t GetTimeMicros()
 {
     return int64_t{GetSystemTime<std::chrono::microseconds>().count()};
-}
-
-int64_t GetTimeSeconds()
-{
-    return int64_t{GetSystemTime<std::chrono::seconds>().count()};
 }
 
 int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
