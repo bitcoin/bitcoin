@@ -34,7 +34,7 @@
 void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
 }
 
 namespace {
@@ -220,9 +220,21 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 #elif BLOCKTRANSACTIONSREQUEST_DESERIALIZE
         BlockTransactionsRequest btr;
         DeserializeFromFuzzingInput(buffer, btr);
+#elif UINT160_DESERIALIZE
+        uint160 u160;
+        DeserializeFromFuzzingInput(buffer, u160);
+        AssertEqualAfterSerializeDeserialize(u160);
+#elif UINT256_DESERIALIZE
+        uint256 u256;
+        DeserializeFromFuzzingInput(buffer, u256);
+        AssertEqualAfterSerializeDeserialize(u256);
 #else
 #error Need at least one fuzz target to compile
 #endif
+        // Classes intentionally not covered in this file since their deserialization code is
+        // fuzzed elsewhere:
+        // * Deserialization of CTxOut is fuzzed in test/fuzz/tx_out.cpp
+        // * Deserialization of CMutableTransaction is fuzzed in src/test/fuzz/transaction.cpp
     } catch (const invalid_fuzzing_input_exception&) {
     }
 }

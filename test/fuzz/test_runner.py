@@ -33,6 +33,7 @@ FUZZERS_MISSING_CORPORA = [
     "key_origin_info_deserialize",
     "locale",
     "merkle_block_deserialize",
+    "netaddress",
     "out_point_deserialize",
     "p2p_transport_deserializer",
     "parse_hd_keypath",

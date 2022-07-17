@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <pubkey.h>
 #include <primitives/block.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
@@ -14,6 +15,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+
+void initialize() {
+    static const ECCVerifyHandle verify_handle;
+}
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
@@ -33,4 +38,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
     CBlockHeader block_header;
     (void)DecodeHexBlockHeader(block_header, random_hex_string);
+    CBlock block;
+    (void)DecodeHexBlk(block, random_hex_string);
 }
