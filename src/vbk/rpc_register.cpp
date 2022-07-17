@@ -385,17 +385,37 @@ UniValue getbtcbestblockhash(const JSONRPCRequest& request)
     return getbestblockhash(request, VeriBlock::GetPop().getAltBlockTree().btc(), "btc");
 }
 
-UniValue getmissingbtcblockhashes(const JSONRPCRequest& request)
+UniValue getlastvbkwithvtbs(const JSONRPCRequest& request)
 {
-    EnsurePopEnabled();
+    auto blocks = VeriBlock::GetPop().getAltBlockTree().vbk().getAllBlocks();
+    std::sort(blocks.begin(), blocks.end(), [](altintegration::BlockIndex<altintegration::VbkBlock>* a, altintegration::BlockIndex<altintegration::VbkBlock>* b) {
+        return a->getHeader().getHeight() > b->getHeader().getHeight();
+    });
 
-    LOCK(cs_main);
-
-    UniValue univalueMissingBtcBlocks(UniValue::VARR);
-    for (const auto& b : VeriBlock::GetPop().getMemPool().getMissingBtcBlocks()) {
-        univalueMissingBtcBlocks.push_back(HexStr(b.begin(), b.end()));
+    for (const auto& block : blocks) {
+        if (!block->getPayloadIds<altintegration::VTB>().empty()) {
+            return UniValue(block->getHash().toHex());
+        }
     }
-    return univalueMissingBtcBlocks;
+
+
+    return UniValue(UniValue::VNULL);
+}
+
+UniValue getlastaltwithvtbs(const JSONRPCRequest& request)
+{
+    auto blocks = VeriBlock::GetPop().getAltBlockTree().getAllBlocks();
+    std::sort(blocks.begin(), blocks.end(), [](altintegration::BlockIndex<altintegration::AltBlock>* a, altintegration::BlockIndex<altintegration::AltBlock>* b) {
+        return a->getHeader().getHeight() > b->getHeader().getHeight();
+    });
+
+    for (const auto& block : blocks) {
+        if (!block->getPayloadIds<altintegration::VTB>().empty()) {
+            return UniValue(HexStr(block->getHash()));
+        }
+    }
+
+    return UniValue(UniValue::VNULL);
 }
 
 } // namespace
@@ -887,7 +907,8 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getbtcblock", &getbtcblock, {"hash"}},
     {"pop_mining", "getvbkbestblockhash", &getvbkbestblockhash, {}},
     {"pop_mining", "getbtcbestblockhash", &getbtcbestblockhash, {}},
-    {"pop_mining", "getmissingbtcblockhashes", &getmissingbtcblockhashes, {}},
+    {"pop_mining", "getlastvbkwithvtbs", &getlastvbkwithvtbs, {}},
+    {"pop_mining", "getlastaltwithvtbs", &getlastaltwithvtbs, {}},
     {"pop_mining", "getvbkblockhash", &getvbkblockhash, {"height"}},
     {"pop_mining", "getbtcblockhash", &getbtcblockhash, {"height"}},
     {"pop_mining", "getrawatv", &getrawatv, {"id"}},
