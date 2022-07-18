@@ -599,7 +599,7 @@ std::string OnionToString(Span<const uint8_t> addr)
     return EncodeBase32(address) + ".onion";
 }
 
-std::string CNetAddr::ToStringIP() const
+std::string CNetAddr::ToStringAddr() const
 {
     switch (m_net) {
     case NET_IPV4:
@@ -624,7 +624,7 @@ std::string CNetAddr::ToStringIP() const
 
 std::string CNetAddr::ToString() const
 {
-    return ToStringIP();
+    return ToStringAddr();
 }
 
 bool operator==(const CNetAddr& a, const CNetAddr& b)
@@ -921,18 +921,18 @@ std::string CService::ToStringPort() const
     return strprintf("%u", port);
 }
 
-std::string CService::ToStringIPPort() const
+std::string CService::ToStringAddrPort() const
 {
     if (IsIPv4() || IsTor() || IsI2P() || IsInternal()) {
-        return ToStringIP() + ":" + ToStringPort();
+        return ToStringAddr() + ":" + ToStringPort();
     } else {
-        return "[" + ToStringIP() + "]:" + ToStringPort();
+        return "[" + ToStringAddr() + "]:" + ToStringPort();
     }
 }
 
 std::string CService::ToString() const
 {
-    return ToStringIPPort();
+    return ToStringAddrPort();
 }
 
 CSubNet::CSubNet():

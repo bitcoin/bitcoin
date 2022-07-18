@@ -194,7 +194,7 @@ public:
 
     enum Network GetNetwork() const;
     std::string ToString() const;
-    std::string ToStringIP() const;
+    std::string ToStringAddr() const;
     bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;
 
@@ -538,7 +538,7 @@ public:
     std::vector<unsigned char> GetKey() const;
     std::string ToString() const;
     std::string ToStringPort() const;
-    std::string ToStringIPPort() const;
+    std::string ToStringAddrPort() const;
 
     CService(const struct in6_addr& ipv6Addr, uint16_t port);
     explicit CService(const struct sockaddr_in6& addr);
