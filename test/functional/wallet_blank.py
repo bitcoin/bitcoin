@@ -72,8 +72,7 @@ class WalletBlankTest(BitcoinTestFramework):
             wif = bytes_to_wif(eckey.get_bytes(), eckey.is_compressed)
 
             wallet.importprivkey(wif)
-            # FIXME: A bug results in blank remaining set
-            assert_equal(wallet.getwalletinfo()["blank"], True)
+            assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importmulti(self):
         if self.options.descriptors:
@@ -121,8 +120,7 @@ class WalletBlankTest(BitcoinTestFramework):
         def_wallet.dumpwallet(wallet_dump_path)
 
         wallet.importwallet(wallet_dump_path)
-        # FIXME: A bug results in blank remaining set
-        assert_equal(wallet.getwalletinfo()["blank"], True)
+        assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_encrypt_legacy(self):
         if self.options.descriptors:
