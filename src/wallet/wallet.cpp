@@ -2280,15 +2280,13 @@ DBErrors CWallet::LoadWallet()
 util::Result<void> CWallet::RemoveTxs(std::vector<Txid>& txs_to_remove)
 {
     AssertLockHeld(cs_wallet);
+    util::Result<void> result;
     bilingual_str str_err;  // future: make RunWithinTxn return a util::Result
     bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        util::Result<void> result{RemoveTxs(batch, txs_to_remove)};
-        if (!result) str_err = util::ErrorString(result);
-        return bool{result};
+        return bool{result.Update(RemoveTxs(batch, txs_to_remove))};
     });
-    if (!str_err.empty()) return util::Error{str_err};
-    if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
-    return {}; // all good
+    if (result && !was_txn_committed) result.Update(util::Error{_("Error starting/committing db txn for wallet transactions removal process")});
+    return result;
 }
 
 util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove)
