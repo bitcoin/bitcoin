@@ -3049,20 +3049,31 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
     if (tip_height && *tip_height != rescan_height)
     {
-        if (chain.havePruned()) {
+        // Technically we could execute the code below in any case, but performing the
+        // `while` loop below can make startup very slow, so only check blocks on disk
+        // if necessary.
+        if (chain.havePruned() || chain.hasAssumedValidChain()) {
             int block_height = *tip_height;
             while (block_height > 0 && chain.haveBlockOnDisk(block_height - 1) && rescan_height != block_height) {
                 --block_height;
             }
 
             if (rescan_height != block_height) {
-                // We can't rescan beyond non-pruned blocks, stop and throw an error.
+                // We can't rescan beyond blocks we don't have data for, stop and throw an error.
                 // This might happen if a user uses an old wallet within a pruned node
                 // or if they ran -disablewallet for a longer time, then decided to re-enable
                 // Exit early and print an error.
+                // It also may happen if an assumed-valid chain is in use and therefore not
+                // all block data is available.
                 // If a block is pruned after this check, we will load the wallet,
                 // but fail the rescan with a generic error.
-                error = _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
+
+                error = chain.hasAssumedValidChain() ?
+                     _(
+                        "Assumed-valid: last wallet synchronisation goes beyond "
+                        "available block data. You need to wait for the background "
+                        "validation chain to download more blocks.") :
+                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
                 return false;
             }
         }
