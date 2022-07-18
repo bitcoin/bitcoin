@@ -68,8 +68,6 @@ static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
 static constexpr bool DEFAULT_COINSTATSINDEX{false};
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
-/** Default for -persistmempool */
-static const bool DEFAULT_PERSIST_MEMPOOL = true;
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
@@ -679,7 +677,7 @@ public:
     void CheckBlockIndex();
 
     /** Load the persisted mempool from disk */
-    void LoadMempool(const ArgsManager& args);
+    void LoadMempool(const fs::path& load_path, fsbridge::FopenFn mockable_fopen_function = fsbridge::fopen);
 
     /** Update the chain tip based on database information, i.e. CoinsTip()'s best block. */
     bool LoadChainTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -1013,14 +1011,6 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
 {
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
-
-using FopenFn = std::function<FILE*(const fs::path&, const char*)>;
-
-/** Dump the mempool to disk. */
-bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function = fsbridge::fopen, bool skip_file_commit = false);
-
-/** Load the mempool from disk. */
-bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function = fsbridge::fopen);
 
 /**
  * Return the expected assumeutxo value for a given height, if one exists.

@@ -10,6 +10,7 @@
 #include <init.h>
 
 #include <kernel/checks.h>
+#include <kernel/mempool_persist.h>
 
 #include <addrman.h>
 #include <banman.h>
@@ -41,6 +42,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -102,14 +104,19 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+using kernel::DumpMempool;
+
 using node::CacheSizes;
 using node::CalculateCacheSizes;
 using node::ChainstateLoadVerifyError;
 using node::ChainstateLoadingError;
 using node::CleanupBlockRevFiles;
+using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINTPRIORITY;
 using node::DEFAULT_STOPAFTERBLOCKIMPORT;
 using node::LoadChainstate;
+using node::MempoolPath;
+using node::ShouldPersistMempool;
 using node::NodeContext;
 using node::ThreadImport;
 using node::VerifyLoadedChainstate;
@@ -245,8 +252,8 @@ void Shutdown(NodeContext& node)
     node.addrman.reset();
     node.netgroupman.reset();
 
-    if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        DumpMempool(*node.mempool);
+    if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
+        DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
     // Drop transactions we were still watching, and record fee estimations.
@@ -1669,7 +1676,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, vImportFiles, args);
+        ThreadImport(chainman, vImportFiles, args, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{});
     });
 
     // Wait for genesis block to be processed
