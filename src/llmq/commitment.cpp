@@ -24,9 +24,9 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 {
 }
 
-#define LogPrintfFinalCommitment(...) if (LogAcceptCategory(BCLog::LLMQ)) { \
+#define LogPrintfFinalCommitment(...) do { if (LogAcceptCategory(BCLog::LLMQ)) { \
     LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
-}
+} } while (false)
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
@@ -80,16 +80,16 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         return false;
     }
     auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
-    std::stringstream ss;
-    for (const auto i : irange::range(llmq_params.size)) {
-        ss << "v[" << i << "]=" << validMembers[i];
-    }
-    std::stringstream ss2;
-    for (const auto i : irange::range(llmq_params.size)) {
-        ss2 << "s[" << i << "]=" << signers[i];
+    if (LogAcceptCategory(BCLog::LLMQ)) {
+        std::stringstream ss;
+        std::stringstream ss2;
+        for (const auto i: irange::range(llmq_params.size)) {
+            ss << "v[" << i << "]=" << validMembers[i];
+            ss2 << "s[" << i << "]=" << signers[i];
+        }
+        LogPrintfFinalCommitment("CFinalCommitment::%s mns[%d] validMembers[%s] signers[%s]\n", __func__, members.size(), ss.str(), ss2.str());
     }
 
-    LogPrintfFinalCommitment("CFinalCommitment::%s mns[%d] validMembers[%s] signers[%s]\n", __func__, members.size(), ss.str(), ss2.str());
     for (const auto i : irange::range(members.size(), size_t(llmq_params.size))) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("q[%s] invalid validMembers bitset. bit %d should not be set\n", quorumHash.ToString(), i);
@@ -104,11 +104,14 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
     // sigs are only checked when the block is processed
     if (checkSigs) {
         uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
-        std::stringstream ss3;
-        for (const auto& mn : members) {
-            ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
+        if (LogAcceptCategory(BCLog::LLMQ)) {
+            std::stringstream ss3;
+            for (const auto &mn: members) {
+                ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
+            }
+            LogPrintfFinalCommitment("CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n",
+                                     __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
         }
-        LogPrintfFinalCommitment("CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n", __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
         std::vector<CBLSPublicKey> memberPubKeys;
         for (const auto i : irange::range(members.size())) {
             if (!signers[i]) {
@@ -168,11 +171,14 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-payload");
     }
     const auto& llmq_params = GetLLMQParams(qcTx.commitment.llmqType);
-    std::stringstream ss;
-    for (const auto i : irange::range(llmq_params.size)) {
-        ss << "v[" << i << "]=" << qcTx.commitment.validMembers[i];
+    if (LogAcceptCategory(BCLog::LLMQ)) {
+        std::stringstream ss;
+        for (const auto i: irange::range(llmq_params.size)) {
+            ss << "v[" << i << "]=" << qcTx.commitment.validMembers[i];
+        }
+        LogPrintfFinalCommitment("%s llmqType[%d] validMembers[%s] signers[]\n", __func__,
+                                 int(qcTx.commitment.llmqType), ss.str());
     }
-    LogPrintfFinalCommitment("%s llmqType[%d] validMembers[%s] signers[]\n", __func__, int(qcTx.commitment.llmqType), ss.str());
 
     if (qcTx.nVersion == 0 || qcTx.nVersion > CFinalCommitmentTxPayload::CURRENT_VERSION) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.nVersion[%d]\n", pindexPrev->nHeight, qcTx.nVersion);
@@ -185,7 +191,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     }
 
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(qcTx.commitment.quorumHash));
-    if (!pQuorumBaseBlockIndex) {
+    if (pQuorumBaseBlockIndex == nullptr) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
 

@@ -44,11 +44,11 @@ public:
 
     int CountSigners() const
     {
-        return (int)std::count(signers.begin(), signers.end(), true);
+        return int(std::count(signers.begin(), signers.end(), true));
     }
     int CountValidMembers() const
     {
-        return (int)std::count(validMembers.begin(), validMembers.end(), true);
+        return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
     bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
@@ -100,8 +100,8 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("llmqType", (int)llmqType);
+        obj.pushKV("version", int{nVersion});
+        obj.pushKV("llmqType", int(llmqType));
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("quorumIndex", quorumIndex);
         obj.pushKV("signersCount", CountSigners());
@@ -135,8 +135,8 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("version", int{nVersion});
+        obj.pushKV("height", int(nHeight));
 
         UniValue qcObj;
         commitment.ToJson(qcObj);

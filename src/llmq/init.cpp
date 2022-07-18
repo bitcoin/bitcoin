@@ -67,56 +67,56 @@ void DestroyLLMQSystem()
 
 void StartLLMQSystem()
 {
-    if (blsWorker) {
+    if (blsWorker != nullptr) {
         blsWorker->Start();
     }
-    if (quorumDKGSessionManager) {
+    if (quorumDKGSessionManager != nullptr) {
         quorumDKGSessionManager->StartThreads();
     }
-    if (quorumManager) {
+    if (quorumManager != nullptr) {
         quorumManager->Start();
     }
-    if (quorumSigSharesManager) {
+    if (quorumSigSharesManager != nullptr) {
         quorumSigSharesManager->RegisterAsRecoveredSigsListener();
         quorumSigSharesManager->StartWorkerThread();
     }
-    if (chainLocksHandler) {
+    if (chainLocksHandler != nullptr) {
         chainLocksHandler->Start();
     }
-    if (quorumInstantSendManager) {
+    if (quorumInstantSendManager != nullptr) {
         quorumInstantSendManager->Start();
     }
 }
 
 void StopLLMQSystem()
 {
-    if (quorumInstantSendManager) {
+    if (quorumInstantSendManager != nullptr) {
         quorumInstantSendManager->Stop();
     }
-    if (chainLocksHandler) {
+    if (chainLocksHandler != nullptr) {
         chainLocksHandler->Stop();
     }
-    if (quorumSigSharesManager) {
+    if (quorumSigSharesManager != nullptr) {
         quorumSigSharesManager->StopWorkerThread();
         quorumSigSharesManager->UnregisterAsRecoveredSigsListener();
     }
-    if (quorumManager) {
+    if (quorumManager != nullptr) {
         quorumManager->Stop();
     }
-    if (quorumDKGSessionManager) {
+    if (quorumDKGSessionManager != nullptr) {
         quorumDKGSessionManager->StopThreads();
     }
-    if (blsWorker) {
+    if (blsWorker != nullptr) {
         blsWorker->Stop();
     }
 }
 
 void InterruptLLMQSystem()
 {
-    if (quorumSigSharesManager) {
+    if (quorumSigSharesManager != nullptr) {
         quorumSigSharesManager->InterruptWorkerThread();
     }
-    if (quorumInstantSendManager) {
+    if (quorumInstantSendManager != nullptr) {
         quorumInstantSendManager->InterruptWorkerThread();
     }
 }

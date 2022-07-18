@@ -261,7 +261,7 @@ bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
+        const auto& dkgType = p.second;
         if (dkgType.pendingContributions.HasSeen(inv.hash)
             || dkgType.pendingComplaints.HasSeen(inv.hash)
             || dkgType.pendingJustifications.HasSeen(inv.hash)
@@ -278,7 +278,7 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
+        const auto& dkgType = p.second;
         LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase::Initialized || dkgType.phase > QuorumPhase::Contribute) {
             continue;
@@ -299,7 +299,7 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
+        const auto& dkgType = p.second;
         LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase::Contribute || dkgType.phase > QuorumPhase::Complain) {
             continue;
@@ -320,7 +320,7 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
+        const auto& dkgType = p.second;
         LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase::Complain || dkgType.phase > QuorumPhase::Justify) {
             continue;
@@ -341,7 +341,7 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
         return false;
 
     for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
+        const auto& dkgType = p.second;
         LOCK(dkgType.cs);
         if (dkgType.phase < QuorumPhase::Justify || dkgType.phase > QuorumPhase::Commit) {
             continue;
