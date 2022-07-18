@@ -2051,7 +2051,7 @@ static RPCHelpMan syscoincreatenevmblob()
     newVchData.insert(newVchData.end(), it, std::end(vchData));
     // fill with 0's to make sure we are using divisor of 32
     newVchData.insert(newVchData.end(), std::begin(vchFill), std::end((vchFill)));
-    // make sure we are atleast 1024 bytes (32 multiples of 32 bytes) long to ensure KZG commitment verification works
+    // make sure we are at least 1024 bytes (32 multiples of 32 bytes) long to ensure KZG commitment verification works
     const int numNewMultiples = (newVchData.size() / 32);
     if(numNewMultiples < 32) {
         const int numNewFillBytes = 32*(32 - numNewMultiples);
