@@ -2334,7 +2334,7 @@ util::Result<void> CWallet::RemoveTxs(std::vector<Txid>& txs_to_remove)
     bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
         util::Result<void> result{RemoveTxs(batch, txs_to_remove)};
         if (!result) str_err = util::ErrorString(result);
-        return result.has_value();
+        return bool{result};
     });
     if (!str_err.empty()) return util::Error{str_err};
     if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
