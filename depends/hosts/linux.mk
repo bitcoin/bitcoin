@@ -5,6 +5,10 @@ ifneq ($(LTO),)
 linux_CFLAGS += -flto
 linux_CXXFLAGS += -flto
 linux_LDFLAGS += -flto
+
+linux_AR = $(host_toolchain)gcc-ar
+linux_NM = $(host_toolchain)gcc-nm
+linux_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
 linux_release_CFLAGS=-O2
