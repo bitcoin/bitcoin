@@ -8,6 +8,7 @@
 #include <node/miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/mempool_utils.h>
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
@@ -31,15 +32,6 @@ struct MockedTxPool : public CTxMemPool {
         LOCK(cs);
         lastRollingFeeUpdate = GetTime();
         blockSinceLastRollingFeeBump = true;
-    }
-};
-
-class DummyChainState final : public CChainState
-{
-public:
-    void SetMempool(CTxMemPool* mempool)
-    {
-        m_mempool = mempool;
     }
 };
 
