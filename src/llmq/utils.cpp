@@ -701,12 +701,23 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
 
 bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash)
 {
+    if (!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) {
+        return false;
+    }
+
     auto members = GetAllQuorumMembers(llmqParams.type, pQuorumBaseBlockIndex);
+    if (members.empty()) {
+        return false;
+    }
+
     bool isMember = std::find_if(members.begin(), members.end(), [&](const auto& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
 
     if (!isMember && !CLLMQUtils::IsWatchQuorumsEnabled()) {
         return false;
     }
+
+    LogPrint(BCLog::NET_NETCONN, "CLLMQUtils::%s -- isMember=%d for quorum %s:\n",
+            __func__, isMember, pQuorumBaseBlockIndex->GetBlockHash().ToString());
 
     std::set<uint256> connections;
     std::set<uint256> relayMembers;

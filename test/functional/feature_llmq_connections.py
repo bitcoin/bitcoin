@@ -69,6 +69,20 @@ class LLMQConnections(DashTestFramework):
 
         self.check_reconnects(4)
 
+        self.log.info("check that inter-quorum masternode conections are added")
+        added = False
+        for mn in self.mninfo:
+            if len(mn.node.quorum("memberof", mn.proTxHash)) > 0:
+                try:
+                    with mn.node.assert_debug_log(['adding mn inter-quorum connections']):
+                        self.mine_quorum()
+                    added = True
+                except:
+                    pass # it's ok to not add connections sometimes
+            if added:
+                break
+        assert added # no way we added none
+
     def check_reconnects(self, expected_connection_count):
         self.log.info("disable and re-enable networking on all masternodes")
         for mn in self.mninfo:
