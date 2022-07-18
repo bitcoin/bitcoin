@@ -175,10 +175,11 @@ static bool rest_headers(const std::any& context,
 {
     if (!CheckWarmup(req))
         return false;
-    std::vector<std::string> path = SplitString(param, '/');
 
+    auto path {req->GetPath()};
     std::string raw_count;
     std::string hashStr;
+
     if (path.size() == 2) {
         // deprecated path: /rest/headers/<count>/<hash>
         hashStr = path[1];
@@ -339,16 +340,16 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
 {
     if (!CheckWarmup(req)) return false;
 
-    std::vector<std::string> uri_parts = SplitString(param, '/');
+    auto path {req->GetPath()};
     std::string raw_count;
     std::string raw_blockhash;
-    if (uri_parts.size() == 3) {
+    if (path.size() == 3) {
         // deprecated path: /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>
-        raw_blockhash = uri_parts[2];
-        raw_count = uri_parts[1];
-    } else if (uri_parts.size() == 2) {
+        raw_blockhash = path[2];
+        raw_count = path[1];
+    } else if (path.size() == 2) {
         // new path with query parameter: /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>
-        raw_blockhash = uri_parts[1];
+        raw_blockhash = path[1];
         raw_count = req->GetQueryParameter("count").value_or("5");
     } else {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>.<ext>?count=<count>");
@@ -365,13 +366,13 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     }
 
     BlockFilterType filtertype;
-    if (!BlockFilterTypeByName(uri_parts[0], filtertype)) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
+    if (!BlockFilterTypeByName(path[0], filtertype)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + path[0]);
     }
 
     BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
     if (!index) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
+        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + path[0]);
     }
 
     std::vector<const CBlockIndex*> headers;
@@ -456,24 +457,24 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
     if (!CheckWarmup(req)) return false;
 
     // request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
-    std::vector<std::string> uri_parts = SplitString(param, '/');
-    if (uri_parts.size() != 2) {
+    auto path {req->GetPath()};
+    if (path.size() != 2) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilter/<filtertype>/<blockhash>");
     }
 
     uint256 block_hash;
-    if (!ParseHashStr(uri_parts[1], block_hash)) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + uri_parts[1]);
+    if (!ParseHashStr(path[1], block_hash)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + path[1]);
     }
 
     BlockFilterType filtertype;
-    if (!BlockFilterTypeByName(uri_parts[0], filtertype)) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + uri_parts[0]);
+    if (!BlockFilterTypeByName(path[0], filtertype)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + path[0]);
     }
 
     BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
     if (!index) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + uri_parts[0]);
+        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + path[0]);
     }
 
     const CBlockIndex* block_index;
@@ -485,7 +486,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         LOCK(cs_main);
         block_index = chainman.m_blockman.LookupBlockIndex(block_hash);
         if (!block_index) {
-            return RESTERR(req, HTTP_NOT_FOUND, uri_parts[1] + " not found");
+            return RESTERR(req, HTTP_NOT_FOUND, path[1] + " not found");
         }
         block_was_connected = block_index->IsValid(BLOCK_VALID_SCRIPTS);
     }
@@ -670,16 +671,11 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     if (!CheckWarmup(req))
         return false;
 
-    std::vector<std::string> uriParts;
-    if (param.length() > 1)
-    {
-        std::string strUriParams = param.substr(1);
-        uriParts = SplitString(strUriParams, '/');
-    }
+    auto path {req->GetPath()};
 
     // throw exception in case of an empty request
     std::string strRequestMutable = req->ReadBody();
-    if (strRequestMutable.length() == 0 && uriParts.size() == 0)
+    if (strRequestMutable.length() == 0 && path.size() == 0)
         return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     bool fInputParsed = false;
@@ -689,17 +685,17 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     // parse/deserialize input
     // input-format = output-format, rest/getutxos/bin requires binary input, gives binary output, ...
 
-    if (uriParts.size() > 0)
+    if (path.size() > 0)
     {
         //inputs is sent over URI scheme (/rest/getutxos/checkmempool/txid1-n/txid2-n/...)
-        if (uriParts[0] == "checkmempool") fCheckMemPool = true;
+        if (path[0] == "checkmempool") fCheckMemPool = true;
 
-        for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
+        for (size_t i = (fCheckMemPool) ? 1 : 0; i < path.size(); i++)
         {
             uint256 txid;
             int32_t nOutput;
-            std::string strTxid = uriParts[i].substr(0, uriParts[i].find('-'));
-            std::string strOutput = uriParts[i].substr(uriParts[i].find('-')+1);
+            std::string strTxid = path[i].substr(0, path[i].find('-'));
+            std::string strOutput = path[i].substr(path[i].find('-')+1);
 
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
