@@ -149,6 +149,26 @@ BOOST_AUTO_TEST_CASE(check_returned)
     ExpectError(TruthyFalsyFn(1, false), Untranslated("error value 1."), 1);
 }
 
+BOOST_AUTO_TEST_CASE(check_update)
+{
+    // Test using Update method to change a result value from success -> error,
+    // and error->success.
+    util::Result<int, FnError> result;
+    ExpectSuccess(result, {}, 0);
+    result.update({util::Error{Untranslated("error")}, ERR1});
+    ExpectError(result, Untranslated("error"), ERR1);
+    result.update(2);
+    ExpectSuccess(result, Untranslated(""), 2);
+
+    // Test the same thing but with non-copyable success and error types.
+    util::Result<NoCopy, NoCopy> result2{0};
+    ExpectSuccess(result2, {}, 0);
+    result2.update({util::Error{Untranslated("error")}, 3});
+    ExpectError(result2, Untranslated("error"), 3);
+    result2.update(4);
+    ExpectSuccess(result2, Untranslated(""), 4);
+}
+
 BOOST_AUTO_TEST_CASE(check_dereference_operators)
 {
     util::Result<std::pair<int, std::string>> mutable_result;
