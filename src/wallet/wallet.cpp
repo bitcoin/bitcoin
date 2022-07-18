@@ -417,17 +417,18 @@ void CWallet::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& metadata, CKey
 
     // derive child key at next index, skip keys already known to the wallet
     CExtKey childKey;
-    CKeyMetadata metadataTmp;
+    KeyOriginInfo key_origin_tmp;
     uint32_t nChildIndex = fInternal ? acc.nInternalChainCounter : acc.nExternalChainCounter;
     do {
-        // NOTE: DeriveChildExtKey updates metadata, use temporary structure to make sure
-        // we start with the original (non-updated) data each time.
-        metadataTmp = metadata;
-        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, metadataTmp);
+        // NOTE: DeriveChildExtKey updates key_origin, make sure to clear it.
+        key_origin_tmp.clear();
+        hdChainTmp.DeriveChildExtKey(nAccountIndex, fInternal, nChildIndex, childKey, key_origin_tmp);
         // increment childkey index
         nChildIndex++;
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
-    metadata = metadataTmp;
+    metadata.key_origin = key_origin_tmp;
+    assert(!metadata.has_key_origin);
+    metadata.has_key_origin = true;
     secretRet = childKey.key;
 
     CPubKey pubkey = secretRet.GetPubKey();
@@ -496,8 +497,8 @@ bool CWallet::GetKey(const CKeyID &address, CKey& keyOut) const
             throw std::runtime_error(std::string(__func__) + ": Wrong HD chain!");
 
         CExtKey extkey;
-        CKeyMetadata metadataTmp;
-        hdChainCurrent.DeriveChildExtKey(hdPubKey.nAccountIndex, hdPubKey.nChangeIndex != 0, hdPubKey.extPubKey.nChild, extkey, metadataTmp);
+        KeyOriginInfo key_origin_tmp;
+        hdChainCurrent.DeriveChildExtKey(hdPubKey.nAccountIndex, hdPubKey.nChangeIndex != 0, hdPubKey.extPubKey.nChild, extkey, key_origin_tmp);
         keyOut = extkey.key;
 
         return true;
