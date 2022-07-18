@@ -176,13 +176,20 @@ public:
     requires (std::decay_t<O>::is_result)
     Result(O&& other)
     {
-        Move(*this, other);
+        Move</*Constructed=*/false>(*this, other);
     }
 
-    //! Disallow operator= to avoid confusion in the future when the Result
-    //! class gains support for richer error reporting, and callers should have
-    //! ability to set a new result value without clearing existing error
-    //! messages.
+    //! Update this result by moving from another result object.
+    Result& Update(Result&& other) LIFETIMEBOUND
+    {
+        Move</*Constructed=*/true>(*this, other);
+        return *this;
+    }
+
+    //! Disallow operator= and require explicit Result::Update() calls to avoid
+    //! confusion in the future when the Result class gains support for richer
+    //! error reporting, and callers should have ability to set a new result
+    //! value without clearing existing error messages.
     Result& operator=(Result&&) = delete;
 
 protected:
@@ -220,13 +227,32 @@ protected:
     //! since no source information is lost. But assigning non-void source types
     //! to void destination types is not allowed, since this would discard
     //! source information.
-    template <typename DstResult, typename SrcResult>
+    template <bool DstConstructed, typename DstResult, typename SrcResult>
     static void Move(DstResult& dst, SrcResult& src)
     {
         // Move messages values first, then move success or failure value below.
         if (src.GetMessages() && !src.GetMessages()->empty()) {
             dst.EnsureMessages() = std::move(*src.GetMessages());
         }
+        // If DstConstructed is true, it means dst has either a success value or
+        // a failure value set, which needs to be destroyed and replaced. If
+        // DstConstructed is false, then dst is being constructed now and has no
+        // values set.
+        if constexpr (DstConstructed) {
+            if (dst) {
+                // dst has a success value, so destroy it before replacing it with src failure value
+                if constexpr (!std::is_same_v<typename DstResult::SuccessType, void>) {
+                    using DstSuccess = typename DstResult::SuccessType;
+                    dst.m_success.~DstSuccess();
+                }
+            } else {
+                // dst has a failure value, so reset it before replacing it with src success value
+                dst.m_fail_data->failure.reset();
+            }
+        }
+        // At this point dst has no success or failure value set. Can assert
+        // there is no failure value.
+        assert(dst);
         if (src) {
             // src has a success value, so move it to dst. If the src success
             // type is void and the dst success type is non-void, just
@@ -236,6 +262,7 @@ protected:
             } else if constexpr (!std::is_same_v<typename DstResult::SuccessType, void>) {
                new (&dst.m_success) typename DstResult::SuccessType{};
             }
+            assert(dst);
         } else {
             // src has a failure value, so move it to dst. If the src failure
             // type is void, just initialize the dst failure value by default
@@ -245,6 +272,7 @@ protected:
             } else {
                 dst.EnsureFailData().failure.emplace();
             }
+            assert(!dst);
         }
     }
 };
