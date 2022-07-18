@@ -13,6 +13,7 @@
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <rpc/server.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <util/strencodings.h>
@@ -206,6 +207,39 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
     }
 }
 
+/**
+ * Takes a URI, checks if it contains a dot-separated format string (e.g. ".json") in the path, and
+ * if found moves it to a query parameter. Only works when -deprecatedrest=format is set, otherwise
+ * the URI remains unchanged.
+ *
+ * For example, "/rest/headers/some_hash.json?count=5"
+ * becomes      "/rest/headers/some_hash?count=5&format=json"
+ *
+ * This function is temporary, and can be removed once support for "-deprecatedrest=format" is gone.
+ *
+ * @param[in, out] uri Original URI that may contain a format string in the path
+ *
+ * @return Copy of the URI where the format string is guaranteed to be in the query
+ */
+std::string CheckMoveFormatToQuery(const std::string& uri)
+{
+    if (!IsDeprecatedRESTEnabled("format")) return uri;
+
+    for (auto el : std::vector<std::string> {".json", ".hex", ".bin"}) {
+        auto match {uri.find(el)};
+        if (match != std::string::npos) {
+            std::string new_uri {uri};
+            new_uri.replace(match, el.length(), "");
+
+            std::string symbol = (new_uri.find("?") == std::string::npos) ? "?" : "&";
+            auto suffix {symbol + "format=" + el.substr(1)};
+            new_uri.append(suffix);
+            return new_uri;
+        }
+    }
+    return uri;
+}
+
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
@@ -253,6 +287,8 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             match = (strURI.substr(0, i->prefix.size()) == i->prefix);
         if (match) {
             path = strURI.substr(i->prefix.size());
+            size_t query_start = path.find("?");
+            if (query_start != std::string::npos) path = path.substr(0, query_start);
             break;
         }
     }
@@ -616,7 +652,7 @@ CService HTTPRequest::GetPeer() const
 
 std::string HTTPRequest::GetURI() const
 {
-    return evhttp_request_get_uri(req);
+    return CheckMoveFormatToQuery(evhttp_request_get_uri(req));
 }
 
 HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
@@ -642,9 +678,9 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
 
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key) const
 {
-    const char* uri{evhttp_request_get_uri(req)};
+    std::string uri{CheckMoveFormatToQuery(evhttp_request_get_uri(req))};
 
-    return GetQueryParameterFromUri(uri, key);
+    return GetQueryParameterFromUri(uri.c_str(), key);
 }
 
 std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key)

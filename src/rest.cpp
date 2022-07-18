@@ -193,12 +193,10 @@ static bool CheckWarmup(HTTPRequest* req)
 
 static bool rest_headers(const std::any& context,
                          HTTPRequest* req,
-                         const std::string& strURIPart)
+                         const std::string& param)
 {
     if (!CheckWarmup(req))
         return false;
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
     std::vector<std::string> path = SplitString(param, '/');
 
     std::string raw_count;
@@ -244,7 +242,7 @@ static bool rest_headers(const std::any& context,
         }
     }
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
@@ -286,14 +284,11 @@ static bool rest_headers(const std::any& context,
 
 static bool rest_block(const std::any& context,
                        HTTPRequest* req,
-                       const std::string& strURIPart,
+                       const std::string& hashStr,
                        TxVerbosity tx_verbosity)
 {
     if (!CheckWarmup(req))
         return false;
-    std::string hashStr;
-    const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
-
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
@@ -319,7 +314,7 @@ static bool rest_block(const std::any& context,
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
         ssBlock << block;
@@ -362,12 +357,9 @@ static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, co
     return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
 }
 
-static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& param)
 {
     if (!CheckWarmup(req)) return false;
-
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
     std::vector<std::string> uri_parts = SplitString(param, '/');
     std::string raw_count;
@@ -441,7 +433,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         filter_headers.push_back(filter_header);
     }
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ssHeader{SER_NETWORK, PROTOCOL_VERSION};
         for (const uint256& header : filter_headers) {
@@ -481,12 +473,9 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     }
 }
 
-static bool rest_block_filter(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_block_filter(const std::any& context, HTTPRequest* req, const std::string& param)
 {
     if (!CheckWarmup(req)) return false;
-
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
     // request is sent over URI scheme /rest/blockfilter/filtertype/blockhash
     std::vector<std::string> uri_parts = SplitString(param, '/');
@@ -540,7 +529,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         return RESTERR(req, HTTP_NOT_FOUND, errmsg);
     }
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ssResp{SER_NETWORK, PROTOCOL_VERSION};
         ssResp << filter;
@@ -580,10 +569,8 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 {
     if (!CheckWarmup(req))
         return false;
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::JSON: {
         JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
@@ -602,14 +589,12 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 
 static bool rest_mempool_info(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
     const CTxMemPool* mempool = GetMemPool(context, req);
     if (!mempool) return false;
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::JSON: {
         UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool);
 
@@ -629,10 +614,8 @@ static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, con
     if (!CheckWarmup(req)) return false;
     const CTxMemPool* mempool = GetMemPool(context, req);
     if (!mempool) return false;
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::JSON: {
         UniValue mempoolObject = MempoolToJSON(*mempool, true);
 
@@ -647,12 +630,10 @@ static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, con
     }
 }
 
-static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& hashStr)
 {
     if (!CheckWarmup(req))
         return false;
-    std::string hashStr;
-    const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
 
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
@@ -670,7 +651,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
         ssTx << tx;
@@ -706,12 +687,10 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     }
 }
 
-static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::string& param)
 {
     if (!CheckWarmup(req))
         return false;
-    std::string param;
-    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
 
     std::vector<std::string> uriParts;
     if (param.length() > 1)
@@ -757,6 +736,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
     }
 
+    auto rf {ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))};
     switch (rf) {
     case RESTResponseFormat::HEX: {
         // convert hex to bin, continue then with bin part
@@ -897,11 +877,9 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 }
 
 static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
-                       const std::string& str_uri_part)
+                       const std::string& height_str)
 {
     if (!CheckWarmup(req)) return false;
-    std::string height_str;
-    const RESTResponseFormat rf = ParseDataFormat(height_str, str_uri_part);
 
     int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/bitcoin/bitcoin/pull/18785
     if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
@@ -920,7 +898,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
         }
         pblockindex = active_chain[blockheight];
     }
-    switch (rf) {
+    switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::BINARY: {
         CDataStream ss_blockhash(SER_NETWORK, PROTOCOL_VERSION);
         ss_blockhash << pblockindex->GetBlockHash();

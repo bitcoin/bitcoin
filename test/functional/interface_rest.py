@@ -69,8 +69,9 @@ class RESTTest (BitcoinTestFramework):
             query_params: typing.Dict[str, typing.Any] = None,
             ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
         rest_uri = '/rest' + uri
+        query_params = dict() if query_params is None else query_params
         if req_type in ReqType:
-            rest_uri += f'.{req_type.name.lower()}'
+            query_params['format'] = req_type.name.lower()
         if query_params:
             rest_uri += f'?{urllib.parse.urlencode(query_params)}'
 
