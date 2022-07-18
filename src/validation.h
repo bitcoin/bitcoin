@@ -462,7 +462,7 @@ protected:
     CTxMemPool* m_mempool;
 
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
-    std::unique_ptr<CoinsViews> m_coins_views;
+    CoinsViews m_coins_views;
 
 public:
     //! Reference to a BlockManager instance which itself is shared across all
@@ -494,7 +494,7 @@ public:
     bool CanFlushToDisk() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        return m_coins_views && m_coins_views->m_cacheview;
+        return static_cast<bool>(m_coins_views.m_cacheview);
     }
 
     //! The current chain of blockheaders we consult and build on.
@@ -524,15 +524,15 @@ public:
     CCoinsViewCache& CoinsTip() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        assert(m_coins_views->m_cacheview);
-        return *m_coins_views->m_cacheview.get();
+        assert(m_coins_views.m_cacheview);
+        return *m_coins_views.m_cacheview.get();
     }
 
     //! @returns A reference to the on-disk UTXO set database.
     CCoinsViewDB& CoinsDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        return m_coins_views->m_dbview;
+        return m_coins_views.m_dbview;
     }
 
     //! @returns A pointer to the mempool.
@@ -546,11 +546,8 @@ public:
     CCoinsViewErrorCatcher& CoinsErrorCatcher() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        return m_coins_views->m_catcherview;
+        return m_coins_views.m_catcherview;
     }
-
-    //! Destructs all objects related to accessing the UTXO set.
-    void ResetCoinsViews() { m_coins_views.reset(); }
 
     //! The cache size of the on-disk coins view.
     size_t m_coinsdb_cache_size_bytes{0};

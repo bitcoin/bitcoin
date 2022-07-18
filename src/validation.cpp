@@ -1502,7 +1502,7 @@ CChainState::CChainState(
     const CCoinsViewDB::Options& opts,
     std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
-      m_coins_views{new CoinsViews{[&](CCoinsViewDB::Options opts) { // Make a non-const copy of opts
+      m_coins_views{[&](CCoinsViewDB::Options opts) { // Make a non-const copy of opts
           if (opts.db_path.empty()) {
               std::string ldb_name{"chainstate"};
               if (from_snapshot_blockhash) {
@@ -1511,7 +1511,7 @@ CChainState::CChainState(
               opts.db_path = chainman.m_data_dir / fs::PathFromString(ldb_name);
           }
           return opts;
-      }(opts)}},
+      }(opts)},
       m_blockman(blockman),
       m_params(chainman.GetParams()),
       m_chainman(chainman),
@@ -1520,9 +1520,8 @@ CChainState::CChainState(
 void CChainState::InitCoinsCache(size_t cache_size_bytes)
 {
     AssertLockHeld(::cs_main);
-    assert(m_coins_views != nullptr);
     m_coinstip_cache_size_bytes = cache_size_bytes;
-    m_coins_views->InitCache();
+    m_coins_views.InitCache();
 }
 
 // Note that though this is marked const, we may end up modifying `m_cached_finished_ibd`, which

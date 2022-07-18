@@ -300,7 +300,6 @@ void Shutdown(NodeContext& node)
         for (CChainState* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
             }
         }
     }

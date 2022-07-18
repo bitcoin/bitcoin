@@ -261,7 +261,6 @@ epilogue:
         for (CChainState* chainstate : chainman.GetAll()) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
             }
         }
     }
