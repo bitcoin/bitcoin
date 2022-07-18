@@ -2404,7 +2404,7 @@ public:
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
     {
         // SYSCOIN
-        return pindex->nHeight >= params.MinBIP9WarningHeight &&
+        return m_bit != 19 && m_bit != 28 && m_bit != 7 && pindex->nHeight >= params.MinBIP9WarningHeight &&
                ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
                ((pindex->GetBaseVersion() >> m_bit) & 1) != 0 &&
                ((m_chainman.m_versionbitscache.ComputeBlockVersion(pindex->pprev, params) >> m_bit) & 1) == 0;

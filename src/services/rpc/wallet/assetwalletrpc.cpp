@@ -2005,7 +2005,7 @@ static RPCHelpMan syscoincreatenevmblob()
     return RPCHelpMan{"syscoincreatenevmblob",
         "\nCreate NEVM blob data used by rollups\n",
         {
-            {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data (ascii)"},
+            {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
