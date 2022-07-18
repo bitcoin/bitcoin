@@ -101,7 +101,7 @@ PYTHONPATH="${depends_prefix}/native/lib/python3/dist-packages${PYTHONPATH:+${PA
 
 if test -n "@AR@"; then
   AR="@AR@"
-  ac_cv_path_ac_pt_AR="${AR}"
+  ac_cv_path_AR="${AR}"
 fi
 
 if test -n "@RANLIB@"; then
@@ -122,12 +122,12 @@ fi
 if test "@host_os@" = darwin; then
   if test -n "@OBJDUMP@"; then
     OBJDUMP="@OBJDUMP@"
-    ac_cv_path_ac_pt_OBJDUMP="${OBJDUMP}"
+    ac_cv_path_OBJDUMP="${OBJDUMP}"
   fi
 
   if test -n "@DSYMUTIL@"; then
     DSYMUTIL="@DSYMUTIL@"
-    ac_cv_path_ac_pt_DSYMUTIL="${DSYMUTIL}"
+    ac_cv_path_DSYMUTIL="${DSYMUTIL}"
   fi
 fi
 
