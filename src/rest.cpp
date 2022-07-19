@@ -262,12 +262,13 @@ static bool rest_headers(const std::any& context,
 
 static bool rest_block(const std::any& context,
                        HTTPRequest* req,
-                       const std::string& hashStr,
+                       const std::string& param,
                        TxVerbosity tx_verbosity)
 {
     if (!CheckWarmup(req))
         return false;
     uint256 hash;
+    const auto hashStr {req->GetPathParameter(0).value_or("")};
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
@@ -607,12 +608,13 @@ static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, con
     }
 }
 
-static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& hashStr)
+static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& param)
 {
     if (!CheckWarmup(req))
         return false;
 
     uint256 hash;
+    const auto hashStr {req->GetPathParameter(0).value_or("")};
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
@@ -849,10 +851,11 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 }
 
 static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
-                       const std::string& height_str)
+                       const std::string& param)
 {
     if (!CheckWarmup(req)) return false;
 
+    const auto height_str {req->GetPathParameter(0).value_or("")};
     int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/bitcoin/bitcoin/pull/18785
     if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
