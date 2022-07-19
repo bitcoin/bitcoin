@@ -195,8 +195,9 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        obj.pushKV("services", strprintf("%016x", stats.nServices));
-        obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
+        ServiceFlags services{fStateStats ? statestats.their_services : ServiceFlags::NODE_NONE};
+        obj.pushKV("services", strprintf("%016x", services));
+        obj.pushKV("servicesnames", GetServicesNames(services));
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
