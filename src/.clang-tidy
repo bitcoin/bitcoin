@@ -1,12 +1,14 @@
 Checks: '
 -*,
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-redundant-declaration,
 '
 WarningsAsErrors: '
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-redundant-declaration,

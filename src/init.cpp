@@ -110,7 +110,6 @@ using node::CacheSizes;
 using node::CalculateCacheSizes;
 using node::ChainstateLoadVerifyError;
 using node::ChainstateLoadingError;
-using node::CleanupBlockRevFiles;
 using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINTPRIORITY;
 using node::DEFAULT_STOPAFTERBLOCKIMPORT;
