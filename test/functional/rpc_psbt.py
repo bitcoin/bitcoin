@@ -22,6 +22,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     find_output,
+    find_vout_for_address,
 )
 from test_framework.wallet_util import bytes_to_wif
 
@@ -763,6 +764,16 @@ class PSBTTest(BitcoinTestFramework):
             psbt = watchonly.sendall([wallet.getnewaddress()])["psbt"]
             psbt = self.nodes[0].walletprocesspsbt(psbt)["psbt"]
             self.nodes[0].sendrawtransaction(self.nodes[0].finalizepsbt(psbt)["hex"])
+
+            self.log.info("Test that walletprocesspsbt both updates and signs a non-updated psbt containing Taproot inputs")
+            addr = self.nodes[0].getnewaddress("", "bech32m")
+            txid = self.nodes[0].sendtoaddress(addr, 1)
+            vout = find_vout_for_address(self.nodes[0], txid, addr)
+            psbt = self.nodes[0].createpsbt([{"txid": txid, "vout": vout}], [{self.nodes[0].getnewaddress(): 0.9999}])
+            signed = self.nodes[0].walletprocesspsbt(psbt)
+            rawtx = self.nodes[0].finalizepsbt(signed["psbt"])["hex"]
+            self.nodes[0].sendrawtransaction(rawtx)
+            self.generate(self.nodes[0], 1)
 
 if __name__ == '__main__':
     PSBTTest().main()
