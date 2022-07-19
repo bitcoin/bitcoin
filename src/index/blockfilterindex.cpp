@@ -9,6 +9,7 @@
 #include <index/blockfilterindex.h>
 #include <node/blockstorage.h>
 #include <util/system.h>
+#include <validation.h>
 
 using node::UndoReadFromDisk;
 
@@ -94,9 +95,9 @@ struct DBHashKey {
 
 static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
-BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
+BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)
-    : m_filter_type(filter_type)
+    : BaseIndex(std::move(chain)), m_filter_type(filter_type)
 {
     const std::string& filter_name = BlockFilterTypeName(filter_type);
     if (filter_name.empty()) throw std::invalid_argument("unknown filter_type");
@@ -109,7 +110,7 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
-bool BlockFilterIndex::Init()
+bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
@@ -124,10 +125,10 @@ bool BlockFilterIndex::Init()
         m_next_filter_pos.nFile = 0;
         m_next_filter_pos.nPos = 0;
     }
-    return BaseIndex::Init();
+    return true;
 }
 
-bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
+bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
 {
     const FlatFilePos& pos = m_next_filter_pos;
 
@@ -141,7 +142,7 @@ bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
     }
 
     batch.Write(DB_FILTER_POS, pos);
-    return BaseIndex::CommitInternal(batch);
+    return true;
 }
 
 bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, BlockFilter& filter) const
@@ -214,22 +215,25 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     return data_size;
 }
 
-bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
+bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     CBlockUndo block_undo;
     uint256 prev_header;
 
-    if (pindex->nHeight > 0) {
+    if (block.height > 0) {
+        // pindex variable gives indexing code access to node internals. It
+        // will be removed in upcoming commit
+        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
         if (!UndoReadFromDisk(block_undo, pindex)) {
             return false;
         }
 
         std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(pindex->nHeight - 1), read_out)) {
+        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
             return false;
         }
 
-        uint256 expected_block_hash = pindex->pprev->GetBlockHash();
+        uint256 expected_block_hash = *Assert(block.prev_hash);
         if (read_out.first != expected_block_hash) {
             return error("%s: previous block header belongs to unexpected block %s; expected %s",
                          __func__, read_out.first.ToString(), expected_block_hash.ToString());
@@ -238,18 +242,18 @@ bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex
         prev_header = read_out.second.header;
     }
 
-    BlockFilter filter(m_filter_type, block, block_undo);
+    BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
 
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
-    value.first = pindex->GetBlockHash();
+    value.first = block.hash;
     value.second.hash = filter.GetHash();
     value.second.header = filter.ComputeHeader(prev_header);
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(pindex->nHeight), value)) {
+    if (!m_db->Write(DBHeightKey(block.height), value)) {
         return false;
     }
 
@@ -283,17 +287,15 @@ static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
     return true;
 }
 
-bool BlockFilterIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
+bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
 {
-    assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
-
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
 
     // During a reorg, we need to copy all filters for blocks that are getting disconnected from the
     // height index to the hash index so we can still find them when the height index entries are
     // overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip->nHeight, current_tip->nHeight)) {
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip.height, current_tip.height)) {
         return false;
     }
 
@@ -303,7 +305,7 @@ bool BlockFilterIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex*
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
-    return BaseIndex::Rewind(current_tip, new_tip);
+    return true;
 }
 
 static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
@@ -467,12 +469,12 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
     for (auto& entry : g_filter_indexes) fn(entry.second);
 }
 
-bool InitBlockFilterIndex(BlockFilterType filter_type,
+bool InitBlockFilterIndex(std::function<std::unique_ptr<interfaces::Chain>()> make_chain, BlockFilterType filter_type,
                           size_t n_cache_size, bool f_memory, bool f_wipe)
 {
     auto result = g_filter_indexes.emplace(std::piecewise_construct,
                                            std::forward_as_tuple(filter_type),
-                                           std::forward_as_tuple(filter_type,
+                                           std::forward_as_tuple(make_chain(), filter_type,
                                                                  n_cache_size, f_memory, f_wipe));
     return result.second;
 }
