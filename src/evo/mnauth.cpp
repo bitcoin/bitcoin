@@ -70,10 +70,9 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         return;
     }
 
-    if ((~pnode->nServices) & NODE_NETWORK) {
+    if (peer && !CanServeBlocks(*peer)) {
         // NODE_NETWORK bit is missing in node's services
-        if(peer)
-            peerman.Misbehaving(*peer, 100, "mnauth from a node with invalid services");
+        peerman.Misbehaving(*peer, 100, "mnauth from a node with invalid services");
         return;
     }
 

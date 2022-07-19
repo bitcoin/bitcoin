@@ -33,6 +33,7 @@ struct CNodeStateStats {
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
+    ServiceFlags their_services;
 };
 // SYSCOIN
 extern RecursiveMutex g_cs_orphans;
@@ -50,6 +51,23 @@ extern RecursiveMutex g_cs_orphans;
 struct Peer {
     /** Same id as the CNode object for this peer */
     const NodeId m_id{0};
+
+    /** Services we offered to this peer.
+     *
+     *  This is supplied by CConnman during peer initialization. It's const
+     *  because there is no protocol defined for renegotiating services
+     *  initially offered to a peer. The set of local services we offer should
+     *  not change after initialization.
+     *
+     *  An interesting example of this is NODE_NETWORK and initial block
+     *  download: a node which starts up from scratch doesn't have any blocks
+     *  to serve, but still advertises NODE_NETWORK because it will eventually
+     *  fulfill this role after IBD completes. P2P code is written in such a
+     *  way that it can gracefully handle peers who don't make good on their
+     *  service advertisements. */
+    const ServiceFlags m_our_services;
+    /** Services this peer offered to us. */
+    std::atomic<ServiceFlags> m_their_services{NODE_NONE};
 
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
@@ -208,8 +226,9 @@ struct Peer {
     // SYSCOIN
     /** This peer's a masternode connection */
     std::atomic<bool> m_masternode_connection{false};
-    Peer(NodeId id)
+    explicit Peer(NodeId id, ServiceFlags our_services)
         : m_id{id}
+        , m_our_services{our_services}
     {}
 
 private:
@@ -295,4 +314,5 @@ public:
 /** Increase a node's misbehavior score. */
 bool IsBanned(NodeId nodeid, BanMan& banman);
 unsigned int GetMaxInv();
+bool CanServeBlocks(const Peer& peer);
 #endif // SYSCOIN_NET_PROCESSING_H

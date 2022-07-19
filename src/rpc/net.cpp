@@ -203,8 +203,10 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        obj.pushKV("services", strprintf("%016x", stats.nServices));
-        obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
+        ServiceFlags services{fStateStats ? statestats.their_services : ServiceFlags::NODE_NONE};
+        obj.pushKV("services", strprintf("%016x", services));
+        obj.pushKV("servicesnames", GetServicesNames(services));
+        // SYSCOIN
         if (!stats.verifiedProRegTxHash.IsNull()) {
             obj.pushKV("verified_proregtx_hash", stats.verifiedProRegTxHash.ToString());
         }
