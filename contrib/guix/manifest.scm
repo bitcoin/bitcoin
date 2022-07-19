@@ -607,8 +607,7 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
-                                                      #:base-kernel-headers base-linux-kernel-headers))
+                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
