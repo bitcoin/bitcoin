@@ -6,12 +6,16 @@
 #define BITCOIN_INDEX_BASE_H
 
 #include <dbwrapper.h>
+#include <interfaces/chain.h>
 #include <threadinterrupt.h>
 #include <validationinterface.h>
 
 class CBlock;
 class CBlockIndex;
 class CChainState;
+namespace interfaces {
+class Chain;
+} // namespace interfaces
 
 struct IndexSummary {
     std::string name;
@@ -59,6 +63,9 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
+    /// Read best block locator and check that data needed to sync has not been pruned.
+    bool Init();
+
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
     /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
@@ -76,30 +83,32 @@ private:
     /// getting corrupted.
     bool Commit();
 
+    /// Loop over disconnected blocks and call CustomRewind.
+    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
     virtual bool AllowPrune() const = 0;
 
 protected:
+    std::unique_ptr<interfaces::Chain> m_chain;
     CChainState* m_chainstate{nullptr};
 
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
-    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
-
     /// Initialize internal state from the database and block index.
-    [[nodiscard]] virtual bool Init();
+    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockKey>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.
-    virtual bool CommitInternal(CDBBatch& batch);
+    virtual bool CustomCommit(CDBBatch& batch) { return true; }
 
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
-    virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+    [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
 
     virtual DB& GetDB() const = 0;
 
@@ -110,6 +119,7 @@ protected:
     void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
+    BaseIndex(std::unique_ptr<interfaces::Chain> chain);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
@@ -124,7 +134,7 @@ public:
 
     /// Start initializes the sync state and registers the instance as a
     /// ValidationInterface so that it stays in sync with blockchain updates.
-    [[nodiscard]] bool Start(CChainState& active_chainstate);
+    [[nodiscard]] bool Start();
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
