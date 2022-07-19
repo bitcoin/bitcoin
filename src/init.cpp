@@ -110,6 +110,7 @@
 
 using kernel::DumpMempool;
 using kernel::ValidationCacheSizes;
+using kernel::nDefaultDbBatchSize;
 
 using node::ApplyArgsManOptions;
 using node::CacheSizes;

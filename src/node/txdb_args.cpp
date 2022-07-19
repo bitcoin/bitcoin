@@ -15,4 +15,11 @@ void ApplyArgsManOptions(const ArgsManager& argsman, kernel::BlockTreeDBOpts& op
     opts.do_compact = argsman.GetBoolArg("-forcecompactdb", false);
 }
 
+void ApplyArgsManOptions(const ArgsManager& argsman, kernel::CoinsViewDBOpts& coinsviewdb_opts)
+{
+    coinsviewdb_opts.do_compact = argsman.GetBoolArg("-forcecompactdb", coinsviewdb_opts.do_compact);
+    coinsviewdb_opts.batch_write_size = argsman.GetIntArg("-dbbatchsize", coinsviewdb_opts.batch_write_size);
+    coinsviewdb_opts.simulate_write_crash_ratio = argsman.GetIntArg("-dbcrashratio", coinsviewdb_opts.simulate_write_crash_ratio);
+}
+
 } // namespace node

@@ -7,6 +7,7 @@
 
 namespace kernel {
 struct BlockTreeDBOpts;
+struct CoinsViewDBOpts;
 } //namespace kernel
 
 class ArgsManager;
@@ -14,6 +15,7 @@ class ArgsManager;
 namespace node {
 
 void ApplyArgsManOptions(const ArgsManager& argsman, kernel::BlockTreeDBOpts& opts);
+void ApplyArgsManOptions(const ArgsManager& argsman, kernel::CoinsViewDBOpts& coinsviewdb_opts);
 
 } // namespace node
 

@@ -17,6 +17,8 @@
 
 #include <stdint.h>
 
+using kernel::nDefaultDbBatchSize;
+
 static constexpr uint8_t DB_COIN{'C'};
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
 static constexpr uint8_t DB_BLOCK_INDEX{'b'};
