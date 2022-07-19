@@ -113,7 +113,7 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
                         LOCK(g_cs_orphans);
                         bool add_tx = orphanage.AddTx(tx, peer_id);
                         // if have_tx is still false, it must be too big
-                        Assert(!have_tx == GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT);
+                        Assert(!have_tx == (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT));
                         Assert(!have_tx || !add_tx);
                     }
                 },
