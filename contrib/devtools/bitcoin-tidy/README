@@ -1,0 +1,8 @@
+# Bitcoin Tidy
+
+Example Usage:
+
+```bash
+cmake -S . -B build -DLLVM_DIR=/path/to/lib/cmake/llvm -DCMAKE_BUILD_TYPE=Release
+make -C build -j$(nproc)
+```
