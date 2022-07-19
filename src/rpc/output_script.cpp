@@ -26,11 +26,6 @@
 #include <tuple>
 #include <vector>
 
-namespace node {
-struct NodeContext;
-}
-using node::NodeContext;
-
 static RPCHelpMan validateaddress()
 {
     return RPCHelpMan{

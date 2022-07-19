@@ -13,9 +13,6 @@
 
 #include <chrono>
 
-using kernel::CCoinsStats;
-using kernel::CoinStatsHashType;
-
 BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
 
 static void IndexWaitSynced(BaseIndex& index)

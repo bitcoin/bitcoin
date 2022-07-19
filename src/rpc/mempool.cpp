@@ -25,7 +25,6 @@ using kernel::DumpMempool;
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::MempoolPath;
-using node::ShouldPersistMempool;
 using node::NodeContext;
 
 static RPCHelpMan sendrawtransaction()

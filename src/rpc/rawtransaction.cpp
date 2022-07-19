@@ -46,11 +46,9 @@
 #include <univalue.h>
 
 using node::AnalyzePSBT;
-using node::BroadcastTransaction;
 using node::FindCoins;
 using node::GetTransaction;
 using node::PSBTAnalysis;
-using node::ReadBlockFromDisk;
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, ChainstateManager& chainstate)
 {

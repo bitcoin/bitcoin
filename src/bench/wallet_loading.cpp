@@ -19,8 +19,6 @@
 using wallet::CWallet;
 using wallet::DatabaseFormat;
 using wallet::DatabaseOptions;
-using wallet::ISMINE_SPENDABLE;
-using wallet::MakeWalletDatabase;
 using wallet::TxStateInactive;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 using wallet::WalletContext;
