@@ -328,7 +328,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     {
         if (!GetExtKey(arg, xprv)) return false;
         for (auto entry : m_path) {
-            xprv.Derive(xprv, entry);
+            if (!xprv.Derive(xprv, entry)) return false;
             if (entry >> 31) {
                 last_hardened = xprv;
             }
@@ -498,8 +498,8 @@ public:
         CExtKey extkey;
         CExtKey dummy;
         if (!GetDerivedExtKey(arg, extkey, dummy)) return false;
-        if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-        if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
+        if (m_derive == DeriveType::UNHARDENED && !extkey.Derive(extkey, pos)) return false;
+        if (m_derive == DeriveType::HARDENED && !extkey.Derive(extkey, pos | 0x80000000UL)) return false;
         key = extkey.key;
         return true;
     }
