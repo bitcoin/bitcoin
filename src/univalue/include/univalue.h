@@ -106,6 +106,7 @@ private:
     std::vector<std::string> keys;
     std::vector<UniValue> values;
 
+    void checkType(const VType& expected) const;
     bool findKey(const std::string& key, size_t& retIdx) const;
     void writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
     void writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
@@ -116,19 +117,7 @@ public:
     const std::vector<std::string>& getKeys() const;
     const std::vector<UniValue>& getValues() const;
     template <typename Int>
-    auto getInt() const
-    {
-        static_assert(std::is_integral<Int>::value);
-        if (typ != VNUM) {
-            throw std::runtime_error("JSON value is not an integer as expected");
-        }
-        Int result;
-        const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
-        if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
-            throw std::runtime_error("JSON integer out of range");
-        }
-        return result;
-    }
+    Int getInt() const;
     bool get_bool() const;
     const std::string& get_str() const;
     double get_real() const;
@@ -142,8 +131,21 @@ public:
 template <class It>
 void UniValue::push_backV(It first, It last)
 {
-    if (typ != VARR) throw std::runtime_error{"JSON value is not an array as expected"};
+    checkType(VARR);
     values.insert(values.end(), first, last);
+}
+
+template <typename Int>
+Int UniValue::getInt() const
+{
+    static_assert(std::is_integral<Int>::value);
+    checkType(VNUM);
+    Int result;
+    const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
+    if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
+        throw std::runtime_error("JSON integer out of range");
+    }
+    return result;
 }
 
 enum jtokentype {
