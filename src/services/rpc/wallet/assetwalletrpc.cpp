@@ -1696,6 +1696,12 @@ static RPCHelpMan assetallocationsendmany()
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(virtual_size);
     if (!pwallet->chain().broadcastTransaction(tx, max_raw_tx_fee, true, err_string)) {
+        if(err_string == "assetallocation-notary-sig") {
+            UniValue result(UniValue::VOBJ);
+            CMutableTransaction mtxRes(*tx);
+            SignTransactionResultToJSON(mtxRes, complete, coins, input_errors, result);
+            return result; 
+        }
         throw JSONRPCError(RPC_WALLET_ERROR, err_string);
     }
     UniValue ret(UniValue::VOBJ);

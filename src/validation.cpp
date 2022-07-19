@@ -1688,7 +1688,7 @@ void CoinsViews::InitCache()
 
 CChainState::CChainState(
     CTxMemPool* mempool,
-    node::BlockManager& blockman,
+    BlockManager& blockman,
     ChainstateManager& chainman,
     std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
@@ -2142,7 +2142,7 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(const node::BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
+bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
     int64_t nTimeNow = 0;
     if(nMedianTime > 0)
         nTimeNow = adjusted_time_callback();
@@ -2213,7 +2213,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2259,7 +2259,7 @@ bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const in
     }
     return true;
 }
-bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -4186,7 +4186,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, node::BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
