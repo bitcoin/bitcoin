@@ -169,12 +169,9 @@ static bool CheckWarmup(HTTPRequest* req)
     return true;
 }
 
-static bool rest_headers(const std::any& context,
-                         HTTPRequest* req,
-                         const std::string& param)
+static bool rest_headers(const std::any& context, HTTPRequest* req)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
 
     auto path {req->GetPath()};
     std::string raw_count;
@@ -262,7 +259,6 @@ static bool rest_headers(const std::any& context,
 
 static bool rest_block(const std::any& context,
                        HTTPRequest* req,
-                       const std::string& param,
                        TxVerbosity tx_verbosity)
 {
     if (!CheckWarmup(req))
@@ -326,17 +322,17 @@ static bool rest_block(const std::any& context,
     }
 }
 
-static bool rest_block_extended(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_block_extended(const std::any& context, HTTPRequest* req)
 {
-    return rest_block(context, req, strURIPart, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+    return rest_block(context, req,  TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
 }
 
-static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req)
 {
-    return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
+    return rest_block(context, req, TxVerbosity::SHOW_TXID);
 }
 
-static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& param)
+static bool rest_filter_header(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
@@ -451,7 +447,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     }
 }
 
-static bool rest_block_filter(const std::any& context, HTTPRequest* req, const std::string& param)
+static bool rest_block_filter(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
@@ -543,10 +539,9 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
 RPCHelpMan getblockchaininfo();
 
-static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_chaininfo(const std::any& context, HTTPRequest* req)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
 
     switch (ResponseFormatFromString(req->GetQueryParameter("format").value_or("json"))) {
     case RESTResponseFormat::JSON: {
@@ -565,7 +560,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
     }
 }
 
-static bool rest_mempool_info(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_mempool_info(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
@@ -587,7 +582,7 @@ static bool rest_mempool_info(const std::any& context, HTTPRequest* req, const s
     }
 }
 
-static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+static bool rest_mempool_contents(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
     const CTxMemPool* mempool = GetMemPool(context, req);
@@ -608,10 +603,9 @@ static bool rest_mempool_contents(const std::any& context, HTTPRequest* req, con
     }
 }
 
-static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string& param)
+static bool rest_tx(const std::any& context, HTTPRequest* req)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
 
     uint256 hash;
     const auto hashStr {req->GetPathParameter(0).value_or("")};
@@ -666,10 +660,9 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     }
 }
 
-static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::string& param)
+static bool rest_getutxos(const std::any& context, HTTPRequest* req)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
 
     auto path {req->GetPath()};
 
@@ -850,8 +843,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     }
 }
 
-static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
-                       const std::string& param)
+static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
@@ -901,7 +893,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
 
 static const struct {
     const char* prefix;
-    bool (*handler)(const std::any& context, HTTPRequest* req, const std::string& strReq);
+    bool (*handler)(const std::any& context, HTTPRequest* req);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
@@ -919,7 +911,7 @@ static const struct {
 void StartREST(const std::any& context)
 {
     for (const auto& up : uri_prefixes) {
-        auto handler = [context, up](HTTPRequest* req, const std::string& prefix) { return up.handler(context, req, prefix); };
+        auto handler = [context, up](HTTPRequest* req, const std::string& prefix) { return up.handler(context, req); };
         RegisterHTTPHandler(up.prefix, false, handler);
     }
 }
