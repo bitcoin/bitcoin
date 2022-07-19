@@ -122,7 +122,6 @@
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
-#include <curl/curl.h>
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
 using kernel::DumpMempool;
@@ -411,7 +410,6 @@ void Shutdown(node::NodeContext& node)
     }
     UninterruptibleSleep(std::chrono::milliseconds{200});
 
-    curl_global_cleanup();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -530,7 +528,6 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
     argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
-    argsman.AddArg("-gethDescriptorURL", strprintf("Geth descriptor URL where to do versioning checks and binary downloads for Geth (default: https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json)"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-disablegovernance=<n>", strprintf("Disable governance validation (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -764,8 +761,6 @@ static bool AppInitServers(node::NodeContext& node)
         return false;
     if (args.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST(&node);
     StartHTTPServer();
-    // SYSCOIN
-    curl_global_init(CURL_GLOBAL_ALL);
     return true;
 }
 

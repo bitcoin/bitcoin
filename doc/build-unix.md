@@ -59,7 +59,7 @@ Build requirements:
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-devlibcurl4-gnutls-dev libgmp3-dev
+    sudo apt-get install libevent-dev libboost-dev libgmp3-dev
 
 SQLite is required for the descriptor wallet:
 

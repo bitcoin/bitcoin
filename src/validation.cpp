@@ -71,7 +71,6 @@
 #include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
-#include <curl/curl.h>
 #include <messagesigner.h>
 #include <rpc/request.h>
 #include <signal.h>
@@ -82,6 +81,10 @@
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
+#endif
+#ifdef MAC_OSX
+    #include <mach-o/dyld.h>
+    #include <limits.h>
 #endif
 RecursiveMutex cs_geth;
 struct DescriptorDetails {
@@ -6056,155 +6059,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
-bool DownloadFile(const std::string &url, const fs::path &dest, const std::string &mode="wb", const std::string &checksum="", const std::string &signature="") {
-    CURL *curl;
-    FILE *fp;
-    CURLcode res;
-    const fs::path destTmp = dest + "tmp";
-    curl = curl_easy_init();
-    if (curl) {
-        fp = fopen(fs::PathToString(destTmp).c_str(),mode.c_str());
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        res = curl_easy_perform(curl);
-        /* Check for errors */ 
-        if(res != CURLE_OK) {
-            LogPrintf("%s curl_easy_perform() failed: %s\n", __func__, curl_easy_strerror(res));
-            return false;
-        } 
-        /* always cleanup */
-        curl_easy_cleanup(curl);
-        fclose(fp);
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-        if(fs::exists(destTmp) && mode == "wb")
-            fs::permissions(destTmp,
-                    fs::perms::owner_exec  | fs::perms::owner_write | fs::perms::group_exec |
-                    fs::perms::others_exec | fs::perms::owner_read | fs::perms::group_read |
-                    fs::perms::others_read);
-    }
-    if(!checksum.empty()) {
-        LogPrintf("%s: Checking file checksum of %s\n", __func__, fs::PathToString(destTmp));
-        std::ifstream file{destTmp, std::ios::binary};
-        if (!file.is_open())
-            return false;
-        std::string fileBuffer;
-        while (file.good()) {
-            std::string input_buffer;
-            file >> input_buffer;
-            fileBuffer += input_buffer;
-        }
-        file.close();
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << fileBuffer;
-        const uint256& calcHash = ss.GetSHA256();
-        bool checksumMatched = calcHash.ToString() == checksum;
-        if(!checksumMatched) {
-            LogPrintf("%s: Checksum mismatch calculated: %s vs expected: %s\n", __func__, calcHash.ToString(), checksum);
-        }
-        const std::vector<std::string> &vSporkAddresses = Params().SporkAddresses();
-        bool sigVerified = false;
-        // any of the spork addresses can sign on the binaries
-        for(const auto& sporkAddress: vSporkAddresses) {
-            CTxDestination txdest = DecodeDestination(sporkAddress);
-            CKeyID keyID;
-            if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txdest)) {	
-                keyID = ToKeyID(*witness_id);
-            }	
-            else if (auto key_id = std::get_if<PKHash>(&txdest)) {	
-                keyID = ToKeyID(*key_id);
-            }	
-            if (keyID.IsNull()) {
-                LogPrintf("DownloadFile -- Failed to parse spork address\n");
-                return false;
-            }
-            auto vchSig = DecodeBase64(signature.c_str());
-            sigVerified = CMessageSigner::VerifyMessage(keyID, *vchSig, checksum);
-            if(sigVerified) {
-                break;
-            }
-        }
-        // everything OK so rename to dest so it can be run
-        if(checksumMatched && sigVerified) {
-            if(fs::exists(dest)) {
-                fs::remove(dest);
-            }
-            if (!fs::exists(dest) && fs::exists(destTmp)) {
-                try {
-                     fs::rename(destTmp, dest);
-                } catch (...) {
-                     LogPrintf("%s: Failed renaming File %s\n", __func__, fs::PathToString(destTmp));
-                     LogPrintf("%s: Trying again in 1s\n", __func__);
-                     UninterruptibleSleep(std::chrono::milliseconds{1000});
-                     try {
-                          fs::rename(destTmp, dest);
-                     } catch (...) {
-                          LogPrintf("%s: Failed again renaming File %s\n", __func__, fs::PathToString(destTmp));
-                          return false;
-                     }
-                }
-            }
-            return true;
-        }
-        // was an issue verifying so delete temporary
-        if(fs::exists(destTmp)) {
-            fs::remove(destTmp);
-        }
-        return false;
-    }
-    // no checksum check required so rename file to dest
-    if(fs::exists(dest)) {
-        fs::remove(dest);
-    }
-    fs::rename(destTmp, dest);
-    return true;
-}
-bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
-    std::ifstream file{filePath};
-    if (!file.is_open())
-        return false;
-    std::string fileBuffer;
-    while (file.good()) {
-        std::string input_buffer;
-        file >> input_buffer;
-        fileBuffer += input_buffer;
-    }
-    file.close();
-    UniValue json(UniValue::VOBJ);
-    std::string binArchitectureTag = "linux";
-    #ifdef WIN32
-        binArchitectureTag = "windows";
-    #endif    
-    #ifdef MAC_OSX
-        binArchitectureTag = "darwin";
-    #endif
-    if(json.read(fileBuffer) && json.isObject()) {
-        const UniValue& jsonObj = json.get_obj();
-        const UniValue& versionValue = find_value(jsonObj, "version");
-        const UniValue& architectureValue = find_value(jsonObj, "bins");
-        if(architectureValue.isObject() && versionValue.isStr()) {
-            const UniValue& binValue = find_value(architectureValue.get_obj(), binArchitectureTag);
-            if(binValue.isObject()) {
-                const UniValue& binURLValue = find_value(binValue, "url");
-                if(binURLValue.isStr()) {
-                    const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
-                    const UniValue& signatureValue = find_value(binValue, "signature");
-                    if(binChecksumValue.isStr() && signatureValue.isStr()) {
-                        details.version = versionValue.get_str();
-                        details.binURL = binURLValue.get_str();
-                        details.sha256Sum = binChecksumValue.get_str();
-                        details.signature = signatureValue.get_str();
-                        return true;
-                    }
-                }
-            }
-        }  
-    }
-    return false;
-}
+
 std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs::path& dataDir) {
     const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
     std::vector<std::string> cmdLineRet;
@@ -6224,36 +6079,6 @@ std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs
     cmdLineRet.push_back("--nevmpub");
     cmdLineRet.push_back(strPub);
     return cmdLineRet;
-}
-bool DownloadBinaryFromDescriptor(const fs::path &descriptorDestPath, const fs::path& binaryDestPath, const std::string& descriptorURL) {
-    DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
-    GetDescriptorStats(descriptorDestPath, descriptorDetailsLocal);
-    // always download remote descriptor to check checksum, if remote doesn't exist use local. Both local and remote cannot be missing.
-    if(!DownloadFile(descriptorURL, descriptorDestPath, "w"))
-        return false;
-    if(!GetDescriptorStats(descriptorDestPath, descriptorDetailsRemote)) {
-        if(!descriptorDetailsLocal.binURL.empty()) {
-            LogPrintf("%s: Could not download descriptor from %s but found local descriptor so using that...\n", __func__, descriptorURL);
-            return true;
-        }
-        LogPrintf("%s: Could not download descriptor from %s\n", __func__, descriptorURL);
-        return false;
-    }
-    if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
-         LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, fs::PathToString(binaryDestPath));
-         if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum, descriptorDetailsRemote.signature)) {
-             LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
-             return false;
-         }
-    }
-    LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
-    return true;
-}
-std::string GetGethDescriptorURL() {
-    std::string url =  "https://raw.githubusercontent.com/syscoin/descriptors/";
-    url += fTestNet? "testnet": "master";
-    url += "/gethdescriptor.json";
-    return url;
 }
 bool CChainState::RestartGethNode() {
     const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
@@ -6278,8 +6103,7 @@ bool CChainState::RestartGethNode() {
         RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
-    const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
-    if(!StartGethNode(gethDescriptorURL)) {
+    if(!StartGethNode()) {
         LogPrintf("RestartGethNode: Could not start Geth\n");
         return false;
     }
@@ -6298,35 +6122,95 @@ bool CChainState::RestartGethNode() {
     }
     return true;
 }
-bool StartGethNode(const std::string &gethDescriptorURL)
+#ifdef WIN32
+// Convert a wide Unicode string to an UTF8 string
+std::string utf8_encode(const std::wstring &wstr)
+{
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo( size_needed, 0 );
+    WideCharToMultiByte (CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
+}
+#endif
+bool StartGethNode()
 {
     LOCK(cs_geth);
 
-    LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
-    fs::path descriptorPath = gArgs.GetDataDirBase() / "gethdescriptor.json";
-    fs::path binaryURL = gArgs.GetDataDirBase() / fs::u8path(GetGethFilename());
-    // if either bin or descriptor not existing remove both files to download from scratch
-    if (!fs::exists(binaryURL) || !fs::exists(descriptorPath)) {
-        if(fs::exists(binaryURL))
-            fs::remove(binaryURL);
-        if(fs::exists(descriptorPath))
-            fs::remove(descriptorPath);          
+    LogPrintf("%s: Starting SysGeth\n", __func__);
+    fs::path gethFilename = fs::u8path(GetGethFilename());
+    fs::path fpathDefault;
+    std::string binArchitectureTag;
+    #ifdef WIN32
+        binArchitectureTag = "windows";
+        WCHAR pszExePath[MAX_PATH];
+        GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
+        wstring ws(txt);
+        fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
+    #endif    
+    #ifdef MAC_OSX
+        binArchitectureTag = "darwin";
+        char buf [PATH_MAX];
+        uint32_t bufsize = PATH_MAX;
+        if(!_NSGetExecutablePath(buf, &bufsize))
+            puts(buf);
+        fpathDefault = fs::u8path(std::string(buf));
+    #endif
+    #if defined(Q_OS_LINUX)
+        binArchitectureTag = "linux";
+        char pszExePath[MAX_PATH+1];
+        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
+        if (r == -1)
+            return false;
+        pszExePath[r] = '\0';
+        fpathDefault = fs::u8path(std::string(buf));
+    #endif
+    fpathDefault = fpathDefault.parent_path();
+    
+    fs::path binaryURL = gArgs.GetDataDirBase() / gethFilename;
+    binaryURL = binaryURL.make_preferred();
+    // ../Resources
+    if(!fs::exists(binaryURL)) {
+        binaryURL = fpathDefault / fs::u8path("/../Resources") / gethFilename;
+        binaryURL = binaryURL.make_preferred();
+        LogPrintf("Could not find sysgeth in datadir, trying %s\n", fs::PathToString(binaryURL));
+        // current executable path
+        if(!fs::exists(binaryURL)) {
+            binaryURL = fpathDefault / gethFilename;
+            binaryURL = binaryURL.make_preferred();
+            LogPrintf("Could not find sysgeth in ../Resources, trying %s\n", fs::PathToString(binaryURL));
+            // current executable path + bin/[os]
+            if(!fs::exists(binaryURL)) {
+                binaryURL = fpathDefault / fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
+                binaryURL = binaryURL.make_preferred();
+                LogPrintf("Could not find sysgeth in current executable path, trying %s\n", fs::PathToString(binaryURL));
+                // $path
+                if(!fs::exists(binaryURL)) {
+                    binaryURL = gethFilename;
+                    binaryURL = binaryURL.make_preferred();
+                    LogPrintf("Could not find sysgeth in current executable path + bin/[os], trying %s\n", fs::PathToString(binaryURL));
+                    // $path + bin/[os]
+                    if(!fs::exists(binaryURL)) {
+                        binaryURL = fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
+                        binaryURL = binaryURL.make_preferred();
+                        LogPrintf("Could not find sysgeth in $path, trying %s\n", fs::PathToString(binaryURL));
+                        // usr/local/bin
+                        if(!fs::exists(binaryURL)) {
+                            binaryURL = fs::u8path("/usr/local/bin") / gethFilename;
+                            binaryURL = binaryURL.make_preferred();
+                            LogPrintf("Could not find sysgeth in $path + bin/[os], trying %s\n", fs::PathToString(binaryURL));
+                        }
+                    }
+                }
+            }
+        }
     }
-    if(!DownloadBinaryFromDescriptor(descriptorPath, binaryURL, gethDescriptorURL)) {
-        if (fs::exists(descriptorPath)) {
-            fs::remove(descriptorPath);
-        }
-        if (fs::exists(binaryURL)) {
-            fs::remove(binaryURL);
-        }
+    if(!fs::exists(binaryURL)) {
+        LogPrintf("Could not find sysgeth\n");
         return false;
     }
 
-    fs::path attempt1 = binaryURL;
-    attempt1 = attempt1.make_preferred();
-
     fs::path dataDir = gArgs.GetDataDirNet() / "geth";
-    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(attempt1, dataDir);
+    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(binaryURL, dataDir);
     fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
 
     #ifndef WIN32
@@ -6364,7 +6248,7 @@ bool StartGethNode(const std::string &gethDescriptorURL)
         fflush(stderr); close(err);                               
         execvp(command[0], &command[0]);
         if (errno != 0) {
-            LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
+            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
         }
     }
     #else
@@ -6421,8 +6305,7 @@ void DoGethMaintenance() {
         LogPrintf("%s: Stopping Geth\n", __func__); 
         StopGethNode(true);
         LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
-        if(!StartGethNode(gethDescriptorURL)) {
+        if(!StartGethNode()) {
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         }
     } else {
@@ -6487,8 +6370,7 @@ void DoGethMaintenance() {
             fs::remove_all(nodeKeyTmpDir);
         }
         LogPrintf("%s: Restarting Geth \n", __func__);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", GetGethDescriptorURL());
-        if(!StartGethNode(gethDescriptorURL))
+        if(!StartGethNode())
             LogPrintf("%s: Failed to start Geth\n", __func__); 
         // set flag that geth is resyncing
         fGethSynced = false;

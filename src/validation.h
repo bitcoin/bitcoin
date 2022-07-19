@@ -1040,7 +1040,7 @@ public:
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
-bool StartGethNode(const std::string &gethDescriptorURL);
+bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);
 bool ProcessNEVMBlob(const CNEVMData &nevmData);
 // SYSCOIN

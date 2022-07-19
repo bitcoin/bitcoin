@@ -45,7 +45,6 @@
 #include <optional>
 
 // SYSCOIN
-#include <curl/curl.h>
 #include <services/asset.h> // GetAsset, FillNotarySig
 #include <evo/deterministicmns.h>
 #include <rpc/util.h>
@@ -1991,221 +1990,19 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
     return SignTransaction(tx, coins, SIGHASH_DEFAULT, input_errors);
 }
 
-// SYSCOIN
-struct MemoryStruct {
-  char *memory;
-  size_t size;
-};
- 
-static size_t
-WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-  size_t realsize = size * nmemb;
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
- 
-  char *ptr = (char*)realloc(mem->memory, mem->size + realsize + 1);
-  if(!ptr) {
-    /* out of memory! */ 
-    LogPrint(BCLog::SYS, "not enough memory (realloc returned NULL)\n");
-    return 0;
-  }
- 
-  mem->memory = ptr;
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
-  mem->size += realsize;
-  mem->memory[mem->size] = 0;
- 
-  return realsize;
-}
- 
-char* curl_fetch_url(CURL *curl, const char *url, const char* payload, bilingual_str& strError)
-{
-  CURLcode res;
-  struct MemoryStruct chunk;
-  struct curl_slist *headers = nullptr;                      /* http headers to send with request */
-  chunk.size = 0;    /* no data at this point */ 
-  chunk.memory = nullptr;
-  if(curl) {
-    chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
- 
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
-    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    
-    headers = curl_slist_append(headers, "Accept: application/json");
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    /* send all data to this function  */ 
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
- 
-    /* we pass our 'chunk' struct to the callback function */ 
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
- 
-    /* some servers don't like requests that are made without a user-agent
-       field, so we provide one */ 
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
- 
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
- 
-    /* if we don't provide POSTFIELDSIZE, libcurl will strlen() by
-       itself */ 
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(payload));
- 
-    /* Perform the request, res will get the return code */ 
-    res = curl_easy_perform(curl);
-    /* Check for errors */ 
-    if(res != CURLE_OK) {
-      strError = _("Notarization failed") + Untranslated(curl_easy_strerror(res));
-      return nullptr;
-    } 
-    curl_slist_free_all(headers);
-  } else {
-      return nullptr;
-  }
-  return chunk.memory;
-}
-bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAssetOut> & voutAssets, bilingual_str& strError) {
-    CURL *curl = curl_easy_init();
-    std::string strHex = EncodeHexTx(CTransaction(mtx));
-    UniValue reqObj(UniValue::VOBJ);
-    reqObj.pushKV("tx", strHex); 
-    const std::string reqJSON = reqObj.write();
-    std::map<uint64_t, std::vector<unsigned char> > mapSigs;
-    // fill notary signatures for assets that require them
-    for(auto& vecOut: voutAssets) {
-        // get asset
-        CAsset theAsset;
-        // if asset has notary signature requirement set
-        const uint64_t nBaseAsset = GetBaseAssetID(vecOut.key);
-        if(mapSigs.find(nBaseAsset) == mapSigs.end() && GetAsset(nBaseAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
-            if(!theAsset.notaryDetails.strEndPoint.empty()) {
-                auto strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint);
-                if (!strEndPoint) {
-                    strError = _("Malformed base64 encoding for notary endpoint");
-                }
-                char* response = curl_fetch_url(curl, std::string{(*strEndPoint).begin(), (*strEndPoint).end()}.c_str(), reqJSON.c_str(), strError);
-                if(response != nullptr) {
-                    UniValue resObj;
-                    if(resObj.read(response)) {
-                        const UniValue &sigsObj = find_value(resObj, "sigs");  
-                        if(sigsObj.isArray()) {
-                            const UniValue &sigsArr = sigsObj.get_array();  
-                            for(size_t i = 0;i<sigsArr.size();i++) {
-                                const UniValue &sigArrObj = sigsArr[i].get_obj();  
-                                if(sigArrObj.isNull())
-                                    continue;
-                                const UniValue &assetObj =  find_value(sigArrObj, "asset");
-                                if(!assetObj.isStr()) {
-                                    strError = _("Invalid asset guid");
-                                    continue;
-                                }
-                                uint64_t nBaseAsset;
-                                if(!ParseUInt64(assetObj.get_str(), &nBaseAsset))
-                                    throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
-                                const UniValue &sigObj =  find_value(sigArrObj, "sig");
-                                if(!sigObj.isStr()) {
-                                    strError = _("Invalid signature");
-                                    continue;
-                                }
-                                const std::string &strSig = sigObj.get_str();
-                                // get signature from end-point
-                                auto vchSig = DecodeBase64(strSig);
-                                if (!vchSig) {
-                                    strError = _("Malformed base64 encoding for notary signature");
-                                }
-                                // ensure compact sig is 65 bytes exactly for ECDSA
-                                if((*vchSig).size() == 65)
-                                    mapSigs.try_emplace(nBaseAsset, *vchSig);
-                                else {
-                                    strError = _(("Invalid signature size. Required 65, found %s") + (*vchSig).size());
-                                }
-                            }
-                        } else {
-                            strError = _("Cannot find signatures field in JSON response from endpoint");
-                        }
-                    } else {
-                        strError = _("Cannot read response from endpoint");
-                    }
-                    free(response);
-                }
-            }
-        }
-    }
-    
-    for(auto& mapSig: mapSigs) {
-        if(!FillNotarySig(voutAssets, mapSig.first, mapSig.second)) {
-            strError = _("Could not fill signature");
-        }
-    }
-    if(curl)
-        curl_easy_cleanup(curl);
-    return !mapSigs.empty();
-}
-
-bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, bilingual_str& strError) {
-    std::vector<unsigned char> data;
-    bool bFilledNotarySig = false;
-     // call API endpoint or notary signatures and fill them in for every asset
-    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
-        CBurnSyscoin burnSyscoin(mtx);
-        if(FillNotarySigFromEndpoint(mtx, burnSyscoin.voutAssets, strError)) {
-            bFilledNotarySig = true;
-            burnSyscoin.SerializeData(data);
-        }
-    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND || mtx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {
-        CAssetAllocation allocation(mtx);
-        if(FillNotarySigFromEndpoint(mtx, allocation.voutAssets, strError)) {
-            bFilledNotarySig = true;
-            allocation.SerializeData(data);
-        }
-    }
-    if(bFilledNotarySig) {
-        // find previous commitment (OP_RETURN) and replace script
-        CScript scriptDataNew;
-        scriptDataNew << OP_RETURN << data;
-        for(auto& vout: mtx.vout) {
-            if(vout.scriptPubKey.IsUnspendable()) {
-                vout.scriptPubKey = scriptDataNew;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-// SYSCOIN
 bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const
 {
-    bool signedTx = false;
     // Try to sign with all ScriptPubKeyMans
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
         // spk_man->SignTransaction will return true if the transaction is complete,
         // so we can exit early and return true if that happens
         if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
-            signedTx = true;
-            break;
+            return true;
         }
     }
-    if(!signedTx) {
-        return false;
-    }
-    bilingual_str strError;
-    if(UpdateNotarySignatureFromEndpoint(tx, strError)) {
-        input_errors.clear();
-        // Try to sign with all ScriptPubKeyMans
-        for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
-            // spk_man->SignTransaction will return true if the transaction is complete,
-            // so we can exit early and return true if that happens
-            if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
-                return true;
-            }
-        }
-    } else if(!strError.empty()) {
-        input_errors[0] = strError;
-        return false;
-    }
-    return true;
+
+    // At this point, one input was not fully signed otherwise we would have exited already
+    return false;
 }
 
 TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs, size_t * n_signed, bool finalize) const
