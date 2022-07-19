@@ -1,6 +1,7 @@
 Checks: '
 -*,
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-const-return-type,
@@ -9,6 +10,7 @@ readability-redundant-string-init,
 '
 WarningsAsErrors: '
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
 readability-redundant-declaration,

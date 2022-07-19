@@ -50,8 +50,6 @@ using node::NodeContext;
 using wallet::CWallet;
 #ifdef ENABLE_WALLET
 using wallet::CCoinControl;
-using wallet::CoinType;
-using wallet::COutput;
 using wallet::CRecipient;
 using wallet::DEFAULT_DISABLE_WALLET;
 using wallet::GetWalletForJSONRPCRequest;
