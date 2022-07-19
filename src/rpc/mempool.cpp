@@ -20,6 +20,7 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
+#include <util/time.h>
 
 using kernel::DumpMempool;
 

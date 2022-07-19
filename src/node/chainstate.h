@@ -15,9 +15,6 @@ class CConnman;
 class BanMan;
 class PeerManager;
 class CTxMemPool;
-namespace Consensus {
-struct Params;
-} // namespace Consensus
 
 namespace node {
 enum class ChainstateLoadingError {
