@@ -21,7 +21,7 @@ class uint256;
 
 /** Maximum number of transactions that can be replaced by BIP125 RBF (Rule #5). This includes all
  * mempool conflicts and their descendants. */
-static constexpr uint32_t MAX_BIP125_REPLACEMENT_CANDIDATES{100};
+static constexpr uint32_t MAX_REPLACEMENT_CANDIDATES{100};
 
 /** The rbf state of unconfirmed transactions */
 enum class RBFTransactionState {
@@ -50,7 +50,7 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 /** Get all descendants of iters_conflicting. Also enforce BIP125 Rule #5, "The number of original
  * transactions to be replaced and their descendant transactions which will be evicted from the
  * mempool must not exceed a total of 100 transactions." Quit as early as possible. There cannot be
- * more than MAX_BIP125_REPLACEMENT_CANDIDATES potential entries.
+ * more than MAX_REPLACEMENT_CANDIDATES potential entries.
  * @param[in]   iters_conflicting   The set of iterators to mempool entries.
  * @param[out]  all_conflicts       Populated with all the mempool entries that would be replaced,
  *                                  which includes descendants of iters_conflicting. Not cleared at

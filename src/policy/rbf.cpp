@@ -65,15 +65,15 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
     uint64_t nConflictingCount = 0;
     for (const auto& mi : iters_conflicting) {
         nConflictingCount += mi->GetCountWithDescendants();
-        // BIP125 Rule #5: don't consider replacing more than MAX_BIP125_REPLACEMENT_CANDIDATES
+        // BIP125 Rule #5: don't consider replacing more than MAX_REPLACEMENT_CANDIDATES
         // entries from the mempool. This potentially overestimates the number of actual
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
         // times), but we just want to be conservative to avoid doing too much work.
-        if (nConflictingCount > MAX_BIP125_REPLACEMENT_CANDIDATES) {
+        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES) {
             return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
                              txid.ToString(),
                              nConflictingCount,
-                             MAX_BIP125_REPLACEMENT_CANDIDATES);
+                             MAX_REPLACEMENT_CANDIDATES);
         }
     }
     // Calculate the set of all transactions that would have to be evicted.
