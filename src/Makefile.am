@@ -1151,6 +1151,18 @@ libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 endif
 
 #
+# syscoin pre-built binaries #
+dist_bin_SCRIPTS =
+if TARGET_WINDOWS
+dist_bin_SCRIPTS += bin/windows/sysgeth.exe
+endif
+if TARGET_DARWIN
+dist_bin_SCRIPTS += bin/darwin/sysgeth
+endif
+if TARGET_LINUX
+dist_bin_SCRIPTS += bin/linux/sysgeth
+endif
+
 
 CTAES_DIST =  crypto/ctaes/bench.c
 CTAES_DIST += crypto/ctaes/ctaes.c

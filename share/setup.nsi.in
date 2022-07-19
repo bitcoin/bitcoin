@@ -80,6 +80,7 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/@SYSCOIN_CLI_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_GETH@@EXEEXT@
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
