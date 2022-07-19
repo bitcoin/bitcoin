@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ZMQ_ZMQRPC_H
-#define BITCOIN_ZMQ_ZMQRPC_H
+#ifndef REVOLT_ZMQ_ZMQRPC_H
+#define REVOLT_ZMQ_ZMQRPC_H
 
 class CRPCTable;
 
 void RegisterZMQRPCCommands(CRPCTable& t);
 
-#endif // BITCOIN_ZMQ_ZMQRPC_H
+#endif // REVOLT_ZMQ_ZMQRPC_H

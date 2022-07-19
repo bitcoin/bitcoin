@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
-#define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#ifndef REVOLT_ZMQ_ZMQABSTRACTNOTIFIER_H
+#define REVOLT_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 
 #include <memory>
@@ -63,4 +63,4 @@ protected:
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 
-#endif // BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#endif // REVOLT_ZMQ_ZMQABSTRACTNOTIFIER_H
