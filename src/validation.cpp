@@ -6144,7 +6144,6 @@ bool StartGethNode()
         binArchitectureTag = "windows";
         WCHAR pszExePath[MAX_PATH];
         GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
-        wstring ws(txt);
         fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
     #endif    
     #ifdef MAC_OSX
@@ -6253,14 +6252,14 @@ bool StartGethNode()
     }
     #else
         std::string commandStr = "";
-        // the first cmd is the binary file which is not needed as attempt1 is that, in windows we only need params passed as commandStr
+        // the first cmd is the binary file which is not needed as binaryURL is that, in windows we only need params passed as commandStr
         vecCmdLineStr.erase(vecCmdLineStr.begin());
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         }
-        pid_t pid = fork(attempt1, commandStr);
+        pid_t pid = fork(binaryURL, commandStr);
         if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s\n", fs::PathToString(attempt1));
+            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
             return false;
         }
     #endif
