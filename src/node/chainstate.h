@@ -11,9 +11,6 @@
 
 class ChainstateManager;
 class CTxMemPool;
-namespace Consensus {
-struct Params;
-} // namespace Consensus
 
 namespace node {
 enum class ChainstateLoadingError {

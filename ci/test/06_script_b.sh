@@ -42,6 +42,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/compat"\
           " src/init"\
           " src/kernel/mempool_persist.cpp"\
+          " src/node/chainstate.cpp"\
           " src/policy/feerate.cpp"\
           " src/policy/packages.cpp"\
           " src/policy/settings.cpp"\
