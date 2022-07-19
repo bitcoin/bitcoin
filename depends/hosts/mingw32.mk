@@ -9,6 +9,10 @@ ifneq ($(LTO),)
 mingw32_CFLAGS += -flto
 mingw32_CXXFLAGS += -flto
 mingw32_LDFLAGS += -flto
+
+mingw32_AR = $(host_toolchain)gcc-ar
+mingw32_NM = $(host_toolchain)gcc-nm
+mingw32_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
 mingw32_release_CFLAGS=-O2
