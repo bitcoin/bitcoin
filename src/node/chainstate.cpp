@@ -4,9 +4,22 @@
 
 #include <node/chainstate.h>
 
+#include <chain.h>
+#include <coins.h>
 #include <consensus/params.h>
 #include <node/blockstorage.h>
+#include <sync.h>
+#include <threadsafety.h>
+#include <txdb.h>
+#include <uint256.h>
+#include <util/time.h>
 #include <validation.h>
+
+#include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <memory>
+#include <vector>
 
 namespace node {
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
