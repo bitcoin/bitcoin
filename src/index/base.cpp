@@ -9,6 +9,7 @@
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <util/syscall_sandbox.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
