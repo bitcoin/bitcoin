@@ -224,12 +224,12 @@ class RESTTest (BitcoinTestFramework):
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
-        assert_equal(self.test_rest_request(f"/headers/{UNKNOWN_PARAM}", query_params={"count": 1}), [])
+        assert_equal(self.test_rest_request(f"/headers/", query_params={"count": 1, "from_blockhash": UNKNOWN_PARAM}), [])
         self.test_rest_request(f"/block/{UNKNOWN_PARAM}", status=404, ret_type=RetType.OBJ)
 
         # Check result if block is not in the active chain
         self.nodes[0].invalidateblock(bb_hash)
-        assert_equal(self.test_rest_request(f'/headers/{bb_hash}', query_params={'count': 1}), [])
+        assert_equal(self.test_rest_request(f'/headers/', query_params={'count': 1, "from_blockhash": bb_hash}), [])
         self.test_rest_request(f'/block/{bb_hash}')
         self.nodes[0].reconsiderblock(bb_hash)
 
@@ -239,7 +239,7 @@ class RESTTest (BitcoinTestFramework):
         response_bytes = response.read()
 
         # Compare with block header
-        response_header = self.test_rest_request(f"/headers/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ, query_params={"count": 1})
+        response_header = self.test_rest_request(f"/headers/", req_type=ReqType.BIN, ret_type=RetType.OBJ, query_params={"count": 1, "from_blockhash": bb_hash})
         assert_equal(int(response_header.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_header_bytes = response_header.read()
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE], response_header_bytes)
@@ -251,7 +251,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
-        response_header_hex = self.test_rest_request(f"/headers/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ, query_params={"count": 1})
+        response_header_hex = self.test_rest_request(f"/headers/", req_type=ReqType.HEX, ret_type=RetType.OBJ, query_params={"count": 1, "from_blockhash": bb_hash})
         assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
@@ -278,7 +278,7 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/blockhashbyheight/", ret_type=RetType.OBJ, status=400)
 
         # Compare with json block header
-        json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1})
+        json_obj = self.test_rest_request(f"/headers/", query_params={"count": 1, "from_blockhash": bb_hash})
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
@@ -289,9 +289,9 @@ class RESTTest (BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
+        json_obj = self.test_rest_request(f"/headers/", query_params={"count": 5, "from_blockhash": bb_hash})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
-        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
+        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/", query_params={"count": 5, "from_blockhash": bb_hash})
         first_filter_header = json_obj[0]
         assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
         json_obj = self.test_rest_request(f"/blockfilter/basic/{bb_hash}")
@@ -302,16 +302,16 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
 
         # Test blockfilterheaders with an invalid hash and filtertype
-        resp = self.test_rest_request(f"/blockfilterheaders/{INVALID_PARAM}/{bb_hash}", ret_type=RetType.OBJ, status=400)
+        resp = self.test_rest_request(f"/blockfilterheaders/{INVALID_PARAM}/", ret_type=RetType.OBJ, status=400, query_params={"from_blockhash": bb_hash})
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Unknown filtertype {INVALID_PARAM}")
-        resp = self.test_rest_request(f"/blockfilterheaders/basic/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        resp = self.test_rest_request(f"/blockfilterheaders/basic/", ret_type=RetType.OBJ, status=400, query_params={"from_blockhash": INVALID_PARAM})
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
                 bytes(f'Header count is invalid or out of acceptable range (1-2000): {num}\r\n', 'ascii'),
-                self.test_rest_request(f"/headers/{bb_hash}", ret_type=RetType.BYTES, status=400, query_params={"count": num}),
+                self.test_rest_request(f"/headers/", ret_type=RetType.BYTES, status=400, query_params={"count": num, "from_blockhash": bb_hash}),
             )
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")

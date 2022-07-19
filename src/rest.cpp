@@ -177,15 +177,18 @@ static bool rest_headers(const std::any& context, HTTPRequest* req)
     std::string raw_count;
     std::string hashStr;
 
-    if (IsDeprecatedRESTEnabled("count")) {
+    if (IsDeprecatedRESTEnabled("count") && IsDeprecatedRESTEnabled("blockhash")) {
         if (path.size() != 2) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<count>/<hash>");
         hashStr = path[1];
         raw_count = path[0];
-    } else if (path.size() == 1) {
+    } else if (IsDeprecatedRESTEnabled("blockhash")) {
+        if (path.size() != 1) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>?count=<count>");
         hashStr = path[0];
         raw_count = req->GetQueryParameter("count").value_or("5");
     } else {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>?count=<count>");
+        if (path.size() != 0) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/?from_blockhash=<blockhash>&count=<count>");
+        hashStr = req->GetQueryParameter("from_blockhash").value_or("");
+        raw_count = req->GetQueryParameter("count").value_or("5");
     }
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
@@ -339,15 +342,18 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req)
     auto path {req->GetPath()};
     std::string raw_count;
     std::string raw_blockhash;
-    if (IsDeprecatedRESTEnabled("count")) {
+    if (IsDeprecatedRESTEnabled("count") && IsDeprecatedRESTEnabled("blockhash")) {
         if (path.size() != 3) return RESTERR(req, HTTP_BAD_REQUEST, "Expected /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>");
         raw_blockhash = path[2];
         raw_count = path[1];
-    } else if (path.size() == 2) {
+    } else if (IsDeprecatedRESTEnabled("blockhash")) {
+        if (path.size() != 2) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype/<hash>?count=<count>");
         raw_blockhash = path[1];
         raw_count = req->GetQueryParameter("count").value_or("5");
     } else {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>");
+        if (path.size() != 1) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders?filtertype=<filtertype>&from_blockhash=<blockhash>&count=<count>");
+        raw_blockhash = req->GetQueryParameter("from_blockhash").value_or("");
+        raw_count = req->GetQueryParameter("count").value_or("5");
     }
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
