@@ -9,4 +9,4 @@
 
 void zmqError(const std::string& str);
 
-#endif //REVOLT_ZMQ_ZMQUTIL_H
+#endif // REVOLT_ZMQ_ZMQUTIL_H
