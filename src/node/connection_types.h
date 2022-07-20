@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_CONNECTION_TYPES_H
-#define BITCOIN_NODE_CONNECTION_TYPES_H
+#ifndef REVOLT_NODE_CONNECTION_TYPES_H
+#define REVOLT_NODE_CONNECTION_TYPES_H
 
 #include <string>
 
@@ -47,7 +47,7 @@ enum class ConnectionType {
      *   evict only if this longer-known peer is offline.
      * - move node addresses from New to Tried table, so that we have more
      *   connectable addresses in our AddrMan.
-     * Note that in the literature ("Eclipse Attacks on Bitcoin’s Peer-to-Peer Network")
+     * Note that in the literature ("Eclipse Attacks on REVOLT’s Peer-to-Peer Network")
      * only the latter feature is referred to as "feeler connections",
      * although in our codebase feeler connections encompass test-before-evict as well.
      * We make these connections approximately every FEELER_INTERVAL:
@@ -79,4 +79,4 @@ enum class ConnectionType {
 /** Convert ConnectionType enum to a string value */
 std::string ConnectionTypeAsString(ConnectionType conn_type);
 
-#endif // BITCOIN_NODE_CONNECTION_TYPES_H
+#endif // REVOLT_NODE_CONNECTION_TYPES_H
