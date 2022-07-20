@@ -1418,7 +1418,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
-    ApplyArgsManOptions(args, mempool_opts);
+    if (const auto err{ApplyArgsManOptions(args, chainparams, mempool_opts)}) {
+        return InitError(*err);
+    }
     mempool_opts.check_ratio = std::clamp<int>(mempool_opts.check_ratio, 0, 1'000'000);
 
     int64_t descendant_limit_bytes = mempool_opts.limits.descendant_size_vbytes * 40;

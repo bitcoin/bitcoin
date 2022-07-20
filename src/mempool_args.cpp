@@ -7,7 +7,13 @@
 #include <kernel/mempool_limits.h>
 #include <kernel/mempool_options.h>
 
+#include <chainparams.h>
+#include <tinyformat.h>
 #include <util/system.h>
+#include <util/translation.h>
+
+#include <chrono>
+#include <memory>
 
 using kernel::MemPoolLimits;
 using kernel::MemPoolOptions;
@@ -25,7 +31,7 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limi
 }
 }
 
-void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolOptions& mempool_opts)
+std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
 {
     mempool_opts.check_ratio = argsman.GetIntArg("-checkmempool", mempool_opts.check_ratio);
 
@@ -36,4 +42,6 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolOptions& mempool_opt
     mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
 
     ApplyArgsManOptions(argsman, mempool_opts.limits);
+
+    return std::nullopt;
 }
