@@ -12,6 +12,8 @@
 namespace node {
 void ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
+    if (auto value{args.GetArg("-assumevalid")}) opts.assumed_valid_block = uint256S(*value);
+
     if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
 }
 } // namespace node
