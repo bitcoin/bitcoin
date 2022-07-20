@@ -838,7 +838,7 @@ private:
     //! Internal helper for ActivateSnapshot().
     [[nodiscard]] bool PopulateAndValidateSnapshot(
         CChainState& snapshot_chainstate,
-        CAutoFile& coins_file,
+        AutoFile& coins_file,
         const node::SnapshotMetadata& metadata);
 
     // SYSCOIN
@@ -929,7 +929,7 @@ public:
     //! - Move the new chainstate to `m_snapshot_chainstate` and make it our
     //!   ChainstateActive().
     [[nodiscard]] bool ActivateSnapshot(
-        CAutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
+        AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
     //! The most-work chain.
     CChainState& ActiveChainstate() const;

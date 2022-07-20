@@ -5612,7 +5612,7 @@ const AssumeutxoData* ExpectedAssumeutxo(
 }
 
 bool ChainstateManager::ActivateSnapshot(
-        CAutoFile& coins_file,
+        AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
@@ -5707,7 +5707,7 @@ static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_load
 
 bool ChainstateManager::PopulateAndValidateSnapshot(
     CChainState& snapshot_chainstate,
-    CAutoFile& coins_file,
+    AutoFile& coins_file,
     const SnapshotMetadata& metadata)
 {
     // It's okay to release cs_main before we're done using `coins_cache` because we know
@@ -6132,19 +6132,15 @@ std::string utf8_encode(const std::wstring &wstr)
     return strTo;
 }
 #endif
-bool StartGethNode()
-{
-    LOCK(cs_geth);
-
-    LogPrintf("%s: Starting SysGeth\n", __func__);
-    fs::path gethFilename = fs::u8path(GetGethFilename());
+fs::path FindExecPath(std::string &binArchitectureTag) {
     fs::path fpathDefault;
-    std::string binArchitectureTag;
     #ifdef WIN32
         binArchitectureTag = "windows";
         WCHAR pszExePath[MAX_PATH];
         GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
         fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
     #endif    
     #ifdef MAC_OSX
         binArchitectureTag = "darwin";
@@ -6153,17 +6149,31 @@ bool StartGethNode()
         if(!_NSGetExecutablePath(buf, &bufsize))
             puts(buf);
         fpathDefault = fs::u8path(std::string(buf));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
     #endif
-    #if defined(Q_OS_LINUX)
+    #ifndef WIN32
         binArchitectureTag = "linux";
         char pszExePath[MAX_PATH+1];
         ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
         if (r == -1)
-            return false;
+            return fpathDefault;
         pszExePath[r] = '\0';
-        fpathDefault = fs::u8path(std::string(buf));
+        fpathDefault = fs::u8path(std::string(pszExePath));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
     #endif
-    fpathDefault = fpathDefault.parent_path();
+    return fpathDefault;
+}
+bool StartGethNode()
+{
+    LOCK(cs_geth);
+
+    LogPrintf("%s: Starting SysGeth\n", __func__);
+    fs::path gethFilename = fs::u8path(GetGethFilename());
+    std::string binArchitectureTag;
+    const fs::path &fpathDefault = FindExecPath(binArchitectureTag);
+
     
     fs::path binaryURL = "/../Resources" / gethFilename;
     binaryURL = binaryURL.make_preferred();

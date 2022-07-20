@@ -41,26 +41,26 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
 
     // Write first line to file.
     {
-        CAutoFile file(seq.Open(FlatFilePos(0, pos1)), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(0, pos1))};
         file << LIMITED_STRING(line1, 256);
     }
 
     // Attempt to append to file opened in read-only mode.
     {
-        CAutoFile file(seq.Open(FlatFilePos(0, pos2), true), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(0, pos2), true)};
         BOOST_CHECK_THROW(file << LIMITED_STRING(line2, 256), std::ios_base::failure);
     }
 
     // Append second line to file.
     {
-        CAutoFile file(seq.Open(FlatFilePos(0, pos2)), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(0, pos2))};
         file << LIMITED_STRING(line2, 256);
     }
 
     // Read text from file in read-only mode.
     {
         std::string text;
-        CAutoFile file(seq.Open(FlatFilePos(0, pos1), true), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(0, pos1), true)};
 
         file >> LIMITED_STRING(text, 256);
         BOOST_CHECK_EQUAL(text, line1);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
     // Read text from file with position offset.
     {
         std::string text;
-        CAutoFile file(seq.Open(FlatFilePos(0, pos2)), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(0, pos2))};
 
         file >> LIMITED_STRING(text, 256);
         BOOST_CHECK_EQUAL(text, line2);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
     // Ensure another file in the sequence has no data.
     {
         std::string text;
-        CAutoFile file(seq.Open(FlatFilePos(1, pos2)), SER_DISK, CLIENT_VERSION);
+        AutoFile file{seq.Open(FlatFilePos(1, pos2))};
         BOOST_CHECK_THROW(file >> LIMITED_STRING(text, 256), std::ios_base::failure);
     }
 }

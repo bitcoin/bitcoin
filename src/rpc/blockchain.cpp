@@ -2467,7 +2467,7 @@ static RPCHelpMan dumptxoutset()
     FILE* file{fsbridge::fopen(temppath, "wb")};
     // SYSCOIN
     FILE* filejson{fsbridge::fopen(temppathjson, "w")};
-    CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
+    AutoFile afile{file};
     if (afile.IsNull()) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
@@ -2491,7 +2491,7 @@ static RPCHelpMan dumptxoutset()
 UniValue CreateUTXOSnapshot(
     NodeContext& node,
     CChainState& chainstate,
-    CAutoFile& afile,
+    AutoFile& afile,
     const fs::path& path,
     const fs::path& temppath,
     FILE* filejson)
