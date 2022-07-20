@@ -1,9 +1,9 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SYSCALL_SANDBOX_H
-#define BITCOIN_UTIL_SYSCALL_SANDBOX_H
+#ifndef REVOLT_UTIL_SYSCALL_SANDBOX_H
+#define REVOLT_UTIL_SYSCALL_SANDBOX_H
 
 enum class SyscallSandboxPolicy {
     // 1. Initialization
@@ -36,7 +36,7 @@ enum class SyscallSandboxPolicy {
 //!
 //! This function is a no-op unless SetupSyscallSandbox(...) has been called.
 //!
-//! SetupSyscallSandbox(...) is called during bitcoind initialization if Bitcoin Core was compiled
+//! SetupSyscallSandbox(...) is called during bitcoind initialization if Revolt Core was compiled
 //! with seccomp-bpf support (--with-seccomp) *and* the parameter -sandbox=<mode> was passed to
 //! bitcoind.
 //!
@@ -51,4 +51,4 @@ void SetSyscallSandboxPolicy(SyscallSandboxPolicy syscall_policy);
 void TestDisallowedSandboxCall();
 #endif // defined(USE_SYSCALL_SANDBOX)
 
-#endif // BITCOIN_UTIL_SYSCALL_SANDBOX_H
+#endif // REVOLT_UTIL_SYSCALL_SANDBOX_H
