@@ -1682,7 +1682,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
                                      chainman, *node.mempool, ignores_incoming_txs);
         
-        const bool fReset = fReindex;
         // SYSCOIN
         fAssetIndex = args.GetBoolArg("-assetindex", false);
         node::ChainstateLoadOptions options;
