@@ -292,26 +292,22 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     return true;
 }
 
-bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
+util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types");
-        return false;
+        return util::Error{_("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types")};
     }
     assert(type != OutputType::BECH32M);
 
     LOCK(cs_KeyStore);
     if (!CanGetAddresses(internal)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
+        return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
 
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
+        return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
-    address = GetDestinationForKey(keypool.vchPubKey, type);
-    return true;
+    return GetDestinationForKey(keypool.vchPubKey, type);
 }
 
 bool LegacyScriptPubKeyMan::TopUpInactiveHDChain(const CKeyID seed_id, int64_t index, bool internal)
@@ -1760,17 +1756,12 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
+util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool)
 {
     LOCK(cs_desc_man);
     auto op_dest = GetNewDestination(type);
     index = m_wallet_descriptor.next_index - 1;
-    if (op_dest) {
-        address = *op_dest;
-    } else {
-        error = util::ErrorString(op_dest);
-    }
-    return bool(op_dest);
+    return op_dest;
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
