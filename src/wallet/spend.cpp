@@ -392,37 +392,19 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     std::map<CTxDestination, std::vector<COutput>> result;
 
-    for (COutput& coin : AvailableCoinsListUnspent(wallet).All()) {
+    CCoinControl coin_control;
+    // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
+    coin_control.fAllowWatchOnly = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    CoinFilterParams coins_params;
+    coins_params.only_spendable = false;
+    coins_params.skip_locked = false;
+    for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
         if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
             ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
-            result[address].emplace_back(std::move(coin));
+            result[address].emplace_back(coin);
         }
     }
-
-    std::vector<COutPoint> lockedCoins;
-    wallet.ListLockedCoins(lockedCoins);
-    // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
-    const bool include_watch_only = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-    const isminetype is_mine_filter = include_watch_only ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    for (const COutPoint& output : lockedCoins) {
-        auto it = wallet.mapWallet.find(output.hash);
-        if (it != wallet.mapWallet.end()) {
-            const auto& wtx = it->second;
-            int depth = wallet.GetTxDepthInMainChain(wtx);
-            if (depth >= 0 && output.n < wtx.tx->vout.size() &&
-                wallet.IsMine(wtx.tx->vout[output.n]) == is_mine_filter
-            ) {
-                CTxDestination address;
-                if (ExtractDestination(FindNonChangeParentOutput(wallet, *wtx.tx, output.n).scriptPubKey, address)) {
-                    const auto out = wtx.tx->vout.at(output.n);
-                    result[address].emplace_back(
-                            COutPoint(wtx.GetHash(), output.n), out, depth, CalculateMaximumSignedInputSize(out, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ false, wtx.GetTxTime(), CachedTxIsFromMe(wallet, wtx, ISMINE_ALL));
-                }
-            }
-        }
-    }
-
     return result;
 }
 
