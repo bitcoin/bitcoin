@@ -260,14 +260,28 @@ static bool rest_headers(const std::any& context, HTTPRequest* req)
     }
 }
 
-static bool rest_block(const std::any& context,
-                       HTTPRequest* req,
-                       TxVerbosity tx_verbosity)
+static bool rest_block(const std::any& context, HTTPRequest* req)
 {
-    if (!CheckWarmup(req))
-        return false;
+    if (!CheckWarmup(req)) return false;
+
+    auto path = req->GetPath();
+    TxVerbosity tx_verbosity {TxVerbosity::SHOW_DETAILS_AND_PREVOUT};
+    std::string hashStr {GetParameterFromPath(path, 0).value_or("")};
+
+    if (IsDeprecatedRESTEnabled("txdetails")) {
+        if (hashStr == "notxdetails") {  // in this route, the first parameter is not actually the hashStr but the /notxdetails path parameter
+            tx_verbosity = TxVerbosity::SHOW_TXID;
+            hashStr = GetParameterFromPath(path, 1).value_or("");
+        }
+    } else {
+        std::string txdetails {req->GetQueryParameter("txdetails").value_or("true")};
+        if (txdetails == "false") tx_verbosity = TxVerbosity::SHOW_TXID;
+        else if (txdetails != "true") {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Parameter txdetails only accepts true|false");
+        }
+    }
+
     uint256 hash;
-    const auto hashStr {req->GetPathParameter(0).value_or("")};
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
@@ -323,16 +337,6 @@ static bool rest_block(const std::any& context,
         return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
     }
     }
-}
-
-static bool rest_block_extended(const std::any& context, HTTPRequest* req)
-{
-    return rest_block(context, req,  TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
-}
-
-static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req)
-{
-    return rest_block(context, req, TxVerbosity::SHOW_TXID);
 }
 
 static bool rest_filter_header(const std::any& context, HTTPRequest* req)
@@ -902,8 +906,7 @@ static const struct {
     bool (*handler)(const std::any& context, HTTPRequest* req);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
-      {"/rest/block/notxdetails/", rest_block_notxdetails},
-      {"/rest/block/", rest_block_extended},
+      {"/rest/block/", rest_block},
       {"/rest/blockfilter/", rest_block_filter},
       {"/rest/blockfilterheaders/", rest_filter_header},
       {"/rest/chaininfo", rest_chaininfo},

@@ -364,7 +364,7 @@ class RESTTest (BitcoinTestFramework):
                     assert "prevout" not in vin
 
         # Check the same but without tx details
-        json_obj = self.test_rest_request(f"/block/notxdetails/{newblockhash[0]}")
+        json_obj = self.test_rest_request(f"/block/{newblockhash[0]}", query_params={"txdetails": "false"})
         for tx in txs:
             assert tx in json_obj['tx']
 
