@@ -207,7 +207,7 @@ static fs::path GetPidFile(const ArgsManager& args)
 // shutdown thing.
 //
 
-void Interrupt(node::NodeContext& node)
+void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
     InterruptHTTPRPC();
@@ -228,7 +228,7 @@ void Interrupt(node::NodeContext& node)
     }
 }
 
-void Shutdown(node::NodeContext& node)
+void Shutdown(NodeContext& node)
 {
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
@@ -748,7 +748,7 @@ static void StartupNotify(const ArgsManager& args)
 }
 #endif
 
-static bool AppInitServers(node::NodeContext& node)
+static bool AppInitServers(NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
     RPCServer::OnStarted(&OnRPCStarted);
@@ -1307,13 +1307,13 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitInterfaces(node::NodeContext& node)
+bool AppInitInterfaces(NodeContext& node)
 {
     node.chain = node.init->makeChain();
     return true;
 }
 
-bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();

@@ -567,7 +567,7 @@ static RPCHelpMan getblockfrompeer()
         UniValue::VSTR, // blockhash
         UniValue::VNUM, // peer_id
     });
-    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
 
@@ -1044,7 +1044,7 @@ static RPCHelpMan gettxoutsetinfo()
     const CoinStatsHashType hash_type{request.params[0].isNull() ? CoinStatsHashType::HASH_SERIALIZED : ParseHashType(request.params[0].get_str())};
     bool index_requested = request.params[2].isNull() || request.params[2].get_bool();
 
-    node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     CChainState& active_chainstate = chainman.ActiveChainstate();
     active_chainstate.ForceFlushStateToDisk();
@@ -1173,7 +1173,7 @@ static RPCHelpMan gettxout()
                 },
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
 
@@ -2290,7 +2290,7 @@ static RPCHelpMan scantxoutset()
         int64_t count = 0;
         std::unique_ptr<CCoinsViewCursor> pcursor;
         const CBlockIndex* tip;
-        node::NodeContext& node = EnsureAnyNodeContext(request.context);
+        NodeContext& node = EnsureAnyNodeContext(request.context);
         {
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
@@ -2473,7 +2473,7 @@ static RPCHelpMan dumptxoutset()
             "Couldn't open file " + temppath.u8string() + " for writing.");
     }
     // SYSCOIN
-    node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue result = CreateUTXOSnapshot(
         node, node.chainman->ActiveChainstate(), afile, path, temppath, filejson);
     fclose(filejson);
@@ -2488,7 +2488,7 @@ static RPCHelpMan dumptxoutset()
 }
 // SYSCOIN
 UniValue CreateUTXOSnapshot(
-    node::NodeContext& node,
+    NodeContext& node,
     CChainState& chainstate,
     CAutoFile& afile,
     const fs::path& path,

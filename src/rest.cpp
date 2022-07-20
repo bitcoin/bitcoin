@@ -81,9 +81,9 @@ static bool RESTERR(HTTPRequest* req, enum HTTPStatusCode status, std::string me
  *                  context is not found.
  * @returns         Pointer to the node context or nullptr if not found.
  */
-static node::NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
+static NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<node::NodeContext>(context);
+    auto node_context = util::AnyPtr<NodeContext>(context);
     if (!node_context) {
         RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
                 strprintf("%s:%d (%s)\n"
@@ -104,7 +104,7 @@ static node::NodeContext* GetNodeContext(const std::any& context, HTTPRequest* r
  */
 static CTxMemPool* GetMemPool(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<node::NodeContext>(context);
+    auto node_context = util::AnyPtr<NodeContext>(context);
     if (!node_context || !node_context->mempool) {
         RESTERR(req, HTTP_NOT_FOUND, "Mempool disabled or instance not found");
         return nullptr;
@@ -121,7 +121,7 @@ static CTxMemPool* GetMemPool(const std::any& context, HTTPRequest* req)
  */
 static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
 {
-    auto node_context = util::AnyPtr<node::NodeContext>(context);
+    auto node_context = util::AnyPtr<NodeContext>(context);
     if (!node_context || !node_context->chainman) {
         RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
                 strprintf("%s:%d (%s)\n"
@@ -652,7 +652,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     CBlockIndex* blockindex = nullptr;
-    const node::NodeContext* const node = GetNodeContext(context, req);
+    const NodeContext* const node = GetNodeContext(context, req);
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
