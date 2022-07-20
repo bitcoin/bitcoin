@@ -458,6 +458,7 @@ CTxMemPool::CTxMemPool(const Options& opts)
       minerPolicyEstimator{opts.estimator},
       m_max_size_bytes{opts.max_size_bytes},
       m_expiry{opts.expiry},
+      m_require_standard{opts.require_standard},
       m_full_rbf{opts.full_rbf},
       m_limits{opts.limits}
 {
