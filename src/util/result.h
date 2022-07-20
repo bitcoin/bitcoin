@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_RESULT_H
-#define BITCOIN_UTIL_RESULT_H
+#ifndef REVOLT_UTIL_RESULT_H
+#define REVOLT_UTIL_RESULT_H
 
 #include <util/translation.h>
 
@@ -46,4 +46,4 @@ public:
     explicit operator bool() const { return HasRes(); }
 };
 
-#endif // BITCOIN_UTIL_RESULT_H
+#endif // REVOLT_UTIL_RESULT_H
