@@ -66,6 +66,8 @@ using interfaces::Node;
 using interfaces::WalletLoader;
 
 namespace node {
+// All members of the classes in this namespace are intentionally public, as the
+// classes themselves are private.
 namespace {
 #ifdef ENABLE_EXTERNAL_SIGNER
 class ExternalSignerImpl : public interfaces::ExternalSigner
@@ -73,15 +75,12 @@ class ExternalSignerImpl : public interfaces::ExternalSigner
 public:
     ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
     std::string getName() override { return m_signer.m_name; }
-private:
     ::ExternalSigner m_signer;
 };
 #endif
 
 class NodeImpl : public Node
 {
-private:
-    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
@@ -389,6 +388,7 @@ public:
     {
         m_context = context;
     }
+    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
     NodeContext* m_context{nullptr};
 };
 
@@ -501,8 +501,6 @@ public:
 
 class ChainImpl : public Chain
 {
-private:
-    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
     std::optional<int> getHeight() override
@@ -782,6 +780,7 @@ public:
     }
 
     NodeContext* context() override { return &m_node; }
+    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     NodeContext& m_node;
 };
 } // namespace
