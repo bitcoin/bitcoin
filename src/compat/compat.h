@@ -3,21 +3,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPAT_H
-#define BITCOIN_COMPAT_H
+#ifndef BITCOIN_COMPAT_COMPAT_H
+#define BITCOIN_COMPAT_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
 #endif
 
+// Windows defines FD_SETSIZE to 64 (see _fd_types.h in mingw-w64),
+// which is too small for our usage, but allows us to redefine it safely.
+// We redefine it to be 1024, to match glibc, see typesizes.h.
 #ifdef WIN32
 #ifdef FD_SETSIZE
-#undef FD_SETSIZE // prevent redefinition compiler warning
+#undef FD_SETSIZE
 #endif
-#define FD_SETSIZE 1024 // max number of fds in fd_set
+#define FD_SETSIZE 1024
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdint.h>
+#include <cstdint>
 #else
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -34,49 +37,54 @@
 #include <unistd.h>
 #endif
 
+// We map Linux / BSD error functions and codes, to the equivalent
+// Windows definitions, and use the WSA* names throughout our code.
+// Note that glibc defines EWOULDBLOCK as EAGAIN (see errno.h).
 #ifndef WIN32
 typedef unsigned int SOCKET;
-#include <errno.h>
+#include <cerrno>
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
-#define WSAEALREADY         EALREADY
 #define WSAEWOULDBLOCK      EWOULDBLOCK
 #define WSAEAGAIN           EAGAIN
 #define WSAEMSGSIZE         EMSGSIZE
 #define WSAEINTR            EINTR
 #define WSAEINPROGRESS      EINPROGRESS
 #define WSAEADDRINUSE       EADDRINUSE
-#define WSAENOTSOCK         EBADF
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
 #else
-#ifndef WSAEAGAIN
+// WSAEAGAIN doesn't exist on Windows
 #ifdef EAGAIN
 #define WSAEAGAIN EAGAIN
 #else
 #define WSAEAGAIN WSAEWOULDBLOCK
 #endif
 #endif
-#endif
 
+// Windows doesn't define S_IRUSR or S_IWUSR. We define both
+// here, with the same values as glibc (see stat.h).
 #ifdef WIN32
 #ifndef S_IRUSR
 #define S_IRUSR             0400
 #define S_IWUSR             0200
 #endif
-#else
-#define MAX_PATH            1024
-#endif
-#ifdef _MSC_VER
-#if !defined(ssize_t)
-#ifdef _WIN64
-typedef int64_t ssize_t;
-#else
-typedef int32_t ssize_t;
-#endif
-#endif
 #endif
 
+// Windows defines MAX_PATH as it's maximum path length.
+// We define MAX_PATH for use on non-Windows systems.
+#ifndef WIN32
+#define MAX_PATH            1024
+#endif
+
+// ssize_t is POSIX, and not present when using MSVC.
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
+// The type of the option value passed to getsockopt & setsockopt
+// differs between Windows and non-Windows.
 #ifndef WIN32
 typedef void* sockopt_arg_type;
 #else
@@ -119,4 +127,4 @@ bool static inline IsSelectableSocket(const SOCKET& s) {
 #define MSG_DONTWAIT 0
 #endif
 
-#endif // BITCOIN_COMPAT_H
+#endif // BITCOIN_COMPAT_COMPAT_H

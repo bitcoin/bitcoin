@@ -8,7 +8,7 @@
 
 #include <chainparams.h>
 #include <common/bloom.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <node/connection_types.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
