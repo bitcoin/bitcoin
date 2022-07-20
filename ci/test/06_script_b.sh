@@ -42,7 +42,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/compat"\
           " src/dbwrapper.cpp"\
           " src/init"\
-          " src/kernel/mempool_persist.cpp"\
+          " src/kernel"\
           " src/node/chainstate.cpp"\
           " src/policy/feerate.cpp"\
           " src/policy/packages.cpp"\

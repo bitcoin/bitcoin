@@ -18,6 +18,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <node/blockstorage.h>
+#include <node/caches.h>
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
@@ -90,33 +91,24 @@ int main(int argc, char* argv[])
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<PeerManager> peerman;
     std::unique_ptr<BanMan> banman;
-    auto rv = node::LoadChainstate(false,
-                                   std::ref(chainman),
-                                   *connman,
-                                   *banman,
-                                   *peerman,
-                                   nullptr,
-                                   false,
-                                   false,
-                                   2 << 20,
-                                   2 << 22,
-                                   (450 << 20) - (2 << 20) - (2 << 22),
-                                   false,
-                                   false,
-                                   false,
-                                   false,
-                                   2 << 20,
-                                   []() { return false; });
-    if (rv.has_value()) {
+    node::CacheSizes cache_sizes;
+    cache_sizes.block_tree_db = 2 << 20;
+    cache_sizes.coins_db = 2 << 22;
+    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
+    // SYSCOIN
+    cache_sizes.evo_db = 2 << 20;
+    node::ChainstateLoadOptions options;
+    options.connman = Assert(connman.get());
+    options.banman =  Assert(banman.get());
+    options.peerman = Assert(peerman.get());
+    options.check_interrupt = [] { return false; };
+    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
+    if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        auto maybe_verify_error = node::VerifyLoadedChainstate(std::ref(chainman),
-                                                               false,
-                                                               false,
-                                                               DEFAULT_CHECKBLOCKS,
-                                                               DEFAULT_CHECKLEVEL);
-        if (maybe_verify_error.has_value()) {
+        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
+        if (status != node::ChainstateLoadStatus::SUCCESS) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }
