@@ -31,13 +31,13 @@ SYSCOIN_NODE_BIN=$(top_builddir)/src/$(SYSCOIN_MP_NODE_NAME)$(EXEEXT)
 SYSCOIN_GUI_BIN=$(top_builddir)/src/$(SYSCOIN_MP_GUI_NAME)$(EXEEXT)
 SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win64-setup$(EXEEXT)
 if TARGET_WINDOWS
-SYSCOIN_GETH=$(top_builddir)/src/bin/windows/sysgeth$(EXEEXT)
+SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/windows/$(SYSCOIN_GETH)$(EXEEXT)
 endif
 if TARGET_DARWIN
-SYSCOIN_GETH=$(top_builddir)/src/bin/darwin/sysgeth$(EXEEXT)
+SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/darwin/$(SYSCOIN_GETH)$(EXEEXT)
 endif
 if TARGET_LINUX
-SYSCOIN_GETH=$(top_builddir)/src/bin/linux/sysgeth$(EXEEXT)
+SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/linux/$(SYSCOIN_GETH)$(EXEEXT)
 endif
 empty :=
 space := $(empty) $(empty)
@@ -90,7 +90,7 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_UTIL_BIN) $(top_builddir)/release
-	cp $(SYSCOIN_GETH) $(top_builddir)/release
+	cp $(SYSCOIN_GETH_BIN) $(top_builddir)/release
 	@test -f $(MAKENSIS) && echo 'OutFile "$@"' | cat $(top_builddir)/share/setup.nsi - | $(MAKENSIS) -V2 - || \
 	  echo error: could not build $@
 	@echo built $@
@@ -132,7 +132,7 @@ osx_volname:
 
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -add-resources $(SYSCOIN_GETH)
+	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -add-resources $(SYSCOIN_GETH_BIN)
 
 deploydir: $(OSX_DMG)
 else !BUILD_DARWIN
@@ -142,7 +142,7 @@ $(OSX_DMG): deploydir
 	$(XORRISOFS) -D -l -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -o $@ $(APP_DIST_DIR) -- $(if $(SOURCE_DATE_EPOCH),-volume_date all_file_dates =$(SOURCE_DATE_EPOCH))
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -add-resources $(SYSCOIN_GETH)
+	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -add-resources $(SYSCOIN_GETH_BIN)
 
 deploydir: $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt
 endif !BUILD_DARWIN

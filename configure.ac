@@ -26,6 +26,7 @@ SYSCOIN_TX_NAME=syscoin-tx
 SYSCOIN_UTIL_NAME=syscoin-util
 SYSCOIN_CHAINSTATE_NAME=syscoin-chainstate
 SYSCOIN_WALLET_TOOL_NAME=syscoin-wallet
+SYSCOIN_GETH=sysgeth
 dnl Multi Process
 SYSCOIN_MP_NODE_NAME=syscoin-node
 SYSCOIN_MP_GUI_NAME=syscoin-gui
