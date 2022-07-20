@@ -123,7 +123,6 @@ uint256 g_best_block;
 bool g_parallel_script_checks{false};
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
-int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -1548,8 +1547,9 @@ bool Chainstate::IsInitialBlockDownload() const
         return true;
     if (m_chain.Tip()->nChainWork < nMinimumChainWork)
         return true;
-    if (m_chain.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
+    if (m_chain.Tip()->Time() < NodeClock::now() - m_chainman.m_options.max_tip_age) {
         return true;
+    }
     LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;

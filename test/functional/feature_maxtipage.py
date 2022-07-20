@@ -2,10 +2,10 @@
 # Copyright (c) 2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test logic for setting nMaxTipAge on command line.
+"""Test logic for setting -maxtipage on command line.
 
 Nodes don't consider themselves out of "initial block download" as long as
-their best known block header time is more than nMaxTipAge in the past.
+their best known block header time is more than -maxtipage in the past.
 """
 
 import time
