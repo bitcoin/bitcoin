@@ -1,9 +1,9 @@
-package=libxkbcommon
-$(package)_version=0.8.4
-$(package)_download_path=https://xkbcommon.org/download/
-$(package)_file_name=$(package)-$($(package)_version).tar.xz
-$(package)_sha256_hash=60ddcff932b7fd352752d51a5c4f04f3d0403230a584df9a2e0d5ed87c486c8b
-$(package)_dependencies=libxcb
+package := libxkbcommon
+$(package)_version := 0.8.4
+$(package)_download_path := https://xkbcommon.org/download/
+$(package)_file_name := $(package)-$($(package)_version).tar.xz
+$(package)_sha256_hash := 60ddcff932b7fd352752d51a5c4f04f3d0403230a584df9a2e0d5ed87c486c8b
+$(package)_dependencies := libxcb
 
 # This package explicitly enables -Werror=array-bounds, which causes build failures
 # with GCC 12.1+. Work around that by turning errors back into warnings.

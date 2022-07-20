@@ -1,9 +1,9 @@
-package=libmultiprocess
-$(package)_version=$(native_$(package)_version)
-$(package)_download_path=$(native_$(package)_download_path)
-$(package)_file_name=$(native_$(package)_file_name)
-$(package)_sha256_hash=$(native_$(package)_sha256_hash)
-$(package)_dependencies=native_$(package) capnp
+package := libmultiprocess
+$(package)_version := $(native_$(package)_version)
+$(package)_download_path := $(native_$(package)_download_path)
+$(package)_file_name := $(native_$(package)_file_name)
+$(package)_sha256_hash := $(native_$(package)_sha256_hash)
+$(package)_dependencies := native_$(package) capnp
 ifneq ($(host),$(build))
 $(package)_dependencies += native_capnp
 endif

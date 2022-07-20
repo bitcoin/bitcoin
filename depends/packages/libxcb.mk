@@ -1,12 +1,12 @@
-package=libxcb
-$(package)_version=1.14
-$(package)_download_path=https://xcb.freedesktop.org/dist
-$(package)_file_name=$(package)-$($(package)_version).tar.xz
-$(package)_sha256_hash=a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34
-$(package)_dependencies=xcb_proto libXau
+package := libxcb
+$(package)_version := 1.14
+$(package)_download_path := https://xcb.freedesktop.org/dist
+$(package)_file_name := $(package)-$($(package)_version).tar.xz
+$(package)_sha256_hash := a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34
+$(package)_dependencies := xcb_proto libXau
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen --without-launchd
+$(package)_config_opts := --disable-static --disable-devel-docs --without-doxygen --without-launchd
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 # Disable unneeded extensions.
 # More info is available from: https://doc.qt.io/qt-5.15/linux-requirements.html
