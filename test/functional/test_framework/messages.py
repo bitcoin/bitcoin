@@ -260,6 +260,18 @@ def tx_from_hex(hex_string):
     """Deserialize from hex string to a transaction object"""
     return from_hex(CTransaction(), hex_string)
 
+# like from_hex, but without the hex part
+def from_binary(cls, stream):
+    """deserialize a binary stream (or bytes object) into an object"""
+    # handle bytes object by turning it into a stream
+    was_bytes = isinstance(stream, bytes)
+    if was_bytes:
+        stream = BytesIO(stream)
+    obj = cls()
+    obj.deserialize(stream)
+    if was_bytes:
+        assert len(stream.read()) == 0
+    return obj
 
 # Objects that map to syscoind objects, which can be serialized/deserialized
 # SYSCOIN
@@ -297,6 +309,8 @@ class CNEVMBlockConnect(CNEVMBlock):
     def deserialize(self, f):
         super(CNEVMBlockConnect, self).deserialize(f)
         self.sysblockhash = deser_uint256(f)
+
+# Objects that map to bitcoind objects, which can be serialized/deserialized
 
     def serialize(self):
         r = b""
