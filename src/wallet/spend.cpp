@@ -362,28 +362,24 @@ CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinContr
     return AvailableCoins(wallet, coinControl).GetTotalAmount();
 }
 
-const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output)
-{
-    AssertLockHeld(wallet.cs_wallet);
-    const CTransaction* ptx = &tx;
-    int n = output;
-    while (OutputIsChange(wallet, ptx->vout[n]) && ptx->vin.size() > 0) {
-        const COutPoint& prevout = ptx->vin[0].prevout;
-        auto it = wallet.mapWallet.find(prevout.hash);
-        if (it == wallet.mapWallet.end() || it->second.tx->vout.size() <= prevout.n ||
-            !wallet.IsMine(it->second.tx->vout[prevout.n])) {
-            break;
-        }
-        ptx = it->second.tx.get();
-        n = prevout.n;
-    }
-    return ptx->vout[n];
-}
-
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
 {
     AssertLockHeld(wallet.cs_wallet);
-    return FindNonChangeParentOutput(wallet, *wallet.GetWalletTx(outpoint.hash)->tx, outpoint.n);
+    const CWalletTx* wtx{Assert(wallet.GetWalletTx(outpoint.hash))};
+
+    const CTransaction* ptx = wtx->tx.get();
+    int n = outpoint.n;
+    while (OutputIsChange(wallet, ptx->vout[n]) && ptx->vin.size() > 0) {
+        const COutPoint& prevout = ptx->vin[0].prevout;
+        const CWalletTx* it = wallet.GetWalletTx(prevout.hash);
+        if (!it || it->tx->vout.size() <= prevout.n ||
+            !wallet.IsMine(it->tx->vout[prevout.n])) {
+            break;
+        }
+        ptx = it->tx.get();
+        n = prevout.n;
+    }
+    return ptx->vout[n];
 }
 
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
