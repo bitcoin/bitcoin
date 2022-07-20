@@ -65,7 +65,6 @@
 #include <typeinfo>
 
 using node::ReadBlockFromDisk;
-using node::ReadRawBlockFromDisk;
 using node::fImporting;
 using node::fPruneMode;
 using node::fReindex;
