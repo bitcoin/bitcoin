@@ -9,7 +9,7 @@
 #include <httpserver.h>
 
 #include <chainparamsbase.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes

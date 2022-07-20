@@ -4,7 +4,7 @@
 
 #include <qt/syscoin.h>
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <util/translation.h>
 #include <util/url.h>
 

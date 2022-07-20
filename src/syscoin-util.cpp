@@ -11,7 +11,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <core_io.h>
 #include <streams.h>
 #include <util/system.h>

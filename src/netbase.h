@@ -9,7 +9,7 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
 #include <util/sock.h>

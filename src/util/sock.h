@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_UTIL_SOCK_H
 #define SYSCOIN_UTIL_SOCK_H
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <threadinterrupt.h>
 #include <util/time.h>
 

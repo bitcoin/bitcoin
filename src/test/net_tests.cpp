@@ -4,7 +4,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <cstdint>
 #include <net.h>
 #include <net_processing.h>

@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_I2P_H
 #define SYSCOIN_I2P_H
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <fs.h>
 #include <netaddress.h>
 #include <sync.h>
