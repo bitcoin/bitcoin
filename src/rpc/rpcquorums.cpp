@@ -21,6 +21,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <rpc/server_util.h>
+#include <util/system.h>
 static RPCHelpMan quorum_list()
 {
     return RPCHelpMan{"quorum_list",

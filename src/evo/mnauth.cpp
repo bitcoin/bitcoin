@@ -15,7 +15,7 @@
 #include <validation.h>
 #include <timedata.h>
 #include <unordered_set>
-
+#include <util/system.h>
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 {
     LOCK(activeMasternodeInfoCs);

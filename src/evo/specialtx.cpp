@@ -12,9 +12,10 @@
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
-
+#include <util/time.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
+#include <util/system.h>
 class CCoinsViewCache;
 bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
 {

@@ -15,7 +15,7 @@
 #include <messagesigner.h>
 #include <script/standard.h>
 #include <validation.h>
-
+#include <util/system.h>
 template <typename ProTx>
 static bool CheckService(const ProTx& proTx, TxValidationState& state, bool fJustCheck)
 {

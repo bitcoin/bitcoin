@@ -14,6 +14,7 @@
 #include <evo/cbtx.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <util/system.h>
 namespace llmq
 {
 

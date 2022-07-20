@@ -17,6 +17,7 @@
 #include <versionbits.h>
 #include <masternode/masternodemeta.h>
 #include <util/ranges.h>
+#include <util/system.h>
 namespace llmq
 {
 

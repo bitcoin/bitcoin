@@ -11,6 +11,7 @@
 #include <validation.h>
 #include <warnings.h>
 #include <bls/bls.h>
+#include <util/system.h>
 // Keep track of the active Masternode
 RecursiveMutex activeMasternodeInfoCs;
 CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);

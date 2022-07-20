@@ -13,7 +13,7 @@
 #include <consensus/merkle.h>
 #include <univalue.h>
 #include <validation.h>
-
+#include <util/time.h>
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_COINBASE) {

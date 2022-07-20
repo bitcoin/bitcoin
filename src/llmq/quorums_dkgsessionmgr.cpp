@@ -12,6 +12,7 @@
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>
+#include <util/system.h>
 namespace llmq
 {
 

@@ -16,6 +16,7 @@
 #include <validation.h>
 #include <scheduler.h>
 #include <util/thread.h>
+#include <util/system.h>
 namespace llmq
 {
 
