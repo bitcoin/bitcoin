@@ -2825,7 +2825,7 @@ void CaptureMessageToFile(const CAddress& addr,
     fs::create_directories(base_path);
 
     fs::path path = base_path / (is_incoming ? "msgs_recv.dat" : "msgs_sent.dat");
-    CAutoFile f(fsbridge::fopen(path, "ab"), SER_DISK, CLIENT_VERSION);
+    AutoFile f{fsbridge::fopen(path, "ab")};
 
     ser_writedata64(f, now.count());
     f.write(MakeByteSpan(msg_type));

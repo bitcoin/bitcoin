@@ -198,7 +198,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
 {
     std::vector<bool> bits;
     FILE *filestr = fsbridge::fopen(path, "rb");
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    AutoFile file{filestr};
     if (file.IsNull()) {
         LogPrintf("Failed to open asmap file from disk\n");
         return bits;

@@ -161,13 +161,13 @@ public:
     unsigned int GetMaxConfirms() const { return scale * confAvg.size(); }
 
     /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout) const;
+    void Write(AutoFile& fileout) const;
 
     /**
      * Read saved state of estimation data from a file and replace all internal data structures and
      * variables with this state.
      */
-    void Read(CAutoFile& filein, int nFileVersion, size_t numBuckets);
+    void Read(AutoFile& filein, int nFileVersion, size_t numBuckets);
 };
 
 
@@ -390,7 +390,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     return median;
 }
 
-void TxConfirmStats::Write(CAutoFile& fileout) const
+void TxConfirmStats::Write(AutoFile& fileout) const
 {
     fileout << Using<EncodedDoubleFormatter>(decay);
     fileout << scale;
@@ -400,7 +400,7 @@ void TxConfirmStats::Write(CAutoFile& fileout) const
     fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
 }
 
-void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets)
+void TxConfirmStats::Read(AutoFile& filein, int nFileVersion, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
     // buckets and bucketMap are not updated yet, so don't access them
@@ -546,7 +546,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
     longStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
 
     // If the fee estimation file is present, read recorded estimations
-    CAutoFile est_file(fsbridge::fopen(m_estimation_filepath, "rb"), SER_DISK, CLIENT_VERSION);
+    AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "rb")};
     if (est_file.IsNull() || !Read(est_file)) {
         LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     }
@@ -904,13 +904,13 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 void CBlockPolicyEstimator::Flush() {
     FlushUnconfirmed();
 
-    CAutoFile est_file(fsbridge::fopen(m_estimation_filepath, "wb"), SER_DISK, CLIENT_VERSION);
+    AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     }
 }
 
-bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
+bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
 {
     try {
         LOCK(m_cs_fee_estimator);
@@ -935,7 +935,7 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
     return true;
 }
 
-bool CBlockPolicyEstimator::Read(CAutoFile& filein)
+bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);

@@ -133,7 +133,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     const FlatFilePos& pos = m_next_filter_pos;
 
     // Flush current filter file to disk.
-    CAutoFile file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
+    AutoFile file{m_filter_fileseq->Open(pos)};
     if (file.IsNull()) {
         return error("%s: Failed to open filter file %d", __func__, pos.nFile);
     }
@@ -147,7 +147,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
 
 bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, BlockFilter& filter) const
 {
-    CAutoFile filein(m_filter_fileseq->Open(pos, true), SER_DISK, CLIENT_VERSION);
+    AutoFile filein{m_filter_fileseq->Open(pos, true)};
     if (filein.IsNull()) {
         return false;
     }
@@ -179,7 +179,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
-        CAutoFile last_file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
+        AutoFile last_file{m_filter_fileseq->Open(pos)};
         if (last_file.IsNull()) {
             LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
             return 0;
@@ -205,7 +205,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
         return 0;
     }
 
-    CAutoFile fileout(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
+    AutoFile fileout{m_filter_fileseq->Open(pos)};
     if (fileout.IsNull()) {
         LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return 0;
