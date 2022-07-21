@@ -147,12 +147,12 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 inline void AssertLockNotHeldInline(const char* name, const char* file, int line, GlobalMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
 #define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
-/** Wrapper around std::unique_lock style lock for Mutex. */
-template <typename Mutex>
-class SCOPED_LOCKABLE UniqueLock : public Mutex::UniqueLock
+/** Wrapper around std::unique_lock style lock for MutexType. */
+template <typename MutexType>
+class SCOPED_LOCKABLE UniqueLock : public MutexType::UniqueLock
 {
 private:
-    using Base = typename Mutex::UniqueLock;
+    using Base = typename MutexType::UniqueLock;
 
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
@@ -175,7 +175,7 @@ private:
     }
 
 public:
-    UniqueLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+    UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
     {
         if (fTry)
             TryEnter(pszName, pszFile, nLine);
@@ -183,7 +183,7 @@ public:
             Enter(pszName, pszFile, nLine);
     }
 
-    UniqueLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
+    UniqueLock(MutexType* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
     {
         if (!pmutexIn) return;
 
