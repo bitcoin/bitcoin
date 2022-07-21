@@ -85,6 +85,10 @@ bool BaseIndex::Init()
     } else {
         SetBestBlockIndex(m_chainstate->FindForkInGlobalIndex(locator));
     }
+
+    // Note: this will latch to true immediately if the user starts up with an empty
+    // datadir and an index enabled. If this is the case, indexation will happen solely
+    // via `BlockConnected` signals until, possibly, the next restart.
     m_synced = m_best_block_index.load() == active_chain.Tip();
     if (!m_synced) {
         bool prune_violation = false;
