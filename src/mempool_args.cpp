@@ -67,6 +67,16 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
         LogPrintf("Increasing minrelaytxfee to %s to match incrementalrelayfee\n", mempool_opts.min_relay_feerate.ToString());
     }
 
+    // Feerate used to define dust.  Shouldn't be changed lightly as old
+    // implementations may inadvertently create non-standard transactions
+    if (argsman.IsArgSet("-dustrelayfee")) {
+        if (std::optional<CAmount> parsed = ParseMoney(argsman.GetArg("-dustrelayfee", ""))) {
+            mempool_opts.dust_relay_feerate = CFeeRate{parsed.value()};
+        } else {
+            return AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""));
+        }
+    }
+
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
         return strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString());

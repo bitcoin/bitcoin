@@ -6,14 +6,12 @@
 #ifndef BITCOIN_POLICY_SETTINGS_H
 #define BITCOIN_POLICY_SETTINGS_H
 
-#include <policy/feerate.h>
 #include <policy/policy.h>
 
 #include <cstdint>
 
 class CTransaction;
 
-extern CFeeRate dustRelayFee;
 extern unsigned int nBytesPerSigOp;
 extern bool fIsBareMultisigStd;
 
