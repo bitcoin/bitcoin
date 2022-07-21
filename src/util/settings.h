@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SETTINGS_H
-#define BITCOIN_UTIL_SETTINGS_H
+#ifndef REVOLT_UTIL_SETTINGS_H
+#define REVOLT_UTIL_SETTINGS_H
 
 #include <fs.h>
 
@@ -111,4 +111,4 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SETTINGS_H
+#endif // REVOLT_UTIL_SETTINGS_H
