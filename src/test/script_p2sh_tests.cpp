@@ -18,6 +18,11 @@
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
+bool IsStandardTx(const CTransaction& tx, std::string& reason)
+{
+    return IsStandardTx(tx, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, reason);
+}
+
 static std::vector<unsigned char>
 Serialize(const CScript& s)
 {

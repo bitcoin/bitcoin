@@ -40,6 +40,9 @@ typedef std::vector<unsigned char> valtype;
 // In script_tests.cpp
 UniValue read_json(const std::string& jsondata);
 
+static CFeeRate g_dust{DUST_RELAY_TX_FEE};
+static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
+
 static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
     {std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC},
@@ -764,19 +767,19 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
     CheckIsStandard(t);
 
     // Check dust with default relay fee:
-    CAmount nDustThreshold = 182 * dustRelayFee.GetFeePerK() / 1000;
+    CAmount nDustThreshold = 182 * g_dust.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
@@ -804,14 +807,14 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
-    dustRelayFee = CFeeRate(3702);
+    g_dust = CFeeRate(3702);
     // dust:
     t.vout[0].nValue = 674 - 1;
     CheckIsNotStandard(t, "dust");
     // not dust:
     t.vout[0].nValue = 674;
     CheckIsStandard(t);
-    dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
+    g_dust = CFeeRate{DUST_RELAY_TX_FEE};
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
@@ -923,16 +926,16 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
     CheckIsNotStandard(t, "tx-size");
 
-    // Check bare multisig (standard if policy flag fIsBareMultisigStd is set)
-    fIsBareMultisigStd = true;
+    // Check bare multisig (standard if policy flag g_bare_multi is set)
+    g_bare_multi = true;
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
     t.vin.resize(1);
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
     CheckIsStandard(t);
 
-    fIsBareMultisigStd = false;
+    g_bare_multi = false;
     CheckIsNotStandard(t, "bare-multisig");
-    fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
+    g_bare_multi = DEFAULT_PERMIT_BAREMULTISIG;
 
     // Check P2WPKH outputs dust threshold
     t.vout[0].scriptPubKey = CScript() << OP_0 << ParseHex("ffffffffffffffffffffffffffffffffffffffff");

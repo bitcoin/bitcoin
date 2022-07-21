@@ -10,18 +10,12 @@
 #include <policy/policy.h>
 
 #include <cstdint>
-#include <string>
 
 class CTransaction;
 
 extern CFeeRate dustRelayFee;
 extern unsigned int nBytesPerSigOp;
 extern bool fIsBareMultisigStd;
-
-static inline bool IsStandardTx(const CTransaction& tx, std::string& reason)
-{
-    return IsStandardTx(tx, ::fIsBareMultisigStd, ::dustRelayFee, reason);
-}
 
 static inline int64_t GetVirtualTransactionSize(int64_t weight, int64_t sigop_cost)
 {
