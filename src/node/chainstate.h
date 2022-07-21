@@ -5,13 +5,13 @@
 #ifndef BITCOIN_NODE_CHAINSTATE_H
 #define BITCOIN_NODE_CHAINSTATE_H
 
+#include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
 #include <functional>
-#include <optional>
+#include <tuple>
 
-class ChainstateManager;
 class CTxMemPool;
 
 namespace node {
