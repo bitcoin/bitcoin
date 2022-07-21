@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXDB_H
-#define BITCOIN_TXDB_H
+#ifndef REVOLT_TXDB_H
+#define REVOLT_TXDB_H
 
 #include <coins.h>
 #include <dbwrapper.h>
@@ -92,4 +92,4 @@ public:
 
 std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
 
-#endif // BITCOIN_TXDB_H
+#endif // REVOLT_TXDB_H

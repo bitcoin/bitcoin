@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CLIENTVERSION_H
-#define BITCOIN_CLIENTVERSION_H
+#ifndef REVOLT_CLIENTVERSION_H
+#define REVOLT_CLIENTVERSION_H
 
 #include <util/macros.h>
 
@@ -48,4 +48,4 @@ std::string LicenseInfo();
 
 #endif // WINDRES_PREPROC
 
-#endif // BITCOIN_CLIENTVERSION_H
+#endif // REVOLT_CLIENTVERSION_H
