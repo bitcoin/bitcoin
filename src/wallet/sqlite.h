@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_SQLITE_H
-#define BITCOIN_WALLET_SQLITE_H
+#ifndef REVOLT_WALLET_SQLITE_H
+#define REVOLT_WALLET_SQLITE_H
 
 #include <wallet/db.h>
 
@@ -121,4 +121,4 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 std::string SQLiteDatabaseVersion();
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_SQLITE_H
+#endif // REVOLT_WALLET_SQLITE_H
