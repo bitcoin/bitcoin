@@ -221,11 +221,11 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     constexpr int RANDOM_CHANGE_POSITION = -1;
     auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
     if (!res) {
-        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + res.GetError());
+        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;
     }
 
-    const auto& txr = res.GetObj();
+    const auto& txr = *res;
     // Write back new fee if successful
     new_fee = txr.fee;
 

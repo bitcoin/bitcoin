@@ -536,7 +536,7 @@ public:
             constexpr int RANDOM_CHANGE_POSITION = -1;
             auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
             BOOST_CHECK(res);
-            tx = res.GetObj().tx;
+            tx = res->tx;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -918,8 +918,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
 
     // Add tx to wallet
     const auto& op_dest = wallet.GetNewDestination(OutputType::BECH32M, "");
-    BOOST_ASSERT(op_dest.HasRes());
-    const CTxDestination& dest = op_dest.GetObj();
+    BOOST_ASSERT(op_dest);
+    const CTxDestination& dest = *op_dest;
 
     CMutableTransaction mtx;
     mtx.vout.push_back({COIN, GetScriptForDestination(dest)});

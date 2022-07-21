@@ -35,7 +35,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         coin_control.m_change_type = OutputType::LEGACY;
         auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, coin_control);
         BOOST_CHECK(res);
-        const auto& txr = res.GetObj();
+        const auto& txr = *res;
         BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
         BOOST_CHECK_EQUAL(txr.tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr.fee);
         BOOST_CHECK_GT(txr.fee, 0);
