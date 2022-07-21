@@ -7,10 +7,13 @@
 
 #include <validation.h>
 
+#include <optional>
+
 class ArgsManager;
+struct bilingual_str;
 
 namespace node {
-void ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
+std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATEMANAGER_ARGS_H

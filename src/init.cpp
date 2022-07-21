@@ -937,16 +937,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     fCheckBlockIndex = args.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = args.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
-    if (args.IsArgSet("-minimumchainwork")) {
-        const std::string minChainWorkStr = args.GetArg("-minimumchainwork", "");
-        if (!IsHexNumber(minChainWorkStr)) {
-            return InitError(strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), minChainWorkStr));
-        }
-        nMinimumChainWork = UintToArith256(uint256S(minChainWorkStr));
-    } else {
-        nMinimumChainWork = UintToArith256(chainparams.GetConsensus().nMinimumChainWork);
-    }
-
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg < 0) {
@@ -1043,6 +1033,16 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         LogPrintf("Experimental syscall sandbox enabled (-sandbox=%s): bitcoind will terminate if an unexpected (not allowlisted) syscall is invoked.\n", sandbox_arg);
     }
 #endif // USE_SYSCALL_SANDBOX
+
+    // Also report errors from parsing before daemonization
+    {
+        ChainstateManager::Options chainman_opts_dummy{
+            .chainparams = chainparams,
+        };
+        if (const auto error{ApplyArgsManOptions(args, chainman_opts_dummy)}) {
+            return InitError(*error);
+        }
+    }
 
     return true;
 }
@@ -1439,7 +1439,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         .chainparams = chainparams,
         .adjusted_time_callback = GetAdjustedTime,
     };
-    ApplyArgsManOptions(args, chainman_opts);
+    Assert(!ApplyArgsManOptions(args, chainman_opts)); // no error can happen, already checked in AppInitParameterInteraction
 
     // cache size calculations
     CacheSizes cache_sizes = CalculateCacheSizes(args, g_enabled_filter_types.size());
