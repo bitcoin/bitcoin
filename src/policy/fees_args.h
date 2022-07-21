@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_FEES_ARGS_H
-#define BITCOIN_POLICY_FEES_ARGS_H
+#ifndef REVOLT_POLICY_FEES_ARGS_H
+#define REVOLT_POLICY_FEES_ARGS_H
 
 #include <fs.h>
 
@@ -12,4 +12,4 @@ class ArgsManager;
 /** @return The fee estimates data file path. */
 fs::path FeeestPath(const ArgsManager& argsman);
 
-#endif // BITCOIN_POLICY_FEES_ARGS_H
+#endif // REVOLT_POLICY_FEES_ARGS_H

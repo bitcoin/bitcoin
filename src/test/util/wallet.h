@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_WALLET_H
-#define BITCOIN_TEST_UTIL_WALLET_H
+#ifndef REVOLT_TEST_UTIL_WALLET_H
+#define REVOLT_TEST_UTIL_WALLET_H
 
 #include <string>
 
@@ -23,4 +23,4 @@ void importaddress(wallet::CWallet& wallet, const std::string& address);
 std::string getnewaddress(wallet::CWallet& w);
 
 
-#endif // BITCOIN_TEST_UTIL_WALLET_H
+#endif // REVOLT_TEST_UTIL_WALLET_H
