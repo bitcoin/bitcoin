@@ -1576,33 +1576,36 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const auto load_block_index_start_time{SteadyClock::now()};
-        auto catch_exceptions = [](auto&& f) {
+        auto catch_exceptions = [](auto&& f) -> util::Result<void, node::ChainstateLoadError> {
             try {
                 return f();
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
+                return {util::Error{_("Error opening block database")}, node::ChainstateLoadError::FAILURE};
             }
         };
-        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
-        if (status == node::ChainstateLoadStatus::SUCCESS) {
+        auto result = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
+        if (result) {
             uiInterface.InitMessage(_("Verifying blocks…").translated);
             if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
                 LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                   MIN_BLOCKS_TO_KEEP);
             }
-            std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
-            if (status == node::ChainstateLoadStatus::SUCCESS) {
+            result = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
+            if (result) {
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
             }
         }
 
-        if (status == node::ChainstateLoadStatus::FAILURE_FATAL || status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
-            return InitError(error);
+        if (!result && (result.GetFailure() == node::ChainstateLoadError::FAILURE_FATAL ||
+                        result.GetFailure() == node::ChainstateLoadError::FAILURE_INCOMPATIBLE_DB ||
+                        result.GetFailure() == node::ChainstateLoadError::FAILURE_INSUFFICIENT_DBCACHE)) {
+            return InitError(util::ErrorString(result));
         }
 
         if (!fLoaded && !ShutdownRequested(node)) {
+            bilingual_str error = util::ErrorString(result);
             // first suggest a reindex
             if (!options.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
