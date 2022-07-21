@@ -1,9 +1,9 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_SPEND_H
-#define BITCOIN_WALLET_SPEND_H
+#ifndef REVOLT_WALLET_SPEND_H
+#define REVOLT_WALLET_SPEND_H
 
 #include <consensus/amount.h>
 #include <policy/fees.h> // for FeeCalculation
@@ -123,4 +123,4 @@ BResult<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_SPEND_H
+#endif // REVOLT_WALLET_SPEND_H
