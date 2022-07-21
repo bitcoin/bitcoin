@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_CRYPTER_H
-#define BITCOIN_WALLET_CRYPTER_H
+#ifndef REVOLT_WALLET_CRYPTER_H
+#define REVOLT_WALLET_CRYPTER_H
 
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -108,4 +108,4 @@ bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned
 bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_CRYPTER_H
+#endif // REVOLT_WALLET_CRYPTER_H
