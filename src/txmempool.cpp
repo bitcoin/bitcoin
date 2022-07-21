@@ -106,7 +106,7 @@ void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
 
 size_t CTxMemPoolEntry::GetTxSize() const
 {
-    return GetVirtualTransactionSize(nTxWeight, sigOpCost);
+    return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
 }
 
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
