@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1078,7 +1078,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
 static bool LockDataDirectory(bool probeOnly)
 {
-    // Make sure only a single Bitcoin process is using the data directory.
+    // Make sure only a single REVOLT process is using the data directory.
     fs::path datadir = gArgs.GetDataDirNet();
     if (!DirIsWritable(datadir)) {
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
@@ -1159,9 +1159,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
-                  "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
+                  "current working directory '%s'. This is fragile, because if REVOLT is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
-                  "also be data loss if bitcoin is started while in a temporary directory.\n",
+                  "also be data loss if REVOLT is started while in a temporary directory.\n",
                   args.GetArg("-datadir", ""), fs::PathToString(fs::current_path()));
     }
 

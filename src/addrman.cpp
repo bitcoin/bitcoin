@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -134,12 +134,12 @@ void AddrManImpl::Serialize(Stream& s_) const
      * * format version byte (@see `Format`)
      * * lowest compatible format version byte. This is used to help old software decide
      *   whether to parse the file. For example:
-     *   * Bitcoin Core version N knows how to parse up to format=3. If a new format=4 is
+     *   * Revolt Core version N knows how to parse up to format=3. If a new format=4 is
      *     introduced in version N+1 that is compatible with format=3 and it is known that
      *     version N will be able to parse it, then version N+1 will write
      *     (format=4, lowest_compatible=3) in the first two bytes of the file, and so
      *     version N will still try to parse it.
-     *   * Bitcoin Core version N+2 introduces a new incompatible format=5. It will write
+     *   * Revolt Core version N+2 introduces a new incompatible format=5. It will write
      *     (format=5, lowest_compatible=5) and so any versions that do not know how to parse
      *     format=5 will not try to read the file.
      * * nKey
