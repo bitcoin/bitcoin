@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2021 The Bitcoin Core developers
+# Copyright (c) 2010-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Bitcoin test framework primitive and message structures
+"""Revolt test framework primitive and message structures
 
 CBlock, CTransaction, CBlockHeader, CTxIn, CTxOut, etc....:
     data structures that should map to corresponding structures in
-    bitcoin/primitives
+    revolt/primitives
 
 msg_block, msg_tx, msg_headers, etc.:
     data structures that represent network messages
@@ -208,7 +208,7 @@ def tx_from_hex(hex_string):
     return from_hex(CTransaction(), hex_string)
 
 
-# Objects that map to bitcoind objects, which can be serialized/deserialized
+# Objects that map to revoltd objects, which can be serialized/deserialized
 
 
 class CAddress:
@@ -355,7 +355,7 @@ class CBlockLocator:
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", 0)  # Bitcoin Core ignores version field. Set it to 0.
+        r += struct.pack("<i", 0)  # Revolt Core ignores version field. Set it to 0.
         r += ser_uint256_vector(self.vHave)
         return r
 
@@ -532,7 +532,7 @@ class CTransaction:
         if len(self.vin) == 0:
             flags = struct.unpack("<B", f.read(1))[0]
             # Not sure why flags can't be zero, but this
-            # matches the implementation in bitcoind
+            # matches the implementation in revoltd
             if (flags != 0):
                 self.vin = deser_vector(f, CTxIn)
                 self.vout = deser_vector(f, CTxOut)
@@ -1082,7 +1082,7 @@ class msg_version:
         self.nStartingHeight = struct.unpack("<i", f.read(4))[0]
 
         # Relay field is optional for version 70001 onwards
-        # But, unconditionally check it to match behaviour in bitcoind
+        # But, unconditionally check it to match behaviour in revoltd
         try:
             self.relay = struct.unpack("<b", f.read(1))[0]
         except struct.error:
@@ -1463,7 +1463,7 @@ class msg_headers:
         self.headers = headers if headers is not None else []
 
     def deserialize(self, f):
-        # comment in bitcoind indicates these should be deserialized as blocks
+        # comment in revoltd indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))

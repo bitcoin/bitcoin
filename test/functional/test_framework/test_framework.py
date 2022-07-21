@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
@@ -46,7 +46,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-TMPDIR_PREFIX = "bitcoin_func_test_"
+TMPDIR_PREFIX = "revolt_func_test_"
 
 
 class SkipTest(Exception):
@@ -56,30 +56,30 @@ class SkipTest(Exception):
         self.message = message
 
 
-class BitcoinTestMetaClass(type):
-    """Metaclass for BitcoinTestFramework.
+class RevoltTestMetaClass(type):
+    """Metaclass for RevoltTestFramework.
 
-    Ensures that any attempt to register a subclass of `BitcoinTestFramework`
+    Ensures that any attempt to register a subclass of `RevoltTestFramework`
     adheres to a standard whereby the subclass overrides `set_test_params` and
     `run_test` but DOES NOT override either `__init__` or `main`. If any of
     those standards are violated, a ``TypeError`` is raised."""
 
     def __new__(cls, clsname, bases, dct):
-        if not clsname == 'BitcoinTestFramework':
+        if not clsname == 'RevoltTestFramework':
             if not ('run_test' in dct and 'set_test_params' in dct):
-                raise TypeError("BitcoinTestFramework subclasses must override "
+                raise TypeError("RevoltTestFramework subclasses must override "
                                 "'run_test' and 'set_test_params'")
             if '__init__' in dct or 'main' in dct:
-                raise TypeError("BitcoinTestFramework subclasses may not override "
+                raise TypeError("RevoltTestFramework subclasses may not override "
                                 "'__init__' or 'main'")
 
         return super().__new__(cls, clsname, bases, dct)
 
 
-class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
-    """Base class for a bitcoin test script.
+class RevoltTestFramework(metaclass=RevoltTestMetaClass):
+    """Base class for a revolt test script.
 
-    Individual bitcoin test scripts should subclass this class and override the set_test_params() and run_test() methods.
+    Individual revolt test scripts should subclass this class and override the set_test_params() and run_test() methods.
 
     Individual tests can also override the following methods to customize the test setup:
 
@@ -160,11 +160,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                            help="Leave bitcoinds and test.* datadir on exit or error")
+                            help="Leave revoltds and test.* datadir on exit or error")
         parser.add_argument("--nosandbox", dest="nosandbox", default=False, action="store_true",
                             help="Don't use the syscall sandbox")
         parser.add_argument("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                            help="Don't stop bitcoinds after the test execution")
+                            help="Don't stop revoltds after the test execution")
         parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                             help="Directory for caching pregenerated datadirs (default: %(default)s)")
         parser.add_argument("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
@@ -185,7 +185,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
                             help="Attach a python debugger if test fails")
         parser.add_argument("--usecli", dest="usecli", default=False, action="store_true",
-                            help="use bitcoin-cli instead of RPC for all commands")
+                            help="use revolt-cli instead of RPC for all commands")
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
         parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
@@ -234,24 +234,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         config = self.config
 
-        fname_bitcoind = os.path.join(
+        fname_revoltd = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
-            "bitcoind" + config["environment"]["EXEEXT"],
+            "revoltd" + config["environment"]["EXEEXT"],
         )
-        fname_bitcoincli = os.path.join(
+        fname_revoltcli = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
-            "bitcoin-cli" + config["environment"]["EXEEXT"],
+            "revolt-cli" + config["environment"]["EXEEXT"],
         )
-        fname_bitcoinutil = os.path.join(
+        fname_revoltutil = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
-            "bitcoin-util" + config["environment"]["EXEEXT"],
+            "revolt-util" + config["environment"]["EXEEXT"],
         )
-        self.options.bitcoind = os.getenv("BITCOIND", default=fname_bitcoind)
-        self.options.bitcoincli = os.getenv("BITCOINCLI", default=fname_bitcoincli)
-        self.options.bitcoinutil = os.getenv("BITCOINUTIL", default=fname_bitcoinutil)
+        self.options.revoltd = os.getenv("REVOLTD", default=fname_revoltd)
+        self.options.revoltcli = os.getenv("REVOLTCLI", default=fname_revoltcli)
+        self.options.revoltutil = os.getenv("REVOLTUTIL", default=fname_revoltutil)
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -312,7 +312,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         else:
             for node in self.nodes:
                 node.cleanup_on_exit = False
-            self.log.info("Note: bitcoinds were not stopped and may still be running")
+            self.log.info("Note: revoltds were not stopped and may still be running")
 
         should_clean_up = (
             not self.options.nocleanup and
@@ -353,7 +353,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             h.flush()
             h.close()
             self.log.removeHandler(h)
-        rpc_logger = logging.getLogger("BitcoinRPC")
+        rpc_logger = logging.getLogger("RevoltRPC")
         for h in list(rpc_logger.handlers):
             h.flush()
             rpc_logger.removeHandler(h)
@@ -488,9 +488,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 if versions[i] is None or versions[i] >= 229900:
                     extra_args[i] = extra_args[i] + ["-sandbox=log-and-abort"]
         if binary is None:
-            binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
+            binary = [get_bin_from_version(v, 'revoltd', self.options.revoltd) for v in versions]
         if binary_cli is None:
-            binary_cli = [get_bin_from_version(v, 'bitcoin-cli', self.options.bitcoincli) for v in versions]
+            binary_cli = [get_bin_from_version(v, 'revolt-cli', self.options.revoltcli) for v in versions]
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
@@ -504,8 +504,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
-                bitcoind=binary[i],
-                bitcoin_cli=binary_cli[i],
+                revoltd=binary[i],
+                revolt_cli=binary_cli[i],
                 version=versions[i],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
@@ -519,14 +519,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
                 # adjust conf for pre 17
-                conf_file = test_node_i.bitcoinconf
+                conf_file = test_node_i.revoltconf
                 with open(conf_file, 'r', encoding='utf8') as conf:
                     conf_data = conf.read()
                 with open(conf_file, 'w', encoding='utf8') as conf:
                     conf.write(conf_data.replace('[regtest]', ''))
 
     def start_node(self, i, *args, **kwargs):
-        """Start a bitcoind"""
+        """Start a revoltd"""
 
         node = self.nodes[i]
 
@@ -537,7 +537,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
     def start_nodes(self, extra_args=None, *args, **kwargs):
-        """Start multiple bitcoinds"""
+        """Start multiple revoltds"""
 
         if extra_args is None:
             extra_args = [None] * self.num_nodes
@@ -557,11 +557,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
     def stop_node(self, i, expected_stderr='', wait=0):
-        """Stop a bitcoind test node"""
+        """Stop a revoltd test node"""
         self.nodes[i].stop_node(expected_stderr, wait=wait)
 
     def stop_nodes(self, wait=0):
-        """Stop multiple bitcoind test nodes"""
+        """Stop multiple revoltd test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
             node.stop_node(wait=wait, wait_until_stopped=False)
@@ -730,7 +730,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
-        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+        # Format logs the same as revoltd's debug.log with microprecision (so log files can be concatenated and sorted)
         formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d000Z %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
         formatter.converter = time.gmtime
         fh.setFormatter(formatter)
@@ -740,7 +740,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log.addHandler(ch)
 
         if self.options.trace_rpc:
-            rpc_logger = logging.getLogger("BitcoinRPC")
+            rpc_logger = logging.getLogger("RevoltRPC")
             rpc_logger.setLevel(logging.DEBUG)
             rpc_handler = logging.StreamHandler(sys.stdout)
             rpc_handler.setLevel(logging.DEBUG)
@@ -770,8 +770,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,
-                    bitcoind=self.options.bitcoind,
-                    bitcoin_cli=self.options.bitcoincli,
+                    revoltd=self.options.revoltd,
+                    revolt_cli=self.options.revoltcli,
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                     descriptors=self.options.descriptors,
@@ -818,7 +818,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
             to_dir = get_datadir_path(self.options.tmpdir, i)
             shutil.copytree(cache_node_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in revolt.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -842,10 +842,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except ImportError:
             raise SkipTest("bcc python module not available")
 
-    def skip_if_no_bitcoind_tracepoints(self):
-        """Skip the running test if bitcoind has not been compiled with USDT tracepoint support."""
+    def skip_if_no_revoltd_tracepoints(self):
+        """Skip the running test if revoltd has not been compiled with USDT tracepoint support."""
         if not self.is_usdt_compiled():
-            raise SkipTest("bitcoind has not been built with USDT tracepoints enabled.")
+            raise SkipTest("revoltd has not been built with USDT tracepoints enabled.")
 
     def skip_if_no_bpf_permissions(self):
         """Skip the running test if we don't have permissions to do BPF syscalls and load BPF maps."""
@@ -858,10 +858,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if platform.system() != "Linux":
             raise SkipTest("not on a Linux system")
 
-    def skip_if_no_bitcoind_zmq(self):
-        """Skip the running test if bitcoind has not been compiled with zmq support."""
+    def skip_if_no_revoltd_zmq(self):
+        """Skip the running test if revoltd has not been compiled with zmq support."""
         if not self.is_zmq_compiled():
-            raise SkipTest("bitcoind has not been built with zmq enabled.")
+            raise SkipTest("revoltd has not been built with zmq enabled.")
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
@@ -884,19 +884,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             raise SkipTest("BDB has not been compiled.")
 
     def skip_if_no_wallet_tool(self):
-        """Skip the running test if bitcoin-wallet has not been compiled."""
+        """Skip the running test if revolt-wallet has not been compiled."""
         if not self.is_wallet_tool_compiled():
-            raise SkipTest("bitcoin-wallet has not been compiled")
+            raise SkipTest("revolt-wallet has not been compiled")
 
-    def skip_if_no_bitcoin_util(self):
-        """Skip the running test if bitcoin-util has not been compiled."""
-        if not self.is_bitcoin_util_compiled():
-            raise SkipTest("bitcoin-util has not been compiled")
+    def skip_if_no_revolt_util(self):
+        """Skip the running test if revolt-util has not been compiled."""
+        if not self.is_revolt_util_compiled():
+            raise SkipTest("revolt-util has not been compiled")
 
     def skip_if_no_cli(self):
-        """Skip the running test if bitcoin-cli has not been compiled."""
+        """Skip the running test if revolt-cli has not been compiled."""
         if not self.is_cli_compiled():
-            raise SkipTest("bitcoin-cli has not been compiled.")
+            raise SkipTest("revolt-cli has not been compiled.")
 
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
@@ -917,7 +917,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             raise SkipTest("external signer support has not been compiled.")
 
     def is_cli_compiled(self):
-        """Checks whether bitcoin-cli was compiled."""
+        """Checks whether revolt-cli was compiled."""
         return self.config["components"].getboolean("ENABLE_CLI")
 
     def is_external_signer_compiled(self):
@@ -937,12 +937,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             return self.is_bdb_compiled()
 
     def is_wallet_tool_compiled(self):
-        """Checks whether bitcoin-wallet was compiled."""
+        """Checks whether revolt-wallet was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
-    def is_bitcoin_util_compiled(self):
-        """Checks whether bitcoin-util was compiled."""
-        return self.config["components"].getboolean("ENABLE_BITCOIN_UTIL")
+    def is_revolt_util_compiled(self):
+        """Checks whether revolt-util was compiled."""
+        return self.config["components"].getboolean("ENABLE_REVOLT_UTIL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
