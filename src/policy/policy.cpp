@@ -82,9 +82,10 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TxoutType::NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
-          return false;
+    } else if (whichType == TxoutType::NULL_DATA) {
+        if (!g_max_datacarrier_bytes || scriptPubKey.size() > *g_max_datacarrier_bytes) {
+            return false;
+        }
     }
 
     return true;

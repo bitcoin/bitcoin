@@ -975,8 +975,11 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
-    fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = args.GetIntArg("-datacarriersize", nMaxDatacarrierBytes);
+    if (args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {
+        g_max_datacarrier_bytes = args.GetIntArg("-datacarriersize", MAX_OP_RETURN_RELAY);
+    } else {
+        g_max_datacarrier_bytes = std::nullopt;
+    }
 
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
