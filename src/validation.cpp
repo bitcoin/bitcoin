@@ -5165,6 +5165,13 @@ void ChainstateManager::MaybeRebalanceCaches()
     }
 }
 
+void ChainstateManager::ResetChainstates()
+{
+    m_ibd_chainstate.reset();
+    m_snapshot_chainstate.reset();
+    m_active_chainstate = nullptr;
+}
+
 ChainstateManager::~ChainstateManager()
 {
     LOCK(::cs_main);
