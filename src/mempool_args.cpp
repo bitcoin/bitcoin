@@ -8,7 +8,12 @@
 #include <kernel/mempool_options.h>
 
 #include <chainparams.h>
+#include <consensus/amount.h>
+#include <logging.h>
+#include <policy/feerate.h>
 #include <tinyformat.h>
+#include <util/error.h>
+#include <util/moneystr.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -38,6 +43,29 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
     if (auto mb = argsman.GetIntArg("-maxmempool")) mempool_opts.max_size_bytes = *mb * 1'000'000;
 
     if (auto hours = argsman.GetIntArg("-mempoolexpiry")) mempool_opts.expiry = std::chrono::hours{*hours};
+
+    // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
+    // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
+    if (argsman.IsArgSet("-incrementalrelayfee")) {
+        if (std::optional<CAmount> inc_relay_fee = ParseMoney(argsman.GetArg("-incrementalrelayfee", ""))) {
+            mempool_opts.incremental_relay_feerate = CFeeRate{inc_relay_fee.value()};
+        } else {
+            return AmountErrMsg("incrementalrelayfee", argsman.GetArg("-incrementalrelayfee", ""));
+        }
+    }
+
+    if (argsman.IsArgSet("-minrelaytxfee")) {
+        if (std::optional<CAmount> min_relay_feerate = ParseMoney(argsman.GetArg("-minrelaytxfee", ""))) {
+            // High fee check is done afterward in CWallet::Create()
+            mempool_opts.min_relay_feerate = CFeeRate{min_relay_feerate.value()};
+        } else {
+            return AmountErrMsg("minrelaytxfee", argsman.GetArg("-minrelaytxfee", ""));
+        }
+    } else if (mempool_opts.incremental_relay_feerate > mempool_opts.min_relay_feerate) {
+        // Allow only setting incremental fee to control both
+        mempool_opts.min_relay_feerate = mempool_opts.incremental_relay_feerate;
+        LogPrintf("Increasing minrelaytxfee to %s to match incrementalrelayfee\n", mempool_opts.min_relay_feerate.ToString());
+    }
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {

@@ -935,16 +935,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
     }
 
-    // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
-    // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
-    if (args.IsArgSet("-incrementalrelayfee")) {
-        if (std::optional<CAmount> inc_relay_fee = ParseMoney(args.GetArg("-incrementalrelayfee", ""))) {
-            ::incrementalRelayFee = CFeeRate{inc_relay_fee.value()};
-        } else {
-            return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
-        }
-    }
-
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg < 0) {
@@ -971,19 +961,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     peer_connect_timeout = args.GetIntArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
         return InitError(Untranslated("peertimeout must be a positive integer."));
-    }
-
-    if (args.IsArgSet("-minrelaytxfee")) {
-        if (std::optional<CAmount> min_relay_fee = ParseMoney(args.GetArg("-minrelaytxfee", ""))) {
-            // High fee check is done afterward in CWallet::Create()
-            ::minRelayTxFee = CFeeRate{min_relay_fee.value()};
-        } else {
-            return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
-        }
-    } else if (incrementalRelayFee > ::minRelayTxFee) {
-        // Allow only setting incrementalRelayFee to control both
-        ::minRelayTxFee = incrementalRelayFee;
-        LogPrintf("Increasing minrelaytxfee to %s to match incrementalrelayfee\n",::minRelayTxFee.ToString());
     }
 
     // Sanity check argument for min fee for including tx in block
