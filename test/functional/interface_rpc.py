@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
 import os
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
 from threading import Thread
 import subprocess
@@ -31,7 +31,7 @@ def test_work_queue_getblock(node, got_exceeded_error):
             got_exceeded_error.append(True)
 
 
-class RPCInterfaceTest(BitcoinTestFramework):
+class RPCInterfaceTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
