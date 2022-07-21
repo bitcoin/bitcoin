@@ -767,12 +767,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
