@@ -849,7 +849,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
     if (feeCalc.reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee
-        return util::Error{_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.")};
+        return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
 
     // Calculate the cost of change
