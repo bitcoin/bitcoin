@@ -148,10 +148,12 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 #define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
 /** Wrapper around std::unique_lock style lock for Mutex. */
-template <typename Mutex, typename Base = typename Mutex::UniqueLock>
-class SCOPED_LOCKABLE UniqueLock : public Base
+template <typename Mutex>
+class SCOPED_LOCKABLE UniqueLock : public Mutex::UniqueLock
 {
 private:
+    using Base = typename Mutex::UniqueLock;
+
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
