@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The Revolt Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_COIN_H
-#define BITCOIN_NODE_COIN_H
+#ifndef REVOLT_NODE_COIN_H
+#define REVOLT_NODE_COIN_H
 
 #include <map>
 
@@ -24,4 +24,4 @@ struct NodeContext;
 void FindCoins(const node::NodeContext& node, std::map<COutPoint, Coin>& coins);
 } // namespace node
 
-#endif // BITCOIN_NODE_COIN_H
+#endif // REVOLT_NODE_COIN_H
