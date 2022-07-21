@@ -13,7 +13,6 @@
 class CTransaction;
 
 extern unsigned int nBytesPerSigOp;
-extern bool fIsBareMultisigStd;
 
 static inline int64_t GetVirtualTransactionSize(int64_t weight, int64_t sigop_cost)
 {

@@ -7,5 +7,4 @@
 
 #include <policy/policy.h>
 
-bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;

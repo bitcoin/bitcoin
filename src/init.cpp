@@ -975,7 +975,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
-    fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
     nMaxDatacarrierBytes = args.GetIntArg("-datacarriersize", nMaxDatacarrierBytes);
 

@@ -40,6 +40,7 @@ struct MemPoolOptions {
     /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
     CFeeRate min_relay_feerate{DEFAULT_MIN_RELAY_TX_FEE};
     CFeeRate dust_relay_feerate{DUST_RELAY_TX_FEE};
+    bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
     bool full_rbf{DEFAULT_MEMPOOL_FULL_RBF};
     MemPoolLimits limits{};

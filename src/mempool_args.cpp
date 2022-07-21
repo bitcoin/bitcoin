@@ -11,6 +11,7 @@
 #include <consensus/amount.h>
 #include <logging.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>
@@ -76,6 +77,8 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
             return AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""));
         }
     }
+
+    mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
