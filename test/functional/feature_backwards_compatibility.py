@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Backwards compatibility functional test
@@ -22,7 +22,7 @@ import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
@@ -31,7 +31,7 @@ from test_framework.util import (
 )
 
 
-class BackwardsCompatibilityTest(BitcoinTestFramework):
+class BackwardsCompatibilityTest(RevoltTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 10
@@ -215,7 +215,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     for wallet_name in ["w1", "w2", "w3"]:
                         assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
 
-        # RPC loadwallet failure causes bitcoind to exit, in addition to the RPC
+        # RPC loadwallet failure causes revoltd to exit, in addition to the RPC
         # call failure, so the following test won't work:
         # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
 
@@ -227,7 +227,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
         else:
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
+            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Revolt Core")
         self.start_node(node_v17.index)
 
         if not self.options.descriptors:
@@ -257,7 +257,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         if self.is_bdb_compiled():
             # Old wallets are BDB and will only work if BDB is compiled
-            # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.16 wallet to the last Revolt Core version and open it:
             shutil.copyfile(
                 os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
                 os.path.join(node_master_wallets_dir, "u1_v16")
@@ -281,7 +281,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             info = wallet.validateaddress(v16_addr)
             assert_equal(info, v16_info)
 
-            # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.17 wallet to the last Revolt Core version and open it:
             node_v17.unloadwallet("u1_v17")
             shutil.copytree(
                 os.path.join(node_v17_wallets_dir, "u1_v17"),
@@ -305,7 +305,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             info = wallet.getaddressinfo(address)
             assert_equal(info, v17_info)
 
-            # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.19 wallet to the last Revolt Core version and open it:
             shutil.copytree(
                 os.path.join(node_v19_wallets_dir, "w1_v19"),
                 os.path.join(node_master_wallets_dir, "w1_v19")

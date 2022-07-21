@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
-Test starting bitcoind with -bind and/or -bind=...=onion and confirm
+Test starting revoltd with -bind and/or -bind=...=onion and confirm
 that bind happens on the expected ports.
 """
 
@@ -14,7 +14,7 @@ from test_framework.netutil import (
     get_bind_addrs,
 )
 from test_framework.test_framework import (
-    BitcoinTestFramework,
+    RevoltTestFramework,
     SkipTest,
 )
 from test_framework.util import (
@@ -24,7 +24,7 @@ from test_framework.util import (
 )
 
 
-class BindExtraTest(BitcoinTestFramework):
+class BindExtraTest(RevoltTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         # Avoid any -bind= on the command line. Force the framework to avoid
@@ -77,7 +77,7 @@ class BindExtraTest(BitcoinTestFramework):
             # Remove IPv6 addresses because on some CI environments "::1" is not configured
             # on the system (so our test_ipv6_local() would return False), but it is
             # possible to bind on "::". This makes it unpredictable whether to expect
-            # that bitcoind has bound on "::1" (for RPC) and "::" (for P2P).
+            # that revoltd has bound on "::1" (for RPC) and "::" (for P2P).
             ipv6_addr_len_bytes = 32
             binds = set(filter(lambda e: len(e[0]) != ipv6_addr_len_bytes, binds))
             # Remove RPC ports. They are not relevant for this test.

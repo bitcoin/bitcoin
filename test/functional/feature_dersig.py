@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
@@ -14,7 +14,7 @@ from test_framework.blocktools import (
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -44,7 +44,7 @@ def unDERify(tx):
 DERSIG_HEIGHT = 102
 
 
-class BIP66Test(BitcoinTestFramework):
+class BIP66Test(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[

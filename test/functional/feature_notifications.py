@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
@@ -7,7 +7,7 @@ import os
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -23,7 +23,7 @@ def notify_outputname(walletname, txid):
     return txid if os.name == 'nt' else f'{walletname}_{txid}'
 
 
-class NotificationsTest(BitcoinTestFramework):
+class NotificationsTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
