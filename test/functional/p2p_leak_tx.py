@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we don't leak txs to inbound peers that we haven't yet announced to"""
@@ -7,7 +7,7 @@
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import msg_getdata, CInv, MSG_TX
 from test_framework.p2p import p2p_lock, P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -19,7 +19,7 @@ class P2PNode(P2PDataStore):
         pass
 
 
-class P2PLeakTxTest(BitcoinTestFramework):
+class P2PLeakTxTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
