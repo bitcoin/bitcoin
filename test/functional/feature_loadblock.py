@@ -35,7 +35,7 @@ class LoadblockTest(BitcoinTestFramework):
         data_dir = self.nodes[0].datadir
         node_url = urllib.parse.urlparse(self.nodes[0].url)
         cfg_file = os.path.join(data_dir, "linearize.cfg")
-        bootstrap_file = os.path.join(self.options.tmpdir, "bootstrap.dat")
+        bootstrap_file = os.path.join(self.tmpdir, "bootstrap.dat")
         genesis_block = self.nodes[0].getblockhash(0)
         blocks_dir = self.nodes[0].blocks_path
         hash_list = tempfile.NamedTemporaryFile(dir=data_dir,

@@ -325,13 +325,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             not self.options.perf
         )
         if should_clean_up:
-            self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
+            self.log.info("Cleaning up {} on exit".format(self.tmpdir))
             cleanup_tree_on_exit = True
         elif self.options.perf:
-            self.log.warning("Not cleaning up dir {} due to perf data".format(self.options.tmpdir))
+            self.log.warning("Not cleaning up dir {} due to perf data".format(self.tmpdir))
             cleanup_tree_on_exit = False
         else:
-            self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
+            self.log.warning("Not cleaning up dir {}".format(self.tmpdir))
             cleanup_tree_on_exit = False
 
         if self.success == TestStatus.PASSED:
@@ -341,9 +341,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.info("Test skipped")
             exit_code = TEST_EXIT_SKIPPED
         else:
-            self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
+            self.log.error("Test failed. Test logging available at %s/test_framework.log", self.tmpdir)
             self.log.error("")
-            self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.options.tmpdir))
+            self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.tmpdir))
             self.log.error("")
             self.log.error("If this failure happened unexpectedly or intermittently, please file a bug and provide a link or upload of the combined log.")
             self.log.error(self.config['environment']['PACKAGE_BUGREPORT'])
@@ -362,7 +362,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             h.flush()
             rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
-            shutil.rmtree(self.options.tmpdir)
+            shutil.rmtree(self.tmpdir)
 
         self.nodes.clear()
         return exit_code
@@ -382,7 +382,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def setup_chain(self):
         """Override this method to customize blockchain setup"""
-        self.log.info("Initializing test directory " + self.options.tmpdir)
+        self.log.info("Initializing test directory " + self.tmpdir)
         if self.setup_clean_chain:
             self._initialize_chain_clean()
         else:
@@ -513,7 +513,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 args.append("-v2transport=1")
             test_node_i = TestNode(
                 i,
-                get_datadir_path(self.options.tmpdir, i),
+                get_datadir_path(self.tmpdir, i),
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
@@ -522,7 +522,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 bitcoin_cli=binary_cli[i],
                 version=versions[i],
                 coverage_dir=self.options.coveragedir,
-                cwd=self.options.tmpdir,
+                cwd=self.tmpdir,
                 extra_conf=extra_confs[i],
                 extra_args=args,
                 use_cli=self.options.usecli,
@@ -748,7 +748,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log = logging.getLogger('TestFramework')
         self.log.setLevel(logging.DEBUG)
         # Create file handler to log all messages
-        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log', encoding='utf-8')
+        fh = logging.FileHandler(self.tmpdir + '/test_framework.log', encoding='utf-8')
         fh.setLevel(logging.DEBUG)
         # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
         ch = logging.StreamHandler(sys.stdout)
@@ -798,7 +798,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     bitcoind=self.options.bitcoind,
                     bitcoin_cli=self.options.bitcoincli,
                     coverage_dir=None,
-                    cwd=self.options.tmpdir,
+                    cwd=self.tmpdir,
                     descriptors=self.options.descriptors,
                 ))
             self.start_node(CACHE_NODE_ID)
@@ -841,9 +841,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         for i in range(self.num_nodes):
             self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
-            to_dir = get_datadir_path(self.options.tmpdir, i)
+            to_dir = get_datadir_path(self.tmpdir, i)
             shutil.copytree(cache_node_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(self.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in bitcoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -851,7 +851,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(self.num_nodes):
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)
+            initialize_datadir(self.tmpdir, i, self.chain, self.disable_autoconnect)
 
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""

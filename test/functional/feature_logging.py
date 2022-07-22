@@ -28,7 +28,7 @@ class LoggingTest(BitcoinTestFramework):
         assert os.path.isfile(self.relative_log_path("foo.log"))
 
         # test alternative log file name outside datadir
-        tempname = os.path.join(self.options.tmpdir, "foo.log")
+        tempname = os.path.join(self.tmpdir, "foo.log")
         self.restart_node(0, [f"-debuglogfile={tempname}"])
         assert os.path.isfile(tempname)
 
@@ -48,7 +48,7 @@ class LoggingTest(BitcoinTestFramework):
 
         # check that invalid log (absolute) will cause error
         self.stop_node(0)
-        invdir = os.path.join(self.options.tmpdir, "foo")
+        invdir = os.path.join(self.tmpdir, "foo")
         invalidname = os.path.join(invdir, "foo.log")
         self.nodes[0].assert_start_raises_init_error([f"-debuglogfile={invalidname}"], exp_stderr, match=ErrorMatch.FULL_REGEX)
         assert not os.path.isfile(os.path.join(invdir, "foo.log"))

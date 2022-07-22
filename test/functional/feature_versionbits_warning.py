@@ -30,7 +30,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
+        self.alert_filename = os.path.join(self.tmpdir, "alert.txt")
         # Open and close to create zero-length file
         with open(self.alert_filename, 'w', encoding='utf8'):
             pass

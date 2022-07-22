@@ -117,7 +117,7 @@ class HelpRpcTest(BitcoinTestFramework):
         assert_equal(titles, sorted(components))
 
     def dump_help(self):
-        dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
+        dump_dir = os.path.join(self.tmpdir, 'rpc_help_dump')
         os.mkdir(dump_dir)
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
         for call in calls:

@@ -33,10 +33,10 @@ class NotificationsTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
-        self.alertnotify_dir = os.path.join(self.options.tmpdir, "alertnotify")
-        self.blocknotify_dir = os.path.join(self.options.tmpdir, "blocknotify")
-        self.walletnotify_dir = os.path.join(self.options.tmpdir, "walletnotify")
-        self.shutdownnotify_dir = os.path.join(self.options.tmpdir, "shutdownnotify")
+        self.alertnotify_dir = os.path.join(self.tmpdir, "alertnotify")
+        self.blocknotify_dir = os.path.join(self.tmpdir, "blocknotify")
+        self.walletnotify_dir = os.path.join(self.tmpdir, "walletnotify")
+        self.shutdownnotify_dir = os.path.join(self.tmpdir, "shutdownnotify")
         self.shutdownnotify_file = os.path.join(self.shutdownnotify_dir, "shutdownnotify.txt")
         os.mkdir(self.alertnotify_dir)
         os.mkdir(self.blocknotify_dir)

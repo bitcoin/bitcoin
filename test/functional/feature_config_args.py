@@ -123,7 +123,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create a temporary directory that will be treated as the default data
         # directory by bitcoind.
-        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "test_config_file_log"))
+        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.tmpdir, "test_config_file_log"))
         default_datadir.mkdir(parents=True)
 
         # Write a bitcoin.conf file in the default data directory containing a
@@ -322,7 +322,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '
                       'because a conflicting -conf file argument is passed.')
         node = self.nodes[0]
-        with tempfile.NamedTemporaryFile(dir=self.options.tmpdir, mode="wt", delete=False) as temp_conf:
+        with tempfile.NamedTemporaryFile(dir=self.tmpdir, mode="wt", delete=False) as temp_conf:
             temp_conf.write(f"datadir={node.datadir}\n")
         node.assert_start_raises_init_error([f"-conf={temp_conf.name}"], re.escape(
             f'Error: Data directory "{node.datadir}" contains a "bitcoin.conf" file which is ignored, because a '
@@ -346,7 +346,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create a temporary directory that will be treated as the default data
         # directory by bitcoind.
-        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "home"))
+        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.tmpdir, "home"))
         default_datadir.mkdir(parents=True)
 
         # Write a bitcoin.conf file in the default data directory containing a

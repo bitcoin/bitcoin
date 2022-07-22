@@ -97,10 +97,10 @@ class MultiWalletTest(BitcoinTestFramework):
         node.createwallet("plain")
         node.createwallet("created")
         self.stop_nodes()
-        empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
+        empty_wallet = os.path.join(self.tmpdir, 'empty.dat')
         os.rename(wallet_file("empty"), empty_wallet)
         shutil.rmtree(wallet_dir("empty"))
-        empty_created_wallet = os.path.join(self.options.tmpdir, 'empty.created.dat')
+        empty_created_wallet = os.path.join(self.tmpdir, 'empty.created.dat')
         os.rename(wallet_dir("created", self.wallet_data_filename), empty_created_wallet)
         shutil.rmtree(wallet_dir("created"))
         os.rename(wallet_file("plain"), wallet_dir("w8"))
@@ -117,7 +117,7 @@ class MultiWalletTest(BitcoinTestFramework):
         to_create = ['w1', 'w2', 'w3', 'w', 'sub/w5', 'w7_symlink']
         in_wallet_dir = [w.replace('/', os.path.sep) for w in to_create]  # Wallets in the wallet dir
         in_wallet_dir.append('w7')  # w7 is not loaded or created, but will be listed by listwalletdir because w7_symlink
-        to_create.append(os.path.join(self.options.tmpdir, 'extern/w6'))  # External, not in the wallet dir, so we need to avoid adding it to in_wallet_dir
+        to_create.append(os.path.join(self.tmpdir, 'extern/w6'))  # External, not in the wallet dir, so we need to avoid adding it to in_wallet_dir
         to_load = [self.default_wallet_name]
         if not self.options.descriptors:
             to_load.append('w8')
@@ -199,7 +199,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w5_info = w5.getwalletinfo()
         assert_equal(w5_info['immature_balance'], 50)
 
-        competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
+        competing_wallet_dir = os.path.join(self.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
         self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
         self.nodes[0].createwallet(self.default_wallet_name)
@@ -341,7 +341,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert 'w9' in self.nodes[0].listwallets()
 
         # Successfully create a wallet using a full path
-        new_wallet_dir = os.path.join(self.options.tmpdir, 'new_walletdir')
+        new_wallet_dir = os.path.join(self.tmpdir, 'new_walletdir')
         new_wallet_name = os.path.join(new_wallet_dir, 'w10')
         loadwallet_name = self.nodes[0].createwallet(new_wallet_name)
         assert_equal(loadwallet_name['name'], new_wallet_name)
@@ -397,7 +397,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in wallet_names:
             rpc = self.nodes[0].get_wallet_rpc(wallet_name)
             addr = rpc.getnewaddress()
-            backup = os.path.join(self.options.tmpdir, 'backup.dat')
+            backup = os.path.join(self.tmpdir, 'backup.dat')
             if os.path.exists(backup):
                 os.unlink(backup)
             rpc.backupwallet(backup)
@@ -412,7 +412,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # Test .walletlock file is closed
         self.start_node(1)
-        wallet = os.path.join(self.options.tmpdir, 'my_wallet')
+        wallet = os.path.join(self.tmpdir, 'my_wallet')
         self.nodes[0].createwallet(wallet)
         if self.options.descriptors:
             assert_raises_rpc_error(-4, "Unable to obtain an exclusive lock", self.nodes[1].loadwallet, wallet)
