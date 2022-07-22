@@ -15,13 +15,19 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -302,4 +308,50 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(key == loaded_key);
         }
     }
+}
+
+std::optional<std::array<std::byte, 64>> GetEll64(const CPubKey& pubkey) {
+    std::array<std::byte, 64> ell64;
+
+    auto ctx = secp256k1_context_static;
+    secp256k1_pubkey pubkey_internal;
+    if (!secp256k1_ec_pubkey_parse(ctx, &pubkey_internal, pubkey.data(), pubkey.size())) {
+        return {};
+    }
+
+    std::array<unsigned char, 32> rnd32;
+    GetRandBytes(rnd32);
+    secp256k1_ellswift_encode(ctx, reinterpret_cast<unsigned char*>(ell64.data()), &pubkey_internal, rnd32.data());
+    return ell64;
+}
+
+FUZZ_TARGET_INIT(bip324_ecdh, initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+    auto rnd32 = fdp.ConsumeBytes<uint8_t>(32);
+    rnd32.resize(32);
+    CKey k1;
+    k1.Set(rnd32.begin(), rnd32.end(), true);
+
+    if (!k1.IsValid()) {
+        return;
+    }
+
+    rnd32 = fdp.ConsumeBytes<uint8_t>(32);
+    rnd32.resize(32);
+    CKey k2;
+    k2.Set(rnd32.begin(), rnd32.end(), true);
+
+    if (!k2.IsValid()) {
+        return;
+    }
+
+    auto k1_ellswift = GetEll64(k1.GetPubKey());
+    auto k2_ellswift = GetEll64(k2.GetPubKey());
+    assert(k1_ellswift.has_value() && k2_ellswift.has_value());
+
+    bool initiating = fdp.ConsumeBool();
+    auto ecdh_secret_1 = k1.ComputeBIP324ECDHSecret(k2_ellswift.value(), k1_ellswift.value(), initiating);
+    auto ecdh_secret_2 = k2.ComputeBIP324ECDHSecret(k1_ellswift.value(), k2_ellswift.value(), !initiating);
+    assert(ecdh_secret_1.value() == ecdh_secret_2.value());
 }
