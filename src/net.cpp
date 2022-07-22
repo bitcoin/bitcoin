@@ -1630,7 +1630,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 LOCK2(m_addr_fetches_mutex, m_added_nodes_mutex);
                 if (m_addr_fetches.empty() && m_added_nodes.empty()) {
                     add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n");
+                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet), -addnode is not provided and all -seednode(s) attempted\n");
                 }
             }
 
