@@ -489,8 +489,6 @@ public:
  */
 class AutoFile
 {
-private:
-    int nTxVersion{0};
 protected:
     FILE* file;
 
@@ -533,10 +531,6 @@ public:
     //
     // Stream subset
     //
-    // SYSCOIN
-    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
-    int GetTxVersion()           { return nTxVersion; }
-    void seek(size_t _nSize) {return;}
     void read(Span<std::byte> dst)
     {
         if (!file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
@@ -587,7 +581,7 @@ class CAutoFile : public AutoFile
 private:
     const int nType;
     const int nVersion;
-
+    int nTxVersion{0};
 public:
     CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : AutoFile{filenew}, nType(nTypeIn), nVersion(nVersionIn) {}
     int GetType() const          { return nType; }
@@ -612,6 +606,10 @@ public:
         ::Unserialize(*this, obj);
         return (*this);
     }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
 };
 
 /** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
