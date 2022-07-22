@@ -121,6 +121,26 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 std::optional<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins,
                         const CoinSelectionParams& coin_selection_params);
 
+// User manually selected inputs that must be part of the transaction
+struct PreSelectedInputs
+{
+    std::set<COutput> coins;
+    // If subtract fee from outputs is disabled, the 'total_amount'
+    // will be the sum of each output effective value
+    // instead of the sum of the outputs amount
+    CAmount total_amount{0};
+
+    void Insert(const COutput& output, bool subtract_fee_outputs)
+    {
+        if (subtract_fee_outputs) {
+            total_amount += output.txout.nValue;
+        } else {
+            total_amount += output.GetEffectiveValue();
+        }
+        coins.insert(output);
+    }
+};
+
 /**
  * Select a set of coins such that nTargetValue is met and at least
  * all coins from coin_control are selected; never select unconfirmed coins if they are not ours
