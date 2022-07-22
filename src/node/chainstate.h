@@ -5,13 +5,13 @@
 #ifndef SYSCOIN_NODE_CHAINSTATE_H
 #define SYSCOIN_NODE_CHAINSTATE_H
 
+#include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
 #include <functional>
-#include <optional>
+#include <tuple>
 
-class ChainstateManager;
 // SYSCOIN
 class CConnman;
 class BanMan;
