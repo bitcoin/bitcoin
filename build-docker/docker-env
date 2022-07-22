@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+export LC_ALL=C
+set -euo pipefail
+
+IMAGE_NAME="${IMAGE_NAME:-bitcoin-builder}"
+
+cd "$(dirname "$0")"
+BDB_PREFIX=${BDB_PREFIX:-"$(pwd)/db4"}
+cd ..
+
+docker run --rm -it \
+  -u "$(id -u):$(id -g)"  \
+  -v "$(pwd):$(pwd)" -w "$(pwd)" \
+  -v "$HOME/.bitcoin:$HOME/.bitcoin" \
+  -e BDB_PREFIX="$(pwd)/db4" \
+  "${IMAGE_NAME}" "$@"
