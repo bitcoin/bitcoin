@@ -1635,10 +1635,15 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             if (add_fixed_seeds_now) {
+                std::vector<CAddress> seed_addrs{ConvertSeeds(Params().FixedSeeds())};
+                seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
+                                               [](const CAddress& addr) { return !IsReachable(addr); }),
+                                seed_addrs.end());
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
-                addrman.Add(ConvertSeeds(Params().FixedSeeds()), local);
+                addrman.Add(seed_addrs, local);
                 add_fixed_seeds = false;
+                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
             }
         }
 
