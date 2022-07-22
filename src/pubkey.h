@@ -311,6 +311,16 @@ public:
     static constexpr size_t size() { return SIZE; }
     auto begin() const { return m_pubkey.cbegin(); }
     auto end() const { return m_pubkey.cend(); }
+
+    bool friend operator==(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey == b.m_pubkey;
+    }
+
+    bool friend operator!=(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey != b.m_pubkey;
+    }
 };
 
 struct CExtPubKey {
