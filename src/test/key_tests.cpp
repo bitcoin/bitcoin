@@ -5,6 +5,7 @@
 #include <key.h>
 
 #include <key_io.h>
+#include <span.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -13,6 +14,7 @@
 #include <util/string.h>
 #include <util/system.h>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -342,6 +344,31 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(bip324_ecdh)
+{
+    CKey initiator_key = DecodeSecret(strSecret1);
+    CKey responder_key = DecodeSecret(strSecret2C);
+
+    auto initiator_ellswift = ParseHex("b654960dff0ba8808a34337f46cc68ba7619c9df76d0550639dea62de07d17f9cb61b85f2897834ce12c50b1aefa281944abf2223a5fcf0a2a7d8c022498db35");
+    auto responder_ellswift = ParseHex("ea57aae33e8dd38380c303fb561b741293ef97c780445184cabdb5ef207053db628f2765e5d770f666738112c94714991362f6643d9837e1c89cbd9710b80929");
+
+    auto initiator_secret = initiator_key.ComputeBIP324ECDHSecret(MakeByteSpan(responder_ellswift), MakeByteSpan(initiator_ellswift), true);
+    BOOST_CHECK(initiator_secret.has_value());
+    auto responder_secret = responder_key.ComputeBIP324ECDHSecret(MakeByteSpan(initiator_ellswift), MakeByteSpan(responder_ellswift), false);
+    BOOST_CHECK(responder_secret.has_value());
+    BOOST_CHECK(initiator_secret.value() == responder_secret.value());
+    BOOST_CHECK_EQUAL("85ac83c8b2cd328293d49b9ed999d9eff79847e767a6252dc17ae248b0040de0", HexStr(initiator_secret.value()));
+    BOOST_CHECK_EQUAL("85ac83c8b2cd328293d49b9ed999d9eff79847e767a6252dc17ae248b0040de0", HexStr(responder_secret.value()));
+
+    // ECDH computation with invalid ellswift
+    initiator_ellswift = ParseHex("5b654960dff0ba8808a34337f46cc68ba7619c9df76d0550639dea62de07d17f9cb61b85f2897834ce12c50b1aefa281944abf2223a5fcf0a2a7d8c022498db3");
+    initiator_secret = initiator_key.ComputeBIP324ECDHSecret(MakeByteSpan(responder_ellswift), MakeByteSpan(initiator_ellswift), true);
+    BOOST_CHECK(initiator_secret.has_value());
+    responder_secret = responder_key.ComputeBIP324ECDHSecret(MakeByteSpan(initiator_ellswift), MakeByteSpan(responder_ellswift), false);
+    BOOST_CHECK(responder_secret.has_value());
+    BOOST_CHECK(initiator_secret.value() != responder_secret.value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
