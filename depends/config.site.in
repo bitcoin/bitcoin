@@ -80,12 +80,9 @@ fi
 
 PKG_CONFIG="$(which pkg-config) --static"
 
-# These two need to remain exported because pkg-config does not see them
-# otherwise. That means they must be unexported at the end of configure.ac to
-# avoid ruining the cache. Sigh.
-export PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
+PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
 if test -z "@allow_host_packages@"; then
-  export PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
+  PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
 fi
 
 CPPFLAGS="-I${depends_prefix}/include/ ${CPPFLAGS}"
