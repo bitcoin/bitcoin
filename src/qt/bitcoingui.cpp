@@ -430,8 +430,12 @@ void BitcoinGUI::createActions()
             if (backup_file.isEmpty()) return;
 
             bool wallet_name_ok;
-            //: Title of the Restore Wallet input dialog (where the wallet name is entered)
-            QString wallet_name = QInputDialog::getText(this, tr("Restore Name"), tr("Wallet Name:"), QLineEdit::Normal, "", &wallet_name_ok);
+            /*: Title of pop-up window shown when the user is attempting to
++                restore a wallet. */
+            QString title = tr("Restore Wallet");
+            //: Label of the input field where the name of the wallet is entered.
+            QString label = tr("Wallet Name");
+            QString wallet_name = QInputDialog::getText(this, title, label, QLineEdit::Normal, "", &wallet_name_ok);
             if (!wallet_name_ok || wallet_name.isEmpty()) return;
 
             auto activity = new RestoreWalletActivity(m_wallet_controller, this);
