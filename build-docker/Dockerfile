@@ -1,7 +1,7 @@
 FROM alpine
 
 # build depndencies
-RUN apk update && apk add
+RUN apk update && apk add \
   git \
   make \
   file \
@@ -18,8 +18,15 @@ RUN apk update && apk add
   libressl-dev \
   libevent-dev
 
-# Needed by some scripts
-RUN apk add bash
+# Not required for building bitcoind but needed by some scripts
+RUN apk add bash py3-pip shellcheck py3-flake8 py3-mypy
+RUN pip3 install vulture codespell
+
+# py3-zmq is available on alpine:edge
+RUN apk update && \
+  apk add build-base libzmq musl-dev python3 python3-dev zeromq-dev && \
+  pip3 install pyzmq && \
+  apk del build-base musl-dev python3-dev zeromq-dev
 
 COPY group /etc/group
 COPY passwd /etc/passwd
