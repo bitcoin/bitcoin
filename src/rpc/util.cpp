@@ -665,14 +665,23 @@ UniValue RPCHelpMan::GetArgMap() const
     UniValue arr{UniValue::VARR};
     for (int i{0}; i < int(m_args.size()); ++i) {
         const auto& arg = m_args.at(i);
+
+        RPCArg::Type argtype = arg.m_type;
+        size_t arg_num = 0;
+
         std::vector<std::string> arg_names = SplitString(arg.m_names, '|');
         for (const auto& arg_name : arg_names) {
+
+            if (!arg.m_type_per_name.empty()) {
+                argtype = arg.m_type_per_name.at(arg_num++);
+            }
+
             UniValue map{UniValue::VARR};
             map.push_back(m_name);
             map.push_back(i);
             map.push_back(arg_name);
-            map.push_back(arg.m_type == RPCArg::Type::STR ||
-                          arg.m_type == RPCArg::Type::STR_HEX);
+            map.push_back(UniValue(argtype == RPCArg::Type::STR ||
+                          argtype == RPCArg::Type::STR_HEX));
             arr.push_back(map);
         }
     }
