@@ -136,7 +136,6 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
 
     MockTime(fuzzed_data_provider, chainstate);
-    SetMempoolConstraints(*node.args, fuzzed_data_provider);
 
     // All RBF-spendable outpoints
     std::set<COutPoint> outpoints_rbf;
@@ -150,6 +149,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     // The sum of the values of all spendable outpoints
     constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
 
+    SetMempoolConstraints(*node.args, fuzzed_data_provider);
     CTxMemPool tx_pool_{MakeMempool(node)};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
@@ -219,9 +219,6 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 
         if (fuzzed_data_provider.ConsumeBool()) {
             MockTime(fuzzed_data_provider, chainstate);
-        }
-        if (fuzzed_data_provider.ConsumeBool()) {
-            SetMempoolConstraints(*node.args, fuzzed_data_provider);
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             tx_pool.RollingFeeUpdate();
@@ -316,7 +313,6 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     auto& chainstate = node.chainman->ActiveChainstate();
 
     MockTime(fuzzed_data_provider, chainstate);
-    SetMempoolConstraints(*node.args, fuzzed_data_provider);
 
     std::vector<uint256> txids;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
@@ -328,6 +324,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
         txids.push_back(ConsumeUInt256(fuzzed_data_provider));
     }
 
+    SetMempoolConstraints(*node.args, fuzzed_data_provider);
     CTxMemPool tx_pool_{MakeMempool(node)};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
@@ -337,9 +334,6 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 
         if (fuzzed_data_provider.ConsumeBool()) {
             MockTime(fuzzed_data_provider, chainstate);
-        }
-        if (fuzzed_data_provider.ConsumeBool()) {
-            SetMempoolConstraints(*node.args, fuzzed_data_provider);
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             tx_pool.RollingFeeUpdate();
