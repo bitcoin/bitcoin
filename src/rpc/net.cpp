@@ -605,7 +605,7 @@ static RPCHelpMan getnetworkinfo()
                         }},
                         {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
+                        {RPCResult::Type::ARR, "localaddresses", "List of local addresses. Addresses of networks that are not reachable outbound are ommitted here unless they are explicitly whitelisted with -allowinbound.",
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
