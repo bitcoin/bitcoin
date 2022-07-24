@@ -336,7 +336,7 @@ TorController::~TorController()
 
 void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlReply& reply)
 {
-    // NOTE: We can only get here if -onion is unset
+    // NOTE: We can only get here if -onion and -proxy are unset
     std::string socks_location;
     if (reply.code == 250) {
         for (const auto& line : reply.lines) {
@@ -441,10 +441,17 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "Authentication successful\n");
 
-        // Now that we know Tor is running setup the proxy for onion addresses
-        // if -onion isn't set to something else.
-        if (gArgs.GetArg("-onion", "") == "") {
-            _conn.Command("GETINFO net/listeners/socks", std::bind(&TorController::get_socks_cb, this, std::placeholders::_1, std::placeholders::_2));
+        // Now that we know Tor is running, setup the proxy for onion addresses
+        // if -onion or -proxy has not set it to something else yet.
+        Proxy maybe_proxy;
+        if (GetProxy(NET_ONION, maybe_proxy)) {
+            LogPrint(BCLog::TOR, "Onion proxy already configured for %s\n", maybe_proxy.proxy.ToStringIPPort());
+        } else {
+            if (gArgs.GetArg("-onion", "") != "0" && gArgs.GetArg("-proxy", "") != "0") {
+                // Don't do this if -onion or -proxy are explicitly disabled
+                LogPrint(BCLog::TOR, "Onion proxy not configured yet. Trying to use TorControl connection to set proxy.\n");
+                _conn.Command("GETINFO net/listeners/socks", std::bind(&TorController::get_socks_cb, this, std::placeholders::_1, std::placeholders::_2));
+            }
         }
 
         // Finally - now create the service
