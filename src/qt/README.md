@@ -1,4 +1,4 @@
-This directory contains the source code for the Bitcoin Core graphical user interface (GUI). It uses the [Qt](https://www1.qt.io/developers/) cross-platform framework.
+This directory contains the source code for the revolt Core graphical user interface (GUI). It uses the [Qt](https://www1.qt.io/developers/) cross-platform framework.
 
 The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
 
@@ -11,7 +11,7 @@ When following your systems build instructions, make sure to install the `Qt` de
 To run:
 
 ```sh
-./src/qt/bitcoin-qt
+./src/qt/revolt-qt
 ```
 
 ## Files and Directories
@@ -32,14 +32,14 @@ To run:
 
 - Functional tests used to ensure proper functionality of the GUI. Significant changes to the GUI code normally require new or updated tests.
 
-#### bitcoingui.(h/cpp)
+#### revoltgui.(h/cpp)
 
-- Represents the main window of the Bitcoin UI.
+- Represents the main window of the Revolt UI.
 
 #### \*model.(h/cpp)
 
 - The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](https://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](https://doc.qt.io/qt-5/qvalidator.html).
-- ClientModel is used by the main application `bitcoingui` and several models like `peertablemodel`.
+- ClientModel is used by the main application `revoltgui` and several models like `peertablemodel`.
 
 #### \*page.(h/cpp)
 
@@ -51,7 +51,7 @@ To run:
 
 #### paymentserver.(h/cpp)
 
-- (Deprecated) Used to process BIP21 payment URI requests. Also handles URI-based application switching (e.g. when following a bitcoin:... link from a browser).
+- (Deprecated) Used to process BIP21 payment URI requests. Also handles URI-based application switching (e.g. when following a revolt:... link from a browser).
 
 #### walletview.(h/cpp)
 
@@ -59,9 +59,9 @@ To run:
 
 #### Other .h/cpp files
 
-* UI elements like BitcoinAmountField, which inherit from QWidget.
-* `bitcoinstrings.cpp`: automatically generated
-* `bitcoinunits.(h/cpp)`: BTC / mBTC / etc. handling
+* UI elements like RevoltAmountField, which inherit from QWidget.
+* `revoltstrings.cpp`: automatically generated
+* `revoltunits.(h/cpp)`: BTC / mBTC / etc. handling
 * `callback.h`
 * `guiconstants.h`: UI colors, app name, etc.
 * `guiutil.h`: several helper functions
@@ -72,7 +72,7 @@ To run:
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines.
 
-**Note:** Do not change `local/bitcoin_en.ts`. It is updated [automatically](/doc/translation_process.md#writing-code-with-translations).
+**Note:** Do not change `local/revolt_en.ts`. It is updated [automatically](/doc/translation_process.md#writing-code-with-translations).
 
 ## Using Qt Creator as an IDE
 
@@ -101,7 +101,7 @@ sudo apt-get install qtcreator
 1. Make sure you've installed all dependencies specified in your systems build instructions
 2. Follow the compile instructions for your system, run `./configure` with the `--enable-debug` flag
 3. Start Qt Creator. At the start page, do: `New` -> `Import Project` -> `Import Existing Project`
-4. Enter `bitcoin-qt` as the Project Name and enter the absolute path to `src/qt` as Location
+4. Enter `revolt-qt` as the Project Name and enter the absolute path to `src/qt` as Location
 5. Check over the file selection, you may need to select the `forms` directory (necessary if you intend to edit *.ui files)
 6. Confirm the `Summary` page
 7. In the `Projects` tab, select `Manage Kits...`
@@ -119,6 +119,6 @@ sudo apt-get install qtcreator
  - Under `Compilers`: select `"GCC (x86 64bit in /usr/bin)"`
  - Under `Debuggers`: select `"GDB"` as debugger
 
-8. While in the `Projects` tab, ensure that you have the `bitcoin-qt` executable specified under `Run`
- - If the executable is not specified: click `"Choose..."`, navigate to `src/qt`, and select `bitcoin-qt`
-9. You're all set! Start developing, building, and debugging the Bitcoin Core GUI
+8. While in the `Projects` tab, ensure that you have the `revolt-qt` executable specified under `Run`
+ - If the executable is not specified: click `"Choose..."`, navigate to `src/qt`, and select `revolt-qt`
+9. You're all set! Start developing, building, and debugging the Revolt Core GUI

@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BITCOINAMOUNTFIELD_H
-#define BITCOIN_QT_BITCOINAMOUNTFIELD_H
+#ifndef REVOLT_QT_REVOLTAMOUNTFIELD_H
+#define REVOLT_QT_REVOLTAMOUNTFIELD_H
 
 #include <consensus/amount.h>
-#include <qt/bitcoinunits.h>
+#include <qt/revoltunits.h>
 
 #include <QWidget>
 
@@ -16,9 +16,9 @@ QT_BEGIN_NAMESPACE
 class QValueComboBox;
 QT_END_NAMESPACE
 
-/** Widget for entering bitcoin amounts.
+/** Widget for entering revolt amounts.
   */
-class BitcoinAmountField: public QWidget
+class RevoltAmountField: public QWidget
 {
     Q_OBJECT
 
@@ -27,7 +27,7 @@ class BitcoinAmountField: public QWidget
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
-    explicit BitcoinAmountField(QWidget *parent = nullptr);
+    explicit RevoltAmountField(QWidget *parent = nullptr);
 
     CAmount value(bool *value=nullptr) const;
     void setValue(const CAmount& value);
@@ -53,7 +53,7 @@ public:
     bool validate();
 
     /** Change unit used to display amount. */
-    void setDisplayUnit(BitcoinUnit new_unit);
+    void setDisplayUnit(RevoltUnit new_unit);
 
     /** Make field empty and ready for new input. */
     void clear();
@@ -82,4 +82,4 @@ private Q_SLOTS:
 
 };
 
-#endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H
+#endif // REVOLT_QT_REVOLTAMOUNTFIELD_H
