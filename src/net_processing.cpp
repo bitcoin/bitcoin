@@ -2810,7 +2810,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             // Tell our peer that he should send us CoinJoin queue messages
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
             // Tell our peer that he should send us intra-quorum messages
-            if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_masternode_connection) {
+            if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && connman->IsMasternodeQuorumNode(pfrom)) {
                 connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
             }
         }
