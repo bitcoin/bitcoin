@@ -2418,6 +2418,7 @@ void CConnman::ThreadOpenMasternodeConnections()
             return;
 
         int64_t nANow = GetAdjustedTime();
+        constexpr const auto &_func_ = __func__;
 
         // NOTE: Process only one pending masternode at a time
 
@@ -2444,6 +2445,22 @@ void CConnman::ThreadOpenMasternodeConnections()
                             continue;
                         }
                         const auto& addr2 = dmn->pdmnState->addr;
+                        if (connectedNodes.count(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                            // we probably connected to it before it became a masternode
+                            // or maybe we are still waiting for mnauth
+                            (void)ForNode(addr2, [&](CNode* pnode) {
+                                if (pnode->nTimeFirstMessageReceived != 0 && GetSystemTimeInSeconds() - pnode->nTimeFirstMessageReceived > 5) {
+                                    // clearly not expecting mnauth to take that long even if it wasn't the first message
+                                    // we received (as it should normally), disconnect
+                                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", _func_, proRegTxHash.ToString(), addr2.ToString(false));
+                                    pnode->fDisconnect = true;
+                                    return true;
+                                }
+                                return false;
+                            });
+                            // either way - it's not ready, skip it for now
+                            continue;
+                        }
                         if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
                             int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                             // back off trying connecting to an address if we already tried recently
