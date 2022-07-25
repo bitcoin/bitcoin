@@ -379,10 +379,10 @@ class RESTTest (BitcoinTestFramework):
         blockchain_info = self.nodes[0].getblockchaininfo()
         assert_equal(blockchain_info, json_obj)
 
-        # Test compatibility of deprecated and newer endpoints
-        self.log.info("Test compatibility of deprecated and newer endpoints")
-        assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))
-        assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
+        # # Test compatibility of deprecated and newer endpoints
+        # self.log.info("Test compatibility of deprecated and newer endpoints")
+        # assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))
+        # assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
 
 
 if __name__ == '__main__':

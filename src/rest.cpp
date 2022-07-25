@@ -180,16 +180,15 @@ static bool rest_headers(const std::any& context,
     std::string raw_count;
     std::string hashStr;
 
-    if (path.size() == 2) {
-        // deprecated path: /rest/headers/<count>/<hash>
+    if (IsDeprecatedRESTEnabled("count")) {
+        if (path.size() != 2) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<count>/<hash>");
         hashStr = path[1];
         raw_count = path[0];
     } else if (path.size() == 1) {
-        // new path with query parameter: /rest/headers/<hash>?count=<count>
         hashStr = path[0];
         raw_count = req->GetQueryParameter("count").value_or("5");
     } else {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>.<ext>?count=<count>");
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>?count=<count>");
     }
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
@@ -343,16 +342,15 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     auto path {req->GetPath()};
     std::string raw_count;
     std::string raw_blockhash;
-    if (path.size() == 3) {
-        // deprecated path: /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>
+    if (IsDeprecatedRESTEnabled("count")) {
+        if (path.size() != 3) return RESTERR(req, HTTP_BAD_REQUEST, "Expected /rest/blockfilterheaders/<filtertype>/<count>/<blockhash>");
         raw_blockhash = path[2];
         raw_count = path[1];
     } else if (path.size() == 2) {
-        // new path with query parameter: /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>
         raw_blockhash = path[1];
         raw_count = req->GetQueryParameter("count").value_or("5");
     } else {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>.<ext>?count=<count>");
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype>/<blockhash>?count=<count>");
     }
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
