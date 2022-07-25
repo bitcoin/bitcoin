@@ -306,9 +306,9 @@ void TestLoadWallet(const std::string& name, DatabaseFormat format, std::functio
     DatabaseStatus status;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto database{MakeWalletDatabase(name, options, status, error)};
+    auto database{ResultExtract(MakeWalletDatabase(name, options), &status, &error)};
     auto wallet{std::make_shared<CWallet>(chain.get(), "", std::move(database))};
-    BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::LOAD_OK);
+    BOOST_CHECK(wallet->PopulateWalletFromDB());
     WITH_LOCK(wallet->cs_wallet, f(wallet));
 }
 
