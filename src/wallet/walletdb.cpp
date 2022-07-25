@@ -1375,7 +1375,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     }
 
     if (format == DatabaseFormat::BERKELEY_RO) {
-        return MakeBerkeleyRODatabase(path, options, status, error);
+        return ResultExtract(MakeBerkeleyRODatabase(path, options), &status, &error);
     }
 
     error = Untranslated(STR_INTERNAL_BUG("Could not determine wallet format"));
