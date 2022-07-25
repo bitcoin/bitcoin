@@ -2773,7 +2773,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
 
-    assert(pindex->phashBlock);
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
