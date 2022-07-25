@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test error messages for 'getaddressinfo' and 'validateaddress' RPC commands."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 
 from test_framework.util import (
     assert_equal,
@@ -38,7 +38,7 @@ BASE58_INVALID_LENGTH = '2VKf7XKMrp4bVNVmuRbyCewkP8FhGLP2E54LHDPakr9Sq5mtU2'
 INVALID_ADDRESS = 'asfah14i8fajz0123f'
 INVALID_ADDRESS_2 = '1q049ldschfnwystcqnsvyfpj23mpsg3jcedq9xv'
 
-class InvalidAddressErrorMessageTest(BitcoinTestFramework):
+class InvalidAddressErrorMessageTest(RevoltTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

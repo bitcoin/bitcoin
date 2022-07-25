@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet can send and receive using all combinations of address types.
@@ -54,7 +54,7 @@ from decimal import Decimal
 import itertools
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.descriptors import (
     descsum_create,
     descsum_check,
@@ -65,7 +65,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class AddressTypeTest(BitcoinTestFramework):
+class AddressTypeTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 6
         self.extra_args = [

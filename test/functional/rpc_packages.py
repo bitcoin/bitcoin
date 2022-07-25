@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """RPCs that handle raw transaction packages."""
@@ -8,7 +8,7 @@ from decimal import Decimal
 import random
 
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -32,7 +32,7 @@ from test_framework.wallet import (
     make_chain,
 )
 
-class RPCPackagesTest(BitcoinTestFramework):
+class RPCPackagesTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

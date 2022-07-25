@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -10,13 +10,13 @@ import shutil
 import time
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.wallet_util import (
     get_generate_key,
 )
 
 
-class InactiveHDChainsTest(BitcoinTestFramework):
+class InactiveHDChainsTest(RevoltTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
