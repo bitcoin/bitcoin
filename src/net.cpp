@@ -3366,6 +3366,8 @@ size_t CConnman::GetNodeCount(NumConnections flags)
         }
         if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
             nNum++;
+        } else if (flags == CONNECTIONS_VERIFIED) {
+            nNum++;
         }
     }
 
