@@ -42,7 +42,7 @@ fi
 #       "--canonicalize-existing", but find a way to keep the Docker build
 #       working (maybe introduce another argument that makes the match lax
 #       again?).
-USR_DIR=${1:-$(realpath --canonicalize-missing "${MY_DIR}/../../itcoin-pbft/usrlocal")}
+USR_DIR=${1:-$(realpath --canonicalize-missing "${MY_DIR}/../../itcoin-pbft/build/usrlocal")}
 INSTALL_DIR=${2:-$(realpath "${MY_DIR}/../target")}
 
 # autogen always assumes that the user is calling it from the same directory

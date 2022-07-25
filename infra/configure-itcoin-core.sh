@@ -58,7 +58,7 @@ cd "${MY_DIR}/.."
     --disable-gui-tests \
     --disable-man \
     --disable-tests \
-    --with-boost="${MY_DIR}/../../itcoin-pbft/usrlocal" \
+    --with-boost="${MY_DIR}/../../itcoin-pbft/build/usrlocal" \
     --with-incompatible-bdb \
     --with-zmq \
     --without-gui \
