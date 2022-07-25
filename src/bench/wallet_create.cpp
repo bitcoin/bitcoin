@@ -46,12 +46,12 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 
     auto wallet_path = fs::PathToString(test_setup->m_path_root / "test_wallet");
     bench.run([&] {
-        auto wallet = CreateWallet(context, wallet_path, /*load_on_start=*/std::nullopt, options, status, error_string, warnings);
+        auto wallet{ResultExtract(CreateWallet(context, wallet_path, /*load_on_start=*/std::nullopt, options), &status, &error_string, &warnings)};
         assert(status == DatabaseStatus::SUCCESS);
         assert(wallet != nullptr);
 
         // Release wallet
-        RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
+        Assert(RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt));
         WaitForDeleteWallet(std::move(wallet));
         fs::remove_all(wallet_path);
     });
