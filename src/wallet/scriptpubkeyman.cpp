@@ -249,8 +249,14 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
             if (fDecryptionThoroughlyChecked)
                 break;
             else {
-                // Rewrite these encrypted keys with checksums
-                batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
+                // Rewrite these encrypted keys with checksums and signatures
+                uint256 enckey_hash = Hash(vchCryptedSecret);
+                std::vector<unsigned char> sig(64);
+                if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+                    keyFail = true;
+                    break;
+                }
+                batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()], sig);
             }
         }
         if (keyPass && keyFail)
@@ -286,7 +292,13 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
             encrypted_batch = nullptr;
             return false;
         }
-        if (!AddCryptedKey(vchPubKey, vchCryptedSecret)) {
+        uint256 enckey_hash = Hash(vchCryptedSecret);
+        std::vector<unsigned char> sig(64);
+        if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+            encrypted_batch = nullptr;
+            return false;
+        }
+        if (!AddCryptedKey(vchPubKey, vchCryptedSecret, sig)) {
             encrypted_batch = nullptr;
             return false;
         }
@@ -811,8 +823,13 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pu
     if (!EncryptSecret(m_storage.GetEncryptionKey(), vchSecret, pubkey.GetHash(), vchCryptedSecret)) {
         return false;
     }
+    uint256 enckey_hash = Hash(vchCryptedSecret);
+    std::vector<unsigned char> sig(64);
+    if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+        return false;
+    }
 
-    if (!AddCryptedKey(pubkey, vchCryptedSecret)) {
+    if (!AddCryptedKey(pubkey, vchCryptedSecret, sig)) {
         return false;
     }
     return true;
@@ -839,7 +856,8 @@ bool LegacyScriptPubKeyMan::AddCryptedKeyInner(const CPubKey &vchPubKey, const s
 }
 
 bool LegacyScriptPubKeyMan::AddCryptedKey(const CPubKey &vchPubKey,
-                            const std::vector<unsigned char> &vchCryptedSecret)
+                            const std::vector<unsigned char> &vchCryptedSecret,
+                            const std::vector<unsigned char>& sig)
 {
     if (!AddCryptedKeyInner(vchPubKey, vchCryptedSecret))
         return false;
@@ -848,11 +866,13 @@ bool LegacyScriptPubKeyMan::AddCryptedKey(const CPubKey &vchPubKey,
         if (encrypted_batch)
             return encrypted_batch->WriteCryptedKey(vchPubKey,
                                                         vchCryptedSecret,
-                                                        mapKeyMetadata[vchPubKey.GetID()]);
+                                                        mapKeyMetadata[vchPubKey.GetID()],
+                                                        sig);
         else
             return WalletBatch(m_storage.GetDatabase()).WriteCryptedKey(vchPubKey,
                                                             vchCryptedSecret,
-                                                            mapKeyMetadata[vchPubKey.GetID()]);
+                                                            mapKeyMetadata[vchPubKey.GetID()],
+                                                            sig);
     }
 }
 
@@ -2073,8 +2093,13 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
+        uint256 enckey_hash = Hash(crypted_secret);
+        std::vector<unsigned char> sig(64);
+        if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+            return false;
+        }
         m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret, sig);
     }
     m_map_keys.clear();
     return true;
@@ -2237,9 +2262,14 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
         if (!EncryptSecret(m_storage.GetEncryptionKey(), secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
+        uint256 enckey_hash = Hash(crypted_secret);
+        std::vector<unsigned char> sig(64);
+        if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+            return false;
+        }
 
         m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret, sig);
     } else {
         m_map_keys[pubkey.GetID()] = key;
         return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey());

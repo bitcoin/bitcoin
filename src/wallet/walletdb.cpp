@@ -66,6 +66,26 @@ const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULT
 // WalletBatch
 //
 
+static util::Result<bool> CheckCryptedKeySig(CDataStream& value, const CPubKey& pubkey, const uint256& hash)
+{
+    if (value.eof()) {
+        return false;
+    }
+
+    std::vector<unsigned char> sig;
+    value >> sig;
+
+    if (sig.size() != 64) {
+        return util::Error{_("Error reading wallet database: Invalid signature size for encrypted key")};
+    }
+
+    XOnlyPubKey xonly{pubkey};
+    if (!xonly.VerifySchnorr(hash, sig)) {
+        return util::Error{_("Error reading wallet database: Invalid signature for encrypted key")};
+    }
+    return true;
+}
+
 bool WalletBatch::WriteName(const std::string& strAddress, const std::string& strName)
 {
     return WriteIC(std::make_pair(DBKeys::NAME, strAddress), strName);
@@ -120,7 +140,8 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
 
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
-                                const CKeyMetadata &keyMeta)
+                                const CKeyMetadata &keyMeta,
+                                const std::vector<unsigned char>& sig)
 {
     if (!WriteKeyMetadata(keyMeta, vchPubKey, true)) {
         return false;
@@ -130,14 +151,23 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     uint256 checksum = Hash(vchCryptedSecret);
 
     const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
-    if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
-        // It may already exist, so try writing just the checksum
+    if (!WriteIC(key, std::make_pair(vchCryptedSecret, std::make_pair(checksum, sig)), false)) {
+        // It may already exist
         std::vector<unsigned char> val;
         if (!m_batch->Read(key, val)) {
             return false;
         }
-        if (!WriteIC(key, std::make_pair(val, checksum), true)) {
-            return false;
+
+        if (val.size() == vchCryptedSecret.size()) {
+            // Write the checksum and sig if both are missing
+            if (!WriteIC(key, std::make_pair(val, std::make_pair(checksum, sig)), true)) {
+                return false;
+            }
+        } else if (val.size() == vchCryptedSecret.size() + checksum.size()) {
+            // Write the sig if it is missing
+            if (!WriteIC(key, std::make_pair(val, sig), true)) {
+                return false;
+            }
         }
     }
     EraseIC(std::make_pair(DBKeys::KEY, vchPubKey));
@@ -230,10 +260,22 @@ bool WalletBatch::WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubk
     return WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)), std::make_pair(privkey, Hash(key)), false);
 }
 
-bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret)
+bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret, const std::vector<unsigned char>& sig)
 {
-    if (!WriteIC(std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, std::make_pair(desc_id, pubkey)), secret, false)) {
-        return false;
+    const auto key = std::make_pair(DBKeys::WALLETDESCRIPTORCKEY, std::make_pair(desc_id, pubkey));
+    if (!WriteIC(key, std::make_pair(secret, sig), false)) {
+        // It may already exist
+        std::vector<unsigned char> val;
+        if (!m_batch->Read(key, val)) {
+            return false;
+        }
+
+        if (val.size() == secret.size()) {
+            // Write the sig if it is missing
+            if (!WriteIC(key, std::make_pair(val, sig), true)) {
+                return false;
+            }
+        }
     }
     EraseIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)));
     return true;
@@ -488,10 +530,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!ssValue.eof()) {
                 uint256 checksum;
                 ssValue >> checksum;
-                if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {
+                if (Hash(vchPrivKey) != checksum) {
                     strErr = "Error reading wallet database: Encrypted key corrupt";
                     return false;
                 }
+
+                // Get the signature and check it
+                util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, vchPubKey, checksum);
+                if (!checksum_res.has_value()) {
+                    strErr = ErrorString(checksum_res).original;
+                    return false;
+                }
+                checksum_valid = checksum_res.value();
             }
 
             wss.nCKeys++;
@@ -729,6 +779,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             std::vector<unsigned char> privkey;
             ssValue >> privkey;
+
+            // Get the signature and check it
+            util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, pubkey, Hash(privkey));
+            if (!checksum_res.has_value()) {
+                strErr = ErrorString(checksum_res).original;
+                return false;
+            }
+
             wss.nCKeys++;
 
             wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
