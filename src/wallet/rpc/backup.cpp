@@ -641,7 +641,7 @@ RPCHelpMan restorewallet()
     bilingual_str error;
     std::vector<bilingual_str> warnings;
 
-    const std::shared_ptr<CWallet> wallet = RestoreWallet(context, backup_file, wallet_name, load_on_start, status, error, warnings);
+    const std::shared_ptr<CWallet> wallet{ResultExtract(RestoreWallet(context, backup_file, wallet_name, load_on_start), &status, &error, &warnings)};
 
     HandleWalletError(wallet, status, error);
 
