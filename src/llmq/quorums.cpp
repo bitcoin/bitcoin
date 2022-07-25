@@ -32,7 +32,10 @@ static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 CQuorumManager* quorumManager;
 
 CCriticalSection cs_data_requests;
-static std::unordered_map<std::pair<uint256, bool>, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
+//key = <ProTx, bool, quorumHash, llmqType>
+//TODO: Document purpose of bool
+using key_t = std::tuple<uint256, bool, uint256, uint8_t>;
+static std::unordered_map<key_t, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
@@ -433,7 +436,8 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
     }
 
     LOCK(cs_data_requests);
-    auto key = std::make_pair(pFrom->GetVerifiedProRegTxHash(), true);
+    auto quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
+    auto key = std::make_tuple(pFrom->GetVerifiedProRegTxHash(), true, quorumHash, (uint8_t)llmqType);
     auto it = mapQuorumDataRequests.emplace(key, CQuorumDataRequest(llmqType, pQuorumBaseBlockIndex->GetBlockHash(), nDataMask, proTxHash));
     if (!it.second && !it.first->second.IsExpired()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Already requested\n", __func__);
@@ -584,11 +588,13 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
 
         {
             LOCK2(cs_main, cs_data_requests);
-            auto key = std::make_pair(pFrom->GetVerifiedProRegTxHash(), false);
+            auto quorumHash = request.GetQuorumHash();
+            auto llmqType = (uint8_t) request.GetLLMQType();
+            auto key = std::make_tuple(pFrom->GetVerifiedProRegTxHash(), false, quorumHash, llmqType);
             auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
                 it = mapQuorumDataRequests.emplace(key, request).first;
-            } else if(it->second.IsExpired()) {
+            } else if (it->second.IsExpired()) {
                 it->second = request;
             } else {
                 errorHandler("Request limit exceeded", 25);
@@ -657,7 +663,10 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
 
         {
             LOCK2(cs_main, cs_data_requests);
-            auto it = mapQuorumDataRequests.find(std::make_pair(pFrom->GetVerifiedProRegTxHash(), true));
+            auto quorumHash = request.GetQuorumHash();
+            auto llmqType = (uint8_t) request.GetLLMQType();
+            auto key = std::make_tuple(pFrom->GetVerifiedProRegTxHash(), true, quorumHash, llmqType);
+            auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
                 errorHandler("Not requested");
                 return;
@@ -829,7 +838,10 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
                 pCurrentMemberHash = &vecMemberHashes[(nMyStartOffset + nTries++) % vecMemberHashes.size()];
                 {
                     LOCK(cs_data_requests);
-                    auto it = mapQuorumDataRequests.find(std::make_pair(*pCurrentMemberHash, true));
+                    auto quorumHash = pQuorum->qc->quorumHash;
+                    auto llmqType = (uint8_t)pQuorum->qc->quorumIndex;
+                    auto key = std::make_tuple(*pCurrentMemberHash, true, quorumHash, (uint8_t)llmqType);
+                    auto it = mapQuorumDataRequests.find(key);
                     if (it != mapQuorumDataRequests.end() && !it->second.IsExpired()) {
                         printLog("Already asked");
                         continue;
@@ -854,7 +866,10 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
                     printLog("Requested");
                 } else {
                     LOCK(cs_data_requests);
-                    auto it = mapQuorumDataRequests.find(std::make_pair(verifiedProRegTxHash, true));
+                    auto quorumHash = pQuorum->qc->quorumHash;
+                    auto llmqType = (uint8_t)pQuorum->qc->quorumIndex;
+                    auto key = std::make_tuple(*pCurrentMemberHash, true, quorumHash, (uint8_t)llmqType);
+                    auto it = mapQuorumDataRequests.find(key);
                     if (it == mapQuorumDataRequests.end()) {
                         printLog("Failed");
                         pNode->fDisconnect = true;
