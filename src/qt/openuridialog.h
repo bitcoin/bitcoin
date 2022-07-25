@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPENURIDIALOG_H
-#define BITCOIN_QT_OPENURIDIALOG_H
+#ifndef REVOLT_QT_OPENURIDIALOG_H
+#define REVOLT_QT_OPENURIDIALOG_H
 
 #include <QDialog>
 
@@ -33,4 +33,4 @@ private:
     const PlatformStyle* m_platform_style;
 };
 
-#endif // BITCOIN_QT_OPENURIDIALOG_H
+#endif // REVOLT_QT_OPENURIDIALOG_H
