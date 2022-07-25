@@ -498,7 +498,7 @@ public:
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
-        RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
+        Assume(RemoveWallet(m_context, m_wallet, /*load_on_start=*/false));
     }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
@@ -576,7 +576,7 @@ public:
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, CreateWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(CreateWallet(m_context, name, /*load_on_start=*/true, options), &status, &error, &warnings))};
         return wallet ? std::move(wallet) : util::Error{error};
     }
     util::ResultPtr<std::unique_ptr<Wallet>> loadWallet(const std::string& name, std::vector<bilingual_str>& warnings) override
@@ -586,14 +586,14 @@ public:
         ReadDatabaseArgs(*m_context.args, options);
         options.require_existing = true;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, LoadWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(LoadWallet(m_context, name, /*load_on_start=*/true, options), &status, &error, &warnings))};
         return wallet ? std::move(wallet) : util::Error{error};
     }
     util::ResultPtr<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) override
     {
         DatabaseStatus status;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings, load_after_restore))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, load_after_restore), &status, &error, &warnings))};
         return wallet && !error.empty() ? std::move(wallet) : util::Error{error};
     }
     util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
@@ -617,13 +617,7 @@ public:
         // Unloaded wallet, read db
         DatabaseOptions options;
         options.require_existing = true;
-        DatabaseStatus status;
-        bilingual_str error;
-        auto db = MakeWalletDatabase(wallet_name, options, status, error);
-        if (!db && status == wallet::DatabaseStatus::FAILED_LEGACY_DISABLED) {
-            options.require_format = wallet::DatabaseFormat::BERKELEY_RO;
-            db = MakeWalletDatabase(wallet_name, options, status, error);
-        }
+        auto db{MakeWalletDatabase(wallet_name, options)};
         if (!db) return false;
         return WalletBatch(*db).IsEncrypted();
     }
