@@ -49,7 +49,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
             if (signer.m_fingerprint.compare(fingerprintStr) == 0) duplicate = true;
         }
         if (duplicate) break;
-        std::string name = "";
+        std::string name;
         const UniValue& model_field = find_value(signer, "model");
         if (model_field.isStr() && model_field.getValStr() != "") {
             name += model_field.getValStr();
