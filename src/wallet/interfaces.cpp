@@ -606,7 +606,7 @@ public:
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, CreateWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(CreateWallet(m_context, name, /*load_on_start=*/true, options), &status, &error, &warnings))};
         return wallet ? std::move(wallet) : util::Error{error};
     }
     util::ResultPtr<std::unique_ptr<Wallet>> loadWallet(const std::string& name, std::vector<bilingual_str>& warnings) override
@@ -616,14 +616,14 @@ public:
         ReadDatabaseArgs(*m_context.args, options);
         options.require_existing = true;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, LoadWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(LoadWallet(m_context, name, /*load_on_start=*/true, options), &status, &error, &warnings))};
         return wallet ? std::move(wallet) : util::Error{error};
     }
     util::ResultPtr<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
         bilingual_str error;
-        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings))};
+        util::ResultPtr<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, ResultExtract(RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true), &status, &error, &warnings))};
         return wallet ? std::move(wallet) : util::Error{error};
     }
     util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
