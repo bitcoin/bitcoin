@@ -4,12 +4,15 @@ $(package)_download_path=https://github.com/libexpat/libexpat/releases/download/
 $(package)_file_name=$(package)-$($(package)_version).tar.xz
 $(package)_sha256_hash=f79b8f904b749e3e0d20afeadecf8249c55b2e32d4ebb089ae378df479dcaf25
 
+# -D_DEFAULT_SOURCE defines __USE_MISC, which exposes additional
+# definitions in endian.h, which are required for a working
+# endianess check in configure when building with -flto.
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared --without-docbook --without-tests --without-examples
   $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
   $(package)_config_opts += --without-xmlwf
   $(package)_config_opts_linux=--with-pic
-  $(package)_cflags += -fno-lto
+  $(package)_cppflags += -D_DEFAULT_SOURCE
 endef
 
 define $(package)_config_cmds
