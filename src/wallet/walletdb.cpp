@@ -1475,7 +1475,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     if (format == DatabaseFormat::SQLITE) {
 #ifdef USE_SQLITE
         if constexpr (true) {
-            return MakeSQLiteDatabase(path, options, status, error);
+            return ResultExtract(MakeSQLiteDatabase(path, options), &status, &error);
         } else
 #endif
         {
