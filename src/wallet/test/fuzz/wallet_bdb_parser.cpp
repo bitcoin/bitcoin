@@ -61,7 +61,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     bool bdb_ro_err = false;
     bool bdb_ro_strict_err = false;
 #endif
-    auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
+    auto db{ResultExtract(MakeBerkeleyRODatabase(wallet_path, options), &status, &error)};
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db, error));
     } else {
