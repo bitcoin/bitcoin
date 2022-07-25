@@ -51,7 +51,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 
     auto db{ResultExtract(MakeBerkeleyRODatabase(wallet_path, options), &status, &error)};
     if (db) {
-        assert(DumpWallet(g_setup->m_args, *db, error));
+        assert(DumpWallet(g_setup->m_args, *db));
     } else {
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
             error.original.starts_with("AutoFile::read: end of file") ||
