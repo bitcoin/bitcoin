@@ -114,7 +114,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     g_setup->m_args.ForceSetArg("-dumpfile", fs::PathToString(bdb_dumpfile));
 
     try {
-        auto db{MakeBerkeleyDatabase(wallet_path, options, status, error)};
+        auto db{ResultExtract(MakeBerkeleyDatabase(wallet_path, options), &status, &error)};
         if (bdb_ro_err && !db) {
             return;
         }
