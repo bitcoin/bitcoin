@@ -345,31 +345,19 @@ class AddressTypeTest(BitcoinTestFramework):
         self.log.info("Nodes with addresstype=legacy never use a P2WPKH change output (unless changetype is set otherwise):")
         self.test_change_output_type(0, [to_address_bech32_1], 'legacy')
 
-        if self.options.descriptors:
-            self.log.info("Nodes with addresstype=p2sh-segwit match the change output")
-            self.test_change_output_type(1, [to_address_p2sh], 'p2sh-segwit')
-            self.test_change_output_type(1, [to_address_bech32_1], 'bech32')
-            self.test_change_output_type(1, [to_address_p2sh, to_address_bech32_1], 'bech32')
-            self.test_change_output_type(1, [to_address_bech32_1, to_address_bech32_2], 'bech32')
-        else:
-            self.log.info("Nodes with addresstype=p2sh-segwit match the change output")
-            self.test_change_output_type(1, [to_address_p2sh], 'p2sh-segwit')
-            self.test_change_output_type(1, [to_address_bech32_1], 'bech32')
-            self.test_change_output_type(1, [to_address_p2sh, to_address_bech32_1], 'bech32')
-            self.test_change_output_type(1, [to_address_bech32_1, to_address_bech32_2], 'bech32')
+        self.log.info("Nodes with addresstype=p2sh-segwit match the change output")
+        self.test_change_output_type(1, [to_address_p2sh], 'p2sh-segwit')
+        self.test_change_output_type(1, [to_address_bech32_1], 'bech32')
+        self.test_change_output_type(1, [to_address_p2sh, to_address_bech32_1], 'bech32')
+        self.test_change_output_type(1, [to_address_bech32_1, to_address_bech32_2], 'bech32')
 
         self.log.info("Nodes with change_type=bech32 always use a P2WPKH change output:")
         self.test_change_output_type(2, [to_address_bech32_1], 'bech32')
         self.test_change_output_type(2, [to_address_p2sh], 'bech32')
 
-        if self.options.descriptors:
-            self.log.info("Nodes with addresstype=bech32 match the change output (unless changetype is set otherwise):")
-            self.test_change_output_type(3, [to_address_bech32_1], 'bech32')
-            self.test_change_output_type(3, [to_address_p2sh], 'p2sh-segwit')
-        else:
-            self.log.info("Nodes with addresstype=bech32 match the change output (unless changetype is set otherwise):")
-            self.test_change_output_type(3, [to_address_bech32_1], 'bech32')
-            self.test_change_output_type(3, [to_address_p2sh], 'p2sh-segwit')
+        self.log.info("Nodes with addresstype=bech32 match the change output (unless changetype is set otherwise):")
+        self.test_change_output_type(3, [to_address_bech32_1], 'bech32')
+        self.test_change_output_type(3, [to_address_p2sh], 'p2sh-segwit')
 
         self.log.info('getrawchangeaddress defaults to addresstype if -changetype is not set and argument is absent')
         self.test_address(3, self.nodes[3].getrawchangeaddress(), multisig=False, typ='bech32')
