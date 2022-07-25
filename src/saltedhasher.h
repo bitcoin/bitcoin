@@ -13,6 +13,20 @@
 
 template<typename T> struct SaltedHasherImpl;
 
+template<typename N, typename M, typename K, typename Q>
+struct SaltedHasherImpl<std::tuple<N, M, K, Q>>
+{
+    static std::size_t CalcHash(const std::tuple<N, M, K, Q>& v, uint64_t k0, uint64_t k1)
+    {
+        CSipHasher c(k0, k1);
+        c.Write((unsigned char*)&std::get<0>(v), sizeof(M));
+        c.Write((unsigned char*)&std::get<1>(v), sizeof(N));
+        c.Write((unsigned char*)&std::get<2>(v), sizeof(K));
+        c.Write((unsigned char*)&std::get<3>(v), sizeof(Q));
+        return c.Finalize();
+    }
+};
+
 template<typename N>
 struct SaltedHasherImpl<std::pair<uint256, N>>
 {
