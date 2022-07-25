@@ -156,6 +156,8 @@ void SetReachable(enum Network net, bool reachable);
 bool IsReachable(enum Network net);
 /** @returns true if the address is in a reachable network, false otherwise */
 bool IsReachable(const CNetAddr& addr);
+/** @returns true if the network is explicitly declared reacable inbound, false otherwise */
+bool IsInboundAllowed(enum Network net);
 
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);

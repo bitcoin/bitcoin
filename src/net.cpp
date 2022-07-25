@@ -227,8 +227,9 @@ static int GetnScore(const CService& addr)
 bool IsPeerAddrLocalGood(CNode *pnode)
 {
     CService addrLocal = pnode->GetAddrLocal();
+    const enum Network net{addrLocal.GetNetwork()};
     return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
-           IsReachable(addrLocal.GetNetwork());
+           (IsReachable(net) || IsInboundAllowed(net));
 }
 
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
@@ -293,8 +294,10 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!IsReachable(addr))
+    const enum Network net{addr.GetNetwork()};
+    if (!IsReachable(net) && !IsInboundAllowed(net)) {
         return false;
+    }
 
     LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
 
@@ -340,6 +343,15 @@ bool IsReachable(enum Network net)
 bool IsReachable(const CNetAddr &addr)
 {
     return IsReachable(addr.GetNetwork());
+}
+
+bool IsInboundAllowed(const enum Network net) {
+    for (const std::string& snet : gArgs.GetArgs("-allowinbound")) {
+        if (net == ParseNetwork(snet)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /** vote for a local address */
