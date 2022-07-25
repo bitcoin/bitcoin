@@ -17,7 +17,6 @@
 #include <iostream>
 
 using wallet::DatabaseOptions;
-using wallet::DatabaseStatus;
 
 namespace {
 TestingSetup* g_setup;
@@ -40,19 +39,17 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     }
 
     const DatabaseOptions options{};
-    DatabaseStatus status;
-    bilingual_str error;
-
     fs::path bdb_ro_dumpfile{g_setup->m_args.GetDataDirNet() / "fuzzed_dumpfile_bdb_ro.dump"};
     if (fs::exists(bdb_ro_dumpfile)) { // Writing into an existing dump file will throw an exception
         remove(bdb_ro_dumpfile);
     }
     g_setup->m_args.ForceSetArg("-dumpfile", fs::PathToString(bdb_ro_dumpfile));
 
-    auto db{ResultExtract(MakeBerkeleyRODatabase(wallet_path, options), &status, &error)};
+    auto db{MakeBerkeleyRODatabase(wallet_path, options)};
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db));
     } else {
+        bilingual_str error{util::ErrorString(db)};
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
             error.original.starts_with("AutoFile::read: end of file") ||
             error.original.starts_with("AutoFile::seek: ") ||
