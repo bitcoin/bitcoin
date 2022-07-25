@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     std::string value2 = "value_2";
 
     DatabaseOptions options;
-    auto database = MakeSQLiteDatabase(m_path_root / "sqlite", options);
+    const auto& database = MakeSQLiteDatabase(m_path_root / "sqlite", options);
 
     std::unique_ptr<DatabaseBatch> handler = Assert(database)->MakeBatch();
 

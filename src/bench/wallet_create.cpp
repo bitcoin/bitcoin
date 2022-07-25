@@ -32,18 +32,13 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
         options.create_passphrase = random.rand256().ToString();
     }
 
-    DatabaseStatus status;
-    bilingual_str error_string;
-    std::vector<bilingual_str> warnings;
-
     fs::path wallet_path = test_setup->m_path_root / strprintf("test_wallet_%d", random.rand32()).c_str();
     bench.run([&] {
-        auto wallet = ResultExtract(CreateWallet(context, wallet_path.utf8string(), /*load_on_start=*/std::nullopt, options), &status, &error_string, &warnings);
-        assert(status == DatabaseStatus::SUCCESS);
-        assert(wallet != nullptr);
+        auto wallet = CreateWallet(context, wallet_path.utf8string(), /*load_on_start=*/std::nullopt, options);
+        assert(wallet);
 
         // Cleanup
-        wallet.reset();
+        wallet.value().reset();
         fs::remove_all(wallet_path);
     });
 }
