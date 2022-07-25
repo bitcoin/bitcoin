@@ -49,7 +49,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     }
     g_setup->m_args.ForceSetArg("-dumpfile", fs::PathToString(bdb_ro_dumpfile));
 
-    auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
+    auto db{ResultExtract(MakeBerkeleyRODatabase(wallet_path, options), &status, &error)};
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db, error));
     } else {
