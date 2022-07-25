@@ -51,7 +51,7 @@ std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database
 {
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
+    auto wallet{ResultExtract(CWallet::Create(context, "", std::move(database), create_flags), nullptr, &error, &warnings)};
     NotifyWalletLoaded(context, wallet);
     if (context.chain) {
         wallet->postInitProcess();
@@ -66,7 +66,7 @@ std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
     DatabaseStatus status;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto database = MakeWalletDatabase("", options, status, error);
+    auto database{ResultExtract(MakeWalletDatabase("", options), &status, &error)};
     return TestLoadWallet(std::move(database), context, options.create_flags);
 }
 
