@@ -201,7 +201,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
 
-        bool ret = DumpWallet(args, *database, error);
+        bool ret = ResultExtract(DumpWallet(args, *database), nullptr, &error);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;
@@ -211,7 +211,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
     } else if (command == "createfromdump") {
         bilingual_str error;
         std::vector<bilingual_str> warnings;
-        bool ret = CreateFromDump(args, name, path, error, warnings);
+        bool ret = ResultExtract(CreateFromDump(args, name, path), nullptr, &error, &warnings);
         for (const auto& warning : warnings) {
             tfm::format(std::cout, "%s\n", warning.original);
         }
