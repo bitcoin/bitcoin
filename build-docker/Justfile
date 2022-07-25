@@ -3,11 +3,12 @@
 Justfile:
 	@echo "running just"
 
-image_name := 'bitcoin-builder'
+image_name := 'bitcoin-build'
 
 export BDB_PREFIX := `pwd` + '/db4'
 
 build-image:
+	IMAGE_NAME=bitcoin-build-db ./build-docker-image.sh -f berkeleydb.Dockerfile
 	IMAGE_NAME={{image_name}} ./build-docker-image.sh
 
 build: setup configure rebuild
@@ -15,7 +16,7 @@ build: setup configure rebuild
 build-all: build-image build
 
 setup *args='':
-	IMAGE_NAME={{image_name}} ./docker-env ./contrib/install_db4.sh $(pwd) "$@"
+	IMAGE_NAME=bitcoin-build-db ./docker-env ./contrib/install_db4.sh $(pwd) "$@"
 
 @configure *args='':
 	#!/usr/bin/env bash

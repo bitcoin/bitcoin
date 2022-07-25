@@ -1,28 +1,34 @@
-FROM alpine
+FROM alpine as bitcoin-build
 
-# build depndencies
-RUN apk update && apk add \
-  git \
-  make \
-  file \
+# build depndencies for bitcoind
+RUN apk update && apk --no-cache add \
   autoconf \
   automake \
+  boost-dev \
   build-base \
-  libtool \
   db-c++ \
   db-dev \
-  boost-system \
-  boost-program_options \
-  boost-filesystem \
-  boost-dev \
-  libressl-dev \
-  libevent-dev
+  file \
+  g++ \
+  libevent-dev \
+  libressl \
+  libtool \
+  make
 
-# Not required for building bitcoind but needed by some scripts
-RUN apk add bash py3-pip shellcheck py3-flake8 py3-mypy
+# These dependencies are needed at runtime
+# Even though this is alpine we are not yet producing a statically linked output
+RUN apk --no-cache add \
+  boost-filesystem \
+  boost-system \
+  boost-thread \
+  libevent \
+  libzmq
+
+# Not required for building bitcoind but needed by some development scripts
+RUN apk --no-cache add bash git py3-pip py3-flake8 py3-mypy shellcheck
 RUN pip3 install vulture codespell
 
-# py3-zmq is available on alpine:edge
+# py3-zmq is only available on alpine:edge
 RUN apk update && \
   apk add build-base libzmq musl-dev python3 python3-dev zeromq-dev && \
   pip3 install pyzmq && \

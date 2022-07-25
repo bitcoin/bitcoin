@@ -5,10 +5,12 @@ set -euo pipefail
 IMAGE_NAME="${IMAGE_NAME:-bitcoin-builder}"
 
 cd "$(dirname "$0")"
-BDB_PREFIX=${BDB_PREFIX:-"$(pwd)/db4"}
+BDB_PREFIX="${BDB_PREFIX:-"$(pwd)/db4"}"
 cd ..
 
-docker run --rm -it \
+DOCKER_ARGS=${DOCKER_ARGS:-""}
+
+docker run $DOCKER_ARGS --rm -it \
   -u "$(id -u):$(id -g)"  \
   -v "$(pwd):$(pwd)" -w "$(pwd)" \
   -v "$HOME/.bitcoin:$HOME/.bitcoin" \

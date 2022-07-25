@@ -7,5 +7,5 @@ cd "$(dirname "$0")"
 IMAGE_NAME=${IMAGE_NAME:-"bitcoin-builder"}
 grep -e "^$(whoami)" /etc/group  > group
 grep -e "^$(whoami)" /etc/passwd > passwd
-docker build . -t "${IMAGE_NAME}"
+docker build . -t "${IMAGE_NAME}" "$@"
 
