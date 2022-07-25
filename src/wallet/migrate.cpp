@@ -768,17 +768,13 @@ std::unique_ptr<DatabaseCursor> BerkeleyROBatch::GetNewPrefixCursor(Span<const s
     return std::make_unique<BerkeleyROCursor>(m_database, prefix);
 }
 
-std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+util::ResultPtr<std::unique_ptr<BerkeleyRODatabase>, DatabaseStatus> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options)
 {
     fs::path data_file = BDBDataFile(path);
     try {
-        std::unique_ptr<BerkeleyRODatabase> db = std::make_unique<BerkeleyRODatabase>(data_file);
-        status = DatabaseStatus::SUCCESS;
-        return db;
+        return std::make_unique<BerkeleyRODatabase>(data_file);
     } catch (const std::runtime_error& e) {
-        error.original = e.what();
-        status = DatabaseStatus::FAILED_LOAD;
-        return nullptr;
+        return {util::Error{Untranslated(e.what())}, DatabaseStatus::FAILED_LOAD};
     }
 }
 } // namespace wallet
