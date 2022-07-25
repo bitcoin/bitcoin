@@ -136,7 +136,7 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
     // Needs BDB to make the DB to read
     dbs.emplace_back(std::make_unique<BerkeleyRODatabase>(BDBDataFile(path_root / "bdb"), /*open=*/false));
 #endif
-    dbs.emplace_back(MakeSQLiteDatabase(path_root / "sqlite", options, status, error));
+    dbs.emplace_back(std::move(MakeSQLiteDatabase(path_root / "sqlite", options).value()));
     dbs.emplace_back(CreateMockableWalletDatabase());
     return dbs;
 }
@@ -310,9 +310,7 @@ BOOST_AUTO_TEST_CASE(txn_close_failure_dangling_txn)
     // Verifies that there is no active dangling, to-be-reversed db txn
     // after the batch object that initiated it is destroyed.
     DatabaseOptions options;
-    DatabaseStatus status;
-    bilingual_str error;
-    std::unique_ptr<SQLiteDatabase> database = MakeSQLiteDatabase(m_path_root / "sqlite", options, status, error);
+    auto database = MakeSQLiteDatabase(m_path_root / "sqlite", options);
 
     std::string key = "key";
     std::string value = "value";
@@ -345,9 +343,7 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     std::string value2 = "value_2";
 
     DatabaseOptions options;
-    DatabaseStatus status;
-    bilingual_str error;
-    const auto& database = MakeSQLiteDatabase(m_path_root / "sqlite", options, status, error);
+    auto database = MakeSQLiteDatabase(m_path_root / "sqlite", options);
 
     std::unique_ptr<DatabaseBatch> handler = Assert(database)->MakeBatch();
 
