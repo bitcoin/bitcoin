@@ -74,14 +74,15 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
     const uint64_t create_flags = wallet.GetWalletFlags() | WALLET_FLAG_DISABLE_PRIVATE_KEYS;
 
     // Create the temporary watchonly wallet in memory to avoid leaving files on disk
-    std::vector<bilingual_str> warnings;
-    bilingual_str error;
+    std::shared_ptr<CWallet> watchonly_wallet;
+
     WalletContext empty_context;
     empty_context.args = context.args;
-    std::shared_ptr<CWallet> watchonly_wallet = CWallet::CreateNew(empty_context, /*name=*/wallet.GetName() + "_watchonly_temp", MakeInMemoryWalletDatabase(), create_flags, /*born_encrypted=*/false, error, warnings);
-    if (!watchonly_wallet) {
-        return util::Error{strprintf(_("Error: Failed to create new watchonly wallet. %s"), error)};
+    auto watchonly_result{CWallet::CreateNew(empty_context, /*name=*/wallet.GetName() + "_watchonly_temp", MakeInMemoryWalletDatabase(), create_flags, /*born_encrypted=*/false)};
+    if (!watchonly_result) {
+        return util::Error{strprintf(_("Error: Failed to create new watchonly wallet. %s"), util::ErrorString(watchonly_result))};
     }
+    watchonly_wallet = std::move(watchonly_result.value());
 
     {
         LOCK(watchonly_wallet->cs_wallet);

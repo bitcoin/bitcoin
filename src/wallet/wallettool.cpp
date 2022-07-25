@@ -12,6 +12,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
+using util::Result;
+
 namespace wallet {
 namespace WalletTool {
 
@@ -40,8 +42,6 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
 
 static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
 {
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
     auto database{MakeDatabase(path, options)};
     if (!database) {
         tfm::format(std::cerr, "%s\n", util::ErrorString(database).original);
@@ -50,23 +50,23 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
 
     // dummy chain interface
     std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, std::move(database.value())), WalletToolReleaseWallet};
-    DBErrors load_wallet_ret;
+    Result<void, DBErrors> populate;
     try {
-        load_wallet_ret = wallet_instance->PopulateWalletFromDB(error, warnings);
+        populate.update(wallet_instance->PopulateWalletFromDB());
     } catch (const std::runtime_error&) {
         tfm::format(std::cerr, "Error loading %s. Is wallet being used by another process?\n", name);
         return nullptr;
     }
 
-    if (!error.empty()) {
-        tfm::format(std::cerr, "%s", error.original);
+    if (!populate) {
+        tfm::format(std::cerr, "%s", ErrorString(populate).original);
     }
 
-    for (const auto &warning : warnings) {
+    for (const auto &warning : populate.messages().warnings) {
         tfm::format(std::cerr, "%s", warning.original);
     }
 
-    if (load_wallet_ret != DBErrors::LOAD_OK && load_wallet_ret != DBErrors::NONCRITICAL_ERROR && load_wallet_ret != DBErrors::NEED_RESCAN) {
+    if (!populate && populate.error() != DBErrors::NONCRITICAL_ERROR && populate.error() != DBErrors::NEED_RESCAN) {
         return nullptr;
     }
 
