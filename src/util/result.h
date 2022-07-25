@@ -18,6 +18,11 @@
 #include <vector>
 
 namespace util {
+template <class T, class E>
+class Expected;
+template <class E>
+class Unexpected;
+
 //! The Result<SuccessType, ErrorType, MessagesType> class provides
 //! an efficient way for functions to return structured result information, as
 //! well as descriptive error messages.
@@ -217,6 +222,19 @@ public:
     Result(O&& other)
     {
         move</*DstConstructed=*/false>(*this, other);
+    }
+
+    template<typename E>
+    Result(Unexpected<E>&& e) : Result{Error{}, std::move(e.error())} {}
+
+    template<typename T, typename E>
+    Result(Expected<T, E>&& e)
+    {
+        if (e) {
+            construct<false>(*this, std::move(e.error()));
+        } else {
+            construct<true>(*this, std::move(e.error()));
+        }
     }
 
     //! Update this result by moving from another result object. Existing
