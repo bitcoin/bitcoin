@@ -88,10 +88,10 @@ struct CompareIteratorByHash {
 class CTxMemPoolEntry
 {
 public:
-    typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
+    using CTxMemPoolEntryRef = std::reference_wrapper<const CTxMemPoolEntry>;
     // two aliases, should the types ever diverge
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Parents;
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Children;
+    using Parents = std::set<CTxMemPoolEntryRef, CompareIteratorByHash>;
+    using Children = std::set<CTxMemPoolEntryRef, CompareIteratorByHash>;
 
 private:
     const CTransactionRef tx;
@@ -170,7 +170,7 @@ public:
 // extracts a transaction hash from CTxMemPoolEntry or CTransactionRef
 struct mempoolentry_txid
 {
-    typedef uint256 result_type;
+    using result_type = uint256;
     result_type operator() (const CTxMemPoolEntry &entry) const
     {
         return entry.GetTx().GetHash();
@@ -185,7 +185,7 @@ struct mempoolentry_txid
 // extracts a transaction witness-hash from CTxMemPoolEntry or CTransactionRef
 struct mempoolentry_wtxid
 {
-    typedef uint256 result_type;
+    using result_type = uint256;
     result_type operator() (const CTxMemPoolEntry &entry) const
     {
         return entry.GetTx().GetWitnessHash();
@@ -459,7 +459,7 @@ public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
 
-    typedef boost::multi_index_container<
+    using indexed_transaction_set = boost::multi_index_container<
         CTxMemPoolEntry,
         boost::multi_index::indexed_by<
             // sorted by txid
@@ -489,7 +489,7 @@ public:
                 CompareTxMemPoolEntryByAncestorFee
             >
         >
-    > indexed_transaction_set;
+    >;
 
     /**
      * This mutex needs to be locked when accessing `mapTx` or other members
@@ -524,11 +524,11 @@ public:
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
     std::vector<std::pair<uint256, txiter>> vTxHashes GUARDED_BY(cs); //!< All tx witness hashes/entries in mapTx, in random order
 
-    typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    using setEntries = std::set<txiter, CompareIteratorByHash>;
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
-    typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
+    using cacheMap = std::map<txiter, setEntries, CompareIteratorByHash>;
 
 
     void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -942,7 +942,7 @@ struct txid_index {};
 struct insertion_order {};
 
 struct DisconnectedBlockTransactions {
-    typedef boost::multi_index_container<
+    using indexed_disconnected_transactions = boost::multi_index_container<
         CTransactionRef,
         boost::multi_index::indexed_by<
             // sorted by txid
@@ -956,7 +956,7 @@ struct DisconnectedBlockTransactions {
                 boost::multi_index::tag<insertion_order>
             >
         >
-    > indexed_disconnected_transactions;
+    >;
 
     // It's almost certainly a logic bug if we don't clear out queuedTx before
     // destruction, as we add to it while disconnecting blocks, and then we

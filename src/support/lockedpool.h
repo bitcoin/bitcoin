@@ -89,11 +89,11 @@ public:
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
 private:
-    typedef std::multimap<size_t, char*> SizeToChunkSortedMap;
+    using SizeToChunkSortedMap = std::multimap<size_t, char*>;
     /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
     SizeToChunkSortedMap size_to_free_chunk;
 
-    typedef std::unordered_map<char*, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
+    using ChunkToSizeMap = std::unordered_map<char*, SizeToChunkSortedMap::const_iterator>;
     /** Map from begin of free chunk to its node in size_to_free_chunk */
     ChunkToSizeMap chunks_free;
     /** Map from end of free chunk to its node in size_to_free_chunk */
@@ -139,7 +139,7 @@ public:
 
     /** Callback when allocation succeeds but locking fails.
      */
-    typedef bool (*LockingFailed_Callback)();
+    using LockingFailed_Callback = bool (*)();
 
     /** Memory statistics. */
     struct Stats

@@ -70,7 +70,7 @@ struct CompareCTxMemPoolIter {
 };
 
 struct modifiedentry_iter {
-    typedef CTxMemPool::txiter result_type;
+    using result_type = CTxMemPool::txiter;
     result_type operator() (const CTxMemPoolModifiedEntry &entry) const
     {
         return entry.iter;
@@ -90,7 +90,7 @@ struct CompareTxIterByAncestorCount {
     }
 };
 
-typedef boost::multi_index_container<
+using indexed_modified_transaction_set = boost::multi_index_container<
     CTxMemPoolModifiedEntry,
     boost::multi_index::indexed_by<
         boost::multi_index::ordered_unique<
@@ -105,10 +105,10 @@ typedef boost::multi_index_container<
             CompareTxMemPoolEntryByAncestorFee
         >
     >
-> indexed_modified_transaction_set;
+>;
 
-typedef indexed_modified_transaction_set::nth_index<0>::type::iterator modtxiter;
-typedef indexed_modified_transaction_set::index<ancestor_score>::type::iterator modtxscoreiter;
+using modtxiter = indexed_modified_transaction_set::nth_index<0>::type::iterator;
+using modtxscoreiter = indexed_modified_transaction_set::index<ancestor_score>::type::iterator;
 
 struct update_for_parent_inclusion
 {

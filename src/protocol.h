@@ -33,7 +33,7 @@ public:
     static constexpr size_t MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE;
     static constexpr size_t CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE;
     static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
-    typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
+    using MessageStartChars = unsigned char [MESSAGE_START_SIZE];
 
     explicit CMessageHeader() = default;
 

@@ -12,7 +12,7 @@
 #include <script/script.h>
 #include <uint256.h>
 
-typedef std::vector<unsigned char> valtype;
+using valtype = std::vector<unsigned char>;
 
 namespace {
 

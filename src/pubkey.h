@@ -27,7 +27,7 @@ public:
     explicit CKeyID(const uint160& in) : uint160(in) {}
 };
 
-typedef uint256 ChainCode;
+using ChainCode = uint256;
 
 /** An encapsulated public key. */
 class CPubKey
@@ -341,7 +341,7 @@ public:
     ~ECCVerifyHandle();
 };
 
-typedef struct secp256k1_context_struct secp256k1_context;
+using secp256k1_context = struct secp256k1_context_struct;
 
 /** Access to the internal secp256k1 context used for verification. Only intended to be used
  *  by key.cpp. */

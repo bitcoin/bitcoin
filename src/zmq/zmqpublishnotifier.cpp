@@ -165,7 +165,7 @@ void CZMQAbstractPublishNotifier::Shutdown()
     int count = mapPublishNotifiers.count(address);
 
     // remove this notifier from the list of publishers using this address
-    typedef std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator iterator;
+    using iterator = std::multimap<std::string, CZMQAbstractPublishNotifier *>::iterator;
     std::pair<iterator, iterator> iterpair = mapPublishNotifiers.equal_range(address);
 
     for (iterator it = iterpair.first; it != iterpair.second; ++it)

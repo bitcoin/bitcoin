@@ -43,7 +43,7 @@ public:
 
     std::thread m_service_thread;
 
-    typedef std::function<void()> Function;
+    using Function = std::function<void()>;
 
     /** Call func at/after time t */
     void schedule(Function f, std::chrono::steady_clock::time_point t) EXCLUSIVE_LOCKS_REQUIRED(!newTaskMutex);

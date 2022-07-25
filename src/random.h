@@ -251,7 +251,7 @@ public:
     };
 
     // Compatibility with the C++11 UniformRandomBitGenerator concept
-    typedef uint64_t result_type;
+    using result_type = uint64_t;
     static constexpr uint64_t min() { return 0; }
     static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
     inline uint64_t operator()() noexcept { return rand64(); }

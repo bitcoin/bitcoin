@@ -17,8 +17,8 @@ D. J. Bernstein
 Public domain.
 */
 
-typedef unsigned int u32;
-typedef unsigned char u8;
+using u32 = unsigned int;
+using u8 = unsigned char;
 
 #define U8C(v) (v##U)
 #define U32C(v) (v##U)
@@ -43,10 +43,10 @@ typedef unsigned char u8;
 /* ------------------------------------------------------------------------- */
 /* Data structures */
 
-typedef struct
+struct ECRYPT_ctx
 {
     u32 input[16];
-} ECRYPT_ctx;
+};
 
 /* ------------------------------------------------------------------------- */
 /* Mandatory functions */

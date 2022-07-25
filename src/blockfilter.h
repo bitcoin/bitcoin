@@ -24,8 +24,8 @@
 class GCSFilter
 {
 public:
-    typedef std::vector<unsigned char> Element;
-    typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
+    using Element = std::vector<unsigned char>;
+    using ElementSet = std::unordered_set<Element, ByteVectorHash>;
 
     struct Params
     {

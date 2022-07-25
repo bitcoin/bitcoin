@@ -59,7 +59,7 @@ public:
     }
 };
 
-typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
+using CKeyingMaterial = std::vector<unsigned char, secure_allocator<unsigned char>>;
 
 namespace wallet_crypto_tests
 {

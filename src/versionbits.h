@@ -35,7 +35,7 @@ enum class ThresholdState {
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map
 // will either be nullptr or a block with (height + 1) % Period() == 0.
-typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
+using ThresholdConditionCache = std::map<const CBlockIndex*, ThresholdState>;
 
 /** Display status of an in-progress BIP9 softfork */
 struct BIP9Stats {

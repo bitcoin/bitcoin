@@ -17,15 +17,15 @@ BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
 template<unsigned int N, typename T>
 class prevector_tester {
-    typedef std::vector<T> realtype;
+    using realtype = std::vector<T>;
     realtype real_vector;
     realtype real_vector_alt;
 
-    typedef prevector<N, T> pretype;
+    using pretype = prevector<N, T>;
     pretype pre_vector;
     pretype pre_vector_alt;
 
-    typedef typename pretype::size_type Size;
+    using Size = typename pretype::size_type;
     bool passed = true;
     FastRandomContext rand_cache;
     uint256 rand_seed;

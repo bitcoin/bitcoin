@@ -55,8 +55,8 @@ public:
 class TorControlConnection
 {
 public:
-    typedef std::function<void(TorControlConnection&)> ConnectionCB;
-    typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
+    using ConnectionCB = std::function<void(TorControlConnection&)>;
+    using ReplyHandlerCB = std::function<void(TorControlConnection &,const TorControlReply &)>;
 
     /** Create a new TorControlConnection.
      */

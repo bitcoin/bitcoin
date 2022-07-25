@@ -19,7 +19,7 @@ struct type##_deleter {\
     }\
 };\
 /* unique ptr typedef */\
-typedef std::unique_ptr<struct type, type##_deleter> raii_##type
+using raii_##type = std::unique_ptr<struct type, type##_deleter>;
 
 MAKE_RAII(event_base);
 MAKE_RAII(event);

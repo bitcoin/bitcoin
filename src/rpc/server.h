@@ -84,7 +84,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  */
 void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
 
-typedef RPCHelpMan (*RpcMethodFnType)();
+using RpcMethodFnType = RPCHelpMan (*)();
 
 class CRPCCommand
 {

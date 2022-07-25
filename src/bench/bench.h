@@ -39,7 +39,7 @@ namespace benchmark {
 
 using ankerl::nanobench::Bench;
 
-typedef std::function<void(Bench&)> BenchFunction;
+using BenchFunction = std::function<void(Bench&)>;
 
 struct Args {
     bool is_list_only;
@@ -53,7 +53,7 @@ struct Args {
 
 class BenchRunner
 {
-    typedef std::map<std::string, BenchFunction> BenchmarkMap;
+    using BenchmarkMap = std::map<std::string, BenchFunction>;
     static BenchmarkMap& benchmarks();
 
 public:

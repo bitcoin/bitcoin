@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
 }
 
 // Store of all necessary tx and undo data for next test
-typedef std::map<COutPoint, std::tuple<CTransaction,CTxUndo,Coin>> UtxoData;
+using UtxoData = std::map<COutPoint, std::tuple<CTransaction, CTxUndo, Coin>>;
 UtxoData utxoData;
 
 UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {

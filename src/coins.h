@@ -131,7 +131,7 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
-typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+using CCoinsMap = std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher>;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor

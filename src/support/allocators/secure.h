@@ -34,7 +34,7 @@ struct secure_allocator : public std::allocator<T> {
     ~secure_allocator() noexcept {}
     template <typename _Other>
     struct rebind {
-        typedef secure_allocator<_Other> other;
+        using other = secure_allocator<_Other>;
     };
 
     T* allocate(std::size_t n, const void* hint = nullptr)
@@ -56,6 +56,6 @@ struct secure_allocator : public std::allocator<T> {
 };
 
 // This is exactly like std::string, but with a custom allocator.
-typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
+using SecureString = std::basic_string<char, std::char_traits<char>, secure_allocator<char>>;
 
 #endif // BITCOIN_SUPPORT_ALLOCATORS_SECURE_H

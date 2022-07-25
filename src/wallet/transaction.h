@@ -108,7 +108,7 @@ static inline int TxStateSerializedIndex(const TxState& state)
 }
 
 
-typedef std::map<std::string, std::string> mapValue_t;
+using mapValue_t = std::map<std::string, std::string>;
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,

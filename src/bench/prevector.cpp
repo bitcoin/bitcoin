@@ -17,7 +17,7 @@ struct nontrivial_t {
 static_assert(!std::is_trivially_default_constructible<nontrivial_t>::value,
               "expected nontrivial_t to not be trivially constructible");
 
-typedef unsigned char trivial_t;
+using trivial_t = unsigned char;
 static_assert(std::is_trivially_default_constructible<trivial_t>::value,
               "expected trivial_t to be trivially constructible");
 

@@ -59,7 +59,7 @@ extern const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR;
 /** A signature creator that just produces 72-byte empty signatures. */
 extern const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR;
 
-typedef std::pair<CPubKey, std::vector<unsigned char>> SigPair;
+using SigPair = std::pair<CPubKey, std::vector<unsigned char>>;
 
 // This struct contains information from a transaction input and also contains signatures for that input.
 // The information contained here can be used to create a signature and is also filled by ProduceSignature

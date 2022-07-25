@@ -41,7 +41,7 @@
 // Windows definitions, and use the WSA* names throughout our code.
 // Note that glibc defines EWOULDBLOCK as EAGAIN (see errno.h).
 #ifndef WIN32
-typedef unsigned int SOCKET;
+using SOCKET = unsigned int;
 #include <cerrno>
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
@@ -80,15 +80,15 @@ typedef unsigned int SOCKET;
 // ssize_t is POSIX, and not present when using MSVC.
 #ifdef _MSC_VER
 #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
+using ssize_t = SSIZE_T;
 #endif
 
 // The type of the option value passed to getsockopt & setsockopt
 // differs between Windows and non-Windows.
 #ifndef WIN32
-typedef void* sockopt_arg_type;
+using sockopt_arg_type = void*;
 #else
-typedef char* sockopt_arg_type;
+using sockopt_arg_type = char*;
 #endif
 
 #ifdef WIN32

@@ -38,22 +38,22 @@ class prevector {
     static_assert(std::is_trivially_copyable_v<T>);
 
 public:
-    typedef Size size_type;
-    typedef Diff difference_type;
-    typedef T value_type;
-    typedef value_type& reference;
-    typedef const value_type& const_reference;
-    typedef value_type* pointer;
-    typedef const value_type* const_pointer;
+    using size_type = Size;
+    using difference_type = Diff;
+    using value_type = T;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
 
     class iterator {
         T* ptr;
     public:
-        typedef Diff difference_type;
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef std::random_access_iterator_tag iterator_category;
+        using difference_type = Diff;
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+        using iterator_category = std::random_access_iterator_tag;
         iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() const { return *ptr; }
         T* operator->() const { return ptr; }
@@ -79,11 +79,11 @@ public:
     class reverse_iterator {
         T* ptr;
     public:
-        typedef Diff difference_type;
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
+        using difference_type = Diff;
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+        using iterator_category = std::bidirectional_iterator_tag;
         reverse_iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() { return *ptr; }
         const T& operator*() const { return *ptr; }
@@ -100,11 +100,11 @@ public:
     class const_iterator {
         const T* ptr;
     public:
-        typedef Diff difference_type;
-        typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
-        typedef std::random_access_iterator_tag iterator_category;
+        using difference_type = Diff;
+        using value_type = const T;
+        using pointer = const T*;
+        using reference = const T&;
+        using iterator_category = std::random_access_iterator_tag;
         const_iterator(const T* ptr_) : ptr(ptr_) {}
         const_iterator(iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }
@@ -130,11 +130,11 @@ public:
     class const_reverse_iterator {
         const T* ptr;
     public:
-        typedef Diff difference_type;
-        typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
+        using difference_type = Diff;
+        using value_type = const T;
+        using pointer = const T*;
+        using reference = const T&;
+        using iterator_category = std::bidirectional_iterator_tag;
         const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
         const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }

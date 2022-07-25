@@ -25,13 +25,13 @@ public:
     static constexpr size_t BYTE_SIZE = 384;
 
 #ifdef __SIZEOF_INT128__
-    typedef unsigned __int128 double_limb_t;
-    typedef uint64_t limb_t;
+    using double_limb_t = unsigned __int128;
+    using limb_t = uint64_t;
     static constexpr int LIMBS = 48;
     static constexpr int LIMB_SIZE = 64;
 #else
-    typedef uint64_t double_limb_t;
-    typedef uint32_t limb_t;
+    using double_limb_t = uint64_t;
+    using limb_t = uint32_t;
     static constexpr int LIMBS = 96;
     static constexpr int LIMB_SIZE = 32;
 #endif

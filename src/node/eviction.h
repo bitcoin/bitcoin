@@ -13,7 +13,7 @@
 #include <optional>
 #include <vector>
 
-typedef int64_t NodeId;
+using NodeId = int64_t;
 
 struct NodeEvictionCandidate {
     NodeId id;

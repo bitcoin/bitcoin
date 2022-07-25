@@ -147,7 +147,7 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 // Internal representation                                                //
 ////////////////////////////////////////////////////////////////////////////
 
-typedef std::vector<uint32_t> KeyPath;
+using KeyPath = std::vector<uint32_t>;
 
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider

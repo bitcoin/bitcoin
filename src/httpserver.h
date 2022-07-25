@@ -36,7 +36,7 @@ void StopHTTPServer();
 void UpdateHTTPServerLogging(bool enable);
 
 /** Handler for requests to a certain HTTP path */
-typedef std::function<bool(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
+using HTTPRequestHandler = std::function<bool(HTTPRequest* req, const std::string &)>;
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
  * be invoked.

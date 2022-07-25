@@ -69,7 +69,7 @@ std::unique_ptr<const TestData> g_testdata;
 
 /** A class encapsulating conversion routing for CPubKey. */
 struct KeyConverter {
-    typedef CPubKey Key;
+    using Key = CPubKey;
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return a < b;

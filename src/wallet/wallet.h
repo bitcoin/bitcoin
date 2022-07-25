@@ -210,7 +210,7 @@ public:
 
     CAddressBookData() : purpose("unknown") {}
 
-    typedef std::map<std::string, std::string> StringMap;
+    using StringMap = std::map<std::string, std::string>;
     StringMap destdata;
 
     bool IsChange() const { return m_change; }
@@ -262,7 +262,7 @@ private:
      * detect and report conflicts (double-spends or
      * mutated transactions where the mutant gets mined).
      */
-    typedef std::unordered_multimap<COutPoint, uint256, SaltedOutpointHasher> TxSpends;
+    using TxSpends = std::unordered_multimap<COutPoint, uint256, SaltedOutpointHasher>;
     TxSpends mapTxSpends GUARDED_BY(cs_wallet);
     void AddToSpends(const COutPoint& outpoint, const uint256& wtxid, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void AddToSpends(const CWalletTx& wtx, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -365,7 +365,7 @@ public:
      */
     const std::string& GetName() const { return m_name; }
 
-    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+    using MasterKeyMap = std::map<unsigned int, CMasterKey>;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
 
@@ -395,7 +395,7 @@ public:
      * interested in, including received and sent transactions. */
     std::unordered_map<uint256, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
 
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
+    using TxItems = std::multimap<int64_t, CWalletTx*>;
     TxItems wtxOrdered;
 
     int64_t nOrderPosNext GUARDED_BY(cs_wallet) = 0;

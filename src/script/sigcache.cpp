@@ -30,7 +30,7 @@ private:
      //! Entries are SHA256(nonce || 'E' or 'S' || 31 zero bytes || signature hash || public key || signature):
     CSHA256 m_salted_hasher_ecdsa;
     CSHA256 m_salted_hasher_schnorr;
-    typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
+    using map_type = CuckooCache::cache<uint256, SignatureCacheHasher>;
     map_type setValid;
     std::shared_mutex cs_sigcache;
 

@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-typedef std::set<COutput> CoinSet;
+using CoinSet = std::set<COutput>;
 
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);

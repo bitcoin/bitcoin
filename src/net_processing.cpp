@@ -902,7 +902,7 @@ private:
     void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
     /** Relay map (txid or wtxid -> CTransactionRef) */
-    typedef std::map<uint256, CTransactionRef> MapRelay;
+    using MapRelay = std::map<uint256, CTransactionRef>;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(cs_main);
@@ -2174,7 +2174,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 // they must either disconnect and retry or request the full block.
                 // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                 // however we MUST always provide at least what the remote peer needs
-                typedef std::pair<unsigned int, uint256> PairType;
+                using PairType = std::pair<unsigned int, uint256>;
                 for (PairType& pair : merkleBlock.vMatchedTxn)
                     m_connman.PushMessage(&pfrom, msgMaker.Make(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::TX, *pblock->vtx[pair.first]));
             }

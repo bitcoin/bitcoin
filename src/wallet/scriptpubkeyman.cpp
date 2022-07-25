@@ -39,7 +39,7 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const Outp
     return GetDestinationForKey(new_key, type);
 }
 
-typedef std::vector<unsigned char> valtype;
+using valtype = std::vector<unsigned char>;
 
 namespace {
 

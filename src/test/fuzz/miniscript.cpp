@@ -16,7 +16,7 @@ namespace {
 
 //! Some pre-computed data for more efficient string roundtrips.
 struct TestData {
-    typedef CPubKey Key;
+    using Key = CPubKey;
 
     // Precomputed public keys.
     std::vector<Key> dummy_keys;
@@ -45,7 +45,7 @@ struct TestData {
  * to focus on fuzzing the Miniscript nodes' test representation, not the key representation.
  */
 struct ParserContext {
-    typedef CPubKey Key;
+    using Key = CPubKey;
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return a < b;

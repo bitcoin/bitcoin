@@ -23,13 +23,13 @@ struct DereferencingComparator { bool operator()(const T a, const T b) const { r
 template <class K, class T>
 class indirectmap {
 private:
-    typedef std::map<const K*, T, DereferencingComparator<const K*> > base;
+    using base = std::map<const K*, T, DereferencingComparator<const K*>>;
     base m;
 public:
-    typedef typename base::iterator iterator;
-    typedef typename base::const_iterator const_iterator;
-    typedef typename base::size_type size_type;
-    typedef typename base::value_type value_type;
+    using iterator = typename base::iterator;
+    using const_iterator = typename base::const_iterator;
+    using size_type = typename base::size_type;
+    using value_type = typename base::value_type;
 
     // passthrough (pointer interface)
     std::pair<iterator, bool> insert(const value_type& value) { return m.insert(value); }

@@ -16,7 +16,7 @@
 #include <util/translation.h>
 #include <util/vector.h>
 
-typedef std::vector<unsigned char> valtype;
+using valtype = std::vector<unsigned char>;
 
 MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction& tx, unsigned int input_idx, const CAmount& amount, int hash_type)
     : m_txto{tx}, nIn{input_idx}, nHashType{hash_type}, amount{amount}, checker{&m_txto, nIn, amount, MissingDataBehavior::FAIL},

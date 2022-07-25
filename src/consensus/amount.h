@@ -9,7 +9,7 @@
 #include <cstdint>
 
 /** Amount in satoshis (Can be negative) */
-typedef int64_t CAmount;
+using CAmount = int64_t;
 
 /** The amount of satoshis in one BTC. */
 static constexpr CAmount COIN = 100000000;
