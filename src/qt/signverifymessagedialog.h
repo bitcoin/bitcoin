@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
-#define BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
+#ifndef REVOLT_QT_SIGNVERIFYMESSAGEDIALOG_H
+#define REVOLT_QT_SIGNVERIFYMESSAGEDIALOG_H
 
 #include <QDialog>
 
@@ -51,4 +51,4 @@ private Q_SLOTS:
     void on_clearButton_VM_clicked();
 };
 
-#endif // BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
+#endif // REVOLT_QT_SIGNVERIFYMESSAGEDIALOG_H

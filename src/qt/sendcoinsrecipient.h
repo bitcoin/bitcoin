@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SENDCOINSRECIPIENT_H
-#define BITCOIN_QT_SENDCOINSRECIPIENT_H
+#ifndef REVOLT_QT_SENDCOINSRECIPIENT_H
+#define REVOLT_QT_SENDCOINSRECIPIENT_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/revolt-config.h>
 #endif
 
 #include <consensus/amount.h>
@@ -62,4 +62,4 @@ public:
     }
 };
 
-#endif // BITCOIN_QT_SENDCOINSRECIPIENT_H
+#endif // REVOLT_QT_SENDCOINSRECIPIENT_H

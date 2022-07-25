@@ -8,14 +8,14 @@ import org.qtproject.qt5.android.bindings.QtActivity;
 
 import java.io.File;
 
-public class BitcoinQtActivity extends QtActivity
+public class RevoltQtActivity extends QtActivity
 {
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        final File bitcoinDir = new File(getFilesDir().getAbsolutePath() + "/.bitcoin");
-        if (!bitcoinDir.exists()) {
-            bitcoinDir.mkdir();
+        final File revoltDir = new File(getFilesDir().getAbsolutePath() + "/.bitcoin");
+        if (!revoltDir.exists()) {
+            revoltDir.mkdir();
         }
 
         super.onCreate(savedInstanceState);
