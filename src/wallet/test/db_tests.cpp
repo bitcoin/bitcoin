@@ -129,10 +129,8 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
 {
     std::vector<std::unique_ptr<WalletDatabase>> dbs;
     DatabaseOptions options;
-    DatabaseStatus status;
-    bilingual_str error;
 #ifdef USE_BDB
-    dbs.emplace_back(MakeBerkeleyDatabase(path_root / "bdb", options, status, error));
+    dbs.emplace_back(std::move(MakeBerkeleyDatabase(path_root / "bdb", options).value()));
     // Needs BDB to make the DB to read
     dbs.emplace_back(std::make_unique<BerkeleyRODatabase>(BDBDataFile(path_root / "bdb"), /*open=*/false));
 #endif
