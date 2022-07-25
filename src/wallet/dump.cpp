@@ -195,7 +195,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     ReadDatabaseArgs(args, options);
     options.require_create = true;
     options.require_format = data_format;
-    std::unique_ptr<WalletDatabase> database = MakeDatabase(wallet_path, options, status, error);
+    std::unique_ptr<WalletDatabase> database = ResultExtract(MakeDatabase(wallet_path, options), &status, &error);
     if (!database) return false;
 
     // dummy chain interface

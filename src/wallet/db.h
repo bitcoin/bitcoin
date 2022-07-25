@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <atomic>
 #include <memory>
@@ -211,7 +212,7 @@ enum class DatabaseStatus {
 std::vector<fs::path> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
-std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeDatabase(const fs::path& path, const DatabaseOptions& options);
 
 fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);

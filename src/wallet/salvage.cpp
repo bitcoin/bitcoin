@@ -74,7 +74,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     options.require_existing = true;
     options.verify = false;
     options.require_format = DatabaseFormat::BERKELEY;
-    std::unique_ptr<WalletDatabase> database = MakeDatabase(file_path, options, status, error);
+    std::unique_ptr<WalletDatabase> database = ResultExtract(MakeDatabase(file_path, options), &status, &error);
     if (!database) return false;
 
     BerkeleyDatabase& berkeley_database = static_cast<BerkeleyDatabase&>(*database);
