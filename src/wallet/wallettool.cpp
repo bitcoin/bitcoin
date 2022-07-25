@@ -175,7 +175,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 #ifdef USE_BDB
         bilingual_str error;
         std::vector<bilingual_str> warnings;
-        bool ret = RecoverDatabaseFile(args, path, error, warnings);
+        bool ret = ResultExtract(RecoverDatabaseFile(args, path), nullptr, &error, &warnings);
         if (!ret) {
             for (const auto& warning : warnings) {
                 tfm::format(std::cerr, "%s\n", warning.original);
