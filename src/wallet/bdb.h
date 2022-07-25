@@ -11,6 +11,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <util/fs.h>
+#include <util/result.h>
 #include <wallet/db.h>
 
 #include <atomic>
@@ -66,7 +67,7 @@ public:
     bool IsInitialized() const { return fDbEnvInit; }
     fs::path Directory() const { return fs::PathFromString(strPath); }
 
-    bool Open(bilingual_str& error);
+    util::Result<void> Open();
     void Close();
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
@@ -127,7 +128,7 @@ public:
     void ReloadDbEnv() override;
 
     /** Verifies the environment and database file */
-    bool Verify(bilingual_str& error);
+    util::Result<void> Verify();
 
     /** Return path to main database filename */
     std::string Filename() override { return fs::PathToString(env->Directory() / m_filename); }
@@ -215,7 +216,7 @@ std::string BerkeleyDatabaseVersion();
 bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
-std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseStatus> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_BDB_H

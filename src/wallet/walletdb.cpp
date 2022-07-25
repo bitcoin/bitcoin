@@ -1424,7 +1424,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 
 #ifdef USE_BDB
     if constexpr (true) {
-        return MakeBerkeleyDatabase(path, options, status, error);
+        return ResultExtract(MakeBerkeleyDatabase(path, options), &status, &error);
     } else
 #endif
     {
