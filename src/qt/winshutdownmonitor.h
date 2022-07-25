@@ -24,4 +24,4 @@ public:
 };
 #endif
 
-#endif // BITCOIN_QT_WINSHUTDOWNMONITOR_H
+#endif // REVOLT_QT_WINSHUTDOWNMONITOR_H
