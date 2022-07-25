@@ -165,7 +165,20 @@ public:
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
 };
 
-bool IsDeprecatedRPCEnabled(const std::string& method);
+/**
+ * Returns true if gArgs contains an argument with name "arg" and value "value", otherwise false
+ */
+bool IsArgValueProvided(const std::string& arg, const std::string& value);
+
+/**
+ * Returns true if -deprecatedrest=<endpoint> is provided as a startup option
+ */
+inline bool IsDeprecatedRESTEnabled(const std::string& endpoint) { return IsArgValueProvided("-deprecatedrest", endpoint); }
+
+/**
+ * Returns true if -deprecatedrpc=<method> is provided as a startup option
+ */
+inline bool IsDeprecatedRPCEnabled(const std::string& method) { return IsArgValueProvided("-deprecatedrpc", method); }
 
 extern CRPCTable tableRPC;
 
