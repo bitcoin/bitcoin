@@ -296,7 +296,7 @@ bool CCoinsViewErrorCatcher::GetCoin(const COutPoint &outpoint, Coin &coin) cons
     try {
         return CCoinsViewBacked::GetCoin(outpoint, coin);
     } catch(const std::runtime_error& e) {
-        for (auto f : m_err_callbacks) {
+        for (const auto& f : m_err_callbacks) {
             f();
         }
         LogPrintf("Error reading from database: %s\n", e.what());

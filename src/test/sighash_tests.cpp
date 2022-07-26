@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
     UniValue tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        UniValue test = tests[idx];
+        const UniValue& test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 1) // Allow for extra stuff (useful for comments)
         {

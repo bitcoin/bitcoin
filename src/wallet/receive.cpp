@@ -416,7 +416,7 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
 
     std::set< std::set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
     std::map< CTxDestination, std::set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
-    for (std::set<CTxDestination> _grouping : groupings)
+    for (const std::set<CTxDestination>& _grouping : groupings)
     {
         // make a set of all the groups hit by this new group
         std::set< std::set<CTxDestination>* > hits;

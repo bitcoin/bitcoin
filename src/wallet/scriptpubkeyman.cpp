@@ -1789,7 +1789,7 @@ std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
     AssertLockHeld(cs_desc_man);
     if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
         KeyMap keys;
-        for (auto key_pair : m_map_crypted_keys) {
+        for (const auto& key_pair : m_map_crypted_keys) {
             const CPubKey& pubkey = key_pair.second.first;
             const std::vector<unsigned char>& crypted_secret = key_pair.second.second;
             CKey key;
