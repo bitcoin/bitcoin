@@ -89,11 +89,11 @@ bool AddrInfo::IsTerrible(int64_t nNow) const
 double AddrInfo::GetChance(int64_t nNow) const
 {
     double fChance = 1.0;
-    int64_t nSinceLastTry = std::max<int64_t>(nNow - nLastTry, 0);
 
     // deprioritize very recent attempts away
-    if (nSinceLastTry < 60 * 10)
+    if (nNow - nLastTry < 60 * 10) {
         fChance *= 0.01;
+    }
 
     // deprioritize 66% after each failed attempt, but at most 1/28th to avoid the search taking forever or overly penalizing outages.
     fChance *= pow(0.66, std::min(nAttempts, 8));
