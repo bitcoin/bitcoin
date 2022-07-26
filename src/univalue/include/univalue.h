@@ -47,6 +47,18 @@ public:
         }
     }
 
+        explicit UniValue(const UniValue&) = default;
+    UniValue& operator=(const UniValue&) = delete;
+
+    UniValue(UniValue&&) = default;
+    UniValue& operator=(UniValue&&) = default;
+    ~UniValue() = default;
+
+    // adds an explicit copy() operation that also works even when WITH_UNIVALUE_COPY_OPERATIONS is defined as 0.
+    UniValue copy() const {
+        return UniValue{*this};
+    }
+
     void clear();
 
     void setNull();

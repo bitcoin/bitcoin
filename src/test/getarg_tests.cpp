@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(setting_args)
 
     auto set_foo = [&](const util::SettingsValue& value) {
       args.LockSettings([&](util::Settings& settings) {
-        settings.rw_settings["foo"] = value;
+        settings.rw_settings["foo"] = value.copy();
       });
     };
 

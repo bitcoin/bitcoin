@@ -130,7 +130,7 @@ static void RegisterSetJson(const std::string& key, const std::string& rawJson)
         throw std::runtime_error(strErr);
     }
 
-    registers[key] = val;
+    registers[key] = std::move(val);
 }
 
 static void RegisterSet(const std::string& strInput)

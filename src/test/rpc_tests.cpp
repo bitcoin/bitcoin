@@ -314,20 +314,20 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0 add")));
     BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.0:8334")), std::runtime_error); //portnumber for setban not allowed
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    UniValue ar = r.get_array();
-    UniValue o1 = ar[0].get_obj();
-    UniValue adr = find_value(o1, "address");
+    UniValue ar { r.get_array().copy()};
+    UniValue o1 { ar[0].get_obj().copy()};
+    UniValue adr { find_value(o1, "address").copy()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/32");
     BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
+    ar = r.get_array().copy();
     BOOST_CHECK_EQUAL(ar.size(), 0U);
 
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 9907731200 true")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
-    o1 = ar[0].get_obj();
-    adr = find_value(o1, "address");
+    ar = r.get_array().copy();
+    o1 = ar[0].get_obj().copy();
+    adr = find_value(o1, "address").copy();
     int64_t banned_until{find_value(o1, "banned_until").getInt<int64_t>()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
     BOOST_CHECK_EQUAL(banned_until, 9907731200); // absolute time check
@@ -340,9 +340,9 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     SetMockTime(now += 2s);
     const int64_t time_remaining_expected{198};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
-    o1 = ar[0].get_obj();
-    adr = find_value(o1, "address");
+    ar = r.get_array().copy();
+    o1 = ar[0].get_obj().copy();
+    adr = find_value(o1, "address").copy();
     banned_until = find_value(o1, "banned_until").getInt<int64_t>();
     const int64_t ban_created{find_value(o1, "ban_created").getInt<int64_t>()};
     const int64_t ban_duration{find_value(o1, "ban_duration").getInt<int64_t>()};
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0/24 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
+    ar = r.get_array().copy();
     BOOST_CHECK_EQUAL(ar.size(), 0U);
 
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/255.255.0.0 add")));
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
+    ar = r.get_array().copy();
     BOOST_CHECK_EQUAL(ar.size(), 0U);
 
 
@@ -374,25 +374,25 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     //IPv6 tests
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban FE80:0000:0000:0000:0202:B3FF:FE1E:8329 add")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
-    o1 = ar[0].get_obj();
-    adr = find_value(o1, "address");
+    ar = r.get_array().copy();
+    o1 = ar[0].get_obj().copy();
+    adr = find_value(o1, "address").copy();
     BOOST_CHECK_EQUAL(adr.get_str(), "fe80::202:b3ff:fe1e:8329/128");
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 2001:db8::/ffff:fffc:0:0:0:0:0:0 add")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
-    o1 = ar[0].get_obj();
-    adr = find_value(o1, "address");
+    ar = r.get_array().copy();
+    o1 = ar[0].get_obj().copy();
+    adr = find_value(o1, "address").copy();
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:db8::/30");
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128 add")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
-    ar = r.get_array();
-    o1 = ar[0].get_obj();
-    adr = find_value(o1, "address");
+    ar = r.get_array().copy();
+    o1 = ar[0].get_obj().copy();
+    adr = find_value(o1, "address").copy();
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
 }
 

@@ -150,7 +150,7 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
         if (id >= num) {
             throw std::runtime_error("Batch member id is larger than batch size");
         }
-        batch[id] = rec;
+        batch[id] = rec.copy();
     }
     return batch;
 }
@@ -163,7 +163,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     const UniValue& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
-    id = find_value(request, "id");
+    id = find_value(request, "id").copy();
 
     // Parse method
     const UniValue& valMethod{find_value(request, "method")};
@@ -179,9 +179,9 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
 
     // Parse params
-    UniValue valParams = find_value(request, "params");
+    const UniValue& valParams { find_value(request, "params")};
     if (valParams.isArray() || valParams.isObject())
-        params = valParams;
+        params = valParams.copy();
     else if (valParams.isNull())
         params = UniValue(UniValue::VARR);
     else

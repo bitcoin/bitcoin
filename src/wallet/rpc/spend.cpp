@@ -389,7 +389,7 @@ RPCHelpMan sendmany()
 
     UniValue subtractFeeFromAmount(UniValue::VARR);
     if (!request.params[4].isNull())
-        subtractFeeFromAmount = request.params[4].get_array();
+        subtractFeeFromAmount = request.params[4].get_array().copy();
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
@@ -593,7 +593,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         }
 
         if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
-            subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
+            subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array().copy();
 
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
@@ -1231,7 +1231,7 @@ RPCHelpMan send()
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
 
-            UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
+            UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4].copy()};
             InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
             PreventOutdatedOptions(options);
 
@@ -1336,7 +1336,7 @@ RPCHelpMan sendall()
             // the user could have gotten from another RPC command prior to now
             pwallet->BlockUntilSyncedToCurrentChain();
 
-            UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
+            UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4].copy()};
             InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
             PreventOutdatedOptions(options);
 
@@ -1671,7 +1671,7 @@ RPCHelpMan walletcreatefundedpsbt()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3]};
+    UniValue options{request.params[3].isNull() ? UniValue::VOBJ : request.params[3].copy()};
 
     CAmount fee;
     int change_position;

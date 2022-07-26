@@ -139,7 +139,7 @@ public:
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
-                settings.rw_settings[name] = value;
+                settings.rw_settings[name] = value.copy();
             }
         });
         gArgs.WriteSettingsFile();
@@ -150,7 +150,7 @@ public:
             if (value.isNull()) {
                 settings.forced_settings.erase(name);
             } else {
-                settings.forced_settings[name] = value;
+                settings.forced_settings[name] = value.copy();
             }
         });
     }
@@ -313,7 +313,7 @@ public:
     {
         JSONRPCRequest req;
         req.context = m_context;
-        req.params = params;
+        req.params = params.copy();
         req.strMethod = command;
         req.URI = uri;
         return ::tableRPC.execute(req);
@@ -755,7 +755,7 @@ public:
         util::SettingsValue result;
         gArgs.LockSettings([&](const util::Settings& settings) {
             if (const util::SettingsValue* value = util::FindKey(settings.rw_settings, name)) {
-                result = *value;
+                result = value->copy();
             }
         });
         return result;
@@ -766,7 +766,7 @@ public:
             if (value.isNull()) {
                 settings.rw_settings.erase(name);
             } else {
-                settings.rw_settings[name] = value;
+                settings.rw_settings[name] = value.copy();
             }
         });
         return !write || gArgs.WriteSettingsFile();

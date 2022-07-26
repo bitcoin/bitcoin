@@ -31,11 +31,11 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     if (inputs_in.isNull()) {
         inputs = UniValue::VARR;
     } else {
-        inputs = inputs_in.get_array();
+        inputs = inputs_in.get_array().copy();
     }
 
     const bool outputs_is_obj = outputs_in.isObject();
-    UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
+    UniValue outputs { outputs_is_obj ? outputs_in.get_obj().copy() : outputs_in.get_array().copy()};
 
     CMutableTransaction rawTx;
 

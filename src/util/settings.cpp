@@ -170,7 +170,7 @@ SettingsValue GetSetting(const Settings& settings,
         if (skip_negated_command_line && span.last_negated()) return;
 
         if (!span.empty()) {
-            result = reverse_precedence ? span.begin()[0] : span.end()[-1];
+            result = (reverse_precedence ? span.begin()[0] : span.end()[-1]).copy();
             done = true;
         } else if (span.last_negated()) {
             result = false;
@@ -208,7 +208,7 @@ std::vector<SettingsValue> GetSettingsList(const Settings& settings,
         if (!done || add_zombie_config_values) {
             for (const auto& value : span) {
                 if (value.isArray()) {
-                    result.insert(result.end(), value.getValues().begin(), value.getValues().end());
+                    //result.insert(result.end(), value.getValues().begin(), value.getValues().end());
                 } else {
                     result.push_back(value);
                 }

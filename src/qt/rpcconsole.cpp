@@ -240,20 +240,18 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                             if (curarg.size() && fExecute)
                             {
                                 // if we have a value query, query arrays with index and objects with a string key
-                                UniValue subelement;
                                 if (lastResult.isArray())
                                 {
                                     const auto parsed{ToIntegral<size_t>(curarg)};
                                     if (!parsed) {
                                         throw std::runtime_error("Invalid result query");
                                     }
-                                    subelement = lastResult[parsed.value()];
+                                    lastResult = lastResult[parsed.value()].copy();
                                 }
                                 else if (lastResult.isObject())
-                                    subelement = find_value(lastResult, curarg);
+                                    lastResult = find_value(lastResult, curarg).copy();
                                 else
                                     throw std::runtime_error("Invalid result query"); //no array or object: abort
-                                lastResult = subelement;
                             }
 
                             state = STATE_COMMAND_EXECUTED;

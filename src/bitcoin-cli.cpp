@@ -273,7 +273,7 @@ public:
 
     UniValue ProcessReply(const UniValue& reply) override
     {
-        if (!reply["error"].isNull()) return reply;
+        if (!reply["error"].isNull()) return reply.copy();
         const std::vector<UniValue>& nodes{reply["result"].getValues()};
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
             throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
@@ -330,10 +330,10 @@ public:
         // Errors in getnetworkinfo() and getblockchaininfo() are fatal, pass them on;
         // getwalletinfo() and getbalances() are allowed to fail if there is no wallet.
         if (!batch[ID_NETWORKINFO]["error"].isNull()) {
-            return batch[ID_NETWORKINFO];
+            return batch[ID_NETWORKINFO].copy();
         }
         if (!batch[ID_BLOCKCHAININFO]["error"].isNull()) {
-            return batch[ID_BLOCKCHAININFO];
+            return batch[ID_BLOCKCHAININFO].copy();
         }
         result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
         result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
@@ -463,8 +463,8 @@ public:
     UniValue ProcessReply(const UniValue& batch_in) override
     {
         const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
-        if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
-        if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
+        if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO].copy();
+        if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO].copy();
 
         const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
         if (networkinfo["version"].getInt<int>() < 209900) {
@@ -710,7 +710,7 @@ public:
 
     UniValue ProcessReply(const UniValue &reply) override
     {
-        return reply.get_obj();
+        return reply.get_obj().copy();
     }
 };
 
@@ -1184,7 +1184,7 @@ static int CommandLineRPC(int argc, char *argv[])
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
             // Parse reply
-            UniValue result = find_value(reply, "result");
+            UniValue result { find_value(reply, "result").copy()};
             const UniValue& error = find_value(reply, "error");
             if (error.isNull()) {
                 if (gArgs.GetBoolArg("-getinfo", false)) {

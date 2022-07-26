@@ -45,12 +45,11 @@ UniValue read_json(const std::string& jsondata)
 {
     UniValue v;
 
-    if (!v.read(jsondata) || !v.isArray())
-    {
+    if (!v.read(jsondata) || !v.isArray())     {
         BOOST_ERROR("Parse error.");
         return UniValue(UniValue::VARR);
     }
-    return v.get_array();
+    return v;
 }
 
 struct ScriptErrorDesc

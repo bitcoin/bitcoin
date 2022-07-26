@@ -403,12 +403,12 @@ bool UniValue::read(const char *raw, size_t size)
             }
 
             if (!stack.size()) {
-                *this = tmpVal;
+                *this = std::move(tmpVal);
                 break;
             }
 
             UniValue *top = stack.back();
-            top->values.push_back(tmpVal);
+            top->values.push_back(std::move(tmpVal));
 
             setExpect(NOT_VALUE);
             break;
@@ -417,12 +417,12 @@ bool UniValue::read(const char *raw, size_t size)
         case JTOK_NUMBER: {
             UniValue tmpVal(VNUM, tokenVal);
             if (!stack.size()) {
-                *this = tmpVal;
+                *this = std::move(tmpVal);
                 break;
             }
 
             UniValue *top = stack.back();
-            top->values.push_back(tmpVal);
+            top->values.push_back(std::move(tmpVal));
 
             setExpect(NOT_VALUE);
             break;
@@ -437,11 +437,11 @@ bool UniValue::read(const char *raw, size_t size)
             } else {
                 UniValue tmpVal(VSTR, tokenVal);
                 if (!stack.size()) {
-                    *this = tmpVal;
+                    *this = std::move(tmpVal);
                     break;
                 }
                 UniValue *top = stack.back();
-                top->values.push_back(tmpVal);
+                top->values.push_back(std::move(tmpVal));
             }
 
             setExpect(NOT_VALUE);

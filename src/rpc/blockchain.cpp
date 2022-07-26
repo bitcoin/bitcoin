@@ -191,12 +191,12 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
                 const CTxUndo* txundo = (have_undo && i > 0) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
                 UniValue objTx(UniValue::VOBJ);
                 TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, RPCSerializationFlags(), txundo, verbosity);
-                txs.push_back(objTx);
+                txs.push_back(std::move(objTx));
             }
             break;
     }
 
-    result.pushKV("tx", txs);
+    result.pushKV("tx", std::move(txs));
 
     return result;
 }
@@ -1005,9 +1005,9 @@ static RPCHelpMan gettxoutsetinfo()
             unspendables.pushKV("bip30", ValueFromAmount(stats.total_unspendables_bip30 - prev_stats.total_unspendables_bip30));
             unspendables.pushKV("scripts", ValueFromAmount(stats.total_unspendables_scripts - prev_stats.total_unspendables_scripts));
             unspendables.pushKV("unclaimed_rewards", ValueFromAmount(stats.total_unspendables_unclaimed_rewards - prev_stats.total_unspendables_unclaimed_rewards));
-            block_info.pushKV("unspendables", unspendables);
+            block_info.pushKV("unspendables", std::move(unspendables));
 
-            ret.pushKV("block_info", block_info);
+            ret.pushKV("block_info", std::move(block_info));
         }
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
@@ -1091,7 +1091,7 @@ static RPCHelpMan gettxout()
     ret.pushKV("value", ValueFromAmount(coin.out.nValue));
     UniValue o(UniValue::VOBJ);
     ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
-    ret.pushKV("scriptPubKey", o);
+    ret.pushKV("scriptPubKey", std::move(o));
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
 
     return ret;
@@ -1141,7 +1141,7 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
     // one below the activation height
     rv.pushKV("active", DeploymentActiveAfter(blockindex, chainman, dep));
     rv.pushKV("height", chainman.GetConsensus().DeploymentHeight(dep));
-    softforks.pushKV(DeploymentName(dep), rv);
+    softforks.pushKV(DeploymentName(dep), std::move(rv));
 }
 
 static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softforks, const ChainstateManager& chainman, Consensus::DeploymentPos id)
@@ -1194,7 +1194,7 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
             statsUV.pushKV("threshold", statsStruct.threshold);
             statsUV.pushKV("possible", statsStruct.possible);
         }
-        bip9.pushKV("statistics", statsUV);
+        bip9.pushKV("statistics", std::move(statsUV));
 
         std::string sig;
         sig.reserve(signals.size());
@@ -1210,9 +1210,9 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
         rv.pushKV("height", chainman.m_versionbitscache.StateSinceHeight(blockindex, chainman.GetConsensus(), id));
     }
     rv.pushKV("active", ThresholdState::ACTIVE == next_state);
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("bip9", std::move(bip9));
 
-    softforks.pushKV(DeploymentName(id), rv);
+    softforks.pushKV(DeploymentName(id), std::move(rv));
 }
 
 // used by rest.cpp:rest_chaininfo, so cannot be static
@@ -1472,7 +1472,7 @@ static RPCHelpMan getchaintips()
         }
         obj.pushKV("status", status);
 
-        res.push_back(obj);
+        res.push_back(std::move(obj));
     }
 
     return res;
@@ -1952,7 +1952,7 @@ static RPCHelpMan getblockstats()
     ret_all.pushKV("avgfeerate", total_weight ? (totalfee * WITNESS_SCALE_FACTOR) / total_weight : 0); // Unit: sat/vbyte
     ret_all.pushKV("avgtxsize", (block.vtx.size() > 1) ? total_size / (block.vtx.size() - 1) : 0);
     ret_all.pushKV("blockhash", pindex.GetBlockHash().GetHex());
-    ret_all.pushKV("feerate_percentiles", feerates_res);
+    ret_all.pushKV("feerate_percentiles", std::move(feerates_res));
     ret_all.pushKV("height", (int64_t)pindex.nHeight);
     ret_all.pushKV("ins", inputs);
     ret_all.pushKV("maxfee", maxfee);
@@ -1990,7 +1990,7 @@ static RPCHelpMan getblockstats()
         if (value.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid selected statistic '%s'", stat));
         }
-        ret.pushKV(stat, value);
+        //ret.pushKV(stat, std::move(value));
     }
     return ret;
 },
@@ -2231,9 +2231,9 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("coinbase", coin.IsCoinBase());
             unspent.pushKV("height", (int32_t)coin.nHeight);
 
-            unspents.push_back(unspent);
+            unspents.push_back(std::move(unspent));
         }
-        result.pushKV("unspents", unspents);
+        result.pushKV("unspents", std::move(unspents));
         result.pushKV("total_amount", ValueFromAmount(total_in));
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));
@@ -2344,7 +2344,7 @@ static RPCHelpMan scanblocks()
         BlockFiltersScanReserver reserver;
         if (reserver.reserve()) {
             // no scan in progress
-            return NullUniValue;
+            return UniValue::VNULL;
         }
         ret.pushKV("progress", g_scanfilter_progress.load());
         ret.pushKV("current_height", g_scanfilter_progress_height.load());
@@ -2473,7 +2473,7 @@ static RPCHelpMan scanblocks()
         }
         ret.pushKV("from_height", start_block->nHeight);
         ret.pushKV("to_height", g_scanfilter_progress_height.load());
-        ret.pushKV("relevant_blocks", blocks);
+        ret.pushKV("relevant_blocks", std::move(blocks));
     }
     else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));

@@ -61,10 +61,10 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     })");
 
     std::map<std::string, util::SettingsValue> expected{
-        {"string", "string"},
-        {"num", 5},
-        {"bool", true},
-        {"null", {}},
+        {"string", UniValue{"string"}},
+        {"num", UniValue{5}},
+        {"bool", UniValue{true}},
+        {"null", UniValue{}},
     };
 
     // Check file read.
