@@ -124,7 +124,7 @@ RPCHelpMan importprivkey()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
@@ -192,7 +192,7 @@ RPCHelpMan importprivkey()
         RescanWallet(*pwallet, reserver);
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -229,7 +229,7 @@ RPCHelpMan importaddress()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
@@ -299,7 +299,7 @@ RPCHelpMan importaddress()
         }
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -317,7 +317,7 @@ RPCHelpMan importprunedfunds()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[0].get_str())) {
@@ -351,7 +351,7 @@ RPCHelpMan importprunedfunds()
     CTransactionRef tx_ref = MakeTransactionRef(tx);
     if (pwallet->IsMine(*tx_ref)) {
         pwallet->AddToWallet(std::move(tx_ref), TxStateConfirmed{merkleBlock.header.GetHash(), height, static_cast<int>(txnIndex)});
-        return NullUniValue;
+        return UniValue::VNULL;
     }
 
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No addresses in wallet correspond to included transaction");
@@ -375,7 +375,7 @@ RPCHelpMan removeprunedfunds()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     LOCK(pwallet->cs_wallet);
 
@@ -392,7 +392,7 @@ RPCHelpMan removeprunedfunds()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction does not exist in wallet.");
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -424,7 +424,7 @@ RPCHelpMan importpubkey()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
@@ -479,7 +479,7 @@ RPCHelpMan importpubkey()
         }
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -505,7 +505,7 @@ RPCHelpMan importwallet()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
 
@@ -636,7 +636,7 @@ RPCHelpMan importwallet()
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -660,7 +660,7 @@ RPCHelpMan dumpprivkey()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     const LegacyScriptPubKeyMan& spk_man = EnsureConstLegacyScriptPubKeyMan(*pwallet);
 
@@ -710,7 +710,7 @@ RPCHelpMan dumpwallet()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     const CWallet& wallet = *pwallet;
     const LegacyScriptPubKeyMan& spk_man = EnsureConstLegacyScriptPubKeyMan(wallet);
@@ -1327,7 +1327,7 @@ RPCHelpMan importmulti()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& mainRequest) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(mainRequest);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
 
     // Make sure the results are valid at least up to the most recent block
@@ -1635,7 +1635,7 @@ RPCHelpMan importdescriptors()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& main_request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(main_request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
 
     // Make sure the results are valid at least up to the most recent block
@@ -1770,7 +1770,7 @@ RPCHelpMan listdescriptors()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
+    if (!wallet) return UniValue::VNULL;
 
     if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "listdescriptors is not available for non-descriptor wallets");
@@ -1839,7 +1839,7 @@ RPCHelpMan backupwallet()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -1852,7 +1852,7 @@ RPCHelpMan backupwallet()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }

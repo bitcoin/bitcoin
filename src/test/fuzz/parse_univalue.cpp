@@ -26,7 +26,7 @@ FUZZ_TARGET_INIT(parse_univalue, initialize_parse_univalue)
             return ParseNonRFCJSONValue(random_string);
         } catch (const std::runtime_error&) {
             valid = false;
-            return NullUniValue;
+            return UniValue{};
         }
     }();
     if (!valid) {

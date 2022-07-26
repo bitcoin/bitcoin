@@ -260,7 +260,7 @@ RPCHelpMan sendtoaddress()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -366,7 +366,7 @@ RPCHelpMan sendmany()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -421,7 +421,7 @@ RPCHelpMan settxfee()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     LOCK(pwallet->cs_wallet);
 
@@ -806,7 +806,7 @@ RPCHelpMan fundrawtransaction()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType(), UniValue::VBOOL});
 
@@ -896,7 +896,7 @@ RPCHelpMan signrawtransactionwithwallet()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR, UniValue::VSTR}, true);
 
@@ -993,7 +993,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         [want_psbt](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
         throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
@@ -1212,7 +1212,7 @@ RPCHelpMan send()
             );
 
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-            if (!pwallet) return NullUniValue;
+            if (!pwallet) return UniValue::VNULL;
 
             UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
             InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
@@ -1320,7 +1320,7 @@ RPCHelpMan sendall()
             );
 
             std::shared_ptr<CWallet> const pwallet{GetWalletForJSONRPCRequest(request)};
-            if (!pwallet) return NullUniValue;
+            if (!pwallet) return UniValue::VNULL;
             // Make sure the results are valid at least up to the most recent block
             // the user could have gotten from another RPC command prior to now
             pwallet->BlockUntilSyncedToCurrentChain();
@@ -1498,7 +1498,7 @@ RPCHelpMan walletprocesspsbt()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     const CWallet& wallet{*pwallet};
     // Make sure the results are valid at least up to the most recent block
@@ -1625,7 +1625,7 @@ RPCHelpMan walletcreatefundedpsbt()
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
+    if (!pwallet) return UniValue::VNULL;
 
     CWallet& wallet{*pwallet};
     // Make sure the results are valid at least up to the most recent block
