@@ -1368,7 +1368,7 @@ void AddBoundaryInputs(const InternalKeyComparator& icmp,
         FindSmallestBoundaryFile(icmp, level_files, largest_key);
 
     // If a boundary file was found advance largest_key, otherwise we're done.
-    if (smallest_boundary_file != NULL) {
+    if (smallest_boundary_file != nullptr) {
       compaction_files->push_back(smallest_boundary_file);
       largest_key = smallest_boundary_file->largest;
     } else {
