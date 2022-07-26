@@ -6,18 +6,28 @@
 #ifndef SYSCOIN_PRIMITIVES_TRANSACTION_H
 #define SYSCOIN_PRIMITIVES_TRANSACTION_H
 
-#include <stdint.h>
 #include <consensus/amount.h>
+#include <prevector.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <prevector.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <ios>
+#include <limits>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+#include <tuple>
+#include <consensus/consensus.h>
 // SYSCOIN
 class TxValidationState;
 class CHashWriter;
 class UniValue;
-#include <tuple>
-#include <consensus/consensus.h>
+
 /**
  * This saves us from making many heap allocations when serializing
  * and deserializing compressed scripts.
@@ -615,7 +625,7 @@ private:
 public:
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
-    CTransaction(CMutableTransaction&& tx);
+    explicit CTransaction(CMutableTransaction&& tx);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -687,7 +697,7 @@ struct CMutableTransaction
     // SYSCOIN
     std::vector<CAssetOut> voutAssets;
 
-    CMutableTransaction();
+    explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
 
     template <typename Stream>
