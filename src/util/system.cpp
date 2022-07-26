@@ -701,7 +701,7 @@ std::string ArgsManager::GetHelpMessage() const
 {
     const bool show_debug = GetBoolArg("-help-debug", false);
 
-    std::string usage = "";
+    std::string usage;
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
         switch(arg_map.first) {

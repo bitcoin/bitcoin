@@ -243,7 +243,7 @@ static RPCHelpMan masternode_winners()
     }
 
     int nCount = 10;
-    std::string strFilter = "";
+    std::string strFilter;
 
     if (!request.params[0].isNull()) {
         nCount = LocaleIndependentAtoi<int>(request.params[0].get_str());
@@ -493,7 +493,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::string strMode = "json";
-    std::string strFilter = "";
+    std::string strFilter;
 
     if (!request.params[0].isNull()) strMode = request.params[0].get_str();
     if (!request.params[1].isNull()) strFilter = request.params[1].get_str();

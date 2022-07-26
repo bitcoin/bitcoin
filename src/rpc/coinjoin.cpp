@@ -472,7 +472,7 @@ static RPCHelpMan getcoinjoininfo()
     auto cj_clientman = CHECK_NONFATAL(node.coinjoin_loader)->GetClient(wallet->GetName());
     CHECK_NONFATAL(cj_clientman)->getJsonInfo(obj);
 
-    std::string warning_msg{""};
+    std::string warning_msg;
     if (wallet->IsLegacy()) {
         obj.pushKV("keys_left", wallet->nKeysLeftSinceAutoBackup);
         if (wallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING) {

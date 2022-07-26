@@ -148,7 +148,7 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
 
 const std::string& BlockFilterTypeName(BlockFilterType filter_type)
 {
-    static std::string unknown_retval = "";
+    static std::string unknown_retval;
     auto it = g_filter_types.find(filter_type);
     return it != g_filter_types.end() ? it->second : unknown_retval;
 }

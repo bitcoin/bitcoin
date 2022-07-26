@@ -486,7 +486,7 @@ static RPCHelpMan loadwallet()
 
 static RPCHelpMan setwalletflag()
 {
-    std::string flags = "";
+    std::string flags;
     for (auto& it : WALLET_FLAG_MAP)
         if (it.second & MUTABLE_WALLET_FLAGS)
             flags += (flags == "" ? "" : ", ") + it.first;

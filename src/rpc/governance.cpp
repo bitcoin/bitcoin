@@ -200,7 +200,7 @@ static RPCHelpMan gobject_prepare()
 
     {
         LOCK(cs_main);
-        std::string strError = "";
+        std::string strError;
         if (!govobj.IsValidLocally(CHECK_NONFATAL(node.dmnman)->GetListAtChainTip(), chainman, strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
     }
@@ -665,7 +665,7 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
         bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
-        std::string strError = "";
+        std::string strError;
         bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(tip_mn_list, chainman, strError, false));
         bObj.pushKV("IsValidReason",  strError.c_str());
         bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
@@ -812,7 +812,7 @@ static RPCHelpMan gobject_get()
     objResult.pushKV("EndorsedResult", objEndorsed);
 
     // --
-    std::string strError = "";
+    std::string strError;
     objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(tip_mn_list, chainman, strError, false));
     objResult.pushKV("IsValidReason",  strError.c_str());
     objResult.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());
