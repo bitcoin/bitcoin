@@ -113,8 +113,8 @@ class DBIter : public Iterator {
   Status status_;
   std::string saved_key_;    // == current key when direction_==kReverse
   std::string saved_value_;  // == current raw value when direction_==kReverse
-  Direction direction_;
-  bool valid_;
+  Direction direction_{kForward};
+  bool valid_{false};
   Random rnd_;
   size_t bytes_until_read_sampling_;
 };

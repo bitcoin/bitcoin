@@ -104,9 +104,9 @@ class HandleTable {
  private:
   // The table consists of an array of buckets where each bucket is
   // a linked list of cache entries that hash into the bucket.
-  uint32_t length_;
-  uint32_t elems_;
-  LRUHandle** list_;
+  uint32_t length_{0};
+  uint32_t elems_{0};
+  LRUHandle** list_{nullptr};
 
   // Return a pointer to slot that points to a cache entry that
   // matches key/hash.  If there is no such cache entry, return a
@@ -176,11 +176,11 @@ class LRUCache {
   bool FinishErase(LRUHandle* e) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Initialized before use.
-  size_t capacity_;
+  size_t capacity_{0};
 
   // mutex_ protects the following state.
   mutable port::Mutex mutex_;
-  size_t usage_ GUARDED_BY(mutex_);
+  size_t usage_{0}; GUARDED_BY(mutex_);
 
   // Dummy head of LRU list.
   // lru.prev is newest entry, lru.next is oldest entry.
@@ -339,7 +339,7 @@ class ShardedLRUCache : public Cache {
  private:
   LRUCache shard_[kNumShards];
   port::Mutex id_mutex_;
-  uint64_t last_id_;
+  uint64_t last_id_{0};
 
   static inline uint32_t HashSlice(const Slice& s) {
     return Hash(s.data(), s.size(), 0);

@@ -46,9 +46,9 @@ struct DBImpl::Writer {
       : batch(nullptr), sync(false), done(false), cv(mu) {}
 
   Status status;
-  WriteBatch* batch;
-  bool sync;
-  bool done;
+  WriteBatch* batch{nullptr};
+  bool sync{false};
+  bool done{false};
   port::CondVar cv;
 };
 
@@ -75,15 +75,15 @@ struct DBImpl::CompactionState {
   // will never have to service a snapshot below smallest_snapshot.
   // Therefore if we have seen a sequence number S <= smallest_snapshot,
   // we can drop all entries for the same key with sequence numbers < S.
-  SequenceNumber smallest_snapshot;
+  SequenceNumber smallest_snapshot{0};
 
   std::vector<Output> outputs;
 
   // State kept for output being generated
-  WritableFile* outfile;
-  TableBuilder* builder;
+  WritableFile* outfile{nullptr};
+  TableBuilder* builder{nullptr};
 
-  uint64_t total_bytes;
+  uint64_t total_bytes{0};
 };
 
 // Fix user-supplied options to be reasonable

@@ -143,11 +143,11 @@ class FileState {
   ~FileState() { Truncate(); }
 
   port::Mutex refs_mutex_;
-  int refs_ GUARDED_BY(refs_mutex_);
+  int refs_{0}; GUARDED_BY(refs_mutex_);
 
   mutable port::Mutex blocks_mutex_;
   std::vector<char*> blocks_ GUARDED_BY(blocks_mutex_);
-  uint64_t size_ GUARDED_BY(blocks_mutex_);
+  uint64_t size_{0}; GUARDED_BY(blocks_mutex_);
 };
 
 class SequentialFileImpl : public SequentialFile {
@@ -181,7 +181,7 @@ class SequentialFileImpl : public SequentialFile {
   virtual std::string GetName() const override { return "[memenv]"; }
  private:
   FileState* file_;
-  uint64_t pos_;
+  uint64_t pos_{0};
 };
 
 class RandomAccessFileImpl : public RandomAccessFile {

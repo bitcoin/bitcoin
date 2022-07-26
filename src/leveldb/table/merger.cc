@@ -141,8 +141,8 @@ class MergingIterator : public Iterator {
   const Comparator* comparator_;
   IteratorWrapper* children_;
   int n_;
-  IteratorWrapper* current_;
-  Direction direction_;
+  IteratorWrapper* current_{nullptr};
+  Direction direction_{kForward};
 };
 
 void MergingIterator::FindSmallest() {

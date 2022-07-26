@@ -438,7 +438,7 @@ class Repairer {
   std::vector<uint64_t> table_numbers_;
   std::vector<uint64_t> logs_;
   std::vector<TableInfo> tables_;
-  uint64_t next_file_number_;
+  uint64_t next_file_number_{1};
 };
 }  // namespace
 

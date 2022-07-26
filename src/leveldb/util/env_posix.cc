@@ -441,7 +441,7 @@ class PosixWritableFile final : public WritableFile {
 
   // buf_[0, pos_ - 1] contains data to be written to fd_.
   char buf_[kWritableFileBufferSize];
-  size_t pos_;
+  size_t pos_{0};
   int fd_;
 
   const bool is_manifest_;  // True if the file's name starts with MANIFEST.
@@ -752,7 +752,7 @@ class PosixEnv : public Env {
 
   port::Mutex background_work_mutex_;
   port::CondVar background_work_cv_ GUARDED_BY(background_work_mutex_);
-  bool started_background_thread_ GUARDED_BY(background_work_mutex_);
+  bool started_background_thread_{false}; GUARDED_BY(background_work_mutex_);
 
   std::queue<BackgroundWorkItem> background_work_queue_
       GUARDED_BY(background_work_mutex_);

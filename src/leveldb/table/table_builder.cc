@@ -38,13 +38,13 @@ struct TableBuilder::Rep {
   Options options;
   Options index_block_options;
   WritableFile* file;
-  uint64_t offset;
+  uint64_t offset{0};
   Status status;
   BlockBuilder data_block;
   BlockBuilder index_block;
   std::string last_key;
-  int64_t num_entries;
-  bool closed;  // Either Finish() or Abandon() has been called.
+  int64_t num_entries{0};
+  bool closed{false};  // Either Finish() or Abandon() has been called.
   FilterBlockBuilder* filter_block;
 
   // We do not emit the index entry for a block until we have seen the
@@ -56,7 +56,7 @@ struct TableBuilder::Rep {
   // blocks.
   //
   // Invariant: r->pending_index_entry is true only if data_block is empty.
-  bool pending_index_entry;
+  bool pending_index_entry{false};
   BlockHandle pending_handle;  // Handle to add to index block
 
   std::string compressed_output;
