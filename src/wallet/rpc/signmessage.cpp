@@ -36,7 +36,7 @@ RPCHelpMan signmessage()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-            if (!pwallet) return NullUniValue;
+            if (!pwallet) return UniValue::VNULL;
 
             LOCK(pwallet->cs_wallet);
 
