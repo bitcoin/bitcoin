@@ -19,6 +19,8 @@
 namespace node {
 std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
+    if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
+
     if (auto value{args.GetArg("-minimumchainwork")}) {
         if (!IsHexNumber(*value)) {
             return strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), *value);

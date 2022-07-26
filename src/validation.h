@@ -63,7 +63,6 @@ struct Params;
 static const int MAX_SCRIPTCHECK_THREADS = 15;
 /** -par default (number of script-checking threads, 0 = auto) */
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
-static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
@@ -97,7 +96,6 @@ extern uint256 g_best_block;
  */
 extern bool g_parallel_script_checks;
 extern bool fCheckBlockIndex;
-extern bool fCheckpointsEnabled;
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
