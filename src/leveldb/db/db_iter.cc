@@ -51,8 +51,6 @@ class DBIter : public Iterator {
         user_comparator_(cmp),
         iter_(iter),
         sequence_(s),
-        direction_(kForward),
-        valid_(false),
         rnd_(seed),
         bytes_until_read_sampling_(RandomCompactionPeriod()) {}
 

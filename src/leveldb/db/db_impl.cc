@@ -43,7 +43,7 @@ const int kNumNonTableCacheFiles = 10;
 // Information kept for every waiting writer
 struct DBImpl::Writer {
   explicit Writer(port::Mutex* mu)
-      : batch(nullptr), sync(false), done(false), cv(mu) {}
+      : cv(mu) {}
 
   Status status;
   WriteBatch* batch{nullptr};
@@ -63,11 +63,7 @@ struct DBImpl::CompactionState {
   Output* current_output() { return &outputs[outputs.size() - 1]; }
 
   explicit CompactionState(Compaction* c)
-      : compaction(c),
-        smallest_snapshot(0),
-        outfile(nullptr),
-        builder(nullptr),
-        total_bytes(0) {}
+      : compaction(c) {}
 
   Compaction* const compaction;
 

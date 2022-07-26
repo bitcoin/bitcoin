@@ -68,7 +68,7 @@ struct LRUHandle {
 // 4.4.3's builtin hashtable.
 class HandleTable {
  public:
-  HandleTable() : length_(0), elems_(0), list_(nullptr) { Resize(); }
+  HandleTable() { Resize(); }
   ~HandleTable() { delete[] list_; }
 
   LRUHandle* Lookup(const Slice& key, uint32_t hash) {
@@ -194,7 +194,7 @@ class LRUCache {
   HandleTable table_ GUARDED_BY(mutex_);
 };
 
-LRUCache::LRUCache() : capacity_(0), usage_(0) {
+LRUCache::LRUCache() {
   // Make empty circular linked lists.
   lru_.next = &lru_;
   lru_.prev = &lru_;
@@ -348,7 +348,7 @@ class ShardedLRUCache : public Cache {
   static uint32_t Shard(uint32_t hash) { return hash >> (32 - kNumShardBits); }
 
  public:
-  explicit ShardedLRUCache(size_t capacity) : last_id_(0) {
+  explicit ShardedLRUCache(size_t capacity) {
     const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;
     for (int s = 0; s < kNumShards; s++) {
       shard_[s].SetCapacity(per_shard);

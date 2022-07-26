@@ -23,15 +23,11 @@ struct TableBuilder::Rep {
       : options(opt),
         index_block_options(opt),
         file(f),
-        offset(0),
         data_block(&options),
         index_block(&index_block_options),
-        num_entries(0),
-        closed(false),
         filter_block(opt.filter_policy == nullptr
                          ? nullptr
-                         : new FilterBlockBuilder(opt.filter_policy)),
-        pending_index_entry(false) {
+                         : new FilterBlockBuilder(opt.filter_policy)) {
     index_block_options.block_restart_interval = 1;
   }
 

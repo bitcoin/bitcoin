@@ -16,9 +16,7 @@ class MergingIterator : public Iterator {
   MergingIterator(const Comparator* comparator, Iterator** children, int n)
       : comparator_(comparator),
         children_(new IteratorWrapper[n]),
-        n_(n),
-        current_(nullptr),
-        direction_(kForward) {
+        n_(n) {
     for (int i = 0; i < n; i++) {
       children_[i].Set(children[i]);
     }

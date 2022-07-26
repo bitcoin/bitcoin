@@ -255,8 +255,7 @@ class PosixMmapReadableFile final : public RandomAccessFile {
 class PosixWritableFile final : public WritableFile {
  public:
   PosixWritableFile(std::string filename, int fd)
-      : pos_(0),
-        fd_(fd),
+      : fd_(fd),
         is_manifest_(IsManifest(filename)),
         filename_(std::move(filename)),
         dirname_(Dirname(filename_)) {}
@@ -787,7 +786,6 @@ int MaxOpenFiles() {
 
 PosixEnv::PosixEnv()
     : background_work_cv_(&background_work_mutex_),
-      started_background_thread_(false),
       mmap_limiter_(MaxMmaps()),
       fd_limiter_(MaxOpenFiles()) {}
 
