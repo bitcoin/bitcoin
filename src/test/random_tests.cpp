@@ -53,6 +53,16 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     BOOST_CHECK_EQUAL(ctx1.randbits(3), ctx2.randbits(3));
     BOOST_CHECK(ctx1.rand256() == ctx2.rand256());
     BOOST_CHECK(ctx1.randbytes(50) == ctx2.randbytes(50));
+    {
+        struct MicroClock {
+            using duration = std::chrono::microseconds;
+        };
+        FastRandomContext ctx{true};
+        // Check with clock type
+        BOOST_CHECK_EQUAL(47222, ctx.rand_uniform_duration<MicroClock>(1s).count());
+        // Check with time-point type
+        BOOST_CHECK_EQUAL(2782, ctx.rand_uniform_duration<SteadySeconds>(9h).count());
+    }
 
     // Check that a nondeterministic ones are not
     g_mock_deterministic_tests = false;
