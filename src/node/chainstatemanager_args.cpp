@@ -19,6 +19,8 @@
 namespace node {
 std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
+    if (auto value{args.GetBoolArg("-checkblockindex")}) opts.check_block_index = *value;
+
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
 
     if (auto value{args.GetArg("-minimumchainwork")}) {
