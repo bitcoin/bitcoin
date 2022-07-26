@@ -32,6 +32,22 @@ class CDKGSessionManager;
 // If true, we will connect to all new quorums and watch their communication
 static constexpr bool DEFAULT_WATCH_QUORUMS{false};
 
+/**
+ * Object used as a key to store CQuorumDataRequest
+ */
+struct CQuorumDataRequestKey
+{
+    uint256 proRegTx;
+    //TODO: Investigate purpose of this flag and rename accordingly
+    bool flag;
+    uint256 quorumHash;
+    Consensus::LLMQType llmqType;
+
+    bool operator ==(const CQuorumDataRequestKey& obj) const
+    {
+        return (proRegTx == obj.proRegTx && flag == obj.flag && quorumHash == obj.quorumHash && llmqType == obj.llmqType);
+    }
+};
 
 /**
  * An object of this class represents a QGETDATA request or a QDATA response header
@@ -242,6 +258,21 @@ private:
 extern CQuorumManager* quorumManager;
 
 } // namespace llmq
+
+template<typename T> struct SaltedHasherImpl;
+template<>
+struct SaltedHasherImpl<llmq::CQuorumDataRequestKey>
+{
+    static std::size_t CalcHash(const llmq::CQuorumDataRequestKey& v, uint64_t k0, uint64_t k1)
+    {
+        CSipHasher c(k0, k1);
+        c.Write((unsigned char*)&(v.proRegTx), sizeof(v.proRegTx));
+        c.Write((unsigned char*)&(v.flag), sizeof(v.flag));
+        c.Write((unsigned char*)&(v.quorumHash), sizeof(v.quorumHash));
+        c.Write((unsigned char*)&(v.llmqType), sizeof(v.llmqType));
+        return c.Finalize();
+    }
+};
 
 template<> struct is_serializable_enum<llmq::CQuorumDataRequest::Errors> : std::true_type {};
 
