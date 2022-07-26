@@ -779,7 +779,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     promise.set_value();
     SyncWithValidationInterfaceQueue();
     // AddToWallet events for block_tx and mempool_tx events are counted a
-    // second time as the notificaiton queue is processed
+    // second time as the notification queue is processed
     BOOST_CHECK_EQUAL(addtx_count, 4);
 
 
