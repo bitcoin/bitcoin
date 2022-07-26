@@ -135,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetlock, TestChain100Setup)
     CKey key;
     key.MakeNewKey(true);
 
-    const CTransaction tx = CreateAssetLockTx(keystore, coins, key);
+    const CTransaction tx{CreateAssetLockTx(keystore, coins, key)};
     std::string reason;
     BOOST_CHECK(IsStandardTx(CTransaction(tx), reason));
 
@@ -304,7 +304,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
     CKey key;
     key.MakeNewKey(true);
 
-    const CTransaction tx = CreateAssetUnlockTx(keystore, key);
+    const CTransaction tx{CreateAssetUnlockTx(keystore, key)};
     std::string reason;
     BOOST_CHECK(IsStandardTx(CTransaction(tx), reason));
 
