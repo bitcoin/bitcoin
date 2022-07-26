@@ -178,6 +178,7 @@ BITCOIN_CORE_H = \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
+  kernel/txdb_options.h \
   kernel/validation_cache_sizes.h \
   key.h \
   key_io.h \
@@ -208,6 +209,7 @@ BITCOIN_CORE_H = \
   node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
+  node/txdb_args.h \
   node/utxo_snapshot.h \
   node/validation_cache_args.h \
   noui.h \
@@ -393,6 +395,7 @@ libbitcoin_node_a_SOURCES = \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
+  node/txdb_args.cpp \
   node/validation_cache_args.cpp \
   noui.cpp \
   policy/fees.cpp \

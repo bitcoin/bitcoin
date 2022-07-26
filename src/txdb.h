@@ -6,6 +6,8 @@
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
+#include <kernel/txdb_options.h>
+
 #include <coins.h>
 #include <dbwrapper.h>
 #include <sync.h>
@@ -78,6 +80,8 @@ public:
 class CBlockTreeDB : public CDBWrapper
 {
 public:
+    using Options = kernel::BlockTreeDBOpts;
+
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
