@@ -9,15 +9,31 @@ Warn in case of spelling errors.
 Note: Will exit successfully regardless of spelling errors.
 """
 
-from subprocess import check_output, STDOUT, CalledProcessError
+import subprocess
 
 IGNORE_WORDS_FILE = 'test/lint/spelling.ignore-words.txt'
-FILES_ARGS = ['git', 'ls-files', '--', ":(exclude)build-aux/m4/", ":(exclude)contrib/seeds/*.txt", ":(exclude)depends/", ":(exclude)doc/release-notes/", ":(exclude)src/leveldb/", ":(exclude)src/crc32c/", ":(exclude)src/qt/locale/", ":(exclude)src/qt/*.qrc", ":(exclude)src/secp256k1/", ":(exclude)src/minisketch/", ":(exclude)contrib/builder-keys/keys.txt", ":(exclude)contrib/guix/patches"]
+FILES_ARGS = [
+    'git',
+    'ls-files',
+    '--',
+    ":(exclude)build-aux/m4/",
+    ":(exclude)contrib/seeds/*.txt",
+    ":(exclude)depends/",
+    ":(exclude)doc/release-notes/",
+    ":(exclude)src/leveldb/",
+    ":(exclude)src/crc32c/",
+    ":(exclude)src/qt/locale/",
+    ":(exclude)src/qt/*.qrc",
+    ":(exclude)src/secp256k1/",
+    ":(exclude)src/minisketch/",
+    ":(exclude)contrib/builder-keys/keys.txt",
+    ":(exclude)contrib/guix/patches",
+]
 
 
 def check_codespell_install():
     try:
-        check_output(["codespell", "--version"])
+        subprocess.check_output(["codespell", "--version"])
     except FileNotFoundError:
         print("Skipping spell check linting since codespell is not installed.")
         exit(0)
@@ -26,14 +42,14 @@ def check_codespell_install():
 def main():
     check_codespell_install()
 
-    files = check_output(FILES_ARGS).decode("utf-8").splitlines()
-    codespell_args = ['codespell', '--check-filenames', '--disable-colors', '--quiet-level=7', '--ignore-words={}'.format(IGNORE_WORDS_FILE)] + files
+    files = subprocess.check_output(FILES_ARGS).decode("utf-8").splitlines()
+    codespell_args = ['codespell', '--check-filenames', '--disable-colors', '--quiet-level=7', f'--ignore-words={IGNORE_WORDS_FILE}'] + files
 
     try:
-        check_output(codespell_args, stderr=STDOUT)
-    except CalledProcessError as e:
-        print(e.output.decode("utf-8"), end="")
-        print('^ Warning: codespell identified likely spelling errors. Any false positives? Add them to the list of ignored words in {}'.format(IGNORE_WORDS_FILE))
+        subprocess.check_call(codespell_args)
+    except subprocess.CalledProcessError:
+        print(f'^ Error: codespell identified likely spelling errors. Any false positives? Add them to the list of ignored words in {IGNORE_WORDS_FILE}')
+        exit(1)
 
 
 if __name__ == "__main__":
