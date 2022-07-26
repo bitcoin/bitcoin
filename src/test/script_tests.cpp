@@ -1514,8 +1514,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
     CScriptWitness wit;
 
     scriptPubKey << OP_1;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1537,8 +1537,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_index_err)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1560,8 +1560,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_size)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1583,8 +1583,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_serialization)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << 0xffffffff;
@@ -1606,8 +1606,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_amount_required_err)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1629,8 +1629,8 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey, 1)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, wit, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
