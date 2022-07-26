@@ -20,6 +20,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
+#include <node/chainstatemanager_args.h>
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
@@ -190,12 +191,18 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    const ChainstateManager::Options chainman_opts{
+    ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .adjusted_time_callback = GetAdjustedTime,
+        .block_tree_db_opts = {
+            .cache_size = static_cast<size_t>(m_cache_sizes.block_tree_db),
+            .in_memory = true,
+        },
+        .data_dir = m_args.GetDataDirNet(),
     };
+    ApplyArgsManOptions(m_args, chainman_opts);
+
     m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -228,7 +235,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     node::ChainstateLoadOptions options;
     options.mempool = Assert(m_node.mempool.get());
-    options.block_tree_db_in_memory = true;
     options.coins_db_in_memory = true;
     options.reindex = node::fReindex;
     options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);

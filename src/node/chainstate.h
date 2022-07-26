@@ -20,7 +20,6 @@ struct CacheSizes;
 
 struct ChainstateLoadOptions {
     CTxMemPool* mempool{nullptr};
-    bool block_tree_db_in_memory{false};
     bool coins_db_in_memory{false};
     bool reindex{false};
     bool reindex_chainstate{false};

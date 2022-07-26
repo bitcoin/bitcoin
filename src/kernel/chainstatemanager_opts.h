@@ -23,6 +23,7 @@ struct ChainstateManagerOpts {
     const CChainParams& chainparams;
     const std::function<int64_t()> adjusted_time_callback{nullptr};
     BlockTreeDBOpts block_tree_db_opts;
+    const fs::path& data_dir;
 };
 
 } // namespace kernel

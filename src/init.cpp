@@ -40,11 +40,13 @@
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
+#include <node/chainstatemanager_args.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
+#include <node/txdb_args.h>
 #include <node/validation_cache_args.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -117,8 +119,8 @@ using node::DEFAULT_PRINTPRIORITY;
 using node::DEFAULT_STOPAFTERBLOCKIMPORT;
 using node::LoadChainstate;
 using node::MempoolPath;
-using node::ShouldPersistMempool;
 using node::NodeContext;
+using node::ShouldPersistMempool;
 using node::ThreadImport;
 using node::VerifyLoadedChainstate;
 using node::fPruneMode;
@@ -1400,16 +1402,22 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (bool fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts);
 
-        const ChainstateManager::Options chainman_opts{
+        const bool do_reindex = fReindex;
+
+        ChainstateManager::Options chainman_opts{
             .chainparams = chainparams,
             .adjusted_time_callback = GetAdjustedTime,
+            .block_tree_db_opts = {
+                .cache_size = static_cast<size_t>(cache_sizes.block_tree_db),
+                .wipe_existing = do_reindex,
+            },
+            .data_dir = gArgs.GetDataDirNet(),
         };
-        node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
-        ChainstateManager& chainman = *node.chainman;
+        ApplyArgsManOptions(args, chainman_opts);
 
         node::ChainstateLoadOptions options;
         options.mempool = Assert(node.mempool.get());
-        options.reindex = node::fReindex;
+        options.reindex = do_reindex;
         options.reindex_chainstate = fReindexChainState;
         options.prune = node::fPruneMode;
         options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -1431,8 +1439,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
             }
         };
-        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
+        auto [status, error] = catch_exceptions([&] {
+            node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
+            return LoadChainstate(*Assert(node.chainman), cache_sizes, options);
+        });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
+            ChainstateManager& chainman = *Assert(node.chainman);
             uiInterface.InitMessage(_("Verifying blocks…").translated);
             if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
                 LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",

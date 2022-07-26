@@ -80,16 +80,21 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    const ChainstateManager::Options chainman_opts{
-        .chainparams = chainparams,
-        .adjusted_time_callback = static_cast<int64_t (*)()>(GetTime),
-    };
-    ChainstateManager chainman{chainman_opts};
-
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
     cache_sizes.coins_db = 2 << 22;
     cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
+
+    const ChainstateManager::Options chainman_opts{
+        .chainparams = chainparams,
+        .adjusted_time_callback = static_cast<int64_t (*)()>(GetTime),
+        .block_tree_db_opts = {
+            .cache_size = static_cast<size_t>(cache_sizes.block_tree_db),
+        },
+        .data_dir = abs_datadir,
+    };
+    ChainstateManager chainman{chainman_opts};
+
     node::ChainstateLoadOptions options;
     options.check_interrupt = [] { return false; };
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);

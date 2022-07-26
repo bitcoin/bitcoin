@@ -859,11 +859,22 @@ private:
     friend CChainState;
 
 public:
+    const fs::path& m_data_dir;
+
     using Options = kernel::ChainstateManagerOpts;
 
     explicit ChainstateManager(const Options& opts)
         : m_chainparams{opts.chainparams},
-          m_adjusted_time_callback{Assert(opts.adjusted_time_callback)} {};
+          m_adjusted_time_callback{Assert(opts.adjusted_time_callback)},
+          m_data_dir{opts.data_dir},
+          m_blockman{
+              [&data_dir = opts.data_dir](CBlockTreeDB::Options db_opts) {
+                  if (db_opts.db_path.empty()) {
+                      db_opts.db_path = data_dir / "blocks" / "index";
+                  }
+                  return db_opts;
+              }(opts.block_tree_db_opts)
+          } {};
 
     const CChainParams& GetParams() const { return m_chainparams; }
     const Consensus::Params& GetConsensus() const { return m_chainparams.GetConsensus(); }

@@ -58,6 +58,9 @@ static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
+BlockManager::BlockManager(const CBlockTreeDB::Options& block_tree_db_opts)
+    : m_block_tree_db{new CBlockTreeDB{block_tree_db_opts}} {}
+
 std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 {
     AssertLockHeld(cs_main);
