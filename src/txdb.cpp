@@ -17,8 +17,6 @@
 
 #include <stdint.h>
 
-using kernel::nDefaultDbBatchSize;
-
 static constexpr uint8_t DB_COIN{'C'};
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
 static constexpr uint8_t DB_BLOCK_INDEX{'b'};
@@ -73,21 +71,28 @@ struct CoinEntry {
 
 } // namespace
 
-CCoinsViewDB::CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe) :
-    m_db(std::make_unique<CDBWrapper>(ldb_path, nCacheSize, fMemory, fWipe, true)),
-    m_ldb_path(ldb_path),
-    m_is_memory(fMemory) { }
+CCoinsViewDB::CCoinsViewDB(const Options& opts)
+    : m_db{new CDBWrapper{opts.ToDBWrapperOptions()}},
+      m_opts{opts}
+{
+    // Reset one-shot options that should not be supplied to CDBWrapper again if
+    // we call ResizeCache
+    m_opts.wipe_existing = false;
+    m_opts.do_compact = false;
+}
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
     // We can't do this operation with an in-memory DB since we'll lose all the coins upon
     // reset.
-    if (!m_is_memory) {
+    if (!m_opts.in_memory) {
         // Have to do a reset first to get the original `m_db` state to release its
         // filesystem lock.
         m_db.reset();
-        m_db = std::make_unique<CDBWrapper>(
-            m_ldb_path, new_cache_size, m_is_memory, /*fWipe=*/false, /*obfuscate=*/true);
+
+        m_opts.cache_size = new_cache_size;
+
+        m_db = std::make_unique<CDBWrapper>(m_opts.ToDBWrapperOptions());
     }
 }
 
@@ -118,8 +123,8 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     CDBBatch batch(*m_db);
     size_t count = 0;
     size_t changed = 0;
-    size_t batch_size = (size_t)gArgs.GetIntArg("-dbbatchsize", nDefaultDbBatchSize);
-    int crash_simulate = gArgs.GetIntArg("-dbcrashratio", 0);
+    size_t batch_size = m_opts.batch_write_size;
+    int crash_simulate = m_opts.simulate_write_crash_ratio;
     assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();

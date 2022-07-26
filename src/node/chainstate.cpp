@@ -35,7 +35,6 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     LOCK(cs_main);
     chainman.InitializeChainstate(options.mempool);
     chainman.m_total_coinstip_cache = cache_sizes.coins;
-    chainman.m_total_coinsdb_cache = cache_sizes.coins_db;
 
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
 
@@ -83,11 +82,6 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // block tree into BlockIndex()!
 
     for (CChainState* chainstate : chainman.GetAll()) {
-        chainstate->InitCoinsDB(
-            /*cache_size_bytes=*/cache_sizes.coins_db,
-            /*in_memory=*/options.coins_db_in_memory,
-            /*should_wipe=*/options.reindex || options.reindex_chainstate);
-
         if (options.coins_error_cb) {
             chainstate->CoinsErrorCatcher().AddReadErrCallback(options.coins_error_cb);
         }

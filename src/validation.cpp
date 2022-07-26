@@ -26,6 +26,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/interface_ui.h>
+#include <node/txdb_args.h>
 #include <node/utxo_snapshot.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -1484,13 +1485,9 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
-CoinsViews::CoinsViews(
-    fs::path ldb_name,
-    size_t cache_size_bytes,
-    bool in_memory,
-    bool should_wipe) : m_dbview(
-                            gArgs.GetDataDirNet() / ldb_name, cache_size_bytes, in_memory, should_wipe),
-                        m_catcherview(&m_dbview) {}
+CoinsViews::CoinsViews(const CCoinsViewDB::Options& opts)
+    : m_dbview{opts},
+      m_catcherview{&m_dbview} {}
 
 void CoinsViews::InitCache()
 {
@@ -1502,26 +1499,23 @@ CChainState::CChainState(
     CTxMemPool* mempool,
     BlockManager& blockman,
     ChainstateManager& chainman,
+    const CCoinsViewDB::Options& opts,
     std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
+      m_coins_views{new CoinsViews{[&](CCoinsViewDB::Options opts) { // Make a non-const copy of opts
+          if (opts.db_path.empty()) {
+              std::string ldb_name{"chainstate"};
+              if (from_snapshot_blockhash) {
+                  ldb_name += "_" + from_snapshot_blockhash->ToString();
+              }
+              opts.db_path = chainman.m_data_dir / fs::PathFromString(ldb_name);
+          }
+          return opts;
+      }(opts)}},
       m_blockman(blockman),
       m_params(chainman.GetParams()),
       m_chainman(chainman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
-
-void CChainState::InitCoinsDB(
-    size_t cache_size_bytes,
-    bool in_memory,
-    bool should_wipe,
-    fs::path leveldb_name)
-{
-    if (m_from_snapshot_blockhash) {
-        leveldb_name += "_" + m_from_snapshot_blockhash->ToString();
-    }
-
-    m_coins_views = std::make_unique<CoinsViews>(
-        leveldb_name, cache_size_bytes, in_memory, should_wipe);
-}
 
 void CChainState::InitCoinsCache(size_t cache_size_bytes)
 {
@@ -4709,7 +4703,7 @@ CChainState& ChainstateManager::InitializeChainstate(
     if (to_modify) {
         throw std::logic_error("should not be overwriting a chainstate");
     }
-    to_modify.reset(new CChainState(mempool, m_blockman, *this, snapshot_blockhash));
+    to_modify.reset(new CChainState{mempool, m_blockman, *this, m_coins_view_db_opts, snapshot_blockhash});
 
     // Snapshot chainstates and initial IBD chaintates always become active.
     if (is_snapshot || (!is_snapshot && !m_active_chainstate)) {
@@ -4736,8 +4730,7 @@ const AssumeutxoData* ExpectedAssumeutxo(
 
 bool ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
-        const SnapshotMetadata& metadata,
-        bool in_memory)
+        const SnapshotMetadata& metadata)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
 
@@ -4778,15 +4771,15 @@ bool ChainstateManager::ActivateSnapshot(
             static_cast<size_t>(current_coinsdb_cache_size * IBD_CACHE_PERC));
     }
 
+    CCoinsViewDB::Options coins_view_db_opts{m_coins_view_db_opts};
+    coins_view_db_opts.cache_size = static_cast<size_t>(current_coinsdb_cache_size * SNAPSHOT_CACHE_PERC);
+
     auto snapshot_chainstate = WITH_LOCK(::cs_main,
         return std::make_unique<CChainState>(
-            /*mempool=*/nullptr, m_blockman, *this, base_blockhash));
+            /*mempool=*/nullptr, m_blockman, *this, coins_view_db_opts, base_blockhash));
 
     {
         LOCK(::cs_main);
-        snapshot_chainstate->InitCoinsDB(
-            static_cast<size_t>(current_coinsdb_cache_size * SNAPSHOT_CACHE_PERC),
-            in_memory, false, "chainstate");
         snapshot_chainstate->InitCoinsCache(
             static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
     }

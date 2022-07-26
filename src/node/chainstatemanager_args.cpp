@@ -15,6 +15,7 @@ namespace node {
 void ApplyArgsManOptions(const ArgsManager& argsman, ChainstateManagerOpts& chainman_opts)
 {
     ApplyArgsManOptions(argsman, chainman_opts.block_tree_db_opts);
+    ApplyArgsManOptions(argsman, chainman_opts.coins_view_db_opts);
 }
 
 } // namespace node

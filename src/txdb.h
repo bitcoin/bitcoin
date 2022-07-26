@@ -53,13 +53,9 @@ public:
     using Options = kernel::CoinsViewDBOpts;
 protected:
     std::unique_ptr<CDBWrapper> m_db;
-    fs::path m_ldb_path;
-    bool m_is_memory;
+    Options m_opts;
 public:
-    /**
-     * @param[in] ldb_path    Location in the filesystem where leveldb data will be stored.
-     */
-    explicit CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe);
+    explicit CCoinsViewDB(const Options& opts);
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;

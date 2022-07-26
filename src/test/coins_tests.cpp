@@ -4,6 +4,7 @@
 
 #include <clientversion.h>
 #include <coins.h>
+#include <node/txdb_args.h>
 #include <script/standard.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
@@ -16,6 +17,8 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+using node::ApplyArgsManOptions;
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
@@ -268,7 +271,14 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     CCoinsViewTest base;
     SimulationTest(&base, false);
 
-    CCoinsViewDB db_base{"test", /*nCacheSize=*/1 << 23, /*fMemory=*/true, /*fWipe=*/false};
+    CCoinsViewDB::Options opts{
+        .db_path = "test",
+        .cache_size = 1 << 23,
+        .in_memory = true,
+        .wipe_existing = false,
+    };
+    ApplyArgsManOptions(m_args, opts);
+    CCoinsViewDB db_base{opts};
     SimulationTest(&db_base, true);
 }
 

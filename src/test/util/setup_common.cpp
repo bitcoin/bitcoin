@@ -24,6 +24,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/txdb_args.h>
 #include <node/validation_cache_args.h>
 #include <noui.h>
 #include <policy/fees.h>
@@ -199,6 +200,11 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
             .in_memory = true,
         },
         .data_dir = m_args.GetDataDirNet(),
+        .coins_view_db_opts = {
+            .cache_size = static_cast<size_t>(m_cache_sizes.coins_db),
+            .in_memory = true,
+            .wipe_existing = node::fReindex || m_args.GetBoolArg("-reindex-chainstate", false),
+        },
     };
     ApplyArgsManOptions(m_args, chainman_opts);
 
@@ -235,7 +241,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     node::ChainstateLoadOptions options;
     options.mempool = Assert(m_node.mempool.get());
-    options.coins_db_in_memory = true;
     options.reindex = node::fReindex;
     options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);
     options.prune = node::fPruneMode;

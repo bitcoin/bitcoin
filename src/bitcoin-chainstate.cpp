@@ -92,6 +92,11 @@ int main(int argc, char* argv[])
             .cache_size = static_cast<size_t>(cache_sizes.block_tree_db),
         },
         .data_dir = abs_datadir,
+        .coins_view_db_opts = {
+            .cache_size = static_cast<size_t>(cache_sizes.coins_db),
+            .in_memory = false,
+            .wipe_existing = false,
+        }
     };
     ChainstateManager chainman{chainman_opts};
 

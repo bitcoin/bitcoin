@@ -1413,6 +1413,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 .wipe_existing = do_reindex,
             },
             .data_dir = gArgs.GetDataDirNet(),
+            .coins_view_db_opts = {
+                .cache_size = static_cast<size_t>(cache_sizes.coins_db), // FIXME
+                .in_memory = false,
+                .wipe_existing = do_reindex || fReindexChainState,
+            },
         };
         ApplyArgsManOptions(args, chainman_opts);
 

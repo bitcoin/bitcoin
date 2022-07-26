@@ -399,7 +399,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(fs::path ldb_name, size_t cache_size_bytes, bool in_memory, bool should_wipe);
+    CoinsViews(const CCoinsViewDB::Options& opts);
 
     //! Initialize the CCoinsViewCache member.
     void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -482,19 +482,8 @@ public:
         CTxMemPool* mempool,
         node::BlockManager& blockman,
         ChainstateManager& chainman,
+        const CCoinsViewDB::Options& opts,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
-
-    /**
-     * Initialize the CoinsViews UTXO set database management data structures. The in-memory
-     * cache is initialized separately.
-     *
-     * All parameters forwarded to CoinsViews.
-     */
-    void InitCoinsDB(
-        size_t cache_size_bytes,
-        bool in_memory,
-        bool should_wipe,
-        fs::path leveldb_name = "chainstate");
 
     //! Initialize the in-memory coins cache (to be done after the health of the on-disk database
     //! is verified).
@@ -874,7 +863,9 @@ public:
                   }
                   return db_opts;
               }(opts.block_tree_db_opts)
-          } {};
+          },
+          m_coins_view_db_opts{opts.coins_view_db_opts},
+          m_total_coinsdb_cache{static_cast<int64_t>(m_coins_view_db_opts.cache_size)} {};
 
     const CChainParams& GetParams() const { return m_chainparams; }
     const Consensus::Params& GetConsensus() const { return m_chainparams.GetConsensus(); }
@@ -883,6 +874,8 @@ public:
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     node::BlockManager m_blockman;
+
+    CCoinsViewDB::Options m_coins_view_db_opts;
 
     /**
      * In order to efficiently track invalidity of headers, we keep the set of
@@ -945,7 +938,7 @@ public:
     //! - Move the new chainstate to `m_snapshot_chainstate` and make it our
     //!   ChainstateActive().
     [[nodiscard]] bool ActivateSnapshot(
-        AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
+        AutoFile& coins_file, const node::SnapshotMetadata& metadata);
 
     //! The most-work chain.
     CChainState& ActiveChainstate() const;
