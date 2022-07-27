@@ -356,7 +356,7 @@ static RPCHelpMan syscoinburntoassetallocation()
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[2].isNull()) {
         fChangeAddress = params[2].get_str();
     }
@@ -581,7 +581,7 @@ RPCHelpMan assetnew()
     }
     CNotaryDetails notaryDetails(params[8]);
     CAuxFeeDetails auxFeeDetails(params[9], precision);
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[10].isNull()) {
         fChangeAddress = params[10].get_str();
     }
@@ -990,8 +990,8 @@ static RPCHelpMan assetupdate()
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-    std::string strData = "";
-    std::string strCategory = "";
+    std::string strData;
+    std::string strCategory;
     std::string strPubData = params[1].get_str();
     if(strPubData == "''")
         strPubData.clear();
@@ -1040,7 +1040,7 @@ static RPCHelpMan assetupdate()
     uint8_t nUpdateMask = 0;
     CNotaryDetails notaryDetails(params[5]);
     CAuxFeeDetails auxFeeDetails(params[6], theAsset.nPrecision);
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[7].isNull()) {
         fChangeAddress = params[7].get_str();
     }
@@ -1138,7 +1138,7 @@ static RPCHelpMan assettransfer()
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     std::string strAddress = params[1].get_str();
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[2].isNull()) {
         fChangeAddress = params[2].get_str();
     }
@@ -1241,7 +1241,7 @@ static RPCHelpMan assetsendmany()
     UniValue valueTo = params[1];
     if (!valueTo.isArray())
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[2].isNull()) {
         fChangeAddress = params[2].get_str();
     }
@@ -1510,7 +1510,7 @@ static RPCHelpMan assetallocationsendmany()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!request.params[5].isNull()) {
         fChangeAddress = request.params[5].get_str();
     }
@@ -1799,10 +1799,10 @@ static RPCHelpMan assetallocationburn()
     catch(...) {
         nAmount = params[1].getInt<int64_t>();
     }
-	std::string nevmAddress = "";
+	std::string nevmAddress;
     if(params[2].isStr())
         nevmAddress = params[2].get_str();
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!params[3].isNull()) {
         fChangeAddress = params[3].get_str();
     } 
@@ -2428,7 +2428,7 @@ static RPCHelpMan convertaddresswallet()
 
     UniValue ret(UniValue::VOBJ);	
     CTxDestination dest = DecodeDestination(request.params[0].get_str());	
-    std::string strLabel = "";	
+    std::string strLabel;	
     if (!request.params[1].isNull())	
         strLabel = request.params[1].get_str();    	
     bool fRescan = false;	
@@ -2438,8 +2438,8 @@ static RPCHelpMan convertaddresswallet()
     if (!IsValidDestination(dest)) {	
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");	
     }	
-    std::string currentV4Address = "";	
-    std::string currentV3Address = "";	
+    std::string currentV4Address;	
+    std::string currentV3Address;	
     CTxDestination v4Dest;	
     if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {	
         v4Dest = dest;	
@@ -2792,7 +2792,7 @@ static RPCHelpMan sendfrom() {
     if (!request.params[4].isNull()) {
         nMaxDepth = request.params[4].getInt<int>();
     }
-    std::string fChangeAddress = "";
+    std::string fChangeAddress ;
     if(!request.params[5].isNull()) {
         fChangeAddress = request.params[5].get_str();
     } 

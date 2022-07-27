@@ -188,7 +188,7 @@ static RPCHelpMan gobject_prepare()
 
     LOCK(pwallet->cs_wallet);
 
-    std::string strError = "";
+    std::string strError;
     if (!govobj.IsValidLocally(*node.chainman, strError, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 

@@ -2743,7 +2743,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
     }
 
-    std::string strError = "";
+    std::string strError;
     // add seniority to reward when checking for limit
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= m_params.GetConsensus().DIP0003EnforcementHeight)) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet);
@@ -6259,7 +6259,7 @@ bool StartGethNode()
         }
     }
     #else
-        std::string commandStr = "";
+        std::string commandStr;
         // the first cmd is the binary file which is not needed as binaryURL is that, in windows we only need params passed as commandStr
         vecCmdLineStr.erase(vecCmdLineStr.begin());
         for(const std::string &cmdStr: vecCmdLineStr) {

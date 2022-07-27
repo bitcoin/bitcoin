@@ -279,7 +279,7 @@ static RPCHelpMan masternode_winners()
     }
 
     int nCount = 10;
-    std::string strFilter = "";
+    std::string strFilter;
 
     if (!request.params[0].isNull()) {
         nCount = request.params[0].getInt<int>();
@@ -448,7 +448,7 @@ RPCHelpMan masternodelist()
 {
     const node::NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strMode = "json";
-    std::string strFilter = "";
+    std::string strFilter;
 
     if (!request.params[0].isNull()) strMode = request.params[0].get_str();
     if (!request.params[1].isNull()) strFilter = request.params[1].get_str();

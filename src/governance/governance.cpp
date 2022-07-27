@@ -170,7 +170,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        std::string strError = "";
+        std::string strError;
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
         bool fMissingConfirmations = false;
@@ -292,7 +292,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
     govobj.UpdateSentinelVariables(); //this sets local vars in object
 
     // MAKE SURE THIS OBJECT IS OK
-    std::string strError = "";
+    std::string strError;
     if (!govobj.IsValidLocally(chainman, strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
         return;

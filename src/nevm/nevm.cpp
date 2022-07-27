@@ -30,7 +30,7 @@ int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &
 std::string hexToASCII(std::string hex) 
 { 
     // initialize the ASCII code string as empty. 
-    std::string ascii = "";
+    std::string ascii;
     uint8_t ch;
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 

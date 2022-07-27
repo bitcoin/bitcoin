@@ -194,7 +194,7 @@ static RPCHelpMan gobject_submit()
 
     std::string strHash = govobj.GetHash().ToString();
 
-    std::string strError = "";
+    std::string strError;
     bool fMissingConfirmations;
     
     if (!govobj.IsValidLocally(*node.chainman, strError, fMissingConfirmations, true) && !fMissingConfirmations) {
@@ -377,7 +377,7 @@ UniValue ListObjects(ChainstateManager& chainman, const std::string& strCachedSi
         bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(VOTE_SIGNAL_FUNDING));
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
-        std::string strError = "";
+        std::string strError;
         bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(chainman, strError, false));
         bObj.pushKV("IsValidReason",  strError.c_str());
         bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
@@ -536,7 +536,7 @@ static RPCHelpMan gobject_get()
     objResult.pushKV("EndorsedResult", objEndorsed);
 
     // --
-    std::string strError = "";
+    std::string strError;
     objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(*node.chainman, strError, false));
     objResult.pushKV("IsValidReason",  strError.c_str());
     objResult.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());

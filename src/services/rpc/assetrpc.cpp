@@ -51,7 +51,7 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& o
 	return true;
 }
 bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
-	std::string strTxid = "";
+	std::string strTxid;
     uint32_t nBaseAsset = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
@@ -303,8 +303,8 @@ static RPCHelpMan convertaddress()
         ret.pushKV("error", error_msg);
         return ret;
     }	
-    std::string currentV4Address = "";	
-    std::string currentV3Address = "";	
+    std::string currentV4Address;	
+    std::string currentV3Address;	
     CTxDestination v4Dest;	
     if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {	
         v4Dest = dest;	
