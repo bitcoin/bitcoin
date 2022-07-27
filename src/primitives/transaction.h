@@ -21,7 +21,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <tuple>
 #include <consensus/consensus.h>
 // SYSCOIN
 class TxValidationState;
