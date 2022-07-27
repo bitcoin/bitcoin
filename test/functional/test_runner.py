@@ -246,6 +246,7 @@ BASE_SCRIPTS = [
     'rpc_generate.py',
     'wallet_balance.py --legacy-wallet',
     'wallet_balance.py --descriptors',
+    'p2p_initial_headers_sync.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
