@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CAddress addr{CAddress(ResolveService("253.3.3.3", 8333), NODE_NONE)};
-    int64_t start_time{GetAdjustedTime()};
+    const auto start_time{AdjustedTime()};
     addr.nTime = start_time;
 
     // test that multiplicity stays at 1 if nTime doesn't increase
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     for (unsigned int i = 1; i < 400; ++i) {
         std::string addr_ip{ToString(i % 256) + "." + ToString(i >> 8 % 256) + ".1.1"};
         CNetAddr source{ResolveIP(addr_ip)};
-        addr.nTime = start_time + i;
+        addr.nTime = start_time + std::chrono::seconds{i};
         addrman->Add({addr}, source);
     }
     AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
@@ -295,15 +295,15 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK_EQUAL(vAddr1.size(), 0U);
 
     CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
-    addr1.nTime = GetAdjustedTime(); // Set time so isTerrible = false
+    addr1.nTime = AdjustedTime(); // Set time so isTerrible = false
     CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
-    addr2.nTime = GetAdjustedTime();
+    addr2.nTime = AdjustedTime();
     CAddress addr3 = CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE);
-    addr3.nTime = GetAdjustedTime();
+    addr3.nTime = AdjustedTime();
     CAddress addr4 = CAddress(ResolveService("252.253.3.4", 8333), NODE_NONE);
-    addr4.nTime = GetAdjustedTime();
+    addr4.nTime = AdjustedTime();
     CAddress addr5 = CAddress(ResolveService("252.254.4.5", 8333), NODE_NONE);
-    addr5.nTime = GetAdjustedTime();
+    addr5.nTime = AdjustedTime();
     CNetAddr source1 = ResolveIP("250.1.2.1");
     CNetAddr source2 = ResolveIP("250.2.3.3");
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
         CAddress addr = CAddress(ResolveService(strAddr), NODE_NONE);
 
         // Ensure that for all addrs in addrman, isTerrible == false.
-        addr.nTime = GetAdjustedTime();
+        addr.nTime = AdjustedTime();
         addrman->Add({addr}, ResolveIP(strAddr));
         if (i % 8 == 0)
             addrman->Good(addr);
@@ -821,8 +821,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
     // Ensure test of address fails, so that it is evicted.
     // Update entry in tried by setting last good connection in the deep past.
-    BOOST_CHECK(!addrman->Good(info, /*nTime=*/1));
-    addrman->Attempt(info, /*fCountFailure=*/false, /*nTime=*/GetAdjustedTime() - 61);
+    BOOST_CHECK(!addrman->Good(info, NodeSeconds{1s}));
+    addrman->Attempt(info, /*fCountFailure=*/false, AdjustedTime() - 61s);
 
     // Should swap 36 for 19.
     addrman->ResolveCollisions();
@@ -966,7 +966,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     CNetAddr source{ResolveIP("252.2.2.2")};
     CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
 
-    int64_t start_time{GetAdjustedTime() - 10000};
+    const auto start_time{AdjustedTime() - 10000s};
     addr.nTime = start_time;
     BOOST_CHECK(addrman->Add({addr}, source));
     BOOST_CHECK_EQUAL(addrman->size(), 1U);
@@ -978,7 +978,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     addrman->SetServices(addr_diff_port, NODE_NETWORK_LIMITED);
     std::vector<CAddress> vAddr1{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
     BOOST_CHECK_EQUAL(vAddr1.size(), 1U);
-    BOOST_CHECK_EQUAL(vAddr1.at(0).nTime, start_time);
+    BOOST_CHECK(vAddr1.at(0).nTime == start_time);
     BOOST_CHECK_EQUAL(vAddr1.at(0).nServices, NODE_NONE);
 
     // Updating an addrman entry with the correct port is successful
@@ -986,7 +986,7 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     addrman->SetServices(addr, NODE_NETWORK_LIMITED);
     std::vector<CAddress> vAddr2 = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
     BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
-    BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000);
+    BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000s);
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
 }
 

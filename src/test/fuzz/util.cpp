@@ -527,6 +527,11 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return net_addr;
 }
 
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), NodeSeconds{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<uint32_t>()}}};
+}
+
 FILE* FuzzedFileProvider::open()
 {
     SetFuzzedErrNo(m_fuzzed_data_provider);
