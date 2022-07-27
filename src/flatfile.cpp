@@ -30,7 +30,7 @@ fs::path FlatFileSeq::FileName(const FlatFilePos& pos) const
     return m_dir / fs::u8path(strprintf("%s%05u.dat", m_prefix, pos.nFile));
 }
 
-FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
+FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
 {
     if (pos.IsNull()) {
         return nullptr;

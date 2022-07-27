@@ -56,9 +56,9 @@ struct FakeCheckCheckCompletion {
 };
 
 struct FailingCheck {
-    bool fails;
+    bool fails{true};
     FailingCheck(bool _fails) : fails(_fails){};
-    FailingCheck() : fails(true){};
+    FailingCheck()  {};
     bool operator()() const
     {
         return !fails;
@@ -72,10 +72,10 @@ struct FailingCheck {
 struct UniqueCheck {
     static Mutex m;
     static std::unordered_multiset<size_t> results GUARDED_BY(m);
-    size_t check_id;
+    size_t check_id{0};
     UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
-    UniqueCheck() : check_id(0){};
-    bool operator()()
+    UniqueCheck()  {};
+    bool operator()() const
     {
         LOCK(m);
         results.insert(check_id);

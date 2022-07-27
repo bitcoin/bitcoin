@@ -94,8 +94,8 @@ public:
 
     operator bool() const { return i != 0; }
 
-    int get_ip1() { return i + 1; }
-    bool test()
+    int get_ip1() const { return i + 1; }
+    bool test() const
     {
         // Check that Assume can be used within a lambda and still call methods
         [&]() { Assume(get_ip1()); }();

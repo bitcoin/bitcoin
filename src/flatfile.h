@@ -64,7 +64,7 @@ public:
     fs::path FileName(const FlatFilePos& pos) const;
 
     /** Open a handle to the file at the given position. */
-    FILE* Open(const FlatFilePos& pos, bool read_only = false);
+    FILE* Open(const FlatFilePos& pos, bool read_only = false) const;
 
     /**
      * Allocate additional space in a file after the given starting position. The amount allocated

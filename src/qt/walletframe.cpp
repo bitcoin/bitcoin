@@ -131,7 +131,7 @@ void WalletFrame::removeAllWallets()
     mapWalletViews.clear();
 }
 
-bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
+bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient) const
 {
     WalletView *walletView = currentWalletView();
     if (!walletView)
@@ -176,14 +176,14 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
-void WalletFrame::gotoSignMessageTab(QString addr)
+void WalletFrame::gotoSignMessageTab(QString addr) const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->gotoSignMessageTab(addr);
 }
 
-void WalletFrame::gotoVerifyMessageTab(QString addr)
+void WalletFrame::gotoVerifyMessageTab(QString addr) const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
@@ -235,42 +235,42 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
     GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
-void WalletFrame::encryptWallet()
+void WalletFrame::encryptWallet() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->encryptWallet();
 }
 
-void WalletFrame::backupWallet()
+void WalletFrame::backupWallet() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->backupWallet();
 }
 
-void WalletFrame::changePassphrase()
+void WalletFrame::changePassphrase() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->changePassphrase();
 }
 
-void WalletFrame::unlockWallet()
+void WalletFrame::unlockWallet() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->unlockWallet();
 }
 
-void WalletFrame::usedSendingAddresses()
+void WalletFrame::usedSendingAddresses() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->usedSendingAddresses();
 }
 
-void WalletFrame::usedReceivingAddresses()
+void WalletFrame::usedReceivingAddresses() const
 {
     WalletView *walletView = currentWalletView();
     if (walletView)

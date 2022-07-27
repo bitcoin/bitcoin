@@ -287,7 +287,7 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
     return true;
 }
 
-void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
+void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile) const
 {
     dbenv->txn_checkpoint(0, 0, 0);
     if (fMockDb)

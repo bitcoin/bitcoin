@@ -31,7 +31,7 @@ struct update_descendant_state
         modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount)
     {}
 
-    void operator() (CTxMemPoolEntry &e)
+    void operator() (CTxMemPoolEntry &e) const
         { e.UpdateDescendantState(modifySize, modifyFee, modifyCount); }
 
     private:
@@ -46,7 +46,7 @@ struct update_ancestor_state
         modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
     {}
 
-    void operator() (CTxMemPoolEntry &e)
+    void operator() (CTxMemPoolEntry &e) const
         { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
 
     private:

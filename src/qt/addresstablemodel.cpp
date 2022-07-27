@@ -144,7 +144,7 @@ public:
         }
     }
 
-    int size()
+    int size() const
     {
         return cachedAddressTable.size();
     }

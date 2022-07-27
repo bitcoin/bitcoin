@@ -52,10 +52,10 @@ static const struct {
 };
 
 struct CCoin {
-    uint32_t nHeight;
+    uint32_t nHeight{0};
     CTxOut out;
 
-    CCoin() : nHeight(0) {}
+    CCoin()  {}
     explicit CCoin(Coin&& in) : nHeight(in.nHeight), out(std::move(in.out)) {}
 
     SERIALIZE_METHODS(CCoin, obj)

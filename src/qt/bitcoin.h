@@ -57,7 +57,7 @@ public:
     /// Create or spawn node
     void createNode(interfaces::Init& init);
     /// Basic initialization, before starting initialization/shutdown thread. Return true on success.
-    bool baseInitialize();
+    bool baseInitialize() const;
 
     /// Request core initialization
     void requestInitialize();

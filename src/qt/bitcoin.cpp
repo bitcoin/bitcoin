@@ -325,7 +325,7 @@ void BitcoinApplication::createNode(interfaces::Init& init)
     if (m_splash) m_splash->setNode(*m_node);
 }
 
-bool BitcoinApplication::baseInitialize()
+bool BitcoinApplication::baseInitialize() const
 {
     return node().baseInitialize();
 }

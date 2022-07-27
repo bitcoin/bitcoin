@@ -33,7 +33,7 @@ public:
      *            TS_ERR  If an error happened.
      *            TS_EOS  If end of stream happened.
      */
-    int TokenWrite(uint8_t token);
+    int TokenWrite(uint8_t token) const;
 
     /** Read token from endpoint.
      *
@@ -42,7 +42,7 @@ public:
      *            TS_ERR  If an error happened.
      *            TS_EOS  If end of stream happened.
      */
-    int TokenRead();
+    int TokenRead() const;
 
     /** Explicit close function.
      */

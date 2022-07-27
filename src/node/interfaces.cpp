@@ -386,7 +386,7 @@ public:
     {
         m_context = context;
     }
-    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
+    ChainstateManager& chainman() const { return *Assert(m_context->chainman); }
     NodeContext* m_context{nullptr};
 };
 

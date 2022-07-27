@@ -209,7 +209,7 @@ public:
         }
     }
 
-    int size()
+    int size() const
     {
         return cachedWallet.size();
     }

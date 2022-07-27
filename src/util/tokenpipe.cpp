@@ -37,7 +37,7 @@ TokenPipeEnd::~TokenPipeEnd()
     Close();
 }
 
-int TokenPipeEnd::TokenWrite(uint8_t token)
+int TokenPipeEnd::TokenWrite(uint8_t token) const
 {
     while (true) {
         ssize_t result = write(m_fd, &token, 1);
@@ -55,7 +55,7 @@ int TokenPipeEnd::TokenWrite(uint8_t token)
     }
 }
 
-int TokenPipeEnd::TokenRead()
+int TokenPipeEnd::TokenRead() const
 {
     uint8_t token;
     while (true) {

@@ -40,7 +40,7 @@ public:
     void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const SendCoinsRecipient& recipient) const;
 
     void showOutOfSyncWarning(bool fShow);
 
@@ -77,26 +77,26 @@ public Q_SLOTS:
     void gotoSendCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
-    void gotoSignMessageTab(QString addr = "");
+    void gotoSignMessageTab(QString addr = "") const;
     /** Show Sign/Verify Message dialog and switch to verify message tab */
-    void gotoVerifyMessageTab(QString addr = "");
+    void gotoVerifyMessageTab(QString addr = "") const;
 
     /** Load Partially Signed Bitcoin Transaction */
     void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Encrypt the wallet */
-    void encryptWallet();
+    void encryptWallet() const;
     /** Backup the wallet */
-    void backupWallet();
+    void backupWallet() const;
     /** Change encrypted wallet passphrase */
-    void changePassphrase();
+    void changePassphrase() const;
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+    void unlockWallet() const;
 
     /** Show used sending addresses */
-    void usedSendingAddresses();
+    void usedSendingAddresses() const;
     /** Show used receiving addresses */
-    void usedReceivingAddresses();
+    void usedReceivingAddresses() const;
 };
 
 #endif // BITCOIN_QT_WALLETFRAME_H

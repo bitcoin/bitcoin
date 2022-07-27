@@ -249,7 +249,7 @@ static void BackupSettings(const fs::path& filename, const QSettings& src)
     CopySettings(dst, src);
 }
 
-void OptionsModel::Reset()
+void OptionsModel::Reset() const
 {
     // Backup and reset settings.json
     node().resetSettings();

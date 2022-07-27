@@ -73,7 +73,7 @@ public:
 
     ~SQLiteDatabase();
 
-    bool Verify(bilingual_str& error);
+    bool Verify(bilingual_str& error) const;
 
     /** Open the database if it is not already opened */
     void Open() override;

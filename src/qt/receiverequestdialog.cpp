@@ -108,7 +108,7 @@ void ReceiveRequestDialog::on_btnCopyURI_clicked()
     GUIUtil::setClipboard(GUIUtil::formatBitcoinURI(info));
 }
 
-void ReceiveRequestDialog::on_btnCopyAddress_clicked()
+void ReceiveRequestDialog::on_btnCopyAddress_clicked() const
 {
     GUIUtil::setClipboard(info.address);
 }

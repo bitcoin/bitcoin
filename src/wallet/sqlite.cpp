@@ -157,7 +157,7 @@ void SQLiteDatabase::Cleanup() noexcept
     }
 }
 
-bool SQLiteDatabase::Verify(bilingual_str& error)
+bool SQLiteDatabase::Verify(bilingual_str& error) const
 {
     assert(m_db);
 
