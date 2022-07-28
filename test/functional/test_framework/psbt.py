@@ -96,10 +96,10 @@ class PSBTMap:
 class PSBT:
     """Class for serializing and deserializing PSBTs"""
 
-    def __init__(self):
-        self.g = PSBTMap()
-        self.i = []
-        self.o = []
+    def __init__(self, *, g=None, i=None, o=None):
+        self.g = g if g is not None else PSBTMap()
+        self.i = i if i is not None else []
+        self.o = o if o is not None else []
         self.tx = None
 
     def deserialize(self, f):
