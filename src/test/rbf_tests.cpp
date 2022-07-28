@@ -131,17 +131,17 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     // considered too low even though entry4 has a low ancestor feerate.
     BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4->GetModifiedFee(), entry4->GetTxSize()), unused_txid).has_value());
 
-    // Tests for EntriesAndTxidsDisjoint
-    BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {tx1->GetHash()}, unused_txid) == std::nullopt);
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx3->GetHash()}, unused_txid) == std::nullopt);
+    // SYSCOIN Tests for EntriesAndTxidsDisjoint
+    BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {tx1->GetHash()}, {tx1->GetHash()}, unused_txid) == std::nullopt);
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx3->GetHash()}, {tx3->GetHash()}, unused_txid) == std::nullopt);
     // EntriesAndTxidsDisjoint uses txids, not wtxids.
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetWitnessHash()}, unused_txid) == std::nullopt);
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetHash()}, unused_txid).has_value());
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx1->GetHash()}, unused_txid).has_value());
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx2->GetHash()}, unused_txid).has_value());
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetWitnessHash()}, {tx2->GetWitnessHash()}, unused_txid) == std::nullopt);
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetHash()}, {tx2->GetHash()}, unused_txid).has_value());
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx1->GetHash()}, {tx1->GetHash()}, unused_txid).has_value());
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx2->GetHash()}, {tx2->GetHash()}, unused_txid).has_value());
     // EntriesAndTxidsDisjoint does not calculate descendants of iters_conflicting; it uses whatever
     // the caller passed in. As such, no error is returned even though entry2 is a descendant of tx1.
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx1->GetHash()}, unused_txid) == std::nullopt);
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx1->GetHash()}, {tx1->GetHash()}, unused_txid) == std::nullopt);
 
     // Tests for PaysForRBF
     const CFeeRate incremental_relay_feerate{DEFAULT_INCREMENTAL_RELAY_FEE};
