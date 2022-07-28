@@ -160,21 +160,23 @@ std::vector<std::vector<CDeterministicMNCPtr>> CLLMQUtils::ComputeQuorumMembersB
             LogPrint(BCLog::LLMQ, "QuarterComposition h[%d] i[%d]:%s\n", pCycleQuorumBaseBlockIndex->nHeight, i,
                      ss.str());
         }
+    }
 
-        for (auto i = 0; i < nQuorums; ++i) {
-            for (auto &m: previousQuarters.quarterHMinus3C[i]) {
-                quorumMembers[i].push_back(std::move(m));
-            }
-            for (auto &m: previousQuarters.quarterHMinus2C[i]) {
-                quorumMembers[i].push_back(std::move(m));
-            }
-            for (auto &m: previousQuarters.quarterHMinusC[i]) {
-                quorumMembers[i].push_back(std::move(m));
-            }
-            for (auto &m: newQuarterMembers[i]) {
-                quorumMembers[i].push_back(std::move(m));
-            }
+    for (auto i = 0; i < nQuorums; ++i) {
+        for (auto &m: previousQuarters.quarterHMinus3C[i]) {
+            quorumMembers[i].push_back(std::move(m));
+        }
+        for (auto &m: previousQuarters.quarterHMinus2C[i]) {
+            quorumMembers[i].push_back(std::move(m));
+        }
+        for (auto &m: previousQuarters.quarterHMinusC[i]) {
+            quorumMembers[i].push_back(std::move(m));
+        }
+        for (auto &m: newQuarterMembers[i]) {
+            quorumMembers[i].push_back(std::move(m));
+        }
 
+        if (LogAcceptCategory(BCLog::LLMQ)) {
             std::stringstream ss;
             ss << " [";
             for (auto &m: quorumMembers[i]) {
