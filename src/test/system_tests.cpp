@@ -7,11 +7,6 @@
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-#if defined(WIN32) && !defined(__kernel_entry)
-// A workaround for boost 1.71 incompatibility with mingw-w64 compiler.
-// For details see https://github.com/bitcoin/bitcoin/pull/22348.
-#define __kernel_entry
-#endif
 #if defined(__GNUC__)
 // Boost 1.78 requires the following workaround.
 // See: https://github.com/boostorg/process/issues/235
