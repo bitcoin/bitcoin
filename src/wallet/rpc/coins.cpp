@@ -515,6 +515,7 @@ RPCHelpMan listunspent()
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase UTXOs"}
                         },
                         RPCArgOptions{.oneline_description="query_options"}},
                 },
@@ -594,6 +595,7 @@ RPCHelpMan listunspent()
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
     uint64_t nMaximumCount = 0;
+    bool include_immature_coinbase{false};
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -604,6 +606,7 @@ RPCHelpMan listunspent()
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
+                {"include_immature_coinbase", UniValueType(UniValue::VBOOL)}
             },
             true, true);
 
@@ -618,6 +621,10 @@ RPCHelpMan listunspent()
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].getInt<int64_t>();
+
+        if (options.exists("include_immature_coinbase")) {
+            include_immature_coinbase = options["include_immature_coinbase"].get_bool();
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -633,7 +640,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount).All();
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, include_immature_coinbase).All();
     }
 
     LOCK(pwallet->cs_wallet);
