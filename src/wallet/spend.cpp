@@ -275,7 +275,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (coinControl && coinControl->HasSelected() && coinControl->IsSelected(outpoint))
                 continue;
 
-            if (wallet.IsLockedCoin(outpoint))
+            if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
                 continue;
 
             if (wallet.IsSpent(outpoint))
