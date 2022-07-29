@@ -207,39 +207,6 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
     }
 }
 
-/**
- * Takes a URI, checks if it contains a dot-separated format string (e.g. ".json") in the path, and
- * if found moves it to a query parameter. Only works when -deprecatedrest=format is set, otherwise
- * the URI remains unchanged.
- *
- * For example, "/rest/headers/some_hash.json?count=5"
- * becomes      "/rest/headers/some_hash?count=5&format=json"
- *
- * This function is temporary, and can be removed once support for "-deprecatedrest=format" is gone.
- *
- * @param[in, out] uri Original URI that may contain a format string in the path
- *
- * @return Copy of the URI where the format string is guaranteed to be in the query
- */
-std::string CheckMoveFormatToQuery(const std::string& uri)
-{
-    if (!IsDeprecatedRESTEnabled("format")) return uri;
-
-    for (auto el : std::vector<std::string> {".json", ".hex", ".bin"}) {
-        auto match {uri.find(el)};
-        if (match != std::string::npos) {
-            std::string new_uri {uri};
-            new_uri.replace(match, el.length(), "");
-
-            std::string symbol = (new_uri.find("?") == std::string::npos) ? "?" : "&";
-            auto suffix {symbol + "format=" + el.substr(1)};
-            new_uri.append(suffix);
-            return new_uri;
-        }
-    }
-    return uri;
-}
-
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
@@ -653,7 +620,7 @@ CService HTTPRequest::GetPeer() const
 
 std::string HTTPRequest::GetURI() const
 {
-    return CheckMoveFormatToQuery(evhttp_request_get_uri(req));
+    return evhttp_request_get_uri(req);
 }
 
 HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
@@ -690,7 +657,7 @@ std::string TrimLeadingTrailingCharacter(const std::string& input, char characte
 
 std::vector<std::string> HTTPRequest::GetPath() const
 {
-    evhttp_uri* uri_parsed{evhttp_uri_parse(CheckMoveFormatToQuery(evhttp_request_get_uri(req)).c_str())};
+    evhttp_uri* uri_parsed{evhttp_uri_parse(evhttp_request_get_uri(req))};
     std::string raw_path{evhttp_uri_get_path(uri_parsed)};
 
     // path excluding the endpoint prefix and excluding leading and trialing forward slashes
@@ -710,9 +677,8 @@ std::optional<std::string> HTTPRequest::GetPathParameter(const size_t index) con
 
 std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key) const
 {
-    std::string uri{CheckMoveFormatToQuery(evhttp_request_get_uri(req))};
-
-    return GetQueryParameterFromUri(uri.c_str(), key);
+    auto uri {evhttp_request_get_uri(req)};
+    return GetQueryParameterFromUri(uri, key);
 }
 
 std::optional<std::string> GetParameterFromPath(const std::vector<std::string>& path, const size_t index)
