@@ -130,6 +130,9 @@ $(package)_config_opts_darwin += -pch
 $(package)_config_opts_darwin += -no-feature-corewlan
 $(package)_config_opts_darwin += -no-freetype
 $(package)_config_opts_darwin += QMAKE_MACOSX_DEPLOYMENT_TARGET=$(OSX_MIN_VERSION)
+ifneq ($(LTO),)
+$(package)_config_opts_darwin += -ltcg
+endif
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin += -xplatform macx-clang-linux
