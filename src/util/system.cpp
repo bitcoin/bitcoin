@@ -940,6 +940,12 @@ bool IsConfSupported(KeyInfo& key, std::string& error) {
         error = "conf cannot be set in the configuration file; use includeconf= if you want to include additional config files";
         return false;
     }
+    if (key.name == "reindex") {
+        // reindex can be set in a config file but it is strongly discouraged as this will cause the node to reindex on
+        // every restart. Allow the config but throw a warning
+        LogPrintf("Warning: reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary\n");
+        return true;
+    }
     return true;
 }
 
