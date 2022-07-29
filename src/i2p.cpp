@@ -434,9 +434,9 @@ void Session::Disconnect()
 {
     if (m_control_sock->Get() != INVALID_SOCKET) {
         if (m_session_id.empty()) {
-            Log("Destroying incomplete session");
+            Log("Destroying incomplete SAM session");
         } else {
-            Log("Destroying session %s", m_session_id);
+            Log("Destroying SAM session %s", m_session_id);
         }
     }
     m_control_sock = std::make_unique<Sock>(INVALID_SOCKET);
