@@ -48,7 +48,23 @@ enum class MessageVerificationResult {
     ERR_NOT_SIGNED,
 
     //! The message verification was successful.
-    OK
+    OK,
+
+    //
+    // BIP-322 extensions
+    //
+
+    //! The message has set timelocks but is otherwise valid (BIP-322)
+    OK_TIMELOCKED,
+
+    //! The validator was unable to check the scripts (BIP-322)
+    INCONCLUSIVE,
+
+    //! Some check failed (BIP-322)
+    ERR_INVALID,
+
+    //! Proof of funds require the wallet-enabled verifier (BIP-322)
+    ERR_POF,
 };
 
 enum class SigningResult {
