@@ -249,21 +249,14 @@ static bool rest_block(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
-    auto path = req->GetPath();
     TxVerbosity tx_verbosity {TxVerbosity::SHOW_DETAILS_AND_PREVOUT};
-    std::string hashStr {GetParameterFromPath(path, 0).value_or("")};
+    std::string hashStr {req->GetPathParameter(0).value_or("")};
+    std::string txdetails {req->GetQueryParameter("txdetails").value_or("true")};
 
-    if (IsDeprecatedRESTEnabled("txdetails")) {
-        if (hashStr == "notxdetails") {  // in this route, the first parameter is not actually the hashStr but the /notxdetails path parameter
-            tx_verbosity = TxVerbosity::SHOW_TXID;
-            hashStr = GetParameterFromPath(path, 1).value_or("");
-        }
-    } else {
-        std::string txdetails {req->GetQueryParameter("txdetails").value_or("true")};
-        if (txdetails == "false") tx_verbosity = TxVerbosity::SHOW_TXID;
-        else if (txdetails != "true") {
-            return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Parameter txdetails only accepts true|false");
-        }
+    if (txdetails == "false") {
+        tx_verbosity = TxVerbosity::SHOW_TXID;
+    } else if (txdetails != "true") {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Parameter txdetails only accepts true|false");
     }
 
     uint256 hash;
