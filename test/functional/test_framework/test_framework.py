@@ -164,6 +164,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                             help="Directory for caching pregenerated datadirs (default: %(default)s)")
         parser.add_argument("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
+        parser.add_argument("--tmpdir-prefix", dest="tmpdir_prefix", help="Prefix to use for datadirs", default=TMPDIR_PREFIX)
         parser.add_argument("-l", "--loglevel", dest="loglevel", default="INFO",
                             help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console. Note that logs at all levels are always written to the test_framework.log file in the temporary test directory.")
         parser.add_argument("--tracerpc", dest="trace_rpc", default=False, action="store_true",
@@ -261,11 +262,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         ])
 
         # Set up temp directory and start logging
+        dir_path = None
         if self.options.tmpdir:
-            self.options.tmpdir = os.path.abspath(self.options.tmpdir)
-            os.makedirs(self.options.tmpdir, exist_ok=False)
-        else:
-            self.options.tmpdir = tempfile.mkdtemp(prefix=TMPDIR_PREFIX)
+            dir_path = os.path.abspath(self.options.tmpdir)
+            os.makedirs(dir_path, exist_ok=True)
+        self.tmpdir = tempfile.mkdtemp(prefix=self.options.tmpdir_prefix, dir=dir_path)
+        self.options.tmpdir = self.tmpdir
         self._start_logging()
 
         # Seed the PRNG. Note that test runs are reproducible if and only if

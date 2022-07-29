@@ -701,8 +701,8 @@ class TestHandler:
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             test_argv = test.split()
-            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
-            tmpdir_arg = ["--tmpdir={}".format(testdir)]
+            testdir = "{}_{}_".format(re.sub(".py$", "", test_argv[0]), portseed)
+            tmpdir_arg = ["--tmpdir={}".format(self.tmpdir), "--tmpdir-prefix={}".format(testdir)]
             self.jobs.append((test,
                               time.time(),
                               subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
