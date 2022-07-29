@@ -105,6 +105,47 @@ void CoinsResult::clear()
     other.clear();
 }
 
+void CoinsResult::Erase(std::set<COutPoint>& preset_coins)
+{
+    for (auto& it : coins) {
+        auto& vec = it.second;
+        auto i = std::find_if(vec.begin(), vec.end(), [&](const COutput &c) { return preset_coins.count(c.outpoint);});
+        if (i != vec.end()) {
+            vec.erase(i);
+            break;
+        }
+    }
+}
+
+void CoinsResult::Shuffle(FastRandomContext& rng_fast)
+{
+    for (auto& it : coins) {
+        ::Shuffle(it.second.begin(), it.second.end(), rng_fast);
+    }
+}
+
+void CoinsResult::Add(OutputType type, const COutput& out)
+{
+    coins[type].emplace_back(out);
+}
+
+static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
+{
+    switch (type) {
+        case TxoutType::WITNESS_V1_TAPROOT:
+            return OutputType::BECH32M;
+        case TxoutType::WITNESS_V0_KEYHASH:
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+            if (is_from_p2sh) return OutputType::P2SH_SEGWIT;
+            else return OutputType::BECH32;
+        case TxoutType::SCRIPTHASH:
+        case TxoutType::PUBKEYHASH:
+            return OutputType::LEGACY;
+        default:
+            return OutputType::UNKNOWN;
+    }
+}
+
 CoinsResult AvailableCoins(const CWallet& wallet,
                            const CCoinControl* coinControl,
                            std::optional<CFeeRate> feerate,
