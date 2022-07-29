@@ -481,19 +481,20 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
             results.push_back(*result);
         }
     }
+    // If we have at least one solution for funding the transaction without mixing, choose the minimum one according to waste metric
+    // and return the result
+    if (results.size() > 0) return *std::min_element(results.begin(), results.end());
 
-    // If we can't fund the transaction from any individual OutputType, run coin selection
-    // over all available coins, else pick the best solution from the results
-    if (results.size() == 0) {
-        if (allow_mixed_output_types) {
-            if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.All(), coin_selection_params)}) {
-                return result;
-            }
+    // If we can't fund the transaction from any individual OutputType, run coin selection one last time
+    // over all available coins, which would allow mixing
+    if (allow_mixed_output_types) {
+        if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.All(), coin_selection_params)}) {
+            return result;
         }
-        return std::optional<SelectionResult>();
-    };
-    std::optional<SelectionResult> result{*std::min_element(results.begin(), results.end())};
-    return result;
+    }
+    // Either mixing is not allowed and we couldn't find a solution from any single OutputType, or mixing was allowed and we still couldn't
+    // find a solution using all available coins
+    return std::nullopt;
 };
 
 std::optional<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins, const CoinSelectionParams& coin_selection_params)
