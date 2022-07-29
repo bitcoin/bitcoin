@@ -173,17 +173,8 @@ static bool rest_headers(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
-    auto path {req->GetPath()};
     std::string raw_count{req->GetQueryParameter("count").value_or("5")};
-    std::string hashStr;
-
-    if (IsDeprecatedRESTEnabled("blockhash")) {
-        if (path.size() != 1) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/<hash>?count=<count>");
-        hashStr = path[0];
-    } else {
-        if (path.size() != 0) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/headers/?from_blockhash=<blockhash>&count=<count>");
-        hashStr = req->GetQueryParameter("from_blockhash").value_or("");
-    }
+    std::string hashStr{req->GetQueryParameter("from_blockhash").value_or("")};
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
@@ -337,17 +328,9 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req)
 {
     if (!CheckWarmup(req)) return false;
 
-    auto path {req->GetPath()};
     std::string raw_count{req->GetQueryParameter("count").value_or("5")};
-    std::string raw_blockhash;
-
-    if (IsDeprecatedRESTEnabled("blockhash")) {
-        if (path.size() != 2) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders/<filtertype/<hash>?count=<count>");
-        raw_blockhash = path[1];
-    } else {
-        if (path.size() != 1) return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/blockfilterheaders?filtertype=<filtertype>&from_blockhash=<blockhash>&count=<count>");
-        raw_blockhash = req->GetQueryParameter("from_blockhash").value_or("");
-    }
+    std::string raw_blockhash{req->GetQueryParameter("from_blockhash").value_or("")};
+    std::string raw_filtertype{req->GetPathParameter(0).value_or("")};
 
     const auto parsed_count{ToIntegral<size_t>(raw_count)};
     if (!parsed_count.has_value() || *parsed_count < 1 || *parsed_count > MAX_REST_HEADERS_RESULTS) {
@@ -360,13 +343,13 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req)
     }
 
     BlockFilterType filtertype;
-    if (!BlockFilterTypeByName(path[0], filtertype)) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + path[0]);
+    if (!BlockFilterTypeByName(raw_filtertype, filtertype)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Unknown filtertype " + raw_filtertype);
     }
 
     BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
     if (!index) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + path[0]);
+        return RESTERR(req, HTTP_BAD_REQUEST, "Index is not enabled for filtertype " + raw_filtertype);
     }
 
     std::vector<const CBlockIndex*> headers;
