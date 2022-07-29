@@ -23,19 +23,17 @@ void UniValue::clear()
     values.clear();
 }
 
-bool UniValue::setNull()
+void UniValue::setNull()
 {
     clear();
-    return true;
 }
 
-bool UniValue::setBool(bool val_)
+void UniValue::setBool(bool val_)
 {
     clear();
     typ = VBOOL;
     if (val_)
         val = "1";
-    return true;
 }
 
 static bool validNumStr(const std::string& s)
@@ -46,18 +44,18 @@ static bool validNumStr(const std::string& s)
     return (tt == JTOK_NUMBER);
 }
 
-bool UniValue::setNumStr(const std::string& val_)
+void UniValue::setNumStr(const std::string& val_)
 {
-    if (!validNumStr(val_))
-        return false;
+    if (!validNumStr(val_)) {
+        throw std::runtime_error{"The string '" + val_ + "' is not a valid JSON number"};
+    }
 
     clear();
     typ = VNUM;
     val = val_;
-    return true;
 }
 
-bool UniValue::setInt(uint64_t val_)
+void UniValue::setInt(uint64_t val_)
 {
     std::ostringstream oss;
 
@@ -66,7 +64,7 @@ bool UniValue::setInt(uint64_t val_)
     return setNumStr(oss.str());
 }
 
-bool UniValue::setInt(int64_t val_)
+void UniValue::setInt(int64_t val_)
 {
     std::ostringstream oss;
 
@@ -75,37 +73,32 @@ bool UniValue::setInt(int64_t val_)
     return setNumStr(oss.str());
 }
 
-bool UniValue::setFloat(double val_)
+void UniValue::setFloat(double val_)
 {
     std::ostringstream oss;
 
     oss << std::setprecision(16) << val_;
 
-    bool ret = setNumStr(oss.str());
-    typ = VNUM;
-    return ret;
+    return setNumStr(oss.str());
 }
 
-bool UniValue::setStr(const std::string& val_)
+void UniValue::setStr(const std::string& val_)
 {
     clear();
     typ = VSTR;
     val = val_;
-    return true;
 }
 
-bool UniValue::setArray()
+void UniValue::setArray()
 {
     clear();
     typ = VARR;
-    return true;
 }
 
-bool UniValue::setObject()
+void UniValue::setObject()
 {
     clear();
     typ = VOBJ;
-    return true;
 }
 
 void UniValue::push_back(const UniValue& val_)
