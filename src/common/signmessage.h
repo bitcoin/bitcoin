@@ -6,9 +6,13 @@
 #ifndef BITCOIN_COMMON_SIGNMESSAGE_H
 #define BITCOIN_COMMON_SIGNMESSAGE_H
 
+#include <addresstype.h>
+#include <primitives/transaction.h>
 #include <uint256.h>
 
+#include <optional>
 #include <string>
+#include <vector>
 
 class CKey;
 
@@ -100,5 +104,20 @@ bool MessageSign(
 uint256 MessageHash(const std::string& message, MessageSignatureFormat format);
 
 std::string SigningResultString(const SigningResult res);
+
+/**
+ * Generate the BIP-322 tx corresponding to the given challenge
+ */
+class BIP322Txs {
+private:
+    template<class T1, class T2>
+    BIP322Txs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
+
+public:
+    static std::optional<BIP322Txs> Create(const CTxDestination& destination, const std::string& message, MessageVerificationResult& result, std::optional<const std::vector<unsigned char>> = std::nullopt);
+
+    const CTransaction m_to_spend;
+    const CTransaction m_to_sign;
+};
 
 #endif // BITCOIN_COMMON_SIGNMESSAGE_H
