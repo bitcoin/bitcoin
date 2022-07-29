@@ -34,26 +34,18 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  * This struct is really just a wrapper around OutputType vectors with a convenient
  * method for concatenating and returning all COutputs as one vector.
  *
- * Clear(), Size() methods are implemented so that one can interact with
- * the CoinsResult struct as if it was a vector
+ * Size(), Clear(), Erase(), Shuffle(), and Add() methods are implemented to
+ * allow easy interaction with the struct.
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
-    /** Vectors for each OutputType */
-    std::vector<COutput> legacy;
-    std::vector<COutput> P2SH_segwit;
-    std::vector<COutput> bech32;
-    std::vector<COutput> bech32m;
-
-    /** Other is a catch-all for anything that doesn't match the known OutputTypes */
-    std::vector<COutput> other;
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
 
     /** The following methods are provided so that CoinsResult can mimic a vector,
      * i.e., methods can work with individual OutputType vectors or on the entire object */
-    uint64_t Size() const;
+    size_t Size() const;
     void Clear();
     void Erase(std::set<COutPoint>& preset_coins);
     void Shuffle(FastRandomContext& rng_fast);

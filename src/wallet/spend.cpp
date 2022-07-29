@@ -79,30 +79,27 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
     return CalculateMaximumSignedTxSize(tx, wallet, txouts, coin_control);
 }
 
-uint64_t CoinsResult::Size() const
+size_t CoinsResult::Size() const
 {
-    return bech32m.size() + bech32.size() + P2SH_segwit.size() + legacy.size() + other.size();
+    size_t size{0};
+    for (const auto& it : coins) {
+        size += it.second.size();
+    }
+    return size;
 }
 
 std::vector<COutput> CoinsResult::All() const
 {
     std::vector<COutput> all;
-    all.reserve(this->Size());
-    all.insert(all.end(), bech32m.begin(), bech32m.end());
-    all.insert(all.end(), bech32.begin(), bech32.end());
-    all.insert(all.end(), P2SH_segwit.begin(), P2SH_segwit.end());
-    all.insert(all.end(), legacy.begin(), legacy.end());
-    all.insert(all.end(), other.begin(), other.end());
+    all.reserve(coins.size());
+    for (const auto& it : coins) {
+        all.insert(all.end(), it.second.begin(), it.second.end());
+    }
     return all;
 }
 
-void CoinsResult::Clear()
-{
-    bech32m.clear();
-    bech32.clear();
-    P2SH_segwit.clear();
-    legacy.clear();
-    other.clear();
+void CoinsResult::Clear() {
+    coins.clear();
 }
 
 void CoinsResult::Erase(std::set<COutPoint>& preset_coins)
@@ -263,51 +260,32 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Filter by spendable outputs only
             if (!spendable && only_spendable) continue;
 
-            // When parsing a scriptPubKey, Solver returns the parsed pubkeys or hashes (depending on the script)
-            // We don't need those here, so we are leaving them in return_values_unused
-            std::vector<std::vector<uint8_t>> return_values_unused;
-            TxoutType type;
-            bool is_from_p2sh{false};
-
             // If the Output is P2SH and spendable, we want to know if it is
             // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
             // this from the redeemScript. If the Output is not spendable, it will be classified
             // as a P2SH (legacy), since we have no way of knowing otherwise without the redeemScript
+            CScript script;
+            bool is_from_p2sh{false};
             if (output.scriptPubKey.IsPayToScriptHash() && solvable) {
-                CScript redeemScript;
                 CTxDestination destination;
                 if (!ExtractDestination(output.scriptPubKey, destination))
                     continue;
                 const CScriptID& hash = CScriptID(std::get<ScriptHash>(destination));
-                if (!provider->GetCScript(hash, redeemScript))
+                if (!provider->GetCScript(hash, script))
                     continue;
-                type = Solver(redeemScript, return_values_unused);
                 is_from_p2sh = true;
             } else {
-                type = Solver(output.scriptPubKey, return_values_unused);
+                script = output.scriptPubKey;
             }
 
             COutput coin(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
-            switch (type) {
-            case TxoutType::WITNESS_UNKNOWN:
-            case TxoutType::WITNESS_V1_TAPROOT:
-                result.bech32m.push_back(coin);
-                break;
-            case TxoutType::WITNESS_V0_KEYHASH:
-            case TxoutType::WITNESS_V0_SCRIPTHASH:
-                if (is_from_p2sh) {
-                    result.P2SH_segwit.push_back(coin);
-                    break;
-                }
-                result.bech32.push_back(coin);
-                break;
-            case TxoutType::SCRIPTHASH:
-            case TxoutType::PUBKEYHASH:
-                result.legacy.push_back(coin);
-                break;
-            default:
-                result.other.push_back(coin);
-            };
+
+            // When parsing a scriptPubKey, Solver returns the parsed pubkeys or hashes (depending on the script)
+            // We don't need those here, so we are leaving them in return_values_unused
+            std::vector<std::vector<uint8_t>> return_values_unused;
+            TxoutType type;
+            type = Solver(script, return_values_unused);
+            result.Add(GetOutputType(type, is_from_p2sh), coin);
 
             // Cache total amount as we go
             result.total_amount += output.nValue;
@@ -498,17 +476,10 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 {
     // Run coin selection on each OutputType and compute the Waste Metric
     std::vector<SelectionResult> results;
-    if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.legacy, coin_selection_params)}) {
-        results.push_back(*result);
-    }
-    if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.P2SH_segwit, coin_selection_params)}) {
-        results.push_back(*result);
-    }
-    if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.bech32, coin_selection_params)}) {
-        results.push_back(*result);
-    }
-    if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.bech32m, coin_selection_params)}) {
-        results.push_back(*result);
+    for (const auto& it : available_coins.coins) {
+        if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, it.second, coin_selection_params)}) {
+            results.push_back(*result);
+        }
     }
 
     // If we can't fund the transaction from any individual OutputType, run coin selection
@@ -633,11 +604,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
 
     // remove preset inputs from coins so that Coin Selection doesn't pick them.
     if (coin_control.HasSelected()) {
-        available_coins.legacy.erase(remove_if(available_coins.legacy.begin(), available_coins.legacy.end(), [&](const COutput& c) { return preset_coins.count(c.outpoint); }), available_coins.legacy.end());
-        available_coins.P2SH_segwit.erase(remove_if(available_coins.P2SH_segwit.begin(), available_coins.P2SH_segwit.end(), [&](const COutput& c) { return preset_coins.count(c.outpoint); }), available_coins.P2SH_segwit.end());
-        available_coins.bech32.erase(remove_if(available_coins.bech32.begin(), available_coins.bech32.end(), [&](const COutput& c) { return preset_coins.count(c.outpoint); }), available_coins.bech32.end());
-        available_coins.bech32m.erase(remove_if(available_coins.bech32m.begin(), available_coins.bech32m.end(), [&](const COutput& c) { return preset_coins.count(c.outpoint); }), available_coins.bech32m.end());
-        available_coins.other.erase(remove_if(available_coins.other.begin(), available_coins.other.end(), [&](const COutput& c) { return preset_coins.count(c.outpoint); }), available_coins.other.end());
+        available_coins.Erase(preset_coins);
     }
 
     unsigned int limit_ancestor_count = 0;
@@ -653,11 +620,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
         // Cases where we have 101+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
-        Shuffle(available_coins.legacy.begin(), available_coins.legacy.end(), coin_selection_params.rng_fast);
-        Shuffle(available_coins.P2SH_segwit.begin(), available_coins.P2SH_segwit.end(), coin_selection_params.rng_fast);
-        Shuffle(available_coins.bech32.begin(), available_coins.bech32.end(), coin_selection_params.rng_fast);
-        Shuffle(available_coins.bech32m.begin(), available_coins.bech32m.end(), coin_selection_params.rng_fast);
-        Shuffle(available_coins.other.begin(), available_coins.other.end(), coin_selection_params.rng_fast);
+        available_coins.Shuffle(coin_selection_params.rng_fast);
     }
 
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the

@@ -83,7 +83,7 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
     const auto& txout = wtx.tx->vout.at(nInput);
-    available_coins.bech32.emplace_back(COutPoint(wtx.GetHash(), nInput), txout, nAge, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate);
+    available_coins.coins[OutputType::BECH32].emplace_back(COutPoint(wtx.GetHash(), nInput), txout, nAge, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
