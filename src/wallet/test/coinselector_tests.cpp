@@ -924,5 +924,46 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
     BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 }
 
+BOOST_AUTO_TEST_CASE(SelectionResult_sorting_test)
+{
+    FastRandomContext rand{};
+    std::vector<COutput> utxo_pool_small_pieces;
+    std::vector<COutput> utxo_pool_big_chunks;
+
+    // Empty utxo pools
+    BOOST_CHECK(!SelectCoinsSRD(GroupCoins(utxo_pool_small_pieces), 1 * CENT, rand));
+    BOOST_CHECK(!SelectCoinsSRD(GroupCoins(utxo_pool_big_chunks), 1 * CENT, rand));
+
+    // Add waste-neutral UTXOs with same fee as long-term fee
+    add_coin(1 * CENT, 1, utxo_pool_small_pieces);
+    add_coin(1 * CENT, 2, utxo_pool_small_pieces);
+    add_coin(1 * CENT, 3, utxo_pool_small_pieces);
+    add_coin(3 * CENT, 4, utxo_pool_big_chunks);
+    add_coin(4 * CENT, 5, utxo_pool_big_chunks);
+
+    // count of inputs of same type, bigger count is preferred
+    auto result_small_1 = SelectCoinsSRD(GroupCoins(utxo_pool_small_pieces), 2.5 * CENT, rand);
+    auto result_big_1 = SelectCoinsSRD(GroupCoins(utxo_pool_big_chunks), 2.5 * CENT, rand);
+    BOOST_CHECK(result_small_1);
+    BOOST_CHECK(result_big_1);
+    result_small_1->ComputeAndSetWaste(10, 200, 100);
+    result_big_1->ComputeAndSetWaste(10, 200, 100);
+    // Should have same waste and then go by input count
+    // BOOST_CHECK_EQUAL(result_small_1->GetWaste(), result_big_1->GetWaste());
+    // Prefer bigger input count
+    BOOST_CHECK(*result_small_1 < *result_big_1);
+
+    // same count and waste, prefer smaller waste
+    auto result_small_2 = SelectCoinsSRD(GroupCoins(utxo_pool_small_pieces), 0.5 * CENT, rand);
+    auto result_big_2 = SelectCoinsSRD(GroupCoins(utxo_pool_big_chunks), 0.5 * CENT, rand);
+    BOOST_CHECK(result_small_2);
+    BOOST_CHECK(result_big_2);
+    result_small_2->ComputeAndSetWaste(10, 200, 100);
+    result_big_2->ComputeAndSetWaste(10, 200, 100);
+    // BOOST_CHECK_EQUAL(result_small_2->GetWaste(), result_big_2->GetWaste());
+    BOOST_CHECK_EQUAL(result_small_2->GetInputSet().size(), result_big_2->GetInputSet().size());
+    BOOST_CHECK(*result_small_2 < *result_big_2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
