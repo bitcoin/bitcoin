@@ -287,6 +287,8 @@ private:
     std::set<COutput> m_selected_inputs;
     /** The target the algorithm selected for. Equal to the recipient amount plus non-input fees */
     CAmount m_target;
+    /** The computed change for this selection result under the selection attempt's circumstances */
+    std::optional<CAmount> m_change;
     /** The algorithm used to produce this result */
     SelectionAlgorithm m_algo;
     /** Whether the input values for calculations should be the effective value (true) or normal value (false) */
@@ -320,9 +322,17 @@ public:
     /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
     std::vector<COutput> GetShuffledInputVector() const;
 
+    /** Sorting order for SelectionResults
+     * 1) Prefer lower waste,
+     * 2) at equal waste prefer higher input count,
+     * 3) at equal waste and input count prefer lower change
+     */
     bool operator<(SelectionResult other) const;
 
-    /** Get the amount for the change output after paying needed fees.
+    /** Get m_change */
+    CAmount GetChange() const;
+
+    /** Calculate the amount for the change output after paying needed fees.
      *
      * The change amount is not 100% precise due to discrepancies in fee calculation.
      * The final change amount (if any) should be corrected after calculating the final tx fees.
@@ -339,7 +349,7 @@ public:
      * @returns Amount for change output, 0 when there is no change.
      *
      */
-    CAmount GetChange(const CAmount min_change, const CAmount change_fee) const;
+    CAmount ComputeAndSetChange(const CAmount min_change, const CAmount change_fee);
 
     CAmount GetTarget() const { return m_target; }
 

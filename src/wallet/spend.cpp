@@ -792,7 +792,7 @@ static BResult<CreatedTransactionResult> CreateTransactionInternal(
     }
     TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result->GetAlgo()).c_str(), result->GetTarget(), result->GetWaste(), result->GetSelectedValue());
 
-    const CAmount change_amount = result->GetChange(coin_selection_params.min_change, coin_selection_params.m_change_fee);
+    const CAmount change_amount = result->ComputeAndSetChange(coin_selection_params.min_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
         if (nChangePosInOut == -1)

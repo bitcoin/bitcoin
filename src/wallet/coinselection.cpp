@@ -408,9 +408,9 @@ CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng)
 
 void SelectionResult::ComputeAndSetWaste(const CAmount min_change, const CAmount change_cost, const CAmount change_fee)
 {
-    const CAmount change = GetChange(min_change, change_fee);
+    m_change = ComputeAndSetChange(min_change, change_fee);
 
-    if (change > 0) {
+    if (m_change > 0) {
         m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
     } else {
         m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
@@ -470,8 +470,16 @@ bool SelectionResult::operator<(SelectionResult other) const
 {
     Assert(m_waste.has_value());
     Assert(other.m_waste.has_value());
-    // As this operator is only used in std::min_element, we want the result that has more inputs when waste are equal.
-    return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
+    // As this operator is only used in std::min_element, we want the result that has more inputs when waste are equal, and other things equal we want to reveal fewer funds to the counter party as well as unconfirm less liquidity
+    if (*m_waste != *other.m_waste) {
+        return *m_waste < *other.m_waste;
+    } else if (m_selected_inputs.size() != other.m_selected_inputs.size()) {
+        return (m_selected_inputs.size() > other.m_selected_inputs.size());
+    } else {
+        Assert(m_change.has_value());
+        Assert(other.m_change.has_value());
+        return *m_change < *other.m_change;
+    }
 }
 
 std::string COutput::ToString() const
@@ -492,7 +500,12 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     assert(false);
 }
 
-CAmount SelectionResult::GetChange(const CAmount min_change, const CAmount change_fee) const
+CAmount SelectionResult::GetChange() const
+{
+    return *Assert(m_change);
+}
+
+CAmount SelectionResult::ComputeAndSetChange(const CAmount min_change, const CAmount change_fee)
 {
     // change_budget = SUM(inputs) - SUM(outputs) - fees
     // 1) With SFFO we don't pay any fees
@@ -504,11 +517,8 @@ CAmount SelectionResult::GetChange(const CAmount min_change, const CAmount chang
                                   ? GetSelectedEffectiveValue() - m_target - change_fee
                                   : GetSelectedValue() - m_target;
 
-    if (change_budget < min_change) {
-        return 0;
-    }
-
-    return change_budget;
+    m_change = (change_budget < min_change) ? 0 : change_budget;
+    return *m_change;
 }
 
 } // namespace wallet
