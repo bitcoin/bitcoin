@@ -267,7 +267,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             dir_path = os.path.abspath(self.options.tmpdir)
             os.makedirs(dir_path, exist_ok=True)
         self.tmpdir = tempfile.mkdtemp(prefix=self.options.tmpdir_prefix, dir=dir_path)
-        self.options.tmpdir = self.tmpdir
         self._start_logging()
 
         # Seed the PRNG. Note that test runs are reproducible if and only if
