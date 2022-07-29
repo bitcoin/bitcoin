@@ -178,7 +178,7 @@ FUZZ_TARGET_INIT(key, initialize_key)
         assert(v_solutions_ret_tx_multisig[1].size() == 33);
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
-        OutputType output_type{};
+        OutputType output_type{OutputType::LEGACY};
         const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));

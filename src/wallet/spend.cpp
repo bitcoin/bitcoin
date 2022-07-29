@@ -161,6 +161,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool filter_inputs = {coinControl ? coinControl->m_filter_inputs.has_value() : false};
 
     std::set<uint256> trusted_parents;
     for (const auto& entry : wallet.mapWallet)
@@ -278,22 +279,23 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 script = output.scriptPubKey;
             }
 
-            COutput coin(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
-
             // When parsing a scriptPubKey, Solver returns the parsed pubkeys or hashes (depending on the script)
             // We don't need those here, so we are leaving them in return_values_unused
             std::vector<std::vector<uint8_t>> return_values_unused;
-            TxoutType type;
-            type = Solver(script, return_values_unused);
-            result.Add(GetOutputType(type, is_from_p2sh), coin);
+            const TxoutType type{Solver(script, return_values_unused)};
+            const OutputType output_type{GetOutputType(type, is_from_p2sh)};
+            if (filter_inputs && !(*coinControl->m_filter_inputs & (1 << static_cast<unsigned int>(output_type)))) {
+                continue;
+            }
+
+            COutput coin(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
+            result.Add(output_type, coin);
 
             // Cache total amount as we go
             result.total_amount += output.nValue;
             // Checks the sum amount of all UTXO's.
-            if (nMinimumSumAmount != MAX_MONEY) {
-                if (result.total_amount >= nMinimumSumAmount) {
-                    return result;
-                }
+            if (nMinimumSumAmount != MAX_MONEY && result.total_amount >= nMinimumSumAmount) {
+                return result;
             }
 
             // Checks the maximum number of UTXO's.
