@@ -118,6 +118,7 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256("addrcache")[0:8]
 
 static constexpr uint8_t V2_LONG_MSG_TYPE_LEN = 12; // V2 (BIP324) message type long ids
+static constexpr size_t V2_MAX_GARBAGE_BYTES = 4095; // maximum length for V2 (BIP324) shapable handshake
 //
 // Global state variables
 //
@@ -716,10 +717,16 @@ void CNode::InitV2P2P(const Span<const std::byte> their_ellswift, const Span<con
     if (initiating) {
         m_deserializer = std::make_unique<V2TransportDeserializer>(GetId(), v2_keys.responder_L, v2_keys.responder_P);
         m_serializer = std::make_unique<V2TransportSerializer>(v2_keys.initiator_L, v2_keys.initiator_P);
+        m_bip324_node_state->sent_garbage_terminator = v2_keys.initiator_garbage_terminator;
+        m_bip324_node_state->recv_garbage_terminator = v2_keys.responder_garbage_terminator;
     } else {
         m_deserializer = std::make_unique<V2TransportDeserializer>(GetId(), v2_keys.initiator_L, v2_keys.initiator_P);
         m_serializer = std::make_unique<V2TransportSerializer>(v2_keys.responder_L, v2_keys.responder_P);
+        m_bip324_node_state->sent_garbage_terminator = v2_keys.responder_garbage_terminator;
+        m_bip324_node_state->recv_garbage_terminator = v2_keys.initiator_garbage_terminator;
     }
+    // Both peers must keep around a copy of the garbage terminator for the BIP324 shapable handshake
+    m_bip324_node_state->keys_derived = true;
 }
 
 void CNode::EnsureInitV2Key(bool initiating)
@@ -763,11 +770,25 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
             // decompose a transport agnostic CNetMessage from the deserializer
             bool reject_message{false};
             bool disconnect{false};
-            CNetMessage msg = m_deserializer->GetMessage(time, reject_message, disconnect, {});
+
+            std::vector<std::byte> aad;
+            if (PreferV2Conn() && !m_bip324_shared_state->authenticated_garbage) {
+                std::copy(m_bip324_node_state->garbage_bytes_recd.begin(),
+                          m_bip324_node_state->garbage_bytes_recd.end(),
+                          std::back_inserter(aad));
+            }
+            CNetMessage msg = m_deserializer->GetMessage(time, reject_message, disconnect, aad);
 
             if (disconnect) {
                 // v2 p2p incorrect MAC tag. Disconnect from peer.
                 return false;
+            }
+
+            if (!aad.empty()) {
+                // first message to authenticate garbage
+                m_bip324_shared_state->authenticated_garbage = true;
+                memory_cleanse(m_bip324_node_state->garbage_bytes_recd.data(),
+                               m_bip324_node_state->garbage_bytes_recd.size());
             }
 
             // inbound clients that support BIP324 do not know whether the peer is trying
@@ -815,7 +836,17 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
     memcpy(&hdrbuf[nHdrPos], msg_bytes.data(), nCopy);
     nHdrPos += nCopy;
 
-    // if header incomplete, exit
+    if (validated_magic_len < CMessageHeader::MESSAGE_START_SIZE) {
+        auto available = std::min((size_t)nHdrPos, CMessageHeader::MESSAGE_START_SIZE);
+        if (memcmp(hdrbuf.data(), m_chain_params.MessageStart(), available) != 0) {
+            LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdrbuf), m_node_id);
+            return -1;
+        } else {
+            validated_magic_len = available;
+        }
+    }
+
+    // don't have complete header yet, exit
     if (nHdrPos < CMessageHeader::HEADER_SIZE)
         return nCopy;
 
@@ -825,12 +856,6 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
     }
     catch (const std::exception&) {
         LogPrint(BCLog::NET, "Header error: Unable to deserialize, peer=%d\n", m_node_id);
-        return -1;
-    }
-
-    // Check start string, network magic
-    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
 
@@ -1009,9 +1034,14 @@ CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds 
         vRecv.resize(m_contents_size);
         reject_message = reject_message || (BIP324HeaderFlags(BIP324_IGNORE & flags) != BIP324_NONE);
 
-        // The first message we receive is the BIP324 transport version placeholder message.
-        // Discard it for v2.0 clients.
-        if (!m_processed_version_placeholder) {
+        if (!aad.empty()) {
+            // This only happens for the first encrypted message received by an inbound client
+            // which is meant to authenticate the garbage bytes for the BIP324 shapable handshake
+            // That message is not to be passed to the p2p application layer.
+            reject_message = true;
+        } else if (!m_processed_version_placeholder) {
+            // BIP324 transport version placeholder message.
+            // Discard it for v2.0 clients.
             reject_message = true;
             m_processed_version_placeholder = true;
         }
@@ -1612,46 +1642,133 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 }
                 nBytes = pnode->m_sock->Recv(pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
             }
+            uint8_t* ptr = pchBuf;
             if (nBytes > 0) {
                 bool notify = false;
                 size_t num_bytes = (size_t)nBytes;
-                if (!pnode->ReceiveMsgBytes({pchBuf, num_bytes}, notify)) {
+
+                // for a v2 outbound peer:
+                //     prior to InitV2P2P(), pnode->m_deserializer is not init and ReceiveMsgBytes() will return false
+                // for a v2 inbound peer:
+                //     prior to InitV2P2P(), pnode->m_deserializer is init to V1TransportDeserializer, ReceiveMsgBytes will fail due to a malformed header according to the v1 protocol
+                // for all v2 peers:
+                //     after InitV2P2P(), keys are derived, but m_deserializer would simply disconnect on MAC failure until
+                //          the key exchange phase ends with the garbage terminator
+                //     after garbage terminator, ReceiveMsgBytes() should work on valid v2 encrypted packets
+                if ((pnode->m_bip324_node_state &&
+                     pnode->m_bip324_node_state->keys_derived &&
+                     !pnode->m_bip324_shared_state->garbage_terminated) ||
+                    !pnode->ReceiveMsgBytes({ptr, num_bytes}, notify)) {
                     // when we cannot understand the received bytes, disconnect if:
                     //   1. we don't support BIP324 v2, or
                     //   2. v2 key exchange is complete, we should understand the bytes, or
                     //   3. we've previously received a v1 (or v2) VERSION message from the peer
-                    //   4. the received bytes are not exactly the size of an ellswift encoding
                     if (!gArgs.GetBoolArg("-v2transport", DEFAULT_V2_TRANSPORT) ||
                         (pnode->m_bip324_shared_state &&
                          pnode->m_bip324_shared_state->key_exchange_complete) ||
-                        pnode->nVersion != 0 ||
-                        num_bytes < ELLSWIFT_ENCODED_SIZE) {
+                        pnode->nVersion != 0) {
                         pnode->CloseSocketDisconnect();
                     } else {
                         pnode->EnsureInitV2Key(!pnode->IsInboundConn());
 
-                        pnode->InitV2P2P({AsBytePtr(pchBuf), ELLSWIFT_ENCODED_SIZE},
-                                         MakeByteSpan(pnode->m_bip324_shared_state->ellswift_pubkey),
-                                         !pnode->IsInboundConn());
-                        if (pnode->IsInboundConn()) {
-                            PushV2EllSwiftPubkey(pnode);
+                        if (!pnode->m_bip324_node_state->keys_derived) {
+                            // If we're the inbound peer, upon receiving any ellswift bytes we send our ellswift key
+                            if (pnode->IsInboundConn() &&
+                                pnode->m_bip324_shared_state->peer_ellswift_buf.empty()) {
+                                PushV2EllSwiftPubkey(pnode);
+                                // We now know the peer prefers a BIP324 v2 connection
+                                pnode->m_prefer_p2p_v2 = true;
+                            }
+
+                            // Keys are not derived because we don't have the peer ellswift yet, keep buffering.
+                            auto old_ellswift_sz = pnode->m_bip324_shared_state->peer_ellswift_buf.size();
+                            auto more_ellswift_bytes = std::min(ELLSWIFT_ENCODED_SIZE - old_ellswift_sz, num_bytes);
+                            pnode->m_bip324_shared_state->peer_ellswift_buf.resize(
+                                    old_ellswift_sz + more_ellswift_bytes);
+                            memcpy(
+                                pnode->m_bip324_shared_state->peer_ellswift_buf.data() + old_ellswift_sz,
+                                ptr, more_ellswift_bytes);
+
+                            ptr += more_ellswift_bytes;
+                            num_bytes -= more_ellswift_bytes;
+
+                            if (pnode->m_bip324_shared_state->peer_ellswift_buf.size() < ELLSWIFT_ENCODED_SIZE)
+                                continue;
+
+                            // At this point we have the entire peer ellswift, we can derive keys
+                            // and instantiate the v2 encryption session
+                            pnode->InitV2P2P(pnode->m_bip324_shared_state->peer_ellswift_buf,
+                                             MakeByteSpan(pnode->m_bip324_shared_state->ellswift_pubkey),
+                                             !pnode->IsInboundConn());
+
+                            // After keys are exchanged, both peers send the garbage terminator
+                            // followed by the v2 encrypted message that authenticates the garbage
+                            // which is currently empty as the mechanism is unused in bitcoin core.
+                            PushV2GarbageTerminator(pnode);
+                            CSerializedNetMsg garbage_auth_msg;
+                            PushMessage(pnode, std::move(garbage_auth_msg));
+                            // Send empty message again for transport version placeholder
+                            CSerializedNetMsg transport_version_msg;
+                            PushMessage(pnode, std::move(transport_version_msg));
                         }
 
-                        // Send empty message for transport version placeholder
-                        CSerializedNetMsg msg;
-                        PushMessage(pnode, std::move(msg));
+                        if (pnode->m_bip324_node_state->keys_derived &&
+                            !pnode->m_bip324_shared_state->garbage_terminated && num_bytes > 0) {
+                            // Keep buffering bytes until the garbage terminator
+                            auto old_size = pnode->m_bip324_node_state->garbage_bytes_recd.size();
+                            auto new_size = old_size + num_bytes;
 
-                        if (!pnode->IsInboundConn()) {
-                            // Outbound peer has completed ECDH and can start the P2P protocol
-                            m_msgproc->InitP2P(*pnode, nLocalServices);
+                            // Might be better to just allocate to V2_MAX_GARBAGE_BYTES at start once the mechanism
+                            // is actually used
+                            pnode->m_bip324_node_state->garbage_bytes_recd.resize(
+                                std::min(new_size, V2_MAX_GARBAGE_BYTES));
+                            memcpy(pnode->m_bip324_node_state->garbage_bytes_recd.data() + old_size,
+                                   ptr, (new_size - old_size));
+                            auto it = std::search(
+                                            pnode->m_bip324_node_state->garbage_bytes_recd.begin(),
+                                            pnode->m_bip324_node_state->garbage_bytes_recd.end(),
+                                            pnode->m_bip324_node_state->recv_garbage_terminator.begin(),
+                                            pnode->m_bip324_node_state->recv_garbage_terminator.end());
+
+                            if (it != pnode->m_bip324_node_state->garbage_bytes_recd.end()) {
+                                // Found the terminator...
+                                auto garbage_size = it - pnode->m_bip324_node_state->garbage_bytes_recd.begin();
+                                pnode->m_bip324_node_state->garbage_bytes_recd.erase(
+                                    it, pnode->m_bip324_node_state->garbage_bytes_recd.end());
+                                if (garbage_size <= long{V2_MAX_GARBAGE_BYTES}) {
+                                    // ...in less than the maximum allowed bytes
+                                    auto fwd = garbage_size +
+                                               pnode->m_bip324_node_state->recv_garbage_terminator.size() -
+                                               old_size;
+                                    ptr += fwd;
+                                    num_bytes -= fwd;
+                                    pnode->m_bip324_shared_state->garbage_terminated = true;
+                                } else {
+                                    // ..but more than the maximum allowed bytes were used
+                                    pnode->CloseSocketDisconnect();
+                                }
+                                memory_cleanse(
+                                    pnode->m_bip324_node_state->recv_garbage_terminator.data(),
+                                    pnode->m_bip324_node_state->recv_garbage_terminator.size());
+                            } else if (pnode->m_bip324_node_state->garbage_bytes_recd.size() >= V2_MAX_GARBAGE_BYTES) {
+                                pnode->CloseSocketDisconnect();
+                                memory_cleanse(
+                                    pnode->m_bip324_node_state->recv_garbage_terminator.data(),
+                                    pnode->m_bip324_node_state->recv_garbage_terminator.size());
+                            }
                         }
 
-                        pnode->m_bip324_shared_state->key_exchange_complete = true;
-                        if (num_bytes > ELLSWIFT_ENCODED_SIZE &&
-                            !pnode->ReceiveMsgBytes(
-                                {pchBuf + ELLSWIFT_ENCODED_SIZE, (size_t)(nBytes - ELLSWIFT_ENCODED_SIZE)},
-                                notify)) {
-                            pnode->CloseSocketDisconnect();
+                        // after a successful ECDH and shapable handshake garbage termination, process the remaining bytes.
+                        if (pnode->m_bip324_shared_state->garbage_terminated) {
+                            if (num_bytes > 0 && !pnode->ReceiveMsgBytes({ptr, num_bytes}, notify)) {
+                                pnode->CloseSocketDisconnect();
+                            } else {
+                                pnode->m_bip324_shared_state->key_exchange_complete = true;
+                                if (!pnode->IsInboundConn()) {
+                                    // Outbound peer has completed key exchange and can start the P2P protocol
+                                    m_msgproc->InitP2P(*pnode, nLocalServices);
+                                }
+                            }
                         }
                     }
                 }
@@ -3228,6 +3345,23 @@ void CConnman::PushV2EllSwiftPubkey(CNode* pnode)
     }
 
     if (nBytesSent) RecordBytesSent(nBytesSent);
+}
+
+void CConnman::PushV2GarbageTerminator(CNode* pnode)
+{
+    std::vector<unsigned char> terminator_uchars;
+    terminator_uchars.resize(pnode->m_bip324_node_state->sent_garbage_terminator.size());
+    memcpy(terminator_uchars.data(),
+           pnode->m_bip324_node_state->sent_garbage_terminator.data(),
+           terminator_uchars.size());
+    {
+        LOCK(pnode->cs_vSend);
+        pnode->nSendSize += pnode->m_bip324_node_state->sent_garbage_terminator.size();
+
+        // We do not have to send immediately because this is followed shortly by the
+        // transport version message
+        pnode->vSendMsg.push_back(terminator_uchars);
+    }
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)

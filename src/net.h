@@ -290,6 +290,7 @@ private:
     CDataStream vRecv;              // received message data
     unsigned int nHdrPos;
     unsigned int nDataPos;
+    uint8_t validated_magic_len{0};
 
     const uint256& GetMessageHash() const;
     int readHeader(Span<const uint8_t> msg_bytes);
@@ -455,11 +456,18 @@ struct BIP324Session {
 struct BIP324SharedState {
     std::atomic_bool key_exchange_complete{false};
     EllSwiftPubKey ellswift_pubkey;
+    std::atomic_bool authenticated_garbage{false};
+    bool garbage_terminated{false};
+    std::vector<std::byte> peer_ellswift_buf;
 };
 
 // struct for private members related to BIP324 connection state
 struct BIP324NodeState {
     CKey priv_key;
+    std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> sent_garbage_terminator;
+    std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> recv_garbage_terminator;
+    std::vector<std::byte> garbage_bytes_recd;
+    bool keys_derived{false};
 };
 
 void DeriveBIP324Session(ECDHSecret&& ecdh_secret, BIP324Session& session);
@@ -891,6 +899,7 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     void PushV2EllSwiftPubkey(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    void PushV2GarbageTerminator(CNode* pnode);
 
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)

@@ -54,6 +54,11 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         if (p2p_node.PreferV2Conn()) {
             InitTestV2P2P(fuzzed_data_provider, p2p_node, connman);
             const CNetMsgMaker mm{0};
+            if (p2p_node.IsInboundConn()) {
+                // pretend to have received the garbage terminator and garbage authentication message
+                p2p_node.m_bip324_shared_state->garbage_terminated = true;
+                p2p_node.m_bip324_shared_state->authenticated_garbage = true;
+            }
             // receive the transport version placeholder message
             CSerializedNetMsg dummy{mm.Make(NetMsgType::VERSION)};
             (void)connman.ReceiveMsgFrom(p2p_node, dummy);

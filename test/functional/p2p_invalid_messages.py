@@ -63,7 +63,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def run_test(self):
         self.test_buffer()
         self.test_duplicate_version_msg()
-        self.test_magic_bytes()
         self.test_checksum()
         self.test_size()
         self.test_msgtype()
@@ -104,17 +103,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         with self.nodes[0].assert_debug_log(['redundant version message from peer']):
             conn.send_and_ping(msg_version())
-        self.nodes[0].disconnect_p2ps()
-
-    def test_magic_bytes(self):
-        self.log.info("Test message with invalid magic bytes disconnects peer")
-        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['Header error: Wrong MessageStart ffffffff received']):
-            msg = conn.build_message(msg_unrecognized(str_data="d"))
-            # modify magic bytes
-            msg = b'\xff' * 4 + msg[4:]
-            conn.send_raw_message(msg)
-            conn.wait_for_disconnect(timeout=1)
         self.nodes[0].disconnect_p2ps()
 
     def test_checksum(self):
