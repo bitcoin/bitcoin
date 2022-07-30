@@ -1747,14 +1747,15 @@ RPCHelpMan listdescriptors()
         {
             {"options|private", {RPCArg::Type::OBJ, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                 {
-                    {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Show private descriptors."}
+                    {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Show private descriptors."},
+                    {"save_to_file", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The filename with path (absolute path recommended)"},
                 },
                 "\"options\""
             },
         },
         RPCResult{RPCResult::Type::OBJ, "", "", {
             {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
-            {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects",
+            {RPCResult::Type::ARR, "descriptors", /*optional=*/true, "Array of descriptor objects",
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "desc", "Descriptor string representation"},
@@ -1767,7 +1768,8 @@ RPCHelpMan listdescriptors()
                     }},
                     {RPCResult::Type::NUM, "next", /*optional=*/true, "The next index to generate addresses from; defined only for ranged descriptors"},
                 }},
-            }}
+            }},
+            {RPCResult::Type::STR, "descriptor_file", /*optional=*/true, "The descriptor file"},
         }},
         RPCExamples{
             HelpExampleCli("listdescriptors", "") + HelpExampleRpc("listdescriptors", "")
@@ -1783,6 +1785,7 @@ RPCHelpMan listdescriptors()
     }
 
     bool priv = false;
+    std::optional<std::string> filename{};
 
     if (!request.params[0].isNull()) {
         if (request.params[0].isBool()) {
@@ -1792,11 +1795,16 @@ RPCHelpMan listdescriptors()
             RPCTypeCheckObj(options,
                 {
                     {"private", UniValueType(UniValue::VBOOL)},
+                    {"save_to_file", UniValueType(UniValue::VSTR)},
                 },
                 true, true);
 
             if (options.exists("private")) {
                 priv = options["private"].get_bool();
+            }
+
+            if (options.exists("save_to_file")) {
+                filename = options["save_to_file"].get_str();
             }
         }
     }
@@ -1840,8 +1848,30 @@ RPCHelpMan listdescriptors()
     }
 
     UniValue response(UniValue::VOBJ);
-    response.pushKV("wallet_name", wallet->GetName());
-    response.pushKV("descriptors", descriptors);
+
+
+    if (filename.has_value()) {
+        fs::path filepath = fs::u8path(filename.value());
+        filepath = fs::absolute(filepath);
+
+        if (fs::exists(filepath)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
+        }
+
+        std::ofstream file;
+        file.open(filepath);
+        if (!file.is_open())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open " + filepath.u8string());
+        file << descriptors.write();
+        file.close();
+
+        response.pushKV("wallet_name", wallet->GetName());
+        response.pushKV("descriptor_file", filepath.u8string());
+
+    } else {
+        response.pushKV("wallet_name", wallet->GetName());
+        response.pushKV("descriptors", descriptors);
+    }
 
     return response;
 },
