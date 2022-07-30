@@ -4,6 +4,7 @@ $(package)_download_path=https://xcb.freedesktop.org/dist
 $(package)_file_name=$(package)-$($(package)_version).tar.xz
 $(package)_sha256_hash=a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34
 $(package)_dependencies=xcb_proto libXau
+$(package)_patches = remove_pthread_stubs.patch
 
 define $(package)_set_vars
 $(package)_config_opts=--disable-static --disable-devel-docs --without-doxygen --without-launchd
@@ -20,7 +21,7 @@ endef
 
 define $(package)_preprocess_cmds
   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux && \
-  sed "s/pthread-stubs//" -i configure
+  patch -p1 -i $($(package)_patch_dir)/remove_pthread_stubs.patch
 endef
 
 define $(package)_config_cmds
