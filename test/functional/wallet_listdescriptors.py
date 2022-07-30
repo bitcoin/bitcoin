@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listdescriptors RPC."""
 
+import os
+import json
+
 from test_framework.descriptors import (
     descsum_create
 )
@@ -75,6 +78,15 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(expected, wallet.listdescriptors(False))
         assert_equal(wallet.listdescriptors({'private': False}), wallet.listdescriptors())
         assert_equal(wallet.listdescriptors({'private': True}), wallet.listdescriptors(True))
+
+        desc_file = os.path.join(node.datadir, 'desc.json')
+        assert_equal({
+            'wallet_name': 'w2',
+            'descriptor_file': desc_file
+            }, wallet.listdescriptors({'save_to_file': desc_file}))
+
+        with open(desc_file, encoding="utf8") as json_file:
+            assert_equal(expected['descriptors'], json.load(json_file))
 
         self.log.info('Test list private descriptors')
         expected_private = {
