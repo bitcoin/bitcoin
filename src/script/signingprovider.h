@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGNINGPROVIDER_H
 #define BITCOIN_SCRIPT_SIGNINGPROVIDER_H
 
+#include <attributes.h>
 #include <key.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
@@ -85,9 +86,9 @@ struct FlatSigningProvider final : public SigningProvider
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
     bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
     bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
-};
 
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b);
+    FlatSigningProvider& Merge(FlatSigningProvider&& b) LIFETIMEBOUND;
+};
 
 /** Fillable signing provider that keeps keys in an address->secret map */
 class FillableSigningProvider : public SigningProvider
