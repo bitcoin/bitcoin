@@ -1745,7 +1745,12 @@ RPCHelpMan listdescriptors()
         "listdescriptors",
         "\nList descriptors imported into a descriptor-enabled wallet.\n",
         {
-            {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Show private descriptors."}
+            {"options|private", {RPCArg::Type::OBJ, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                {
+                    {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Show private descriptors."}
+                },
+                "\"options\""
+            },
         },
         RPCResult{RPCResult::Type::OBJ, "", "", {
             {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
@@ -1777,7 +1782,25 @@ RPCHelpMan listdescriptors()
         throw JSONRPCError(RPC_WALLET_ERROR, "listdescriptors is not available for non-descriptor wallets");
     }
 
-    const bool priv = !request.params[0].isNull() && request.params[0].get_bool();
+    bool priv = false;
+
+    if (!request.params[0].isNull()) {
+        if (request.params[0].isBool()) {
+            priv = request.params[0].get_bool();
+        } else {
+            const UniValue& options = request.params[0];
+            RPCTypeCheckObj(options,
+                {
+                    {"private", UniValueType(UniValue::VBOOL)},
+                },
+                true, true);
+
+            if (options.exists("private")) {
+                priv = options["private"].get_bool();
+            }
+        }
+    }
+
     if (priv) {
         EnsureWalletIsUnlocked(*wallet);
     }

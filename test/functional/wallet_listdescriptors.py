@@ -73,6 +73,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
         }
         assert_equal(expected, wallet.listdescriptors())
         assert_equal(expected, wallet.listdescriptors(False))
+        assert_equal(wallet.listdescriptors({'private': False}), wallet.listdescriptors())
+        assert_equal(wallet.listdescriptors({'private': True}), wallet.listdescriptors(True))
 
         self.log.info('Test list private descriptors')
         expected_private = {
