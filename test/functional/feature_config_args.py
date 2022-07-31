@@ -20,11 +20,25 @@ class ConfArgsTest(BitcoinTestFramework):
         self.disable_autoconnect = False
 
     def test_config_file_parser(self):
+        self.log.info('Test config file parser')
         self.stop_node(0)
 
+        # Check that startup fails if conf= is set in bitcoin.conf or in an included conf file
+        bad_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_bad.conf')
+        util.write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
+        conf_in_config_file_err = 'Error: Error reading configuration file: conf cannot be set in the configuration file; use includeconf= if you want to include additional config files'
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f'-conf={bad_conf_file_path}'],
+            expected_msg=conf_in_config_file_err,
+        )
         inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
         with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
             conf.write(f'includeconf={inc_conf_file_path}\n')
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('conf=some.conf\n')
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=conf_in_config_file_err,
+        )
 
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli=1',
@@ -32,7 +46,15 @@ class ConfArgsTest(BitcoinTestFramework):
         )
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('dash_conf=1\n')
+
         with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring unknown configuration value dash_conf']):
+            self.start_node(0)
+        self.stop_node(0)
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('reindex=1\n')
+
+        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary']):
             self.start_node(0)
         self.stop_node(0)
 
