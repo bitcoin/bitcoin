@@ -15,6 +15,9 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+import os
+import json
+
 from test_framework.address import key_to_p2pkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -670,6 +673,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 "internal": True}]
         result = w2.importdescriptors({"requests": desc})
         assert_equal(result[0]['success'], True)
+
+        desc_file = os.path.join(self.nodes[1].datadir, 'desc.json')
+        w2.listdescriptors({'save_to_file': desc_file})
+
+        self.log.info("Descriptors imported from file")
+        self.nodes[1].createwallet(wallet_name="desc_from_file", disable_private_keys=True, blank=True, descriptors=True)
+        desc_from_file_w = self.nodes[1].get_wallet_rpc("desc_from_file")
+
+        result = desc_from_file_w.importdescriptors({"descriptor_file": desc_file})
+        assert_equal(result[0]['success'], True)
+
+        with open(desc_file, encoding="utf8") as json_file:
+            desc = json.load(json_file)
+            assert_equal(desc, desc_from_file_w.listdescriptors()['descriptors'])
 
 if __name__ == '__main__':
     ImportDescriptorsTest().main()

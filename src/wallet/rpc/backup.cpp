@@ -1612,6 +1612,7 @@ RPCHelpMan importdescriptors()
                                     },
                                 },
                                 "\"requests\""},
+                            {"descriptor_file", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The descriptor file"},
                         },
                         "\"options\""
                     },
@@ -1668,11 +1669,37 @@ RPCHelpMan importdescriptors()
             RPCTypeCheckObj(options,
                 {
                     {"requests", UniValueType(UniValue::VARR)},
+                    {"descriptor_file", UniValueType(UniValue::VSTR)},
                 },
                 true, true);
 
+            if (options.exists("requests") && options.exists("descriptor_file") ) {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "The 'requests' and 'descriptor_file' options cannot be used together.");
+            }
+
             if (options.exists("requests")) {
                 requests = options["requests"].get_array();
+            }
+
+            if (options.exists("descriptor_file")) {
+                fs::path filepath = fs::u8path(options["descriptor_file"].get_str());
+
+                filepath = fs::absolute(filepath);
+
+                if (!fs::exists(filepath)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " does not exist.");
+                }
+
+                auto ss = std::ostringstream{};
+                std::ifstream input_file(filepath);
+
+                if (!input_file.is_open()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not open the file " + filepath.u8string());
+                }
+
+                ss << input_file.rdbuf();
+                requests.read(ss.str());
+                RPCTypeCheck(requests, {UniValue::VOBJ});
             }
         }
 
