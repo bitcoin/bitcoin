@@ -663,5 +663,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
 
+        self.nodes[1].createwallet(wallet_name="w2", disable_private_keys=True, descriptors=True)
+        w2 = self.nodes[1].get_wallet_rpc("w2")
+        desc = [{"desc": descsum_create("pkh(" + get_generate_key().pubkey + ")"),
+                "timestamp": "now",
+                "internal": True}]
+        result = w2.importdescriptors({"requests": desc})
+        assert_equal(result[0]['success'], True)
+
 if __name__ == '__main__':
     ImportDescriptorsTest().main()

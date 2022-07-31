@@ -1589,27 +1589,32 @@ RPCHelpMan importdescriptors()
             "\nNote: This call can take over an hour to complete if using an early timestamp; during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exist but related transactions are still missing.\n",
                 {
-                    {"requests", RPCArg::Type::ARR, RPCArg::Optional::NO, "Data to be imported",
+                    {"options|requests", {RPCArg::Type::OBJ, RPCArg::Type::ARR}, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
-                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                            {"requests", RPCArg::Type::ARR, RPCArg::Optional::NO, "Data to be imported",
                                 {
-                                    {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "Descriptor to import."},
-                                    {"active", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set this descriptor to be the active descriptor for the corresponding output type/externality"},
-                                    {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import"},
-                                    {"next_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If a ranged descriptor is set to active, this specifies the next index to generate addresses from"},
-                                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time from which to start rescanning the blockchain for this descriptor, in " + UNIX_EPOCH_TIME + "\n"
-        "                                                              Use the string \"now\" to substitute the current synced blockchain time.\n"
-        "                                                              \"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
-        "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
-                                        "of all descriptors being imported will be scanned as well as the mempool.",
-                                        /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
+                                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                        {
+                                            {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "Descriptor to import."},
+                                            {"active", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set this descriptor to be the active descriptor for the corresponding output type/externality"},
+                                            {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import"},
+                                            {"next_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If a ranged descriptor is set to active, this specifies the next index to generate addresses from"},
+                                            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time from which to start rescanning the blockchain for this descriptor, in " + UNIX_EPOCH_TIME + "\n"
+                "                                                              Use the string \"now\" to substitute the current synced blockchain time.\n"
+                "                                                              \"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
+                "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
+                                                "of all descriptors being imported will be scanned as well as the mempool.",
+                                                /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
+                                            },
+                                            {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
+                                            {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
+                                        },
                                     },
-                                    {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
-                                    {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
                                 },
-                            },
+                                "\"requests\""},
                         },
-                        "\"requests\""},
+                        "\"options\""
+                    },
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -1648,14 +1653,29 @@ RPCHelpMan importdescriptors()
         throw JSONRPCError(RPC_WALLET_ERROR, "importdescriptors is not available for non-descriptor wallets");
     }
 
-    RPCTypeCheck(main_request.params, {UniValue::VARR, UniValue::VOBJ});
-
     WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
 
-    const UniValue& requests = main_request.params[0];
+    UniValue requests;
+
+    if (main_request.params[0].isArray()) {
+        RPCTypeCheck(main_request.params, {UniValue::VARR, UniValue::VOBJ});
+        requests = main_request.params[0];
+    } else {
+            const UniValue& options = main_request.params[0];
+            RPCTypeCheckObj(options,
+                {
+                    {"requests", UniValueType(UniValue::VARR)},
+                },
+                true, true);
+
+            if (options.exists("requests")) {
+                requests = options["requests"].get_array();
+            }
+        }
+
     const int64_t minimum_timestamp = 1;
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
