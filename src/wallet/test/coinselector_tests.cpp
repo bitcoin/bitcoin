@@ -53,7 +53,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
     OutputGroup group;
-    group.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ true);
+    group.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0);
     result.AddInput(group);
 }
 
@@ -134,7 +134,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& availabl
     static_groups.clear();
     for (auto& coin : available_coins) {
         static_groups.emplace_back();
-        static_groups.back().Insert(coin, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
+        static_groups.back().Insert(coin, /*ancestors=*/ 0, /*descendants=*/ 0);
     }
     return static_groups;
 }

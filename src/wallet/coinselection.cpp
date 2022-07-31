@@ -333,10 +333,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only) {
-    // Filter for positive only here before adding the coin
-    if (positive_only && output.GetEffectiveValue() <= 0) return;
-
+void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants) {
     m_outputs.push_back(output);
     COutput& coin = m_outputs.back();
 

@@ -237,7 +237,7 @@ struct OutputGroup
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
 
-    void Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only);
+    void Insert(const COutput& output, size_t ancestors, size_t descendants);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
     CAmount GetSelectionAmount() const;
 };

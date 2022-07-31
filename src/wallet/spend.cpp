@@ -417,13 +417,14 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
             size_t ancestors, descendants;
             wallet.chain().getTransactionAncestry(output.outpoint.hash, ancestors, descendants);
 
-            // Make an OutputGroup containing just this output
-            OutputGroup group{coin_sel_params};
-            group.Insert(output, ancestors, descendants, positive_only);
+            // If 'positive_only' is set, filter for positive only before adding the coin
+            if (!positive_only || output.GetEffectiveValue() > 0) {
+                // Make an OutputGroup containing just this output
+                OutputGroup group{coin_sel_params};
+                group.Insert(output, ancestors, descendants);
 
-            // Check the OutputGroup's eligibility. Only add the eligible ones.
-            if (positive_only && group.GetSelectionAmount() <= 0) continue;
-            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups_out.push_back(group);
+                if (group.EligibleForSpending(filter)) groups_out.push_back(group);
+            }
         }
         return groups_out;
     }
@@ -462,8 +463,10 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
             group = &groups.back();
         }
 
-        // Add the output to group
-        group->Insert(output, ancestors, descendants, positive_only);
+        // Filter for positive only before adding the output to group
+        if (!positive_only || output.GetEffectiveValue() > 0) {
+            group->Insert(output, ancestors, descendants);
+        }
     }
 
     // Now we go through the entire map and pull out the OutputGroups
