@@ -24,6 +24,7 @@ from test_framework.util import (
     assert_is_hex_string,
     sha256sum_file,
 )
+from test_framework.wallet_util import dump_sqlite_kv
 
 
 UPGRADED_KEYMETA_VERSION = 12
@@ -49,13 +50,15 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
+        self.num_nodes = 5
         self.extra_args = [
             ["-addresstype=bech32", "-keypool=2"], # current wallet version
             ["-usehd=1", "-keypool=2"],            # v0.16.3 wallet
-            ["-usehd=0", "-keypool=2"]             # v0.15.2 wallet
+            ["-usehd=0", "-keypool=2"],            # v0.15.2 wallet
+            ["-keypool=2"],                        # v0.20.1 wallet
+            ["-keypool=2"],                        # v23.0 wallet
         ]
-        self.wallet_names = [self.default_wallet_name, None, None]
+        self.wallet_names = [self.default_wallet_name, None, None, None, self.default_wallet_name]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -70,6 +73,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
             None,
             160300,
             150200,
+            200100,
+            230000,
         ])
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
@@ -124,6 +129,47 @@ class UpgradeWalletTest(BitcoinTestFramework):
     def get_wallet_file_path(self, node, name):
         return os.path.join(node.datadir, "regtest/wallets", name, "wallet.dat")
 
+    def test_encryption_key_sig_upgrade(self, node, version):
+        self.log.info(f"Test that loading a {version} wallet upgrades encrypted keys")
+
+        node.start()
+        node.wait_for_rpc_connection()
+        node.get_wallet_rpc(self.default_wallet_name).encryptwallet("passphrase")
+        wallet_path = os.path.join(self.options.tmpdir, f"{version}_wallet")
+        node.get_wallet_rpc(self.default_wallet_name).backupwallet(wallet_path)
+        node.stop_node()
+        node.wait_until_stopped()
+
+        wallet_name = f"{version}_key_sig_upgrade"
+        self.nodes[0].restorewallet(wallet_name, wallet_path)
+        self.nodes[0].get_wallet_rpc(wallet_name).unloadwallet()
+        restored_path = os.path.join(self.nodes[0].datadir, "regtest/wallets", wallet_name, "wallet.dat")
+
+        if self.options.descriptors:
+            kvs = dump_sqlite_kv(restored_path)
+        else:
+            kvs = dump_bdb_kv(restored_path)
+        for key, value in kvs.items():
+            if key.startswith(b"\x04ckey") or key.startswith(b"\x14walletdescriptorckey"):
+                assert len(value) in [49, 81]
+
+        load_res = self.nodes[0].loadwallet(wallet_name)
+        assert_equal(load_res["warning"], "This wallet contains encrypted keys which lack proofs of correctness. Please unlock the wallet so that the encrypted keys can be checked and the proofs added to the wallet file.")
+
+        self.nodes[0].get_wallet_rpc(wallet_name).walletpassphrase("passphrase", 10)
+        self.nodes[0].unloadwallet(wallet_name)
+
+        if self.options.descriptors:
+            kvs = dump_sqlite_kv(restored_path)
+        else:
+            kvs = dump_bdb_kv(restored_path)
+        for key, value in kvs.items():
+            if key.startswith(b"\x04ckey") or key.startswith(b"\x14walletdescriptorckey"):
+                assert len(value) in [114, 146]
+
+        load_res = self.nodes[0].loadwallet(wallet_name)
+        assert_equal(load_res["warning"], "")
+
     def run_test(self):
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress(), sync_fun=lambda: self.dumb_sync_blocks())
         # # Sanity check the test framework:
@@ -132,6 +178,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
         node_master = self.nodes[0]
         v16_3_node  = self.nodes[1]
         v15_2_node  = self.nodes[2]
+        v20_1_node  = self.nodes[3]
+        v23_0_node  = self.nodes[4]
 
         # Send coins to old wallets for later conversion checks.
         v16_3_wallet  = v16_3_node.get_wallet_rpc('wallet.dat')
@@ -334,6 +382,10 @@ class UpgradeWalletTest(BitcoinTestFramework):
             self.nodes[0].createwallet(wallet_name="privkeys_disabled_upgrade", disable_private_keys=True, descriptors=False)
             disabled_wallet = self.nodes[0].get_wallet_rpc("privkeys_disabled_upgrade")
             self.test_upgradewallet(disabled_wallet, previous_version=169900, expected_version=169900)
+
+        if not self.options.descriptors:
+            self.test_encryption_key_sig_upgrade(v20_1_node, "v0.20.1")
+        self.test_encryption_key_sig_upgrade(v23_0_node, "v23.0")
 
 if __name__ == '__main__':
     UpgradeWalletTest().main()

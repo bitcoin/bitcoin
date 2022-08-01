@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful util functions for testing the wallet"""
+import sqlite3
+
 from collections import namedtuple
 
 from test_framework.address import (
@@ -119,3 +121,13 @@ def generate_wif_key():
     k = ECKey()
     k.generate()
     return bytes_to_wif(k.get_bytes(), k.is_compressed)
+
+def dump_sqlite_kv(wallet_path):
+    con = sqlite3.connect(wallet_path)
+    cur = con.cursor()
+    kvs = {}
+    for row in cur.execute("SELECT * FROM main"):
+        assert len(row) == 2
+        kvs[row[0]] = row[1]
+    con.close()
+    return kvs
