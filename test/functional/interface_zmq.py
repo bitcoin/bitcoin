@@ -21,6 +21,8 @@ from test_framework.messages import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_true,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
@@ -70,9 +72,9 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert label == "A" or label == "R"
+            assert_true(label == "A" or label == "R", err_msg=f"{label} different from A or C")
         else:
-            assert label == "D" or label == "C"
+            assert_true(label == "D" or label == "C", err_msg=f"{label} different from D or C")
         return (hash, label, mempool_sequence)
 
 
@@ -359,7 +361,6 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal((payment_txid_2, "A", seq_num), seq.receive_sequence())
         seq_num += 1
 
-        # Spot check getrawmempool results that they only show up when asked for
         assert type(self.nodes[0].getrawmempool()) is list
         assert type(self.nodes[0].getrawmempool(mempool_sequence=False)) is list
         assert "mempool_sequence" not in self.nodes[0].getrawmempool(verbose=True)
@@ -379,7 +380,7 @@ class ZMQTest (BitcoinTestFramework):
 
         # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
         # of the time they were gathered.
-        assert self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"] > seq_num
+        assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         assert_equal((best_hash, "D", None), seq.receive_sequence())
         assert_equal((rbf_txid, "A", seq_num), seq.receive_sequence())
@@ -463,8 +464,8 @@ class ZMQTest (BitcoinTestFramework):
         while zmq_mem_seq is None:
             (hash_str, label, zmq_mem_seq) = seq.receive_sequence()
 
-        assert label == "A" or label == "R"
-        assert hash_str is not None
+        assert_true(label == "A" or label == "R", err_msg="{} is different from A or R")
+        assert_true(hash_str is not None)
 
         # 2) We need to "seed" our view of the mempool
         mempool_snapshot = self.nodes[0].getrawmempool(mempool_sequence=True)
@@ -509,16 +510,16 @@ class ZMQTest (BitcoinTestFramework):
                     # Detected "R" gap, means this a conflict eviction, and mempool tx are being evicted before its
                     # position in the incoming block message "C"
                     if label == "R":
-                        assert mempool_sequence > expected_sequence
+                        assert_greater_than(mempool_sequence, expected_sequence)
                         r_gap += mempool_sequence - expected_sequence
                     else:
                         raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")
             if label == "A":
-                assert hash_str not in mempool_view
+                assert_true(hash_str not in mempool_view)
                 mempool_view.add(hash_str)
                 expected_sequence = mempool_sequence + 1
             elif label == "R":
-                assert hash_str in mempool_view
+                assert_true(hash_str in mempool_view)
                 mempool_view.remove(hash_str)
                 expected_sequence = mempool_sequence + 1
             elif label == "C":

@@ -94,6 +94,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_not_equal,
+    assert_true,
+    assert_greater_than,
+    assert_greater_than_or_equal,
     random_bytes,
 )
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
@@ -156,7 +160,7 @@ Final = namedtuple("Final", "value")
 
 def get(ctx, name):
     """Evaluate name in context ctx."""
-    assert name in ctx, "Missing '%s' in context" % name
+    assert_true(name in ctx, err_msg="Missing '%s' in context" % name)
     expr = ctx[name]
     if not isinstance(expr, Final):
         # Evaluate and cache the result.
@@ -495,11 +499,11 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
 
     # Compute scriptPubKey and set useful defaults based on the inputs.
     if witv0:
-        assert tap is None
+        assert_equal(tap, None)
         conf["mode"] = "witv0"
         if pkh is not None:
             # P2WPKH
-            assert script is None
+            assert_equal(script, None)
             pubkeyhash = hash160(pkh)
             spk = key_to_p2wpkh_script(pkh)
             conf["scriptcode"] = keyhash_to_p2pkh_script(pubkeyhash)
@@ -516,7 +520,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         conf["mode"] = "legacy"
         if pkh is not None:
             # P2PKH
-            assert script is None
+            assert_equal(script, None)
             pubkeyhash = hash160(pkh)
             spk = keyhash_to_p2pkh_script(pubkeyhash)
             conf["scriptcode"] = spk
@@ -528,7 +532,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         else:
             assert False
     else:
-        assert script is None
+        assert_equal(script, None)
         conf["mode"] = "taproot"
         conf["tap"] = tap
         spk = tap.scriptPubKey
@@ -547,7 +551,7 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
         if valid:
             return spend(tx, idx, utxos, **conf)
         else:
-            assert failure is not None
+            assert_not_equal(failure, None)
             return spend(tx, idx, utxos, **{**conf, **failure})
 
     return Spender(script=spk, comment=comment, is_standard=standard, sat_function=sat_fn, err_msg=err_msg, sigops_weight=sigops_weight, no_fail=failure is None, need_vin_vout_mismatch=need_vin_vout_mismatch)
@@ -574,7 +578,7 @@ def bitflipper(expr):
     """Return a callable that evaluates expr and returns it with a random bitflip."""
     def fn(ctx):
         sub = deep_eval(ctx, expr)
-        assert isinstance(sub, bytes)
+        assert_true(isinstance(sub, bytes), err_msg="It is not a bytes instance")
         return (int.from_bytes(sub, 'little') ^ (1 << random.randrange(len(sub) * 8))).to_bytes(len(sub), 'little')
     return fn
 
@@ -769,7 +773,7 @@ def spenders_taproot_active():
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
-                    assert len(prog) == 32
+                    assert_equal(len(prog), 32)
                     if witlen < 32:
                         prog = prog[0:witlen]
                     elif witlen > 32:
@@ -1254,15 +1258,16 @@ class TaprootTest(BitcoinTestFramework):
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
-            assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
+            assert_true(block_response is not None and err_msg in block_response,
+                        err_msg= "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg))
         if accept:
-            assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
+            assert_equal(node.getbestblockhash(), block.hash, err_msg="Failed to accept: %s (response: %s)" % (msg, block_response))
             self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
         else:
-            assert node.getbestblockhash() == self.lastblockhash, "Failed to reject: " + msg
+            assert_equal(node.getbestblockhash(), self.lastblockhash, err_msg="Failed to reject: " + msg)
 
     def init_blockinfo(self, node):
         # Initialize variables used by block_submit().
@@ -1358,7 +1363,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert done == len(normal_utxos) + len(mismatching_utxos)
+        assert_equal(done, len(normal_utxos) + len(mismatching_utxos))
 
         left = done
         while left:
@@ -1397,7 +1402,9 @@ class TaprootTest(BitcoinTestFramework):
             for i in range(len(input_utxos)):
                 if input_utxos[i].spender.need_vin_vout_mismatch:
                     first_mismatch_input = i
-            assert first_mismatch_input is None or first_mismatch_input > 0
+
+            if first_mismatch_input is not None:
+                assert_greater_than(first_mismatch_input, 0)
 
             # Decide fee, and add CTxIns to tx.
             amount = sum(utxo.output.nValue for utxo in input_utxos)
@@ -1410,7 +1417,8 @@ class TaprootTest(BitcoinTestFramework):
 
             # Add 1 to 4 random outputs (but constrained by inputs that require mismatching outputs)
             num_outputs = random.choice(range(1, 1 + min(4, 4 if first_mismatch_input is None else first_mismatch_input)))
-            assert in_value >= 0 and fee - num_outputs * DUST_LIMIT >= MIN_FEE
+            assert_greater_than_or_equal(in_value, 0)
+            assert_greater_than_or_equal(fee - num_outputs * DUST_LIMIT, MIN_FEE)
             for i in range(num_outputs):
                 tx.vout.append(CTxOut())
                 if in_value <= DUST_LIMIT:
@@ -1423,7 +1431,7 @@ class TaprootTest(BitcoinTestFramework):
                 tx.vout[-1].scriptPubKey = random.choice(host_spks)
                 sigops_weight += CScript(tx.vout[-1].scriptPubKey).GetSigOpCount(False) * WITNESS_SCALE_FACTOR
             fee += in_value
-            assert fee >= 0
+            assert_greater_than_or_equal(fee, 0)
 
             # Select coinbase pubkey
             cb_pubkey = random.choice(host_pubkeys)
@@ -1471,9 +1479,9 @@ class TaprootTest(BitcoinTestFramework):
             if (len(spenders) - left) // 200 > (len(spenders) - left - len(input_utxos)) // 200:
                 self.log.info("  - %i tests done" % (len(spenders) - left))
 
-        assert left == 0
-        assert len(normal_utxos) == 0
-        assert len(mismatching_utxos) == 0
+        assert_equal(left, 0)
+        assert_equal(len(normal_utxos), 0)
+        assert_equal(len(mismatching_utxos), 0)
         self.log.info("  - Done")
 
     def gen_test_vectors(self):
