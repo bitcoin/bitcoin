@@ -1131,6 +1131,12 @@ def spenders_taproot_active():
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "alwaysvalid/notsuccessx", tap=tap, leaf="op_success", inputs=[], standard=False, failure={"leaf": "normal"}) # err_msg differs based on opcode
 
+    # == Test case for https://github.com/bitcoin/bitcoin/issues/24765 ==
+
+    zero_fn = lambda h: bytes([0 for _ in range(32)])
+    tap = taproot_construct(pubs[0], [("leaf", CScript([pubs[1], OP_CHECKSIG, pubs[1], OP_CHECKSIGADD, OP_2, OP_EQUAL])), zero_fn])
+    add_spender(spenders, "case24765", tap=tap, leaf="leaf", inputs=[getter("sign"), getter("sign")], key=secs[1], no_fail=True)
+
     # == Legacy tests ==
 
     # Also add a few legacy spends into the mix, so that transactions which combine taproot and pre-taproot spends get tested too.
