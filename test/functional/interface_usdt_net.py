@@ -109,7 +109,7 @@ class NetTracepointTest(BitcoinTestFramework):
 
         self.log.info(
             "hook into the net:inbound_message and net:outbound_message tracepoints")
-        ctx = USDT(path=str(self.options.bitcoind))
+        ctx = USDT(pid=self.nodes[0].process.pid)
         ctx.enable_probe(probe="net:inbound_message",
                          fn_name="trace_inbound_message")
         ctx.enable_probe(probe="net:outbound_message",
