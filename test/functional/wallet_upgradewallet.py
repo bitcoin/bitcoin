@@ -11,7 +11,6 @@ Only v0.15.2 and v0.16.3 are required by this test.
 """
 
 import os
-import shutil
 import struct
 
 from io import BytesIO
@@ -110,16 +109,20 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["walletversion"], new_version)
 
     def test_upgradewallet_error(self, wallet, previous_version, requested_version, msg):
-        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+        wallet_info = wallet.getwalletinfo()
+        assert_equal(wallet_info["walletversion"], previous_version)
         assert_equal(wallet.upgradewallet(requested_version),
             {
-                "wallet_name": "",
+                "wallet_name": wallet_info["walletname"],
                 "previous_version": previous_version,
                 "current_version": previous_version,
                 "error": msg,
             }
         )
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+
+    def get_wallet_file_path(self, node, name):
+        return os.path.join(node.datadir, "regtest/wallets", name, "wallet.dat")
 
     def run_test(self):
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress(), sync_fun=lambda: self.dumb_sync_blocks())
@@ -138,60 +141,28 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         self.log.info("Test upgradewallet RPC...")
         # Prepare for copying of the older wallet
-        node_master_wallet_dir = os.path.join(node_master.datadir, "regtest/wallets", self.default_wallet_name)
-        node_master_wallet = os.path.join(node_master_wallet_dir, self.default_wallet_name, self.wallet_data_filename)
-        v16_3_wallet       = os.path.join(v16_3_node.datadir, "regtest/wallets/wallet.dat")
-        v15_2_wallet       = os.path.join(v15_2_node.datadir, "regtest/wallet.dat")
-        split_hd_wallet    = os.path.join(v15_2_node.datadir, "regtest/splithd")
+        v16_3_wallet = os.path.join(self.options.tmpdir, "16_3_wallet.dat")
+        v16_3_node.backupwallet(v16_3_wallet)
+        v15_2_wallet = os.path.join(self.options.tmpdir, "15_2_wallet.dat")
+        v15_2_node.backupwallet(v15_2_wallet)
         self.stop_nodes()
 
         # Make split hd wallet
+        split_hd_wallet = os.path.join(self.options.tmpdir, "split_hd_wallet.dat")
         self.start_node(2, ['-usehd=1', '-keypool=2', '-wallet=splithd'])
+        v15_2_node.backupwallet(split_hd_wallet)
         self.stop_node(2)
 
-        def copy_v16():
-            node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.16.3 wallet to the last Bitcoin Core version and open it:
-            shutil.rmtree(node_master_wallet_dir)
-            os.mkdir(node_master_wallet_dir)
-            shutil.copy(
-                v16_3_wallet,
-                node_master_wallet_dir
-            )
-            node_master.loadwallet(self.default_wallet_name)
-
-        def copy_non_hd():
-            node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.15.2 non hd wallet to the last Bitcoin Core version and open it:
-            shutil.rmtree(node_master_wallet_dir)
-            os.mkdir(node_master_wallet_dir)
-            shutil.copy(
-                v15_2_wallet,
-                node_master_wallet_dir
-            )
-            node_master.loadwallet(self.default_wallet_name)
-
-        def copy_split_hd():
-            node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.15.2 split hd wallet to the last Bitcoin Core version and open it:
-            shutil.rmtree(node_master_wallet_dir)
-            os.mkdir(node_master_wallet_dir)
-            shutil.copy(
-                split_hd_wallet,
-                os.path.join(node_master_wallet_dir, 'wallet.dat')
-            )
-            node_master.loadwallet(self.default_wallet_name)
-
         self.restart_node(0)
-        copy_v16()
-        wallet = node_master.get_wallet_rpc(self.default_wallet_name)
+        node_master.restorewallet("16_3_wallet", v16_3_wallet)
+        wallet = node_master.get_wallet_rpc("16_3_wallet")
         self.log.info("Test upgradewallet without a version argument")
         self.test_upgradewallet(wallet, previous_version=159900, expected_version=169900)
         # wallet should still contain the same balance
         assert_equal(wallet.getbalance(), v16_3_balance)
 
-        copy_non_hd()
-        wallet = node_master.get_wallet_rpc(self.default_wallet_name)
+        node_master.restorewallet("15_2_wallet", v15_2_wallet)
+        wallet = node_master.get_wallet_rpc("15_2_wallet")
         # should have no master key hash before conversion
         assert_equal('hdseedid' in wallet.getwalletinfo(), False)
         self.log.info("Test upgradewallet with explicit version number")
@@ -200,34 +171,36 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_is_hex_string(wallet.getwalletinfo()['hdseedid'])
 
         self.log.info("Intermediary versions don't effect anything")
-        copy_non_hd()
+        node_master.restorewallet("15_2_wallet_upgrade", v15_2_wallet)
+        wallet = node_master.get_wallet_rpc("15_2_wallet_upgrade")
         # Wallet starts with 60000
         assert_equal(60000, wallet.getwalletinfo()['walletversion'])
         wallet.unloadwallet()
-        before_checksum = sha256sum_file(node_master_wallet)
-        node_master.loadwallet('')
+        before_checksum = sha256sum_file(self.get_wallet_file_path(node_master, "15_2_wallet_upgrade"))
+        node_master.loadwallet("15_2_wallet_upgrade")
         # Test an "upgrade" from 60000 to 129999 has no effect, as the next version is 130000
         self.test_upgradewallet(wallet, previous_version=60000, requested_version=129999, expected_version=60000)
         wallet.unloadwallet()
-        assert_equal(before_checksum, sha256sum_file(node_master_wallet))
-        node_master.loadwallet('')
+        assert_equal(before_checksum, sha256sum_file(self.get_wallet_file_path(node_master, "15_2_wallet_upgrade")))
+        node_master.loadwallet("15_2_wallet_upgrade")
 
         self.log.info('Wallets cannot be downgraded')
-        copy_non_hd()
+        node_master.restorewallet("15_2_step_upgrade", v15_2_wallet)
+        wallet = node_master.get_wallet_rpc("15_2_step_upgrade")
         self.test_upgradewallet_error(wallet, previous_version=60000, requested_version=40000,
             msg="Cannot downgrade wallet from version 60000 to version 40000. Wallet version unchanged.")
         wallet.unloadwallet()
-        assert_equal(before_checksum, sha256sum_file(node_master_wallet))
-        node_master.loadwallet('')
+        assert_equal(before_checksum, sha256sum_file(self.get_wallet_file_path(node_master, "15_2_step_upgrade")))
+        node_master.loadwallet("15_2_step_upgrade")
 
         self.log.info('Can upgrade to HD')
         # Inspect the old wallet and make sure there is no hdchain
-        orig_kvs = dump_bdb_kv(node_master_wallet)
+        orig_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "15_2_step_upgrade"))
         assert b'\x07hdchain' not in orig_kvs
         # Upgrade to HD, no split
         self.test_upgradewallet(wallet, previous_version=60000, requested_version=130000)
         # Check that there is now a hd chain and it is version 1, no internal chain counter
-        new_kvs = dump_bdb_kv(node_master_wallet)
+        new_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "15_2_step_upgrade"))
         assert b'\x07hdchain' in new_kvs
         hd_chain = new_kvs[b'\x07hdchain']
         assert_equal(28, len(hd_chain))
@@ -255,7 +228,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.log.info('Upgrade HD to HD chain split')
         self.test_upgradewallet(wallet, previous_version=130000, requested_version=169900)
         # Check that the hdchain updated correctly
-        new_kvs = dump_bdb_kv(node_master_wallet)
+        new_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "15_2_step_upgrade"))
         hd_chain = new_kvs[b'\x07hdchain']
         assert_equal(32, len(hd_chain))
         hd_chain_version, external_counter, seed_id, internal_counter = struct.unpack('<iI20sI', hd_chain)
@@ -278,10 +251,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('m/0\'/0\'/3\'', info['hdkeypath'])
 
         self.log.info('Upgrade non-HD to HD chain split')
-        copy_non_hd()
+        node_master.restorewallet("15_2_wallet_hd_upgrade", v15_2_wallet)
+        wallet = node_master.get_wallet_rpc("15_2_wallet_hd_upgrade")
         self.test_upgradewallet(wallet, previous_version=60000, requested_version=169900)
         # Check that the hdchain updated correctly
-        new_kvs = dump_bdb_kv(node_master_wallet)
+        new_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "15_2_wallet_hd_upgrade"))
         hd_chain = new_kvs[b'\x07hdchain']
         assert_equal(32, len(hd_chain))
         hd_chain_version, external_counter, seed_id, internal_counter = struct.unpack('<iI20sI', hd_chain)
@@ -296,9 +270,10 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('m/0\'/1\'/0\'', info['hdkeypath'])
 
         self.log.info('KeyMetadata should upgrade when loading into master')
-        copy_v16()
+        node_master.restorewallet("16_3_meta_upgrade", v16_3_wallet)
+        wallet = node_master.get_wallet_rpc("16_3_meta_upgrade")
         old_kvs = dump_bdb_kv(v16_3_wallet)
-        new_kvs = dump_bdb_kv(node_master_wallet)
+        new_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "16_3_meta_upgrade"))
         for k, old_v in old_kvs.items():
             if k.startswith(b'\x07keymeta'):
                 new_ver, new_create_time, new_kp_str, new_seed_id, new_fpr, new_path_len, new_path, new_has_key_orig = deser_keymeta(BytesIO(new_kvs[k]))
@@ -329,13 +304,14 @@ class UpgradeWalletTest(BitcoinTestFramework):
                 assert_equal(new_path, built_path)
 
         self.log.info('Upgrading to NO_DEFAULT_KEY should not remove the defaultkey')
-        copy_split_hd()
+        node_master.restorewallet("split_hd_upgrade", split_hd_wallet)
+        wallet = node_master.get_wallet_rpc("split_hd_upgrade")
         # Check the wallet has a default key initially
-        old_kvs = dump_bdb_kv(node_master_wallet)
+        old_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "split_hd_upgrade"))
         defaultkey = old_kvs[b'\x0adefaultkey']
         self.log.info("Upgrade the wallet. Should still have the same default key.")
         self.test_upgradewallet(wallet, previous_version=139900, requested_version=159900)
-        new_kvs = dump_bdb_kv(node_master_wallet)
+        new_kvs = dump_bdb_kv(self.get_wallet_file_path(node_master, "split_hd_upgrade"))
         up_defaultkey = new_kvs[b'\x0adefaultkey']
         assert_equal(defaultkey, up_defaultkey)
         # 0.16.3 doesn't have a default key
