@@ -769,7 +769,8 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, st
 bool WalletBatch::IsKeyType(const std::string& strType)
 {
     return (strType == DBKeys::KEY ||
-            strType == DBKeys::MASTER_KEY || strType == DBKeys::CRYPTED_KEY);
+            strType == DBKeys::MASTER_KEY || strType == DBKeys::CRYPTED_KEY ||
+            strType == DBKeys::WALLETDESCRIPTORKEY || strType == DBKeys::WALLETDESCRIPTORCKEY);
 }
 
 DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
