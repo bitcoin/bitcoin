@@ -499,8 +499,11 @@ util::Result<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmo
 {
     // Run coin selection on each OutputType and compute the Waste Metric
     std::vector<SelectionResult> results;
-    for (const auto& it : available_coins.coins) {
-        auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, it.second, coin_selection_params)};
+    for (const auto& [type, coins] : available_coins.coins) {
+        Groups groups;
+        groups.positive_group = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
+        groups.mixed_group = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+        auto result{ChooseSelectionResult(nTargetValue, groups, coin_selection_params)};
         // If any specific error message appears here, then something particularly wrong happened.
         if (HasErrorMsg(result)) return result; // So let's return the specific error.
         // Append the favorable result.
@@ -514,31 +517,33 @@ util::Result<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmo
     // over all available coins, which would allow mixing.
     // If TypesCount() <= 1, there is nothing to mix.
     if (allow_mixed_output_types && available_coins.TypesCount() > 1) {
-        return ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.All(), coin_selection_params);
+        const auto& all = available_coins.All();
+        Groups groups;
+        groups.positive_group = GroupOutputs(wallet, all, coin_selection_params, eligibility_filter, true /* positive_only */);
+        groups.mixed_group = GroupOutputs(wallet, all, coin_selection_params, eligibility_filter, false /* positive_only */);
+        return ChooseSelectionResult(nTargetValue, groups, coin_selection_params);
     }
     // Either mixing is not allowed and we couldn't find a solution from any single OutputType, or mixing was allowed and we still couldn't
     // find a solution using all available coins
     return util::Error();
 };
 
-util::Result<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins, const CoinSelectionParams& coin_selection_params)
+util::Result<SelectionResult> ChooseSelectionResult(const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
 {
     // Vector of results. We will choose the best one based on waste.
     std::vector<SelectionResult> results;
 
-    std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, available_coins, coin_selection_params, eligibility_filter, /*positive_only=*/true);
-    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
+    if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change)}) {
         results.push_back(*bnb_result);
     }
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-    std::vector<OutputGroup> all_groups = GroupOutputs(wallet, available_coins, coin_selection_params, eligibility_filter, /*positive_only=*/false);
-    if (auto knapsack_result{KnapsackSolver(all_groups, nTargetValue, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
+    if (auto knapsack_result{KnapsackSolver(groups.mixed_group, nTargetValue, coin_selection_params.m_min_change_target, coin_selection_params.rng_fast)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*knapsack_result);
     }
 
-    if (auto srd_result{SelectCoinsSRD(positive_groups, nTargetValue, coin_selection_params.rng_fast)}) {
+    if (auto srd_result{SelectCoinsSRD(groups.positive_group, nTargetValue, coin_selection_params.rng_fast)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         results.push_back(*srd_result);
     }

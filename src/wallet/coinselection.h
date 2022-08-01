@@ -242,6 +242,13 @@ struct OutputGroup
     CAmount GetSelectionAmount() const;
 };
 
+struct Groups {
+    // Stores 'OutputGroup' containing only positive UTXOs (value > 0).
+    std::vector<OutputGroup> positive_group;
+    // Stores 'OutputGroup' which may contain both positive and negative UTXOs.
+    std::vector<OutputGroup> mixed_group;
+};
+
 /** Compute the waste for this result given the cost of change
  * and the opportunity cost of spending these inputs now vs in the future.
  * If change exists, waste = change_cost + inputs * (effective_feerate - long_term_feerate)
