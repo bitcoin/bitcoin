@@ -2655,9 +2655,14 @@ bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key)
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key)
+bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key, bool checksum_valid)
 {
     LOCK(cs_desc_man);
+
+    if (!checksum_valid) {
+        m_decryption_thoroughly_checked = false;
+    }
+
     if (!m_map_keys.empty()) {
         return false;
     }

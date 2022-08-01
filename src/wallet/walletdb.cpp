@@ -353,7 +353,7 @@ public:
     std::map<OutputType, uint256> m_active_internal_spks;
     std::map<uint256, DescriptorCache> m_descriptor_caches;
     std::map<std::pair<uint256, CKeyID>, CKey> m_descriptor_keys;
-    std::map<std::pair<uint256, CKeyID>, std::pair<CPubKey, std::vector<unsigned char>>> m_descriptor_crypt_keys;
+    std::map<std::pair<uint256, CKeyID>, std::tuple<CPubKey, std::vector<unsigned char>, bool>> m_descriptor_crypt_keys;
     std::map<uint160, CHDChain> m_hd_chains;
     bool tx_corrupt{false};
     bool descriptor_unknown{false};
@@ -789,7 +789,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.nCKeys++;
 
-            wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
+            wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_tuple(pubkey, privkey, checksum_res.value())));
             wss.fIsEncrypted = true;
         } else if (strType == DBKeys::LOCKED_UTXO) {
             uint256 hash;
@@ -961,7 +961,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
     for (const auto& desc_key_pair : wss.m_descriptor_crypt_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
-        ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
+        ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, std::get<0>(desc_key_pair.second), std::get<1>(desc_key_pair.second), std::get<2>(desc_key_pair.second));
     }
 
     if (rescan_required && result == DBErrors::LOAD_OK) {
