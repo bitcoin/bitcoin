@@ -2315,9 +2315,15 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
 DBErrors CWallet::LoadWallet()
 {
+    std::vector<bilingual_str> warnings;
+    return LoadWallet(warnings);
+}
+
+DBErrors CWallet::LoadWallet(std::vector<bilingual_str>& warnings)
+{
     LOCK(cs_wallet);
 
-    DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this);
+    DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this, warnings);
     if (nLoadWalletRet == DBErrors::NEED_REWRITE)
     {
         if (GetDatabase().Rewrite("\x04pool"))
@@ -2886,7 +2892,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // should be possible to use std::allocate_shared.
     const std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, args, std::move(database)), ReleaseWallet);
     bool rescan_required = false;
-    DBErrors nLoadWalletRet = walletInstance->LoadWallet();
+    DBErrors nLoadWalletRet = walletInstance->LoadWallet(warnings);
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
             error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);

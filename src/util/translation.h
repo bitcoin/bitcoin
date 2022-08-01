@@ -26,6 +26,11 @@ struct bilingual_str {
         return *this;
     }
 
+    bool operator<(const bilingual_str& other) const
+    {
+        return original < other.original;
+    }
+
     bool empty() const
     {
         return original.empty();

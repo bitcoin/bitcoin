@@ -66,9 +66,10 @@ const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULT
 // WalletBatch
 //
 
-static util::Result<bool> CheckCryptedKeySig(CDataStream& value, const CPubKey& pubkey, const uint256& hash)
+static util::Result<bool> CheckCryptedKeySig(CDataStream& value, const CPubKey& pubkey, const uint256& hash, std::set<bilingual_str>& warnings)
 {
     if (value.eof()) {
+        warnings.insert(_("This wallet contains encrypted keys which lack proofs of correctness. Please unlock the wallet so that the encrypted keys can be checked and the proofs added to the wallet file."));
         return false;
     }
 
@@ -358,6 +359,7 @@ public:
     bool tx_corrupt{false};
     bool descriptor_unknown{false};
     bool unexpected_legacy_entry{false};
+    std::set<bilingual_str> m_warnings;
 
     CWalletScanState() = default;
 };
@@ -536,12 +538,15 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
 
                 // Get the signature and check it
-                util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, vchPubKey, checksum);
+                util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, vchPubKey, checksum, wss.m_warnings);
                 if (!checksum_res.has_value()) {
                     strErr = ErrorString(checksum_res).original;
                     return false;
                 }
                 checksum_valid = checksum_res.value();
+            }
+            if (!checksum_valid) {
+                wss.m_warnings.insert(_("This wallet contains encrypted keys which lack proofs of correctness. Please unlock the wallet so that the encrypted keys can be checked and the proofs added to the wallet file."));
             }
 
             wss.nCKeys++;
@@ -781,7 +786,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> privkey;
 
             // Get the signature and check it
-            util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, pubkey, Hash(privkey));
+            util::Result<bool> checksum_res = CheckCryptedKeySig(ssValue, pubkey, Hash(privkey), wss.m_warnings);
             if (!checksum_res.has_value()) {
                 strErr = ErrorString(checksum_res).original;
                 return false;
@@ -831,7 +836,7 @@ bool WalletBatch::IsKeyType(const std::string& strType)
             strType == DBKeys::WALLETDESCRIPTORKEY || strType == DBKeys::WALLETDESCRIPTORCKEY);
 }
 
-DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
+DBErrors WalletBatch::LoadWallet(CWallet* pwallet, std::vector<bilingual_str>& warnings)
 {
     CWalletScanState wss;
     bool fNoncriticalErrors = false;
@@ -938,6 +943,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         result = DBErrors::CORRUPT;
     }
     m_batch->CloseCursor();
+
+    // Add the warnings from the scan state
+    for (const auto& warning : wss.m_warnings) {
+        warnings.push_back(warning);
+    }
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man_pair : wss.m_active_external_spks) {
