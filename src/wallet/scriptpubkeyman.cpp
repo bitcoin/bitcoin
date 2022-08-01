@@ -2052,6 +2052,7 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
         return false;
     }
 
+    WalletBatch batch(m_storage.GetDatabase());
     bool keyPass = m_map_crypted_keys.empty(); // Always pass when there are no encrypted keys
     bool keyFail = false;
     for (const auto& mi : m_map_crypted_keys) {
@@ -2063,8 +2064,18 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
             break;
         }
         keyPass = true;
-        if (m_decryption_thoroughly_checked)
+        if (m_decryption_thoroughly_checked) {
             break;
+        } else {
+            // Rewrite these encrypted keys with checksums and signatures
+            uint256 enckey_hash = Hash(crypted_secret);
+            std::vector<unsigned char> sig(64);
+            if (!key.SignSchnorr(enckey_hash, sig, nullptr, uint256())) {
+                keyFail = true;
+                break;
+            }
+            batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret, sig);
+        }
     }
     if (keyPass && keyFail) {
         LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
