@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-typedef std::set<COutput> CoinSet;
+typedef std::set<std::shared_ptr<COutput>> CoinSet;
 
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
 static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
@@ -53,7 +53,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
     OutputGroup group;
-    group.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0);
+    group.Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*descendants=*/ 0);
     result.AddInput(group);
 }
 
@@ -65,7 +65,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     COutput coin(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ 148, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, fee);
     coin.long_term_fee = long_term_fee;
-    set.insert(coin);
+    set.insert(std::make_shared<COutput>(coin));
 }
 
 static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = CFeeRate(0), int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false)
@@ -94,10 +94,10 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
     std::vector<CAmount> a_amts;
     std::vector<CAmount> b_amts;
     for (const auto& coin : a.GetInputSet()) {
-        a_amts.push_back(coin.txout.nValue);
+        a_amts.push_back(coin->txout.nValue);
     }
     for (const auto& coin : b.GetInputSet()) {
-        b_amts.push_back(coin.txout.nValue);
+        b_amts.push_back(coin->txout.nValue);
     }
     std::sort(a_amts.begin(), a_amts.end());
     std::sort(b_amts.begin(), b_amts.end());
@@ -110,8 +110,8 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
 static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
 {
     std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
-        [](const COutput& a, const COutput& b) {
-            return a.outpoint == b.outpoint;
+        [](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
+            return a->outpoint == b->outpoint;
         });
     return ret.first == a.GetInputSet().end() && ret.second == b.GetInputSet().end();
 }
@@ -134,7 +134,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& availabl
     static_groups.clear();
     for (auto& coin : available_coins) {
         static_groups.emplace_back();
-        static_groups.back().Insert(coin, /*ancestors=*/ 0, /*descendants=*/ 0);
+        static_groups.back().Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
     }
     return static_groups;
 }
@@ -943,7 +943,7 @@ static util::Result<SelectionResult> select_coins(const CAmount& target, const C
 
 static bool has_coin(const CoinSet& set, CAmount amount)
 {
-    return std::any_of(set.begin(), set.end(), [&](const auto& coin) { return coin.GetEffectiveValue() == amount; });
+    return std::any_of(set.begin(), set.end(), [&](const auto& coin) { return coin->GetEffectiveValue() == amount; });
 }
 
 BOOST_AUTO_TEST_CASE(check_max_weight)

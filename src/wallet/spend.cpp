@@ -421,7 +421,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
             if (!positive_only || output.GetEffectiveValue() > 0) {
                 // Make an OutputGroup containing just this output
                 OutputGroup group{coin_sel_params};
-                group.Insert(output, ancestors, descendants);
+                group.Insert(std::make_shared<COutput>(output), ancestors, descendants);
 
                 if (group.EligibleForSpending(filter)) groups_out.push_back(group);
             }
@@ -465,7 +465,7 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
 
         // Filter for positive only before adding the output to group
         if (!positive_only || output.GetEffectiveValue() > 0) {
-            group->Insert(output, ancestors, descendants);
+            group->Insert(std::make_shared<COutput>(output), ancestors, descendants);
         }
     }
 
@@ -936,7 +936,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // Shuffle selected coins and fill in final vin
-    std::vector<COutput> selected_coins = result.GetShuffledInputVector();
+    std::vector<std::shared_ptr<COutput>> selected_coins = result.GetShuffledInputVector();
 
     // The sequence number is set to non-maxint so that DiscourageFeeSniping
     // works.
@@ -948,7 +948,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // behavior."
     const uint32_t nSequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
     for (const auto& coin : selected_coins) {
-        txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
+        txNew.vin.push_back(CTxIn(coin->outpoint, CScript(), nSequence));
     }
     DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
 

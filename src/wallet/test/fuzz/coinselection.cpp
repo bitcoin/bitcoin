@@ -30,7 +30,7 @@ static void GroupCoins(FuzzedDataProvider& fuzzed_data_provider, const std::vect
     bool valid_outputgroup{false};
     for (auto& coin : coins) {
         if (!positive_only || (positive_only && coin.GetEffectiveValue() > 0)) {
-            output_group.Insert(coin, /*ancestors=*/0, /*descendants=*/0);
+            output_group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/0, /*descendants=*/0);
         }
         // If positive_only was specified, nothing was inserted, leading to an empty output group
         // that would be invalid for the BnB algorithm

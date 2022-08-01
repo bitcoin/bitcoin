@@ -333,9 +333,9 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants) {
+void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t descendants) {
     m_outputs.push_back(output);
-    COutput& coin = m_outputs.back();
+    auto& coin = *m_outputs.back();
 
     fee += coin.GetFee();
 
@@ -355,8 +355,8 @@ void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descend
     // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
 
-    if (output.input_bytes > 0) {
-        m_weight += output.input_bytes * WITNESS_SCALE_FACTOR;
+    if (output->input_bytes > 0) {
+        m_weight += output->input_bytes * WITNESS_SCALE_FACTOR;
     }
 }
 
@@ -372,7 +372,7 @@ CAmount OutputGroup::GetSelectionAmount() const
     return m_subtract_fee_outputs ? m_value : effective_value;
 }
 
-CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
+CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed
     assert(!inputs.empty());
@@ -380,7 +380,8 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     // Always consider the cost of spending an input now vs in the future.
     CAmount waste = 0;
     CAmount selected_effective_value = 0;
-    for (const COutput& coin : inputs) {
+    for (const auto& coin_ptr : inputs) {
+        const COutput& coin = *coin_ptr;
         waste += coin.GetFee() - coin.long_term_fee;
         selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.txout.nValue;
     }
@@ -428,12 +429,12 @@ CAmount SelectionResult::GetWaste() const
 
 CAmount SelectionResult::GetSelectedValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->txout.nValue; });
 }
 
 CAmount SelectionResult::GetSelectedEffectiveValue() const
 {
-    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.GetEffectiveValue(); });
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->GetEffectiveValue(); });
 }
 
 void SelectionResult::Clear()
@@ -452,14 +453,14 @@ void SelectionResult::AddInput(const OutputGroup& group)
     m_weight += group.m_weight;
 }
 
-void SelectionResult::AddInputs(const std::set<COutput>& inputs, bool subtract_fee_outputs)
+void SelectionResult::AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs)
 {
     // As it can fail, combine inputs first
     InsertInputs(inputs);
     m_use_effective = !subtract_fee_outputs;
 
     m_weight += std::accumulate(inputs.cbegin(), inputs.cend(), 0, [](int sum, const auto& coin) {
-        return sum + std::max(coin.input_bytes, 0) * WITNESS_SCALE_FACTOR;
+        return sum + std::max(coin->input_bytes, 0) * WITNESS_SCALE_FACTOR;
     });
 }
 
@@ -477,14 +478,14 @@ void SelectionResult::Merge(const SelectionResult& other)
     m_weight += other.m_weight;
 }
 
-const std::set<COutput>& SelectionResult::GetInputSet() const
+const std::set<std::shared_ptr<COutput>>& SelectionResult::GetInputSet() const
 {
     return m_selected_inputs;
 }
 
-std::vector<COutput> SelectionResult::GetShuffledInputVector() const
+std::vector<std::shared_ptr<COutput>> SelectionResult::GetShuffledInputVector() const
 {
-    std::vector<COutput> coins(m_selected_inputs.begin(), m_selected_inputs.end());
+    std::vector<std::shared_ptr<COutput>> coins(m_selected_inputs.begin(), m_selected_inputs.end());
     Shuffle(coins.begin(), coins.end(), FastRandomContext());
     return coins;
 }
