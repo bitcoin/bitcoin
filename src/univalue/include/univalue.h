@@ -47,18 +47,18 @@ public:
 
     void clear();
 
-    bool setNull();
-    bool setBool(bool val);
-    bool setNumStr(const std::string& val);
-    bool setInt(uint64_t val);
-    bool setInt(int64_t val);
+    void setNull();
+    void setBool(bool val);
+    void setNumStr(const std::string& val);
     // SYSCOIN
-    bool setInt(uint32_t val_);
-    bool setInt(int val_) { return setInt((int64_t)val_); }
-    bool setFloat(double val);
-    bool setStr(const std::string& val);
-    bool setArray();
-    bool setObject();
+    void setInt(uint32_t val_);
+    void setInt(uint64_t val);
+    void setInt(int64_t val);
+    void setInt(int val_) { return setInt(int64_t{val_}); }
+    void setFloat(double val);
+    void setStr(const std::string& val);
+    void setArray();
+    void setObject();
 
     enum VType getType() const { return typ; }
     const std::string& getValStr() const { return val; }
