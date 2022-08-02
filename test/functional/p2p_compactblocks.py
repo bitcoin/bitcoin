@@ -615,6 +615,27 @@ class CompactBlocksTest(BitcoinTestFramework):
             bad_peer.send_message(msg)
         bad_peer.wait_for_disconnect()
 
+    def test_low_work_compactblocks(self, test_node):
+        # A compactblock with insufficient work won't get its header included
+        node = self.nodes[0]
+        hashPrevBlock = int(node.getblockhash(node.getblockcount() - 150), 16)
+        block = self.build_block_on_tip(node)
+        block.hashPrevBlock = hashPrevBlock
+        block.solve()
+
+        comp_block = HeaderAndShortIDs()
+        comp_block.initialize_from_block(block)
+        with self.nodes[0].assert_debug_log(['[net] Ignoring low-work compact block from peer 0']):
+            test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+
+        tips = node.getchaintips()
+        found = False
+        for x in tips:
+            if x["hash"] == block.hash:
+                found = True
+                break
+        assert not found
+
     def test_compactblocks_not_at_tip(self, test_node):
         node = self.nodes[0]
         # Test that requesting old compactblocks doesn't work.
@@ -832,6 +853,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing compactblock requests/announcements not at chain tip...")
         self.test_compactblocks_not_at_tip(self.segwit_node)
+
+        self.log.info("Testing handling of low-work compact blocks...")
+        self.test_low_work_compactblocks(self.segwit_node)
 
         self.log.info("Testing handling of incorrect blocktxn responses...")
         self.test_incorrect_blocktxn_response(self.segwit_node)
