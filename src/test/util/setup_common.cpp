@@ -14,12 +14,12 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
-#include <node/mempool_args.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
+#include <node/mempool_args.h>
 #include <node/miner.h>
 #include <noui.h>
 #include <policy/fees.h>

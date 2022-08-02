@@ -31,7 +31,6 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
-#include <node/mempool_args.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
@@ -42,6 +41,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <policy/feerate.h>

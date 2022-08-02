@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
-#include <node/mempool_args.h>
 #include <node/context.h>
+#include <node/mempool_args.h>
 #include <node/miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
