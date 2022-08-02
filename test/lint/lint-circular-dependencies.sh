@@ -83,8 +83,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "policy/fees -> txmempool -> validation -> policy/fees"
     "policy/policy -> policy/settings -> policy/policy"
     "evo/specialtxman -> validation -> evo/specialtxman"
-    "bloom -> llmq/commitment -> llmq/utils -> net -> bloom"
-    "banman -> bloom -> llmq/commitment -> llmq/utils -> net -> banman"
 
     "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> llmq/snapshot -> evo/simplifiedmns"
     "llmq/blockprocessor -> net_processing -> llmq/snapshot -> llmq/blockprocessor"

@@ -7,6 +7,7 @@
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
 #include <llmq/signing.h>
+#include <llmq/utils.h>
 
 #include <chain.h>
 #include <chainparams.h>

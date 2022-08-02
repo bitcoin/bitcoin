@@ -100,7 +100,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
 
     CDKGLogger logger(*this, __func__);
 
-    if (CLLMQUtils::IsQuorumRotationEnabled(params.type, m_quorum_base_block_index)) {
+    if (utils::IsQuorumRotationEnabled(params.type, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
         const CBlockIndex* pCycleQuorumBaseBlockIndex = m_quorum_base_block_index->GetAncestor(cycleQuorumBaseHeight);
         std::stringstream ss;
@@ -117,7 +117,7 @@ bool CDKGSession::Init(const CBlockIndex* _pQuorumBaseBlockIndex, const std::vec
 
     if (!myProTxHash.IsNull()) {
         quorumDKGDebugManager->InitLocalSessionStatus(params, quorumIndex, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
-        relayMembers = CLLMQUtils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);
+        relayMembers = utils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);
         std::stringstream ss;
         for (const auto& r : relayMembers) {
             ss << r.ToString().substr(0, 4) << " | ";
@@ -445,7 +445,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 {
-    if (!CLLMQUtils::IsQuorumPoseEnabled(params.type)) {
+    if (!utils::IsQuorumPoseEnabled(params.type)) {
         return;
     }
 
@@ -460,7 +460,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         protoMap.emplace(verifiedProRegTxHash, pnode->nVersion);
     });
 
-    bool fShouldAllMembersBeConnected = CLLMQUtils::IsAllMembersConnectedEnabled(params.type);
+    bool fShouldAllMembersBeConnected = utils::IsAllMembersConnectedEnabled(params.type);
     for (const auto& m : members) {
         if (m->dmn->proTxHash == myProTxHash) {
             continue;
@@ -992,7 +992,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*qc.quorumVvecHash.begin())++;
     }
 
-    uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
+    uint256 commitmentHash = utils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
 
     if (lieType == 2) {
         (*commitmentHash.begin())++;
@@ -1219,14 +1219,14 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         fqc.quorumPublicKey = first.quorumPublicKey;
         fqc.quorumVvecHash = first.quorumVvecHash;
 
-        if (CLLMQUtils::IsQuorumRotationEnabled(fqc.llmqType, m_quorum_base_block_index)) {
+        if (utils::IsQuorumRotationEnabled(fqc.llmqType, m_quorum_base_block_index)) {
             fqc.nVersion = CFinalCommitment::INDEXED_QUORUM_VERSION;
             fqc.quorumIndex = quorumIndex;
         } else {
             fqc.quorumIndex = 0;
         }
 
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
+        uint256 commitmentHash = utils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
 
         std::vector<CBLSSignature> aggSigs;
         std::vector<CBLSPublicKey> aggPks;

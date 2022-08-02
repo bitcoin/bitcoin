@@ -9,8 +9,8 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <llmq/utils.h>
 #include <logging.h>
-#include <util/irange.h>
 #include <validation.h>
 
 namespace llmq
@@ -30,7 +30,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
-    if (nVersion == 0 || nVersion != (CLLMQUtils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ? INDEXED_QUORUM_VERSION : CURRENT_VERSION)) {
+    if (nVersion == 0 || nVersion != (utils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ? INDEXED_QUORUM_VERSION : CURRENT_VERSION)) {
         LogPrintfFinalCommitment("q[%s] invalid nVersion=%d\n", quorumHash.ToString(), nVersion);
         return false;
     }
@@ -79,7 +79,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         LogPrintfFinalCommitment("q[%s] invalid vvecSig\n");
         return false;
     }
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
     if (LogAcceptCategory(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;
@@ -103,7 +103,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        uint256 commitmentHash = utils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
         if (LogAcceptCategory(BCLog::LLMQ)) {
             std::stringstream ss3;
             for (const auto &mn: members) {

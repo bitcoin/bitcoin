@@ -164,7 +164,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
     }
 
     //Quorum rotation is enabled only for InstantSend atm.
-    Consensus::LLMQType llmqType = CLLMQUtils::GetInstantSendLLMQType(blockIndex);
+    Consensus::LLMQType llmqType = utils::GetInstantSendLLMQType(blockIndex);
 
     // Since the returned quorums are in reversed order, the most recent one is at index 0
     const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);

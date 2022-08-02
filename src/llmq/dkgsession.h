@@ -183,7 +183,7 @@ public:
 
     [[nodiscard]] uint256 GetSignHash() const
     {
-        return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        return utils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
     }
 };
 

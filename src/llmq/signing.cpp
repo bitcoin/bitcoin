@@ -553,7 +553,7 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     if (!db.GetRecoveredSigByHash(hash, ret)) {
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(ret.getLlmqType(), ret.getQuorumHash())) {
+    if (!utils::IsQuorumActive(ret.getLlmqType(), ret.getQuorumHash())) {
         // we don't want to propagate sigs from inactive quorums
         return false;
     }
@@ -621,7 +621,7 @@ bool CSigningManager::PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, b
                   recoveredSig.getQuorumHash().ToString());
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+    if (!utils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
         return false;
     }
 
@@ -640,7 +640,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
         }
 
         std::unordered_set<std::pair<NodeId, uint256>, StaticSaltedHasher> uniqueSignHashes;
-        CLLMQUtils::IterateNodesRandom(pendingRecoveredSigs, [&]() {
+        utils::IterateNodesRandom(pendingRecoveredSigs, [&]() {
             return uniqueSignHashes.size() < maxUniqueSessions;
         }, [&](NodeId nodeId, std::list<std::shared_ptr<const CRecoveredSig>>& ns) {
             if (ns.empty()) {
@@ -679,7 +679,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
                     it = v.erase(it);
                     continue;
                 }
-                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+                if (!utils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig->getQuorumHash().ToString(), nodeId);
                     it = v.erase(it);
@@ -999,7 +999,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         pindexStart = ::ChainActive()[startBlockHeight];
     }
 
-    if (CLLMQUtils::IsQuorumRotationEnabled(llmqType, pindexStart)) {
+    if (utils::IsQuorumRotationEnabled(llmqType, pindexStart)) {
         auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
         if (quorums.empty()) {
             return nullptr;
@@ -1050,13 +1050,13 @@ bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signe
         return false;
     }
 
-    uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    uint256 signHash = utils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
     return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
 }
 
 uint256 CSigBase::buildSignHash() const
 {
-    return CLLMQUtils::BuildSignHash(llmqType, quorumHash, id, msgHash);
+    return utils::BuildSignHash(llmqType, quorumHash, id, msgHash);
 }
 
 

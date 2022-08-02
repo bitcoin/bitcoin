@@ -1519,8 +1519,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     nMaxTipAge = args.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     try {
-        const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
-        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncEntries().size() > 0};
+        const bool fRecoveryEnabled{llmq::utils::QuorumDataRecoveryEnabled()};
+        const bool fQuorumVvecRequestsEnabled{llmq::utils::GetEnabledQuorumVvecSyncEntries().size() > 0};
         if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
             InitWarning(Untranslated("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0"));
         }

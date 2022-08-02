@@ -139,7 +139,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStr
 
         if (pnode2->GetVerifiedProRegTxHash() == mnauth.proRegTxHash) {
             if (fMasternodeMode) {
-                const auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::CLLMQUtils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
+                const auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::utils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
                 LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
                 if (WITH_LOCK(activeMasternodeInfoCs, return deterministicOutbound == activeMasternodeInfo.proTxHash)) {

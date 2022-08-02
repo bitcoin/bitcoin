@@ -7,7 +7,7 @@
 #include <primitives/transaction.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
-#include <llmq/commitment.h>
+#include <logging.h>
 #include <hash.h>
 #include <script/script.h>
 #include <script/standard.h>

@@ -207,7 +207,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& msg_typ
     {
         LOCK(cs_indexedQuorumsCache);
         if (indexedQuorumsCache.empty()) {
-            CLLMQUtils::InitQuorumsCache(indexedQuorumsCache);
+            utils::InitQuorumsCache(indexedQuorumsCache);
         }
         indexedQuorumsCache[llmqType].get(quorumHash, quorumIndex);
     }
@@ -223,7 +223,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& msg_typ
             return;
         }
 
-        if (!CLLMQUtils::IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
+        if (!utils::IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
             LOCK(cs_main);
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", uint8_t(llmqType));
             Misbehaving(pfrom->GetId(), 100);
@@ -232,7 +232,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& msg_typ
 
         const Consensus::LLMQParams& llmqParams = GetLLMQParams(llmqType);
         quorumIndex = pQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval;
-        int quorumIndexMax = CLLMQUtils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ?
+        int quorumIndexMax = utils::IsQuorumRotationEnabled(llmqType, pQuorumBaseBlockIndex) ?
                 llmqParams.signingActiveQuorumCount - 1 : 0;
 
         if (quorumIndex > quorumIndexMax) {
@@ -374,7 +374,7 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -408,7 +408,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 
 bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
 
     vecRet.clear();
     vecRet.reserve(members.size());
