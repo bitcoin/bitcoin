@@ -80,28 +80,28 @@ public:
     CoinsResult coins_pool;
     FastRandomContext rand;
 
-    void GroupVerify(const CoinEligibilityFilter& filter,
+    void GroupVerify(const OutputType type,
+                     const CoinEligibilityFilter& filter,
                      bool avoid_partial_spends,
                      bool positive_only,
                      int expected_size)
     {
-        std::vector<OutputGroup> groups = GroupOutputs(*wallet,
-                                                       coins_pool.All(),
-                                                       makeSelectionParams(rand, avoid_partial_spends),
-                                                       filter,
-                                                       positive_only);
-        BOOST_CHECK_EQUAL(groups.size(), expected_size);
+        OutputGroupTypeMap groups = GroupOutputs(*wallet, coins_pool, makeSelectionParams(rand, avoid_partial_spends), filter);
+        std::vector<OutputGroup>& groups_out = positive_only ? groups.groups_by_type[type].positive_group :
+                                               groups.groups_by_type[type].mixed_group;
+        BOOST_CHECK_EQUAL(groups_out.size(), expected_size);
     }
 
-    void GroupAndVerify(const CoinEligibilityFilter& filter,
+    void GroupAndVerify(const OutputType type,
+                        const CoinEligibilityFilter& filter,
                         int expected_with_partial_spends_size,
                         int expected_without_partial_spends_size,
                         bool positive_only)
     {
         // First avoid partial spends
-        GroupVerify(filter, /*avoid_partial_spends=*/false, positive_only,  expected_with_partial_spends_size);
+        GroupVerify(type, filter, /*avoid_partial_spends=*/false, positive_only,  expected_with_partial_spends_size);
         // Second don't avoid partial spends
-        GroupVerify(filter, /*avoid_partial_spends=*/true, positive_only, expected_without_partial_spends_size);
+        GroupVerify(type, filter, /*avoid_partial_spends=*/true, positive_only, expected_without_partial_spends_size);
     }
 };
 
@@ -125,7 +125,8 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
         addCoin(group_verifier.coins_pool, *wallet, dest, 10 * COIN, /*is_from_me=*/true);
     }
 
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+                                  BASIC_FILTER,
                                   /*expected_with_partial_spends_size=*/ GROUP_SIZE,
                                   /*expected_without_partial_spends_size=*/ 1,
                                   /*positive_only=*/ true);
@@ -140,7 +141,8 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
         addCoin(group_verifier.coins_pool, *wallet, dest2, 5 * COIN, /*is_from_me=*/true);
     }
 
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ GROUP_SIZE * 2,
             /*expected_without_partial_spends_size=*/ 2,
             /*positive_only=*/ true);
@@ -154,13 +156,15 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
     BOOST_CHECK(group_verifier.coins_pool.coins[OutputType::BECH32].back().GetEffectiveValue() <= 0);
 
     // First expect no changes with "positive_only" enabled
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ GROUP_SIZE * 2,
             /*expected_without_partial_spends_size=*/ 2,
             /*positive_only=*/ true);
 
     // Then expect changes with "positive_only" disabled
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ GROUP_SIZE * 2 + 1,
             /*expected_without_partial_spends_size=*/ 3,
             /*positive_only=*/ false);
@@ -176,7 +180,8 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
             /*is_from_me=*/false, CFeeRate(0), /*depth=*/5);
 
     // Expect no changes from this round and the previous one (point 4)
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ GROUP_SIZE * 2 + 1,
             /*expected_without_partial_spends_size=*/ 3,
             /*positive_only=*/ false);
@@ -192,7 +197,8 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
             /*is_from_me=*/true, CFeeRate(0), /*depth=*/0);
 
     // Expect no changes from this round and the previous one (point 5)
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ GROUP_SIZE * 2 + 1,
             /*expected_without_partial_spends_size=*/ 3,
             /*positive_only=*/ false);
@@ -209,14 +215,16 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
 
     // Exclude partial groups only adds one more group to the previous test case (point 6)
     int PREVIOUS_ROUND_COUNT = GROUP_SIZE * 2 + 1;
-    group_verifier.GroupAndVerify(BASIC_FILTER,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            BASIC_FILTER,
             /*expected_with_partial_spends_size=*/ PREVIOUS_ROUND_COUNT + NUM_SINGLE_ENTRIES,
             /*expected_without_partial_spends_size=*/ 4,
             /*positive_only=*/ false);
 
     // Include partial groups should add one more group inside the "avoid partial spends" count
     const CoinEligibilityFilter& avoid_partial_groups_filter{1, 6, 0, 0, /*include_partial=*/ true};
-    group_verifier.GroupAndVerify(avoid_partial_groups_filter,
+    group_verifier.GroupAndVerify(OutputType::BECH32,
+            avoid_partial_groups_filter,
             /*expected_with_partial_spends_size=*/ PREVIOUS_ROUND_COUNT + NUM_SINGLE_ENTRIES,
             /*expected_without_partial_spends_size=*/ 5,
             /*positive_only=*/ false);

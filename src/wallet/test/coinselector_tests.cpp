@@ -153,9 +153,9 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
-    static std::vector<OutputGroup> static_groups;
-    static_groups = GroupOutputs(wallet, available_coins.All(), coin_selection_params, filter, /*positive_only=*/false);
-    return static_groups;
+    static OutputGroupTypeMap static_groups;
+    static_groups = GroupOutputs(wallet, available_coins, coin_selection_params, {filter});
+    return static_groups.all_groups.mixed_group;
 }
 
 // Branch and bound coin selection tests

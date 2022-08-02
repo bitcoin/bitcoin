@@ -372,6 +372,28 @@ CAmount OutputGroup::GetSelectionAmount() const
     return m_subtract_fee_outputs ? m_value : effective_value;
 }
 
+void OutputGroupTypeMap::Push(const OutputGroup& group, OutputType type, bool insert_positive, bool insert_mixed)
+{
+    if (group.m_outputs.empty()) return;
+
+    Groups& groups = groups_by_type[type];
+    if (insert_positive && group.GetSelectionAmount() > 0) {
+        groups.positive_group.emplace_back(group);
+        all_groups.positive_group.emplace_back(group);
+    }
+    if (insert_mixed) {
+        groups.mixed_group.emplace_back(group);
+        all_groups.mixed_group.emplace_back(group);
+    }
+}
+
+std::optional<Groups> OutputGroupTypeMap::Find(OutputType type)
+{
+    auto it_by_type = groups_by_type.find(type);
+    if (it_by_type == groups_by_type.end()) return std::nullopt;
+    return it_by_type->second;
+}
+
 CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed

@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -247,6 +248,21 @@ struct Groups {
     std::vector<OutputGroup> positive_group;
     // Stores 'OutputGroup' which may contain both positive and negative UTXOs.
     std::vector<OutputGroup> mixed_group;
+};
+
+/** Stores several 'Groups' whose were mapped by output type. */
+struct OutputGroupTypeMap
+{
+    // Maps output type to output groups.
+    std::map<OutputType, Groups> groups_by_type;
+    // All inserted groups, no type distinction.
+    Groups all_groups;
+
+    // Based on the insert flag; appends group to the 'mixed_group' and, if value > 0, to the 'positive_group'.
+    // This affects both; the groups filtered by type and the overall groups container.
+    void Push(const OutputGroup& group, OutputType type, bool insert_positive, bool insert_mixed);
+    // Retrieves 'Groups' filtered by type
+    std::optional<Groups> Find(OutputType type);
 };
 
 /** Compute the waste for this result given the cost of change
