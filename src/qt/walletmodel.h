@@ -11,7 +11,7 @@
 #include <script/standard.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <qt/walletmodeltransaction.h>
