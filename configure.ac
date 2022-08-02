@@ -322,7 +322,7 @@ AC_ARG_ENABLE([werror],
     [enable_werror=no])
 
 AC_ARG_ENABLE([external-signer],
-    [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is yes, requires Boost::Process)])],
+    [AS_HELP_STRING([--enable-external-signer],[compile external signer support (default is auto, requires Boost::Process)])],
     [use_external_signer=$enableval],
     [use_external_signer=auto])
 
