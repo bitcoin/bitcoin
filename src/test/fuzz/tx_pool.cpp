@@ -177,7 +177,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         Assert(!outpoints_supply.empty());
 
         // Create transaction to add to the mempool
-        const CTransactionRef tx = [&] {
+        const Package package{[&] {
             CMutableTransaction tx_mut;
             tx_mut.nVersion = CTransaction::CURRENT_VERSION;
             tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
@@ -216,7 +216,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
                 Assert(outpoints_rbf.insert(in.prevout).second);
             }
             return tx;
-        }();
+        }()};
 
         if (fuzzed_data_provider.ConsumeBool()) {
             MockTime(fuzzed_data_provider, chainstate);
@@ -224,12 +224,14 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         if (fuzzed_data_provider.ConsumeBool()) {
             tx_pool.RollingFeeUpdate();
         }
-        if (fuzzed_data_provider.ConsumeBool()) {
-            const auto& txid = fuzzed_data_provider.ConsumeBool() ?
-                                   tx->GetHash() :
-                                   PickValue(fuzzed_data_provider, outpoints_rbf).hash;
-            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+        for (const auto& tx : package) {
+            if (fuzzed_data_provider.ConsumeBool()) {
+                const auto& txid = fuzzed_data_provider.ConsumeBool() ?
+                                       tx->GetHash() :
+                                       PickValue(fuzzed_data_provider, outpoints_rbf).hash;
+                const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+                tx_pool.PrioritiseTransaction(txid, delta);
+            }
         }
 
         // Remember all removed and added transactions
@@ -239,33 +241,52 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         RegisterSharedValidationInterface(txr);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
 
-        // Make sure ProcessNewPackage on one transaction works.
-        // The result is not guaranteed to be the same as what is returned by ATMP.
-        const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true));
-        // If something went wrong due to a package-specific policy, it might not return a
-        // validation result for the transaction.
-        if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
-            auto it = result_package.m_tx_results.find(tx->GetWitnessHash());
-            Assert(it != result_package.m_tx_results.end());
-            Assert(it->second.m_result_type == MempoolAcceptResult::ResultType::VALID ||
-                   it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+
+        bool accepted{true};
+        for (const auto& tx : package) {
+            const bool submit_standalone{
+                // A package must have at least 2 txs, so size-1 packages can only be submitted standalone
+                package.size() == 1 ||
+                fuzzed_data_provider.ConsumeBool()};
+            if (submit_standalone) {
+                const auto result_single{WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false))};
+                const bool accepted_single{result_single.m_result_type == MempoolAcceptResult::ResultType::VALID};
+                accepted &= accepted_single;
+            }
         }
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
-        const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
+        if (package.size() >= 2) {
+            // Submit the remainder of the package.
+            // For now, every package has only one tx , so this submits the whole
+            // package again.
+            const auto result_package{WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, tx_pool, package, /*test_accept=*/false))};
+            accepted = result_package.m_state.IsValid();
+            Assert(accepted != result_package.m_state.IsInvalid());
+            // If something went wrong due to a package-specific policy, it might not return a
+            // validation result for the transaction.
+            if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
+                for (const auto& tx_res : result_package.m_tx_results) {
+                    Assert(tx_res.second.m_result_type == MempoolAcceptResult::ResultType::VALID ||
+                           tx_res.second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+                }
+            }
+            if (accepted) {
+                Assert(result_package.m_tx_results.size() == package.size());
+                for (const auto& tx_res : result_package.m_tx_results) {
+                    Assert(tx_res.second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+                }
+            }
+        }
         SyncWithValidationInterfaceQueue();
         UnregisterSharedValidationInterface(txr);
-
         Assert(accepted != added.empty());
-        Assert(accepted == res.m_state.IsValid());
-        Assert(accepted != res.m_state.IsInvalid());
         if (accepted) {
-            Assert(added.size() == 1); // For now, no package acceptance
-            Assert(tx == *added.begin());
+            Assert(Package(added.begin(), added.end()) == package);
         } else {
-            // Do not consider rejected transaction removed
-            removed.erase(tx);
+            // Do not consider rejected transactions removed
+            for (const auto& tx : package) {
+                removed.erase(tx);
+            }
         }
 
         // Helper to insert spent and created outpoints of a tx into collections
