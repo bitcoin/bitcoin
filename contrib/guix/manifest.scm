@@ -78,6 +78,11 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
+
+(define (cross-gcc-with-newlib gcc)
+  (package-with-extra-configure-variable gcc
+      "--with-newlib" "yes"))
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
@@ -87,9 +92,9 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
   (let* ((xbinutils (cross-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (cross-gcc target
+         (xgcc-sans-libc (cross-gcc-with-newlib (cross-gcc target
                                     #:xgcc base-gcc-for-libc
-                                    #:xbinutils xbinutils))
+                                    #:xbinutils xbinutils)))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
