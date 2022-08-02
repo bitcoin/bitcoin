@@ -245,7 +245,7 @@ SYSCOIN_CORE_H = \
   logging.h \
   logging/timer.h \
   mapport.h \
-  mempool_args.h \
+  node/mempool_args.h \
   memusage.h \
   merkleblock.h \
   net.h \
@@ -537,7 +537,7 @@ libsyscoin_node_a_SOURCES = \
   kernel/context.cpp \
   kernel/mempool_persist.cpp \
   mapport.cpp \
-  mempool_args.cpp \
+  node/mempool_args.cpp \
   net.cpp \
   netfulfilledman.cpp \
   netgroup.cpp \
