@@ -68,7 +68,7 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_MAJOR_CONFLICT)
             # this one uses output from tx2 so its not involved in the conflict chain
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_STATUS_OK)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx6)['status'], ZDAG_MAJOR_CONFLICT)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx6)['status'], ZDAG_WARNING_RBF)
 
         self.generate(self.nodes[0], 1)
         self.sync_blocks()
@@ -90,23 +90,23 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         useraddress3 = self.nodes[3].getnewaddress()
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.generate(self.nodes[0], 1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, 0, False)['txid']
         time.sleep(0.25)
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, 0, False)['txid']
         time.sleep(0.25)
         tx3 = self.nodes[0].assetallocationburn(self.asset, 1, '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
         time.sleep(0.25)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001, 0, False)['txid']
         time.sleep(0.25)
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002, 0, False)['txid']
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx2)['status'], ZDAG_STATUS_OK)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx3)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
-            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_NOT_ZDAG_TX)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_WARNING_RBF)
+            assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_WARNING_RBF)
 
         self.generate(self.nodes[0], 1)
         self.sync_blocks()
@@ -117,15 +117,15 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx4)['status'], ZDAG_NOT_FOUND)
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, 0, False)['txid']
         time.sleep(0.25)
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, 0, False)['txid']
         time.sleep(0.25)
         tx3 = self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})['txid']
         time.sleep(0.25)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001, 0, False)['txid']
         time.sleep(0.25)
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002, 0, False)['txid']
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
