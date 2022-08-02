@@ -7,7 +7,7 @@ The purpose of this library is to make the verification functionality that is cr
 
 ### API
 
-The interface is defined in the C header `dashconsensus.h` located in  `src/script/dashconsensus.h`.
+The interface is defined in the C header `bitcoinconsensus.h` located in  `src/script/bitcoinconsensus.h`.
 
 #### Version
 
@@ -39,9 +39,3 @@ The interface is defined in the C header `dashconsensus.h` located in  `src/scri
 - `dashconsensus_ERR_TX_INDEX` - An invalid index for `txTo`
 - `dashconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`
 - `dashconsensus_ERR_DESERIALIZE` - An error deserializing `txTo`
-
-### Example Implementations
-- [NBitcoin](https://github.com/NicolasDorier/NBitcoin/blob/master/NBitcoin/Script.cs#L814) (.NET Bindings)
-- [node-libbitcoinconsensus](https://github.com/bitpay/node-libbitcoinconsensus) (Node.js Bindings)
-- [java-libbitcoinconsensus](https://github.com/dexX7/java-libbitcoinconsensus) (Java Bindings)
-- [bitcoinconsensus-php](https://github.com/Bit-Wasp/bitcoinconsensus-php) (PHP Bindings)

@@ -17,7 +17,7 @@
 #include <streams.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include <script/dashconsensus.h>
+#include <script/bitcoinconsensus.h>
 #endif
 
 #include <stdint.h>
