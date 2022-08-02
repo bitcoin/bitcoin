@@ -9,10 +9,13 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
 )
+from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 class ResendWalletTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -27,7 +30,9 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         peer_first = node.add_p2p_connection(P2PTxInvStore())
 
         self.log.info("Create a new transaction and wait until it's broadcast")
-        txid = node.sendtoaddress(node.getnewaddress(), 1)
+        parent_utxo, indep_utxo = node.listunspent()[:2]
+        addr = node.getnewaddress()
+        txid = node.send(outputs=[{addr: 1}], options={"inputs": [parent_utxo]})["txid"]
 
         # Can take a few seconds due to transaction trickling
         peer_first.wait_for_broadcast([txid])
@@ -67,6 +72,49 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Give some time for trickle to occur
         node.setmocktime(now + 36 * 60 * 60 + 600)
         peer_second.wait_for_broadcast([txid])
+
+        self.log.info("Chain of unconfirmed not-in-mempool txs are rebroadcast")
+        # This tests that the node broadcasts the parent transaction before the child transaction.
+        # To test that scenario, we need a method to reliably get a child transaction placed
+        # in mapWallet positioned before the parent. We cannot predict the position in mapWallet,
+        # but we can observe it using listreceivedbyaddress and other related RPCs.
+        #
+        # So we will create the child transaction, use listreceivedbyaddress to see what the
+        # ordering of mapWallet is, if the child is not before the parent, we will create a new
+        # child (via bumpfee) and remove the old child (via removeprunedfunds) until we get the
+        # ordering of child before parent.
+        child_txid = node.send(outputs=[{addr: 0.5}], options={"inputs": [{"txid":txid, "vout":0}]})["txid"]
+        while True:
+            txids = node.listreceivedbyaddress(minconf=0, address_filter=addr)[0]["txids"]
+            if txids == [child_txid, txid]:
+                break
+            bumped = node.bumpfee(child_txid)
+            node.removeprunedfunds(child_txid)
+            child_txid = bumped["txid"]
+        entry_time = node.getmempoolentry(child_txid)["time"]
+
+        block_time = entry_time + 6 * 60
+        node.setmocktime(block_time)
+        block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
+        block.solve()
+        node.submitblock(block.serialize().hex())
+        node.syncwithvalidationinterfacequeue()
+
+        # Evict these txs from the mempool
+        evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
+        node.setmocktime(evict_time)
+        indep_send = node.send(outputs=[{node.getnewaddress(): 1}], options={"inputs": [indep_utxo]})
+        node.syncwithvalidationinterfacequeue()
+        node.getmempoolentry(indep_send["txid"])
+        assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)
+        assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
+
+        # Rebroadcast and check that parent and child are both in the mempool
+        with node.assert_debug_log(['resubmit 2 unconfirmed transactions']):
+            node.setmocktime(evict_time + 36 * 60 * 60) # 36 hrs is the upper limit of the resend timer
+            node.mockscheduler(60)
+        node.getmempoolentry(txid)
+        node.getmempoolentry(child_txid)
 
 
 if __name__ == '__main__':
