@@ -70,6 +70,7 @@ mkdir -p "$DISTSRC"
                 osslsigncode attach-signature \
                                  -in "$infile" \
                                  -out "${OUTDIR}/${infile_base/-unsigned}" \
+                                 -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
                                  -sigin codesignatures/win/"$infile_base".pem
             done
             ;;
