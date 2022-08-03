@@ -587,7 +587,7 @@ inspecting signatures in Mach-O binaries.")
         xz
         ;; Build tools
         gnu-make
-        libtool-2.4.7
+        libtool
         autoconf-2.71
         automake
         pkg-config
@@ -596,7 +596,7 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
         ;; Scripting
-        python-minimal ;; (3.9)
+        python-minimal ;; (3.10)
         ;; Git
         git-minimal
         ;; Tests

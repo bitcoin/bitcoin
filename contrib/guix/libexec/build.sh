@@ -52,7 +52,8 @@ BASEPREFIX="${PWD}/depends"
 store_path() {
     grep --extended-regexp "/[^-]{32}-${1}-[^-]+${2:+-${2}}" "${GUIX_ENVIRONMENT}/manifest" \
         | head --lines=1 \
-        | sed --expression='s|^[[:space:]]*"||' \
+        | sed --expression='s|\x29*$||' \
+              --expression='s|^[[:space:]]*"||' \
               --expression='s|"[[:space:]]*$||'
 }
 
