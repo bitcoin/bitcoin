@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_WALLET_H
 #define BITCOIN_TEST_UTIL_WALLET_H
 
+#include <outputtype.h>
 #include <string>
 
 namespace wallet {
@@ -19,8 +20,10 @@ extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
 
 /** Import the address to the wallet */
 void importaddress(wallet::CWallet& wallet, const std::string& address);
-/** Returns a new address from the wallet */
+/** Returns a new encoded destination from the wallet (hardcoded to BECH32) */
 std::string getnewaddress(wallet::CWallet& w);
+/** Returns a new destination, of an specific type, from the wallet */
+CTxDestination getNewDestination(wallet::CWallet& w, OutputType output_type);
 
 
 #endif // BITCOIN_TEST_UTIL_WALLET_H
