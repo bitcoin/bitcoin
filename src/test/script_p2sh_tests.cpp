@@ -18,20 +18,18 @@
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+static bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
     return IsStandardTx(tx, std::nullopt, DEFAULT_PERMIT_BAREMULTISIG, CFeeRate{DUST_RELAY_TX_FEE}, reason);
 }
 
-static std::vector<unsigned char>
-Serialize(const CScript& s)
+static std::vector<unsigned char> Serialize(const CScript& s)
 {
     std::vector<unsigned char> sSerialized(s.begin(), s.end());
     return sSerialized;
 }
 
-static bool
-Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, ScriptError& err)
+static bool Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, ScriptError& err)
 {
     // Create dummy to/from transactions:
     CMutableTransaction txFrom;
