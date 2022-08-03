@@ -292,9 +292,10 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // the buffer size.
     BOOST_CHECK(bf.SetPos(11));
     {
-        uint8_t a[40 - 11];
+        constexpr uint8_t a_size = 40 - 11;
+        uint8_t a[a_size];
         bf >> a;
-        for (uint8_t j = 0; j < sizeof(a); ++j) {
+        for (uint8_t j = 0; j < a_size; ++j) {
             BOOST_CHECK_EQUAL(a[j], 11 + j);
         }
     }
@@ -338,7 +339,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
         FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
-        size_t fileSize = InsecureRandRange(256);
+        uint8_t fileSize = static_cast<uint8_t>(InsecureRandRange(256));
         for (uint8_t i = 0; i < fileSize; ++i) {
             fwrite(&i, 1, 1, file);
         }
