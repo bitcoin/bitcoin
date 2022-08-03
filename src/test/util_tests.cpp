@@ -2271,7 +2271,7 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
 {
     BOOST_CHECK_EQUAL(Capitalize(""), "");
     BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
-    BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff"); // NOLINT(bugprone-string-literal-with-embedded-nul)
 }
 
 static std::string SpanToStr(const Span<const char>& span)
