@@ -31,7 +31,6 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
-#include <mempool_args.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
@@ -42,6 +41,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <policy/feerate.h>
@@ -935,16 +935,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
     }
 
-    // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
-    // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
-    if (args.IsArgSet("-incrementalrelayfee")) {
-        if (std::optional<CAmount> inc_relay_fee = ParseMoney(args.GetArg("-incrementalrelayfee", ""))) {
-            ::incrementalRelayFee = CFeeRate{inc_relay_fee.value()};
-        } else {
-            return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
-        }
-    }
-
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg < 0) {
@@ -973,19 +963,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    if (args.IsArgSet("-minrelaytxfee")) {
-        if (std::optional<CAmount> min_relay_fee = ParseMoney(args.GetArg("-minrelaytxfee", ""))) {
-            // High fee check is done afterward in CWallet::Create()
-            ::minRelayTxFee = CFeeRate{min_relay_fee.value()};
-        } else {
-            return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
-        }
-    } else if (incrementalRelayFee > ::minRelayTxFee) {
-        // Allow only setting incrementalRelayFee to control both
-        ::minRelayTxFee = incrementalRelayFee;
-        LogPrintf("Increasing minrelaytxfee to %s to match incrementalrelayfee\n",::minRelayTxFee.ToString());
-    }
-
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
     if (args.IsArgSet("-blockmintxfee")) {
@@ -994,27 +971,9 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         }
     }
 
-    // Feerate used to define dust.  Shouldn't be changed lightly as old
-    // implementations may inadvertently create non-standard transactions
-    if (args.IsArgSet("-dustrelayfee")) {
-        if (std::optional<CAmount> parsed = ParseMoney(args.GetArg("-dustrelayfee", ""))) {
-            dustRelayFee = CFeeRate{parsed.value()};
-        } else {
-            return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
-        }
-    }
-
-    fRequireStandard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
-    if (!chainparams.IsTestChain() && !fRequireStandard) {
-        return InitError(strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString()));
-    }
     nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
-
-    fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
-    fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = args.GetIntArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
@@ -1418,7 +1377,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
-    ApplyArgsManOptions(args, mempool_opts);
+    if (const auto err{ApplyArgsManOptions(args, chainparams, mempool_opts)}) {
+        return InitError(*err);
+    }
     mempool_opts.check_ratio = std::clamp<int>(mempool_opts.check_ratio, 0, 1'000'000);
 
     int64_t descendant_limit_bytes = mempool_opts.limits.descendant_size_vbytes * 40;

@@ -55,7 +55,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     }
 
     TxoutType which_type;
-    bool is_standard_ret = IsStandard(script, which_type);
+    bool is_standard_ret = IsStandard(script, std::nullopt, which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||

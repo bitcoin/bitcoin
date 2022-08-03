@@ -568,6 +568,12 @@ public:
 
     const int64_t m_max_size_bytes;
     const std::chrono::seconds m_expiry;
+    const CFeeRate m_incremental_relay_feerate;
+    const CFeeRate m_min_relay_feerate;
+    const CFeeRate m_dust_relay_feerate;
+    const bool m_permit_bare_multisig;
+    const std::optional<unsigned> m_max_datacarrier_bytes;
+    const bool m_require_standard;
     const bool m_full_rbf;
 
     using Limits = kernel::MemPoolLimits;
@@ -702,11 +708,11 @@ public:
     void CalculateDescendants(txiter it, setEntries& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
-      *  for larger-sized transactions.
-      *  The incrementalRelayFee policy variable is used to bound the time it
-      *  takes the fee rate to go back down all the way to 0. When the feerate
-      *  would otherwise be half of this, it is set to 0 instead.
-      */
+     *  for larger-sized transactions.
+     *  The m_incremental_relay_feerate policy variable is used to bound the time it
+     *  takes the fee rate to go back down all the way to 0. When the feerate
+     *  would otherwise be half of this, it is set to 0 instead.
+     */
     CFeeRate GetMinFee() const {
         return GetMinFee(m_max_size_bytes);
     }
