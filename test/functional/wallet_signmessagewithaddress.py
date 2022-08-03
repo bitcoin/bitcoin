@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2021 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet commands for signing and verifying messages."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class SignMessagesWithAddressTest(BitcoinTestFramework):
+class SignMessagesWithAddressTest(RevoltTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

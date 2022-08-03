@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test generation and spending of P2TR addresses."""
@@ -9,7 +9,7 @@ import random
 from decimal import Decimal
 from test_framework.address import output_key_to_p2tr
 from test_framework.key import H_POINT
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
@@ -182,7 +182,7 @@ def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
     return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
 
-class WalletTaprootTest(BitcoinTestFramework):
+class WalletTaprootTest(RevoltTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
     def set_test_params(self):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021 The Revolt Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test a basic M-of-N multisig setup between multiple people using descriptor wallets and PSBTs, as well as a signing flow.
@@ -8,14 +8,14 @@ This is meant to be documentation as much as functional tests, so it is kept as 
 """
 
 from test_framework.address import base58_to_byte
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import RevoltTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
 )
 
 
-class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
+class WalletMultisigDescriptorPSBTTest(RevoltTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
