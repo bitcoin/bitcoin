@@ -25,6 +25,7 @@ struct ChainstateManagerOpts {
     BlockTreeDBOpts block_tree_db_opts;
     const fs::path& data_dir;
     CoinsViewDBOpts coins_view_db_opts;
+    size_t total_coinstip_cache_bytes;
 };
 
 } // namespace kernel

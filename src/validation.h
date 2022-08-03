@@ -862,6 +862,7 @@ public:
               }(opts.block_tree_db_opts)
           },
           m_coins_view_db_opts{opts.coins_view_db_opts},
+          m_total_coinstip_cache{static_cast<int64_t>(opts.total_coinstip_cache_bytes)},
           m_total_coinsdb_cache{static_cast<int64_t>(m_coins_view_db_opts.cache_size)} {};
 
     const CChainParams& GetParams() const { return m_chainparams; }

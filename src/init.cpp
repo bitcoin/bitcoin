@@ -1417,6 +1417,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 .in_memory = false,
                 .wipe_existing = do_reindex || fReindexChainState,
             },
+            .total_coinstip_cache_bytes = static_cast<size_t>(cache_sizes.coins),
         };
         ApplyArgsManOptions(args, chainman_opts);
 
@@ -1446,7 +1447,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         };
         auto [status, error] = catch_exceptions([&] {
             node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
-            return LoadChainstate(*Assert(node.chainman), cache_sizes, options);
+            return LoadChainstate(*Assert(node.chainman), options);
         });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
             ChainstateManager& chainman = *Assert(node.chainman);

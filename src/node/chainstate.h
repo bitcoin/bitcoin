@@ -51,8 +51,7 @@ using ChainstateLoadResult = std::tuple<ChainstateLoadStatus, bilingual_str>;
  *
  *  LoadChainstate returns a (status code, error string) tuple.
  */
-ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
-                                    const ChainstateLoadOptions& options);
+ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
 } // namespace node
 

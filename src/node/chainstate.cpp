@@ -25,8 +25,7 @@
 #include <vector>
 
 namespace node {
-ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
-                                    const ChainstateLoadOptions& options)
+ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -34,7 +33,6 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
 
     LOCK(cs_main);
     chainman.InitializeChainstate(options.mempool);
-    chainman.m_total_coinstip_cache = cache_sizes.coins;
 
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
 
@@ -100,7 +98,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         }
 
         // The on-disk coinsdb is now in a good state, create the cache
-        chainstate->InitCoinsCache(cache_sizes.coins);
+        chainstate->InitCoinsCache(chainman.m_total_coinstip_cache);
         assert(chainstate->CanFlushToDisk());
 
         if (!is_coinsview_empty(chainstate)) {

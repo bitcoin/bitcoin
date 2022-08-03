@@ -190,21 +190,22 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args));
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node));
 
-    m_cache_sizes = CalculateCacheSizes(m_args);
+    auto cache_sizes = CalculateCacheSizes(m_args);
 
     ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .adjusted_time_callback = GetAdjustedTime,
         .block_tree_db_opts = {
-            .cache_size = static_cast<size_t>(m_cache_sizes.block_tree_db),
+            .cache_size = static_cast<size_t>(cache_sizes.block_tree_db),
             .in_memory = true,
         },
         .data_dir = m_args.GetDataDirNet(),
         .coins_view_db_opts = {
-            .cache_size = static_cast<size_t>(m_cache_sizes.coins_db),
+            .cache_size = static_cast<size_t>(cache_sizes.coins_db),
             .in_memory = true,
             .wipe_existing = node::fReindex || m_args.GetBoolArg("-reindex-chainstate", false),
         },
+        .total_coinstip_cache_bytes = static_cast<size_t>(cache_sizes.coins),
     };
     ApplyArgsManOptions(m_args, chainman_opts);
 
@@ -246,7 +247,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     options.prune = node::fPruneMode;
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
-    auto [status, error] = LoadChainstate(*Assert(m_node.chainman), m_cache_sizes, options);
+    auto [status, error] = LoadChainstate(*Assert(m_node.chainman), options);
     assert(status == node::ChainstateLoadStatus::SUCCESS);
 
     std::tie(status, error) = VerifyLoadedChainstate(*Assert(m_node.chainman), options);

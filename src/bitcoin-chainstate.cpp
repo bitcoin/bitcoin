@@ -96,13 +96,14 @@ int main(int argc, char* argv[])
             .cache_size = static_cast<size_t>(cache_sizes.coins_db),
             .in_memory = false,
             .wipe_existing = false,
-        }
+        },
+        .total_coinstip_cache_bytes = static_cast<size_t>(cache_sizes.coins),
     };
     ChainstateManager chainman{chainman_opts};
 
     node::ChainstateLoadOptions options;
     options.check_interrupt = [] { return false; };
-    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
+    auto [status, error] = node::LoadChainstate(chainman, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
