@@ -6,28 +6,16 @@
 
 from decimal import Decimal
 
-from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     COIN,
-    CTransaction,
-    CTxInWitness,
-    tx_from_hex,
     WITNESS_SCALE_FACTOR,
-)
-from test_framework.script import (
-    CScript,
-    OP_TRUE,
 )
 from test_framework.util import (
     assert_equal,
 )
-from test_framework.wallet import (
-    bulk_transaction,
-    create_child_with_parents,
-    make_chain,
-    DEFAULT_FEE,
-)
+from test_framework.wallet import MiniWallet
 
 class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -35,19 +23,10 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
-        self.log.info("Generate blocks to create UTXOs")
-        node = self.nodes[0]
-        self.privkeys = [node.get_deterministic_priv_key().key]
-        self.address = node.get_deterministic_priv_key().address
-        self.coins = []
-        # The last 100 coinbase transactions are premature
-        for b in self.generatetoaddress(node, 200, self.address)[:100]:
-            coinbase = node.getblock(blockhash=b, verbosity=2)["tx"][0]
-            self.coins.append({
-                "txid": coinbase["txid"],
-                "amount": coinbase["vout"][0]["value"],
-                "scriptPubKey": coinbase["vout"][0]["scriptPubKey"],
-            })
+        self.wallet = MiniWallet(self.nodes[0])
+        # Add enough mature utxos to the wallet so that all txs spend confirmed coins.
+        self.generate(self.wallet, 35)
+        self.generate(self.nodes[0], COINBASE_MATURITY)
 
         self.test_chain_limits()
         self.test_desc_count_limits()
@@ -64,22 +43,14 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def test_chain_limits_helper(self, mempool_count, package_count):
         node = self.nodes[0]
         assert_equal(0, node.getmempoolinfo()["size"])
-        first_coin = self.coins.pop()
-        spk = None
-        txid = first_coin["txid"]
         chain_hex = []
-        chain_txns = []
-        value = first_coin["amount"]
 
-        for i in range(mempool_count + package_count):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-            txid = tx.rehash()
-            if i < mempool_count:
-                node.sendrawtransaction(txhex)
-                assert_equal(node.getmempoolentry(txid)["ancestorcount"], i + 1)
-            else:
-                chain_hex.append(txhex)
-                chain_txns.append(tx)
+        chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=mempool_count)
+        # in-package transactions
+        for _ in range(package_count):
+            tx = self.wallet.create_self_transfer(utxo_to_spend=chaintip_utxo)
+            chaintip_utxo = tx["new_utxo"]
+            chain_hex.append(tx["hex"])
         testres_too_long = node.testmempoolaccept(rawtxs=chain_hex)
         for txres in testres_too_long:
             assert_equal(txres["package-error"], "package-mempool-limits")
@@ -125,49 +96,20 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         assert_equal(0, node.getmempoolinfo()["size"])
         self.log.info("Check that in-mempool and in-package descendants are calculated properly in packages")
         # Top parent in mempool, M1
-        first_coin = self.coins.pop()
-        parent_value = (first_coin["amount"] - Decimal("0.0002")) / 2 # Deduct reasonable fee and make 2 outputs
-        inputs = [{"txid": first_coin["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
-
-        parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
-        assert parent_signed["complete"]
-        parent_tx = tx_from_hex(parent_signed["hex"])
-        parent_txid = parent_tx.rehash()
-        node.sendrawtransaction(parent_signed["hex"])
+        m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
         package_hex = []
+        # Chain A (M2a... M12a)
+        chain_a_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=11, utxo_to_spend=m1_utxos[0])
+        # Pa
+        pa_hex = self.wallet.create_self_transfer(utxo_to_spend=chain_a_tip_utxo)["hex"]
+        package_hex.append(pa_hex)
 
-        # Chain A
-        spk = parent_tx.vout[0].scriptPubKey.hex()
-        value = parent_value
-        txid = parent_txid
-        for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-            txid = tx.rehash()
-            if i < 11: # M2a... M12a
-                node.sendrawtransaction(txhex)
-            else: # Pa
-                package_hex.append(txhex)
-
-        # Chain B
-        value = parent_value - Decimal("0.0001")
-        rawtx_b = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], {self.address : value})
-        tx_child_b = tx_from_hex(rawtx_b) # M2b
-        tx_child_b.wit.vtxinwit = [CTxInWitness()]
-        tx_child_b.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
-        tx_child_b_hex = tx_child_b.serialize().hex()
-        node.sendrawtransaction(tx_child_b_hex)
-        spk = tx_child_b.vout[0].scriptPubKey.hex()
-        txid = tx_child_b.rehash()
-        for i in range(12):
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-            txid = tx.rehash()
-            if i < 11: # M3b... M13b
-                node.sendrawtransaction(txhex)
-            else: # Pb
-                package_hex.append(txhex)
+        # Chain B (M2b... M13b)
+        chain_b_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12, utxo_to_spend=m1_utxos[1])
+        # Pb
+        pb_hex = self.wallet.create_self_transfer(utxo_to_spend=chain_b_tip_utxo)["hex"]
+        package_hex.append(pb_hex)
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
@@ -200,41 +142,18 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         node = self.nodes[0]
         package_hex = []
         # M1
-        first_coin_a = self.coins.pop()
-        parent_value = (first_coin_a["amount"] - DEFAULT_FEE) / 2 # Deduct reasonable fee and make 2 outputs
-        inputs = [{"txid": first_coin_a["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE : parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
-
-        parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
-        assert parent_signed["complete"]
-        parent_tx = tx_from_hex(parent_signed["hex"])
-        parent_txid = parent_tx.rehash()
-        node.sendrawtransaction(parent_signed["hex"])
+        m1_utxos = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2)['new_utxos']
 
         # Chain M2...M24
-        spk = parent_tx.vout[0].scriptPubKey.hex()
-        value = parent_value
-        txid = parent_txid
-        for i in range(23): # M2...M24
-            (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-            txid = tx.rehash()
-            node.sendrawtransaction(txhex)
+        self.wallet.send_self_transfer_chain(from_node=node, chain_length=23, utxo_to_spend=m1_utxos[0])
 
         # P1
-        value_p1 = (parent_value - DEFAULT_FEE)
-        rawtx_p1 = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], [{self.address : value_p1}])
-        tx_child_p1 = tx_from_hex(rawtx_p1)
-        tx_child_p1.wit.vtxinwit = [CTxInWitness()]
-        tx_child_p1.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
-        tx_child_p1_hex = tx_child_p1.serialize().hex()
-        txid_child_p1 = tx_child_p1.rehash()
-        package_hex.append(tx_child_p1_hex)
-        tx_child_p1_spk = tx_child_p1.vout[0].scriptPubKey.hex()
+        p1_tx = self.wallet.create_self_transfer(utxo_to_spend=m1_utxos[1])
+        package_hex.append(p1_tx["hex"])
 
         # P2
-        (_, tx_child_p2_hex, _, _) = make_chain(node, self.address, self.privkeys, txid_child_p1, value_p1, 0, tx_child_p1_spk)
-        package_hex.append(tx_child_p2_hex)
+        p2_tx = self.wallet.create_self_transfer(utxo_to_spend=p1_tx["new_utxo"])
+        package_hex.append(p2_tx["hex"])
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
@@ -266,32 +185,21 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert_equal(0, node.getmempoolinfo()["size"])
         package_hex = []
-        parents_tx = []
-        values = []
-        scripts = []
+        pc_parent_utxos = []
 
         self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
 
         # Two chains of 13 transactions each
         for _ in range(2):
-            spk = None
-            top_coin = self.coins.pop()
-            txid = top_coin["txid"]
-            value = top_coin["amount"]
-            for i in range(13):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-                txid = tx.rehash()
-                if i < 12:
-                    node.sendrawtransaction(txhex)
-                else: # Save the 13th transaction for the package
-                    package_hex.append(txhex)
-                    parents_tx.append(tx)
-                    scripts.append(spk)
-                    values.append(value)
+            chain_tip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)
+            # Save the 13th transaction for the package
+            tx = self.wallet.create_self_transfer(utxo_to_spend=chain_tip_utxo)
+            package_hex.append(tx["hex"])
+            pc_parent_utxos.append(tx["new_utxo"])
 
         # Child Pc
-        child_hex = create_child_with_parents(node, self.address, self.privkeys, parents_tx, values, scripts)
-        package_hex.append(child_hex)
+        pc_hex = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)["hex"]
+        package_hex.append(pc_hex)
 
         assert_equal(24, node.getmempoolinfo()["size"])
         assert_equal(3, len(package_hex))
@@ -321,45 +229,29 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         """
         node = self.nodes[0]
         assert_equal(0, node.getmempoolinfo()["size"])
-        parents_tx = []
-        values = []
-        scripts = []
+        pc_parent_utxos = []
 
         self.log.info("Check that in-mempool and in-package ancestors are calculated properly in packages")
         # Two chains of 12 transactions each
         for _ in range(2):
-            spk = None
-            top_coin = self.coins.pop()
-            txid = top_coin["txid"]
-            value = top_coin["amount"]
-            for i in range(12):
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk)
-                txid = tx.rehash()
-                value -= Decimal("0.0001")
-                node.sendrawtransaction(txhex)
-                if i == 11:
-                    # last 2 transactions will be the parents of Pc
-                    parents_tx.append(tx)
-                    values.append(value)
-                    scripts.append(spk)
+            chaintip_utxo = self.wallet.send_self_transfer_chain(from_node=node, chain_length=12)
+            # last 2 transactions will be the parents of Pc
+            pc_parent_utxos.append(chaintip_utxo)
 
         # Child Pc
-        pc_hex = create_child_with_parents(node, self.address, self.privkeys, parents_tx, values, scripts)
-        pc_tx = tx_from_hex(pc_hex)
-        pc_value = sum(values) - Decimal("0.0002")
-        pc_spk = pc_tx.vout[0].scriptPubKey.hex()
+        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)
 
         # Child Pd
-        (_, pd_hex, _, _) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk)
+        pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0])
 
         assert_equal(24, node.getmempoolinfo()["size"])
-        testres_too_long = node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])
+        testres_too_long = node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])
         for txres in testres_too_long:
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])])
+        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])])
 
     def test_anc_count_limits_bushy(self):
         """Create a tree with 20 transactions in the mempool and 6 in the package:
@@ -375,31 +267,18 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert_equal(0, node.getmempoolinfo()["size"])
         package_hex = []
-        parent_txns = []
-        parent_values = []
-        scripts = []
+        pc_parent_utxos = []
         for _ in range(5): # Make package transactions P0 ... P4
-            gp_tx = []
-            gp_values = []
-            gp_scripts = []
+            pc_grandparent_utxos = []
             for _ in range(4): # Make mempool transactions M(4i+1)...M(4i+4)
-                parent_coin = self.coins.pop()
-                value = parent_coin["amount"]
-                txid = parent_coin["txid"]
-                (tx, txhex, value, spk) = make_chain(node, self.address, self.privkeys, txid, value)
-                gp_tx.append(tx)
-                gp_values.append(value)
-                gp_scripts.append(spk)
-                node.sendrawtransaction(txhex)
+                pc_grandparent_utxos.append(self.wallet.send_self_transfer(from_node=node)["new_utxo"])
             # Package transaction Pi
-            pi_hex = create_child_with_parents(node, self.address, self.privkeys, gp_tx, gp_values, gp_scripts)
-            package_hex.append(pi_hex)
-            pi_tx = tx_from_hex(pi_hex)
-            parent_txns.append(pi_tx)
-            parent_values.append(Decimal(pi_tx.vout[0].nValue) / COIN)
-            scripts.append(pi_tx.vout[0].scriptPubKey.hex())
+            pi_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_grandparent_utxos)
+            package_hex.append(pi_tx["hex"])
+            pc_parent_utxos.append(pi_tx["new_utxos"][0])
         # Package transaction PC
-        package_hex.append(create_child_with_parents(node, self.address, self.privkeys, parent_txns, parent_values, scripts))
+        pc_hex = self.wallet.create_self_transfer_multi(utxos_to_spend=pc_parent_utxos)["hex"]
+        package_hex.append(pc_hex)
 
         assert_equal(20, node.getmempoolinfo()["size"])
         assert_equal(6, len(package_hex))
@@ -424,51 +303,30 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         """
         node = self.nodes[0]
         assert_equal(0, node.getmempoolinfo()["size"])
-        parents_tx = []
-        values = []
-        scripts = []
+        parent_utxos = []
         target_weight = WITNESS_SCALE_FACTOR * 1000 * 30 # 30KvB
         high_fee = Decimal("0.003") # 10 sats/vB
         self.log.info("Check that in-mempool and in-package ancestor size limits are calculated properly in packages")
         # Mempool transactions A and B
         for _ in range(2):
-            spk = None
-            top_coin = self.coins.pop()
-            txid = top_coin["txid"]
-            value = top_coin["amount"]
-            (tx, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
-            bulked_tx = bulk_transaction(tx, node, target_weight, self.privkeys)
-            node.sendrawtransaction(bulked_tx.serialize().hex())
-            parents_tx.append(bulked_tx)
-            values.append(Decimal(bulked_tx.vout[0].nValue) / COIN)
-            scripts.append(bulked_tx.vout[0].scriptPubKey.hex())
+            bulked_tx = self.wallet.create_self_transfer(target_weight=target_weight)
+            self.wallet.sendrawtransaction(from_node=node, tx_hex=bulked_tx["hex"])
+            parent_utxos.append(bulked_tx["new_utxo"])
 
         # Package transaction C
-        small_pc_hex = create_child_with_parents(node, self.address, self.privkeys, parents_tx, values, scripts, high_fee)
-        pc_tx = bulk_transaction(tx_from_hex(small_pc_hex), node, target_weight, self.privkeys)
-        pc_value = Decimal(pc_tx.vout[0].nValue) / COIN
-        pc_spk = pc_tx.vout[0].scriptPubKey.hex()
-        pc_hex = pc_tx.serialize().hex()
+        pc_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=int(high_fee * COIN), target_weight=target_weight)
 
         # Package transaction D
-        (small_pd, _, val, spk) = make_chain(node, self.address, self.privkeys, pc_tx.rehash(), pc_value, 0, pc_spk, high_fee)
-        prevtxs = [{
-            "txid": pc_tx.rehash(),
-            "vout": 0,
-            "scriptPubKey": spk,
-            "amount": val,
-        }]
-        pd_tx = bulk_transaction(small_pd, node, target_weight, self.privkeys, prevtxs)
-        pd_hex = pd_tx.serialize().hex()
+        pd_tx = self.wallet.create_self_transfer(utxo_to_spend=pc_tx["new_utxos"][0], target_weight=target_weight)
 
         assert_equal(2, node.getmempoolinfo()["size"])
-        testres_too_heavy = node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])
+        testres_too_heavy = node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])
         for txres in testres_too_heavy:
             assert_equal(txres["package-error"], "package-mempool-limits")
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
-        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_hex, pd_hex])])
+        assert all([res["allowed"] for res in node.testmempoolaccept(rawtxs=[pc_tx["hex"], pd_tx["hex"]])])
 
     def test_desc_size_limits(self):
         """Create 3 mempool transactions and 2 package transactions (25KvB each):
@@ -486,50 +344,18 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
         high_fee = Decimal("0.0021") # 10 sats/vB
         self.log.info("Check that in-mempool and in-package descendant sizes are calculated properly in packages")
         # Top parent in mempool, Ma
-        first_coin = self.coins.pop()
-        parent_value = (first_coin["amount"] - high_fee) / 2 # Deduct fee and make 2 outputs
-        inputs = [{"txid": first_coin["txid"], "vout": 0}]
-        outputs = [{self.address : parent_value}, {ADDRESS_BCRT1_P2WSH_OP_TRUE:  parent_value}]
-        rawtx = node.createrawtransaction(inputs, outputs)
-        parent_tx = bulk_transaction(tx_from_hex(rawtx), node, target_weight, self.privkeys)
-        node.sendrawtransaction(parent_tx.serialize().hex())
+        ma_tx = self.wallet.create_self_transfer_multi(num_outputs=2, fee_per_output=int(high_fee / 2 * COIN), target_weight=target_weight)
+        self.wallet.sendrawtransaction(from_node=node, tx_hex=ma_tx["hex"])
 
         package_hex = []
         for j in range(2): # Two legs (left and right)
             # Mempool transaction (Mb and Mc)
-            mempool_tx = CTransaction()
-            spk = parent_tx.vout[j].scriptPubKey.hex()
-            value = Decimal(parent_tx.vout[j].nValue) / COIN
-            txid = parent_tx.rehash()
-            prevtxs = [{
-                "txid": txid,
-                "vout": j,
-                "scriptPubKey": spk,
-                "amount": value,
-            }]
-            if j == 0: # normal key
-                (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, j, spk, high_fee)
-                mempool_tx = bulk_transaction(tx_small, node, target_weight, self.privkeys, prevtxs)
-            else: # OP_TRUE
-                inputs = [{"txid": txid, "vout": 1}]
-                outputs = {self.address: value - high_fee}
-                small_tx = tx_from_hex(node.createrawtransaction(inputs, outputs))
-                mempool_tx = bulk_transaction(small_tx, node, target_weight, None, prevtxs)
-            node.sendrawtransaction(mempool_tx.serialize().hex())
+            mempool_tx = self.wallet.create_self_transfer(utxo_to_spend=ma_tx["new_utxos"][j], target_weight=target_weight)
+            self.wallet.sendrawtransaction(from_node=node, tx_hex=mempool_tx["hex"])
 
             # Package transaction (Pd and Pe)
-            spk = mempool_tx.vout[0].scriptPubKey.hex()
-            value = Decimal(mempool_tx.vout[0].nValue) / COIN
-            txid = mempool_tx.rehash()
-            (tx_small, _, _, _) = make_chain(node, self.address, self.privkeys, txid, value, 0, spk, high_fee)
-            prevtxs = [{
-                "txid": txid,
-                "vout": 0,
-                "scriptPubKey": spk,
-                "amount": value,
-            }]
-            package_tx = bulk_transaction(tx_small, node, target_weight, self.privkeys, prevtxs)
-            package_hex.append(package_tx.serialize().hex())
+            package_tx = self.wallet.create_self_transfer(utxo_to_spend=mempool_tx["new_utxo"], target_weight=target_weight)
+            package_hex.append(package_tx["hex"])
 
         assert_equal(3, node.getmempoolinfo()["size"])
         assert_equal(2, len(package_hex))
