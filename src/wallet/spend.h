@@ -106,13 +106,18 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
  */
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct SelectionFilter {
+    CoinEligibilityFilter filter;
+    bool allow_mixed_output_types{true};
+};
+
 /**
 * Group coins by the provided filters.
 */
-OutputGroupTypeMap GroupOutputs(const CWallet& wallet,
+FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                           const CoinsResult& coins,
                           const CoinSelectionParams& coin_sel_params,
-                          const CoinEligibilityFilter& filter);
+                          const std::vector<SelectionFilter>& filters);
 
 /**
  * Attempt to find a valid input set that preserves privacy by not mixing OutputTypes.
@@ -120,10 +125,8 @@ OutputGroupTypeMap GroupOutputs(const CWallet& wallet,
  * the solution (according to the waste metric) will be chosen. If a valid input cannot be found from any
  * single OutputType, fallback to running `ChooseSelectionResult()` over all available coins.
  *
- * param@[in]  wallet                    The wallet which provides solving data for the coins
  * param@[in]  nTargetValue              The target value
- * param@[in]  eligilibity_filter        A filter containing rules for which coins are allowed to be included in this selection
- * param@[in]  available_coins           The struct of coins, organized by OutputType, available for selection prior to filtering
+ * param@[in]  groups                    The grouped outputs mapped by coin eligibility filters
  * param@[in]  coin_selection_params     Parameters for the coin selection
  * param@[in]  allow_mixed_output_types  Relax restriction that SelectionResults must be of the same OutputType
  * returns                               If successful, a SelectionResult containing the input set
@@ -131,7 +134,7 @@ OutputGroupTypeMap GroupOutputs(const CWallet& wallet,
  *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const CoinsResult& available_coins,
+util::Result<SelectionResult> AttemptSelection(const CAmount& nTargetValue, OutputGroupTypeMap& groups,
                         const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types);
 
 /**

@@ -154,7 +154,7 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
         /*avoid_partial=*/ false,
     };
     static OutputGroupTypeMap static_groups;
-    static_groups = GroupOutputs(wallet, available_coins, coin_selection_params, {filter});
+    static_groups = GroupOutputs(wallet, available_coins, coin_selection_params, {{filter}})[filter];
     return static_groups.all_groups.mixed_group;
 }
 
