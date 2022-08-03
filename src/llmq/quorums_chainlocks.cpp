@@ -159,7 +159,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
     if (it1 != bestChainLockCandidates.end()) {
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
-        mapAttemptSignedRequestIds.erase(pindex->nHeight);
+        mapAttemptSignedRequestIds.clear();
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
         return true;
     }
@@ -190,7 +190,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
-                mapAttemptSignedRequestIds.erase(pindex->nHeight);
+                mapAttemptSignedRequestIds.clear();
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
                 return true;
@@ -667,7 +667,6 @@ void CChainLocksHandler::TrySignChainTip()
         }
     }
     bool fMemberOfSomeQuorum{false};
-    bool fSignedAsMemberOfSomeQuorum{false};
     const auto heightHashKP = std::make_pair(nHeight, msgHash);
     signingState.BumpAttempt();
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
@@ -732,18 +731,16 @@ void CChainLocksHandler::TrySignChainTip()
                 // might have happened while we didn't hold cs
                 return;
             }
-            fSignedAsMemberOfSomeQuorum = true;
-            mapSignedRequestIds.emplace(requestId, heightHashKP);
+            mapSignedRequestIds[requestId] = heightHashKP;
         }
-        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
+        if(quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash)) {
+            LOCK(cs);
+            mapAttemptSignedRequestIds[nHeight] = msgHash;
+        }
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do
         signingState.SetLastSignedHeight(nHeight);
-    }
-    if(fSignedAsMemberOfSomeQuorum) {
-        LOCK(cs);
-        mapAttemptSignedRequestIds.emplace(nHeight, msgHash);
     }
 }
 
