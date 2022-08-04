@@ -68,6 +68,8 @@
 #include <QVBoxLayout>
 #include <QWindow>
 
+#include <cmath>
+
 
 const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MACOS)
@@ -1132,7 +1134,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
         progressBar->setMaximum(1000000000);
-        progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
+        progressBar->setValue(lround(nVerificationProgress * 1000000000.0));
         progressBar->setVisible(true);
 
         tooltip = tr("Catching up…") + QString("<br>") + tooltip;
