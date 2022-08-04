@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(bech32_testvectors_invalid)
 {
     static const std::string CASES[] = {
         " 1nwldj5",
-        "\x7f""1axkwrx",
-        "\x80""1eym55h",
+        "\x7f""1axkwrx", // NOLINT(bugprone-suspicious-missing-comma)
+        "\x80""1eym55h", // NOLINT(bugprone-suspicious-missing-comma)
         "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
         "pzry9x0s0muk",
         "1pzry9x0s0muk",
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(bech32m_testvectors_invalid)
 {
     static const std::string CASES[] = {
         " 1xj0phk",
-        "\x7f""1g6xzxy",
-        "\x80""1vctc34",
+        "\x7f""1g6xzxy", // NOLINT(bugprone-suspicious-missing-comma)
+        "\x80""1vctc34", // NOLINT(bugprone-suspicious-missing-comma)
         "an84characterslonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11d6pts4",
         "qyrz8wqd2c9m",
         "1qyrz8wqd2c9m",
