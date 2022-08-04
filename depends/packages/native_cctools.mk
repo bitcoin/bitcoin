@@ -7,18 +7,24 @@ $(package)_build_subdir=cctools
 $(package)_dependencies=native_libtapi
 
 define $(package)_set_vars
-  $(package)_config_opts=--target=$(host)
+  $(package)_config_opts=--target=$(host) --enable-lto-support
+  $(package)_config_opts+=--with-llvm-config=$(llvm_config_prog)
   $(package)_ldflags+=-Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib
-  ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-  $(package)_config_opts+=--enable-lto-support --with-llvm-config=$(build_prefix)/bin/llvm-config
-  endif
   $(package)_cc=$(clang_prog)
   $(package)_cxx=$(clangxx_prog)
 endef
 
+ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+define $(package)_preprocess_cmds
+  mkdir -p $($(package)_staging_prefix_dir)/lib && \
+  cp $(llvm_lib_dir)/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
+endef
+else
 define $(package)_preprocess_cmds
   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
 endef
+endif
 
 define $(package)_config_cmds
   $($(package)_autoconf)
