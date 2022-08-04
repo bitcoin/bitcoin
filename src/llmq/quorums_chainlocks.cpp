@@ -604,7 +604,7 @@ void CChainLocksHandler::TrySignChainTip()
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
-
+    bool bStopLookback{false};
     {
         LOCK(cs);
 
@@ -634,8 +634,8 @@ void CChainLocksHandler::TrySignChainTip()
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Invalid index!%s\n", __func__, msgHash.ToString());
                 return;
             }
-            const int& nIndexHeight = pindexWalkback->nHeight;
-            const uint256& nIndexHash = pindexWalkback->GetBlockHash();
+            const int nIndexHeight = pindexWalkback->nHeight;
+            const uint256 nIndexHash = pindexWalkback->GetBlockHash();
             auto it = mapAttemptSignedRequestIds.find(nIndexHeight);
             // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
             if (it != mapAttemptSignedRequestIds.end() && nIndexHash != it->second) {
@@ -643,7 +643,8 @@ void CChainLocksHandler::TrySignChainTip()
                 return;
             }
             // if we are chainlocked here we can stop and not look back any further
-            if(HasChainLock(nIndexHeight, nIndexHash)) {
+            if(InternalHasChainLock(nIndexHeight, nIndexHash)) {
+                bStopLookback = true;
                 break;
             }
             pindexWalkback = pindexWalkback->pprev;
@@ -651,7 +652,7 @@ void CChainLocksHandler::TrySignChainTip()
 
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d, StopLookback=%d\n", __func__, msgHash.ToString(), nHeight, bStopLookback? 1: 0);
     const auto& consensus = Params().GetConsensus();
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);

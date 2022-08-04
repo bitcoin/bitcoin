@@ -4357,10 +4357,12 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf{m_blockman.m_block_index.find(hash)};
+    // SYSCOIN
+    CBlockIndex *pindex = nullptr;
     if (hash != GetConsensus().hashGenesisBlock) {
         if (miSelf != m_blockman.m_block_index.end()) {
             // Block header is already known.
-            CBlockIndex* pindex = &(miSelf->second);
+            pindex = &(miSelf->second);
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK) {
@@ -4442,11 +4444,13 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
         }
         // SYSCOIN
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
-            m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
+            if (pindex == nullptr) {
+                m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
+            }
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
         }
     }
-    CBlockIndex* pindex{m_blockman.AddToBlockIndex(block, m_best_header)};
+    pindex = m_blockman.AddToBlockIndex(block, m_best_header);
 
     if (ppindex)
         *ppindex = pindex;
