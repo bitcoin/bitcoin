@@ -1098,7 +1098,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         # If rounding up, then the calculated fee will be 126 + 78 = 204.
         # In the former case, the calculated needed fee is higher than the actual fee being paid, so an assertion is reached
         # To test this does not happen, we subtract 202 sats from the input value. If working correctly, this should
-        # fail with insufficient funds rather than bitcoind asserting.
+        # fail with insufficient funds rather than syscoind asserting.
         rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
         assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, {"fee_rate": 1.85})
 

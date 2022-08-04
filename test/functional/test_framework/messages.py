@@ -310,7 +310,7 @@ class CNEVMBlockConnect(CNEVMBlock):
         super(CNEVMBlockConnect, self).deserialize(f)
         self.sysblockhash = deser_uint256(f)
 
-# Objects that map to bitcoind objects, which can be serialized/deserialized
+# Objects that map to syscoind objects, which can be serialized/deserialized
 
     def serialize(self):
         r = b""

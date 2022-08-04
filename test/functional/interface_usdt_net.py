@@ -152,7 +152,7 @@ class NetTracepointTest(SyscoinTestFramework):
         bpf["inbound_messages"].open_perf_buffer(handle_inbound)
         bpf["outbound_messages"].open_perf_buffer(handle_outbound)
 
-        self.log.info("connect a P2P test node to our bitcoind node")
+        self.log.info("connect a P2P test node to our syscoind node")
         test_node = P2PInterface()
         self.nodes[0].add_p2p_connection(test_node)
         bpf.perf_buffer_poll(timeout=200)
