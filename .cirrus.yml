@@ -262,7 +262,7 @@ task:
     image_project: ubuntu-os-cloud
     image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
     cpu: 4
-    memory: 16G
+    memory: 12G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     HOME: /root/  # Only needed for compute_engine_instance
