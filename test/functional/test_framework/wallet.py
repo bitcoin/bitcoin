@@ -39,6 +39,7 @@ from test_framework.script import (
     LegacySignatureHash,
     LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
+    OP_RETURN,
     OP_TRUE,
     SIGHASH_ALL,
     taproot_construct,
@@ -107,11 +108,13 @@ class MiniWallet:
         """Pad a transaction with extra outputs until it reaches a target weight (or higher).
         returns the tx
         """
-        assert_greater_than_or_equal(target_weight, tx.get_weight())
-        while tx.get_weight() < target_weight:
-            script_pubkey = ( b"6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
-                + b"01" * 512 )
-            tx.vout.append(CTxOut(0, script_pubkey))
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'a'])))
+        dummy_vbytes = (target_weight - tx.get_weight() + 3) // 4
+        tx.vout[-1].scriptPubKey = CScript([OP_RETURN, b'a' * dummy_vbytes])
+        # Lower bound should always be off by at most 3
+        assert_greater_than_or_equal(tx.get_weight(), target_weight)
+        # Higher bound should always be off by at most 3 + 12 weight (for encoding the length)
+        assert_greater_than_or_equal(target_weight + 15, tx.get_weight())
 
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
