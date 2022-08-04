@@ -223,7 +223,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # ensure after some delay that the chainlock doesn't get established, all nodes will reorg but they first signed on good_tip, so the longer chain cannot be signed on
         time.sleep(6)
         self.wait_for_chainlocked_block_all_nodes(prev_lock)
-        # after 20 blocks the ancestory consistency check ends and it can create chainlocks again on the longer chain
+        # after 20 blocks the ancestry consistency check ends and it can create chainlocks again on the longer chain
         new_tip = self.generate(self.nodes[2], 20)[-1]
         self.wait_for_chainlocked_block_all_nodes(new_tip, timeout=30)
         self.nodes[0].disconnect_p2ps()
