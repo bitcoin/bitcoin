@@ -79,18 +79,6 @@ class LLMQChainLocksTest(DashTestFramework):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
             assert(block['chainlock'])
 
-        self.log.info("Avoid signing on competing chains")
-        prev_lock = self.nodes[0].getbestblockhash()
-        # mine short chain and wait until some sigs, first-come-first-serve should win
-        good_tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]
-        # mine longer chain at same time after a short delay and it should reject subsequent sigs from longer but competing chain
-        self.generate(self.nodes[2], 3)[-1]
-        # ensure after some delay that the chainlock doesn't get established, all nodes will reorg but they first signed on good_tip, so the longer chain cannot be signed on
-        time.sleep(6)
-        self.wait_for_chainlocked_block_all_nodes(prev_lock)
-        # after 20 blocks the ancestory consistency check ends and it can create chainlocks again on the longer chain
-        new_tip = self.generate(self.nodes[2], 20)[-1]
-        self.wait_for_chainlocked_block_all_nodes(new_tip, timeout=30)
         self.log.info("Isolate node, mine on another, and reconnect")
         node0_mining_addr = self.nodes[0].getnewaddress()
         self.isolate_node(self.nodes[0])
@@ -226,6 +214,18 @@ class LLMQChainLocksTest(DashTestFramework):
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
         self.bump_mocktime(7, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
+        self.log.info("Avoid signing on competing chains")
+        prev_lock = self.nodes[0].getbestblockhash()
+        # mine short chain and wait until some sigs, first-come-first-serve should win
+        good_tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]
+        # mine longer chain at same time after a short delay and it should reject subsequent sigs from longer but competing chain
+        self.generate(self.nodes[2], 3)[-1]
+        # ensure after some delay that the chainlock doesn't get established, all nodes will reorg but they first signed on good_tip, so the longer chain cannot be signed on
+        time.sleep(6)
+        self.wait_for_chainlocked_block_all_nodes(prev_lock)
+        # after 20 blocks the ancestory consistency check ends and it can create chainlocks again on the longer chain
+        new_tip = self.generate(self.nodes[2], 20)[-1]
+        self.wait_for_chainlocked_block_all_nodes(new_tip, timeout=30)
         self.nodes[0].disconnect_p2ps()
 
     def create_fake_clsig(self, height_offset):
