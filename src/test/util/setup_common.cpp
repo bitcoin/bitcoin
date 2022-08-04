@@ -4,6 +4,8 @@
 
 #include <test/util/setup_common.h>
 
+#include <kernel/validation_cache_sizes.h>
+
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
@@ -21,6 +23,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/validation_cache_args.h>
 #include <noui.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -52,6 +55,8 @@
 #include <functional>
 #include <stdexcept>
 
+using kernel::ValidationCacheSizes;
+using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::CalculateCacheSizes;
 using node::LoadChainstate;
@@ -133,8 +138,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.kernel = std::make_unique<kernel::Context>();
     SetupEnvironment();
     SetupNetworking();
-    InitSignatureCache();
-    InitScriptExecutionCache();
+
+    ValidationCacheSizes validation_cache_sizes{};
+    ApplyArgsManOptions(*m_node.args, validation_cache_sizes);
+    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
+    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
+
     m_node.chain = interfaces::MakeChain(m_node);
     fCheckBlockIndex = true;
     static bool noui_connected = false;

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <vector>
 
@@ -75,7 +76,7 @@ public:
         std::unique_lock<std::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
     }
-    uint32_t setup_bytes(size_t n)
+    std::optional<std::pair<uint32_t, size_t>> setup_bytes(size_t n)
     {
         return setValid.setup_bytes(n);
     }
@@ -92,14 +93,15 @@ static CSignatureCache signatureCache;
 
 // To be called once in AppInitMain/BasicTestingSetup to initialize the
 // signatureCache.
-void InitSignatureCache()
+bool InitSignatureCache(size_t max_size_bytes)
 {
-    // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
-    // setup_bytes creates the minimum possible cache (2 elements).
-    size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
-    size_t nElems = signatureCache.setup_bytes(nMaxCacheSize);
-    LogPrintf("Using %zu MiB out of %zu/2 requested for signature cache, able to store %zu elements\n",
-            (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
+    auto setup_results = signatureCache.setup_bytes(max_size_bytes);
+    if (!setup_results) return false;
+
+    const auto [num_elems, approx_size_bytes] = *setup_results;
+    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
+              approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
+    return true;
 }
 
 bool CachingTransactionSignatureChecker::VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const

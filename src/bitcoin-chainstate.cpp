@@ -13,6 +13,7 @@
 
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/validation_cache_sizes.h>
 
 #include <chainparams.h>
 #include <consensus/validation.h>
@@ -62,8 +63,9 @@ int main(int argc, char* argv[])
     // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
     // which will try the script cache first and fall back to actually
     // performing the check with the signature cache.
-    InitSignatureCache();
-    InitScriptExecutionCache();
+    kernel::ValidationCacheSizes validation_cache_sizes{};
+    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
+    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
 
     // SETUP: Scheduling and Background Signals
