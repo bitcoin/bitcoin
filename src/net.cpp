@@ -1665,7 +1665,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 switch (pnode->m_conn_type) {
                     case ConnectionType::INBOUND:
                     case ConnectionType::MANUAL:
-                        break;
+                        continue;
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
