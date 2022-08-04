@@ -430,7 +430,7 @@ void openDebugLogfile()
 
 bool openSyscoinConf()
 {
-    fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", SYSCOIN_CONF_FILENAME));
+    fs::path pathConfig = GetConfigFile(gArgs.GetPathArg("-conf", SYSCOIN_CONF_FILENAME));
 
     /* Create the file */
     std::ofstream configFile{pathConfig, std::ios_base::app};

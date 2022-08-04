@@ -120,7 +120,7 @@ std::string GetDefaultPubNEVM();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
-fs::path GetConfigFile(const std::string& confPath);
+fs::path GetConfigFile(const fs::path& configuration_file_path);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
