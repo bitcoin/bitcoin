@@ -790,7 +790,8 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         }
     }
     int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
-    req.release(); // ownership moved to evcon in above call
+    // ownership moved to evcon in above call
+    req.release(); // NOLINT(bugprone-unused-return-value)
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
     }
