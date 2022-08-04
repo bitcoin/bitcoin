@@ -59,7 +59,7 @@ static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
 BlockManager::BlockManager(const CBlockTreeDB::Options& block_tree_db_opts)
-    : m_block_tree_db{new CBlockTreeDB{block_tree_db_opts}} {}
+    : m_block_tree_db{block_tree_db_opts} {}
 
 std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 {
@@ -259,7 +259,7 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 
 bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
 {
-    if (!m_block_tree_db->LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); })) {
+    if (!m_block_tree_db.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); })) {
         return false;
     }
 
@@ -316,7 +316,7 @@ bool BlockManager::WriteBlockIndexDB()
         vBlocks.push_back(*it);
         m_dirty_blockindex.erase(it++);
     }
-    if (!m_block_tree_db->WriteBatchSync(vFiles, m_last_blockfile, vBlocks)) {
+    if (!m_block_tree_db.WriteBatchSync(vFiles, m_last_blockfile, vBlocks)) {
         return false;
     }
     return true;
@@ -329,16 +329,16 @@ bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
     }
 
     // Load block file info
-    m_block_tree_db->ReadLastBlockFile(m_last_blockfile);
+    m_block_tree_db.ReadLastBlockFile(m_last_blockfile);
     m_blockfile_info.resize(m_last_blockfile + 1);
     LogPrintf("%s: last block file = %i\n", __func__, m_last_blockfile);
     for (int nFile = 0; nFile <= m_last_blockfile; nFile++) {
-        m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
+        m_block_tree_db.ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
     LogPrintf("%s: last block file info: %s\n", __func__, m_blockfile_info[m_last_blockfile].ToString());
     for (int nFile = m_last_blockfile + 1; true; nFile++) {
         CBlockFileInfo info;
-        if (m_block_tree_db->ReadBlockFileInfo(nFile, info)) {
+        if (m_block_tree_db.ReadBlockFileInfo(nFile, info)) {
             m_blockfile_info.push_back(info);
         } else {
             break;
@@ -361,14 +361,14 @@ bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
     }
 
     // Check whether we have ever pruned block & undo files
-    m_block_tree_db->ReadFlag("prunedblockfiles", m_have_pruned);
+    m_block_tree_db.ReadFlag("prunedblockfiles", m_have_pruned);
     if (m_have_pruned) {
         LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
     }
 
     // Check whether we need to continue reindexing
     bool fReindexing = false;
-    m_block_tree_db->ReadReindexing(fReindexing);
+    m_block_tree_db.ReadReindexing(fReindexing);
     if (fReindexing) fReindex = true;
 
     return true;
@@ -858,7 +858,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                 }
                 nFile++;
             }
-            WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
+            WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db.WriteReindexing(false));
             fReindex = false;
             LogPrintf("Reindexing finished\n");
             // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):

@@ -40,7 +40,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
 
     if (options.reindex) {
-        pblocktree->WriteReindexing(true);
+        pblocktree.WriteReindexing(true);
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
         if (options.prune) {
             CleanupBlockRevFiles();
