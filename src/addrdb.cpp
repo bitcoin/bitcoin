@@ -92,7 +92,7 @@ void DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
     unsigned char pchMsgTmp[4];
     verifier >> pchMsgTmp;
     // ... verify the network matches ours
-    if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp))) {
+    if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)) != 0) {
         throw std::runtime_error{"Invalid network magic number"};
     }
 

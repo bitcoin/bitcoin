@@ -1881,7 +1881,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             exec_script = CScript(script_bytes.begin(), script_bytes.end());
             uint256 hash_exec_script;
             CSHA256().Write(exec_script.data(), exec_script.size()).Finalize(hash_exec_script.begin());
-            if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
+            if (memcmp(hash_exec_script.begin(), program.data(), 32) != 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
