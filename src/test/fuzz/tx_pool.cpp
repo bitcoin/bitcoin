@@ -6,6 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <policy/packages.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/mempool_utils.h>
@@ -66,6 +67,24 @@ struct TransactionsDelta final : public CValidationInterface {
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
     {
         Assert(m_removed.insert(tx).second);
+    }
+};
+
+struct TransactionsHistory final : public CValidationInterface {
+    std::vector<std::tuple<bool, CTransactionRef>>& m_history;
+
+    explicit TransactionsHistory(std::vector<std::tuple<bool, CTransactionRef>>& h)
+        : m_history{h} {}
+
+    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    {
+        m_history.emplace_back(true, tx);
+    }
+
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
+    {
+        if (reason != MemPoolRemovalReason::SIZELIMIT)
+            m_history.emplace_back(false, tx);
     }
 };
 
@@ -157,7 +176,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     chainstate.SetMempool(&tx_pool);
 
     // Helper to query an amount
-    const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
+    CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
         Coin c;
         Assert(amount_view.GetCoin(outpoint, c));
@@ -177,46 +196,57 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         Assert(!outpoints_supply.empty());
 
         // Create transaction to add to the mempool
-        const Package package{[&] {
-            CMutableTransaction tx_mut;
-            tx_mut.nVersion = CTransaction::CURRENT_VERSION;
-            tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-            const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size());
-            const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size() * 2);
+        std::set<COutPoint> outpoints = outpoints_rbf;
+        const Package package = [&] {
+            auto n_tx = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, MAX_PACKAGE_COUNT + 5);
+            Package txs;
+            while (n_tx--) {
+                CMutableTransaction tx_mut;
+                tx_mut.nVersion = CTransaction::CURRENT_VERSION;
+                tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+                const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints.size());
+                const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints.size() * 2);
 
-            CAmount amount_in{0};
-            for (int i = 0; i < num_in; ++i) {
-                // Pop random outpoint
-                auto pop = outpoints_rbf.begin();
-                std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints_rbf.size() - 1));
-                const auto outpoint = *pop;
-                outpoints_rbf.erase(pop);
-                amount_in += GetAmount(outpoint);
+                CAmount amount_in{0};
+                for (int i = 0; i < num_in; ++i) {
+                    // Pop random outpoint
+                    auto pop = outpoints.begin();
+                    std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
+                    const auto outpoint = *pop;
+                    outpoints.erase(pop);
+                    amount_in += GetAmount(outpoint);
 
-                // Create input
-                const auto sequence = ConsumeSequence(fuzzed_data_provider);
-                const auto script_sig = CScript{};
-                const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
-                CTxIn in;
-                in.prevout = outpoint;
-                in.nSequence = sequence;
-                in.scriptSig = script_sig;
-                in.scriptWitness.stack = script_wit_stack;
+                    // Create input
+                    const auto sequence = ConsumeSequence(fuzzed_data_provider);
+                    const auto script_sig = CScript{};
+                    const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+                    CTxIn in;
+                    in.prevout = outpoint;
+                    in.nSequence = sequence;
+                    in.scriptSig = script_sig;
+                    in.scriptWitness.stack = script_wit_stack;
 
-                tx_mut.vin.push_back(in);
+                    tx_mut.vin.push_back(in);
+                }
+                const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1000, amount_in);
+                const auto amount_out = (amount_in - amount_fee) / num_out;
+                for (int i = 0; i < num_out; ++i) {
+                    tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+                }
+                const auto tx = MakeTransactionRef(tx_mut);
+                txs.push_back(tx);
+                amount_view.PackageAddTransaction(tx);
+                // Restore previously removed outpoints
+                for (const auto& in : tx->vin) {
+                    Assert(outpoints.insert(in.prevout).second);
+                }
+                // add newly constructed transaction to outpoints
+                for (int i = 0; i < num_out; i++) {
+                    outpoints.emplace(tx->GetHash(), i);
+                }
             }
-            const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1000, amount_in);
-            const auto amount_out = (amount_in - amount_fee) / num_out;
-            for (int i = 0; i < num_out; ++i) {
-                tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
-            }
-            const auto tx = MakeTransactionRef(tx_mut);
-            // Restore previously removed outpoints
-            for (const auto& in : tx->vin) {
-                Assert(outpoints_rbf.insert(in.prevout).second);
-            }
-            return tx;
-        }()};
+            return txs;
+        }();
 
         if (fuzzed_data_provider.ConsumeBool()) {
             MockTime(fuzzed_data_provider, chainstate);
@@ -235,9 +265,8 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         }
 
         // Remember all removed and added transactions
-        std::set<CTransactionRef> removed;
-        std::set<CTransactionRef> added;
-        auto txr = std::make_shared<TransactionsDelta>(removed, added);
+        std::vector<std::tuple<bool, CTransactionRef>> history;
+        auto txr = std::make_shared<TransactionsHistory>(history);
         RegisterSharedValidationInterface(txr);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
 
@@ -271,7 +300,6 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
                 }
             }
             if (accepted) {
-                Assert(result_package.m_tx_results.size() == package.size());
                 for (const auto& tx_res : result_package.m_tx_results) {
                     Assert(tx_res.second.m_result_type == MempoolAcceptResult::ResultType::VALID);
                 }
@@ -279,15 +307,6 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         }
         SyncWithValidationInterfaceQueue();
         UnregisterSharedValidationInterface(txr);
-        Assert(accepted != added.empty());
-        if (accepted) {
-            Assert(Package(added.begin(), added.end()) == package);
-        } else {
-            // Do not consider rejected transactions removed
-            for (const auto& tx : package) {
-                removed.erase(tx);
-            }
-        }
 
         // Helper to insert spent and created outpoints of a tx into collections
         using Sets = std::vector<std::reference_wrapper<std::set<COutPoint>>>;
@@ -305,22 +324,24 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         };
         // Add created outpoints, remove spent outpoints
         {
-            // Outpoints that no longer exist at all
-            std::set<COutPoint> consumed_erased;
-            // Outpoints that no longer count toward the total supply
-            std::set<COutPoint> consumed_supply;
-            for (const auto& removed_tx : removed) {
-                insert_tx(/*created_by_tx=*/{consumed_erased}, /*consumed_by_tx=*/{outpoints_supply}, /*tx=*/*removed_tx);
-            }
-            for (const auto& added_tx : added) {
-                insert_tx(/*created_by_tx=*/{outpoints_supply, outpoints_rbf}, /*consumed_by_tx=*/{consumed_supply}, /*tx=*/*added_tx);
-            }
-            for (const auto& p : consumed_erased) {
-                Assert(outpoints_supply.erase(p) == 1);
-                Assert(outpoints_rbf.erase(p) == 1);
-            }
-            for (const auto& p : consumed_supply) {
-                Assert(outpoints_supply.erase(p) == 1);
+            for (const auto& [added, tx] : history) {
+                // Outpoints that no longer exist at all
+                std::set<COutPoint> consumed_erased;
+                // Outpoints that no longer count toward the total supply
+                std::set<COutPoint> consumed_supply;
+                if (added) {
+                    insert_tx(/*created_by_tx=*/{outpoints_supply, outpoints_rbf}, /*consumed_by_tx=*/{consumed_supply}, /*tx=*/*tx);
+                } else {
+                    insert_tx(/*created_by_tx=*/{consumed_erased}, /*consumed_by_tx=*/{outpoints_supply}, /*tx=*/*tx);
+                }
+
+                for (const auto& p : consumed_erased) {
+                    Assert(outpoints_supply.erase(p) == 1);
+                    Assert(outpoints_rbf.erase(p) == 1);
+                }
+                for (const auto& p : consumed_supply) {
+                    Assert(outpoints_supply.erase(p) == 1);
+                }
             }
         }
     }
