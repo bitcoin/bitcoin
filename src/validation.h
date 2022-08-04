@@ -331,7 +331,7 @@ public:
     ScriptError GetScriptError() const { return error; }
 };
 /** Initializes the script-execution cache */
-void InitScriptExecutionCache();
+[[nodiscard]] bool InitScriptExecutionCache(size_t max_size_bytes);
 
 /** Functions for validating blocks and updating the block tree */
 
