@@ -522,7 +522,7 @@ bool ArgsManager::InitSettings(std::string& error)
 
 bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp, bool backup) const
 {
-    fs::path settings = GetPathArg("-settings", fs::path{BITCOIN_SETTINGS_FILENAME});
+    fs::path settings = GetPathArg("-settings", BITCOIN_SETTINGS_FILENAME);
     if (settings.empty()) {
         return false;
     }
@@ -885,9 +885,9 @@ bool CheckDataDirOption()
     return datadir.empty() || fs::is_directory(fs::absolute(datadir));
 }
 
-fs::path GetConfigFile(const std::string& confPath)
+fs::path GetConfigFile(const fs::path& configuration_file_path)
 {
-    return AbsPathForConfigVal(fs::PathFromString(confPath), false);
+    return AbsPathForConfigVal(configuration_file_path, /*net_specific=*/false);
 }
 
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
@@ -971,17 +971,17 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         m_config_sections.clear();
     }
 
-    const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    std::ifstream stream{GetConfigFile(confPath)};
+    const fs::path conf_path = GetPathArg("-conf", BITCOIN_CONF_FILENAME);
+    std::ifstream stream{GetConfigFile(conf_path)};
 
     // not ok to have a config file specified that cannot be opened
     if (IsArgSet("-conf") && !stream.good()) {
-        error = strprintf("specified config file \"%s\" could not be opened.", confPath);
+        error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
         return false;
     }
     // ok to not have a config file
     if (stream.good()) {
-        if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
+        if (!ReadConfigStream(stream, fs::PathToString(conf_path), error, ignore_invalid_keys)) {
             return false;
         }
         // `-includeconf` cannot be included in the command line arguments except
@@ -1019,7 +1019,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                std::ifstream conf_file_stream{GetConfigFile(conf_file_name)};
+                std::ifstream conf_file_stream{GetConfigFile(fs::PathFromString(conf_file_name))};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
