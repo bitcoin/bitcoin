@@ -111,7 +111,7 @@ CSHA512& operator<<(CSHA512& hasher, const T& data) {
     static_assert(!std::is_same<typename std::decay<T>::type, unsigned char*>::value, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
     static_assert(!std::is_same<typename std::decay<T>::type, const char*>::value, "Calling operator<<(CSHA512, const char*) is probably not what you want");
     static_assert(!std::is_same<typename std::decay<T>::type, const unsigned char*>::value, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
-    hasher.Write((const unsigned char*)&data, sizeof(data));
+    hasher.Write((const unsigned char*)&data, sizeof(data)); // NOLINT(bugprone-sizeof-expression)
     return hasher;
 }
 
@@ -366,7 +366,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     getifaddrs(&ifad);
     struct ifaddrs *ifit = ifad;
     while (ifit != nullptr) {
-        hasher.Write((const unsigned char*)&ifit, sizeof(ifit));
+        hasher.Write((const unsigned char*)&ifit, sizeof(ifit)); // NOLINT(bugprone-sizeof-expression)
         hasher.Write((const unsigned char*)ifit->ifa_name, strlen(ifit->ifa_name) + 1);
         hasher.Write((const unsigned char*)&ifit->ifa_flags, sizeof(ifit->ifa_flags));
         AddSockaddr(hasher, ifit->ifa_addr);
