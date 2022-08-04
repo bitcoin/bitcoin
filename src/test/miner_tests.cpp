@@ -325,7 +325,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        m_node.chainman->ActiveChain().SetTip(next);
+        m_node.chainman->ActiveChain().SetTip(*next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     // Extend to a 210000-long block chain.
@@ -337,7 +337,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        m_node.chainman->ActiveChain().SetTip(next);
+        m_node.chainman->ActiveChain().SetTip(*next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
@@ -362,7 +362,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     // Delete the dummy blocks again.
     while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
         CBlockIndex* del = m_node.chainman->ActiveChain().Tip();
-        m_node.chainman->ActiveChain().SetTip(del->pprev);
+        m_node.chainman->ActiveChain().SetTip(*Assert(del->pprev));
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
         delete del->phashBlock;
         delete del;
