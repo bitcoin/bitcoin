@@ -92,7 +92,7 @@ bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
                 cn_pos += 5;
                 if (pr[cn_pos] == 0x13 || pr[cn_pos] == 0x0c) {
                     cn_pos++; // Consume the type
-                    int str_len = pr[cn_pos];
+                    auto str_len = pr[cn_pos];
                     cn_pos++; // Consume the string length
                     merchant = QString::fromUtf8(pr.data() + cn_pos, str_len);
                     return true;
