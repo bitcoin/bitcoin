@@ -23,6 +23,7 @@
 #include <wallet/wallet.h>
 
 #include <atomic>
+#include <map>
 #include <optional>
 #include <string>
 
@@ -38,6 +39,7 @@ const std::string CSCRIPT{"cscript"};
 const std::string DEFAULTKEY{"defaultkey"};
 const std::string DESTDATA{"destdata"};
 const std::string FLAGS{"flags"};
+const std::string FLAGS_BY_NAME{"flags_by_name"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
@@ -776,10 +778,12 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
 
         // Load wallet flags, so they are known when processing other records.
-        // The FLAGS key is absent during wallet creation.
+        // The flags keys are absent during wallet creation.
         uint64_t flags;
         if (m_batch->Read(DBKeys::FLAGS, flags)) {
-            if (!pwallet->LoadWalletFlags(flags)) {
+            std::map<std::string, WalletFlagDetails> flags_by_name;
+            m_batch->Read(DBKeys::FLAGS_BY_NAME, flags_by_name);
+            if (!pwallet->LoadWalletFlags(flags, flags_by_name)) {
                 pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
                 return DBErrors::CORRUPT;
             }
@@ -1082,6 +1086,11 @@ bool WalletBatch::WriteHDChain(const CHDChain& chain)
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 {
     return WriteIC(DBKeys::FLAGS, flags);
+}
+
+bool WalletBatch::WriteWalletFlagsByName(const std::map<std::string, WalletFlagDetails>& flags_by_name)
+{
+    return WriteIC(DBKeys::FLAGS_BY_NAME, flags_by_name);
 }
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)

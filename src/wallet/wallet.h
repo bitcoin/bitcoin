@@ -129,7 +129,11 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_LAST_HARDENED_XPUB_CACHED
     |   WALLET_FLAG_DISABLE_PRIVATE_KEYS
     |   WALLET_FLAG_DESCRIPTORS
-    |   WALLET_FLAG_EXTERNAL_SIGNER;
+    |   WALLET_FLAG_EXTERNAL_SIGNER
+    |   WALLET_FLAG_NAMED_REQUIRED;
+
+static inline const std::map<std::string, uint64_t> KNOWN_WALLET_FLAGS_BY_NAME{
+};
 
 static constexpr uint64_t MUTABLE_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE;
@@ -297,6 +301,7 @@ private:
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
+    std::map<std::string, WalletFlagDetails> m_wallet_flags_by_name;
 
     bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
 
@@ -799,19 +804,21 @@ public:
 
     /** set a single wallet flag */
     void SetWalletFlag(uint64_t flags);
+    void SetWalletFlag(const std::string& flag, const WalletFlagDetails& details);
 
     /** Unsets a single wallet flag */
     void UnsetWalletFlag(uint64_t flag);
 
     /** check if a certain wallet flag is set */
     bool IsWalletFlagSet(uint64_t flag) const override;
+    bool IsWalletFlagSet(const std::string& flag) const override;
 
     /** overwrite all flags by the given uint64_t
        flags must be uninitialised (or 0)
        only known flags may be present */
-    void InitWalletFlags(uint64_t flags);
+    void InitWalletFlags(uint64_t flags, const std::map<std::string, WalletFlagDetails>& flags_by_name);
     /** Loads the flags into the wallet. (used by LoadWallet) */
-    bool LoadWalletFlags(uint64_t flags);
+    bool LoadWalletFlags(uint64_t flags, const std::map<std::string, WalletFlagDetails>& flags_by_name);
 
     /** Determine if we are a legacy wallet */
     bool IsLegacy() const;

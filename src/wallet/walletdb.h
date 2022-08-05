@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <script/sign.h>
+#include <serialize.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
 #include <key.h>
@@ -88,6 +89,17 @@ extern const std::string WATCHS;
 // Keys in this set pertain only to the legacy wallet (LegacyScriptPubKeyMan) and are removed during migration from legacy to descriptors.
 extern const std::unordered_set<std::string> LEGACY_TYPES;
 } // namespace DBKeys
+
+struct WalletFlagDetails {
+    bool required;
+    uint64_t version;
+
+    SERIALIZE_METHODS(WalletFlagDetails, obj)
+    {
+        READWRITE(obj.required);
+        READWRITE(VARINT(obj.version));
+    }
+};
 
 /* simple HD chain data model */
 class CHDChain
@@ -283,6 +295,8 @@ public:
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(const uint64_t flags);
+    bool WriteWalletFlagsByName(const std::map<std::string, WalletFlagDetails>& flags_by_name);
+
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction

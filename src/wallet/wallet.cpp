@@ -1500,6 +1500,29 @@ void CWallet::SetWalletFlag(uint64_t flags)
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
+void CWallet::SetWalletFlag(const std::string& flag, const WalletFlagDetails& details)
+{
+    LOCK(cs_wallet);
+    auto [it, newly_inserted] = m_wallet_flags_by_name.emplace(std::piecewise_construct, std::forward_as_tuple(flag), std::tuple<>());
+    WalletBatch batch(GetDatabase());
+    if (details.required) {
+        if (0 == (m_wallet_flags & WALLET_FLAG_NAMED_REQUIRED)) {
+            m_wallet_flags |= WALLET_FLAG_NAMED_REQUIRED;
+            if (!batch.WriteWalletFlags(m_wallet_flags)) {
+                throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+            }
+        }
+    } else if (it->second.required) {
+        // If this is implemented, we need to check if WALLET_FLAG_NAMED_REQUIRED should be unset (if no other named flags are required)
+        if (newly_inserted) m_wallet_flags_by_name.erase(it);
+        throw std::runtime_error(std::string(__func__) + ": SetWalletFlag changing required true->false is not supported");
+    }
+    m_wallet_flags_by_name[flag] = details;
+    if (!batch.WriteWalletFlagsByName(m_wallet_flags_by_name)) {
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags_by_name failed");
+    }
+}
+
 void CWallet::UnsetWalletFlag(uint64_t flag)
 {
     WalletBatch batch(GetDatabase());
@@ -1524,32 +1547,62 @@ bool CWallet::IsWalletFlagSet(uint64_t flag) const
     return (m_wallet_flags & flag);
 }
 
-bool CWallet::LoadWalletFlags(uint64_t flags)
+bool CWallet::IsWalletFlagSet(const std::string& flagname) const
+{
+    return m_wallet_flags_by_name.count(flagname);
+}
+
+bool CWallet::LoadWalletFlags(uint64_t flags, const std::map<std::string, WalletFlagDetails>& flags_by_name)
 {
     LOCK(cs_wallet);
     if (((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)) {
         // contains unknown non-tolerable wallet flags
         return false;
     }
+    for (const auto& flag_info : flags_by_name) {
+        const auto it = KNOWN_WALLET_FLAGS_BY_NAME.find(flag_info.first);
+        if (it == KNOWN_WALLET_FLAGS_BY_NAME.end() && flag_info.second.required) {
+            return false;
+        } else if (flag_info.second.version > it->second) {
+            // We support an older version of the feature, but not the version of this data
+            return false;
+        }
+    }
     m_wallet_flags = flags;
+    m_wallet_flags_by_name = flags_by_name;
 
     return true;
 }
 
-void CWallet::InitWalletFlags(uint64_t flags)
+void CWallet::InitWalletFlags(uint64_t flags, const std::map<std::string, WalletFlagDetails>& flags_by_name)
 {
     LOCK(cs_wallet);
 
     // We should never be writing unknown non-tolerable wallet flags
     assert(((flags & KNOWN_WALLET_FLAGS) >> 32) == (flags >> 32));
     // This should only be used once, when creating a new wallet - so current flags are expected to be blank
-    assert(m_wallet_flags == 0);
+    assert(m_wallet_flags == 0 && m_wallet_flags_by_name.empty());
 
-    if (!WalletBatch(GetDatabase()).WriteWalletFlags(flags)) {
-        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    // Ensure WALLET_FLAG_NAMED_REQUIRED is set correctly
+    flags &= ~WALLET_FLAG_NAMED_REQUIRED;
+    for (const auto& flag_info : flags_by_name) {
+        if (flag_info.second.required) {
+            flags |= WALLET_FLAG_NAMED_REQUIRED;
+            break;
+        }
     }
 
-    if (!LoadWalletFlags(flags)) assert(false);
+    WalletBatch batch(GetDatabase());
+    if (!batch.WriteWalletFlags(flags)) {
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+    }
+    if (!flags_by_name.empty()) {
+        if (!batch.WriteWalletFlagsByName(flags_by_name)) {
+            throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+        }
+    }
+
+    if (!LoadWalletFlags(flags, flags_by_name)) assert(false);
 }
 
 // Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
@@ -2846,7 +2899,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
-        walletInstance->InitWalletFlags(wallet_creation_flags);
+        walletInstance->InitWalletFlags(wallet_creation_flags, std::map<std::string, WalletFlagDetails>());
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
