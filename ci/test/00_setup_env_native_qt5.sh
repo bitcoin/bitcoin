@@ -14,6 +14,6 @@ export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude fe
 export RUN_UNIT_TESTS_SEQUENTIAL="true"
 export RUN_UNIT_TESTS="false"
 export GOAL="install"
-export PREVIOUS_RELEASES_TO_DOWNLOAD="v4.1.3"
+export DOWNLOAD_PREVIOUS_RELEASES="true"
 export SYSCOIN_CONFIG="--enable-zmq --with-libs=no --with-gui=qt5 --enable-reduce-exports \
 --enable-debug CFLAGS=\"-g0 -O2 -funsigned-char\" CXXFLAGS=\"-g0 -O2 -funsigned-char\" CC=gcc-8 CXX=g++-8"

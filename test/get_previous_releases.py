@@ -20,8 +20,8 @@ import sys
 import hashlib
 
 SHA256_SUMS = {
-"77f8fcece0c5b9e67bd63ec041c1a73132119407a29ae799e650189b231e642b": "syscoin-4.1.3-osx64.tar.gz",
-"858f0e24be6c999aabe8cd9a682ac3b8bdf24dbc42c36566536701faf85824f4": "syscoin-4.1.3-x86_64-linux-gnu.tar.gz",
+    "77f8fcece0c5b9e67bd63ec041c1a73132119407a29ae799e650189b231e642b": {"tag": "v4.1.3", "tarball": "syscoin-4.1.3-osx64.tar.gz"},
+    "858f0e24be6c999aabe8cd9a682ac3b8bdf24dbc42c36566536701faf85824f4": {"tag": "v4.1.3", "tarball": "syscoin-4.1.3-x86_64-linux-gnu.tar.gz"},
 }
 
 @contextlib.contextmanager
@@ -68,7 +68,7 @@ def download_binary(tag, args) -> int:
         hasher.update(afile.read())
     tarballHash = hasher.hexdigest()
 
-    if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash] != tarball:
+    if tarballHash not in SHA256_SUMS or SHA256_SUMS[tarballHash]['tarball'] != tarball:
         if tarball in SHA256_SUMS.values():
             print("Checksum did not match")
             return 1
@@ -193,7 +193,12 @@ if __name__ == '__main__':
                         help='download release binary.')
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
-    parser.add_argument('tags', nargs='+',
-                        help="release tags. e.g.: v0.18.1 v0.20.0rc2")
+    parser.add_argument('tags', nargs='*', default=set(
+                            [v['tag'] for v in SHA256_SUMS.values()]
+                        ),
+                        help='release tags. e.g.: v0.18.1 v0.20.0rc2 '
+                        '(if not specified, the full list needed for'
+                        'backwards compatibility tests will be used)'
+                        )
     args = parser.parse_args()
     sys.exit(main(args))
