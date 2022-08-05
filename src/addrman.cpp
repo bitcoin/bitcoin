@@ -14,10 +14,10 @@
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
-#include <timedata.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/time.h>
 
 #include <cmath>
 #include <optional>
@@ -560,7 +560,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
 
     if (pinfo) {
         // periodically update nTime
-        const bool currently_online{AdjustedTime() - addr.nTime < 24h};
+        const bool currently_online{NodeClock::now() - addr.nTime < 24h};
         const auto update_interval{currently_online ? 1h : 24h};
         if (pinfo->nTime < addr.nTime - update_interval - time_penalty) {
             pinfo->nTime = std::max(NodeSeconds{0s}, addr.nTime - time_penalty);
@@ -788,7 +788,7 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     }
 
     // gather a list of random nodes, skipping those of low quality
-    const auto now{AdjustedTime()};
+    const auto now{Now<NodeSeconds>()};
     std::vector<CAddress> addresses;
     for (unsigned int n = 0; n < vRandom.size(); n++) {
         if (addresses.size() >= nNodes)
@@ -874,7 +874,7 @@ void AddrManImpl::ResolveCollisions_()
                 int id_old = vvTried[tried_bucket][tried_bucket_pos];
                 AddrInfo& info_old = mapInfo[id_old];
 
-                const auto current_time{AdjustedTime()};
+                const auto current_time{Now<NodeSeconds>()};
 
                 // Has successfully connected in last X hours
                 if (current_time - info_old.m_last_success < ADDRMAN_REPLACEMENT) {
@@ -898,7 +898,7 @@ void AddrManImpl::ResolveCollisions_()
                     erase_collision = true;
                 }
             } else { // Collision is not actually a collision anymore
-                Good_(info_new, false, AdjustedTime());
+                Good_(info_new, false, Now<NodeSeconds>());
                 erase_collision = true;
             }
         }
