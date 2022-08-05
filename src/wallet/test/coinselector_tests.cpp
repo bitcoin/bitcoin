@@ -61,9 +61,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
-        auto op_dest = wallet.GetNewDestination(OutputType::BECH32, "");
-        assert(op_dest.HasRes());
-        tx.vout[nInput].scriptPubKey = GetScriptForDestination(op_dest.GetObj());
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")));
     }
     if (fIsFromMe) {
         // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),

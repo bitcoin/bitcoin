@@ -1973,7 +1973,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (interruptNet)
             return;
 
-        int64_t nANow = GetAdjustedTime();
+        int64_t nANow = Now<NodeSeconds>().time_since_epoch().count();
 
         // NOTE: Process only one pending masternode at a time
 

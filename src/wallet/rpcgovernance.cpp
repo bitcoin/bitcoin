@@ -13,6 +13,7 @@
 #include <evo/deterministicmns.h>
 #include <rpc/server_util.h>
 #include <wallet/rpc/wallet.h>
+#include <util/result.h>
 using namespace wallet;
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
@@ -205,9 +206,9 @@ static RPCHelpMan gobject_prepare()
     }
     auto res = GetBudgetSystemCollateralTX(*pwallet, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint);
     if(!res) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, res.GetError().original);
+        throw JSONRPCError(RPC_INTERNAL_ERROR, util::ErrorString(res).original);
     }
-    auto &txr = res.GetObj();
+    auto &txr = *res;
     CTransactionRef tx = txr.tx;
     if (!tx) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";

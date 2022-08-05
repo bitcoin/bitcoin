@@ -33,6 +33,7 @@
 #include <index/txindex.h>
 #include <node/context.h>
 #include <services/assetconsensus.h>
+#include <util/result.h>
 using namespace wallet;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -370,10 +371,10 @@ static RPCHelpMan syscoinburntoassetallocation()
 
     auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
     if (fChangeAddress.empty() && !op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
 
-    const CScript& scriptPubKey = GetScriptForDestination(op_dest.GetObj());
+    const CScript& scriptPubKey = GetScriptForDestination(*op_dest);
     CTxOut change_prototype_txout(0, scriptPubKey);
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
 
@@ -415,8 +416,8 @@ static RPCHelpMan syscoinburntoassetallocation()
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
     auto resTx = CreateTransaction(*pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION);
-    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    auto &txr = resTx.GetObj();
+    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(resTx).original);
+    auto &txr = *resTx;
     tx = txr.tx;
     CMutableTransaction mtx(*tx);
     // Script verification errors
@@ -639,9 +640,9 @@ RPCHelpMan assetnew()
 
     auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
     if (fChangeAddress.empty() && !op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
-    auto dest = op_dest.GetObj();
+    auto dest = *op_dest;
     if(!fChangeAddress.empty())
         dest = DecodeDestination(fChangeAddress);
     if (!IsValidDestination(dest)) {
@@ -864,9 +865,9 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
         auto op_dest = pwallet.GetNewChangeDestination(pwallet.m_default_address_type);
         if (fChangeAddress.empty() && !op_dest) {
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
         }     
-        recp = { GetScriptForDestination(op_dest.GetObj()), nGas, false};  
+        recp = { GetScriptForDestination(*op_dest), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
     if(nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
@@ -895,8 +896,8 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
     auto resTx = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn);
-    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
-    auto &txr = resTx.GetObj();
+    if (!resTx) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(resTx).original);
+    auto &txr = *resTx;
     tx = txr.tx;
     
     CMutableTransaction mtx(*tx);
@@ -1840,10 +1841,10 @@ static RPCHelpMan assetallocationburn()
     
     auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
     if (fChangeAddress.empty() && !op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
 
-    const CScript& scriptPubKey = GetScriptForDestination(op_dest.GetObj());
+    const CScript& scriptPubKey = GetScriptForDestination(*op_dest);
     CRecipient recp = {scriptPubKey, nAmount, false };
 
     std::vector<unsigned char> data;

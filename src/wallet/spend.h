@@ -155,7 +155,7 @@ struct CreatedTransactionResult
  * @note passing change_pos as -1 will result in setting a random position
  */
 // SYSCOIN
-BResult<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
+util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, const int& nVersion = 2);
 
 /**
  * Insert additional inputs into the transaction by
@@ -163,6 +163,6 @@ BResult<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::
  */
 // SYSCOIN
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl&);
-BResult<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wallet, uint256 hash, CAmount amount, const COutPoint& outpoint);
+util::Result<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wallet, uint256 hash, CAmount amount, const COutPoint& outpoint);
 } // namespace wallet
 #endif // SYSCOIN_WALLET_SPEND_H

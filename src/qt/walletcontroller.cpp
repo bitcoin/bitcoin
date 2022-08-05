@@ -393,8 +393,8 @@ void RestoreWalletActivity::restore(const fs::path& backup_file, const std::stri
     QTimer::singleShot(0, worker(), [this, backup_file, wallet_name] {
         auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message)};
 
-        m_error_message = wallet ? bilingual_str{} : wallet.GetError();
-        if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(wallet.ReleaseObj());
+        m_error_message = util::ErrorString(wallet);
+        if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
 
         QTimer::singleShot(0, this, &RestoreWalletActivity::finish);
     });
