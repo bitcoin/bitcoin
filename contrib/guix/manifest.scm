@@ -194,7 +194,8 @@ chain for " target " development."))
 
 (define (make-nsis-for-gcc-10 base-nsis)
   (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-gcc-10-memmove.patch")))
+    (search-our-patches "nsis-gcc-10-memmove.patch"
+                        "nsis-disable-installer-reloc.patch")))
 
 (define (fix-ppc64-nx-default lief)
   (package-with-extra-patches lief
