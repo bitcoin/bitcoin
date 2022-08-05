@@ -191,7 +191,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(5)
         for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=5)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=15)
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
         self.sync_blocks()
         self.bump_mocktime(5, nodes=self.nodes)

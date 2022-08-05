@@ -604,7 +604,7 @@ void CChainLocksHandler::TrySignChainTip()
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
-    bool bStopLookback{false};
+    int LookbackBlock{0};
     {
         LOCK(cs);
 
@@ -644,7 +644,7 @@ void CChainLocksHandler::TrySignChainTip()
             }
             // if we are chainlocked here we can stop and not look back any further
             if(InternalHasChainLock(nIndexHeight, nIndexHash)) {
-                bStopLookback = true;
+                LookbackBlock = nIndexHeight;
                 break;
             }
             pindexWalkback = pindexWalkback->pprev;
@@ -652,7 +652,7 @@ void CChainLocksHandler::TrySignChainTip()
 
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d, StopLookback=%d\n", __func__, msgHash.ToString(), nHeight, bStopLookback? 1: 0);
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d, LookbackBlock=%d\n", __func__, msgHash.ToString(), nHeight, LookbackBlock);
     const auto& consensus = Params().GetConsensus();
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
