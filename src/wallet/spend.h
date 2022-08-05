@@ -142,8 +142,14 @@ struct PreSelectedInputs
 };
 
 /**
- * Select a set of coins such that nTargetValue is met and at least
- * all coins from coin_control are selected; never select unconfirmed coins if they are not ours
+ * Fetch and validate coin control selected inputs.
+ * Coins could be internal (from the wallet) or external.
+*/
+util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
+                                                    const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
+ * Select a set of coins such that nTargetValue is met; never select unconfirmed coins if they are not ours
  * param@[in]   wallet                 The wallet which provides data necessary to spend the selected coins
  * param@[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
  * param@[in]   nTargetValue           The target value
@@ -152,8 +158,16 @@ struct PreSelectedInputs
  * returns                             If successful, a SelectionResult containing the selected coins
  *                                     If failed, a nullopt.
  */
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
+ * Select all coins from coin_control, and if coin_control 'm_allow_other_inputs=true', call 'AutomaticCoinSelection' to
+ * select a set of coins such that nTargetValue - pre_set_inputs.total_amount is met.
+ */
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,
+                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
+                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 struct CreatedTransactionResult
 {
