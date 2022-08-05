@@ -730,12 +730,13 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
         }
     } else {
         // json
-        char* buffer = new char [nFilesize];
-        file.read(buffer, nFilesize);
         UniValue data(UniValue::VOBJ);
-        if(!data.read(buffer))
-            throw JSONRPCError(RPC_TYPE_ERROR, "Cannot parse Electrum wallet export file");
-        delete[] buffer;
+        {
+            auto buffer = std::make_unique<char[]>(nFilesize);
+            file.read(buffer.get(), nFilesize);
+            if(!data.read(buffer.get()))
+                throw JSONRPCError(RPC_TYPE_ERROR, "Cannot parse Electrum wallet export file");
+        }
 
         std::vector<std::string> vKeys = data.getKeys();
 
