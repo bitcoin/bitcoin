@@ -217,7 +217,10 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
 
             std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
-            bool solvable = provider ? IsSolvable(*provider, output.scriptPubKey) : false;
+            int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), coinControl);
+            // Because CalculateMaximumSignedInputSize just uses ProduceSignature and makes a dummy signature,
+            // it is safe to assume that this input is solvable if input_bytes is greater -1.
+            bool solvable = input_bytes > -1;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
             vCoins.push_back(COutput(wallet, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
             // Checks the sum amount of all UTXO's.
