@@ -1152,8 +1152,8 @@ static UniValue protx_diff(const JSONRPCRequest& request)
     uint256 baseBlockHash = ParseBlock(request.params[0], "baseBlock");
     uint256 blockHash = ParseBlock(request.params[1], "block");
     bool extended = false;
-    if (!request.params[3].isNull()) {
-        extended = ParseBoolV(request.params[3], "extended");
+    if (!request.params[2].isNull()) {
+        extended = ParseBoolV(request.params[2], "extended");
     }
 
     CSimplifiedMNListDiff mnListDiff;
