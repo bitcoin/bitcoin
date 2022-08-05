@@ -781,8 +781,9 @@ public:
     bool IsWalletFlagSet(uint64_t flag) const override;
 
     /** overwrite all flags by the given uint64_t
-       returns false if unknown, non-tolerable flags are present */
-    bool AddWalletFlags(uint64_t flags);
+       flags must be uninitialised (or 0)
+       only known flags may be present */
+    void InitWalletFlags(uint64_t flags);
     /** Loads the flags into the wallet. (used by LoadWallet) */
     bool LoadWalletFlags(uint64_t flags);
 
