@@ -93,10 +93,10 @@ public:
     int GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const;
 
     //! Determine whether the statistics about this entry are bad enough so that it can just be deleted
-    bool IsTerrible(NodeSeconds now = AdjustedTime()) const;
+    bool IsTerrible(NodeSeconds now = Now<NodeSeconds>()) const;
 
     //! Calculate the relative chance this entry should be given when selecting nodes to connect to
-    double GetChance(NodeSeconds now = AdjustedTime()) const;
+    double GetChance(NodeSeconds now = Now<NodeSeconds>()) const;
 };
 
 class AddrManImpl

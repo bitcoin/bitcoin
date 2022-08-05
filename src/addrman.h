@@ -10,7 +10,6 @@
 #include <netgroup.h>
 #include <protocol.h>
 #include <streams.h>
-#include <timedata.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -121,10 +120,10 @@ public:
      * @param[in] time            The time that we were last connected to this peer.
      * @return    true if the address is successfully moved from the new table to the tried table.
      */
-    bool Good(const CService& addr, NodeSeconds time = AdjustedTime());
+    bool Good(const CService& addr, NodeSeconds time = Now<NodeSeconds>());
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService& addr, bool fCountFailure, NodeSeconds time = AdjustedTime());
+    void Attempt(const CService& addr, bool fCountFailure, NodeSeconds time = Now<NodeSeconds>());
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions();
@@ -169,7 +168,7 @@ public:
      * @param[in]   addr     The address of the peer we were connected to
      * @param[in]   time     The time that we were last connected to this peer
      */
-    void Connected(const CService& addr, NodeSeconds time = AdjustedTime());
+    void Connected(const CService& addr, NodeSeconds time = Now<NodeSeconds>());
 
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);
