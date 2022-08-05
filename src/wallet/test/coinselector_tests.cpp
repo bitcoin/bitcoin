@@ -74,9 +74,7 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     if (spendable) {
-        auto op_dest = wallet.GetNewDestination(OutputType::BECH32, "");
-        assert(op_dest.HasRes());
-        tx.vout[nInput].scriptPubKey = GetScriptForDestination(op_dest.GetObj());
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")));
     }
     uint256 txid = tx.GetHash();
 
