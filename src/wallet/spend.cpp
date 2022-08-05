@@ -230,7 +230,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount)
                 continue;
 
-            if (coinControl && coinControl->HasSelected() && !coinControl->m_allow_other_inputs && !coinControl->IsSelected(outpoint))
+            // Skip manually selected coins (the caller can fetch them directly)
+            if (coinControl && coinControl->HasSelected() && coinControl->IsSelected(outpoint))
                 continue;
 
             if (wallet.IsLockedCoin(outpoint))
@@ -528,9 +529,6 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
 
     OutputGroup preset_inputs(coin_selection_params);
 
-    // calculate value from preset inputs and store them
-    std::set<COutPoint> preset_coins;
-
     std::vector<COutPoint> vPresetInputs;
     coin_control.ListSelected(vPresetInputs);
     for (const COutPoint& outpoint : vPresetInputs) {
@@ -571,7 +569,6 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
         } else {
             value_to_select -= output.GetEffectiveValue();
         }
-        preset_coins.insert(outpoint);
         /* Set ancestors and descendants to 0 as they don't matter for preset inputs since no actual selection is being done.
          * positive_only is set to false because we want to include all preset inputs, even if they are dust.
          */
@@ -591,11 +588,6 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
 
         result.ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
         return result;
-    }
-
-    // remove preset inputs from coins so that Coin Selection doesn't pick them.
-    if (coin_control.HasSelected()) {
-        available_coins.Erase(preset_coins);
     }
 
     unsigned int limit_ancestor_count = 0;
