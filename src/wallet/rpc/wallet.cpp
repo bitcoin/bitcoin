@@ -616,7 +616,7 @@ RPCHelpMan simulaterawtransaction()
             HelpExampleCli("simulaterawtransaction", "[\"myhex\"]")
             + HelpExampleRpc("simulaterawtransaction", "[\"myhex\"]")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!rpc_wallet) return UniValue::VNULL;

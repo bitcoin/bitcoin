@@ -216,8 +216,7 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             }
 
             std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
-
-            int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), coinControl);
+            int input_bytes =  CalculateMaximumSignedInputSize(output, provider.get(), /*use_max_sig=*/true);
             // Because CalculateMaximumSignedInputSize just uses ProduceSignature and makes a dummy signature,
             // it is safe to assume that this input is solvable if input_bytes is greater -1.
             bool solvable = input_bytes > -1;
@@ -564,7 +563,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
     for (const COutPoint& outpoint : vPresetInputs) {
         int input_bytes = -1;
         CTxOut txout;
-        std::map<uint256, CWalletTx>::const_iterator it = wallet.mapWallet.find(outpoint.hash);
+        auto it = wallet.mapWallet.find(outpoint.hash);
         if (it != wallet.mapWallet.end()) {
             const CWalletTx& wtx = it->second;
             // Clearly invalid input, fail
