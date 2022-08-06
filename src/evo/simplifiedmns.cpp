@@ -115,6 +115,17 @@ uint256 CSimplifiedMNList::CalcMerkleRoot(bool* pmutated) const
     return ComputeMerkleRoot(leaves, pmutated);
 }
 
+bool CSimplifiedMNList::operator==(const CSimplifiedMNList& rhs) const
+{
+    return mnList.size() == rhs.mnList.size() &&
+            std::equal(mnList.begin(), mnList.end(), rhs.mnList.begin(),
+                [](const std::unique_ptr<CSimplifiedMNListEntry>& left, const std::unique_ptr<CSimplifiedMNListEntry>& right)
+                {
+                    return *left == *right;
+                }
+            );
+}
+
 CSimplifiedMNListDiff::CSimplifiedMNListDiff() = default;
 
 CSimplifiedMNListDiff::~CSimplifiedMNListDiff() = default;

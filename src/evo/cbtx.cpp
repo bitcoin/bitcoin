@@ -130,7 +130,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         static uint256 merkleRootCached;
         static bool mutatedCached{false};
 
-        if (sml.mnList == smlCached.mnList) {
+        if (sml == smlCached) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "mutated-cached-calc-cb-mnmerkleroot");
