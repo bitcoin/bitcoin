@@ -28,6 +28,11 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
         db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
         blsWorker(_blsWorker), connman(_connman)
 {
+    if (!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) {
+        // Regular nodes do not care about any DKG internals, bail out
+        return;
+    }
+
     MigrateDKG();
 
     const Consensus::Params& consensus_params = Params().GetConsensus();

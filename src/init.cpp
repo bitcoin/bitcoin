@@ -1717,6 +1717,28 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         }
     }
 
+    assert(activeMasternodeInfo.blsKeyOperator == nullptr);
+    assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            LOCK(activeMasternodeInfoCs);
+            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
+        }
+        LogPrintf("MASTERNODE:\n  blsPubKeyOperator: %s\n", activeMasternodeInfo.blsPubKeyOperator->ToString());
+    } else {
+        LOCK(activeMasternodeInfoCs);
+        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    }
+
     assert(!node.scheduler);
     node.scheduler = MakeUnique<CScheduler>();
 
@@ -1913,6 +1935,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
     RegisterValidationInterface(pdsNotificationInterface);
+
+    if (fMasternodeMode) {
+        // Create and register activeMasternodeManager, will init later in ThreadImport
+        activeMasternodeManager = new CActiveMasternodeManager(*node.connman);
+        RegisterValidationInterface(activeMasternodeManager);
+    }
 
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
@@ -2282,43 +2310,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         return false;
     }
 
-    // ********************************************************* Step 10a: Prepare Masternode related stuff
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
-        CBLSSecretKey keyOperator(binKey);
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        fMasternodeMode = true;
-        {
-            LOCK(activeMasternodeInfoCs);
-            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(
-                    activeMasternodeInfo.blsKeyOperator->GetPublicKey());
-        }
-        LogPrintf("MASTERNODE:\n");
-        LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
-    }
-
-    if(fMasternodeMode) {
-        // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager(*node.connman);
-        RegisterValidationInterface(activeMasternodeManager);
-    }
-
-    {
-        LOCK(activeMasternodeInfoCs);
-        if (activeMasternodeInfo.blsKeyOperator == nullptr) {
-            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
-        }
-        if (activeMasternodeInfo.blsPubKeyOperator == nullptr) {
-            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
-        }
-    }
-
-    // ********************************************************* Step 10b: setup CoinJoin
+    // ********************************************************* Step 10a: Setup CoinJoin
 
     g_wallet_init_interface.InitCoinJoinSettings();
 
@@ -2373,7 +2365,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         }
     }
 
-    // ********************************************************* Step 10c: schedule Dash-specific tasks
+    // ********************************************************* Step 10b: schedule Dash-specific tasks
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60 * 1000);
     node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*node.connman)), 1 * 1000);
