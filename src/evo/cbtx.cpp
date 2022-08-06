@@ -177,20 +177,40 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
     LogPrint(BCLog::BENCHMARK, "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
 
-    for (const auto& p : quorums) {
-        auto& v = qcHashes[p.first];
-        v.reserve(p.second.size());
-        for (const auto& p2 : p.second) {
-            uint256 minedBlockHash;
-            llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
-            if (qc == nullptr) return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "commitment-not-found");
-            if (llmq::utils::IsQuorumRotationEnabled(qc->llmqType, pindexPrev)) {
-                auto& qi = qcIndexedHashes[p.first];
-                qi.insert(std::make_pair(qc->quorumIndex, ::SerializeHash(*qc)));
-                continue;
+    static CCriticalSection cs_cache;
+    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
+    static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes_cached GUARDED_BY(cs_cache);
+    static std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes_cached GUARDED_BY(cs_cache);
+
+    {
+        LOCK(cs_cache);
+
+        if (quorums == quorums_cached) {
+            qcHashes = qcHashes_cached;
+            qcIndexedHashes = qcIndexedHashes_cached;
+            for (const auto& [_, vec_hashes] : qcHashes) {
+                hashCount += vec_hashes.size();
             }
-            v.emplace_back(::SerializeHash(*qc));
-            hashCount++;
+        } else {
+            for (const auto& p : quorums) {
+                auto& v = qcHashes[p.first];
+                v.reserve(p.second.size());
+                for (const auto& p2 : p.second) {
+                    uint256 minedBlockHash;
+                    llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
+                    if (qc == nullptr) return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "commitment-not-found");
+                    if (llmq::utils::IsQuorumRotationEnabled(qc->llmqType, pindexPrev)) {
+                        auto& qi = qcIndexedHashes[p.first];
+                        qi.insert(std::make_pair(qc->quorumIndex, ::SerializeHash(*qc)));
+                        continue;
+                    }
+                    v.emplace_back(::SerializeHash(*qc));
+                    hashCount++;
+                }
+            }
+            quorums_cached = quorums;
+            qcHashes_cached = qcHashes;
+            qcIndexedHashes_cached = qcIndexedHashes;
         }
     }
 
