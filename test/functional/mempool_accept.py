@@ -268,7 +268,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].scriptPubKey = CScript([OP_0])  # Some non-standard script
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey-nonstandard'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)

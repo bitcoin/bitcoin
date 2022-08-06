@@ -132,7 +132,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
-            reason = "scriptpubkey";
+            reason = "scriptpubkey-nonstandard";
             return false;
         }
 
