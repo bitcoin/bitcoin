@@ -374,6 +374,7 @@ BASE_SCRIPTS = [
     'feature_unsupported_utxo_db.py',
     'feature_logging.py',
     'feature_anchors.py',
+    'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
