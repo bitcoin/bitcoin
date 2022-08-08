@@ -150,10 +150,3 @@ bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemS
     }
     return false;
 }
-
-bool FillableSigningProvider::GetHDChain(CHDChain& hdChainRet) const
-{
-    LOCK(cs_KeyStore);
-    hdChainRet = hdChain;
-    return !hdChain.IsNull();
-}

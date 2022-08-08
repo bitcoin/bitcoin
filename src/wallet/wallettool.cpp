@@ -40,7 +40,8 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
 
     // generate a new HD seed
     // NOTE: we do not yet create HD wallets by default
-    // wallet_instance->GenerateNewHDChain("", "");
+    // auto spk_man = wallet_instance->GetLegacyScriptPubKeyMan();
+    // spk_man->GenerateNewHDChain("", "");
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
@@ -98,7 +99,7 @@ static void WalletShowInfo(CWallet* wallet_instance)
     CHDChain hdChainTmp;
     tfm::format(std::cout, "Wallet info\n===========\n");
     tfm::format(std::cout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
-    tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->GetHDChain(hdChainTmp) ?  "yes" : "no");
+    tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->IsHDEnabled() ? "yes" : "no");
     tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
     tfm::format(std::cout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());

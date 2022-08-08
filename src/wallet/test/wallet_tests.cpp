@@ -33,8 +33,10 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static void AddKey(CWallet& wallet, const CKey& key)
 {
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
     LOCK(wallet.cs_wallet);
-    wallet.AddKeyPubKey(key, key.GetPubKey());
+    AssertLockHeld(spk_man->cs_wallet);
+    spk_man->AddKeyPubKey(key, key.GetPubKey());
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
@@ -223,9 +225,11 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Import key into wallet and call dumpwallet to create backup file.
     {
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
+        auto spk_man = wallet->GetLegacyScriptPubKeyMan();
         LOCK(wallet->cs_wallet);
-        wallet->mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
-        wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        AssertLockHeld(spk_man->cs_wallet);
+        spk_man->mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
+        spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
         util::Ref context;
         JSONRPCRequest request(context);
@@ -274,9 +278,11 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     auto chain = interfaces::MakeChain(node);
 
     CWallet wallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
 
     LOCK(wallet.cs_wallet);
+    AssertLockHeld(spk_man->cs_wallet);
     wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
 
     CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 0);
@@ -286,10 +292,10 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     // cache the current immature credit amount, which is 0.
     BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 0);
 
-    // Invalidate the cached value, add the key, and make sure a new immature
+    // Invalidate the cached vanue, add the key, and make sure a new immature
     // credit amount is calculated.
     wtx.MarkDirty();
-    wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+    BOOST_CHECK(spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()));
     BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 500*COIN);
 }
 
@@ -1003,7 +1009,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     BOOST_CHECK(!wallet->TopUpKeyPool(1000));
     CPubKey pubkey;
-    BOOST_CHECK(!wallet->GetKeyFromPool(pubkey, false));
+    BOOST_CHECK(!wallet->GetLegacyScriptPubKeyMan()->GetKeyFromPool(pubkey, false));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

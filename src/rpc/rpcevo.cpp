@@ -579,8 +579,13 @@ static UniValue protx_register(const JSONRPCRequest& request)
             return ret;
         } else {
             // lets prove we own the collateral
+            LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+            if (!spk_man) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+            }
+
             CKey key;
-            if (!pwallet->GetKey(*keyID, key)) {
+            if (!spk_man->GetKey(*keyID, key)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
@@ -779,8 +784,13 @@ static UniValue protx_update_registrar(const JSONRPCRequest& request)
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
     }
 
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+    }
+
     CKey keyOwner;
-    if (!pwallet->GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
+    if (!spk_man->GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
         throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(dmn->pdmnState->keyIDOwner)));
     }
 
@@ -919,17 +929,25 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
     if (!pwallet) {
         return false;
     }
-    return pwallet->HaveKey(keyID);
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    return spk_man->HaveKey(keyID);
 }
 
 static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
 
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
-        if ((boost::get<CKeyID>(&dest) && pwallet->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwallet->HaveCScript(*boost::get<CScriptID>(&dest)))) {
+        if ((boost::get<CKeyID>(&dest) && spk_man->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && spk_man->HaveCScript(*boost::get<CScriptID>(&dest)))) {
             return true;
         }
     }

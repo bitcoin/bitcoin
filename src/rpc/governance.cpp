@@ -628,12 +628,17 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+    }
+
     std::map<uint256, CKey> votingKeys;
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     mnList.ForEachMN(true, [&](auto& dmn) {
         CKey votingKey;
-        if (pwallet->GetKey(dmn.pdmnState->keyIDVoting, votingKey)) {
+        if (spk_man->GetKey(dmn.pdmnState->keyIDVoting, votingKey)) {
             votingKeys.emplace(dmn.proTxHash, votingKey);
         }
     });
@@ -689,8 +694,13 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
     }
 
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+    }
+
     CKey votingKey;
-    if (!pwallet->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
+    if (!spk_man->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(dmn->pdmnState->keyIDVoting)));
     }
 

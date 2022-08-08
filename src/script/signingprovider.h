@@ -64,17 +64,15 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
 class FillableSigningProvider : public SigningProvider
 {
 protected:
-    mutable CCriticalSection cs_KeyStore;
-
     using KeyMap = std::map<CKeyID, CKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
 
     KeyMap mapKeys GUARDED_BY(cs_KeyStore);
     ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
-    /* the HD chain data model*/
-    CHDChain hdChain GUARDED_BY(cs_KeyStore);
 
 public:
+    mutable CCriticalSection cs_KeyStore;
+
     virtual bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     virtual bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
@@ -85,8 +83,6 @@ public:
     virtual bool HaveCScript(const CScriptID &hash) const override;
     virtual std::set<CScriptID> GetCScripts() const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
-
-    virtual bool GetHDChain(CHDChain& hdChainRet) const;
 };
 
 #endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H

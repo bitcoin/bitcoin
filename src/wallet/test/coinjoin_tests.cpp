@@ -137,7 +137,7 @@ public:
         AddWallet(wallet);
         {
             LOCK2(wallet->cs_wallet, cs_main);
-            wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            wallet->GetLegacyScriptPubKeyMan()->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
             WalletRescanReserver reserver(wallet.get());
             reserver.reserve();

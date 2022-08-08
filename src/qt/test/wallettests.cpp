@@ -114,9 +114,11 @@ void TestGUI(interfaces::Node& node)
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
+        auto spk_man = wallet->GetLegacyScriptPubKeyMan();
         LOCK(wallet->cs_wallet);
+        AssertLockHeld(spk_man->cs_wallet);
         wallet->SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
-        wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        spk_man->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
         wallet->SetLastBlockProcessed(105, ::ChainActive().Tip()->GetBlockHash());
     }
     {
