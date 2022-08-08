@@ -21,8 +21,7 @@ EXCLUDED_DIRS = ["src/leveldb/",
                  "src/minisketch/",
                 ]
 
-EXPECTED_BOOST_INCLUDES = ["boost/algorithm/string/replace.hpp",
-                           "boost/date_time/posix_time/posix_time.hpp",
+EXPECTED_BOOST_INCLUDES = ["boost/date_time/posix_time/posix_time.hpp",
                            "boost/multi_index/hashed_index.hpp",
                            "boost/multi_index/ordered_index.hpp",
                            "boost/multi_index/sequenced_index.hpp",
