@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
     BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 }
 
-static std::optional<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, interfaces::Chain* chain, const ArgsManager& args)
+static util::Result<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, interfaces::Chain* chain, const ArgsManager& args)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(chain, "", args, CreateMockWalletDatabase());
     wallet->LoadWallet();
