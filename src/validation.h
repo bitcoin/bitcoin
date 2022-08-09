@@ -275,7 +275,7 @@ bool GetUTXOCoin(CChainState& active_chainstate, const COutPoint& outpoint, Coin
 int GetUTXOHeight(CChainState& active_chainstate, const COutPoint& outpoint);
 int GetUTXOConfirmations(CChainState& active_chainstate, const COutPoint& outpoint);
 
-/* Transaction policy functions */
+/* Mempool validation helper functions */
 
 /**
  * Check if transaction will be final in the next block to be created.
