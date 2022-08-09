@@ -7,7 +7,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <tinyformat.h>
 #include <util/time.h>
 #include <util/check.h>

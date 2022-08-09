@@ -211,16 +211,16 @@ bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> si
     return secp256k1_schnorrsig_verify(secp256k1_context_verify, sigbytes.data(), msg.begin(), 32, &pubkey);
 }
 
-static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
+static const HashWriter HASHER_TAPTWEAK{TaggedHash("TapTweak")};
 
 uint256 XOnlyPubKey::ComputeTapTweakHash(const uint256* merkle_root) const
 {
     if (merkle_root == nullptr) {
         // We have no scripts. The actual tweak does not matter, but follow BIP341 here to
         // allow for reproducible tweaking.
-        return (CHashWriter(HASHER_TAPTWEAK) << m_keydata).GetSHA256();
+        return (HashWriter{HASHER_TAPTWEAK} << m_keydata).GetSHA256();
     } else {
-        return (CHashWriter(HASHER_TAPTWEAK) << m_keydata << *merkle_root).GetSHA256();
+        return (HashWriter{HASHER_TAPTWEAK} << m_keydata << *merkle_root).GetSHA256();
     }
 }
 

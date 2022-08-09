@@ -120,6 +120,8 @@ struct KeyConverter {
 //! Singleton instance of KeyConverter.
 const KeyConverter CONVERTER{};
 
+// https://github.com/llvm/llvm-project/issues/53444
+// NOLINTNEXTLINE(misc-unused-using-decls)
 using miniscript::operator"" _mst;
 
 enum TestMode : int {

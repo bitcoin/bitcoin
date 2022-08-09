@@ -132,12 +132,19 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
+;; https://gcc.gnu.org/install/configure.html
+(define (hardened-gcc gcc)
+  (package-with-extra-configure-variable (
+    package-with-extra-configure-variable gcc
+    "--enable-default-ssp" "yes")
+    "--enable-default-pie" "yes"))
+
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (make-glibc-without-werror glibc-2.24))
-                                       (base-gcc (make-gcc-rpath-link base-gcc)))
+                                       (base-libc (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.24)))
+                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -187,7 +194,8 @@ chain for " target " development."))
 
 (define (make-nsis-for-gcc-10 base-nsis)
   (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-gcc-10-memmove.patch")))
+    (search-our-patches "nsis-gcc-10-memmove.patch"
+                        "nsis-disable-installer-reloc.patch")))
 
 (define (fix-ppc64-nx-default lief)
   (package-with-extra-patches lief
@@ -402,6 +410,11 @@ thus should be able to compile on most platforms where these exist.")
                   (string-append indent
                                  "@unittest.skip(\"Disabled by Guix\")\n"
                                  line)))
+               (substitute* "tests/test_validate.py"
+                 (("^(.*)def test_revocation_mode_soft" line indent)
+                  (string-append indent
+                                 "@unittest.skip(\"Disabled by Guix\")\n"
+                                 line)))
                #t))
            (replace 'check
              (lambda _
@@ -520,6 +533,12 @@ inspecting signatures in Mach-O binaries.")
 (define (make-glibc-without-werror glibc)
   (package-with-extra-configure-variable glibc "enable_werror" "no"))
 
+(define (make-glibc-with-stack-protector glibc)
+  (package-with-extra-configure-variable glibc "--enable-stack-protector" "all"))
+
+(define (make-glibc-with-bind-now glibc)
+  (package-with-extra-configure-variable glibc "--enable-bind-now" "yes"))
+
 (define-public glibc-2.24
   (package
     (inherit glibc-2.31)
@@ -607,8 +626,8 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
                         (make-bitcoin-cross-toolchain target
-                                                      #:base-libc (make-glibc-without-werror glibc-2.27/bitcoin-patched)
-                                                      #:base-kernel-headers base-linux-kernel-headers))
+                                                      #:base-libc (make-glibc-with-stack-protector
+                                                        (make-glibc-with-bind-now (make-glibc-without-werror glibc-2.27/bitcoin-patched)))))
                        (else
                         (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")

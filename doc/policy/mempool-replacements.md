@@ -71,7 +71,7 @@ This set of rules is similar but distinct from BIP125.
   Bitcoin Core implementation.
 
 * The incremental relay feerate used to calculate the required additional fees is distinct from
-  `minRelayTxFee` and configurable using `-incrementalrelayfee`
+  `-minrelaytxfee` and configurable using `-incrementalrelayfee`
   ([PR #9380](https://github.com/bitcoin/bitcoin/pull/9380)).
 
 * RBF enabled by default in the wallet GUI as of **v0.18.1** ([PR

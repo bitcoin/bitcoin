@@ -24,41 +24,39 @@ public:
         typ = initialType;
         val = initialStr;
     }
-    UniValue(uint64_t val_) {
-        setInt(val_);
-    }
-    UniValue(int64_t val_) {
-        setInt(val_);
-    }
-    UniValue(bool val_) {
-        setBool(val_);
-    }
-    UniValue(int val_) {
-        setInt(val_);
-    }
-    UniValue(double val_) {
-        setFloat(val_);
-    }
-    UniValue(const std::string& val_) {
-        setStr(val_);
-    }
-    UniValue(const char *val_) {
-        std::string s(val_);
-        setStr(s);
+    template <typename Ref, typename T = std::remove_cv_t<std::remove_reference_t<Ref>>,
+              std::enable_if_t<std::is_floating_point_v<T> ||                      // setFloat
+                                   std::is_same_v<bool, T> ||                      // setBool
+                                   std::is_signed_v<T> || std::is_unsigned_v<T> || // setInt
+                                   std::is_constructible_v<std::string, T>,        // setStr
+                               bool> = true>
+    UniValue(Ref&& val)
+    {
+        if constexpr (std::is_floating_point_v<T>) {
+            setFloat(val);
+        } else if constexpr (std::is_same_v<bool, T>) {
+            setBool(val);
+        } else if constexpr (std::is_signed_v<T>) {
+            setInt(int64_t{val});
+        } else if constexpr (std::is_unsigned_v<T>) {
+            setInt(uint64_t{val});
+        } else {
+            setStr(std::string{std::forward<Ref>(val)});
+        }
     }
 
     void clear();
 
-    bool setNull();
-    bool setBool(bool val);
-    bool setNumStr(const std::string& val);
-    bool setInt(uint64_t val);
-    bool setInt(int64_t val);
-    bool setInt(int val_) { return setInt((int64_t)val_); }
-    bool setFloat(double val);
-    bool setStr(const std::string& val);
-    bool setArray();
-    bool setObject();
+    void setNull();
+    void setBool(bool val);
+    void setNumStr(const std::string& val);
+    void setInt(uint64_t val);
+    void setInt(int64_t val);
+    void setInt(int val_) { return setInt(int64_t{val_}); }
+    void setFloat(double val);
+    void setStr(const std::string& val);
+    void setArray();
+    void setObject();
 
     enum VType getType() const { return typ; }
     const std::string& getValStr() const { return val; }
@@ -106,6 +104,7 @@ private:
     std::vector<std::string> keys;
     std::vector<UniValue> values;
 
+    void checkType(const VType& expected) const;
     bool findKey(const std::string& key, size_t& retIdx) const;
     void writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
     void writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
@@ -116,19 +115,7 @@ public:
     const std::vector<std::string>& getKeys() const;
     const std::vector<UniValue>& getValues() const;
     template <typename Int>
-    auto getInt() const
-    {
-        static_assert(std::is_integral<Int>::value);
-        if (typ != VNUM) {
-            throw std::runtime_error("JSON value is not an integer as expected");
-        }
-        Int result;
-        const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
-        if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
-            throw std::runtime_error("JSON integer out of range");
-        }
-        return result;
-    }
+    Int getInt() const;
     bool get_bool() const;
     const std::string& get_str() const;
     double get_real() const;
@@ -142,8 +129,21 @@ public:
 template <class It>
 void UniValue::push_backV(It first, It last)
 {
-    if (typ != VARR) throw std::runtime_error{"JSON value is not an array as expected"};
+    checkType(VARR);
     values.insert(values.end(), first, last);
+}
+
+template <typename Int>
+Int UniValue::getInt() const
+{
+    static_assert(std::is_integral<Int>::value);
+    checkType(VNUM);
+    Int result;
+    const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
+    if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
+        throw std::runtime_error("JSON integer out of range");
+    }
+    return result;
 }
 
 enum jtokentype {

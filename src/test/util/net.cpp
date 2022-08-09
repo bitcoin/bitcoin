@@ -16,6 +16,7 @@
 void ConnmanTestMsg::Handshake(CNode& node,
                                bool successfully_connected,
                                ServiceFlags remote_services,
+                               ServiceFlags local_services,
                                NetPermissionFlags permission_flags,
                                int32_t version,
                                bool relay_txs)
@@ -24,7 +25,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
     const CNetMsgMaker mm{0};
 
-    peerman.InitializeNode(&node);
+    peerman.InitializeNode(node, local_services);
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
@@ -51,10 +52,10 @@ void ConnmanTestMsg::Handshake(CNode& node,
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
-    assert(node.nServices == remote_services);
     CNodeStateStats statestats;
     assert(peerman.GetNodeStateStats(node.GetId(), statestats));
     assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
+    assert(statestats.their_services == remote_services);
     node.m_permissionFlags = permission_flags;
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};

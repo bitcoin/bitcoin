@@ -476,7 +476,7 @@ static RPCHelpMan prioritisetransaction()
 static UniValue BIP22ValidationResult(const BlockValidationState& state)
 {
     if (state.IsValid())
-        return NullUniValue;
+        return UniValue::VNULL;
 
     if (state.IsError())
         throw JSONRPCError(RPC_VERIFY_ERROR, state.ToString());
@@ -1040,7 +1040,7 @@ static RPCHelpMan submitheader()
 
     BlockValidationState state;
     chainman.ProcessNewBlockHeaders({h}, state);
-    if (state.IsValid()) return NullUniValue;
+    if (state.IsValid()) return UniValue::VNULL;
     if (state.IsError()) {
         throw JSONRPCError(RPC_VERIFY_ERROR, state.ToString());
     }

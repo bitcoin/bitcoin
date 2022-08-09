@@ -13,11 +13,13 @@
 
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/validation_cache_sizes.h>
 
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <node/blockstorage.h>
+#include <node/caches.h>
 #include <node/chainstate.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
@@ -61,8 +63,9 @@ int main(int argc, char* argv[])
     // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
     // which will try the script cache first and fall back to actually
     // performing the check with the signature cache.
-    InitSignatureCache();
-    InitScriptExecutionCache();
+    kernel::ValidationCacheSizes validation_cache_sizes{};
+    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
+    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
 
     // SETUP: Scheduling and Background Signals
@@ -83,27 +86,19 @@ int main(int argc, char* argv[])
     };
     ChainstateManager chainman{chainman_opts};
 
-    auto rv = node::LoadChainstate(false,
-                                   std::ref(chainman),
-                                   nullptr,
-                                   false,
-                                   false,
-                                   2 << 20,
-                                   2 << 22,
-                                   (450 << 20) - (2 << 20) - (2 << 22),
-                                   false,
-                                   false,
-                                   []() { return false; });
-    if (rv.has_value()) {
+    node::CacheSizes cache_sizes;
+    cache_sizes.block_tree_db = 2 << 20;
+    cache_sizes.coins_db = 2 << 22;
+    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
+    node::ChainstateLoadOptions options;
+    options.check_interrupt = [] { return false; };
+    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
+    if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        auto maybe_verify_error = node::VerifyLoadedChainstate(std::ref(chainman),
-                                                               false,
-                                                               false,
-                                                               DEFAULT_CHECKBLOCKS,
-                                                               DEFAULT_CHECKLEVEL);
-        if (maybe_verify_error.has_value()) {
+        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
+        if (status != node::ChainstateLoadStatus::SUCCESS) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }

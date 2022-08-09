@@ -12,6 +12,7 @@ import inspect
 import json
 import logging
 import os
+import random
 import re
 import time
 import unittest
@@ -28,6 +29,10 @@ logger = logging.getLogger("TestFramework.utils")
 
 def assert_approx(v, vexp, vspan=0.00001):
     """Assert that `v` is within `vspan` of `vexp`"""
+    if isinstance(v, Decimal) or isinstance(vexp, Decimal):
+        v=Decimal(v)
+        vexp=Decimal(vexp)
+        vspan=Decimal(vspan)
     if v < vexp - vspan:
         raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
     if v > vexp + vspan:
@@ -285,6 +290,13 @@ def sha256sum_file(filename):
             h.update(d)
             d = f.read(4096)
     return h.digest()
+
+
+# TODO: Remove and use random.randbytes(n) instead, available in Python 3.9
+def random_bytes(n):
+    """Return a random bytes object of length n."""
+    return bytes(random.getrandbits(8) for i in range(n))
+
 
 # RPC/P2P connection constants and functions
 ############################################

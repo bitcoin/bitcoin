@@ -39,13 +39,13 @@ private:
     bool AllowPrune() const override { return true; }
 
 protected:
-    bool Init() override;
+    bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
 
-    bool CommitInternal(CDBBatch& batch) override;
+    bool CustomCommit(CDBBatch& batch) override;
 
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
+    bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
@@ -53,7 +53,7 @@ protected:
 
 public:
     // Constructs the index, which becomes available to be queried.
-    explicit CoinStatsIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Look up stats for a specific block using CBlockIndex
     std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex* block_index) const;
