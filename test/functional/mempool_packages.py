@@ -17,12 +17,12 @@ from test_framework.util import (
 )
 
 # default limits
-MAX_ANCESTORS = 25
-MAX_DESCENDANTS = 25
+DEFAULT_ANCESTOR_LIMIT = 25
+DEFAULT_DESCENDANT_LIMIT = 25
 # custom limits for node1
-MAX_ANCESTORS_CUSTOM = 5
-MAX_DESCENDANTS_CUSTOM = 10
-assert MAX_DESCENDANTS_CUSTOM >= MAX_ANCESTORS_CUSTOM
+CUSTOM_ANCESTOR_LIMIT = 5
+CUSTOM_DESCENDANT_LIMIT = 10
+assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -34,8 +34,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
             ],
             [
                 "-maxorphantx=1000",
-                "-limitancestorcount={}".format(MAX_ANCESTORS_CUSTOM),
-                "-limitdescendantcount={}".format(MAX_DESCENDANTS_CUSTOM),
+                "-limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
+                "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
             ],
         ]
 
@@ -55,12 +55,12 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert 'ancestorfees' not in utxo[0]
 
         fee = Decimal("0.0001")
-        # MAX_ANCESTORS transactions off a confirmed tx should be fine
+        # DEFAULT_ANCESTOR_LIMIT transactions off a confirmed tx should be fine
         chain = []
         witness_chain = []
         ancestor_vsize = 0
         ancestor_fees = Decimal(0)
-        for i in range(MAX_ANCESTORS):
+        for i in range(DEFAULT_ANCESTOR_LIMIT):
             (txid, sent_value) = chain_transaction(self.nodes[0], [txid], [0], value, fee, 1)
             value = sent_value
             chain.append(txid)
@@ -81,16 +81,16 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
         peer_inv_store.wait_for_broadcast(witness_chain)
 
-        # Check mempool has MAX_ANCESTORS transactions in it, and descendant and ancestor
+        # Check mempool has DEFAULT_ANCESTOR_LIMIT transactions in it, and descendant and ancestor
         # count and fees should look correct
         mempool = self.nodes[0].getrawmempool(True)
-        assert_equal(len(mempool), MAX_ANCESTORS)
+        assert_equal(len(mempool), DEFAULT_ANCESTOR_LIMIT)
         descendant_count = 1
         descendant_fees = 0
         descendant_vsize = 0
 
         assert_equal(ancestor_vsize, sum([mempool[tx]['vsize'] for tx in mempool]))
-        ancestor_count = MAX_ANCESTORS
+        ancestor_count = DEFAULT_ANCESTOR_LIMIT
         assert_equal(ancestor_fees, sum([mempool[tx]['fees']['base'] for tx in mempool]))
 
         descendants = []
@@ -213,9 +213,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
-        assert_equal(len(mempool1), MAX_ANCESTORS_CUSTOM)
+        assert_equal(len(mempool1), CUSTOM_ANCESTOR_LIMIT)
         assert set(mempool1).issubset(set(mempool0))
-        for tx in chain[:MAX_ANCESTORS_CUSTOM]:
+        for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
             assert tx in mempool1
         # TODO: more detailed check of node1's mempool (fees etc.)
         # check transaction unbroadcast info (should be false if in both mempools)
@@ -240,7 +240,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Sign and send up to MAX_DESCENDANT transactions chained off the parent tx
         chain = [] # save sent txs for the purpose of checking node1's mempool later (see below)
-        for _ in range(MAX_DESCENDANTS - 1):
+        for _ in range(DEFAULT_DESCENDANT_LIMIT - 1):
             utxo = transaction_package.pop(0)
             (txid, sent_value) = chain_transaction(self.nodes[0], [utxo['txid']], [utxo['vout']], utxo['amount'], fee, 10)
             chain.append(txid)
@@ -250,7 +250,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
                 transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
 
         mempool = self.nodes[0].getrawmempool(True)
-        assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
+        assert_equal(mempool[parent_transaction]['descendantcount'], DEFAULT_DESCENDANT_LIMIT)
         assert_equal(sorted(mempool[parent_transaction]['spentby']), sorted(tx_children))
 
         for child in tx_children:
@@ -265,14 +265,14 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # - parent tx for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
         self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
-                                MAX_ANCESTORS_CUSTOM + 1 + MAX_DESCENDANTS_CUSTOM, timeout=10)
+                                CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=10)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
         assert parent_transaction in mempool1
-        for tx in chain[:MAX_DESCENDANTS_CUSTOM]:
+        for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:
             assert tx in mempool1
-        for tx in chain[MAX_DESCENDANTS_CUSTOM:]:
+        for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
             assert tx not in mempool1
         # TODO: more detailed check of node1's mempool (fees etc.)
 
