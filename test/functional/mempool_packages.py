@@ -7,7 +7,11 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN
+from test_framework.messages import (
+    COIN,
+    DEFAULT_ANCESTOR_LIMIT,
+    DEFAULT_DESCENDANT_LIMIT,
+)
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -16,13 +20,12 @@ from test_framework.util import (
     chain_transaction,
 )
 
-# default limits
-DEFAULT_ANCESTOR_LIMIT = 25
-DEFAULT_DESCENDANT_LIMIT = 25
+
 # custom limits for node1
 CUSTOM_ANCESTOR_LIMIT = 5
 CUSTOM_DESCENDANT_LIMIT = 10
 assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
+
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):

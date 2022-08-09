@@ -7,16 +7,15 @@
    size.
 """
 
+from test_framework.messages import (
+    DEFAULT_ANCESTOR_LIMIT,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
-
-
-DEFAULT_ANCESTOR_LIMIT = 25
-DEFAULT_DESCENDANT_LIMIT = 25
 
 
 class MempoolPackagesTest(BitcoinTestFramework):
