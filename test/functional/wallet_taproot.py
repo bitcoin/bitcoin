@@ -20,6 +20,7 @@ from test_framework.script import (
     OP_NUMEQUAL,
     taproot_construct,
 )
+from test_framework.segwit_addr import encode_segwit_address
 
 # xprvs/xpubs, and m/* derived x-only pubkeys (created using independent implementation)
 KEYS = [
@@ -182,6 +183,9 @@ def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
     return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
 
+def compute_raw_taproot_address(pubkey):
+    return encode_segwit_address("bcrt", 1, pubkey)
+
 class WalletTaprootTest(BitcoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
@@ -216,7 +220,12 @@ class WalletTaprootTest(BitcoinTestFramework):
         args = []
         for j in range(len(keys)):
             args.append(keys[j]['pubs'][i])
-        return compute_taproot_address(*treefn(*args))
+        tree = treefn(*args)
+        if isinstance(tree, tuple):
+            return compute_taproot_address(*tree)
+        if isinstance(tree, bytes):
+            return compute_raw_taproot_address(tree)
+        assert False
 
     def do_test_addr(self, comment, pattern, privmap, treefn, keys):
         self.log.info("Testing %s address derivation" % comment)
@@ -443,6 +452,12 @@ class WalletTaprootTest(BitcoinTestFramework):
             "tr($2/*,multi_a(1" + (",$H" * rnd_pos) + ",$1/*" + (",$H" * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)) + "))",
             [True, False],
             lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))])
+        )
+        self.do_test(
+            "rawtr(XPRV)",
+            "rawtr($1/*)",
+            [True],
+            lambda k1: key(k1)
         )
 
         self.log.info("Sending everything back...")
