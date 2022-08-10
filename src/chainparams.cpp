@@ -250,10 +250,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nFalloffCoeff = 5;      // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000549cd3ccb81a55892330"); // 1450000
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000076f91fbc02922ce2226e"); // 1718500
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00000000000000105cfae44a995332d8ec256850ea33a1f7b700474e3dad82bc"); // 1450000
+        consensus.defaultAssumeValid = uint256S("0x000000000000001af6e940e36cfc58573c71cce69eaa1f457164c395f31bd3be"); // 1718500
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -266,7 +266,7 @@ public:
         pchMessageStart[3] = 0xbd;
         nDefaultPort = 9999;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 35;
+        m_assumed_blockchain_size = 45;
         m_assumed_chain_state_size = 1;
 
         genesis = CreateGenesisBlock(1390095618, 28917698, 0x1e0ffff0, 1, 50 * COIN);
@@ -473,10 +473,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nFalloffCoeff = 5;      // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000022f14ac5d56b5ef"); // 470000
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000027babbb45da9fa4"); // 771500
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000009303aeadf8cf3812f5c869691dbd4cb118ad20e9bf553be434bafe6a52"); // 470000
+        consensus.defaultAssumeValid = uint256S("0x00000067b30c1e082086bf9da8cf49344b90d8fda37b9051875c4c1420549b6f"); // 771500
 
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -484,7 +484,7 @@ public:
         pchMessageStart[3] = 0xff;
         nDefaultPort = 19999;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 3;
+        m_assumed_blockchain_size = 4;
         m_assumed_chain_state_size = 1;
 
         genesis = CreateGenesisBlock(1390666206UL, 3861367235UL, 0x1e0ffff0, 1, 50 * COIN);
