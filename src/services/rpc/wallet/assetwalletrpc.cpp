@@ -2926,16 +2926,13 @@ public:
     if (mit != data.end ())
       return mit->second.coinbaseScript;
 
-    ReserveDestination rdest(pwallet, pwallet->m_default_address_type);
-    CTxDestination dest;
-    auto op_dest = rdest.GetReservedDestination(true);
+    auto op_dest = pwallet->GetNewChangeDestination(pwallet->m_default_address_type);
     if (!op_dest) {
          throw JSONRPCError (RPC_WALLET_KEYPOOL_RAN_OUT,
                           "Error: Keypool ran out,"
                           " please call keypoolrefill first");
     } else {
-        dest = *op_dest;
-        const CScript res = GetScriptForDestination (dest);
+        const CScript res = GetScriptForDestination (*op_dest);
         data.emplace (pwallet->GetName (), PerWallet (res));
         return res;
     }
