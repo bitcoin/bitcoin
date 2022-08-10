@@ -112,7 +112,7 @@ public:
     CSimplifiedMNListDiff mnListDiffAtHMinus2C;
     CSimplifiedMNListDiff mnListDiffAtHMinus3C;
 
-    bool extraShare;
+    bool extraShare{false};
     std::optional<CQuorumSnapshot> quorumSnapshotAtHMinus4C;
     std::optional<CSimplifiedMNListDiff> mnListDiffAtHMinus4C;
 

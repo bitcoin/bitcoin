@@ -144,7 +144,7 @@ void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
 
     cxxtimer::Timer t1(true);
     logger.Batch("generating contributions");
-    if (!blsWorker.GenerateContributions(params.threshold, memberIds, vvecContribution, skContributions)) {
+    if (!blsWorker.GenerateContributions(params.threshold, memberIds, vvecContribution, m_sk_contributions)) {
         // this should never happen actually
         logger.Batch("GenerateContributions failed");
         return;
@@ -179,7 +179,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
-        CBLSSecretKey skContrib = skContributions[i];
+        CBLSSecretKey skContrib = m_sk_contributions[i];
 
         if (i != myIdx && ShouldSimulateError("contribution-lie")) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());
@@ -689,7 +689,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         }
         logger.Batch("justifying for %s", m->dmn->proTxHash.ToString());
 
-        CBLSSecretKey skContribution = skContributions[i];
+        CBLSSecretKey skContribution = m_sk_contributions[i];
 
         if (i != myIdx && ShouldSimulateError("justify-lie")) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());

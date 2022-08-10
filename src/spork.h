@@ -174,7 +174,7 @@ private:
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
 
     std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
-    int nMinSporkKeys GUARDED_BY(cs);
+    int nMinSporkKeys GUARDED_BY(cs) {std::numeric_limits<int>::max()};
     CKey sporkPrivKey GUARDED_BY(cs);
 
     /**

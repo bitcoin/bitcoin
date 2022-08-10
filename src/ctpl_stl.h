@@ -129,7 +129,7 @@ namespace ctpl {
         std::function<void(int)> pop() {
             std::function<void(int id)> * _f = nullptr;
             this->q.pop(_f);
-            std::unique_ptr<std::function<void(int id)>> func(_f); // at return, delete the function even if an exception occurred
+            [[maybe_unused]] std::unique_ptr<std::function<void(int id)>> func(_f); // at return, delete the function even if an exception occurred
             std::function<void(int)> f;
             if (_f)
                 f = *_f;

@@ -379,7 +379,6 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     std::string strHash = govobj.GetHash().ToString();
 
-    std::string strError = "";
     bool fMissingConfirmations;
     {
         if (g_txindex) {
@@ -387,6 +386,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
         }
 
         LOCK2(cs_main, ::mempool.cs);
+        std::string strError;
         if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);

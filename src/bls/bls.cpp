@@ -61,7 +61,7 @@ void CBLSSecretKey::MakeNewKey()
     while (true) {
         GetStrongRandBytes(buf, sizeof(buf));
         try {
-            impl = bls::PrivateKey::FromBytes(bls::Bytes((const uint8_t*)buf, SerSize));
+            impl = bls::PrivateKey::FromBytes(bls::Bytes(reinterpret_cast<const uint8_t*>(buf), SerSize));
             break;
         } catch (...) {
         }
@@ -370,7 +370,7 @@ static mt_pooled_secure_allocator<uint8_t>& get_secure_allocator()
 static void* secure_allocate(size_t n)
 {
     uint8_t* ptr = get_secure_allocator().allocate(n + sizeof(size_t));
-    *(size_t*)ptr = n;
+    *reinterpret_cast<size_t*>(ptr) = n;
     return ptr + sizeof(size_t);
 }
 
@@ -380,8 +380,8 @@ static void secure_free(void* p)
         return;
     }
 
-    uint8_t* ptr = (uint8_t*)p - sizeof(size_t);
-    size_t n = *(size_t*)ptr;
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(p) - sizeof(size_t);
+    size_t n = *reinterpret_cast<size_t*>(ptr);
     return get_secure_allocator().deallocate(ptr, n);
 }
 #endif

@@ -125,7 +125,7 @@ private:
     int nVersion{CHDPubKey::CURRENT_VERSION};
 
 public:
-    CExtPubKey extPubKey;
+    CExtPubKey extPubKey{};
     uint256 hdchainID;
     uint32_t nAccountIndex{0};
     uint32_t nChangeIndex{0};

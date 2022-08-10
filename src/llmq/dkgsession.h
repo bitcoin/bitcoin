@@ -245,7 +245,7 @@ private:
     std::map<uint256, size_t> membersMap;
     std::set<uint256> relayMembers;
     BLSVerificationVectorPtr vvecContribution;
-    BLSSecretKeyVector skContributions;
+    BLSSecretKeyVector m_sk_contributions;
 
     BLSIdVector memberIds;
     std::vector<BLSVerificationVectorPtr> receivedVvecs;

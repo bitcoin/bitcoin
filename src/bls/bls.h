@@ -160,13 +160,13 @@ public:
     template <typename Stream>
     inline void Serialize(Stream& s) const
     {
-        s.write((const char*)ToByteVector().data(), SerSize);
+        s.write(reinterpret_cast<const char*>(ToByteVector().data()), SerSize);
     }
     template <typename Stream>
     inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
-        s.read((char*)vecBytes.data(), SerSize);
+        s.read(reinterpret_cast<char*>(vecBytes.data()), SerSize);
         SetByteVector(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
@@ -360,14 +360,14 @@ public:
             bufValid = true;
             hash.SetNull();
         }
-        s.write((const char*)vecBytes.data(), vecBytes.size());
+        s.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
     }
 
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
         std::unique_lock<std::mutex> l(mutex);
-        s.read((char*)vecBytes.data(), BLSObject::SerSize);
+        s.read(reinterpret_cast<char*>(vecBytes.data()), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
         hash.SetNull();
@@ -427,7 +427,7 @@ public:
         }
         if (hash.IsNull()) {
             CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-            ss.write((const char*)vecBytes.data(), vecBytes.size());
+            ss.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
             hash = ss.GetHash();
         }
         return hash;

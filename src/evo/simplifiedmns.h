@@ -28,7 +28,7 @@ public:
     CService service;
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
-    bool isValid;
+    bool isValid{false};
     CScript scriptPayout; // mem-only
     CScript scriptOperatorPayout; // mem-only
 

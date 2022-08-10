@@ -35,7 +35,7 @@ constexpr uint32_t UNINITIALIZED_SESSION_ID{std::numeric_limits<uint32_t>::max()
 class CSigShare : virtual public CSigBase
 {
 protected:
-    uint16_t quorumMember;
+    uint16_t quorumMember{std::numeric_limits<uint16_t>::max()};
 public:
     CBLSLazySignature sigShare;
 

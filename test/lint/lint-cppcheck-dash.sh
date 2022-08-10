@@ -50,6 +50,8 @@ IGNORED_WARNINGS=(
 #    "Member variable '.*' is not initialized in the constructor."
 
     "unusedFunction"
+    "unknownMacro"
+    "unusedStructMember"
 )
 
 # We should attempt to update this with all dash specific code

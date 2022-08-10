@@ -266,7 +266,7 @@ static uint64_t GetBaseAddress()
 #else
 static int dl_iterate_callback(struct dl_phdr_info* info, size_t s, void* data)
 {
-    uint64_t* p = (uint64_t*)data;
+    uint64_t* p = reinterpret_cast<uint64_t*>(data);
     if (info->dlpi_name == nullptr || info->dlpi_name[0] == '\0') {
         *p = info->dlpi_addr;
     }
@@ -367,7 +367,7 @@ static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_
 struct crash_info_header
 {
     std::string magic;
-    uint16_t version;
+    uint16_t version{0};
     std::string exeFileName;
 
     SERIALIZE_METHODS(crash_info_header, obj)
