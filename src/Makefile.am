@@ -1278,6 +1278,15 @@ nodist_libsyscoin_ipc_a_SOURCES = $(libsyscoin_ipc_mpgen_output)
 CLEANFILES += $(libsyscoin_ipc_mpgen_output)
 endif
 
+%.raw.h: %.raw
+	@$(MKDIR_P) $(@D)
+	@{ \
+	 echo "static unsigned const char $(*F)_raw[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
+	@echo "Generated $@"
+
 include Makefile.minisketch.include
 
 include Makefile.crc32c.include
