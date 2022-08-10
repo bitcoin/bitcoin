@@ -209,7 +209,7 @@ enum opcodetype
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_NOP10;
+static constexpr auto MAX_OPCODE = OP_NOP10;
 
 std::string GetOpName(opcodetype opcode);
 
