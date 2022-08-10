@@ -3433,6 +3433,29 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     }
 }
 
+void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
+{
+    AssertLockHeld(cs_wallet);
+
+    for (bool internal : {false, true}) {
+        for (OutputType t : OUTPUT_TYPES) {
+            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
+            if (IsCrypted()) {
+                if (IsLocked()) {
+                    throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
+                }
+                if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
+                    throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
+                }
+            }
+            spk_manager->SetupDescriptorGeneration(master_key, t, internal);
+            uint256 id = spk_manager->GetID();
+            m_spk_managers[id] = std::move(spk_manager);
+            AddActiveScriptPubKeyMan(id, t, internal);
+        }
+    }
+}
+
 void CWallet::SetupDescriptorScriptPubKeyMans()
 {
     AssertLockHeld(cs_wallet);
@@ -3448,23 +3471,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         CExtKey master_key;
         master_key.SetSeed(seed_key);
 
-        for (bool internal : {false, true}) {
-            for (OutputType t : OUTPUT_TYPES) {
-                auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
-                if (IsCrypted()) {
-                    if (IsLocked()) {
-                        throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
-                    }
-                    if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
-                        throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
-                    }
-                }
-                spk_manager->SetupDescriptorGeneration(master_key, t, internal);
-                uint256 id = spk_manager->GetID();
-                m_spk_managers[id] = std::move(spk_manager);
-                AddActiveScriptPubKeyMan(id, t, internal);
-            }
-        }
+        SetupDescriptorScriptPubKeyMans(master_key);
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
