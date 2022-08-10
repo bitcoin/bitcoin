@@ -1,4 +1,4 @@
-<TS language="zh_CN" version="2.1">
+<TS version="2.1" language="zh_CN">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -78,8 +78,8 @@
         <translation>这些是您要付款过去的Dash地址。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>这些是您用来收款的Dash地址。建议在每次交易时，都使用一个新的收款地址。</translation>
+        <source>These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>这些是用于接收付款的Dash地址. 使用接收标签中的 '创建新接收地址' 按钮来创建新地址.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -191,12 +191,8 @@
         <translation>重复新密码</translation>
     </message>
     <message>
-        <source>Show password</source>
+        <source>Show passphrase</source>
         <translation>显示密码</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>输入钱包的新密码。&lt;br/&gt;使用的密码请至少包含&lt;b&gt;10个以上随机字符&lt;/b&gt;，或者是&lt;b&gt;8个以上的单词&lt;/b&gt;。</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -227,10 +223,6 @@
         <translation>更改密码</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>请输入钱包的旧密码和新密码。</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>确认加密钱包</translation>
     </message>
@@ -245,6 +237,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>钱包已加密</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>输入钱包的新密码. &lt;br/&gt;密码请用&lt;b&gt;十个或更多随机字符&lt;/b&gt;, 或&lt;b&gt;8个以上的单词&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>输入钱包的旧密码和新密码.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>切记, 加密您的钱包并不能完全防止您的资金被感染您电脑的恶意软件窃取.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>钱包需要加密</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>您的钱包即将被加密.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>您的钱包现已被加密.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -312,18 +328,6 @@
         <translation>发生严重错误。Dash Core钱包不再能安全地运行下去，程序将会关闭。</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>钱包</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>节点</translation>
-    </message>
-    <message>
         <source>&amp;Overview</source>
         <translation>概况(&amp;O)</translation>
     </message>
@@ -348,6 +352,50 @@
         <translation>请求付款(生成二维码和Dash付款协议的URI)</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;发送地址</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;收款地址</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>打开钱包</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>打开一个钱包</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>关闭钱包...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>关闭钱包</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>没有可用的钱包</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;窗口</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>放大</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>主窗口</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>交易记录(&amp;T)</translation>
     </message>
@@ -370,10 +418,6 @@
     <message>
         <source>Quit application</source>
         <translation>退出程序</translation>
-    </message>
-    <message>
-        <source>Show information about Dash Core</source>
-        <translation>显示关于Dash Core信息</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -449,7 +493,7 @@
     </message>
     <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>使用您的达市币地址进行消息签名以证明对此地址的所有权</translation>
+        <translation>使用您的Dash地址进行消息签名以证明对此地址的所有权</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -516,16 +560,8 @@
         <translation>显示自动创建的钱包备份</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>付款地址(&amp;S)...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>显示用过的发送地址和标签的列表</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>收款地址(&amp;R)...</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -548,6 +584,10 @@
         <translation>显示 %1 帮助信息，获取可用命令行选项列表</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>默认钱包</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 客戶</translation>
     </message>
@@ -566,6 +606,18 @@
         <translation>文件(&amp;F)</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>显示有关%1的相关信息</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>创建钱包...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>创建一个新钱包</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;信息</translation>
     </message>
@@ -578,16 +630,20 @@
         <translation>设置(&amp;S)</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>工具(&amp;T)</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>帮助(&amp;H)</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>分页工具栏</translation>
+    </message>
+    <message>
+        <source>&amp;Governance</source>
+        <translation>&amp;治理</translation>
+    </message>
+    <message>
+        <source>View Governance Proposals</source>
+        <translation>查看治理提案</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -654,8 +710,16 @@
         <translation>错误</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>错误: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>警告: %1</translation>
     </message>
     <message>
         <source>Information</source>
@@ -738,6 +802,14 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;锁定&lt;/b&gt;状态</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>代理服务器 &lt;b&gt;已启用&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>原始信息:</translation>
     </message>
 </context>
 <context>
@@ -936,6 +1008,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>正在创建钱包 &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>创建钱包失败</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>创建钱包警告</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>创建钱包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>钱包名称</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>加密钱包. 钱包将以您选择的密码进行加密.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>加密钱包</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>禁用此钱包的私钥. 禁用私钥的钱包将没有私钥, 且不能有HD种子或导入私钥. 这个选项适用于仅用于观察的钱包.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>禁用私钥</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>创建一个空白钱包. 空白钱包初始没有私钥或脚本. 随后可以导入私钥或地址, 或可以设置HD种子.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>创建空白钱包</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>创建</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -974,8 +1100,12 @@
         <translation>输入的地址“%1”不是有效的Dash地址。</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>输入的地址“%1”已经存在于地址簿中。</translation>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>地址 "%1" 已作为带有标签 "%2" 的接收地址存在, 因此无法被添加为发送地址.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>输入的地址 "%1" 已经在地址簿中存在, 标签为 "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1010,14 +1140,37 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    <message>
+        <source>Form</source>
+        <translation>表格</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>筛选列表:</translation>
+    </message>
+    <message>
+        <source>Filter propsal list</source>
+        <translation>筛选提案列表</translation>
+    </message>
+    <message>
+        <source>Proposal Count:</source>
+        <translation>提案数量:</translation>
+    </message>
+    <message>
+        <source>Filter by Title</source>
+        <translation>按标题筛选</translation>
+    </message>
+    <message>
+        <source>Proposal Info: %1</source>
+        <translation>提案信息: %1</translation>
+    </message>
+</context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>版本</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1 位)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1080,7 +1233,7 @@
     </message>
     <message>
         <source>%1 will download and store a copy of the Dash block chain.</source>
-        <translation>%1 将会下载并存储比特币区块链。</translation>
+        <translation>%1 将会下载并存储Dash区块链.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1112,10 +1265,6 @@
     <message>
         <source>Status</source>
         <translation>状态</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1277,8 +1426,8 @@
         <translation>隐藏</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>未知状态. 同步区块头部 (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>未知状态. 同步区块头部 (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1305,6 +1454,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>打开钱包失败</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>打开钱包警告</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>默认钱包</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>正在打开钱包 &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1317,10 +1485,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>数据库缓存大小(&amp;D)</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1339,12 +1503,36 @@
         <translation>&amp;外观</translation>
     </message>
     <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>修剪&amp;区块存储到</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>还原此设置需要重新下载整个区块链.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
+    </message>
+    <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>显示其他标签，在第一个子标签列出所有您的主节点&lt;br/&gt;在第二个子标签列出所有网络上的主节点。</translation>
     </message>
     <message>
         <source>Show Masternodes Tab</source>
         <translation>显示主节点标签页</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing governance proposals.</source>
+        <translation>显示列出治理提案的其他标签页.</translation>
+    </message>
+    <message>
+        <source>Show Governance Tab</source>
+        <translation>显示治理标签页</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
@@ -1403,6 +1591,14 @@
         <translation>自动在路由器打开Dash Core客户端端口。此项只在路由器支持UPnP且开启时有效。</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation>自动打开路由器上Bitcoin客户端端口. 这仅在您的路由器支持NAT-PMP并且已启用时才有效. 外部端口可以是随机的.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation>使用NA&amp;T-PMP映射端口</translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation>接受来自外部的连接.</translation>
     </message>
@@ -1425,6 +1621,10 @@
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
         <translation>使用独立的SOCK&amp;5代理服务器, 并通过Tor隐藏服务到对等用户群:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>此对话框中设置的选项被命令行或配置文件覆盖:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1468,11 +1668,15 @@
     </message>
     <message>
         <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>此选项用以调整进行混币操作的主节点数量。&lt;br/&gt;越多的循环次数提供了更高级别的匿名性，同时也会花费更多的手续费。</translation>
+        <translation>此选项用以调整进行混币操作的主节点数量。&lt;br/&gt;越多的循环次数提供了更高级别的隐私保护，同时也会花费更多的手续费。</translation>
     </message>
     <message>
         <source>&amp;Network</source>
         <translation>网络(&amp;N)</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>启用修剪会显著减少用于存储交易的磁盘空间. 所有区块仍然经过充分验证. 恢复此设置需要重新下载整个区块链.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1555,10 +1759,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>小数位数</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>有效的命令行参数覆盖上述选项：</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1851,6 +2051,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>付款请求URI链接非法：%1</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>无法处理付款请求因为未编译BIP70支持.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>无效的付款地址 %1</translation>
     </message>
@@ -1951,6 +2155,56 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>Proposal</name>
+    <message>
+        <source>Passing +%1</source>
+        <translation>通过 +%1</translation>
+    </message>
+    <message>
+        <source>Needs additional %1 votes</source>
+        <translation>需要额外的 %1 票</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalModel</name>
+    <message>
+        <source>Yes</source>
+        <translation>赞成</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>反对</translation>
+    </message>
+    <message>
+        <source>Hash</source>
+        <translation>哈希值</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>标题</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>开始</translation>
+    </message>
+    <message>
+        <source>End</source>
+        <translation>结束</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>金额</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>活跃的</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>状态</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
@@ -1991,6 +2245,46 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>显示启动画面（默认：%u）</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>错误: 指定的数据目录 "%1" 不存在.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>错误: 无法解析配置文件: %1.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>错误: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>错误: 无法加载应用程序字体.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>错误: 指定的字体系列无效. 有效值: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>错误: 指定的字体粗细正常无效. 有效范围 %1 到%2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>错误: 指定的字体粗体无效. 有效范围 %1 到 %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>错误: 指定的字体大小无效. 有效范围%1 至 %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>错误: 无效的 -custom-css-dir 路径.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>错误: -custom-css-dir 路径下%1 CSS file(s)丢失.</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2094,49 +2388,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>错误：指定的数据目录“%1”不存在。</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>错误：无法解析配置文件：%1。只接受 key=value语法。</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>错误：%1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>错误: 加载应用程序字体失败.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>错误: 指定的字体系列无效. 有效值: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>错误: 指定的字体粗细标准无效. 有效范围%1 至 %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>错误: 指定的字体粗体无效. 有效范围%1 至 %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>错误: 指定的字体大小无效. 有效范围%1 至 %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>错误: 无效的 -custom-css-dir 路径.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>错误: -custom-css-dir 路径下%1 CSS file(s)丢失.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2183,6 +2434,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Copy Image</source>
         <translation>复制图片(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>生成的URI 太长, 请试着精简标签或消息文本.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>将 URI转为二维码失败.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>二维码支持不可用.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2240,16 +2503,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>调试日志文件</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>当前数据块数量</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>客户端版本</translation>
-    </message>
-    <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>使用 BerkeleyDB 版本</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2340,6 +2595,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>重新扫描区块链文件 2</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
+        <translation>下面的按钮将使用命令行选项重新启动钱包, 以修复钱包, 修复损坏的区块链文件或丢失/超时的交易问题.</translation>
+    </message>
+    <message>
         <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
         <translation>-rescan=1: 从钱包创建时开始重新扫描区块链以查找遗漏的钱包交易。</translation>
     </message>
@@ -2360,8 +2619,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>数据目录</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>要指定的数据目录不是默认路径, 请使用 '%1' 选项.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>区块目录</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>要指定的区块目录不是默认路径, 请使用 '%1' 选项.</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>当前区块高度</translation>
+    </message>
+    <message>
         <source>Last block hash</source>
         <translation>最后区块的哈希值</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block hash</source>
+        <translation>最新链锁区块的哈希值</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block height</source>
+        <translation>最新链锁区块的高度</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2440,10 +2723,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>钱包修复(&amp;W)</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>抢救钱包</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>恢复交易 1</translation>
     </message>
@@ -2454,14 +2733,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Upgrade wallet format</source>
         <translation>升级钱包格式</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>下面的按钮将重新启动钱包并使用命令行选项进行修复，解决损坏或丢失的区块链文件/超时的交易问题。</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet：尝试从已损坏的钱包文件中找回私钥。</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2639,8 +2910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>总额(&amp;A)：</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>请求付款(&amp;R)</translation>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;创建新的收款地址</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2681,6 +2952,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copy URI</source>
         <translation>复制URI</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>复制地址</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2744,14 +3019,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet</source>
         <translation>钱包</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI 太长，请试着精简标签或消息文本。</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>将 URI 转为二维码失败。</translation>
     </message>
 </context>
 <context>
@@ -2852,10 +3119,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>选择...</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>收起手续费设置</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation>确认时间目标：</translation>
     </message>
@@ -2873,11 +3136,15 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>使用fallbackfee可能会导致发送一笔需要几个小时或几天(或永远不会)确认的交易. 建议手动选择手续费, 或者等待您完全验证整个区块链后。</translation>
+        <translation>使用fallbackfee可能会导致发送一笔需要几个小时或几天(或永远不会)确认的交易. 建议手动选择手续费, 或者等待您完全验证整个区块链后.</translation>
     </message>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
         <translation>注意: 没有足够数据用于费用测算, 将使用备选费用代替.</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>隐藏交易手续费设置</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -2976,14 +3243,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您确定要发出吗？</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>作为交易费被添加</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>总额 = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;（在%2中%1个项目显示出来）&lt;/b&gt;</translation>
     </message>
@@ -3004,6 +3263,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>全部有效金额</translation>
     </message>
     <message>
+        <source>Transaction fee</source>
+        <translation>交易手续费</translation>
+    </message>
+    <message>
         <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
         <translation>(%1交易的手续费更高通常由于输出不允许更改)</translation>
     </message>
@@ -3022,6 +3285,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
         <translation>提醒: 使用 %1与%2或更多输入不利于您的隐私保护，并不推荐</translation>
+    </message>
+    <message>
+        <source>Click to learn more</source>
+        <translation>点击了解更多</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>总金额</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>或</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3050,10 +3325,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction creation failed!</source>
         <translation>交易创建失败！</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>交易因以下原因拒绝：%1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -3095,10 +3366,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>这是笔正常的支付。</translation>
-    </message>
-    <message>
         <source>Pay &amp;To:</source>
         <translation>付给(&amp;T)：</translation>
     </message>
@@ -3137,6 +3404,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>A&amp;mount:</source>
         <translation>金额(&amp;M)</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>在所选单位中发送的金额</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -3182,8 +3453,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
-        <source>Yes</source>
-        <translation>是</translation>
+        <source>Send</source>
+        <translation>发送</translation>
     </message>
 </context>
 <context>
@@ -3270,6 +3541,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The Dash address the message was signed with</source>
         <translation>已签名的地址</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>要验证的签名消息</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>签名消息时所用的签名</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
@@ -3511,6 +3790,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>交易总大小</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation> (证书未验证)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3806,8 +4089,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>复制完整交易详情</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>编辑标签</translation>
+        <source>Edit address label</source>
+        <translation>编辑地址标签</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -3890,6 +4173,21 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>关闭钱包</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>您确定要关闭钱包吗&lt;i&gt;%1&lt;/i&gt; ?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>如果启用修剪后, 关闭钱包太久可能会导致必须重新同步整个区块链.</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3901,6 +4199,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Send Coins</source>
         <translation>发送Dash</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>默认钱包</translation>
     </message>
 </context>
 <context>
@@ -3951,6 +4253,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>错误：监听外来连接失败(监听回馈错误 %s)</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>费用估算失败. 备用费用已禁用. 请等待几个区块或启用-fallbackfee。</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>如果此前包未完全关闭并且上次使用较新版本的Berkeley DB的构建加载, 则可能发生此错误. 如果是这样, 请使用上次加载此钱包的软件.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4013,14 +4323,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>读取数据库错误，正在关闭。</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>错误</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>错误：磁盘空间不够！</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>监听端口失败。如果想使用此项，可设定-listen=0。</translation>
     </message>
@@ -4057,18 +4359,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>条目超过最大值。</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>无法加载完成请求缓存</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>无法加载治理缓存</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>无法加载主节点缓存</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>用户数已满足，开始签名 (等待 %s)</translation>
     </message>
@@ -4091,10 +4381,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>不正确或没有找到创世区块。错误的数据目录？</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>信息</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -4177,18 +4463,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>未知响应。</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>忽略不支持的选项 -benchmark，使用 -debug=bench</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>忽略不支持的选项 -debugnet，使用 -debug=net。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>忽略不支持的选项 -tor，使用 -oinon</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>用户代理评论(%s)包含不安全的字符。</translation>
     </message>
@@ -4213,10 +4487,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s处于空闲状态.</translation>
     </message>
     <message>
-        <source>%s request incomplete: %s</source>
-        <translation>%s 请求未完成: %s</translation>
-    </message>
-    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>无法在同步过程中进行混合。</translation>
     </message>
@@ -4231,10 +4501,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s 文件包含此钱包中的所有私钥。不要与任何人分享！</translation>
-    </message>
-    <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>-masternode选项已被弃用并忽略, 指定-masternodeblsprivkey即可将此节点激活为主节点.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4269,24 +4535,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>网络版本字符串的总长度 (%i) 超过最大长度 (%i) 了。请减少 uacomment 参数的数量或大小。</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>找到不再支持的 -socks 参数。现在只支持 SOCKS5 协议的代理服务器，因此不可以指定 SOCKS 协议版本。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>一个不被支持的参数 -whitelistalwaysrelay 被忽略了。请使用 -whitelistrelay 和/或 -whitelistforcerelay。</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>警告！无法补充公钥池，请解锁您的钱包。</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
         <translation>钱包被锁定，无法补充keypool！自动备份和混合功能被禁用，请解锁您的钱包以补充keypool。</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>警告：未知的区块版本被挖出！未知规则可能已生效</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
@@ -4297,8 +4551,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您需要使用 -reindex 重新构建数据库以返回未修剪的模式。这将重新下载整个区块链</translation>
     </message>
     <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode 已被弃用.</translation>
+        <source>%s failed</source>
+        <translation>%s 失败</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4309,8 +4563,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>自动备份已停用</translation>
     </message>
     <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>不能在没有  -blockfilterindex的情况下设置  -peerblockfilters.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>%s的配置设置仅在 [%s] 部分中应用于 %s网络.</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>无法找到asmap文件 %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>无法解析asmap文件 %s</translation>
+    </message>
+    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>错误！无法创建自动备份</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>加载 %s时出错: 私钥只能在创建期间禁用</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4321,24 +4595,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>错误: %s 磁盘空间不足</translation>
+    </message>
+    <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <translation>错误: 无法添加socket到epollfd (epoll_ctl 返回错误 %s)</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
         <translation>超过最大尝试次数.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>无法清除位于缓存中的已完成请求</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>无法清除位于缓存中的治理项目</translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>无法清除缓存中的主节点</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4357,12 +4623,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法删除备份，错误：%s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>从... 读取叉勺缓存失败</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>在初始化时无法重新扫描钱包</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>无效的 P2P 权限: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4371,14 +4637,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>无效的 masternodeblsprivkey。请阅读文档。</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>它已被 -disablegovernance代替.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>代替命令 -disablegovernance已被强制执行.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4433,6 +4691,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>修剪不能设置为负数。</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>修剪模式与 -blockfilterindex不兼容.</translation>
+    </message>
+    <message>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
         <translation>修剪模式与 -disablegovernance=false 不兼容.</translation>
     </message>
@@ -4443,6 +4705,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Pruning blockstore...</source>
         <translation>正在修剪区块存储...</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>片段 [%s]无法被识别.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
@@ -4459,6 +4725,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing blockchain...</source>
         <translation>正在同步区块链...</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>指定的配置文件 %s 不存在
+</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4501,16 +4773,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法在本机绑定 %s 端口。%s 可能已经在运行。</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>无法创建PID文件 '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>无法生成初始密钥</translation>
     </message>
     <message>
-        <source>Upgrading UTXO database</source>
-        <translation>升级UTXO数据库</translation>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>未知 -blockfilterindex 值 %s.</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>钱包 %s 在钱包目录 %s 外面</translation>
+        <source>Upgrading UTXO database</source>
+        <translation>升级UTXO数据库</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4537,20 +4813,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您需要通过使用-reindex改变-spentindex来重新建立数据库</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>您需要通过使用-reindex改变-txindex来重新建立数据库</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>无法进行混合。</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>详细信息请参阅debug.log。</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4605,24 +4873,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法重播区块. 您需要使用 -reindex-chainstate命令来重建数据库.</translation>
     </message>
     <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>警告：钱包文件损坏，但数据被救回！原始的钱包文件%s已经重命名为%s并存储到%s目录下 。如果您的账户余额或者交易记录不正确，请使用您的钱包备份文件恢复。</translation>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>警告: 钱包 {%s}中检测到已禁用私钥的私钥</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>最近100个区块中的 %d 个区块有意外版本</translation>
     </message>
     <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s 已损坏，抢救备份失败</translation>
-    </message>
-    <message>
         <source>%s is not a valid backup folder!</source>
         <translation>%s 不是一个有效的备份文件夹!</translation>
     </message>
     <message>
+        <source>%s is only allowed with a single wallet file</source>
+        <translation>%s 仅允许用于单个钱包文件</translation>
+    </message>
+    <message>
         <source>%s is set very high!</source>
         <translation>%s非常高！</translation>
+    </message>
+    <message>
+        <source>%s request incomplete:</source>
+        <translation>%s 请求不完整:</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4635,6 +4907,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
         <translation>当 -devnet 和 -server 被指定时, 必须指定 -rpcport</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>发生了严重的内部错误, 请参阅debug.log了解详细信息</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4651,6 +4927,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>版权 (C)</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>磁盘空间太小!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -4681,8 +4961,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>错误: 无法添加socket到kqueuefd (kevent 返回错误 %s)</translation>
     </message>
     <message>
+        <source>Failed to clear fulfilled requests cache at %s</source>
+        <translation>未能在 %s 清除已完成的请求缓存</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at %s</source>
+        <translation>无法清除 %s 的治理缓存</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at %s</source>
+        <translation>在 %s 清除主节点缓存失败</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>无法找到混币队列并加入</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from %s</source>
+        <translation>无法从 %s 加载已完成的请求缓存</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from %s</source>
+        <translation>无法从 %s 加载治理缓存</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from %s</source>
+        <translation>无法从 %s 加载主节点缓存</translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from %s</source>
+        <translation>无法从 %s 加载叉勺缓存</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
@@ -4753,6 +5061,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>上一次队列才被创建.</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
+        <translation>%s 已损坏. 请尝试使用钱包工具 dash-wallet 来挽救或恢复备份.</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>无法生成找零地址密钥. 内部密钥池中没有密钥, 也无法生成任何密钥.</translation>
+    </message>
+    <message>
         <source>Last successful action was too recent.</source>
         <translation>上一次成功操作才完成。</translation>
     </message>
@@ -4793,10 +5109,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>交易无效。</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>根据交易手续费准则，本交易过大</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>无法绑定此计算机上的%s (绑定返回错误 %s)</translation>
     </message>
@@ -4825,6 +5137,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>不支持的日志记录类别 %s=%s.</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>正在升级交易指数数据库</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>验证区块中...</translation>
     </message>
@@ -4835,14 +5151,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wallet is locked.</source>
         <translation>钱包被锁定。</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>警告</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>警告: %s 已过时, 请使用 %s</translation>
     </message>
     <message>
         <source>Warning: can't use %s and %s together, will prefer %s</source>
