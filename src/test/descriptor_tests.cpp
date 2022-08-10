@@ -233,7 +233,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                 for (const auto& xpub_pair : parent_xpub_cache) {
                     const CExtPubKey& xpub = xpub_pair.second;
                     CExtPubKey der;
-                    xpub.Derive(der, i);
+                    BOOST_CHECK(xpub.Derive(der, i));
                     pubkeys.insert(der.pubkey);
                 }
                 int count_pks = 0;
@@ -265,7 +265,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                     const CExtPubKey& xpub = xpub_pair.second;
                     pubkeys.insert(xpub.pubkey);
                     CExtPubKey der;
-                    xpub.Derive(der, i);
+                    BOOST_CHECK(xpub.Derive(der, i));
                     pubkeys.insert(der.pubkey);
                 }
                 int count_pks = 0;

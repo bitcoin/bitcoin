@@ -184,4 +184,22 @@ BOOST_AUTO_TEST_CASE(bip32_test5) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(bip32_max_depth) {
+    CExtKey key_parent{DecodeExtKey(test1.vDerive[0].prv)}, key_child;
+    CExtPubKey pubkey_parent{DecodeExtPubKey(test1.vDerive[0].pub)}, pubkey_child;
+
+    // We can derive up to the 255th depth..
+    for (auto i = 0; i++ < 255;) {
+        BOOST_CHECK(key_parent.Derive(key_child, 0));
+        std::swap(key_parent, key_child);
+        BOOST_CHECK(pubkey_parent.Derive(pubkey_child, 0));
+        std::swap(pubkey_parent, pubkey_child);
+    }
+
+    // But trying to derive a non-existent 256th depth will fail!
+    BOOST_CHECK(key_parent.nDepth == 255 && pubkey_parent.nDepth == 255);
+    BOOST_CHECK(!key_parent.Derive(key_child, 0));
+    BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
