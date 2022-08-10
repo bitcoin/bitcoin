@@ -2928,16 +2928,17 @@ public:
 
     ReserveDestination rdest(pwallet, pwallet->m_default_address_type);
     CTxDestination dest;
-    bilingual_str dest_err;
-    if (!rdest.GetReservedDestination (dest, false, dest_err))
-      throw JSONRPCError (RPC_WALLET_KEYPOOL_RAN_OUT,
+    auto op_dest = rdest.GetReservedDestination(true);
+    if (!op_dest) {
+         throw JSONRPCError (RPC_WALLET_KEYPOOL_RAN_OUT,
                           "Error: Keypool ran out,"
                           " please call keypoolrefill first");
-    rdest.KeepDestination ();
-
-    const CScript res = GetScriptForDestination (dest);
-    data.emplace (pwallet->GetName (), PerWallet (res));
-    return res;
+    } else {
+        dest = *op_dest;
+        const CScript res = GetScriptForDestination (dest);
+        data.emplace (pwallet->GetName (), PerWallet (res));
+        return res;
+    }
   }
 
   /**
