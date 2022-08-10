@@ -360,10 +360,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            1617874573, // * UNIX timestamp of last known number of transactions (Block 1450962)
-            34709765,   // * total number of transactions between genesis and that timestamp
+            1660074878, // * UNIX timestamp of last known number of transactions (Block 1718597)
+            43702293,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the ChainStateFlushed debug.log lines)
-            0.3         // * estimated number of transactions per second after that timestamp
+            0.175       // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -558,10 +558,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            1617874832, // * UNIX timestamp of last known number of transactions (Block 477483)
-            4926985,    // * total number of transactions between genesis and that timestamp
+            1659215338, // * UNIX timestamp of last known number of transactions (Block 771537)
+            5579961,    // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the ChainStateFlushed debug.log lines)
-            0.01        // * estimated number of transactions per second after that timestamp
+            0.018       // * estimated number of transactions per second after that timestamp
         };
     }
 };
