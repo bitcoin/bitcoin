@@ -5,7 +5,7 @@ Utility to generate the seeds.txt list that is compiled into the client
 
 The seeds compiled into the release are created from the current protx list, like this:
 
-    dash-cli protx list valid 1 1185193 > protx_list.json
+    dash-cli protx list valid 1 1716101 > protx_list.json
     python3 makeseeds.py < protx_list.json > nodes_main.txt
     python3 generate-seeds.py . > ../../src/chainparamsseeds.h
 
