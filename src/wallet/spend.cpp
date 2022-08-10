@@ -79,15 +79,15 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
     return CalculateMaximumSignedTxSize(tx, wallet, txouts, coin_control);
 }
 
-uint64_t CoinsResult::size() const
+uint64_t CoinsResult::Size() const
 {
     return bech32m.size() + bech32.size() + P2SH_segwit.size() + legacy.size() + other.size();
 }
 
-std::vector<COutput> CoinsResult::all() const
+std::vector<COutput> CoinsResult::All() const
 {
     std::vector<COutput> all;
-    all.reserve(this->size());
+    all.reserve(this->Size());
     all.insert(all.end(), bech32m.begin(), bech32m.end());
     all.insert(all.end(), bech32.begin(), bech32.end());
     all.insert(all.end(), P2SH_segwit.begin(), P2SH_segwit.end());
@@ -96,7 +96,7 @@ std::vector<COutput> CoinsResult::all() const
     return all;
 }
 
-void CoinsResult::clear()
+void CoinsResult::Clear()
 {
     bech32m.clear();
     bech32.clear();
@@ -319,7 +319,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             }
 
             // Checks the maximum number of UTXO's.
-            if (nMaximumCount > 0 && result.size() >= nMaximumCount) {
+            if (nMaximumCount > 0 && result.Size() >= nMaximumCount) {
                 return result;
             }
         }
@@ -375,7 +375,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     std::map<CTxDestination, std::vector<COutput>> result;
 
-    for (const COutput& coin : AvailableCoinsListUnspent(wallet).all()) {
+    for (const COutput& coin : AvailableCoinsListUnspent(wallet).All()) {
         CTxDestination address;
         if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
             ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
@@ -515,7 +515,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // over all available coins, else pick the best solution from the results
     if (results.size() == 0) {
         if (allow_mixed_output_types) {
-            if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.all(), coin_selection_params)}) {
+            if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.All(), coin_selection_params)}) {
                 return result;
             }
         }
@@ -649,7 +649,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
 
     // form groups from remaining coins; note that preset coins will not
     // automatically have their associated (same address) coins included
-    if (coin_control.m_avoid_partial_spends && available_coins.size() > OUTPUT_GROUP_MAX_ENTRIES) {
+    if (coin_control.m_avoid_partial_spends && available_coins.Size() > OUTPUT_GROUP_MAX_ENTRIES) {
         // Cases where we have 101+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
