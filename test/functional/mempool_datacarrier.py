@@ -11,7 +11,7 @@ from test_framework.script import (
     CScript,
     OP_RETURN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -20,7 +20,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
-class DataCarrierTest(BitcoinTestFramework):
+class DataCarrierTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
