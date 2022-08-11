@@ -91,8 +91,6 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     case OutputType::BECH32: {
         CTxDestination witdest = WitnessV0ScriptHash(script);
         CScript witprog = GetScriptForDestination(witdest);
-        // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
-        if (!IsSolvable(keystore, witprog)) return ScriptHash(script);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
         keystore.AddCScript(witprog);
         if (type == OutputType::BECH32) {
