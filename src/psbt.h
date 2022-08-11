@@ -641,6 +641,9 @@ struct PSBTInput
                     s >> leaf_hashes;
                     size_t after_hashes = s.size();
                     size_t hashes_len = before_hashes - after_hashes;
+                    if (hashes_len > value_len) {
+                        throw std::ios_base::failure("Input Taproot BIP32 keypath has an invalid length");
+                    }
                     size_t origin_len = value_len - hashes_len;
                     m_tap_bip32_paths.emplace(xonly, std::make_pair(leaf_hashes, DeserializeKeyOrigin(s, origin_len)));
                     break;
