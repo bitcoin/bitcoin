@@ -138,8 +138,6 @@ FUZZ_TARGET_INIT(key, initialize_key)
         assert(tx_multisig_script.size() == 37);
 
         FillableSigningProvider fillable_signing_provider;
-        assert(IsSolvable(fillable_signing_provider, tx_pubkey_script));
-        assert(IsSolvable(fillable_signing_provider, tx_multisig_script));
         assert(!IsSegWitOutput(fillable_signing_provider, tx_pubkey_script));
         assert(!IsSegWitOutput(fillable_signing_provider, tx_multisig_script));
         assert(fillable_signing_provider.GetKeys().size() == 0);
