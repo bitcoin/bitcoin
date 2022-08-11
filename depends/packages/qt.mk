@@ -153,6 +153,9 @@ $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
+$(package)_config_opts_linux += "QMAKE_COMPILER = '$($(package)_cc)'"
+$(package)_config_opts_linux += "QMAKE_CC = '$($(package)_cc)'"
+$(package)_config_opts_linux += "QMAKE_CXX = '$($(package)_cxx)'"
 ifneq ($(LTO),)
 $(package)_config_opts_linux += -ltcg
 endif
@@ -235,7 +238,9 @@ endef
 #
 # 5. Do similar for the win32-g++ mkspec.
 #
-# 6. In clang.conf, swap out clang & clang++, for our compiler + flags. See #17466.
+# 6. In g++-base.conf, swap out gcc & g++, for our compiler + flags.
+#
+# 7. In clang.conf, swap out clang & clang++, for our compiler + flags. See #17466.
 define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qt.pro qt.pro && \
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
@@ -259,6 +264,9 @@ define $(package)_preprocess_cmds
   echo "!host_build: QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
+  sed -i.old "s|QMAKE_COMPILER          = gcc|QMAKE_COMPILER          = $($(package)_cc)|" qtbase/mkspecs/common/g++-base.conf && \
+  sed -i.old "s|QMAKE_CC                = \$$$$\$$$${CROSS_COMPILE}gcc|QMAKE_CC                = $($(package)_cc)|" qtbase/mkspecs/common/g++-base.conf && \
+  sed -i.old "s|QMAKE_CXX               = \$$$$\$$$${CROSS_COMPILE}g++|QMAKE_CXX               = $($(package)_cxx)|" qtbase/mkspecs/common/g++-base.conf && \
   sed -i.old "s|QMAKE_CC                = \$$$$\$$$${CROSS_COMPILE}clang|QMAKE_CC                = $($(package)_cc)|" qtbase/mkspecs/common/clang.conf && \
   sed -i.old "s|QMAKE_CXX               = \$$$$\$$$${CROSS_COMPILE}clang++|QMAKE_CXX               = $($(package)_cxx)|" qtbase/mkspecs/common/clang.conf
 endef
