@@ -33,12 +33,23 @@ SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win64-setup$(EXEEXT)
 if TARGET_WINDOWS
 SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/windows/$(SYSCOIN_GETH)$(EXEEXT)
 endif
-if TARGET_DARWIN
-SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/darwin/$(SYSCOIN_GETH)$(EXEEXT)
+if TARGET_X86_64_DARWIN
+SYSCOIN_GETH_BIN= -add-resources $(top_builddir)/src/bin/darwin/x86_64/$(SYSCOIN_GETH)$(EXEEXT)
 endif
-if TARGET_LINUX
-SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/linux/$(SYSCOIN_GETH)$(EXEEXT)
+if TARGET_ARM64_DARWIN
+# SYSCOIN_GETH_BIN= -add-resources $(top_builddir)/src/bin/darwin/arm64/$(SYSCOIN_GETH)$(EXEEXT)
+SYSCOIN_GETH_BIN=
 endif
+if TARGET_X86_64_LINUX
+SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/linux/x86_64/$(SYSCOIN_GETH)$(EXEEXT)
+endif
+# if TARGET_ARM_LINUX
+# SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/linux/arm/$(SYSCOIN_GETH)$(EXEEXT)
+# endif
+# if TARGET_AARCH64_LINUX
+# SYSCOIN_GETH_BIN=$(top_builddir)/src/bin/linux/aarch64/$(SYSCOIN_GETH)$(EXEEXT)
+# endif
+
 empty :=
 space := $(empty) $(empty)
 
@@ -132,7 +143,7 @@ osx_volname:
 
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -add-resources $(SYSCOIN_GETH_BIN)
+	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -dmg $(SYSCOIN_GETH_BIN)
 
 deploydir: $(OSX_DMG)
 else !BUILD_DARWIN
@@ -142,7 +153,7 @@ $(OSX_DMG): deploydir
 	$(XORRISOFS) -D -l -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -o $@ $(APP_DIST_DIR) -- $(if $(SOURCE_DATE_EPOCH),-volume_date all_file_dates =$(SOURCE_DATE_EPOCH))
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) -add-resources $(SYSCOIN_GETH_BIN)
+	INSTALL_NAME_TOOL=$(INSTALL_NAME_TOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR) $(SYSCOIN_GETH_BIN)
 
 deploydir: $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt
 endif !BUILD_DARWIN
