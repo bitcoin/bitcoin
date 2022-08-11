@@ -58,7 +58,10 @@ public:
 
         Returns true upon success. Upon failure, the output should not be used.
         */
-    [[nodiscard]] bool Crypt(const Span<const std::byte> input, Span<std::byte> output, BIP324HeaderFlags& flags, bool encrypt);
+    [[nodiscard]] bool Crypt(const Span<const std::byte> aad,
+                             const Span<const std::byte> input,
+                             Span<std::byte> output,
+                             BIP324HeaderFlags& flags, bool encrypt);
 
     /** Decrypts the 3 byte encrypted length field (the packet header and contents length) and decodes it into a uint32_t field
         The FSChaCha20 keystream will advance. As a result, DecryptLength() cannot be called multiple times to get the same result. The caller must cache the result for re-use.

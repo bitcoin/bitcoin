@@ -36,6 +36,8 @@ FUZZ_TARGET(crypto_bip324_suite)
     std::vector<std::byte> out(BIP324_LENGTH_FIELD_LEN + BIP324_HEADER_LEN + contents_size + RFC8439_EXPANSION, std::byte{0x00});
     bool is_encrypt = fdp.ConsumeBool();
     BIP324HeaderFlags flags{fdp.ConsumeIntegralInRange<uint8_t>(0, 255)};
+    size_t aad_size = fdp.ConsumeIntegralInRange<size_t>(0, 255);
+    auto aad = fdp.ConsumeBytes<std::byte>(aad_size);
     LIMITED_WHILE(fdp.ConsumeBool(), 10000)
     {
         CallOneOf(
@@ -49,7 +51,7 @@ FUZZ_TARGET(crypto_bip324_suite)
                 flags = BIP324HeaderFlags{fdp.ConsumeIntegralInRange<uint8_t>(0, 255)};
             },
             [&] {
-                (void)suite.Crypt(in, out, flags, is_encrypt);
+                (void)suite.Crypt(aad, in, out, flags, is_encrypt);
             },
             [&] {
                 std::array<std::byte, BIP324_LENGTH_FIELD_LEN> encrypted_pkt_len;

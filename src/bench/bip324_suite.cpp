@@ -36,7 +36,7 @@ static void BIP324_CIPHER_SUITE(benchmark::Bench& bench, size_t contents_len, bo
 
     bench.batch(contents_len).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
-        const bool crypt_ok_1 = enc.Crypt(in, out, flags, true);
+        const bool crypt_ok_1 = enc.Crypt({}, in, out, flags, true);
         assert(crypt_ok_1);
 
         if (include_decryption) {
@@ -44,7 +44,7 @@ static void BIP324_CIPHER_SUITE(benchmark::Bench& bench, size_t contents_len, bo
             std::array<std::byte, BIP324_LENGTH_FIELD_LEN> encrypted_pkt_len;
             memcpy(encrypted_pkt_len.data(), out.data(), BIP324_LENGTH_FIELD_LEN);
             (void)dec.DecryptLength(encrypted_pkt_len);
-            const bool crypt_ok_2 = dec.Crypt({out.data() + BIP324_LENGTH_FIELD_LEN, out.size() - BIP324_LENGTH_FIELD_LEN}, in, flags, false);
+            const bool crypt_ok_2 = dec.Crypt({}, {out.data() + BIP324_LENGTH_FIELD_LEN, out.size() - BIP324_LENGTH_FIELD_LEN}, in, flags, false);
             assert(crypt_ok_2);
         }
     });
