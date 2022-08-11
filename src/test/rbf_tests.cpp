@@ -76,7 +76,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     // Create a parent tx5 and child tx6 where both have very low fees
     const auto tx5 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {1099 * CENT});
     pool.addUnchecked(entry.Fee(low_fee).FromTx(tx5));
-    const auto tx6 = make_tx(/*inputs=*/ {tx3}, /*output_values=*/ {1098 * CENT});
+    const auto tx6 = make_tx(/*inputs=*/ {tx5}, /*output_values=*/ {1098 * CENT});
     pool.addUnchecked(entry.Fee(low_fee).FromTx(tx6));
     // Make tx6's modified fee much higher than its base fee. This should cause it to pass
     // the fee-related checks despite being low-feerate.
