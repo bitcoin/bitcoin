@@ -236,9 +236,6 @@ endef
 # 5. Do similar for the win32-g++ mkspec.
 #
 # 6. In clang.conf, swap out clang & clang++, for our compiler + flags. See #17466.
-#
-# 7. Adjust a regex in toolchain.prf, to accommodate Guix's usage of
-# CROSS_LIBRARY_PATH. See #15277.
 define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qt.pro qt.pro && \
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
