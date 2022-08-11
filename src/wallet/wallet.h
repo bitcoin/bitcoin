@@ -1063,8 +1063,6 @@ public:
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
-    bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
-
     isminetype IsMine(const CTxDestination& dest) const;
     isminetype IsMine(const CScript& script) const;
     isminetype IsMine(const CTxIn& txin) const;
