@@ -177,12 +177,12 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
     LogPrint(BCLog::BENCHMARK, "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
 
-    static CCriticalSection cs_cache;
-    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
-    static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes_cached GUARDED_BY(cs_cache);
-    static std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes_cached GUARDED_BY(cs_cache);
-
     {
+        static CCriticalSection cs_cache;
+        static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
+        static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes_cached GUARDED_BY(cs_cache);
+        static std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes_cached GUARDED_BY(cs_cache);
+
         LOCK(cs_cache);
 
         if (quorums == quorums_cached) {
