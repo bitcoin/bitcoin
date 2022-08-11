@@ -16,7 +16,7 @@ unsigned-integer-overflow:*/include/c++/*/bits/basic_string.tcc
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:dash-tx.cpp
+unsigned-integer-overflow:bitcoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
 unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h

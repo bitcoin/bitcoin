@@ -6,7 +6,7 @@
 #define BITCOIN_UTIL_CHECK_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <tinyformat.h>

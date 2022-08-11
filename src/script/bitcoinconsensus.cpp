@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/dashconsensus.h>
+#include <script/bitcoinconsensus.h>
 
 #include <primitives/transaction.h>
 #include <pubkey.h>

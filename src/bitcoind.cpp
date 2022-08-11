@@ -5,7 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <chainparams.h>
@@ -50,7 +50,7 @@ static bool AppInit(int argc, char* argv[])
 
     util::ThreadSetInternalName("init");
 
-    // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
+    // If Qt is used, parameters/dash.conf are parsed in qt/bitcoin.cpp's main()
     SetupServerArgs(node);
     ArgsManager& args = *Assert(node.args);
     std::string error;

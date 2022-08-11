@@ -428,7 +428,7 @@
       </trans-unit>
     </group>
   </body></file>
-  <file original="../dash.cpp" datatype="cpp" source-language="en" target-language="en"><body>
+  <file original="../bitcoin.cpp" datatype="cpp" source-language="en" target-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="BitcoinGUI">
       <trans-unit id="_msg77" approved="yes">
         <source xml:space="preserve">A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
