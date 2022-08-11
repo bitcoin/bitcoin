@@ -855,6 +855,22 @@ case $host in
      ;;
 esac
 
+case $host in
+  *x86_64*)
+     TARGET_ARCH=x86_64
+     ;;
+   *aarch64*)
+     TARGET_ARCH=aarch64
+     ;;
+   *arm64*)
+     TARGET_ARCH=arm64
+     ;;
+   *arm*)
+     TARGET_ARCH=arm
+     ;;
+   *) AC_MSG_ERROR([Could not determine target arch, or it is unsupported]) ;;
+esac
+
 if test "$use_extended_functional_tests" != "no"; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
 fi
@@ -1906,6 +1922,17 @@ fi
 if test "$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoin_libs$build_syscoind$syscoin_enable_qt$enable_fuzz_binary$use_bench$use_tests" = "nonononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
+
+AM_CONDITIONAL([TARGET_X86_64], [test "$TARGET_ARCH" = "x86_64"])
+AM_CONDITIONAL([TARGET_AARCH64], [test "$TARGET_ARCH" = "aarch64"])
+AM_CONDITIONAL([TARGET_ARM64], [test "$TARGET_ARCH" = "arm64"])
+AM_CONDITIONAL([TARGET_ARM], [test "$TARGET_ARCH" = "arm"])
+
+AM_CONDITIONAL([TARGET_X86_64_LINUX], [test "$TARGET_ARCH-$TARGET_OS" = "x86_64-linux"])
+AM_CONDITIONAL([TARGET_ARM_LINUX], [test "$TARGET_ARCH-$TARGET_OS" = "arm-linux"])
+AM_CONDITIONAL([TARGET_AARCH64_LINUX], [test "$TARGET_ARCH-$TARGET_OS" = "aarch64-linux"])
+AM_CONDITIONAL([TARGET_X86_64_DARWIN], [test "$TARGET_ARCH-$TARGET_OS" = "x86_64-darwin"])
+AM_CONDITIONAL([TARGET_ARM64_DARWIN], [test "$TARGET_ARCH-$TARGET_OS" = "arm64-darwin"])
 
 AM_CONDITIONAL([TARGET_DARWIN], [test "$TARGET_OS" = "darwin"])
 AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
