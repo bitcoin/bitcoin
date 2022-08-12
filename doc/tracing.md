@@ -137,6 +137,18 @@ Arguments passed:
 1. Peer ID as `int64`.
 2. Reason why the peer is misbehaving as `pointer to C-style String` (max. length 128 characters).
 
+#### Tracepoint `net:closed_connection`
+
+Is called when a connection is closed. Passes information about the closed peer
+and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
+
 ### Context `validation`
 
 #### Tracepoint `validation:block_connected`
