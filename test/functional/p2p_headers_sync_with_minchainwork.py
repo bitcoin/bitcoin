@@ -6,6 +6,21 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 
+from test_framework.p2p import (
+    P2PInterface,
+)
+
+from test_framework.messages import (
+    msg_headers,
+)
+
+from test_framework.blocktools import (
+    NORMAL_GBT_REQUEST_PARAMS,
+    create_block,
+)
+
+from test_framework.util import assert_equal
+
 NODE1_BLOCKS_REQUIRED = 15
 NODE2_BLOCKS_REQUIRED = 2047
 
@@ -22,6 +37,10 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.sync_all()
+
+    def disconnect_all(self):
+        self.disconnect_nodes(0, 1)
+        self.disconnect_nodes(0, 2)
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -58,8 +77,40 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.log.info("Verify that node2 will sync the chain when it gets long enough")
         self.sync_blocks()
 
+    def test_peerinfo_includes_headers_presync_height(self):
+        self.log.info("Test that getpeerinfo() includes headers presync height")
+
+        # Disconnect network, so that we can find our own peer connection more
+        # easily
+        self.disconnect_all()
+
+        p2p = self.nodes[0].add_p2p_connection(P2PInterface())
+        node = self.nodes[0]
+
+        # Ensure we have a long chain already
+        current_height = self.nodes[0].getblockcount()
+        if (current_height < 3000):
+            self.generate(node, 3000-current_height, sync_fun=self.no_op)
+
+        # Send a group of 2000 headers, forking from genesis.
+        new_blocks = []
+        hashPrevBlock = int(node.getblockhash(0), 16)
+        for i in range(2000):
+            block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
+            block.solve()
+            new_blocks.append(block)
+            hashPrevBlock = block.sha256
+
+        headers_message = msg_headers(headers=new_blocks)
+        p2p.send_and_ping(headers_message)
+
+        # getpeerinfo should show a sync in progress
+        assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
+
     def run_test(self):
         self.test_chains_sync_when_long_enough()
+
+        self.test_peerinfo_includes_headers_presync_height()
 
 
 if __name__ == '__main__':

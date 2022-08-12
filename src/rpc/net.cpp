@@ -132,6 +132,7 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::NUM, "startingheight", /*optional=*/true, "The starting height (block) of the peer"},
+                    {RPCResult::Type::NUM, "presynced_headers", /*optional=*/true, "The current height of header pre-synchronization with this peer, or -1 if no low-work sync is in progress"},
                     {RPCResult::Type::NUM, "synced_headers", /*optional=*/true, "The last header we have in common with this peer"},
                     {RPCResult::Type::NUM, "synced_blocks", /*optional=*/true, "The last block we have in common with this peer"},
                     {RPCResult::Type::ARR, "inflight", /*optional=*/true, "",
@@ -226,6 +227,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
         if (fStateStats) {
             obj.pushKV("startingheight", statestats.m_starting_height);
+            obj.pushKV("presynced_headers", statestats.presync_height);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);

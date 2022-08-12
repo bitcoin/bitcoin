@@ -118,6 +118,9 @@ public:
     /** Return the current state of our download */
     State GetState() const { return m_download_state; }
 
+    /** Return the height reached during the PRESYNC phase */
+    int64_t GetPresyncHeight() const { return m_current_height; }
+
     /** Construct a HeadersSyncState object representing a headers sync via this
      *  download-twice mechanism).
      *
