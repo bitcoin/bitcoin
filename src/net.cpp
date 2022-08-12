@@ -208,12 +208,11 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 // one by discovery.
 CService GetLocalAddress(const CNetAddr& addrPeer)
 {
-    CService ret{CNetAddr(), GetListenPort()};
     CService addr;
     if (GetLocal(addr, &addrPeer)) {
-        ret = CService{addr};
+        return addr;
     }
-    return ret;
+    return CService{CNetAddr(), GetListenPort()};
 }
 
 static int GetnScore(const CService& addr)
