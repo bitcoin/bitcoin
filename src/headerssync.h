@@ -121,6 +121,12 @@ public:
     /** Return the height reached during the PRESYNC phase */
     int64_t GetPresyncHeight() const { return m_current_height; }
 
+    /** Return the block timestamp of the last header received during the PRESYNC phase. */
+    uint32_t GetPresyncTime() const { return m_last_header_received.nTime; }
+
+    /** Return the amount of work in the chain received during the PRESYNC phase. */
+    arith_uint256 GetPresyncWork() const { return m_current_chain_work; }
+
     /** Construct a HeadersSyncState object representing a headers sync via this
      *  download-twice mechanism).
      *

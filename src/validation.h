@@ -868,6 +868,9 @@ private:
         bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend CChainState;
 
+    /** Most recent headers presync progress update, for rate-limiting. */
+    std::chrono::time_point<std::chrono::steady_clock> m_last_presync_update GUARDED_BY(::cs_main) {};
+
 public:
     using Options = kernel::ChainstateManagerOpts;
 
@@ -1045,6 +1048,12 @@ public:
 
     /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
     std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev) const;
+
+    /** This is used by net_processing to report pre-synchronization progress of headers, as
+     *  headers are not yet fed to validation during that time, but validation is (for now)
+     *  responsible for logging and signalling through NotifyHeaderTip, so it needs this
+     *  information. */
+    void ReportHeadersPresync(const arith_uint256& work, int64_t height, int64_t timestamp);
 
     ~ChainstateManager();
 };
