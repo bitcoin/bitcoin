@@ -767,7 +767,7 @@ public:
     bool checkFinalTx(const CTransaction& tx) override
     {
         LOCK(cs_main);
-        return CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), tx);
+        return CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), tx);
     }
     bool isInstantSendLockedTx(const uint256& hash) override
     {
