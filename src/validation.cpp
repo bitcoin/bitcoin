@@ -3727,7 +3727,9 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
         if (now < m_last_presync_update + std::chrono::milliseconds{250}) return;
         m_last_presync_update = now;
     }
-    if (chainstate.IsInitialBlockDownload()) {
+    bool initial_download = chainstate.IsInitialBlockDownload();
+    uiInterface.NotifyHeaderTip(GetSynchronizationState(initial_download), height, timestamp, /*presync=*/true);
+    if (initial_download) {
         const int64_t blocks_left{(GetTime() - timestamp) / GetConsensus().nPowTargetSpacing};
         const double progress{100.0 * height / (height + blocks_left)};
         LogPrintf("Pre-synchronizing blockheaders, height: %d (~%.2f%%)\n", height, progress);
