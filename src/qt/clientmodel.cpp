@@ -215,26 +215,26 @@ QString ClientModel::blocksDir() const
     return GUIUtil::PathToQString(gArgs.GetBlocksDirPath());
 }
 
-void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header)
+void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, SyncType synctype)
 {
-    if (header) {
+    if (synctype == SyncType::HEADER_SYNC) {
         // cache best headers time and height to reduce future cs_main locks
         cachedBestHeaderHeight = tip.block_height;
         cachedBestHeaderTime = tip.block_time;
-    } else {
+    } else if (synctype == SyncType::BLOCK_SYNC) {
         m_cached_num_blocks = tip.block_height;
         WITH_LOCK(m_cached_tip_mutex, m_cached_tip_blocks = tip.block_hash;);
     }
 
     // Throttle GUI notifications about (a) blocks during initial sync, and (b) both blocks and headers during reindex.
-    const bool throttle = (sync_state != SynchronizationState::POST_INIT && !header) || sync_state == SynchronizationState::INIT_REINDEX;
+    const bool throttle = (sync_state != SynchronizationState::POST_INIT && synctype == SyncType::BLOCK_SYNC) || sync_state == SynchronizationState::INIT_REINDEX;
     const int64_t now = throttle ? GetTimeMillis() : 0;
-    int64_t& nLastUpdateNotification = header ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
+    int64_t& nLastUpdateNotification = synctype != SyncType::BLOCK_SYNC ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
     if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;
     }
 
-    Q_EMIT numBlocksChanged(tip.block_height, QDateTime::fromSecsSinceEpoch(tip.block_time), verification_progress, header, sync_state);
+    Q_EMIT numBlocksChanged(tip.block_height, QDateTime::fromSecsSinceEpoch(tip.block_time), verification_progress, synctype, sync_state);
     nLastUpdateNotification = now;
 }
 
@@ -264,11 +264,11 @@ void ClientModel::subscribeToCoreSignals()
         });
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
-            TipChanged(sync_state, tip, verification_progress, /*header=*/false);
+            TipChanged(sync_state, tip, verification_progress, SyncType::BLOCK_SYNC);
         });
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, bool presync) {
-            if (!presync) TipChanged(sync_state, tip, /*verification_progress=*/0.0, /*header=*/true);
+            TipChanged(sync_state, tip, /*verification_progress=*/0.0, presync ? SyncType::HEADER_PRESYNC : SyncType::HEADER_SYNC);
         });
 }
 
