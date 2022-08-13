@@ -297,6 +297,10 @@ void CreateWalletActivity::create()
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
     }
+    if (signers.size() > 1) {
+        QMessageBox::critical(nullptr, tr("Too many external signers found"), QString::fromStdString("More than one external signer found. Please connect only one at a time."));
+        signers.clear();
+    }
     m_create_wallet_dialog->setSigners(signers);
 
     m_create_wallet_dialog->setWindowModality(Qt::ApplicationModal);
