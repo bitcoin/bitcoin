@@ -284,6 +284,8 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
 {
     AssertLockHeld(cs_main);
 
+    llmq::utils::PreComputeQuorumMembers(pindex, true);
+
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
     CValidationState dummy;
     if (!GetCommitmentsFromBlock(block, pindex, qcs, dummy)) {
