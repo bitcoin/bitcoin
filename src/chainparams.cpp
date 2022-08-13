@@ -243,8 +243,8 @@ public:
 
         // Deployment of Quorum Rotation DIP and decreased proposal fee (Values to be determined)
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].bit = 7;
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nStartTime = 999999999999ULL; // TODO ENABLE BEFORE FINAL RELEASE
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nTimeout = 999999999999ULL;   // TODO ENABLE BEFORE FINAL RELEASE
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nStartTime = 1660521600; // Tuesday, August 15, 2022 12:00:00 AM
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nTimeout = 1692057600;   // Tuesday, August 15, 2023 12:00:00 AM
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nThresholdStart = 3226; // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0024].nThresholdMin = 2420;   // 60% of 4032
