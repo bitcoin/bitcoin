@@ -260,7 +260,7 @@ public:
 
     //! Register handler for header tip messages.
     using NotifyHeaderTipFn =
-        std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
+        std::function<void(SynchronizationState, interfaces::BlockTip tip, bool presync)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
     //! Get and set internal node context. Useful for testing, but not

@@ -377,9 +377,8 @@ public:
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyHeaderTip_connect([fn](SynchronizationState sync_state, const CBlockIndex* block) {
-                fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
-                    /* verification progress is unused when a header was received */ 0);
+            ::uiInterface.NotifyHeaderTip_connect([fn](SynchronizationState sync_state, int64_t height, int64_t timestamp, bool presync) {
+                fn(sync_state, BlockTip{(int)height, timestamp, uint256{}}, presync);
             }));
     }
     NodeContext* context() override { return m_context; }
