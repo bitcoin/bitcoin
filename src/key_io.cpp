@@ -278,6 +278,22 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
+std::string EncodeSilentDestination(const XOnlyPubKey& scan_pubkey, const XOnlyPubKey& spend_pubkey)
+{
+    // The data_in is scan_pubkey + spend_pubkey
+    std::vector<unsigned char> data_in = {};
+    std::vector<unsigned char> data_out = {};
+
+    data_in.insert(data_in.end(), scan_pubkey.begin(), scan_pubkey.end());
+    data_in.insert(data_in.end(), spend_pubkey.begin(), spend_pubkey.end());
+
+    ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+
+    std::string hrp = Params().SilentPaymentHRP();
+
+    return bech32::Encode(bech32::Encoding::BECH32M, hrp, data_out);
+}
+
 CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations)
 {
     return DecodeDestination(str, Params(), error_msg, error_locations);
@@ -298,4 +314,47 @@ bool IsValidDestinationString(const std::string& str, const CChainParams& params
 bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
+}
+
+std::pair<XOnlyPubKey, XOnlyPubKey> DecodeSilentData(const std::vector<unsigned char>& data)
+{
+    if (data.size() != 64) {
+        return {XOnlyPubKey(), XOnlyPubKey()};
+    }
+
+    std::vector<unsigned char> scan_pubkey_data(data.begin(), data.begin() + 32);
+    XOnlyPubKey scan_pubkey{scan_pubkey_data};
+
+    std::vector<unsigned char> spend_pubkey_data(data.begin() + 32, data.end());
+    XOnlyPubKey spend_pubkey{spend_pubkey_data};
+
+    return {scan_pubkey, spend_pubkey};
+}
+
+std::vector<unsigned char> DecodeSilentAddress(const std::string& str)
+{
+    const auto& params{Params()};
+
+    const auto& silent_payment_hrp = params.SilentPaymentHRP();
+    auto dest_silent_payment_hrp = ToLower(std::string_view(str).substr(0, params.SilentPaymentHRP().size()));
+
+    if (dest_silent_payment_hrp != silent_payment_hrp) {
+        return {};
+    }
+
+    std::vector<unsigned char> data;
+    data.clear();
+    const auto dec = bech32::Decode(str, /*silent*/true);
+    auto dec_silent_payment_hrp = dec.hrp.substr(0, params.SilentPaymentHRP().size());
+
+    if (dec.encoding != bech32::Encoding::BECH32M || dec.data.empty() || dec.hrp != silent_payment_hrp) {
+        return {};
+    }
+
+    data.reserve(((dec.data.size() - 1) * 5) / 8);
+    if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin(), dec.data.end())) {
+        return data;
+    }
+
+    return {};
 }

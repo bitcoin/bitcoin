@@ -370,11 +370,13 @@ std::string Encode(Encoding encoding, const std::string& hrp, const data& values
 }
 
 /** Decode a Bech32 or Bech32m string. */
-DecodeResult Decode(const std::string& str) {
+DecodeResult Decode(const std::string& str, bool silent) {
+    std::size_t max_size = silent ? 114 : 90;
+
     std::vector<int> errors;
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
-    if (str.size() > 90 || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
+    if (str.size() > max_size || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
         return {};
     }
     data values(str.size() - 1 - pos);

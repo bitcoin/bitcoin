@@ -13,6 +13,8 @@
 
 #include <string>
 
+const int32_t SILENT_ADDRESS_MAXIMUM_IDENTIFIER = 99;
+
 CKey DecodeSecret(const std::string& str);
 std::string EncodeSecret(const CKey& key);
 
@@ -22,8 +24,13 @@ CExtPubKey DecodeExtPubKey(const std::string& str);
 std::string EncodeExtPubKey(const CExtPubKey& extpubkey);
 
 std::string EncodeDestination(const CTxDestination& dest);
+std::string EncodeSilentDestination(const XOnlyPubKey& scan_pubkey, const XOnlyPubKey& spend_pubkey);
 CTxDestination DecodeDestination(const std::string& str);
 CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr);
+
+std::pair<XOnlyPubKey, XOnlyPubKey> DecodeSilentData(const std::vector<unsigned char>& data);
+std::vector<unsigned char> DecodeSilentAddress(const std::string& str);
+
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 

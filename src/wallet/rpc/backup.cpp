@@ -1494,7 +1494,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 	bool isSP = (descriptor.rfind("sp(", 0) == 0);
 
         // Active descriptors must be ranged
-        if (active && !parsed_desc->IsRange()) {
+        if (active && !parsed_desc->IsRange() && !isSP) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
         }
 
@@ -1542,6 +1542,12 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             }
         }
 
+        if (isSP) {
+           if (keys.keys.empty() || !have_all_privkeys) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import Silent Payment descriptor without private keys provided.");
+           }
+        }
+
         // If private keys are enabled, check some things.
         if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
            if (keys.keys.empty()) {
@@ -1579,6 +1585,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             if (w_desc.descriptor->GetOutputType()) {
                 wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
+        }
+
+        if (isSP && !wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT)) {
+            wallet.SetWalletFlag(WALLET_FLAG_SILENT_PAYMENT);
         }
 
         result.pushKV("success", UniValue(true));
