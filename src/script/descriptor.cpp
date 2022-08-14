@@ -1060,6 +1060,25 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
+/** A parsed sp(...) descriptor. */
+class SPDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
+    {
+        /* XOnlyPubKey xpk(keys[0]);
+        if (!xpk.IsFullyValid()) return {};
+        WitnessV1Taproot output{xpk}; */
+        CPubKey pubkey{keys[0]};
+        if (!pubkey.IsFullyValid()) return {};
+        return Vector(CScript(std::begin(pubkey), std::end(pubkey)));
+    }
+public:
+    SPDescriptor(std::vector<std::unique_ptr<PubkeyProvider>> scan_and_spend_key) : DescriptorImpl(std::move(scan_and_spend_key), "sp") {}
+    std::optional<OutputType> GetOutputType() const override { return OutputType::SILENT_PAYMENT; }
+    bool IsSingleType() const final { return true; }
+};
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1527,6 +1546,41 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         return std::make_unique<RawTRDescriptor>(std::move(output_key));
     } else if (Func("rawtr", expr)) {
         error = "Can only have rawtr at top level";
+        return nullptr;
+    }
+    if (ctx == ParseScriptContext::TOP && Func("sp", expr)) {
+        std::vector<std::unique_ptr<PubkeyProvider>> scan_and_spend_key;
+        // Parse the first key
+        auto arg = Expr(expr);
+        auto pk = ParsePubkey(key_exp_index, arg, ctx, out, error);
+        if (!pk) {
+            error = strprintf("sp(): %s", error);
+            return nullptr;
+        }
+        scan_and_spend_key.emplace_back(std::move(pk));
+        key_exp_index++;
+        while (expr.size()) {
+            if (!Const(",", expr)) {
+                error = strprintf("sp(): expected ',', got '%c'", expr[0]);
+                return nullptr;
+            }
+            auto arg = Expr(expr);
+            auto pk = ParsePubkey(key_exp_index, arg, ctx, out, error);
+            if (!pk) {
+                error = strprintf("sp(): %s", error);
+                return nullptr;
+            }
+            scan_and_spend_key.emplace_back(std::move(pk));
+            key_exp_index++;
+        }
+        auto sp_desc = std::make_unique<SPDescriptor>(std::move(scan_and_spend_key));
+        if (sp_desc->IsRange()) {
+            error = "Silent Payment descriptors cannot be ranged.";
+            return nullptr;
+        }
+        return sp_desc;
+    } else if (Func("sp", expr)) {
+        error = "Can only have sp at top level";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {

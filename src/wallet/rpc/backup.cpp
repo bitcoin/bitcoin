@@ -1496,10 +1496,17 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 }
             }
         }
+	// Can only have sp at the top level
+	bool isSP = (descriptor.rfind("sp(", 0) == 0);
 
         // Active descriptors must be ranged
         if (active && !parsed_desc->IsRange()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
+        }
+
+        if (isSP && data.exists("next_index"))
+        {
+            next_index = data["next_index"].getInt<int64_t>();
         }
 
         // Ranged descriptors should not have a label
@@ -1846,6 +1853,9 @@ RPCHelpMan listdescriptors()
             spk.pushKV("range", range);
             spk.pushKV("next", info.next_index);
             spk.pushKV("next_index", info.next_index);
+        }
+        if (info.descriptor.rfind("sp(", 0) == 0) {
+            spk.pushKV("next", info.next_index);
         }
         descriptors.push_back(spk);
     }
