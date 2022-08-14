@@ -2285,6 +2285,9 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         // so if we get to this point something is wrong
         assert(false);
     }
+    case OutputType::SILENT_PAYMENT: {
+        return false;
+    }
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());
 
