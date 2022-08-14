@@ -1037,6 +1037,26 @@ public:
     bool IsSingleType() const final { return true; }
 };
 
+/** A parsed sp(...) descriptor. */
+class SPDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
+    {
+        assert(keys.size() == 1);
+        /* XOnlyPubKey xpk(keys[0]);
+        if (!xpk.IsFullyValid()) return {};
+        WitnessV1Taproot output{xpk}; */
+        CPubKey pubkey{keys[0]};
+        if (!pubkey.IsFullyValid()) return {};
+        return Vector(CScript(std::begin(pubkey), std::end(pubkey)));
+    }
+public:
+    SPDescriptor(std::unique_ptr<PubkeyProvider> internal_key) : DescriptorImpl(Vector(std::move(internal_key)), "sp") {}
+    std::optional<OutputType> GetOutputType() const override { return OutputType::SILENT_PAYMENT; }
+    bool IsSingleType() const final { return true; }
+};
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1487,6 +1507,25 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         return std::make_unique<RawTRDescriptor>(std::move(output_key));
     } else if (Func("rawtr", expr)) {
         error = "Can only have rawtr at top level";
+        return nullptr;
+    }
+    if (ctx == ParseScriptContext::TOP && Func("sp", expr)) {
+        auto arg = Expr(expr);
+        if (expr.size()) {
+            error = strprintf("sp(): only one key expected.");
+            return nullptr;
+        }
+        auto internal_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
+        if (!internal_key) return nullptr;
+        ++key_exp_index;
+        auto sp_desc = std::make_unique<SPDescriptor>(std::move(internal_key));
+        if (sp_desc->IsRange()) {
+            error = "Silent Payment descriptors cannot be ranged.";
+            return nullptr;
+        }
+        return sp_desc;
+    } else if (Func("sp", expr)) {
+        error = "Can only have sp at top level";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
