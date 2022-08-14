@@ -2282,9 +2282,23 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix = "tr(" + xpub + "/86h";
         break;
     }
-    case OutputType::SILENT_PAYMENT:
-        // We don't have a descriptor for silent payments defined yet,
-        // so let this fall through as an unknown
+    case OutputType::SILENT_PAYMENT: {
+        // Mainnet derives at 0', testnet and regtest derive at 1'
+        std::string coin_type;
+        if (Params().IsTestChain()) {
+            coin_type = "/1h";
+        } else {
+            coin_type = "/0h";
+        }
+        std::string purpose = "/352h";
+        std::string account = "/0h";
+        // Following BIP44 - m/purpose/coin_type/account/
+        std::string root = xpub + purpose + coin_type + account;
+        std::string scan_key = root + "/1h/0";
+        std::string spend_key = root + "/0h/0";
+        desc_prefix = "sp(" + scan_key + "," + spend_key + ")";
+        break;
+    }
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
