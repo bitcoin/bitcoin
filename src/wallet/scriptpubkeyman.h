@@ -15,6 +15,7 @@
 #include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
+#include <wallet/silentpayments.h>
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -561,6 +562,8 @@ private:
     KeyMap m_map_keys GUARDED_BY(cs_desc_man);
     CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
 
+    std::unique_ptr<Recipient> m_silent_recipient{nullptr};
+
     //! keeps track of whether Unlock has run a thorough check before
     bool m_decryption_thoroughly_checked = false;
 
@@ -595,8 +598,10 @@ public:
         {}
 
     mutable RecursiveMutex cs_desc_man;
+    void LoadSilentRecipient();
 
     util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<std::pair<CPubKey,CPubKey>> GetSilentAddress();
     isminetype IsMine(const CScript& script) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;

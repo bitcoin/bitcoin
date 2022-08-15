@@ -1496,17 +1496,12 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 }
             }
         }
-	// Can only have sp at the top level
-	bool isSP = (descriptor.rfind("sp(", 0) == 0);
+        // Can only have sp at the top level
+        bool is_silent_payment_desc = (descriptor.rfind("sp(", 0) == 0);
 
         // Active descriptors must be ranged
-        if (active && !parsed_desc->IsRange()) {
+        if (active && !parsed_desc->IsRange() && !is_silent_payment_desc) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
-        }
-
-        if (isSP && data.exists("next_index"))
-        {
-            next_index = data["next_index"].getInt<int64_t>();
         }
 
         // Ranged descriptors should not have a label
@@ -1585,6 +1580,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             if (w_desc.descriptor->GetOutputType()) {
                 wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
+        }
+
+        if (is_silent_payment_desc && !wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT)) {
+            wallet.SetWalletFlag(WALLET_FLAG_SILENT_PAYMENT);
         }
 
         result.pushKV("success", UniValue(true));
