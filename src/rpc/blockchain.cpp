@@ -19,6 +19,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <kernel/coinstats.h>
+#include <index/txindex.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
@@ -45,6 +46,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
+#include <silentpayment.h>
 #include <warnings.h>
 
 #include <stdint.h>
@@ -1998,8 +2000,109 @@ static RPCHelpMan getblockstats()
 }
 
 namespace {
+struct SilentScanner {
+
+    const CTxMemPool* m_mempool;
+    ChainstateManager& m_chainman;
+
+    std::vector<std::tuple<silentpayment::Recipient, std::pair<CAmount, int64_t>>> recipient_range;
+
+    std::map<uint256, std::tuple<CPubKey, uint256>> m_silent_data;
+
+    std::vector<uint256> m_scanned_blocks;
+
+    std::map<COutPoint, Coin> scan(const COutPoint key, const Coin coin)
+    {
+        std::map<COutPoint, Coin> out_results;
+
+        for(auto& [silent_recipient, range]: recipient_range) {
+            std::vector<std::vector<unsigned char>> solutions;
+            TxoutType whichType{Solver(coin.out.scriptPubKey, solutions)};
+
+            // Silent Payments require that the recipients use Taproot address
+            if (whichType != TxoutType::WITNESS_V1_TAPROOT) {
+                continue;
+            }
+
+            // public key of the output
+            auto outputPubKey{XOnlyPubKey(solutions[0])};
+
+            auto it1 = m_silent_data.find(key.hash);
+            if (it1 == m_silent_data.end()) {
+                GetSilentData(key.hash);
+            }
+
+            auto it2 = m_silent_data.find(key.hash); // find by transaction id
+             if (it2 == m_silent_data.end()) continue;
+
+            const auto& [sum_of_all_input_pubkeys, outpoint_hash] = it2->second;
+
+            silent_recipient.SetSenderPublicKey(sum_of_all_input_pubkeys, outpoint_hash);
+
+            for (int64_t identifier = range.first; identifier < range.second; identifier++) {
+                const auto [silKey, silPubKey] = silent_recipient.Tweak((int32_t) identifier);
+
+                if (outputPubKey == silPubKey) {
+                    out_results.emplace(key, coin);
+                }
+            }
+        }
+
+        return out_results;
+    }
+
+    void GetSilentData(const uint256& txid)
+    {
+        uint256 hashBlock;
+        const CTransactionRef tx = node::GetTransaction(/*block_index=*/nullptr, m_mempool, txid, Params().GetConsensus(), hashBlock);
+        if (!tx) {
+            std::string errmsg{"Transaction " + txid.ToString() + " not found. "};
+            if (!g_txindex) {
+                errmsg += "Use -txindex or provide a block hash to enable blockchain transaction queries";
+            } else if (!g_txindex->BlockUntilSyncedToCurrentChain()) {
+                errmsg += "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
+            }
+
+            throw JSONRPCError(RPC_MISC_ERROR, errmsg);
+        }
+
+        // This block was scanned befored. All its transactions are already mapped in m_silent_data
+        if (std::count(m_scanned_blocks.begin(), m_scanned_blocks.end(), hashBlock)) {
+            return;
+        }
+
+        const CBlockIndex* pblockindex;
+        {
+            LOCK(cs_main);
+            pblockindex = m_chainman.m_blockman.LookupBlockIndex(hashBlock);
+
+            if (!pblockindex) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not found");
+            }
+        }
+        const CBlock block{GetBlockChecked(m_chainman.m_blockman, pblockindex)};
+        const CBlockUndo& blockUndo = GetUndoChecked(m_chainman.m_blockman, pblockindex);
+
+        for(const auto& [txid, sum_tx_pubkeys, hash_outpoints, truncated_hash]: silentpayment::GetSilentPaymentKeysPerBlock(hashBlock, blockUndo, block.vtx))
+        {
+            (void) truncated_hash; // not used here
+            m_silent_data.insert({txid, {sum_tx_pubkeys, hash_outpoints}});
+        }
+
+        m_scanned_blocks.push_back(hashBlock);
+    }
+};
+
 //! Search for a given set of pubkey scripts
-bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results, std::function<void()>& interruption_point)
+bool FindScriptPubKey(
+    std::atomic<int>& scan_progress,
+    const std::atomic<bool>& should_abort,
+    int64_t& count,
+    CCoinsViewCursor* cursor,
+    const std::set<CScript>& needles,
+    std::map<COutPoint, Coin>& out_results,
+    std::function<void()>& interruption_point,
+    SilentScanner& silent_scanner)
 {
     scan_progress = 0;
     count = 0;
@@ -2022,6 +2125,8 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
         if (needles.count(coin.out.scriptPubKey)) {
             out_results.emplace(key, coin);
         }
+        std::map<COutPoint, Coin> silent_results = silent_scanner.scan(key, coin);
+        out_results.insert(silent_results.begin(), silent_results.end());
         cursor->Next();
     }
     scan_progress = 100;
@@ -2182,18 +2287,64 @@ static RPCHelpMan scantxoutset()
         }
 
         std::set<CScript> needles;
+        std::vector<std::tuple<CKey, std::pair<int64_t, int64_t>>> sp_keys_range;
         std::map<CScript, std::string> descriptors;
         CAmount total_in = 0;
 
         // loop through the scan objects
         for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
             FlatSigningProvider provider;
-            auto scripts = EvalDescriptorStringOrObject(scanobject, provider);
-            for (CScript& script : scripts) {
-                std::string inferred = InferDescriptor(script, provider)->ToString();
-                needles.emplace(script);
-                descriptors.emplace(std::move(script), std::move(inferred));
+            auto [desc_str, range] = EvalDescriptorStringOrObject(scanobject);
+
+            bool is_sp_desc = (desc_str.rfind("sp(", 0) == 0);
+
+            if (is_sp_desc) {
+                auto keys = DescriptorToKeys(desc_str, range, provider);
+
+                if (keys.empty()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanning silent payment descriptors requires private keys.");
+                }
+
+                if (keys.size() != 1) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Silent payment descriptors must have only one private key.");
+                }
+
+                auto privKey = keys.at(0);
+
+                bool privkey_already_added{false};
+                for (const auto& [key, _] : sp_keys_range) {
+
+                    (void) _;
+
+                    if (key == privKey) {
+                        privkey_already_added = true;
+                        break;
+                    }
+                }
+
+                if (!privkey_already_added) {
+                    sp_keys_range.emplace_back(privKey, range);
+                }
+            } else {
+                auto scripts = DescriptorToScripts(desc_str, range, provider);
+                for (const auto& script : scripts) {
+                    std::string inferred = InferDescriptor(script, provider)->ToString();
+                    needles.emplace(script);
+                    descriptors.emplace(script, std::move(inferred));
+                }
             }
+        }
+
+        NodeContext& node_context{EnsureAnyNodeContext(request.context)};
+
+        SilentScanner silent_scanner {
+            .m_mempool = &EnsureMemPool(node_context),
+            .m_chainman = EnsureChainman(node_context)
+        };
+
+        for(const auto& [priv_key, range]: sp_keys_range) {
+            silentpayment::Recipient silent_recipient{priv_key, ((size_t) range.second)};
+            silent_scanner.recipient_range.emplace_back(silent_recipient, range);
         }
 
         // Scan the unspent transaction output set for inputs
@@ -2213,7 +2364,8 @@ static RPCHelpMan scantxoutset()
             pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
-        bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);
+
+        bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point, silent_scanner);
         result.pushKV("success", res);
         result.pushKV("txouts", count);
         result.pushKV("height", tip->nHeight);
@@ -2225,6 +2377,12 @@ static RPCHelpMan scantxoutset()
             const CTxOut& txo = coin.out;
             input_txos.push_back(txo);
             total_in += txo.nValue;
+
+            if (descriptors.find(txo.scriptPubKey) == descriptors.end()) {
+                FlatSigningProvider provider;
+                std::string inferred = InferDescriptor(txo.scriptPubKey, provider)->ToString();
+                descriptors.emplace(txo.scriptPubKey, std::move(inferred));
+            }
 
             UniValue unspent(UniValue::VOBJ);
             unspent.pushKV("txid", outpoint.hash.GetHex());
