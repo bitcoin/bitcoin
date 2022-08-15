@@ -58,6 +58,8 @@ FUZZ_TARGET(coinselection)
     coin_params.m_subtract_fee_outputs = subtract_fee_outputs;
     coin_params.m_long_term_feerate = long_term_fee_rate;
     coin_params.m_effective_feerate = effective_fee_rate;
+    coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
+    coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
 
     // Create some coins
     CAmount total_balance{0};
@@ -85,7 +87,7 @@ FUZZ_TARGET(coinselection)
     auto result_srd = SelectCoinsSRD(group_pos, target, fast_random_context);
     if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change);
 
-    CAmount change_target{GenerateChangeTarget(target, fast_random_context)};
+    CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
     auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context);
     if (result_knapsack) result_knapsack->ComputeAndSetWaste(cost_of_change);
 

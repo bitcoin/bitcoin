@@ -252,6 +252,7 @@ struct OutputGroup
 
 /** Choose a random change target for each transaction to make it harder to fingerprint the Core
  * wallet based on the change output values of transactions it creates.
+ * Change target covers at least change fees and adds a random value on top of it.
  * The random value is between 50ksat and min(2 * payment_value, 1milsat)
  * When payment_value <= 25ksat, the value is just 50ksat.
  *
@@ -261,8 +262,9 @@ struct OutputGroup
  * coins selected are just sufficient to cover the payment amount ("unnecessary input" heuristic).
  *
  * @param[in]   payment_value   Average payment value of the transaction output(s).
+ * @param[in]   change_fee      Fee for creating a change output.
  */
-[[nodiscard]] CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng);
+[[nodiscard]] CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng);
 
 enum class SelectionAlgorithm : uint8_t
 {
