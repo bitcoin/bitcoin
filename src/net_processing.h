@@ -216,6 +216,9 @@ struct Peer {
     /** Set of txids to reconsider once their parent transactions have been accepted **/
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
+    /** Whether we've sent this peer a getheaders in response to an inv prior to initial-headers-sync completing */
+    bool m_inv_triggered_getheaders_before_sync{false};
+    
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
     /** Work queue of items requested by this peer **/
