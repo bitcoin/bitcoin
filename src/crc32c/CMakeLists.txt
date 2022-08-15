@@ -296,9 +296,10 @@ target_include_directories(crc32c
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_compile_definitions(crc32c
-PRIVATE
-  CRC32C_HAVE_CONFIG_H=1
+set_property(
+  TARGET crc32c_arm64 crc32c_sse42 crc32c
+  APPEND
+  PROPERTY COMPILE_DEFINITIONS CRC32C_HAVE_CONFIG_H
 )
 
 set_target_properties(crc32c
