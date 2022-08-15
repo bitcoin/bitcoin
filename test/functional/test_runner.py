@@ -92,6 +92,14 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
+    'wallet_silentpayment_tx.py',
+    'wallet_silentpayment_misc.py',
+    'wallet_silentpayment_labels.py',
+    'wallet_silentpayment_identifier.py',
+    'wallet_silentpayment_psbt_send_many_addr.py',
+    'wallet_silentpayment_blockfilterindex.py',
+    'wallet_silentpayment_addr_reuse.py',
+    'wallet_silentpayment_addresses.py',
     'feature_fee_estimation.py',
     'feature_taproot.py',
     'feature_block.py',
