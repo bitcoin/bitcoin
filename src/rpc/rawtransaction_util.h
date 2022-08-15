@@ -5,17 +5,20 @@
 #ifndef BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 #define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 
+#include <vector>
 #include <map>
 #include <string>
 #include <optional>
 
 struct bilingual_str;
+class CTxOut;
 class FillableSigningProvider;
 class UniValue;
 struct CMutableTransaction;
 class Coin;
 class COutPoint;
 class SigningProvider;
+struct SilentTxOut;
 
 /**
  * Sign a transaction with the given keystore and previous transactions

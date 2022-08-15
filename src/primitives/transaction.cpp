@@ -51,11 +51,13 @@ std::string CTxIn::ToString() const
     return str;
 }
 
-CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
-{
-    nValue = nValueIn;
-    scriptPubKey = scriptPubKeyIn;
-}
+CTxOut::CTxOut(const CAmount& nValueIn, const CScript& scriptPubKeyIn) :
+    nValue{nValueIn}, scriptPubKey{scriptPubKeyIn} { }
+
+CTxOut::CTxOut(const CAmount& nValueIn, const CScript& scriptPubKeyIn, bool silentpayment) :
+    nValue{nValueIn},
+    scriptPubKey{scriptPubKeyIn},
+    m_silentpayment{silentpayment} { }
 
 std::string CTxOut::ToString() const
 {

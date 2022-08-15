@@ -823,6 +823,66 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     }
 }
 
+bool CreateSilentTransaction(
+    const CWallet& wallet,
+    const std::set<std::shared_ptr<wallet::COutput>>& selected_coins,
+    CMutableTransaction& txNew,
+    bilingual_str& error)
+{
+    std::vector<std::tuple<CKey,bool>> input_private_keys;
+
+    for (const auto& input : selected_coins) {
+        const auto& spk_managers = wallet.GetScriptPubKeyMans(input->txout.scriptPubKey);
+
+        if (spk_managers.size() != 1) {
+            error = _("Only one ScriptPubKeyManager was expected for the input.");
+            return false;
+        }
+
+        const auto* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(*spk_managers.begin());
+
+        const auto& [sender_secret_key, is_taproot]{spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey, /*onlyTaproot=*/ false)};
+
+        if (!sender_secret_key.IsValid()) {
+            error = _("The private key of one of the inputs was not found.");
+            return false;
+        }
+
+        input_private_keys.emplace_back(sender_secret_key, is_taproot);
+    }
+
+    std::vector<COutPoint> tx_outpoints;
+    for (auto& vin : txNew.vin) {
+        tx_outpoints.push_back(vin.prevout);
+    }
+
+    for (auto& vout : txNew.vout) {
+
+        if (!vout.m_silentpayment) continue;
+
+        std::vector<unsigned char> data;
+        data.assign(vout.scriptPubKey.begin(), vout.scriptPubKey.end());
+
+        auto [scan_pubkey, spend_pubkey] = DecodeSilentData(data);
+        assert(scan_pubkey.IsFullyValid() && spend_pubkey.IsFullyValid());
+
+        silentpayment::Sender silent_sender{
+            input_private_keys,
+            tx_outpoints,
+            scan_pubkey
+        };
+
+        // XOnlyPubKey tweakedKey{silent_sender.Tweak2(identifier)};
+        XOnlyPubKey tweakedKey{silent_sender.Tweak(spend_pubkey)};
+
+        assert(tweakedKey.IsFullyValid());
+        auto tap = WitnessV1Taproot(tweakedKey);
+        CScript tweakedScriptPubKey =  GetScriptForDestination(tap);
+        vout = CTxOut(vout.nValue, tweakedScriptPubKey);
+    }
+    return true;
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -940,7 +1000,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // vouts to the payees
     for (const auto& recipient : vecSend)
     {
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        CTxOut txout(recipient.nAmount, recipient.scriptPubKey, recipient.m_silentpayment);
 
         // Include the fee cost for outputs.
         coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
@@ -1016,6 +1076,19 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         txNew.vin.push_back(CTxIn(coin->outpoint, CScript(), nSequence));
     }
     DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+
+    bool is_silent_payment{false};
+
+    for (const auto& out : txNew.vout) {
+        if (out.m_silentpayment) {
+            is_silent_payment = true;
+            break;
+        }
+    }
+
+    if (is_silent_payment && !CreateSilentTransaction(wallet, result.GetInputSet(), txNew, error)) {
+        return util::Error{_("Unable to create silent transaction")};
+    }
 
     // Calculate the transaction fee
     TxSize tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
@@ -1181,14 +1254,22 @@ util::Result<CreatedTransactionResult> CreateTransaction(
     return res;
 }
 
-bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+bool FundTransaction(
+    CWallet& wallet,
+    CMutableTransaction& tx,
+    CAmount& nFeeRet,
+    int& nChangePosInOut,
+    bilingual_str& error,
+    bool lockUnspents,
+    const std::set<int>& setSubtractFeeFromOutputs,
+    CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
 
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1, txOut.m_silentpayment};
         vecSend.push_back(recipient);
     }
 
@@ -1234,8 +1315,11 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
+    // Also copy the scriptPubKeys as they may have been tweaked if silent payment
+    // is enabled
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
         tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx].scriptPubKey = tx_new->vout[idx].scriptPubKey;
     }
 
     // Add new txins while keeping original txin scriptSig/order.
