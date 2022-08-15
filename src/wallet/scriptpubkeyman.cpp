@@ -2017,6 +2017,43 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
     }
 }
 
+void DescriptorScriptPubKeyMan::LoadSilentRecipient()
+{
+    if (m_silent_recipient == nullptr) {
+        LOCK(cs_desc_man);
+
+        FlatSigningProvider out_keys;
+        FlatSigningProvider master_provider;
+        master_provider.keys = GetKeys();
+        m_wallet_descriptor.descriptor->ExpandPrivate(0, master_provider, out_keys);
+        assert(out_keys.keys.size() == 2);
+        // TODO: shouldn't need the spend key
+        // also not sure if this is the best way to get private keys from the descriptor
+        m_silent_recipient = std::make_unique<Recipient>(
+                out_keys.keys.begin()->second,
+                std::next(out_keys.keys.begin(), 1)->second
+        );
+    }
+}
+
+util::Result<std::pair<CPubKey,CPubKey>> DescriptorScriptPubKeyMan::GetSilentAddress()
+{
+    LOCK(cs_desc_man);
+
+    assert(m_wallet_descriptor.descriptor->IsSingleType());
+    std::optional<OutputType> desc_addr_type = m_wallet_descriptor.descriptor->GetOutputType();
+    assert(desc_addr_type);
+    if (OutputType::SILENT_PAYMENT != *desc_addr_type) {
+        throw std::runtime_error(std::string(__func__) + ": Silent Payment output type is expected.");
+    }
+
+    LoadSilentRecipient();
+
+    const auto&[recipient_scan_pubkey, recipient_spend_pubkey]{m_silent_recipient->GetAddress()};
+
+    return std::make_pair(recipient_scan_pubkey, recipient_spend_pubkey);
+}
+
 isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
 {
     LOCK(cs_desc_man);
@@ -2307,15 +2344,21 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());
 
-    // Mainnet derives at 0', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1h";
-    } else {
-        desc_prefix += "/0h";
-    }
+    std::string desc_str;
 
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
+    if (addr_type != OutputType::SILENT_PAYMENT) {
+        // Mainnet derives at 0', testnet and regtest derive at 1'
+        if (Params().IsTestChain()) {
+            desc_prefix += "/1h";
+        } else {
+            desc_prefix += "/0h";
+        }
+
+        std::string internal_path = internal ? "/1" : "/0";
+        desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
+    } else {
+        desc_str = desc_prefix;
+    }
 
     // Make the descriptor
     FlatSigningProvider keys;
@@ -2372,7 +2415,10 @@ std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);
-    return m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
+
+    // Silent payment descriptors do not use range_end
+    return (m_wallet_descriptor.descriptor->GetOutputType() == OutputType::SILENT_PAYMENT) ? 1 :
+        m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
 }
 
 int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
