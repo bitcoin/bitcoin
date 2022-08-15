@@ -157,6 +157,7 @@ public:
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
+    virtual bool getUndoBlock(const uint256& block_hash, CBlockUndo& blockUndo) = 0;
 
     //! Find first block in the chain with timestamp >= the given time
     //! and height >= than the given height, return false if there is no block

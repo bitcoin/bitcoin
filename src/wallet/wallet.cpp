@@ -1204,9 +1204,50 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     return true;
 }
 
-bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block)
+void CWallet::AddSilentScriptPubKey(
+    const CTransaction& tx, const SyncTxState& state, bool rescanning_old_block, const std::vector<CKey>& rawTrKeys)
+{
+    WalletLogPrintf("Silent Transaction identified: %s.\n", tx.GetHash().ToString());
+
+    for(const auto& key: rawTrKeys) {
+
+        std::string desc = "rawtr(" + EncodeSecret(key) + ")";
+        std::string checksum = GetDescriptorChecksum(desc);
+
+        auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+        std::string desc_check = desc + "#" + checksum;
+
+        FlatSigningProvider keys;
+        std::string error;
+        auto parsed_desc = Parse(desc_check, keys, error, /* require_checksum = */ true);
+        assert(parsed_desc);
+
+        int64_t range_start = 0, range_end = 1, next_index = 0;
+
+        // Need to ExpandPrivate to check if private keys are available for all pubkeys
+        FlatSigningProvider expand_keys;
+        std::vector<CScript> scripts;
+        assert(parsed_desc->Expand(0, keys, scripts, expand_keys));
+        parsed_desc->ExpandPrivate(0, keys, expand_keys);
+
+        WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
+
+
+        auto existing_spk_manager = GetDescriptorScriptPubKeyMan(w_desc);
+        if (!existing_spk_manager) {
+            auto spk_manager = AddWalletDescriptor(w_desc, keys, "", false);
+            assert(spk_manager != nullptr);
+        }
+    }
+}
+
+bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxState& state, const std::map<uint256, CPubKey>& tweakData, bool fUpdate, bool rescanning_old_block, bool taproot_active)
 {
     const CTransaction& tx = *ptx;
+
+    std::vector<CKey> rawTrKeys;
     {
         AssertLockHeld(cs_wallet);
 
@@ -1225,7 +1266,14 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
-        if (fExisted || IsMine(tx) || IsFromMe(tx))
+
+        bool is_silent_payment{false};
+        if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT) && taproot_active) {
+            is_silent_payment = VerifySilentPayment(tx, rawTrKeys, tweakData);
+            if (is_silent_payment)
+                AddSilentScriptPubKey(tx, state, rescanning_old_block, rawTrKeys);
+        }
+        if (fExisted || IsMine(tx) || IsFromMe(tx) || is_silent_payment)
         {
             /* Check if any keys in the wallet keypool that were supposed to be unused
              * have appeared in a new transaction. If so, remove those keys from the keypool.
@@ -1268,6 +1316,76 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
         }
     }
     return false;
+}
+
+bool CWallet::VerifySilentPayment(const CTransaction& tx, std::vector<CKey>& rawTrKeys, const std::map<uint256, CPubKey>& tweakData)
+{
+    AssertLockHeld(cs_wallet);
+
+    if (tx.IsCoinBase() || tx.vin.empty()) return false;
+
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) return false;
+
+    std::vector<XOnlyPubKey> outputPubKeys;
+
+    for (auto& vout : tx.vout) {
+
+        if (IsMine(vout)) {
+            continue;
+        }
+
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType whichType = Solver(vout.scriptPubKey, solutions);
+
+        // Silent Payments require that the recipients use Taproot address
+        if (whichType != TxoutType::WITNESS_V1_TAPROOT) {
+            continue;
+        }
+
+        auto xOnlyPubKey = XOnlyPubKey(solutions[0]);
+
+        if (!xOnlyPubKey.IsFullyValid()) {
+            continue;
+        }
+
+        outputPubKeys.emplace_back(xOnlyPubKey);
+    }
+
+    if (outputPubKeys.empty()) {
+        return false;
+    }
+
+    std::vector<Coin> coins;
+    std::vector<COutPoint> tx_outpoints;
+
+    for (const CTxIn& txin : tx.vin) {
+        coins.push_back(FindPreviousCoin(txin));
+        tx_outpoints.push_back(txin.prevout);
+    }
+
+    CPubKey sum_sender_pubkeys = SumInputPubKeys(tx, coins);
+    if (!sum_sender_pubkeys.IsFullyValid()) {
+        auto it = tweakData.find(tx.GetHash());
+        if (it == tweakData.end()) return false;
+        auto pubkeys_from_index = it->second;
+        if (!pubkeys_from_index.IsFullyValid()) {
+            return false;
+        }
+        sum_sender_pubkeys = pubkeys_from_index;
+    }
+    for (ScriptPubKeyMan* spkm : GetActiveScriptPubKeyMans()) {
+        DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+
+        std::string desc_str;
+        bool res_get_desc = desc_spkm->GetDescriptorString(desc_str, false);
+
+        // There must be only one SP descriptor
+        if (res_get_desc && desc_str.rfind("sp(", 0) != 0) {
+            continue;
+        }
+        rawTrKeys = desc_spkm->VerifySilentPaymentAddress(outputPubKeys, sum_sender_pubkeys, tx_outpoints);
+    }
+    return !rawTrKeys.empty();
 }
 
 bool CWallet::TransactionCanBeAbandoned(const uint256& hashTx) const
@@ -1391,9 +1509,9 @@ void CWallet::RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingSt
     }
 }
 
-void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block)
+void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, const std::map<uint256, CPubKey>& tweakData, bool update_tx, bool rescanning_old_block, bool taproot_active)
 {
-    if (!AddToWalletIfInvolvingMe(ptx, state, update_tx, rescanning_old_block))
+    if (!AddToWalletIfInvolvingMe(ptx, state, tweakData, update_tx, rescanning_old_block, taproot_active))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1404,6 +1522,13 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
 
 void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
     LOCK(cs_wallet);
+    // if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT)) {
+    //     std::vector<Coin> coins;
+    //     for (const auto& txin : tx.vin) {
+    //         coins.push_back(FindPreviousCoin(txin));
+    //     }
+    //     CPubKey sum_input_pubkey = SumInputPubKeys(tx, coins);
+    // }
     SyncTransaction(tx, TxStateInMempool{});
 
     auto it = mapWallet.find(tx->GetHash());
@@ -1449,6 +1574,134 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 }
 
+std::map<uint256, CPubKey> CWallet::GetSilentPaymentKeysPerBlock(const uint256& block_hash, const std::vector<CTransactionRef> vtx)
+{
+    CBlockUndo blockUndo;
+    if (!chain().getUndoBlock(block_hash, blockUndo)) {
+        return {};
+    }
+    return GetSilentPaymentKeys(block_hash, blockUndo, vtx);
+}
+
+std::map<uint256, CPubKey> GetSilentPaymentKeys(const uint256& block_hash, const CBlockUndo& blockUndo, const std::vector<CTransactionRef> vtx)
+{
+    std::map<uint256, CPubKey>  items; // <tx_hash, sum of public keys of transaction inputs>
+
+    for (const auto& tx : vtx) {
+
+        if (tx->IsCoinBase()) {
+            continue;
+        }
+
+        std::unordered_set<TxoutType> tx_vout_types;
+        for (auto& vout : tx->vout) {
+            std::vector<std::vector<unsigned char>> solutions;
+            TxoutType whichType = Solver(vout.scriptPubKey, solutions);
+            tx_vout_types.insert(whichType);
+        }
+
+        // Silent Payments require that the recipients use Taproot address
+        // so one output at least must be Taproot
+        if (tx_vout_types.find(TxoutType::WITNESS_V1_TAPROOT) == tx_vout_types.end()) {
+            continue;
+        }
+
+        auto it = std::find_if(vtx.cbegin(), vtx.cend(), [tx](CTransactionRef t){ return *t == *tx; });
+        // TODO: redundant verification ?
+        if (it == vtx.end()) {
+            continue;
+        }
+
+        // -1 as blockundo does not have coinbase tx
+        const auto& undoTX = blockUndo.vtxundo.at(it - vtx.begin() - 1);
+
+        assert(tx->vin.size() == undoTX.vprevout.size());
+
+        std::vector<Coin> coins;
+        for (size_t i = 0; i < tx->vin.size(); i++)
+        {
+            coins.push_back(undoTX.vprevout[i]);
+        }
+
+        CPubKey sum_tx_pubkeys = SumInputPubKeys(*tx, coins);
+        if (sum_tx_pubkeys.IsFullyValid()) {
+            items.emplace(tx->GetHash(), sum_tx_pubkeys);
+        }
+    }
+
+    return items;
+}
+
+CPubKey SumInputPubKeys(const CTransaction &tx, const std::vector<Coin>& coins)
+{
+    CPubKey sum_sender_pubkeys;
+    std::vector<CPubKey> pubkeys_for_shared_secret;
+    for (size_t i = 0; i < tx.vin.size(); i++)
+    {
+        const auto& spk = coins.at(i).out.scriptPubKey;
+        const auto& txin = tx.vin.at(i);
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType input = Solver(spk, solutions);
+
+        switch (input) {
+            case TxoutType::WITNESS_UNKNOWN:
+                // This transaction contains unknown input types, which means it is not
+                // a Silent Payments v0 transaction
+                return CPubKey();
+            case TxoutType::WITNESS_V0_SCRIPTHASH:
+            case TxoutType::MULTISIG:
+            case TxoutType::PUBKEY:
+            case TxoutType::NULL_DATA:
+                // We don't use any of these input types for calculating the shared secret
+                // so we skip them
+                continue;
+            case TxoutType::NONSTANDARD:
+            case TxoutType::PUBKEYHASH:
+                {
+                    std::vector<std::vector<unsigned char> > stack;
+                    if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+                        // Something went wrong
+                        return CPubKey();
+                    // Probably not a pubkeyhash?
+                    if (stack.empty()) continue;
+
+                    // Get the public key from the back of the stack
+                    // No need to check if it actually hashes to the hash in the scriptPubKey as
+                    // this has already been checked
+                    CPubKey pubkey{stack.back()};
+                    assert(pubkey.IsFullyValid());
+                    pubkeys_for_shared_secret.push_back(pubkey);
+                    continue;
+                }
+            case TxoutType::SCRIPTHASH:
+            case TxoutType::WITNESS_V0_KEYHASH:
+                {
+                    // Only P2SH-P2WSH is supported. If it is any other type of P2SH, skip the input
+                    if (txin.scriptWitness.stack.size() != 2) continue;
+                    if (txin.scriptWitness.stack.at(1).size() != 33) continue;
+
+                    CPubKey pubkey = CPubKey(txin.scriptWitness.stack.at(1));
+                    assert(pubkey.IsFullyValid());
+                    pubkeys_for_shared_secret.emplace_back(pubkey);
+                    continue;
+                }
+            case TxoutType::WITNESS_V1_TAPROOT:
+                {
+                    // TODO: If the outer public key is H (the NUMS point defined in the BIP), skip the input
+                    XOnlyPubKey pubkey = XOnlyPubKey(solutions[0]);
+                    assert(pubkey.IsFullyValid());
+                    pubkeys_for_shared_secret.push_back(pubkey.ConvertToCompressedPubKey());
+                    continue;
+                }
+        }
+
+    }
+    // If none of the inputs can be used to derive the shared secret,
+    // this is not a silent payments transaction
+    if (pubkeys_for_shared_secret.empty()) return CPubKey();
+    return CPubKey::Combine(pubkeys_for_shared_secret);
+}
+
 void CWallet::blockConnected(const interfaces::BlockInfo& block)
 {
     assert(block.data);
@@ -1462,8 +1715,12 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
     if (block.chain_time_max < m_birth_time.load() - (TIMESTAMP_WINDOW * 2)) return;
 
     // Scan block
+    std::map<uint256, CPubKey> tweakData;
+    if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT)) {
+        tweakData = GetSilentPaymentKeysPerBlock(block.hash, block.data->vtx);
+    }
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
+        SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, tweakData);
         transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
     }
 }
@@ -1871,6 +2128,24 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     return startTime;
 }
 
+Coin CWallet::FindPreviousCoin(const CTxIn& txin) const
+{
+    // Find the UTXO being spent in UTXO Set to learn the transaction type
+    std::map<COutPoint, Coin> coins;
+    coins[txin.prevout];
+    chain().findCoins(coins);
+
+    auto pos = coins.find(txin.prevout);
+
+    Coin coin = pos->second;
+
+    // TODO: can more than one txin.prevout be in the mempool (RBF) ?
+    pos++;
+    assert( pos == coins.end() );
+
+    return coin;
+}
+
 /**
  * Scan the block chain (starting in start_block) for transactions
  * from or to us. If fUpdate is true, found transactions that already
@@ -1919,6 +2194,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     double progress_end = chain().guessVerificationProgress(end_hash);
     double progress_current = progress_begin;
     int block_height = start_height;
+    Consensus::Params consensus = Params().GetConsensus();
     while (!fAbortRescan && !chain().shutdownRequested()) {
         if (progress_end - progress_begin > 0.0) {
             m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
@@ -1936,7 +2212,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         }
 
         bool fetch_block{true};
-        if (fast_rescan_filter) {
+        if (!IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT) && fast_rescan_filter) {
             fast_rescan_filter->UpdateIfNeeded();
             auto matches_block{fast_rescan_filter->MatchesBlock(block_hash)};
             if (matches_block.has_value()) {
@@ -1973,8 +2249,15 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     result.status = ScanResult::FAILURE;
                     break;
                 }
+
+                std::map<uint256, CPubKey> tweakData;
+                bool taproot_active{block_height >= consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height};
+                if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT) && taproot_active) {
+                    tweakData = GetSilentPaymentKeysPerBlock(block_hash, block.vtx);
+                }
+
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, fUpdate, /*rescanning_old_block=*/true);
+                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, tweakData, fUpdate, /*rescanning_old_block=*/true, taproot_active);
                 }
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;

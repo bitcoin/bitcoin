@@ -2847,4 +2847,17 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
 
     return true;
 }
+
+std::vector<CKey> DescriptorScriptPubKeyMan::VerifySilentPaymentAddress(
+    std::vector<XOnlyPubKey>& tx_output_pub_keys,
+    const CPubKey& sender_pub_key,
+    const std::vector<COutPoint>& tx_outpoints)
+{
+    LOCK(cs_desc_man);
+    std::vector<CKey> raw_tr_keys;
+    LoadSilentRecipient();
+    assert(m_silent_recipient != nullptr);
+    m_silent_recipient->ComputeECDHSharedSecret(sender_pub_key, tx_outpoints);
+    return m_silent_recipient->ScanTxOutputs(tx_output_pub_keys);
+}
 } // namespace wallet
