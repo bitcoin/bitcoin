@@ -58,7 +58,7 @@ The currently available tracepoints are listed here.
 #### Tracepoint `net:inbound_message`
 
 Is called when a message is received from a peer over the P2P network. Passes
-information about our peer, the connection and the message as arguments.
+information about our peer, the connection, and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
@@ -76,8 +76,8 @@ the passed message.
 
 #### Tracepoint `net:outbound_message`
 
-Is called when a message is send to a peer over the P2P network. Passes
-information about our peer, the connection and the message as arguments.
+Is called when a message is sent to a peer over the P2P network. Passes
+information about our peer, the connection, and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
@@ -117,7 +117,7 @@ added to and removed (spent) from the cache when we connect a new block.
 `getblocktemplate` call `TestBlockValidity()`, which applies the UTXO set
 changes to a temporary cache. Similarly, mempool consistency checks, which are
 frequent on regtest, also apply the the UTXO set changes to a temporary cache.
-Changes to the _main_ UTXO cache and to temporary caches trigger the tracepoints.
+Changes to the _main_ UTXO cache and temporary caches trigger the tracepoints.
 We can't tell if a temporary cache or the _main_ cache was changed.
 
 #### Tracepoint `utxocache:flush`
@@ -254,7 +254,7 @@ TRACE6(net, inbound_message,
 ### Guidelines and best practices
 
 #### Clear motivation and use-case
-Tracepoints need a clear motivation and use-case. The motivation should
+Tracepoints need a clear motivation and use case. The motivation should
 outweigh the impact on, for example, code readability. There is no point in
 adding tracepoints that don't end up being used.
 
