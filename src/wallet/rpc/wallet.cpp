@@ -59,6 +59,7 @@ static RPCHelpMan getwalletinfo()
                         }, /*skip_type_check=*/true},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
+                        {RPCResult::Type::BOOL, "silent_payment", "whether this supports silent payments"},
                     }},
                 },
                 RPCExamples{
@@ -120,6 +121,7 @@ static RPCHelpMan getwalletinfo()
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    obj.pushKV("silent_payment", pwallet->IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT));
     return obj;
 },
     };
