@@ -27,6 +27,10 @@ static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
      "You need to rescan the blockchain in order to correctly mark used "
      "destinations in the past. Until this is done, some destinations may "
      "be considered unused, even if the opposite is the case."},
+    {WALLET_FLAG_SILENT_PAYMENT,
+     "By enabling this flag, the wallet will start to check for silent transactions. "
+     "For previous transactions, a rescan is required."
+     "This flag increases wallet rescan time."},
 };
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
@@ -69,6 +73,7 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                         {RPCResult::Type::BOOL, "blank", "Whether this wallet intentionally does not contain any keys, scripts, or descriptors"},
+                        {RPCResult::Type::BOOL, "silent_payment", "whether this supports silent payments"},
                         RESULT_LAST_PROCESSED_BLOCK,
                     }},
                 },
@@ -132,6 +137,7 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
     obj.pushKV("blank", pwallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET));
+    obj.pushKV("silent_payment", pwallet->IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT));
 
     AppendLastProcessedBlock(obj, *pwallet);
     return obj;

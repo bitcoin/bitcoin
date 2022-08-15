@@ -53,7 +53,6 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
     common::SettingsValue setting_value = chain.getRwSetting("wallet");
