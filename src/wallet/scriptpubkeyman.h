@@ -668,6 +668,8 @@ public:
     bool GetDescriptorString(std::string& out, const bool priv) const;
 
     void UpgradeDescriptorCache();
+
+    std::vector<CKey> VerifySilentPaymentAddress(std::vector<XOnlyPubKey>& txOutputPubKeys, const CPubKey& senderPubKey, const std::vector<COutPoint>& tx_outpoints);
 };
 
 /** struct containing information needed for migrating legacy wallets to descriptor wallets */

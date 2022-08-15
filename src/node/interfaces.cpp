@@ -563,6 +563,13 @@ public:
         WAIT_LOCK(cs_main, lock);
         return FillBlock(chainman().m_blockman.LookupBlockIndex(hash), block, lock, chainman().ActiveChain(), chainman().m_blockman);
     }
+    bool getUndoBlock(const uint256& block_hash, CBlockUndo& undoBlock) override
+    {
+        WAIT_LOCK(cs_main, lock);
+        const CBlockIndex* pindex{chainman().m_blockman.LookupBlockIndex(block_hash)};
+        if (!chainman().m_blockman.UndoReadFromDisk(undoBlock, *pindex)) return false;
+        return true;
+    }
     bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block) override
     {
         WAIT_LOCK(cs_main, lock);
