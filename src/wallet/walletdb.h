@@ -223,6 +223,8 @@ public:
     WalletBatch(const WalletBatch&) = delete;
     WalletBatch& operator=(const WalletBatch&) = delete;
 
+    bool WriteSilentIdentifier(const int32_t& identifier, const std::string& label, const std::string& address);
+
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
 

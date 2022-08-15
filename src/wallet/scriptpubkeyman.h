@@ -9,6 +9,7 @@
 #include <script/descriptor.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
+#include <silentpayment.h>
 #include <util/error.h>
 #include <util/message.h>
 #include <util/result.h>
@@ -555,6 +556,8 @@ private:
     KeyMap m_map_keys GUARDED_BY(cs_desc_man);
     CryptedKeyMap m_map_crypted_keys GUARDED_BY(cs_desc_man);
 
+    std::unique_ptr<silentpayment::Recipient> m_silent_recipient{nullptr};
+
     //! keeps track of whether Unlock has run a thorough check before
     bool m_decryption_thoroughly_checked = false;
 
@@ -591,6 +594,7 @@ public:
     mutable RecursiveMutex cs_desc_man;
 
     util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<std::tuple<int32_t,XOnlyPubKey,XOnlyPubKey>> GetSilentAddress();
     isminetype IsMine(const CScript& script) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
@@ -642,6 +646,9 @@ public:
 
     bool AddKey(const CKeyID& key_id, const CKey& key);
     bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
+
+    void LoadSilentRecipient();
+    int32_t RetrieveSilentIdentifier(const XOnlyPubKey& spend_key);
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     void UpdateWalletDescriptor(WalletDescriptor& descriptor);

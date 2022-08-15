@@ -332,6 +332,7 @@ static RPCHelpMan createwallet()
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"silent_payment", RPCArg::Type::BOOL, RPCArg::Default{false}, "Experimental. Indicates that the wallet supports Silent Payments. This means a more complex scanning logic"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -391,6 +392,12 @@ static RPCHelpMan createwallet()
     }
 #endif
 
+    bool silent_payment = !request.params[8].isNull() && request.params[8].get_bool();
+
+    if (silent_payment) {
+        flags |= WALLET_FLAG_SILENT_PAYMENT;
+    }
+
     DatabaseOptions options;
     DatabaseStatus status;
     ReadDatabaseArgs(*context.args, options);
@@ -399,7 +406,7 @@ static RPCHelpMan createwallet()
     options.create_passphrase = passphrase;
     bilingual_str error;
     std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings, silent_payment);
     if (!wallet) {
         RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
         throw JSONRPCError(code, error.original);
@@ -784,6 +791,7 @@ static RPCHelpMan migratewallet()
 
 // addresses
 RPCHelpMan getaddressinfo();
+RPCHelpMan decodesilentaddress();
 RPCHelpMan getnewaddress();
 RPCHelpMan getrawchangeaddress();
 RPCHelpMan setlabel();
@@ -793,6 +801,7 @@ RPCHelpMan keypoolrefill();
 RPCHelpMan newkeypool();
 RPCHelpMan getaddressesbylabel();
 RPCHelpMan listlabels();
+RPCHelpMan getsilentaddress();
 #ifdef ENABLE_EXTERNAL_SIGNER
 RPCHelpMan walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
@@ -871,11 +880,13 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &encryptwallet},
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},
+        {"wallet", &decodesilentaddress},
         {"wallet", &getbalance},
         {"wallet", &getnewaddress},
         {"wallet", &getrawchangeaddress},
         {"wallet", &getreceivedbyaddress},
         {"wallet", &getreceivedbylabel},
+        {"wallet", &getsilentaddress},
         {"wallet", &gettransaction},
         {"wallet", &getunconfirmedbalance},
         {"wallet", &getbalances},

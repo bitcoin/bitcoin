@@ -44,6 +44,8 @@ const std::string KEY{"key"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
+const std::string SILENT_IDENTIFIER_LABEL{"silentidentifierlabel"};
+const std::string SILENT_IDENTIFIER_ADDRESS{"silentidentifieraddress"};
 const std::string NAME{"name"};
 const std::string OLD_KEY{"wkey"};
 const std::string ORDERPOSNEXT{"orderposnext"};
@@ -65,6 +67,15 @@ const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULT
 //
 // WalletBatch
 //
+
+bool WalletBatch::WriteSilentIdentifier(const int32_t& identifier, const std::string& label, const std::string& address)
+{
+    if (!WriteIC(std::make_pair(DBKeys::SILENT_IDENTIFIER_LABEL, identifier), label)) {
+        return false;
+    }
+
+    return WriteIC(std::make_pair(DBKeys::SILENT_IDENTIFIER_ADDRESS, identifier), address);
+}
 
 bool WalletBatch::WriteName(const std::string& strAddress, const std::string& strName)
 {
@@ -338,7 +349,19 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             wss.unexpected_legacy_entry = true;
             return false;
         }
-        if (strType == DBKeys::NAME) {
+        if (strType == DBKeys::SILENT_IDENTIFIER_LABEL) {
+            int32_t identifier;
+            ssKey >> identifier;
+            std::string label;
+            ssValue >> label;
+            pwallet->m_silent_address_book[identifier].m_label = label;
+        } else if (strType == DBKeys::SILENT_IDENTIFIER_ADDRESS) {
+            int32_t identifier;
+            ssKey >> identifier;
+            std::string address;
+            ssValue >> address;
+            pwallet->m_silent_address_book[identifier].m_address = address;
+        } else if (strType == DBKeys::NAME) {
             std::string strAddress;
             ssKey >> strAddress;
             std::string label;

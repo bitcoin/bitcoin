@@ -8,6 +8,7 @@
 #include <outputtype.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <silentpayment.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -1985,6 +1986,10 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
     {
         LOCK(cs_desc_man);
 
+        if (type == OutputType::SILENT_PAYMENT) {
+            assert(m_wallet_descriptor.next_index < SILENT_ADDRESS_MAXIMUM_IDENTIFIER);
+        }
+
         assert(m_wallet_descriptor.descriptor->IsSingleType()); // This is a combo descriptor which should not be an active descriptor
         std::optional<OutputType> desc_addr_type = m_wallet_descriptor.descriptor->GetOutputType();
         assert(desc_addr_type);
@@ -2014,6 +2019,34 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
         return dest;
     }
+}
+
+util::Result<std::tuple<int32_t,XOnlyPubKey,XOnlyPubKey>> DescriptorScriptPubKeyMan::GetSilentAddress()
+{
+    LOCK(cs_desc_man);
+
+    // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
+    if (!CanGetAddresses()) {
+        return util::Error{_("No addresses available")};
+    }
+
+    assert(m_wallet_descriptor.descriptor->IsSingleType());
+    std::optional<OutputType> desc_addr_type = m_wallet_descriptor.descriptor->GetOutputType();
+    assert(desc_addr_type);
+    if (OutputType::SILENT_PAYMENT != *desc_addr_type) {
+        throw std::runtime_error(std::string(__func__) + ": Silent Payment output type is expected.");
+    }
+
+    LoadSilentRecipient();
+
+    auto identifier{m_wallet_descriptor.next_index};
+
+    const auto&[recipient_scan_pubkey, recipient_spend_pubkey]{m_silent_recipient->GetAddress(identifier)};
+
+    m_wallet_descriptor.next_index++;
+    WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+
+    return std::make_tuple(identifier, recipient_scan_pubkey, recipient_spend_pubkey);
 }
 
 isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
@@ -2287,20 +2320,27 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         assert(false);
     }
     case OutputType::SILENT_PAYMENT: {
-        return false;
+        desc_prefix = "sp(" + EncodeSecret(master_key.key)  + ")";
+        break;
     }
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());
 
-    // Mainnet derives at 0', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1'";
-    } else {
-        desc_prefix += "/0'";
-    }
+    std::string desc_str;
 
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
+    if (addr_type != OutputType::SILENT_PAYMENT) {
+        // Mainnet derives at 0', testnet and regtest derive at 1'
+        if (Params().IsTestChain()) {
+            desc_prefix += "/1'";
+        } else {
+            desc_prefix += "/0'";
+        }
+
+        std::string internal_path = internal ? "/1" : "/0";
+        desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
+    } else {
+        desc_str = desc_prefix;
+    }
 
     // Make the descriptor
     FlatSigningProvider keys;
@@ -2338,7 +2378,7 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_desc_man);
 
     if (m_wallet_descriptor.descriptor->GetOutputType() == OutputType::SILENT_PAYMENT &&
-        m_wallet_descriptor.next_index <= SILENT_ADDRESS_MAXIMUM_IDENTIFIER)
+        m_wallet_descriptor.next_index < SILENT_ADDRESS_MAXIMUM_IDENTIFIER)
         return true;
 
     return m_wallet_descriptor.descriptor->IsSingleType() &&
@@ -2362,7 +2402,10 @@ std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);
-    return m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
+
+    // Silent payment descriptors do not use range_end
+    return (m_wallet_descriptor.descriptor->GetOutputType() == OutputType::SILENT_PAYMENT) ? 1 :
+        m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
 }
 
 int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
@@ -2643,6 +2686,35 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
 
     m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
     return true;
+}
+
+void DescriptorScriptPubKeyMan::LoadSilentRecipient()
+{
+    // if (m_silent_recipient_old == nullptr) {
+    if (m_silent_recipient == nullptr) {
+        LOCK(cs_desc_man);
+
+        std::vector<CKey> priv_keys;
+
+        for (const auto& [_, priv_key] : m_map_keys) {
+            priv_keys.push_back(priv_key);
+        }
+
+        assert(priv_keys.size() == 1);
+
+        m_silent_recipient = std::make_unique<silentpayment::Recipient>(priv_keys.at(0), SILENT_ADDRESS_MAXIMUM_IDENTIFIER);
+    }
+}
+
+int32_t DescriptorScriptPubKeyMan::RetrieveSilentIdentifier(const XOnlyPubKey& spend_key)
+{
+    LOCK(cs_desc_man);
+
+    LoadSilentRecipient();
+
+    assert(m_silent_recipient != nullptr);
+
+    return m_silent_recipient->GetIdentifier(spend_key);
 }
 
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
