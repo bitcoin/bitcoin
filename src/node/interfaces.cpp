@@ -34,6 +34,7 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <shutdown.h>

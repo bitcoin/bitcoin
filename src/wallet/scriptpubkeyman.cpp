@@ -2760,6 +2760,38 @@ std::tuple<CKey,bool> DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayment(cons
     }
 }
 
+std::vector<std::tuple<CKey, int32_t>> DescriptorScriptPubKeyMan::VerifySilentPaymentAddress(
+    const std::vector<std::tuple<CScript, XOnlyPubKey>>& tx_output_pub_keys,
+    const CPubKey& sender_pub_key,
+    const std::vector<COutPoint>& tx_outpoints)
+{
+    LOCK(cs_desc_man);
+
+    std::vector<std::tuple<CKey, int32_t>> raw_tr_keys;
+
+    LoadSilentRecipient();
+
+    assert(m_silent_recipient != nullptr);
+
+    m_silent_recipient->SetSenderPublicKey(sender_pub_key, tx_outpoints);
+
+    for(const auto& [outputScriptPubKey, outputPubKey] : tx_output_pub_keys) {
+
+        for (int32_t identifier = 0; identifier <= m_wallet_descriptor.next_index; identifier++) {
+            const auto [silent_priv_key, silent_pub_key] = m_silent_recipient->Tweak(identifier);
+
+            if (silent_pub_key == outputPubKey) {
+                raw_tr_keys.emplace_back(silent_priv_key, identifier);
+                WalletLogPrintf("Silent scriptPubKey identified: %s\n", HexStr(outputScriptPubKey));
+                break;
+            }
+        }
+
+    }
+
+    return raw_tr_keys;
+}
+
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);

@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <pubkey.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
