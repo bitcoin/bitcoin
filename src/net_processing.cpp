@@ -370,6 +370,9 @@ struct Peer {
     /** Set of txids to reconsider once their parent transactions have been accepted **/
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
+    /** Whether we've sent this peer a getheaders in response to an inv prior to initial-headers-sync completing */
+    bool m_inv_triggered_getheaders_before_sync{false};
+
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
     /** Work queue of items requested by this peer **/
@@ -681,6 +684,9 @@ private:
 
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
+
+    /** Hash of the last block we received via INV */
+    uint256 m_last_block_inv_triggering_headers_sync{};
 
     /**
      * Sources of received blocks, saved to be able punish them when processing
@@ -3240,8 +3246,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !IsBlockRequested(inv.hash)) {
                     // Headers-first is the primary method of announcement on
-                    // the network. If a node fell back to sending blocks by inv,
-                    // it's probably for a re-org. The final block hash
+                    // the network. If a node fell back to sending blocks by
+                    // inv, it may be for a re-org, or because we haven't
+                    // completed initial headers sync. The final block hash
                     // provided should be the highest, so send a getheaders and
                     // then fetch the blocks we need to catch up.
                     best_block = &inv.hash;
@@ -3266,10 +3273,30 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         if (best_block != nullptr) {
-            if (MaybeSendGetHeaders(pfrom, m_chainman.ActiveChain().GetLocator(m_chainman.m_best_header), *peer)) {
-                LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n",
-                        m_chainman.m_best_header->nHeight, best_block->ToString(),
-                        pfrom.GetId());
+            // If we haven't started initial headers-sync with this peer, then
+            // consider sending a getheaders now. On initial startup, there's a
+            // reliability vs bandwidth tradeoff, where we are only trying to do
+            // initial headers sync with one peer at a time, with a long
+            // timeout (at which point, if the sync hasn't completed, we will
+            // disconnect the peer and then choose another). In the meantime,
+            // as new blocks are found, we are willing to add one new peer per
+            // block to sync with as well, to sync quicker in the case where
+            // our initial peer is unresponsive (but less bandwidth than we'd
+            // use if we turned on sync with all peers).
+            CNodeState& state{*Assert(State(pfrom.GetId()))};
+            if (state.fSyncStarted || (!peer->m_inv_triggered_getheaders_before_sync && *best_block != m_last_block_inv_triggering_headers_sync)) {
+                if (MaybeSendGetHeaders(pfrom, m_chainman.ActiveChain().GetLocator(m_chainman.m_best_header), *peer)) {
+                    LogPrint(BCLog::NET, "getheaders (%d) %s to peer=%d\n",
+                            m_chainman.m_best_header->nHeight, best_block->ToString(),
+                            pfrom.GetId());
+                }
+                if (!state.fSyncStarted) {
+                    peer->m_inv_triggered_getheaders_before_sync = true;
+                    // Update the last block hash that triggered a new headers
+                    // sync, so that we don't turn on headers sync with more
+                    // than 1 new peer every new block.
+                    m_last_block_inv_triggering_headers_sync = *best_block;
+                }
             }
         }
 
