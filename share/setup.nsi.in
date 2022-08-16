@@ -80,9 +80,8 @@ Section -Main SEC0000
     File @abs_top_builddir@/release/@SYSCOIN_CLI_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@SYSCOIN_TEST_NAME@@EXEEXT@
     File @abs_top_builddir@/release/@SYSCOIN_GETH@@EXEEXT@
-    SetOutPath $INSTDIR\doc
-    File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
@@ -130,7 +129,6 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
-    RMDir /r /REBOOTOK $INSTDIR\doc
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 
