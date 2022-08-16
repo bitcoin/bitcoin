@@ -1244,17 +1244,21 @@ static RPCHelpMan decodepsbt()
         if (output.m_tap_tree.has_value()) {
             UniValue tree(UniValue::VARR);
             const auto& tuples = output.m_tap_tree->GetTreeTuples();
-            for (const auto& tuple : tuples) {
-                uint8_t depth = std::get<0>(tuple);
-                uint8_t leaf_ver = std::get<1>(tuple);
-                CScript script = std::get<2>(tuple);
-                UniValue elem(UniValue::VOBJ);
-                elem.pushKV("depth", (int)depth);
-                elem.pushKV("leaf_ver", (int)leaf_ver);
-                elem.pushKV("script", HexStr(script));
-                tree.push_back(elem);
+            // do not write an empty tree to be BIP-174 compliant, which
+            // requires one-or-more tuple
+            if (!tuples.empty()) {
+                for (const auto& tuple : tuples) {
+                    uint8_t depth = std::get<0>(tuple);
+                    uint8_t leaf_ver = std::get<1>(tuple);
+                    CScript script = std::get<2>(tuple);
+                    UniValue elem(UniValue::VOBJ);
+                    elem.pushKV("depth", (int)depth);
+                    elem.pushKV("leaf_ver", (int)leaf_ver);
+                    elem.pushKV("script", HexStr(script));
+                    tree.push_back(elem);
+                }
+                out.pushKV("taproot_tree", tree);
             }
-            out.pushKV("taproot_tree", tree);
         }
 
         // Taproot bip32 keypaths

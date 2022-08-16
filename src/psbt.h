@@ -755,19 +755,23 @@ struct PSBTOutput
 
         // Write taproot tree
         if (m_tap_tree.has_value()) {
-            SerializeToVector(s, PSBT_OUT_TAP_TREE);
-            std::vector<unsigned char> value;
-            CVectorWriter s_value(s.GetType(), s.GetVersion(), value, 0);
+            // do not write an empty tree to be BIP-174 compliant, which
+            // requires one-or-more tuple
             const auto& tuples = m_tap_tree->GetTreeTuples();
-            for (const auto& tuple : tuples) {
-                uint8_t depth = std::get<0>(tuple);
-                uint8_t leaf_ver = std::get<1>(tuple);
-                CScript script = std::get<2>(tuple);
-                s_value << depth;
-                s_value << leaf_ver;
-                s_value << script;
+            if (!tuples.empty()) {
+                SerializeToVector(s, PSBT_OUT_TAP_TREE);
+                std::vector<unsigned char> value;
+                CVectorWriter s_value(s.GetType(), s.GetVersion(), value, 0);
+                for (const auto& tuple : tuples) {
+                    uint8_t depth = std::get<0>(tuple);
+                    uint8_t leaf_ver = std::get<1>(tuple);
+                    CScript script = std::get<2>(tuple);
+                    s_value << depth;
+                    s_value << leaf_ver;
+                    s_value << script;
+                }
+                s << value;
             }
-            s << value;
         }
 
         // Write taproot bip32 keypaths
