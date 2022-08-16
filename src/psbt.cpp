@@ -249,7 +249,7 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
     if (!sigdata.tr_spenddata.internal_key.IsNull()) {
         m_tap_internal_key = sigdata.tr_spenddata.internal_key;
     }
-    if (sigdata.tr_builder.has_value()) {
+    if (sigdata.tr_builder.has_value() && sigdata.tr_builder->HasScripts()) {
         m_tap_tree = sigdata.tr_builder->GetTreeTuples();
     }
     for (const auto& [pubkey, leaf_origin] : sigdata.taproot_misc_pubkeys) {
