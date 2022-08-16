@@ -3336,6 +3336,18 @@ std::unique_ptr<SigningProvider> CWallet::GetSolvingProvider(const CScript& scri
     return nullptr;
 }
 
+std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& script) const
+{
+    std::vector<WalletDescriptor> descs;
+    for (const auto spk_man: GetScriptPubKeyMans(script)) {
+        if (const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man)) {
+            LOCK(desc_spk_man->cs_desc_man);
+            descs.push_back(desc_spk_man->GetWalletDescriptor());
+        }
+    }
+    return descs;
+}
+
 LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
 {
     if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {

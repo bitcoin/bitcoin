@@ -315,13 +315,16 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
 template <class Vec>
-static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong, Vec& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
+                             Vec& ret, const isminefilter& filter_ismine, const std::string* filter_label,
+                             bool include_change = false)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine);
+    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
 
     bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
 
@@ -367,6 +370,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("involvesWatchonly", true);
             }
             MaybePushAddress(entry, r.destination);
+            PushParentDescriptors(wallet, wtx.tx->vout.at(r.vout).scriptPubKey, entry);
             if (wtx.IsCoinBase())
             {
                 if (wallet.GetTxDepthInMainChain(wtx) < 1)
@@ -418,7 +422,11 @@ static const std::vector<RPCResult> TransactionDescriptionString()
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction, only present if not empty."},
            {RPCResult::Type::STR, "bip125-replaceable", "(\"yes|no|unknown\") Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
-               "may be unknown for unconfirmed transactions not in the mempool."}};
+               "may be unknown for unconfirmed transactions not in the mempool."},
+           {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the scriptPubKey of this coin.", {
+               {RPCResult::Type::STR, "desc", "The descriptor string."},
+           }},
+           };
 }
 
 RPCHelpMan listtransactions()
@@ -543,6 +551,7 @@ RPCHelpMan listsinceblock()
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
                     {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
                                                                        "(not guaranteed to work on pruned nodes)"},
+                    {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -623,6 +632,7 @@ RPCHelpMan listsinceblock()
     }
 
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
+    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 
@@ -632,7 +642,7 @@ RPCHelpMan listsinceblock()
         const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
+            ListTransactions(wallet, tx, 0, true, transactions, filter, nullptr /* filter_label */, /*include_change=*/include_change);
         }
     }
 
@@ -649,7 +659,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */, /*include_change=*/include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -709,6 +719,9 @@ RPCHelpMan gettransaction()
                                     "'send' category of transactions."},
                                 {RPCResult::Type::BOOL, "abandoned", /*optional=*/true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
+                                {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the scriptPubKey of this coin.", {
+                                    {RPCResult::Type::STR, "desc", "The descriptor string."},
+                                }},
                             }},
                         }},
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
