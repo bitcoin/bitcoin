@@ -862,6 +862,9 @@ struct PSBTOutput
                     std::vector<unsigned char> tree_v;
                     s >> tree_v;
                     SpanReader s_tree(s.GetType(), s.GetVersion(), tree_v);
+                    if (s_tree.empty()) {
+                        throw std::ios_base::failure("Output Taproot tree must not be empty");
+                    }
                     while (!s_tree.empty()) {
                         uint8_t depth;
                         uint8_t leaf_ver;
