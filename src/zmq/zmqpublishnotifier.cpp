@@ -306,7 +306,7 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     LOCK(cs_nevm);
     bResponse = false;
     if(psocketsub) {
-        int timeout = 5000;
+        int timeout = 150000;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
         if (rc != 0) {
             zmqError("Failed to set ZMQ_RCVTIMEO");
@@ -360,7 +360,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
         }
     }
     if(psocketsub) {
-        int timeout = 60000;
+        int timeout = 150000;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
         if (rc != 0) {
             zmqError("Failed to set ZMQ_RCVTIMEO");
