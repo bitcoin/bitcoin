@@ -1489,7 +1489,8 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(mainRequest);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
+
+    GetLegacyScriptPubKeyMan(*wallet);
 
     //Default options
     bool fRescan = true;
