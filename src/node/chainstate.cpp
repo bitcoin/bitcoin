@@ -10,14 +10,12 @@
 #include <consensus/params.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/database_args.h>
 #include <node/caches.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -67,11 +65,11 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
     pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
-        .path = gArgs.GetDataDirNet() / "blocks" / "index",
+        .path = chainman.m_options.datadir / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
         .wipe_data = options.reindex,
-        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()});
+        .options = chainman.m_options.block_tree_db});
 
     if (options.reindex) {
         pblocktree->WriteReindexing(true);

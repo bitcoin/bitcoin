@@ -28,8 +28,6 @@
 #include <node/blockstorage.h>
 #include <node/interface_ui.h>
 #include <node/utxo_snapshot.h>
-#include <node/coins_view_args.h>
-#include <node/database_args.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -1545,13 +1543,13 @@ void Chainstate::InitCoinsDB(
 
     m_coins_views = std::make_unique<CoinsViews>(
         DBParams{
-            .path = gArgs.GetDataDirNet() / leveldb_name,
+            .path = m_chainman.m_options.datadir / leveldb_name,
             .cache_bytes = cache_size_bytes,
             .memory_only = in_memory,
             .wipe_data = should_wipe,
             .obfuscate = true,
-            .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()},
-        [] { CoinsViewOptions options; node::ReadCoinsViewArgs(gArgs, options); return options; }());
+            .options = m_chainman.m_options.coins_db},
+        m_chainman.m_options.coins_view);
 }
 
 void Chainstate::InitCoinsCache(size_t cache_size_bytes)

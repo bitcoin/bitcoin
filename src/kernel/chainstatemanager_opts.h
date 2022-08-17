@@ -6,6 +6,8 @@
 #define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
 #include <arith_uint256.h>
+#include <dbwrapper.h>
+#include <txdb.h>
 #include <uint256.h>
 #include <util/time.h>
 
@@ -27,6 +29,7 @@ namespace kernel {
  */
 struct ChainstateManagerOpts {
     const CChainParams& chainparams;
+    fs::path datadir;
     const std::function<NodeClock::time_point()> adjusted_time_callback{nullptr};
     std::optional<bool> check_block_index{};
     bool checkpoints_enabled{DEFAULT_CHECKPOINTS_ENABLED};
@@ -36,6 +39,9 @@ struct ChainstateManagerOpts {
     std::optional<uint256> assumed_valid_block{};
     //! If the tip is older than this, the node is considered to be in initial block download.
     std::chrono::seconds max_tip_age{DEFAULT_MAX_TIP_AGE};
+    DBOptions block_tree_db{};
+    DBOptions coins_db{};
+    CoinsViewOptions coins_view{};
 };
 
 } // namespace kernel
