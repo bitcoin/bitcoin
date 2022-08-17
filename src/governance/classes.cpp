@@ -527,6 +527,9 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
       AMOUNTS = [AMOUNT1|2|3|4|5|6]
     */
 
+    // TODO: script addresses limit here and cs_main lock in
+    // CGovernanceManager::InitOnLoad()once DIP0024 is active
+    bool fAllowScript = (VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
     for (int i = 0; i < (int)vecParsed1.size(); i++) {
         CTxDestination dest = DecodeDestination(vecParsed1[i]);
         if (!IsValidDestination(dest)) {
@@ -535,18 +538,15 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
-        /*
-            TODO
 
-            - There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
-            - Post 12.3+ (test multisig coinbase transaction)
-        */
-        const CScriptID *scriptID = boost::get<CScriptID>(&dest);
-        if (scriptID) {
-            std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Script addresses are not supported yet : " << vecParsed1[i];
-            LogPrintf("%s\n", ostr.str());
-            throw std::runtime_error(ostr.str());
+        if (!fAllowScript) {
+            const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+            if (scriptID) {
+                std::ostringstream ostr;
+                ostr << "CSuperblock::ParsePaymentSchedule -- Script addresses are not supported yet : " << vecParsed1[i];
+                LogPrintf("%s\n", ostr.str());
+                throw std::runtime_error(ostr.str());
+            }
         }
 
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
