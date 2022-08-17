@@ -218,8 +218,14 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
     for (const auto& key_pair : hd_keypaths) {
         sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
     }
-    if (m_tap_tree.has_value() && m_tap_internal_key.IsFullyValid()) {
-        TaprootSpendData spenddata = m_tap_tree->GetSpendData();
+    if (!m_tap_tree.empty() && m_tap_internal_key.IsFullyValid()) {
+        TaprootBuilder builder;
+        for (const auto& [depth, leaf_ver, script] : m_tap_tree) {
+            builder.Add((int)depth, script, (int)leaf_ver, /*track=*/true);
+        }
+        assert(builder.IsComplete());
+        builder.Finalize(m_tap_internal_key);
+        TaprootSpendData spenddata = builder.GetSpendData();
 
         sigdata.tr_spenddata.internal_key = m_tap_internal_key;
         sigdata.tr_spenddata.Merge(spenddata);
@@ -244,7 +250,7 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
         m_tap_internal_key = sigdata.tr_spenddata.internal_key;
     }
     if (sigdata.tr_builder.has_value()) {
-        m_tap_tree = sigdata.tr_builder;
+        m_tap_tree = sigdata.tr_builder->GetTreeTuples();
     }
     for (const auto& [pubkey, leaf_origin] : sigdata.taproot_misc_pubkeys) {
         m_tap_bip32_paths.emplace(pubkey, leaf_origin);
@@ -265,7 +271,7 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
     if (m_tap_internal_key.IsNull() && !output.m_tap_internal_key.IsNull()) m_tap_internal_key = output.m_tap_internal_key;
-    if (!m_tap_tree.has_value() && output.m_tap_tree.has_value()) m_tap_tree = output.m_tap_tree;
+    if (m_tap_tree.empty() && !output.m_tap_tree.empty()) m_tap_tree = output.m_tap_tree;
 }
 bool PSBTInputSigned(const PSBTInput& input)
 {
