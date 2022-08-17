@@ -6191,37 +6191,43 @@ bool StartGethNode()
     const fs::path &fpathDefault = FindExecPath(binArchitectureTag);
 
     
-    fs::path binaryURL = "/../Resources" / gethFilename;
+    fs::path binaryURL = fpathDefault / "../Resources" / gethFilename;
     binaryURL = binaryURL.make_preferred();
     // current executable path
     if(!fs::exists(binaryURL)) {
+        fs::path binaryURLTmp = binaryURL;
         binaryURL = fpathDefault / gethFilename;
         binaryURL = binaryURL.make_preferred();
-        LogPrintf("Could not find sysgeth in /../Resources,, trying %s\n", fs::PathToString(binaryURL));
+        LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
         // current executable path + bin/[os]
         if(!fs::exists(binaryURL)) {
+            fs::path binaryURLTmp = binaryURL;
             binaryURL = fpathDefault / fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
             binaryURL = binaryURL.make_preferred();
-            LogPrintf("Could not find sysgeth in current executable path, trying %s\n", fs::PathToString(binaryURL));
+            LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
             // $path
             if(!fs::exists(binaryURL)) {
+                fs::path binaryURLTmp = binaryURL;
                 binaryURL = gethFilename;
                 binaryURL = binaryURL.make_preferred();
-                LogPrintf("Could not find sysgeth in current executable path + bin/[os], trying %s\n", fs::PathToString(binaryURL));
+                LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                 // $path + bin/[os]
                 if(!fs::exists(binaryURL)) {
+                    fs::path binaryURLTmp = binaryURL;
                     binaryURL = fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
                     binaryURL = binaryURL.make_preferred();
-                    LogPrintf("Could not find sysgeth in $path, trying %s\n", fs::PathToString(binaryURL));
+                    LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                     // usr/local/bin
                     if(!fs::exists(binaryURL)) {
+                        fs::path binaryURLTmp = binaryURL;
                         binaryURL = fs::u8path("/usr/local/bin") / gethFilename;
                         binaryURL = binaryURL.make_preferred();
-                        LogPrintf("Could not find sysgeth in $path + bin/[os], trying %s\n", fs::PathToString(binaryURL));
+                        LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                         if(!fs::exists(binaryURL)) {
-                            fs::path binaryURL = gArgs.GetDataDirBase() / gethFilename;
+                            fs::path binaryURLTmp = binaryURL;
+                            binaryURL = gArgs.GetDataDirBase() / gethFilename;
                             binaryURL = binaryURL.make_preferred();
-                            LogPrintf("Could not find sysgeth in /usr/local/bin, trying %s\n", fs::PathToString(binaryURL));
+                            LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
                         }
                     }
                 }
