@@ -1,4 +1,4 @@
-Dash Core version v18.0.0
+Dash Core version v18.0.1
 =========================
 
 Release is now available from:
@@ -29,7 +29,7 @@ using version < 0.13 you will have to reindex (start with -reindex-chainstate
 or -reindex) to make sure your wallet has all the new data synced. Upgrading
 from version 0.13 should not require any additional actions.
 
-When upgrading from a version prior to 18.0.0, the
+When upgrading from a version prior to 18.0.1, the
 first startup of Dash Core will run a migration process which can take anywhere
 from a few minutes to thirty minutes to finish. After the migration, a 
 downgrade to an older version is only possible with a reindex 
@@ -38,13 +38,13 @@ downgrade to an older version is only possible with a reindex
 Downgrade warning
 -----------------
 
-### Downgrade to a version < v18.0.0
+### Downgrade to a version < v18.0.1
 
-Downgrading to a version older than v18.0.0 is not supported due to changes in
+Downgrading to a version older than v18.0.1 is not supported due to changes in
 the indexes database folder. If you need to use an older version, you must
 either reindex or re-sync the whole chain.
 
-### Downgrade of masternodes to < v18.0.0
+### Downgrade of masternodes to < v18.0.1
 
 Starting with the 0.16 release, masternodes verify the protocol version of other
 masternodes. This results in PoSe punishment/banning for outdated masternodes,
@@ -124,7 +124,7 @@ The transaction index is moved into `indexes/` folder. The migration of the old
 data is done on the first run and does not require reindexing. Note that the data
 in the old path is removed which means that this change is not backwards
 compatible and you'll have to reindex the whole blockchain if you decide to
-downgrade to a pre-v18.0.0 version.
+downgrade to a pre-v18.0.1 version.
 
 Remote Procedure Call (RPC) Changes
 -----------------------------------
@@ -255,10 +255,10 @@ Miscellaneous
 -------------
 A lot of refactoring, code cleanups and other small fixes were done in this release.
 
-v18.0.0 Change log
+v18.0.1 Change log
 ==================
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.17.0.3...dashpay:v18.0.0).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.17.0.3...dashpay:v18.0.1).
 
 Credits
 =======
