@@ -64,12 +64,11 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
         return pwallet;
     }
 
-    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets(context);
-    if (wallets.size() == 1) {
-        return wallets[0];
-    }
+    size_t count{0};
+    auto wallet = GetDefaultWallet(context, count);
+    if (wallet) return wallet;
 
-    if (wallets.empty()) {
+    if (count == 0) {
         throw JSONRPCError(
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
