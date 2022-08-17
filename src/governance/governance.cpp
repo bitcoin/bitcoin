@@ -1098,7 +1098,9 @@ void CGovernanceManager::AddCachedTriggers()
 
 void CGovernanceManager::InitOnLoad()
 {
-    LOCK(cs);
+    // TODO: drop cs_main here and script addresses limit in
+    // CSuperblock::ParsePaymentSchedule() once DIP0024 is active
+    LOCK2(cs_main, cs);
     int64_t nStart = GetTimeMillis();
     LogPrintf("Preparing masternode indexes and governance triggers...\n");
     RebuildIndexes();
