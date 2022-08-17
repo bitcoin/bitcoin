@@ -2182,7 +2182,7 @@ void CConnman::WakeMessageHandler()
     condMsgProc.notify_one();
 }
 
-void CConnman::ThreadDNSAddressSeed()
+void CConnman::ThreadAddressSeed()
 {
     constexpr int TARGET_OUTBOUND_CONNECTIONS = 2;
     int outbound_connection_count = 0;
@@ -3300,7 +3300,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
         LogPrintf("DNS seeding disabled\n");
     else
-        threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
+        threadAddressSeed = std::thread(&util::TraceThread, "addrseed", [this] { ThreadAddressSeed(); });
 
     // Initiate manual connections
     threadOpenAddedConnections = std::thread(&util::TraceThread, "addcon", [this] { ThreadOpenAddedConnections(); });
@@ -3389,8 +3389,8 @@ void CConnman::StopThreads()
         threadOpenConnections.join();
     if (threadOpenAddedConnections.joinable())
         threadOpenAddedConnections.join();
-    if (threadDNSAddressSeed.joinable())
-        threadDNSAddressSeed.join();
+    if (threadAddressSeed.joinable())
+        threadAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
 }
