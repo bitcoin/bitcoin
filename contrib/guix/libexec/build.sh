@@ -369,6 +369,8 @@ mkdir -p "$DISTSRC"
         # has not been run before buildling, this file will be a stub
         cp "${DISTSRC}/share/examples/bitcoin.conf" "${DISTNAME}/"
 
+        cp -r "${DISTSRC}/share/rpcauth" "${DISTNAME}/share/"
+
         # Finally, deterministically produce {non-,}debug binary tarballs ready
         # for release
         case "$HOST" in
