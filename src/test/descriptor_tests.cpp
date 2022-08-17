@@ -312,7 +312,7 @@ void DoCheck(const std::string& prv, const std::string& pub, const std::string& 
                     txdata.Init(spend, std::move(utxos), /*force=*/true);
                     MutableTransactionSignatureCreator creator{spend, 0, CAmount{0}, &txdata, SIGHASH_DEFAULT};
                     SignatureData sigdata;
-                    BOOST_CHECK_MESSAGE(ProduceSignature(Merge(keys_priv, script_provider), creator, spks[n], sigdata), prv);
+                    BOOST_CHECK_MESSAGE(ProduceSignature(FlatSigningProvider{keys_priv}.Merge(FlatSigningProvider{script_provider}), creator, spks[n], sigdata), prv);
                 }
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
