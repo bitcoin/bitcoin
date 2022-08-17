@@ -644,7 +644,7 @@ public:
             assert(outscripts.size() == 1);
             subscripts.emplace_back(std::move(outscripts[0]));
         }
-        out = Merge(std::move(out), std::move(subprovider));
+        out.Merge(std::move(subprovider));
 
         std::vector<CPubKey> pubkeys;
         pubkeys.reserve(entries.size());
