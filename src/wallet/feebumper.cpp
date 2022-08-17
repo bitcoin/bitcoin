@@ -242,7 +242,13 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
-        const int64_t maxTxSize{CalculateMaximumSignedTxSize(*wtx.tx, &wallet, &new_coin_control).vsize};
+        // We need to make a temporary transaction with no input witnesses as the dummy signer expects them to be empty for external inputs
+        CMutableTransaction mtx{*wtx.tx};
+        for (auto& txin : mtx.vin) {
+            txin.scriptSig.clear();
+            txin.scriptWitness.SetNull();
+        }
+        const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(mtx), &wallet, &new_coin_control).vsize};
         Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
