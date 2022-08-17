@@ -6,6 +6,7 @@
 #include <txdb.h>
 
 #include <chain.h>
+#include <node/database_args.h>
 #include <pow.h>
 #include <random.h>
 #include <shutdown.h>
@@ -71,7 +72,13 @@ struct CoinEntry {
 } // namespace
 
 CCoinsViewDB::CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe) :
-    m_db(std::make_unique<CDBWrapper>(ldb_path, nCacheSize, fMemory, fWipe, true)),
+    m_db{std::make_unique<CDBWrapper>(DBParams{
+        .path = ldb_path,
+        .cache_bytes = nCacheSize,
+        .memory_only = fMemory,
+        .wipe_data = fWipe,
+        .obfuscate = true,
+        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()})},
     m_ldb_path(ldb_path),
     m_is_memory(fMemory) { }
 
@@ -83,8 +90,13 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
         // Have to do a reset first to get the original `m_db` state to release its
         // filesystem lock.
         m_db.reset();
-        m_db = std::make_unique<CDBWrapper>(
-            m_ldb_path, new_cache_size, m_is_memory, /*fWipe=*/false, /*obfuscate=*/true);
+        m_db = std::make_unique<CDBWrapper>(DBParams{
+            .path = m_ldb_path,
+            .cache_bytes = new_cache_size,
+            .memory_only = m_is_memory,
+            .wipe_data = false,
+            .obfuscate = true,
+            .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()});
     }
 }
 
@@ -176,7 +188,12 @@ size_t CCoinsViewDB::EstimateSize() const
     return m_db->EstimateSize(DB_COIN, uint8_t(DB_COIN + 1));
 }
 
-CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
+CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper{DBParams{
+    .path = gArgs.GetDataDirNet() / "blocks" / "index",
+    .cache_bytes = nCacheSize,
+    .memory_only = fMemory,
+    .wipe_data = fWipe,
+    .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}} {
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
