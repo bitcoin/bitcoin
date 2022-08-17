@@ -6,7 +6,6 @@
 #include <txdb.h>
 
 #include <chain.h>
-#include <node/database_args.h>
 #include <pow.h>
 #include <random.h>
 #include <shutdown.h>
@@ -174,14 +173,6 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, boo
 size_t CCoinsViewDB::EstimateSize() const
 {
     return m_db->EstimateSize(DB_COIN, uint8_t(DB_COIN + 1));
-}
-
-CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper{DBParams{
-    .path = gArgs.GetDataDirNet() / "blocks" / "index",
-    .cache_bytes = nCacheSize,
-    .memory_only = fMemory,
-    .wipe_data = fWipe,
-    .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}} {
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {

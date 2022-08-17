@@ -10,12 +10,14 @@
 #include <consensus/params.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <node/database_args.h>
 #include <node/caches.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
+#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -64,7 +66,12 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // new CBlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree.reset(new CBlockTreeDB(cache_sizes.block_tree_db, options.block_tree_db_in_memory, options.reindex));
+    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+        .path = gArgs.GetDataDirNet() / "blocks" / "index",
+        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = options.reindex,
+        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()});
 
     if (options.reindex) {
         pblocktree->WriteReindexing(true);
