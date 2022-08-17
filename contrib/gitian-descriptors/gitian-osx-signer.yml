@@ -14,7 +14,7 @@ remotes:
   "dir": "signature"
 - "url": "https://github.com/achow101/signapple.git"
   "dir": "signapple"
-  "commit": "b084cbbf44d5330448ffce0c7d118f75781b64bd"
+  "commit": "8a945a2e7583be2665cf3a6a89d665b70ecd1ab6"
 files:
 - "dashcore-osx-unsigned.tar.gz"
 script: |
