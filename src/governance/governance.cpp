@@ -351,7 +351,7 @@ void CGovernanceManager::UpdateCachesAndClean()
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean\n");
 
     std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
-
+    int nHeight = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
     LOCK(cs);
 
     for (const uint256& nHash : vecDirtyHashes) {
@@ -421,7 +421,6 @@ void CGovernanceManager::UpdateCachesAndClean()
                 // keep hashes of deleted proposals forever
                 nTimeExpired = std::numeric_limits<int64_t>::max();
             } else {
-                int nHeight = chainman.ActiveHeight();
                 int64_t nSuperblockCycleSeconds = Params().GetConsensus().SuperBlockCycle(nHeight) * Params().GetConsensus().PowTargetSpacing(nHeight);
                 nTimeExpired = pObj->GetCreationTime() + 2 * nSuperblockCycleSeconds + GOVERNANCE_DELETION_DELAY;
             }
@@ -735,6 +734,7 @@ bool CGovernanceManager::ProcessVoteAndRelay(const CGovernanceVote& vote, CGover
 }
 bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus, bool fForce, bool& fRateCheckBypassed)
 {
+    int nHeight = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
     LOCK(cs);
 
     fRateCheckBypassed = false;
@@ -750,7 +750,6 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
     int64_t nTimestamp = govobj.GetCreationTime();
     int64_t nNow = GetAdjustedTime();
-    int nHeight = chainman.ActiveHeight();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().SuperBlockCycle(nHeight) * Params().GetConsensus().PowTargetSpacing(nHeight);
 
     std::string strHash = govobj.GetHash().ToString();
