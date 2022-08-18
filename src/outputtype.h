@@ -27,7 +27,6 @@ static constexpr auto OUTPUT_TYPES = std::array{
     OutputType::P2SH_SEGWIT,
     OutputType::BECH32,
     OutputType::BECH32M,
-    OutputType::UNKNOWN,
 };
 
 std::optional<OutputType> ParseOutputType(const std::string& str);
