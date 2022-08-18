@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <test/util/setup_common.h>
@@ -17,6 +18,12 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
+
+static void ResetLogger()
+{
+    LogInstance().SetLogLevel(BCLog::DEFAULT_LOG_LEVEL);
+    LogInstance().SetCategoryLogLevel({});
+}
 
 struct LogSetup : public BasicTestingSetup {
     fs::path prev_log_path;
@@ -192,6 +199,61 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
         log_lines.push_back(log);
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
+{
+    // Set global log level
+    {
+        ResetLogger();
+        ArgsManager args;
+        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind", "-loglevel=debug"};
+        std::string err;
+        BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
+        init::SetLoggingLevel(args);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
+    }
+
+    // Set category-specific log level
+    {
+        ResetLogger();
+        ArgsManager args;
+        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind", "-loglevel=net:debug"};
+        std::string err;
+        BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
+        init::SetLoggingLevel(args);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::DEFAULT_LOG_LEVEL);
+
+        const auto& category_levels{LogInstance().CategoryLevels()};
+        const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
+        BOOST_REQUIRE(net_it != category_levels.end());
+        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
+    }
+
+    // Set both global log level and category-specific log level
+    {
+        ResetLogger();
+        ArgsManager args;
+        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:debug", "-loglevel=http:info"};
+        std::string err;
+        BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));
+        init::SetLoggingLevel(args);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
+
+        const auto& category_levels{LogInstance().CategoryLevels()};
+        BOOST_CHECK_EQUAL(category_levels.size(), 2);
+
+        const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
+        BOOST_CHECK(net_it != category_levels.end());
+        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
+
+        const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
+        BOOST_CHECK(http_it != category_levels.end());
+        BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Info);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
