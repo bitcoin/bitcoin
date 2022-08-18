@@ -148,3 +148,22 @@ else()
   set(WITH_SQLITE OFF)
   set(WITH_BDB OFF)
 endif()
+
+if(WITH_SECCOMP)
+  check_cxx_source_compiles("
+    #include <linux/seccomp.h>
+    #if !defined(__x86_64__)
+    #  error Syscall sandbox is an experimental feature currently available only under Linux x86-64.
+    #endif
+    int main(){}
+    " HAVE_SECCOMP_H
+  )
+  if(HAVE_SECCOMP_H)
+    set(USE_SYSCALL_SANDBOX TRUE)
+    set(WITH_SECCOMP ON)
+  elseif(WITH_SECCOMP STREQUAL "AUTO")
+    set(WITH_SECCOMP OFF)
+  else()
+    message(FATAL_ERROR "linux/seccomp.h requested, but not found.")
+  endif()
+endif()

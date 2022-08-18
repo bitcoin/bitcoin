@@ -218,4 +218,7 @@
 /* Define if Berkeley DB (BDB) support should be compiled in. */
 #cmakedefine USE_BDB
 
+/* Define to build with syscall sandbox support. */
+#cmakedefine USE_SYSCALL_SANDBOX
+
 #endif //BITCOIN_CONFIG_H
