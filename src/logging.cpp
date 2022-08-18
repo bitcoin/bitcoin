@@ -319,6 +319,18 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     return ret;
 }
 
+/** Log severity levels that can be selected by the user. */
+static constexpr std::array<BCLog::Level, 2> LogLevelsList()
+{
+    return {BCLog::Level::Info, BCLog::Level::Debug};
+}
+
+std::string BCLog::Logger::LogLevelsString() const
+{
+    const auto& levels = LogLevelsList();
+    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
+}
+
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
 {
     std::string strStamped;
