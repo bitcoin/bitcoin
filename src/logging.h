@@ -74,6 +74,7 @@ namespace BCLog {
         Error,
         None, // Internal use only
     };
+    constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
 
     class Logger
     {
@@ -90,6 +91,10 @@ namespace BCLog {
          * newline.
          */
         std::atomic_bool m_started_new_line{true};
+
+        //! If there is no category-specific log level, all logs with a severity
+        //! level lower than `m_log_level` will be ignored.
+        std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
         std::atomic<uint32_t> m_categories{0};
@@ -142,6 +147,9 @@ namespace BCLog {
         void DisconnectTestLogger();
 
         void ShrinkDebugFile();
+
+        Level LogLevel() const { return m_log_level.load(); }
+        void SetLogLevel(Level level) { m_log_level = level; }
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
