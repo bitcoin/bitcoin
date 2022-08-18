@@ -83,6 +83,7 @@ tristate_option(WITH_SECCOMP
   "if seccomp-bpf is found under Linux x86_64."
   AUTO
 )
+tristate_option(WITH_QRENCODE "Enable QR code support." "if libqrencode is found." AUTO)
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
 option(BUILD_BENCH "Build bench_bitcoin executable." ON)
@@ -405,6 +406,9 @@ message("  SQLite, descriptor wallets .......... ${WITH_SQLITE}")
 message("  Berkeley DB, legacy wallets ......... ${WITH_BDB}")
 message("Optional packages:")
 message("  GUI ................................. ${WITH_GUI}")
+if(WITH_GUI)
+  message("  QR code (GUI) ....................... ${WITH_QRENCODE}")
+endif()
 message("  NAT-PMP ............................. ${WITH_NATPMP}")
 message("  UPnP ................................ ${WITH_MINIUPNPC}")
 message("  ZeroMQ .............................. ${WITH_ZMQ}")

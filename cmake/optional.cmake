@@ -167,3 +167,17 @@ if(WITH_SECCOMP)
     message(FATAL_ERROR "linux/seccomp.h requested, but not found.")
   endif()
 endif()
+
+if(WITH_GUI AND WITH_QRENCODE)
+  cross_pkg_check_modules(libqrencode libqrencode IMPORTED_TARGET)
+  if(libqrencode_FOUND)
+    set_target_properties(PkgConfig::libqrencode PROPERTIES
+      INTERFACE_COMPILE_DEFINITIONS USE_QRCODE
+    )
+    set(WITH_QRENCODE ON)
+  elseif(WITH_QRENCODE STREQUAL "AUTO")
+    set(WITH_QRENCODE OFF)
+  else()
+    message(FATAL_ERROR "libqrencode requested, but not found.")
+  endif()
+endif()
