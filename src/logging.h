@@ -7,8 +7,8 @@
 #define BITCOIN_LOGGING_H
 
 #include <fs.h>
-#include <tinyformat.h>
 #include <threadsafety.h>
+#include <tinyformat.h>
 #include <util/string.h>
 
 #include <atomic>
@@ -121,7 +121,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags category, const BCLog::Level level);
+        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const
@@ -162,9 +162,11 @@ namespace BCLog {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels = levels;
         }
+        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str);
 
         Level LogLevel() const { return m_log_level.load(); }
         void SetLogLevel(Level level) { m_log_level = level; }
+        bool SetLogLevel(const std::string& level);
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
