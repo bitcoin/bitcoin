@@ -161,4 +161,37 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
+BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+
+    LogInstance().SetLogLevel(BCLog::Level::Info);
+    LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
+
+    // Global log level
+    LogPrintLevel(BCLog::HTTP, BCLog::Level::Info, "foo1: %s\n", "bar1");
+    LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Debug, "foo2: %s. This log level is lower than the global one.\n", "bar2");
+    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "foo3: %s\n", "bar3");
+    LogPrintLevel(BCLog::RPC, BCLog::Level::Error, "foo4: %s\n", "bar4");
+
+    // Category-specific log level
+    LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo5: %s\n", "bar5");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo6: %s. This log level is lower than the category-specific one.\n", "bar6");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo7: %s\n", "bar7");
+
+    std::vector<std::string> expected = {
+        "[http:info] foo1: bar1",
+        "[validation:warning] foo3: bar3",
+        "[rpc:error] foo4: bar4",
+        "[net:warning] foo5: bar5",
+        "[net:error] foo7: bar7",
+    };
+    std::ifstream file{tmp_log_path};
+    std::vector<std::string> log_lines;
+    for (std::string log; std::getline(file, log);) {
+        log_lines.push_back(log);
+    }
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
