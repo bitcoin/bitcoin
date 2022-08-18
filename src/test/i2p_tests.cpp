@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <i2p.h>
+#include <logging.h>
 #include <netaddress.h>
 #include <test/util/logging.h>
 #include <test/util/net.h>
@@ -19,6 +20,8 @@ BOOST_FIXTURE_TEST_SUITE(i2p_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(unlimited_recv)
 {
+    const auto prev_log_level{LogInstance().LogLevel()};
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
     auto CreateSockOrig = CreateSock;
 
     // Mock CreateSock() to create MockSock.
@@ -39,6 +42,7 @@ BOOST_AUTO_TEST_CASE(unlimited_recv)
     }
 
     CreateSock = CreateSockOrig;
+    LogInstance().SetLogLevel(prev_log_level);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -176,6 +176,8 @@ namespace BCLog {
         bool DisableCategory(const std::string& str);
 
         bool WillLogCategory(LogFlags category) const;
+        bool WillLogCategoryLevel(LogFlags category, Level level) const;
+
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
         /** Returns a string with the log categories in alphabetical order. */
@@ -194,12 +196,7 @@ BCLog::Logger& LogInstance();
 /** Return true if log accepts specified category, at the specified level. */
 static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
 {
-    // Log messages at Warning and Error level unconditionally, so that
-    // important troubleshooting information doesn't get lost.
-    if (level >= BCLog::Level::Warning) {
-        return true;
-    }
-    return LogInstance().WillLogCategory(category);
+    return LogInstance().WillLogCategoryLevel(category, level);
 }
 
 /** Return true if str parses as a log category and set the flag */

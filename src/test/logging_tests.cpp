@@ -10,6 +10,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,6 +26,8 @@ struct LogSetup : public BasicTestingSetup {
     bool prev_log_timestamps;
     bool prev_log_threadnames;
     bool prev_log_sourcelocations;
+    std::unordered_map<BCLog::LogFlags, BCLog::Level> prev_category_levels;
+    BCLog::Level prev_log_level;
 
     LogSetup() : prev_log_path{LogInstance().m_file_path},
                  tmp_log_path{m_args.GetDataDirBase() / "tmp_debug.log"},
@@ -32,14 +35,21 @@ struct LogSetup : public BasicTestingSetup {
                  prev_print_to_file{LogInstance().m_print_to_file},
                  prev_log_timestamps{LogInstance().m_log_timestamps},
                  prev_log_threadnames{LogInstance().m_log_threadnames},
-                 prev_log_sourcelocations{LogInstance().m_log_sourcelocations}
+                 prev_log_sourcelocations{LogInstance().m_log_sourcelocations},
+                 prev_category_levels{LogInstance().CategoryLevels()},
+                 prev_log_level{LogInstance().LogLevel()}
     {
         LogInstance().m_file_path = tmp_log_path;
         LogInstance().m_reopen_file = true;
         LogInstance().m_print_to_file = true;
         LogInstance().m_log_timestamps = false;
         LogInstance().m_log_threadnames = false;
-        LogInstance().m_log_sourcelocations = true;
+
+        // Prevent tests from failing when the line number of the logs changes.
+        LogInstance().m_log_sourcelocations = false;
+
+        LogInstance().SetLogLevel(BCLog::Level::Debug);
+        LogInstance().SetCategoryLogLevel({});
     }
 
     ~LogSetup()
@@ -51,6 +61,8 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().m_log_timestamps = prev_log_timestamps;
         LogInstance().m_log_threadnames = prev_log_threadnames;
         LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
+        LogInstance().SetLogLevel(prev_log_level);
+        LogInstance().SetCategoryLogLevel(prev_category_levels);
     }
 };
 
@@ -74,6 +86,7 @@ BOOST_AUTO_TEST_CASE(logging_timer)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
 {
+    LogInstance().m_log_sourcelocations = true;
     LogPrintf_("fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug, "foo1: %s", "bar1\n");
     LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::None, "foo2: %s", "bar2\n");
     LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo3: %s", "bar3\n");
@@ -94,9 +107,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 {
-    // Prevent tests from failing when the line number of the following log calls changes.
-    LogInstance().m_log_sourcelocations = false;
-
     LogPrintf("foo5: %s\n", "bar5");
     LogPrint(BCLog::NET, "foo6: %s\n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
@@ -123,16 +133,14 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 {
-    // Prevent tests from failing when the line number of the following log calls changes.
-    LogInstance().m_log_sourcelocations = false;
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
-    const auto concated_categery_names = LogInstance().LogCategoriesString();
+    const auto concatenated_category_names = LogInstance().LogCategoriesString();
     std::vector<std::pair<BCLog::LogFlags, std::string>> expected_category_names;
-    const auto category_names = SplitString(concated_categery_names, ',');
+    const auto category_names = SplitString(concatenated_category_names, ',');
     for (const auto& category_name : category_names) {
-        BCLog::LogFlags category = BCLog::NONE;
+        BCLog::LogFlags category;
         const auto trimmed_category_name = TrimString(category_name);
-        BOOST_TEST(GetLogCategory(category, trimmed_category_name));
+        BOOST_REQUIRE(GetLogCategory(category, trimmed_category_name));
         expected_category_names.emplace_back(category, trimmed_category_name);
     }
 
