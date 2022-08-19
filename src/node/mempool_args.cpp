@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
+#include <script/standard.h>
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>

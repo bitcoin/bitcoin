@@ -6,11 +6,9 @@
 #include <util/bip32.h>
 #include <util/strencodings.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <sstream>
-
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
