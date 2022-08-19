@@ -533,12 +533,17 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
 {
   CTxMemPool mempool{MemPoolOptionsForTest(m_node)};
   AuxpowMinerForTest miner;
+  int64_t nMedianTime;
+  {
+      LOCK(cs_main);
+      nMedianTime = m_node.chainman->ActiveTip()->GetMedianTimePast();
+  }
   LOCK (miner.cs);
 
   /* We use mocktime so that we can control GetTime() as it is used in the
      logic that determines whether or not to reconstruct a block.  The "base"
      time is set such that the blocks we have from the fixture are fresh.  */
-  const int64_t baseTime = m_node.chainman->ActiveTip()->GetMedianTimePast () + 1;
+  const int64_t baseTime = nMedianTime + 1;
   SetMockTime (baseTime);
 
   /* Construct a first block.  */
