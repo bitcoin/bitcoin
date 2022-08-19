@@ -621,6 +621,7 @@ public:
     bool CanGetAddresses(bool internal = false) const override;
 
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script, bool include_private) const { return GetSigningProvider(script, include_private); }
 
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
