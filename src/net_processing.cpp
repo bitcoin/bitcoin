@@ -3752,7 +3752,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             nHeight = m_chainman.ActiveHeight();
         }
         bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
-        if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, nMedianTime, GetAdjustedTime, nevmDataVecOut)) {
+        if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, ptx, nMedianTime, GetAdjustedTime, nevmDataVecOut)) {
             LogPrint(BCLog::NET, "NEVM data transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
