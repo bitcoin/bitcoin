@@ -246,8 +246,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     // Mining a block with a DIP3 transaction should succeed now
     block = std::make_shared<CBlock>(CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
 
-    if(deterministicMNManager)
-        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+    if(deterministicMNManager) {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+    }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     
@@ -287,8 +289,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
             auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
             TxValidationState dummyState;
             // Technically, the payload is still valid...
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), m_node.chainman->ActiveChain().Tip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), m_node.chainman->ActiveTip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
+            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), m_node.chainman->ActiveTip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
             // But the signature should not verify anymore
             BOOST_ASSERT(CheckTransactionSignature(m_node, tx));
             BOOST_ASSERT(!CheckTransactionSignature(m_node, tx2));
@@ -296,8 +298,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
         CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
 
-        if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+        if(deterministicMNManager) {
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+        }
 
         BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
         
@@ -313,7 +317,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     {
         LOCK(cs_main);
         if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
     }
     nHeight++;
 
@@ -326,7 +330,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         {
             LOCK(cs_main);
             if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
         }
         BOOST_ASSERT(!block.vtx.empty());
 
@@ -353,7 +357,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         {
             LOCK(cs_main);
             if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
             BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
         }
 
@@ -369,7 +373,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     CreateAndProcessBlock({tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     {
         LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
@@ -382,7 +386,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     {
         LOCK(cs_main);
         if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     
@@ -399,7 +403,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         {
             LOCK(cs_main);
             if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
         }
         BOOST_ASSERT(!block.vtx.empty());
 
@@ -420,8 +424,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
         auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
         TxValidationState dummyState;
-        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
-        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), m_node.chainman->ActiveChain().Tip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
+        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), m_node.chainman->ActiveTip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
+        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), m_node.chainman->ActiveTip(), dummyState, m_node.chainman->ActiveChainstate().CoinsTip(), false));
         BOOST_ASSERT(CheckTransactionSignature(m_node, tx));
         BOOST_ASSERT(!CheckTransactionSignature(m_node, tx2));
     }
@@ -430,7 +434,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     {
         LOCK(cs_main);
         if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
@@ -440,7 +444,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     {
         LOCK(cs_main);
         if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+            deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
     }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
@@ -460,7 +464,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         {
             LOCK(cs_main);
             if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+                deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
         }
         BOOST_ASSERT(!block.vtx.empty());
 
@@ -498,7 +502,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
     SignTransaction(m_node, tx_collateral, coinbaseKey);
 
     auto block = CreateAndProcessBlock({tx_collateral}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+    }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 1);
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
 
@@ -625,7 +632,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
 
 
     auto block = CreateAndProcessBlock({tx_collateral}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+    }
     BOOST_ASSERT(*m_node.chain->getHeight() == nHeight + 1);
     BOOST_ASSERT(block.GetHash() == m_node.chain->getBlockHash(*m_node.chain->getHeight()));
 
@@ -654,7 +664,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     auto tx_reg_hash = tx_reg.GetHash();
 
     block = CreateAndProcessBlock({tx_reg}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+    }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
@@ -665,7 +678,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     auto proUpRevTx = CreateProUpRevTx(m_node, collateral_utxos, tx_reg_hash, operatorKey, collateralKey);
 
     block = CreateAndProcessBlock({proUpRevTx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+    {
+        LOCK(cs_main);
+        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveTip());
+    }
     BOOST_CHECK_EQUAL(*m_node.chain->getHeight() , nHeight + 3);
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
