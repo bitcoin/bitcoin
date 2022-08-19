@@ -55,7 +55,7 @@ SplashScreen::SplashScreen(const NetworkStyle *networkStyle) :
     // define text to place
     QString titleText       = PACKAGE_NAME;
     QString versionText = QString::fromStdString(FormatFullVersion()).remove(0, 1);
-    QString titleAddText    = networkStyle->getTitleAddText();
+    const QString& titleAddText = networkStyle->getTitleAddText();
 
     QFont fontNormal = GUIUtil::getFontNormal();
     QFont fontBold = GUIUtil::getFontBold();
@@ -116,8 +116,7 @@ SplashScreen::SplashScreen(const NetworkStyle *networkStyle) :
         int titleAddTextWidth = GUIUtil::TextWidth(fm, titleAddText);
         // Draw the badge background with the network-specific color
         QRect badgeRect = QRect(width - titleAddTextWidth - 20, 5, width, fm.height() + 10);
-        QColor badgeColor = networkStyle->getBadgeColor();
-        pixPaint.fillRect(badgeRect, badgeColor);
+        pixPaint.fillRect(badgeRect, networkStyle->getBadgeColor());
         // Draw the text itself using white color, regardless of the current theme
         pixPaint.setPen(QColor(255, 255, 255));
         pixPaint.drawText(width - titleAddTextWidth - 10, paddingTop + 10, titleAddText);

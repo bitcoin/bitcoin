@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
 
     for (unsigned int i = 0; i < tests.size(); i++) {
         // printf("%d\n", i);
-        UniValue test = tests[i];
+        const UniValue& test = tests[i];
         std::string strTest = test.write();
         if (test.size() < 4) // Allow for extra stuff (useful for comments)
         {

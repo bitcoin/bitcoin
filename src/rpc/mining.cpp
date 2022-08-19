@@ -131,7 +131,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     block_hash.SetNull();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    CChainParams chainparams(Params());
+    const CChainParams& chainparams(Params());
 
     while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
         ++block.nNonce;
@@ -356,7 +356,7 @@ static RPCHelpMan generateblock()
         }
     }
 
-    CChainParams chainparams(Params());
+    const CChainParams& chainparams(Params());
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     ChainstateManager& chainman = EnsureChainman(node);
@@ -755,7 +755,7 @@ static RPCHelpMan getblocktemplate()
         if (lpval.isStr())
         {
             // Format: <hashBestChain><nTransactionsUpdatedLast>
-            std::string lpstr = lpval.get_str();
+            const std::string& lpstr = lpval.get_str();
 
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
             nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));

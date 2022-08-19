@@ -48,7 +48,7 @@ void trivialvalidation_runner(const CChain& active_chain, const std::string& jso
     const UniValue vectors = read_json(json);
 
     for (size_t idx = 1; idx < vectors.size(); idx++) {
-        UniValue test = vectors[idx];
+        const UniValue& test = vectors[idx];
         uint256 txHash;
         std::string txType;
         CMutableTransaction tx;

@@ -886,8 +886,9 @@ static void SmlCache(TestChainSetup& setup)
     CDeterministicMNList mn_list_1(emptyList);
     BOOST_CHECK(sml_empty == mn_list_1.to_sml());
 
+    CDeterministicMNList mn_list_2;
     // Assigning list should return the same cached object
-    CDeterministicMNList mn_list_2 = emptyList;
+    mn_list_2 = emptyList;
     BOOST_CHECK(sml_empty == mn_list_2.to_sml());
 
     auto dmn = create_mock_mn(1);
