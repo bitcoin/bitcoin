@@ -3346,21 +3346,6 @@ bool CWallet::BackupWallet(const std::string& strDest) const
     return GetDatabase().Backup(strDest);
 }
 
-CKeyPool::CKeyPool()
-{
-    nTime = GetTime();
-    fInternal = false;
-    m_pre_split = false;
-}
-
-CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
-{
-    nTime = GetTime();
-    vchPubKey = vchPubKeyIn;
-    fInternal = internalIn;
-    m_pre_split = false;
-}
-
 int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);

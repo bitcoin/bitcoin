@@ -105,16 +105,17 @@ class CKeyPool
 {
 public:
     //! The time at which the key was generated. Set in AddKeypoolPubKeyWithDB
-    int64_t nTime;
+    int64_t nTime{0};
     //! The public key
     CPubKey vchPubKey;
     //! Whether this keypool entry is in the internal keypool (for change outputs)
-    bool fInternal;
+    bool fInternal{false};
     //! Whether this key was generated for a keypool before the wallet was upgraded to HD-split
-    bool m_pre_split;
+    bool m_pre_split{false};
 
-    CKeyPool();
-    CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn);
+    CKeyPool() : nTime(GetTime()) {}
+    CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn) :
+        nTime(GetTime()), vchPubKey(vchPubKeyIn), fInternal(internalIn) {}
 
     template<typename Stream>
     void Serialize(Stream& s) const
