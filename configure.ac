@@ -962,6 +962,12 @@ if test "$use_hardening" != "no"; then
       ;;
   esac
 
+  case $host in
+    *aarch64-unknown-linux*)
+      AX_CHECK_COMPILE_FLAG([-mbranch-protection=standard], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -mbranch-protection=standard"], [], [$CXXFLAG_WERROR])
+      AX_CHECK_LINK_FLAG([-Wl,-z,pac-plt], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,pac-plt"], [], [$LDFLAG_WERROR])
+      ;;
+  esac
 
   dnl When enable_debug is yes, all optimizations are disabled.
   dnl However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
