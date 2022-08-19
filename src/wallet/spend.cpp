@@ -569,8 +569,12 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
                 return std::nullopt;
             }
+        }
+
+        if (input_bytes == -1) {
             input_bytes = CalculateMaximumSignedInputSize(txout, outpoint, &coin_control.m_external_provider, &coin_control);
         }
+
         // If available, override calculated size with coin control specified size
         if (coin_control.HasInputWeight(outpoint)) {
             input_bytes = GetVirtualTransactionSize(coin_control.GetInputWeight(outpoint), 0, 0);
@@ -1127,12 +1131,16 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     wallet.chain().findCoins(coins);
 
     for (const CTxIn& txin : tx.vin) {
-        // if it's not in the wallet and corresponding UTXO is found than select as external output
         const auto& outPoint = txin.prevout;
-        if (wallet.mapWallet.find(outPoint.hash) == wallet.mapWallet.end() && !coins[outPoint].out.IsNull()) {
-            coinControl.SelectExternal(outPoint, coins[outPoint].out);
-        } else {
+        if (wallet.IsMine(outPoint)) {
+            // The input was found in the wallet, so select as internal
             coinControl.Select(outPoint);
+        } else if (coins[outPoint].out.IsNull()) {
+            error = _("Unable to find UTXO for external input");
+            return false;
+        } else {
+            // The input was not in the wallet, but is in the UTXO set, so select as external
+            coinControl.SelectExternal(outPoint, coins[outPoint].out);
         }
     }
 
