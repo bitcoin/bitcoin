@@ -3744,8 +3744,15 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> ptx;
         // SYSCOIN
         NEVMDataVec nevmDataVecOut;
-        bool PODAContext = m_chainman.ActiveChain().Tip()->nHeight >= Params().GetConsensus().nPODAStartBlock;
-        if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, ptx, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), GetAdjustedTime, nevmDataVecOut)) {
+        int64_t nMedianTime;
+        int nHeight;
+        {
+            LOCK(cs_main);
+            nMedianTime = m_chainman.ActiveTip()->GetMedianTimePast();
+            nHeight = m_chainman.ActiveHeight();
+        }
+        bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
+        if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, nMedianTime, GetAdjustedTime, nevmDataVecOut)) {
             LogPrint(BCLog::NET, "NEVM data transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -4097,7 +4104,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
                 std::vector<CTransactionRef> dummy;
                 // SYSCOIN
-                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), m_chainman.ActiveChain().Tip()->nHeight, GetAdjustedTime, &m_chainman.m_blockman);
+                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData, m_chainman.ActiveTip()->GetMedianTimePast(), m_chainman.ActiveHeight(), GetAdjustedTime, &m_chainman.m_blockman);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -4277,8 +4284,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         int nHeight;
         {
             LOCK(cs_main);
-            nMedianTime = m_chainman.ActiveChain().Tip()->GetMedianTimePast();
-            nHeight = m_chainman.ActiveChain().Tip()->nHeight;
+            nMedianTime = m_chainman.ActiveTip()->GetMedianTimePast();
+            nHeight = m_chainman.ActiveHeight();
         }
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
