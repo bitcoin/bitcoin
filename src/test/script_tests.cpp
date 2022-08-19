@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     UniValue tests = read_json(std::string(json_tests::script_tests, json_tests::script_tests + sizeof(json_tests::script_tests)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        UniValue test = tests[idx];
+        const UniValue& test = tests[idx];
         std::string strTest = test.write();
         CScriptWitness witness;
         CAmount nValue = 0;
