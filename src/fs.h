@@ -69,7 +69,11 @@ public:
 
 static inline path u8path(const std::string& utf8_str)
 {
+#if __cplusplus < 202002L
     return std::filesystem::u8path(utf8_str);
+#else
+    return std::filesystem::path(std::u8string{utf8_str.begin(), utf8_str.end()});
+#endif
 }
 
 // Disallow implicit std::string conversion for absolute to avoid
