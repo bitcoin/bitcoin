@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             }
 
             // to make sure that eventually we process the full chain - do it here
-            for (auto block : blocks) {
+            for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
                     bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, true, &ignored);
                     assert(processed);
