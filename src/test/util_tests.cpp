@@ -238,9 +238,9 @@ BOOST_AUTO_TEST_CASE(span_write_bytes)
 BOOST_AUTO_TEST_CASE(util_Join)
 {
     // Normal version
-    BOOST_CHECK_EQUAL(Join({}, ", "), "");
-    BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
-    BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+    BOOST_CHECK_EQUAL(Join(std::vector<std::string>{}, ", "), "");
+    BOOST_CHECK_EQUAL(Join(std::vector<std::string>{"foo"}, ", "), "foo");
+    BOOST_CHECK_EQUAL(Join(std::vector<std::string>{"foo", "bar"}, ", "), "foo, bar");
 
     // Version with unary operator
     const auto op_upper = [](const std::string& s) { return ToUpper(s); };

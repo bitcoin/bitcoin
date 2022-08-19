@@ -66,7 +66,6 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
  */
 template <typename T, typename BaseType, typename UnaryOp>
 auto Join(const std::vector<T>& list, const BaseType& separator, UnaryOp unary_op)
-    -> decltype(unary_op(list.at(0)))
 {
     decltype(unary_op(list.at(0))) ret;
     for (size_t i = 0; i < list.size(); ++i) {
@@ -80,12 +79,6 @@ template <typename T, typename T2>
 T Join(const std::vector<T>& list, const T2& separator)
 {
     return Join(list, separator, [](const T& i) { return i; });
-}
-
-// Explicit overload needed for c_str arguments, which would otherwise cause a substitution failure in the template above.
-inline std::string Join(const std::vector<std::string>& list, std::string_view separator)
-{
-    return Join<std::string>(list, separator);
 }
 
 /**
