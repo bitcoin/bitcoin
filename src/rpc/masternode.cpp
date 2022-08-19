@@ -375,7 +375,7 @@ RPCHelpMan masternode_payments()
         CMutableTransaction coinbaseTx;
         coinbaseTx.vout.resize(1);
         coinbaseTx.vout[0].nValue = blockReward + nBlockFees;
-        FillBlockPayments(node.chainman->ActiveChain(), coinbaseTx, pindex->nHeight, blockReward, nBlockFees, voutMasternodePayments, voutDummy);
+        FillBlockPayments(WITH_LOCK(node.chainman->GetMutex(), return node.chainman->ActiveChain()), coinbaseTx, pindex->nHeight, blockReward, nBlockFees, voutMasternodePayments, voutDummy);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};
