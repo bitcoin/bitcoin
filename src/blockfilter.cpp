@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mutex>
-#include <sstream>
 #include <set>
 
 #include <blockfilter.h>
@@ -13,6 +12,7 @@
 #include <script/script.h>
 #include <streams.h>
 #include <util/golombrice.h>
+#include <util/string.h>
 
 /// SerType used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_TYPE = SER_NETWORK;
@@ -179,19 +179,7 @@ const std::set<BlockFilterType>& AllBlockFilterTypes()
 
 const std::string& ListBlockFilterTypes()
 {
-    static std::string type_list;
-
-    static std::once_flag flag;
-    std::call_once(flag, []() {
-            std::stringstream ret;
-            bool first = true;
-            for (const auto& entry : g_filter_types) {
-                if (!first) ret << ", ";
-                ret << entry.second;
-                first = false;
-            }
-            type_list = ret.str();
-        });
+    static std::string type_list{Join(g_filter_types, ", ", [](const auto& entry) { return entry.second; })};
 
     return type_list;
 }
