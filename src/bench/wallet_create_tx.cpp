@@ -9,9 +9,9 @@
 #include <kernel/chain.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
 #include <validation.h>
 #include <wallet/spend.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 using wallet::CWallet;

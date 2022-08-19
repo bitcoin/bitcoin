@@ -7,7 +7,7 @@
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
+#include <wallet/test/util.h>
 #include <validationinterface.h>
 #include <wallet/receive.h>
 #include <wallet/wallet.h>
@@ -19,6 +19,8 @@ using wallet::CreateMockWalletDatabase;
 using wallet::DBErrors;
 using wallet::GetBalance;
 using wallet::WALLET_FLAG_DESCRIPTORS;
+
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
 {

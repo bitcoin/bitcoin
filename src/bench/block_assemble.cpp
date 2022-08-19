@@ -8,7 +8,6 @@
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
-#include <test/util/wallet.h>
 #include <txmempool.h>
 #include <validation.h>
 
