@@ -1966,7 +1966,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
     bool fLoadCacheFiles = !(fReindex || fReindexChainState);
-    fs::path pathDB = gArgs.GetDataDirNet();
+    const fs::path &pathDB = gArgs.GetDataDirNet();
 
     strDBName = "mncache.dat";
     uiInterface.InitMessage(_("Loading masternode cache...").translated);
