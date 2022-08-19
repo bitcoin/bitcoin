@@ -1830,6 +1830,17 @@ uint256 ComputeTapleafHash(uint8_t leaf_version, Span<const unsigned char> scrip
     return (HashWriter{HASHER_TAPLEAF} << leaf_version << CompactSizeWriter(script.size()) << script).GetSHA256();
 }
 
+uint256 ComputeTapbranchHash(Span<const unsigned char> a, Span<const unsigned char> b)
+{
+    HashWriter ss_branch{HASHER_TAPBRANCH};
+    if (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end())) {
+        ss_branch << a << b;
+    } else {
+        ss_branch << b << a;
+    }
+    return ss_branch.GetSHA256();
+}
+
 uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint256& tapleaf_hash)
 {
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
@@ -1839,14 +1850,8 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     const int path_len = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
     uint256 k = tapleaf_hash;
     for (int i = 0; i < path_len; ++i) {
-        HashWriter ss_branch{HASHER_TAPBRANCH};
         Span node{Span{control}.subspan(TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE)};
-        if (std::lexicographical_compare(k.begin(), k.end(), node.begin(), node.end())) {
-            ss_branch << k << node;
-        } else {
-            ss_branch << node << k;
-        }
-        k = ss_branch.GetSHA256();
+        k = ComputeTapbranchHash(k, node);
     }
     return k;
 }

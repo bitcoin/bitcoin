@@ -370,12 +370,7 @@ bool IsValidDestination(const CTxDestination& dest) {
         leaf.merkle_branch.push_back(a.hash);
         ret.leaves.emplace_back(std::move(leaf));
     }
-    /* Lexicographically sort a and b's hash, and compute parent hash. */
-    if (a.hash < b.hash) {
-        ret.hash = (HashWriter{HASHER_TAPBRANCH} << a.hash << b.hash).GetSHA256();
-    } else {
-        ret.hash = (HashWriter{HASHER_TAPBRANCH} << b.hash << a.hash).GetSHA256();
-    }
+    ret.hash = ComputeTapbranchHash(a.hash, b.hash);
     return ret;
 }
 
@@ -607,7 +602,7 @@ std::optional<std::vector<std::tuple<int, std::vector<unsigned char>, int>>> Inf
             node.done = true;
             stack.pop_back();
         } else if (node.sub[0]->done && !node.sub[1]->done && !node.sub[1]->explored && !node.sub[1]->hash.IsNull() &&
-                   (HashWriter{HASHER_TAPBRANCH} << node.sub[1]->hash << node.sub[1]->hash).GetSHA256() == node.hash) {
+                   ComputeTapbranchHash(node.sub[1]->hash, node.sub[1]->hash) == node.hash) {
             // Whenever there are nodes with two identical subtrees under it, we run into a problem:
             // the control blocks for the leaves underneath those will be identical as well, and thus
             // they will all be matched to the same path in the tree. The result is that at the location
