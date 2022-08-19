@@ -206,7 +206,7 @@ struct PSBTInput
     // Taproot fields
     std::vector<unsigned char> m_tap_key_sig;
     std::map<std::pair<XOnlyPubKey, uint256>, std::vector<unsigned char>> m_tap_script_sigs;
-    std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> m_tap_scripts;
+    std::map<std::pair<std::vector<unsigned char>, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> m_tap_scripts;
     std::map<XOnlyPubKey, std::pair<std::set<uint256>, KeyOriginInfo>> m_tap_bip32_paths;
     XOnlyPubKey m_tap_internal_key;
     uint256 m_tap_merkle_root;
@@ -621,7 +621,7 @@ struct PSBTInput
                     }
                     uint8_t leaf_ver = script_v.back();
                     script_v.pop_back();
-                    const auto leaf_script = std::make_pair(CScript(script_v.begin(), script_v.end()), (int)leaf_ver);
+                    const auto leaf_script = std::make_pair(script_v, (int)leaf_ver);
                     m_tap_scripts[leaf_script].insert(std::vector<unsigned char>(key.begin() + 1, key.end()));
                     break;
                 }
@@ -713,7 +713,7 @@ struct PSBTOutput
     CScript witness_script;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     XOnlyPubKey m_tap_internal_key;
-    std::vector<std::tuple<uint8_t, uint8_t, CScript>> m_tap_tree;
+    std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> m_tap_tree;
     std::map<XOnlyPubKey, std::pair<std::set<uint256>, KeyOriginInfo>> m_tap_bip32_paths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
@@ -864,7 +864,7 @@ struct PSBTOutput
                     while (!s_tree.empty()) {
                         uint8_t depth;
                         uint8_t leaf_ver;
-                        CScript script;
+                        std::vector<unsigned char> script;
                         s_tree >> depth;
                         s_tree >> leaf_ver;
                         s_tree >> script;
