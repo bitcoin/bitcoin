@@ -58,27 +58,30 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
 }
 
 /**
- * Join a list of items
+ * Join all container items. Typically used to concatenate strings but accepts
+ * containers with elements of any type.
  *
- * @param list       The list to join
- * @param separator  The separator
- * @param unary_op   Apply this operator to each item in the list
+ * @param container The items to join
+ * @param separator The separator
+ * @param unary_op  Apply this operator to each item
  */
-template <typename T, typename BaseType, typename UnaryOp>
-auto Join(const std::vector<T>& list, const BaseType& separator, UnaryOp unary_op)
+template <typename C, typename S, typename UnaryOp>
+auto Join(const C& container, const S& separator, UnaryOp unary_op)
 {
-    decltype(unary_op(list.at(0))) ret;
-    for (size_t i = 0; i < list.size(); ++i) {
-        if (i > 0) ret += separator;
-        ret += unary_op(list.at(i));
+    decltype(unary_op(*container.begin())) ret;
+    bool first{true};
+    for (const auto& item : container) {
+        if (!first) ret += separator;
+        ret += unary_op(item);
+        first = false;
     }
     return ret;
 }
 
-template <typename T, typename T2>
-T Join(const std::vector<T>& list, const T2& separator)
+template <typename C, typename S>
+auto Join(const C& container, const S& separator)
 {
-    return Join(list, separator, [](const T& i) { return i; });
+    return Join(container, separator, [](const auto& i) { return i; });
 }
 
 /**

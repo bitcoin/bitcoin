@@ -244,9 +244,9 @@ BOOST_AUTO_TEST_CASE(util_Join)
 
     // Version with unary operator
     const auto op_upper = [](const std::string& s) { return ToUpper(s); };
-    BOOST_CHECK_EQUAL(Join<std::string>({}, ", ", op_upper), "");
-    BOOST_CHECK_EQUAL(Join<std::string>({"foo"}, ", ", op_upper), "FOO");
-    BOOST_CHECK_EQUAL(Join<std::string>({"foo", "bar"}, ", ", op_upper), "FOO, BAR");
+    BOOST_CHECK_EQUAL(Join(std::list<std::string>{}, ", ", op_upper), "");
+    BOOST_CHECK_EQUAL(Join(std::list<std::string>{"foo"}, ", ", op_upper), "FOO");
+    BOOST_CHECK_EQUAL(Join(std::list<std::string>{"foo", "bar"}, ", ", op_upper), "FOO, BAR");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReplaceAll)
