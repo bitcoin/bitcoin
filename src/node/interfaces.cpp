@@ -582,7 +582,7 @@ public:
         return std::nullopt;
     }
     CDeterministicMNList getMNList(int height) override {
-        return deterministicMNManager->GetListForBlock(m_node.chainman->ActiveChain()[height]);
+        return deterministicMNManager->GetListForBlock(WITH_LOCK(chainman().GetMutex(), return chainman().ActiveChain()[height]));
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
