@@ -162,7 +162,7 @@ namespace bls {
     BLSType Poly::Evaluate(const std::vector<BLSType>& vecIn, const Bytes& id) {
         typedef PolyOps<BLSType> Ops;
         Ops ops;
-        std::vector<BLSType> vec = vecIn;
+        const std::vector<BLSType> &vec = vecIn;
         if (vec.size() < 2) {
             throw std::length_error("At least 2 coefficients required");
         }
