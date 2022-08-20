@@ -6,6 +6,8 @@ All command-line options (except for `-?`, `-help`, `-version` and `-conf`) may 
 
 Changes to the configuration file while `bitcoind` or `bitcoin-qt` is running only take effect after restarting.
 
+Users should never make any configuration changes which they do not understand. Furthermore, users should always be wary of accepting any configuration changes provided to them by another source (even if they believe that they do understand them).
+
 ## Configuration File Format
 
 The configuration file is a plain text file and consists of `option=value` entries, one per line. Leading and trailing whitespaces are removed.
