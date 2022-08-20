@@ -387,13 +387,6 @@ void OutputGroupTypeMap::Push(const OutputGroup& group, OutputType type, bool in
     }
 }
 
-std::optional<Groups> OutputGroupTypeMap::Find(OutputType type)
-{
-    auto it_by_type = groups_by_type.find(type);
-    if (it_by_type == groups_by_type.end()) return std::nullopt;
-    return it_by_type->second;
-}
-
 CAmount GetSelectionWaste(const std::set<std::shared_ptr<COutput>>& inputs, CAmount change_cost, CAmount target, bool use_effective_value)
 {
     // This function should not be called with empty inputs as that would mean the selection failed

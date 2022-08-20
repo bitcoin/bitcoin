@@ -263,8 +263,6 @@ struct OutputGroupTypeMap
     // Based on the insert flag; appends group to the 'mixed_group' and, if value > 0, to the 'positive_group'.
     // This affects both; the groups filtered by type and the overall groups container.
     void Push(const OutputGroup& group, OutputType type, bool insert_positive, bool insert_mixed);
-    // Retrieves 'Groups' filtered by type
-    std::optional<Groups> Find(OutputType type);
     // Different output types count
     size_t TypesCount() { return groups_by_type.size(); }
 };
