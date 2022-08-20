@@ -6343,12 +6343,12 @@ void DoGethMaintenance() {
         LogPrintf("%s: Stopping Geth\n", __func__); 
         StopGethNode(true);
         // copy wallet dir if exists
-        fs::path dataDir = gArgs.GetDataDirNet();
-        fs::path gethDir = dataDir / "geth";
-        fs::path gethKeyStoreDir = gethDir / "keystore";
-        fs::path gethNodeKeyPath = gethDir / "geth" / "nodekey";
-        fs::path keyStoreTmpDir = dataDir / "keystoretmp";
-        fs::path nodeKeyTmpDir = dataDir / "nodekeytmp";
+        const fs::path &dataDir = gArgs.GetDataDirNet();
+        const fs::path &gethDir = dataDir / "geth";
+        const fs::path &gethKeyStoreDir = gethDir / "keystore";
+        const fs::path &gethNodeKeyPath = gethDir / "geth" / "nodekey";
+        const fs::path &keyStoreTmpDir = dataDir / "keystoretmp";
+        const fs::path &nodeKeyTmpDir = dataDir / "nodekeytmp";
         bool existedKeystore = fs::exists(gethKeyStoreDir);
         bool existedKeystoreTmp = fs::exists(keyStoreTmpDir);
         if(existedKeystore && !existedKeystoreTmp){
