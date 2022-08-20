@@ -6239,9 +6239,9 @@ bool StartGethNode()
         return false;
     }
 
-    fs::path dataDir = gArgs.GetDataDirNet() / "geth";
+    const fs::path &dataDir = gArgs.GetDataDirNet() / "geth";
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(binaryURL, dataDir);
-    fs::path log = gArgs.GetDataDirNet() / "sysgeth.log";
+    const fs::path &log = gArgs.GetDataDirNet() / "sysgeth.log";
 
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
