@@ -6015,7 +6015,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
 
   if (fs::is_directory(src)) {
     TryCreateDirectories(dst);
-    for (auto item : fs::directory_iterator(src)) {
+    for (const auto &item : fs::directory_iterator(src)) {
       recursive_copy(item.path(), dst/fs::u8path(fs::PathToString(item.path().filename())));
     }
   } 
