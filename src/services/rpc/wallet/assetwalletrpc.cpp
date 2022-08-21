@@ -1256,7 +1256,7 @@ static RPCHelpMan assetsendmany()
 
 
     CAssetAllocation theAssetAllocation;
-    UniValue receivers = valueTo.get_array();
+    const UniValue &receivers = valueTo.get_array();
     std::vector<CRecipient> vecSend;
     std::vector<CAssetOutValue> vecOut;
     std::map<uint64_t, std::pair<CAmount, CAmount> > mapAssets;
@@ -1528,7 +1528,7 @@ static RPCHelpMan assetallocationsendmany()
     }
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
-	UniValue receivers = valueTo.get_array();
+	const UniValue &receivers = valueTo.get_array();
     std::map<uint64_t, std::pair<CAmount,CAmount> > mapAssets;
     std::vector<CAssetOutValue> vecOut;
     uint8_t bOverideRBF = 0;
