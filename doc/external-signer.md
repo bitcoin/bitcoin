@@ -39,6 +39,7 @@ Create a wallet, this automatically imports the public keys:
 ```sh
 $ bitcoin-cli createwallet "hww" true true "" true true true
 ```
+Creating `N` distinctly named wallets with the same external signer, will create `N` identical wallets, with the same seed, account, and addresses - just named differently. New wallet creation will not automatically increment the `account` path.
 
 ### Verify an address
 
