@@ -92,6 +92,7 @@ constexpr auto ALL_NETWORKS = std::array{
     Network::NET_ONION,
     Network::NET_I2P,
     Network::NET_CJDNS,
+    Network::NET_YGGDRASIL,
     Network::NET_INTERNAL,
 };
 

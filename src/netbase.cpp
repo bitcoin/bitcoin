@@ -99,6 +99,9 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "cjdns") {
         return NET_CJDNS;
     }
+    if (net == "yggdrasil") {
+        return NET_YGGDRASIL;
+    }
     return NET_UNROUTABLE;
 }
 
@@ -111,6 +114,7 @@ std::string GetNetworkName(enum Network net)
     case NET_ONION: return "onion";
     case NET_I2P: return "i2p";
     case NET_CJDNS: return "cjdns";
+    case NET_YGGDRASIL: return "yggdrasil";
     case NET_INTERNAL: return "internal";
     case NET_MAX: assert(false);
     } // no default case, so the compiler can warn about missing cases

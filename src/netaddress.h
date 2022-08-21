@@ -60,6 +60,9 @@ enum Network {
     /// CJDNS
     NET_CJDNS,
 
+    /// Yggdrasil
+    NET_YGGDRASIL,
+
     /// A set of addresses that represent the hash of a string or FQDN. We use
     /// them in AddrMan to keep track of which DNS seeds were used.
     NET_INTERNAL,
@@ -104,6 +107,9 @@ static constexpr size_t ADDR_I2P_SIZE = 32;
 
 /// Size of CJDNS address (in bytes).
 static constexpr size_t ADDR_CJDNS_SIZE = 16;
+
+/// Size of Yggdrasil address (in bytes).
+static constexpr size_t ADDR_YGGDRASIL_SIZE = 16;
 
 /// Size of "internal" (NET_INTERNAL) address (in bytes).
 static constexpr size_t ADDR_INTERNAL_SIZE = 10;
@@ -180,6 +186,7 @@ public:
     bool IsTor() const;
     bool IsI2P() const;
     bool IsCJDNS() const;
+    bool IsYggdrasil() const;
     bool IsLocal() const;
     bool IsRoutable() const;
     bool IsInternal() const;
@@ -216,7 +223,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS() || IsYggdrasil();
     }
 
     /**
@@ -276,6 +283,7 @@ private:
         TORV3 = 4,
         I2P = 5,
         CJDNS = 6,
+        YGGDRASIL = 7,
     };
 
     /**
@@ -333,13 +341,14 @@ private:
         case NET_ONION:
         case NET_I2P:
         case NET_CJDNS:
+        case NET_YGGDRASIL:
             break;
         case NET_UNROUTABLE:
         case NET_MAX:
             assert(false);
         } // no default case, so the compiler can warn about missing cases
 
-        // Serialize ONION, I2P and CJDNS as all-zeros.
+        // Serialize ONION, I2P, CJDNS and YGGDRASIL as all-zeros.
         memset(arr, 0x0, V1_SERIALIZATION_SIZE);
     }
 
@@ -548,7 +557,7 @@ public:
     }
 
     friend class CServiceHash;
-    friend CService MaybeFlipIPv6toCJDNS(const CService& service);
+    friend CService MaybeFlipIPv6toAltNet(const CService& service);
 };
 
 class CServiceHash

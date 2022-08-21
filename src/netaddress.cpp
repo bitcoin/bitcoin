@@ -33,6 +33,8 @@ CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
         return BIP155Network::I2P;
     case NET_CJDNS:
         return BIP155Network::CJDNS;
+    case NET_YGGDRASIL:
+        return BIP155Network::YGGDRASIL;
     case NET_INTERNAL:   // should have been handled before calling this function
     case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
     case NET_MAX:        // m_net is never and should not be set to NET_MAX
@@ -85,6 +87,14 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 CJDNS address with length %u (should be %u)", address_size,
                       ADDR_CJDNS_SIZE));
+    case BIP155Network::YGGDRASIL:
+        if (address_size == ADDR_YGGDRASIL_SIZE) {
+            m_net = NET_YGGDRASIL;
+            return true;
+        }
+        throw std::ios_base::failure(
+            strprintf("BIP155 Yggdrasil address with length %u (should be %u)", address_size,
+                      ADDR_YGGDRASIL_SIZE));
     }
 
     // Don't throw on addresses with unknown network ids (maybe from the future).
@@ -118,6 +128,9 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
         break;
     case NET_CJDNS:
         assert(ipIn.m_addr.size() == ADDR_CJDNS_SIZE);
+        break;
+    case NET_YGGDRASIL:
+        assert(ipIn.m_addr.size() == ADDR_YGGDRASIL_SIZE);
         break;
     case NET_INTERNAL:
         assert(ipIn.m_addr.size() == ADDR_INTERNAL_SIZE);
@@ -416,6 +429,11 @@ bool CNetAddr::IsI2P() const { return m_net == NET_I2P; }
  */
 bool CNetAddr::IsCJDNS() const { return m_net == NET_CJDNS; }
 
+/**
+ * Check whether this object represents a Yggdrasil address.
+ */
+bool CNetAddr::IsYggdrasil() const { return m_net == NET_YGGDRASIL; }
+
 bool CNetAddr::IsLocal() const
 {
     // IPv4 loopback (127.0.0.0/8 or 0.0.0.0/8)
@@ -452,6 +470,11 @@ bool CNetAddr::IsValid() const
 
     // CJDNS addresses always start with 0xfc
     if (IsCJDNS() && (m_addr[0] != 0xFC)) {
+        return false;
+    }
+
+    // Yggdrasil addresses always start with 0x02
+    if (IsYggdrasil() && (m_addr[0] != 0x02)) {
         return false;
     }
 
@@ -506,6 +529,7 @@ bool CNetAddr::IsAddrV1Compatible() const
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
+    case NET_YGGDRASIL:
         return false;
     case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
     case NET_MAX:        // m_net is never and should not be set to NET_MAX
@@ -612,6 +636,8 @@ std::string CNetAddr::ToStringIP() const
         return EncodeBase32(m_addr, false /* don't pad with = */) + ".b32.i2p";
     case NET_CJDNS:
         return IPv6ToString(m_addr, 0);
+    case NET_YGGDRASIL:
+        return IPv6ToString(m_addr, 0);
     case NET_INTERNAL:
         return EncodeBase32(m_addr) + ".internal";
     case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
@@ -657,7 +683,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 }
 
 /**
- * Try to get our IPv6 (or CJDNS) address.
+ * Try to get our IPv6 (or CJDNS or Yggdrasil) address.
  *
  * @param[out] pipv6Addr The in6_addr struct to which to copy.
  *
@@ -668,7 +694,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
  */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
-    if (!IsIPv6() && !IsCJDNS()) {
+    if (!IsIPv6() && !IsCJDNS() && !IsYggdrasil()) {
         return false;
     }
     assert(sizeof(*pipv6Addr) == m_addr.size());
@@ -788,6 +814,11 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         case NET_CJDNS: return REACH_PRIVATE;
         default: return REACH_DEFAULT;
         }
+    case NET_YGGDRASIL:
+        switch (ourNet) {
+        case NET_YGGDRASIL: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
     case NET_TEREDO:
         switch(ourNet) {
         default:          return REACH_DEFAULT;
@@ -889,7 +920,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         paddrin->sin_port = htons(port);
         return true;
     }
-    if (IsIPv6() || IsCJDNS()) {
+    if (IsIPv6() || IsCJDNS() || IsYggdrasil()) {
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);
@@ -1025,6 +1056,7 @@ CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
+    case NET_YGGDRASIL:
         valid = true;
         break;
     case NET_INTERNAL:
@@ -1052,6 +1084,7 @@ bool CSubNet::Match(const CNetAddr &addr) const
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
+    case NET_YGGDRASIL:
     case NET_INTERNAL:
         return addr == network;
     case NET_UNROUTABLE:
@@ -1092,6 +1125,7 @@ std::string CSubNet::ToString() const
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
+    case NET_YGGDRASIL:
     case NET_INTERNAL:
     case NET_UNROUTABLE:
     case NET_MAX:
@@ -1115,6 +1149,7 @@ bool CSubNet::SanityCheck() const
     case NET_ONION:
     case NET_I2P:
     case NET_CJDNS:
+    case NET_YGGDRASIL:
         return true;
     case NET_INTERNAL:
     case NET_UNROUTABLE:

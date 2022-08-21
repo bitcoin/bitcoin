@@ -269,14 +269,24 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
  * If an IPv6 address belongs to the address range used by the CJDNS network and
  * the CJDNS network is reachable (-cjdnsreachable config is set), then change
  * the type from NET_IPV6 to NET_CJDNS.
+ *
+ * If an IPv6 address belongs to the address range used by the Yggdrasil network and
+ * the Yggdrasil network is reachable (-yggdrasilreachable config is set), then change
+ * the type from NET_IPV6 to NET_YGGDRASIL.
+ *
  * @param[in] service Address to potentially convert.
- * @return a copy of `service` either unmodified or changed to CJDNS.
+ * @return a copy of `service` either unmodified or changed to CJDNS or Yggdrasil.
  */
-CService MaybeFlipIPv6toCJDNS(const CService& service)
+CService MaybeFlipIPv6toAltNet(const CService& service)
 {
     CService ret{service};
-    if (ret.m_net == NET_IPV6 && ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
-        ret.m_net = NET_CJDNS;
+    if (ret.m_net == NET_IPV6) {
+        if (ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
+            ret.m_net = NET_CJDNS;
+        } else
+        if (ret.m_addr[0] == 0x02 && IsReachable(NET_YGGDRASIL)) {
+            ret.m_net = NET_YGGDRASIL;
+        }
     }
     return ret;
 }
@@ -284,7 +294,7 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
 // learn a new local address
 bool AddLocal(const CService& addr_, int nScore)
 {
-    CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+    CService addr{MaybeFlipIPv6toAltNet(addr_)};
 
     if (!addr.IsRoutable())
         return false;
@@ -462,7 +472,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         std::vector<CService> resolved;
         if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
             const CService rnd{resolved[GetRand(resolved.size())]};
-            addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
+            addrConnect = CAddress{MaybeFlipIPv6toAltNet(rnd), NODE_NONE};
             if (!addrConnect.IsValid()) {
                 LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
                 return nullptr;
@@ -919,10 +929,10 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
         LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
     } else {
-        addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
+        addr = CAddress{MaybeFlipIPv6toAltNet(addr), NODE_NONE};
     }
 
-    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock)), NODE_NONE};
+    const CAddress addr_bind{MaybeFlipIPv6toAltNet(GetBindAddress(*sock), NODE_NONE};
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
@@ -2201,7 +2211,7 @@ NodeId CConnman::GetNewNodeId()
 
 bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlags permissions)
 {
-    const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+    const CService addr{MaybeFlipIPv6toAltNet(addr_)};
 
     if (!(flags & BF_EXPLICIT) && !IsReachable(addr)) {
         return false;

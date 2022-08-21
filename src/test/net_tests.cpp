@@ -574,6 +574,38 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
     s.clear();
 
+    // Valid Yggdrasil.
+    s << Span{ParseHex("07"                               // network type (Yggdrasil)
+                       "10"                               // address length
+                       "02000001000200030004000500060007" // address
+                       )};
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsYggdrasil());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "200:1:2:3:4:5:6:7");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid Yggdrasil, wrong prefix.
+    s << Span{ParseHex("07"                               // network type (Yggdrasil)
+                       "10"                               // address length
+                       "aa000001000200030004000500060007" // address
+                       )};
+    s >> addr;
+    BOOST_CHECK(addr.IsYggdrasil());
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid Yggdrasil, with bogus length.
+    s << Span{ParseHex("07" // network type (Yggdrasil)
+                       "01" // address length
+                       "00" // address
+                       )};
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 Yggdrasil address with length 1 (should be 16)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
     // Unknown, with extreme length.
     s << Span{ParseHex("aa"             // network type (unknown)
                        "fe00000002"     // address length (CompactSize's MAX_SIZE)

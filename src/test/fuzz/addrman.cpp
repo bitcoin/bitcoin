@@ -65,15 +65,16 @@ CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& f
     if (fuzzed_data_provider.remaining_bytes() > 1 && fuzzed_data_provider.ConsumeBool()) {
         addr = ConsumeNetAddr(fuzzed_data_provider);
     } else {
-        // The networks [1..6] correspond to CNetAddr::BIP155Network (private).
+        // The networks [1..7] correspond to CNetAddr::BIP155Network (private).
         static const std::map<uint8_t, uint8_t> net_len_map = {{1, ADDR_IPV4_SIZE},
                                                                {2, ADDR_IPV6_SIZE},
                                                                {4, ADDR_TORV3_SIZE},
                                                                {5, ADDR_I2P_SIZE},
-                                                               {6, ADDR_CJDNS_SIZE}};
-        uint8_t net = fast_random_context.randrange(5) + 1; // [1..5]
+                                                               {6, ADDR_CJDNS_SIZE},
+                                                               {7, ADDR_YGGDRASIL_SIZE}};
+        uint8_t net = fast_random_context.randrange(6) + 1; // [1..6]
         if (net == 3) {
-            net = 6;
+            net = 7;
         }
 
         CDataStream s(SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
