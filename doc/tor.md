@@ -218,8 +218,21 @@ for normal IPv4/IPv6 communication, use:
 
 ## 4. Privacy recommendations
 
-- Do not add anything but Bitcoin Core ports to the onion service created in section 3.
+Do not add anything but Bitcoin Core ports to the onion service created in section 3.
   If you run a web service too, create a new onion service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 2) always have only one port
   open.
+
+## 5. Security considerations
+
+If you only make random Tor connections, you're much more vulnerable to Sybil attacks.
+As Tor addresses may be created at no cost, an attacker can potentially flood the network with many Tor nodes and receive all of the outbound Tor connections an `onlynet=onion` node makes.
+
+If all of your connections are controlled by a Sybil attacker, they can easily prevent you from seeing confirmed transactions and, with more difficulty, even trick your node into falsely reporting a transaction as confirmed on the blockchain with the most cumulative "chainwork".
+
+This is significantly less of a concern if you make `-addnode` connections to trusted peers (even if they're onion addresses). It's also alleviated with IPv4/IPv6 connections (especially when using the `-asmap` configuration option) due to the cost of obtaining IPs in many networks. A connection to a single honest peer is enough to thwart an attempted eclipse attack.
+
+**Network Partitioning**
+
+If too many nodes use `onlynet=onion`, it could become difficult for onion nodes to communicate with clearnet, I2P, and CJDNS nodes, preventing the Tor network from seeing recent transactions and blocks. It is essential that some nodes access both clearnet and Tor.
