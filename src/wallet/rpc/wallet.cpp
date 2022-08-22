@@ -866,6 +866,95 @@ RPCHelpMan gethdkey()
     };
 }
 
+static RPCHelpMan createwalletdescriptor()
+{
+    return RPCHelpMan{"createwalletdescriptor",
+        "Creates the wallet's descriptor for the given address type. "
+        "Only works on wallets that contain automatically generated descriptors. "
+        "The address type must be one that the wallet does not already have a descriptor for."
+        + HELP_REQUIRING_PASSPHRASE,
+        {
+            {"address_type", RPCArg::Type::STR, RPCArg::Optional::NO, "The address type the descriptor will produce. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+            {"internal", RPCArg::Type::BOOL, RPCArg::DefaultHint{"Both external and internal will be generated unless this parameter is specified"}, "Whether to only make one descriptor that is internal (if parameter is true) or external (if parameter is false)"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "descs", "The public descriptors that were added to the wallet",
+                    {{RPCResult::Type::STR, "", ""}}
+                }
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("createwalletdescriptor", "bech32m")
+            + HelpExampleRpc("createwalletdescriptor", "bech32m")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            //  Make sure wallet is a descriptor wallet
+            if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "importdescriptors is not available for non-descriptor wallets");
+            }
+            EnsureWalletIsUnlocked(*pwallet);
+
+            std::optional<OutputType> output_type = ParseOutputType(request.params[0].get_str());
+            if (!output_type) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[0].get_str()));
+            }
+
+            std::vector<bool> internals;
+            if (request.params[1].isNull()) {
+                internals.push_back(false);
+                internals.push_back(true);
+            } else {
+                internals.push_back(request.params[1].get_bool());
+            }
+
+            LOCK(pwallet->cs_wallet);
+
+            // Make sure that the wallet has an active hd key
+            std::optional<CExtPubKey> active_xpub = pwallet->GetActiveHDPubKey();
+            if (!active_xpub) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Wallet does not have an active HD key set, please use sethdseed first");
+            }
+            std::optional<CExtKey> active_hd_key = pwallet->GetActiveHDPrivKey();
+            CHECK_NONFATAL(active_hd_key.has_value());
+
+            std::vector<uint256> ids;
+            WalletBatch batch{pwallet->GetDatabase()};
+            for (bool internal : internals) {
+                WalletDescriptor w_desc = DescriptorScriptPubKeyMan::GenerateWalletDescriptor(active_hd_key.value(), *output_type, internal);
+                uint256 w_id = DescriptorID(*w_desc.descriptor);
+                if (pwallet->GetScriptPubKeyMan(w_id)) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Descriptor already exists");
+                }
+                ids.push_back(pwallet->SetupDescriptorScriptPubKeyMan(batch, *active_hd_key, *output_type, internal));
+            }
+
+            // Generate spks, fill caches, etc.
+            pwallet->TopUpKeyPool();
+
+            // Fetch each descspkm from the wallet in order to get the descriptor strings
+            UniValue descs{UniValue::VARR};
+            for (const auto& id : ids) {
+                const DescriptorScriptPubKeyMan* spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(pwallet->GetScriptPubKeyMan(id));
+                CHECK_NONFATAL(spkm);
+
+                std::string desc_str;
+                bool ok = spkm->GetDescriptorString(desc_str, false);
+                CHECK_NONFATAL(ok);
+                descs.push_back(desc_str);
+            }
+            UniValue out{UniValue::VOBJ};
+            out.pushKV("descs", descs);
+            return out;
+        }
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1011,6 +1100,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &walletpassphrase},
         {"wallet", &walletpassphrasechange},
         {"wallet", &walletprocesspsbt},
+        {"wallet", &createwalletdescriptor},
     };
     return commands;
 }

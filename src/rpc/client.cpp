@@ -303,6 +303,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "stop", 0, "wait" },
     { "addnode", 2, "v2transport" },
     { "gethdkey", 0, "private"},
+    { "createwalletdescriptor", 1, "internal"},
 };
 // clang-format on
 
