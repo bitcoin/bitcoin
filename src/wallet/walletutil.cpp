@@ -43,4 +43,11 @@ WalletFeature GetClosestWalletFeature(int version)
     }
     return static_cast<WalletFeature>(0);
 }
+
+uint256 WalletDescriptor::GetID() const{
+    std::string desc_str = descriptor->ToString();
+    uint256 id;
+    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
+    return id;
+}
 } // namespace wallet
