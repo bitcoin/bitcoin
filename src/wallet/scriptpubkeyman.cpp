@@ -2170,21 +2170,10 @@ void DescriptorScriptPubKeyMan::AddDescriptorKey(const CKey& key, const CPubKey 
     m_set_stored_keys.insert(pubkey.GetID());
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(OutputType addr_type, bool internal)
+WalletDescriptor DescriptorScriptPubKeyMan::GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& addr_type, bool internal)
 {
-    LOCK2(cs_desc_man, m_keyman.cs_keyman);
-    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
-    // Ignore when there is already a descriptor
-    if (m_wallet_descriptor.descriptor) {
-        return false;
-    }
 
     int64_t creation_time = GetTime();
-
-    std::optional<CExtKey> extkey = m_keyman.GetActiveHDKey();
-    assert(extkey != std::nullopt);
-    CExtKey& master_key = extkey.value();
 
     std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
@@ -2232,7 +2221,24 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(OutputType addr_type, 
     std::string error;
     std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
     WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
-    m_wallet_descriptor = w_desc;
+    return w_desc;
+}
+
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(OutputType addr_type, bool internal)
+{
+    LOCK2(cs_desc_man, m_keyman.cs_keyman);
+    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    // Ignore when there is already a descriptor
+    if (m_wallet_descriptor.descriptor) {
+        return false;
+    }
+
+    std::optional<CExtKey> extkey = m_keyman.GetActiveHDKey();
+    assert(extkey != std::nullopt);
+    CExtKey& master_key = extkey.value();
+
+    m_wallet_descriptor = GenerateWalletDescriptor(master_key, addr_type, internal);
 
     // Store the master private key, and descriptor
     WalletBatch batch(m_storage.GetDatabase());
