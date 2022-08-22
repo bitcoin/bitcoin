@@ -370,7 +370,7 @@ esac
 if test "$enable_debug" = "yes"; then
   dnl If debugging is enabled, and the user hasn't overridden CXXFLAGS, clear
   dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
-  dnl with "-O0 -g3 -g -O2".
+  dnl with "-O0 -g4 -g -O2".
   if test "$CXXFLAGS_overridden" = "no"; then
   CXXFLAGS=""
   fi
@@ -378,10 +378,10 @@ if test "$enable_debug" = "yes"; then
   dnl Disable all optimizations
   AX_CHECK_COMPILE_FLAG([-O0], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"], [], [$CXXFLAG_WERROR])
 
-  dnl Prefer -g3, fall back to -g if that is unavailable.
+  dnl Prefer -g4, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
-    [-g3],
-    [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g3"],
+    [-g4],
+    [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g4"],
     [AX_CHECK_COMPILE_FLAG([-g], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g"], [], [$CXXFLAG_WERROR])],
     [$CXXFLAG_WERROR])
 
