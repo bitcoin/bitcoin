@@ -456,9 +456,9 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         }
 
         auto lastOutbound = mmetaman.GetMetaInfo(m->dmn->proTxHash)->GetLastOutboundSuccess();
-        if (GetAdjustedTime() - lastOutbound > 60 * 60) {
+        if (TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) - lastOutbound > 60 * 60) {
             m->badConnection = true;
-            logger.Batch("%s no outbound connection since %d seconds", m->dmn->proTxHash.ToString(), GetAdjustedTime() - lastOutbound);
+            logger.Batch("%s no outbound connection since %d seconds", m->dmn->proTxHash.ToString(), TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) - lastOutbound);
         }
     }
 }

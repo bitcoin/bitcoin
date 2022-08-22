@@ -97,7 +97,7 @@ CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const ui
     masternodeOutpoint(outpointMasternodeIn),
     nParentHash(nParentHashIn),
     nVoteOutcome(eVoteOutcomeIn),
-    nTime(GetAdjustedTime()),
+    nTime(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime())),
     vchSig()
 {
     UpdateHash();
@@ -202,8 +202,8 @@ bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 
 bool CGovernanceVote::IsValid(bool useVotingKey) const
 {
-    if (nTime > GetAdjustedTime() + (60 * 60)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60 * 60));
+    if (nTime > TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60));
         return false;
     }
 

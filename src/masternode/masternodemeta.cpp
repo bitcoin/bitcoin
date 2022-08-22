@@ -15,7 +15,7 @@ UniValue CMasternodeMetaInfo::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
 
-    auto now = GetAdjustedTime();
+    auto now = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
 
     ret.pushKV("lastOutboundAttempt", lastOutboundAttempt.load());
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);

@@ -13,6 +13,7 @@
 #include <primitives/pureheader.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <vector>
 /**
@@ -264,6 +265,11 @@ public:
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
      */
     bool HaveTxsDownloaded() const { return nChainTx != 0; }
+
+    NodeSeconds Time() const
+    {
+        return NodeSeconds{std::chrono::seconds{nTime}};
+    }
 
     int64_t GetBlockTime() const
     {

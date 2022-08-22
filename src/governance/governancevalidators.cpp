@@ -108,7 +108,7 @@ bool CProposalValidator::ValidateStartEndEpoch(bool fCheckExpiration)
         return false;
     }
 
-    if (fCheckExpiration && nEndEpoch <= GetAdjustedTime()) {
+    if (fCheckExpiration && nEndEpoch <= TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime())) {
         strErrorMessages += "expired;";
         return false;
     }

@@ -10,6 +10,7 @@
 #include <primitives/pureheader.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <memory>
 
@@ -60,7 +61,11 @@ public:
         CPureBlockHeader::SetNull();
         auxpow.reset();
     }
-
+    
+    NodeSeconds Time() const
+    {
+        return NodeSeconds{std::chrono::seconds{nTime}};
+    }
     /**
      * Set the block's auxpow (or unset it).  This takes care of updating
      * the version accordingly.

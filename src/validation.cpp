@@ -2145,10 +2145,10 @@ bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
+bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
     int64_t nTimeNow = 0;
     if(nMedianTime > 0)
-        nTimeNow = adjusted_time_callback();
+        nTimeNow = TicksSinceEpoch<std::chrono::seconds>(adjusted_time_callback());
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
@@ -2216,7 +2216,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2262,7 +2262,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
     }
     return true;
 }
-bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -4189,7 +4189,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, int64_t nAdjustedTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
@@ -4221,8 +4221,9 @@ static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+    if (block.Time() > now + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
+    }
     // SYSCOIN
     if((pindexPrev->nHeight+1) >= consensusParams.nNEVMStartBlock) {
         if(!block.IsNEVM() && !fRegTest) {
@@ -4637,7 +4638,7 @@ bool TestBlockValidity(BlockValidationState& state,
                        CChainState& chainstate,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
-                       const std::function<int64_t()>& adjusted_time_callback,
+                       const std::function<NodeClock::time_point()>& adjusted_time_callback,
                        bool fCheckPOW,
                        bool fCheckMerkleRoot)
 {

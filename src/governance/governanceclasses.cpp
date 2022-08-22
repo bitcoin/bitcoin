@@ -161,7 +161,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
             if (pObj) {
                 strDataAsPlainString = pObj->GetDataAsPlainString();
                 // mark corresponding object for deletion
-                pObj->PrepareDeletion(GetAdjustedTime());
+                pObj->PrepareDeletion(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()));
             }
             LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Removing trigger object %s\n", strDataAsPlainString);
             // delete the trigger

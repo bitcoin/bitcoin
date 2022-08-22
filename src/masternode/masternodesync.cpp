@@ -350,7 +350,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateMa
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
 
-    nTimeLastUpdateBlockTip = GetAdjustedTime();
+    nTimeLastUpdateBlockTip = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.m_best_header);
 
     if (IsSynced() || !pindexTip || !pindexNew)

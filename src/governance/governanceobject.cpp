@@ -168,7 +168,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
     }
 
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     int64_t nVoteTimeUpdate = voteInstanceRef.nTime;
     if (governance->AreRateChecksEnabled()) {
         int64_t nTimeDelta = nNow - voteInstanceRef.nTime;
@@ -684,7 +684,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     if ((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
         fCachedDelete = true;
         if (nDeletionTime == 0) {
-            nDeletionTime = GetAdjustedTime();
+            nDeletionTime = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
         }
     }
     if (GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;

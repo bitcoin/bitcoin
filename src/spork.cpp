@@ -119,7 +119,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, pfrom->GetId());
     }
 
-    if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
+    if (spork.nTimeSigned > TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + 2 * 60 * 60) {
         {
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), hash);
@@ -194,7 +194,7 @@ void CSporkManager::ProcessGetSporks(CNode* pfrom, const std::string &strCommand
 
 bool CSporkManager::UpdateSpork(int32_t nSporkID, int64_t nValue, PeerManager& peerman)
 {
-    CSporkMessage spork(nSporkID, nValue, GetAdjustedTime());
+    CSporkMessage spork(nSporkID, nValue, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()));
 
 
     if (!spork.Sign(sporkPrivKey)) {
@@ -231,7 +231,7 @@ bool CSporkManager::IsSporkActive(int32_t nSporkID) const
 
     int64_t nSporkValue = GetSporkValue(nSporkID);
     // Get time is somewhat costly it looks like
-    bool ret = nSporkValue < GetAdjustedTime();
+    bool ret = nSporkValue < TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     // Only cache true values
     if (ret) {
         mapSporksCachedActive[nSporkID] = ret;

@@ -344,7 +344,7 @@ bool TestBlockValidity(BlockValidationState& state,
                        CChainState& chainstate,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
-                       const std::function<int64_t()>& adjusted_time_callback,
+                       const std::function<NodeClock::time_point()>& adjusted_time_callback,
                        bool fCheckPOW = true,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 // SYSCOIN
@@ -861,7 +861,7 @@ private:
 
     const CChainParams m_chainparams;
 
-    const std::function<int64_t()> m_adjusted_time_callback;
+    const std::function<NodeClock::time_point()> m_adjusted_time_callback;
 
     //! Internal helper for ActivateSnapshot().
     [[nodiscard]] bool PopulateAndValidateSnapshot(
@@ -1092,8 +1092,8 @@ bool FillNEVMData(const CBlock &block);
 bool FillNEVMData(CBlock& block);
 bool FillNEVMData(CTransactionRef tx);
 bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut);
-bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata = false);
-bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef &tx, const int64_t nMedianTime, const std::function<int64_t()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut);
+bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata = false);
+bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef &tx, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

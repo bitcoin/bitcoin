@@ -265,7 +265,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, PeerManager
 
     ScopedLockBool guard(cs, fRateChecksEnabled, false);
 
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     for (auto& pairVote : vecVotePairs) {
         bool fRemove = false;
         CGovernanceVote& vote = pairVote.first;
@@ -320,7 +320,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
         if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
             if (!triggerman.AddNewTrigger(nHash)) {
                 LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
-                objpair.first->second.PrepareDeletion(GetAdjustedTime());
+                objpair.first->second.PrepareDeletion(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()));
                 return;
             }
         }
@@ -368,7 +368,7 @@ void CGovernanceManager::UpdateCachesAndClean()
     triggerman.CleanAndRemove();
 
     auto it = mapObjects.begin();
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
 
     while (it != mapObjects.end()) {
         CGovernanceObject* pObj = &((*it).second);
@@ -749,7 +749,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
     const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
     int64_t nTimestamp = govobj.GetCreationTime();
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().SuperBlockCycle(nHeight) * Params().GetConsensus().PowTargetSpacing(nHeight);
 
     std::string strHash = govobj.GetHash().ToString();
@@ -826,7 +826,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         ostr << "CGovernanceManager::ProcessVote -- Unknown parent object " << nHashGovobj.ToString()
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort();
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
-        if (cmmapOrphanVotes.Insert(nHashGovobj, vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
+        if (cmmapOrphanVotes.Insert(nHashGovobj, vote_time_pair_t(vote, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             LEAVE_CRITICAL_SECTION(cs)
             RequestGovernanceObject(pfrom, nHashGovobj, connman);
             LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
@@ -885,7 +885,7 @@ void CGovernanceManager::CheckPostponedObjects(PeerManager& peerman)
 
 
     // Perform additional relays for triggers
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     int nHeight = chainman.ActiveHeight();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().SuperBlockCycle(nHeight) * Params().GetConsensus().PowTargetSpacing(nHeight);
 
@@ -1111,7 +1111,7 @@ void CGovernanceManager::AddCachedTriggers()
         }
 
         if (!triggerman.AddNewTrigger(govobj.GetHash())) {
-            govobj.PrepareDeletion(GetAdjustedTime());
+            govobj.PrepareDeletion(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()));
         }
     }
 }
@@ -1245,7 +1245,7 @@ void CGovernanceManager::CleanOrphanObjects()
     LOCK(cs);
     const vote_cmm_t::list_t& items = cmmapOrphanVotes.GetItemList();
 
-    int64_t nNow = GetAdjustedTime();
+    int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
 
     vote_cmm_t::list_cit it = items.begin();
     while (it != items.end()) {

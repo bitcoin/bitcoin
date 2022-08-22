@@ -254,7 +254,7 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
     }
 
     auto members = GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
-    auto curTime = GetAdjustedTime();
+    auto curTime = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
 
     std::set<uint256> probeConnections;
     for (const auto& dmn : members) {

@@ -120,7 +120,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     }
 
     if (!pnode->IsInboundConn()) {
-        mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
+        mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()));
         if (pnode->m_masternode_probe_connection) {
             LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
                         mnauth.proRegTxHash.ToString(), pnode->GetId());

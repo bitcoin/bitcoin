@@ -91,7 +91,7 @@ static RPCHelpMan gobject_check()
 
     int nRevision = 1;
 
-    int64_t nTime = GetAdjustedTime();
+    int64_t nTime = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     std::string strDataHex = request.params[0].get_str();
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
