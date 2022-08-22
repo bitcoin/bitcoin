@@ -6,15 +6,15 @@ ARG USER_ID
 ARG GROUP_ID
 ARG TAG
 
-ENV HOME /dash
+ENV HOME /home/dash
 
 # add user with specified (or default) user/group ids
 ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
 RUN groupadd -g ${GROUP_ID} dash && \
-    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash  && \
-    mkdir /dash/.dashcore && \
-    chown dash:dash -R /dash
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash  && \
+    mkdir /home/dash/.dashcore && \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
@@ -32,11 +32,11 @@ RUN mach=$(uname -m) \
 
 USER dash
 
-VOLUME ["/dash"]
+VOLUME ["/home/dash"]
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 9998 9999 19998 19999
 
-WORKDIR /dash
+WORKDIR /home/dash

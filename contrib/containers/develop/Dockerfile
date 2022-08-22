@@ -8,19 +8,34 @@ INCLUDE+ ci/Dockerfile
 # just started configuring this image, give us root access
 USER root
 
+# Make development environment more standalone
+RUN apt-get update && \
+    apt-get install $APT_ARGS \
+    apt-cacher-ng \
+    gdb \
+    gpg \
+    lsb-release \
+    nano \
+    openssh-client \
+    screen \
+    sudo \
+    zsh \
+    && \
+    rm -rf /var/lib/apt/lists/*
+
 # Discourage root access, this is an interactive instance
 #
 # Sometimes these commands are run repetitively _after_ the non-sudo
 # user was introduced and therefore these commands would fail
-# To mitigate the build halting, we've added "|| true" so that it
+# To mitigate the build halting, you can add "|| true" so that it
 # unconditionally returns 0
 #
-RUN apt-get update && apt-get install $APT_ARGS sudo && rm -rf /var/lib/apt/lists/*
-RUN usermod -aG sudo dash
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
-# Make development environment more standalone
-RUN apt-get update && apt-get install $APT_ARGS nano openssh-client zsh gdb && rm -rf /var/lib/apt/lists/*
+# Also, we create the group `docker` and add our user to it to meet
+# Gitian's requirements
+#
+RUN groupadd docker && \
+    usermod -aG sudo,docker dash && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Disable noninteractive mode
 ENV DEBIAN_FRONTEND="dialog"
