@@ -86,7 +86,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
-        test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address)
+        test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
@@ -232,7 +232,7 @@ def test_nonrbf_bumpfee_fails(self, peer_node, dest_address):
     self.clear_mempool()
 
 
-def test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address):
+def test_notmine_bumpfee(self, rbf_node, peer_node, dest_address):
     self.log.info('Test that it cannot bump fee if non-owned inputs are included')
     # here, the rbftx has a peer_node coin and then adds a rbf_node input
     # Note that this test depends upon the RPC code checking input ownership prior to change outputs
@@ -250,8 +250,27 @@ def test_notmine_bumpfee_fails(self, rbf_node, peer_node, dest_address):
     signedtx = rbf_node.signrawtransactionwithwallet(rawtx)
     signedtx = peer_node.signrawtransactionwithwallet(signedtx["hex"])
     rbfid = rbf_node.sendrawtransaction(signedtx["hex"])
+    entry = rbf_node.getmempoolentry(rbfid)
+    old_fee = entry["fees"]["base"]
+    old_feerate = int(old_fee / entry["vsize"] * Decimal(1e8))
     assert_raises_rpc_error(-4, "Transaction contains inputs that don't belong to this wallet",
                             rbf_node.bumpfee, rbfid)
+
+    def finish_psbtbumpfee(psbt):
+        psbt = rbf_node.walletprocesspsbt(psbt)
+        psbt = peer_node.walletprocesspsbt(psbt["psbt"])
+        final = rbf_node.finalizepsbt(psbt["psbt"])
+        res = rbf_node.testmempoolaccept([final["hex"]])
+        assert res[0]["allowed"]
+        assert_greater_than(res[0]["fees"]["base"], old_fee)
+
+    self.log.info("Test that psbtbumpfee works for non-owned inputs")
+    psbt = rbf_node.psbtbumpfee(txid=rbfid)
+    finish_psbtbumpfee(psbt["psbt"])
+
+    psbt = rbf_node.psbtbumpfee(txid=rbfid, options={"fee_rate": old_feerate + 10})
+    finish_psbtbumpfee(psbt["psbt"])
+
     self.clear_mempool()
 
 
