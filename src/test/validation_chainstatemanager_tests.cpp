@@ -380,7 +380,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             const ChainstateManager::Options chainman_opts{
                 .chainparams = ::Params(),
                 .datadir = m_args.GetDataDirNet(),
-                .adjusted_time_callback = GetAdjustedTime,
+                .adjusted_time_callback = NodeClock::now,
             };
             const BlockManager::Options blockman_opts{
                 .chainparams = chainman_opts.chainparams,
