@@ -552,6 +552,7 @@ RPCHelpMan listsinceblock()
                     {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
                                                                        "(not guaranteed to work on pruned nodes)"},
                     {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Return only incoming transactions paying to addresses with the specified label.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -634,6 +635,11 @@ RPCHelpMan listsinceblock()
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
     bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
+    std::optional<std::string> filter_label;
+    if (!request.params[5].isNull()) {
+        filter_label = request.params[5].get_str();
+    }
+
     int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
 
     UniValue transactions(UniValue::VARR);
@@ -642,7 +648,7 @@ RPCHelpMan listsinceblock()
         const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, std::nullopt/* filter_label */, /*include_change=*/include_change);
+            ListTransactions(wallet, tx, 0, true, transactions, filter, filter_label, include_change);
         }
     }
 
@@ -659,7 +665,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, std::nullopt/* filter_label */, /*include_change=*/include_change);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -777,7 +783,7 @@ RPCHelpMan gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, filter, std::nullopt /* filter_label */);
+    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/std::nullopt);
     entry.pushKV("details", details);
 
     std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
