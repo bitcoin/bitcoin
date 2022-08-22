@@ -330,14 +330,7 @@ bool WalletBatch::WriteActiveHDKey(const CExtPubKey& extpub)
     std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
     extpub.Encode(xpub.data());
 
-    if (!WriteIC(DBKeys::ACTIVEHDKEY, xpub, false)) {
-        std::vector<unsigned char> read_xpub(BIP32_EXTKEY_SIZE);
-        if (!m_batch->Read(DBKeys::ACTIVEHDKEY, read_xpub)) {
-            return false;
-        }
-        return xpub == read_xpub;
-    }
-    return true;
+    return WriteIC(DBKeys::ACTIVEHDKEY, xpub);
 }
 
 bool WalletBatch::WriteKeyManKey(const CPubKey& pubkey, const CPrivKey& privkey)
