@@ -3452,6 +3452,26 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     }
 }
 
+uint256 CWallet::SetupDescriptorScriptPubKeyMan(const OutputType& output_type, bool internal)
+{
+    AssertLockHeld(cs_wallet);
+
+    auto spk_manager = std::make_unique<DescriptorScriptPubKeyMan>(*this, m_keyman);
+    if (IsCrypted()) {
+        if (IsLocked()) {
+            throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
+        }
+        if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
+            throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
+        }
+    }
+    spk_manager->SetupDescriptorGeneration(output_type, internal);
+    uint256 id = spk_manager->GetID();
+    m_spk_managers[id] = std::move(spk_manager);
+    AddActiveScriptPubKeyMan(id, output_type, internal);
+    return id;
+}
+
 void CWallet::SetupDescriptorScriptPubKeyMans()
 {
     AssertLockHeld(cs_wallet);
@@ -3464,19 +3484,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
         for (bool internal : {false, true}) {
             for (OutputType t : OUTPUT_TYPES) {
-                auto spk_manager = std::make_unique<DescriptorScriptPubKeyMan>(*this, m_keyman);
-                if (IsCrypted()) {
-                    if (IsLocked()) {
-                        throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
-                    }
-                    if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
-                        throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
-                    }
-                }
-                spk_manager->SetupDescriptorGeneration(t, internal);
-                uint256 id = spk_manager->GetID();
-                m_spk_managers[id] = std::move(spk_manager);
-                AddActiveScriptPubKeyMan(id, t, internal);
+                SetupDescriptorScriptPubKeyMan(t, internal);
             }
         }
     } else {

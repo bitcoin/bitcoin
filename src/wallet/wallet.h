@@ -914,6 +914,8 @@ public:
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
     void DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
+    //! Create new DescriptorScriptPubKeyMan and add it to the wallet
+    uint256 SetupDescriptorScriptPubKeyMan(const OutputType& output_type, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
