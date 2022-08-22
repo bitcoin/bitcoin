@@ -52,6 +52,8 @@ public:
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
 };
 
+/** A signature checker that accepts all signatures */
+extern const BaseSignatureChecker& DUMMY_CHECKER;
 /** A signature creator that just produces 71-byte empty signatures. */
 extern const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR;
 /** A signature creator that just produces 72-byte empty signatures. */
