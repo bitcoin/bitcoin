@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include <span.h>
+
 /** A hasher class for SHA-256. */
 class CSHA256
 {
@@ -22,6 +24,7 @@ public:
 
     CSHA256();
     CSHA256& Write(const unsigned char* data, size_t len);
+    CSHA256& Write(const Span<const unsigned char>& k) { return Write(k.data(), k.size()); }
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA256& Reset();
 };

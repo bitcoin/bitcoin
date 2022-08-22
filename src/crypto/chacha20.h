@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <span.h>
+
+
 /** A class for ChaCha20 256-bit stream cipher developed by Daniel J. Bernstein
     https://cr.yp.to/chacha/chacha-20080128.pdf */
 class ChaCha20
@@ -18,6 +21,7 @@ private:
 public:
     ChaCha20();
     ChaCha20(const unsigned char* key, size_t keylen);
+    ChaCha20(const Span<const unsigned char>& key) : ChaCha20(key.data(), key.size()) {}
     void SetKey(const unsigned char* key, size_t keylen); //!< set key with flexible keylength; 256bit recommended */
     void SetIV(uint64_t iv); // set the 64bit nonce
     void Seek(uint64_t pos); // set the 64bit block counter

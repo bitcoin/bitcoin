@@ -6,6 +6,8 @@
 #define BITCOIN_CRYPTO_HMAC_SHA512_H
 
 #include <crypto/sha512.h>
+#include <span.h>
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -21,11 +23,13 @@ public:
     static const size_t OUTPUT_SIZE = 64;
 
     CHMAC_SHA512(const unsigned char* key, size_t keylen);
+    CHMAC_SHA512(const Span<const unsigned char>& key) : CHMAC_SHA512(key.data(), key.size()) {}
     CHMAC_SHA512& Write(const unsigned char* data, size_t len)
     {
         inner.Write(data, len);
         return *this;
     }
+    CHMAC_SHA512& Write(const Span<const unsigned char>& k) { return Write(k.data(), k.size()); }
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
 };
 

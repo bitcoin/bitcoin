@@ -76,7 +76,7 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
 {
     unsigned char num[4];
     WriteBE32(num, nChild);
-    CHMAC_SHA512(chainCode.begin(), ChainCode::size()).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
+    CHMAC_SHA512(chainCode).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
 }
 
 uint256 SHA256Uint256(const uint256& input)

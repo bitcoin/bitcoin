@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <span.h>
+
+
 /** A hasher class for RIPEMD-160. */
 class CRIPEMD160
 {
@@ -21,6 +24,7 @@ public:
 
     CRIPEMD160();
     CRIPEMD160& Write(const unsigned char* data, size_t len);
+    CRIPEMD160& Write(const Span<const unsigned char>& k) { return Write(k.data(), k.size()); }
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CRIPEMD160& Reset();
 };
