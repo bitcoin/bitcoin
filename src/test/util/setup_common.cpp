@@ -16,12 +16,12 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
-#include <node/mempool_args.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
+#include <node/mempool_args.h>
 #include <node/miner.h>
 #include <node/validation_cache_args.h>
 #include <noui.h>
@@ -94,7 +94,7 @@ void Seed(FastRandomContext& ctx)
     static const std::string RANDOM_CTX_SEED{"RANDOM_CTX_SEED"};
     if (seed.IsNull()) seed = GetUintFromEnv(RANDOM_CTX_SEED);
     if (seed.IsNull()) seed = GetRandHash();
-    // LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
+    LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
     ctx = FastRandomContext(seed);
 }
 
@@ -185,7 +185,8 @@ CTxMemPool::Options MemPoolOptionsForTest(const NodeContext& node)
         // chainparams.DefaultConsistencyChecks for tests
         .check_ratio = 1,
     };
-    ApplyArgsManOptions(*node.args, mempool_opts);
+    const auto err{ApplyArgsManOptions(*node.args, ::Params(), mempool_opts)};
+    Assert(!err);
     return mempool_opts;
 }
 
@@ -281,12 +282,23 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+
+    // m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
+    // m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
+    //                                            /*deterministic=*/false,
+    //                                            m_node.args->GetIntArg("-checkaddrman", 0));
+    // m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    // m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    // m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
+    //                                    m_node.banman.get(), *m_node.chainman,
+    //                                    *m_node.mempool, false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
         m_node.connman->Init(options);
     }
 }
+
 // SYSCOIN
 TestChain100Setup::TestChain100Setup(const std::string& chain_name, const std::vector<const char*>& extra_args, int count)
     : TestingSetup{chain_name, extra_args}
@@ -296,9 +308,19 @@ TestChain100Setup::TestChain100Setup(const std::string& chain_name, const std::v
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
-    // Generate a 100-block chain:
+    // SYSCOIN Generate a 100-block chain:
     this->mineBlocks(count);
-
+    {
+        LOCK(::cs_main);
+        // SYSCOIN
+        assert(
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+            "722b456b5005377859a8320f3b3001c8a941643a246d7e5da64c8beeb17b3254" ||
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+            "7b923c7931fbbd3e65e1737a4986810935ca4b911e3e9d527d9c62a512bf7f63" ||
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+            "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  );
+    }
 }
 
 void TestChain100Setup::mineBlocks(int num_blocks)
@@ -323,7 +345,7 @@ CBlock TestChain100Setup::CreateBlock(
     for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
     }
-    // Manually update CbTx as we modified the block here
+    // SYSCOIN Manually update CbTx as we modified the block here
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
         LOCK(cs_main);

@@ -159,7 +159,6 @@ GlobalMutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;
 uint256 g_best_block;
 bool g_parallel_script_checks{false};
-bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
@@ -676,8 +675,8 @@ private:
                        std::map<const uint256, const MempoolAcceptResult>& results)
          EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
-    // Compare a package's feerate against minimum allowed.
-    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs)
+     // Compare a package's feerate against minimum allowed.
+    bool CheckFeeRate(size_t package_size, CAmount package_fee, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_pool.cs)
     {
         AssertLockHeld(::cs_main);
         AssertLockHeld(m_pool.cs);
@@ -685,8 +684,10 @@ private:
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
-        if (package_fee < ::minRelayTxFee.GetFee(package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
+
+        if (package_fee < m_pool.m_min_relay_feerate.GetFee(package_size)) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
+                                 strprintf("%d < %d", package_fee, m_pool.m_min_relay_feerate.GetFee(package_size)));
         }
         return true;
     }
@@ -713,6 +714,8 @@ private:
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(m_pool.cs);
     const CTransactionRef& ptx = ws.m_ptx;
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
@@ -725,8 +728,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Alias what we need out of ws
     TxValidationState& state = ws.m_state;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
-    if (!CheckTransaction(tx, state))
+
+    if (!CheckTransaction(tx, state)) {
         return false; // state filled in by CheckTransaction
+    }
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
@@ -734,8 +739,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
-    if (fRequireStandard && !IsStandardTx(tx, reason))
+    if (m_pool.m_require_standard && !IsStandardTx(tx, m_pool.m_max_datacarrier_bytes, m_pool.m_permit_bare_multisig, m_pool.m_dust_relay_feerate, reason)) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
+    }
 
     // Do not work on transactions that are too small.
     // A transaction with 1 segwit input and 1 P2WPHK output has non-witness size of 82 bytes.
@@ -869,18 +875,20 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const auto& params = args.m_chainparams.GetConsensus();
     if(tx.HasAssets()) {
         isAssetTx = IsAssetTx(tx.nVersion);
-        if (!CheckSyscoinInputs(tx, params, hash, state, (uint32_t)m_active_chainstate.m_chain.Tip()->nHeight, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
+        if (!CheckSyscoinInputs(tx, params, hash, state, (uint32_t)m_active_chainstate.m_chain.Tip()->nHeight + 1, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), mapMintKeysMempool, args.m_test_accept, mapAssetIn, mapAssetOut)) {
             return false; // state filled in by CheckSyscoinInputs
         } 
     }  
 
-    if (fRequireStandard && !AreInputsStandard(tx, m_view)) {
+     if (m_pool.m_require_standard && !AreInputsStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
     }
 
-    // Check for non-standard witnesses.
-    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view))
+
+     // Check for non-standard witnesses.
+    if (tx.HasWitness() && m_pool.m_require_standard && !IsWitnessStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    }
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
@@ -1058,7 +1066,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         ws.m_conflicting_size += it->GetTxSize();
     }
     if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
-                                         ::incrementalRelayFee, hash)}) {
+                                         m_pool.m_incremental_relay_feerate, hash)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
     return true;

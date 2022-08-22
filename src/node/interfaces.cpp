@@ -54,23 +54,25 @@
 #include <memory>
 #include <optional>
 #include <utility>
+
 // SYSCOIN
 #include <evo/deterministicmns.h>
 #include <masternode/masternodesync.h>
+
 #include <boost/signals2/signal.hpp>
+
 using interfaces::BlockTip;
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeHandler;
 using interfaces::Node;
+using interfaces::WalletLoader;
 // SYSCOIN
 using interfaces::EVO;
 namespace Masternode {
 using interfaces::Masternode::Sync;
 }
-using interfaces::WalletLoader;
-
 namespace node {
 // All members of the classes in this namespace are intentionally public, as the
 // classes themselves are private.
@@ -103,6 +105,7 @@ public:
     }
 };
 #ifdef ENABLE_EXTERNAL_SIGNER
+
 class ExternalSignerImpl : public interfaces::ExternalSigner
 {
 public:
@@ -348,7 +351,11 @@ public:
         }
     }
     bool getNetworkActive() override { return m_context->connman && m_context->connman->GetNetworkActive(); }
-    CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
+    CFeeRate getDustRelayFee() override
+    {
+        if (!m_context->mempool) return CFeeRate{DUST_RELAY_TX_FEE};
+        return m_context->mempool->m_dust_relay_feerate;
+    }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
         node::JSONRPCRequest req;
@@ -581,6 +588,7 @@ public:
         }
         return std::nullopt;
     }
+    // SYSCOIN
     CDeterministicMNList getMNList(int height) override {
         return deterministicMNManager->GetListForBlock(WITH_LOCK(chainman().GetMutex(), return chainman().ActiveChain()[height]));
     }
@@ -726,9 +734,21 @@ public:
         if (!m_node.mempool) return {};
         return m_node.mempool->GetMinFee();
     }
-    CFeeRate relayMinFee() override { return ::minRelayTxFee; }
-    CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
-    CFeeRate relayDustFee() override { return ::dustRelayFee; }
+    CFeeRate relayMinFee() override
+    {
+        if (!m_node.mempool) return CFeeRate{DEFAULT_MIN_RELAY_TX_FEE};
+        return m_node.mempool->m_min_relay_feerate;
+    }
+    CFeeRate relayIncrementalFee() override
+    {
+        if (!m_node.mempool) return CFeeRate{DEFAULT_INCREMENTAL_RELAY_FEE};
+        return m_node.mempool->m_incremental_relay_feerate;
+    }
+    CFeeRate relayDustFee() override
+    {
+        if (!m_node.mempool) return CFeeRate{DUST_RELAY_TX_FEE};
+        return m_node.mempool->m_dust_relay_feerate;
+    }
     bool havePruned() override
     {
         LOCK(::cs_main);

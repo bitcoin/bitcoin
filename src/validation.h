@@ -110,7 +110,6 @@ static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
  * False indicates all script checking is done on the main threadMessageHandler thread.
  */
 extern bool g_parallel_script_checks;
-extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */

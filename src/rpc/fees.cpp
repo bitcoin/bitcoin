@@ -88,7 +88,7 @@ static RPCHelpMan estimatesmartfee()
             CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
             if (feeRate != CFeeRate(0)) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
-                CFeeRate min_relay_feerate{::minRelayTxFee};
+                CFeeRate min_relay_feerate{mempool.m_min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
                 result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
             } else {

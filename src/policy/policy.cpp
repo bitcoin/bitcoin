@@ -67,7 +67,7 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
-bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
+bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_datacarrier_bytes, TxoutType& whichType, bool isSysTx)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     whichType = Solver(scriptPubKey, vSolutions);
@@ -82,16 +82,16 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
-    // SYSCOIN MAX_SCRIPT_SIZE vs nMaxDatacarrierBytes
-    } else if (whichType == TxoutType::NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > std::max<unsigned int>(nMaxDatacarrierBytes, MAX_SCRIPT_SIZE) )) {
-          return false;
+    // SYSCOIN MAX_SCRIPT_SIZE vs max_datacarrier_bytes
+    } else if (whichType == TxoutType::NULL_DATA) {
+        if (!max_datacarrier_bytes || scriptPubKey.size() > (isSysTx? MAX_SCRIPT_SIZE: *max_datacarrier_bytes) ) {
+            return false;
+        }
     }
 
     return true;
 }
-
-bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     // SYSCOIN
     const bool &isSysTx = tx.HasAssets();
@@ -107,6 +107,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         reason = "version";
         return false;
     }
+
     // Extremely large transactions with lots of inputs can cost the network
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
@@ -116,6 +117,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         reason = "tx-size";
         return false;
     }
+
     for (const CTxIn& txin : tx.vin)
     {
         // Biggest 'standard' txin involving only keys is a 15-of-15 P2SH
@@ -135,24 +137,18 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             return false;
         }
     }
+
     unsigned int nDataOut = 0;
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
+        // SYSCOIN
+        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType, isSysTx || IsMnTx)) {
             reason = "scriptpubkey";
             return false;
         }
 
-        if (whichType == TxoutType::NULL_DATA){
-            // SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
-            // we need this because if it is a sys tx then we allow MAX_SCRIPT_SIZE bytes.
-            if (!isSysTx && !IsMnTx && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
-            {
-                reason = "scriptpubkey";
-                return false;
-            }
+        if (whichType == TxoutType::NULL_DATA)
             nDataOut++;
-        }
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
@@ -162,6 +158,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         }
     }
 
+    // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
         reason = "multi-op-return";
         return false;

@@ -55,7 +55,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     }
 
     TxoutType which_type;
-    bool is_standard_ret = IsStandard(script, which_type);
+    bool is_standard_ret = IsStandard(script, std::nullopt, which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
@@ -152,7 +152,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
         const std::string encoded_dest{EncodeDestination(tx_destination_1)};
         const UniValue json_dest{DescribeAddress(tx_destination_1)};
         Assert(tx_destination_1 == DecodeDestination(encoded_dest));
-        (void)GetKeyForDestination(/* store */ {}, tx_destination_1);
+        (void)GetKeyForDestination(/*store=*/{}, tx_destination_1);
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
         Assert(dest.empty() != valid);
