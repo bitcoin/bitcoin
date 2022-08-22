@@ -35,7 +35,7 @@ int64_t GetTimeOffset()
 
 NodeClock::time_point GetAdjustedTime()
 {
-    return NodeClock::now() + std::chrono::seconds{GetTimeOffset()};
+    return NodeClock::now();
 }
 
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
