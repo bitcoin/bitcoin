@@ -620,6 +620,7 @@ public:
 
     bool IsHDEnabled() const override;
 
+    static WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& output_type, bool internal);
     //! Setup descriptors based on the given CExtkey
     bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
