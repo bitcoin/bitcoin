@@ -27,7 +27,6 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <shutdown.h>
-#include <timedata.h>
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/strencodings.h>

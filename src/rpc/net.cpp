@@ -20,7 +20,6 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
-#include <timedata.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/string.h>

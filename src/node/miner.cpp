@@ -19,7 +19,6 @@
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <timedata.h>
 #include <util/moneystr.h>
 #include <validation.h>
 

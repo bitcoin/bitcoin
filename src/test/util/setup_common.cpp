@@ -39,7 +39,6 @@
 #include <streams.h>
 #include <test/util/net.h>
 #include <test/util/txmempool.h>
-#include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
