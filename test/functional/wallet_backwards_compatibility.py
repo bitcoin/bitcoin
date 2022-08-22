@@ -481,13 +481,20 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                             expected_xprv_count = 8
                     assert_equal(found_xprv_count, expected_xprv_count)
 
-                if encrypt:
-                    wallet.walletlock()
-
                 # Make backup so the wallet can be copied back to old node
                 down_wallet_name = f"re_down_{node.version}{'_enc' if encrypt else ''}"
                 down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
                 wallet.backupwallet(down_backup_path)
+
+                # Check that taproot descriptors can be added to 0.21 wallets
+                # This must be done after the backup is created so that 0.21 can still load
+                # the backup
+                if self.options.descriptors and self.major_version_equals(node, 21):
+                    wallet.createwalletdescriptor("bech32m")
+
+                if encrypt:
+                    wallet.walletlock()
+
                 wallet.unloadwallet()
 
                 # Check that no automatic upgrade broke the downgrading the wallet
