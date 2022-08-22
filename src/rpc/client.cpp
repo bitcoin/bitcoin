@@ -213,6 +213,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addpeeraddress", 1, "port"},
     { "addpeeraddress", 2, "tried"},
     { "stop", 0, "wait" },
+    { "createwalletdescriptor", 1, "internal"},
 };
 // clang-format on
 
