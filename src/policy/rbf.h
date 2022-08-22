@@ -19,7 +19,7 @@
 class CFeeRate;
 class uint256;
 
-/** Maximum number of transactions that can be replaced by RBF Rule #5. This includes all
+/** Maximum number of transactions that can be replaced by RBF (Rule #5). This includes all
  * mempool conflicts and their descendants. */
 static constexpr uint32_t MAX_REPLACEMENT_CANDIDATES{100};
 
