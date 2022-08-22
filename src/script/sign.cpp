@@ -350,8 +350,11 @@ public:
     DummySignatureChecker() = default;
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return true; }
 };
-const DummySignatureChecker DUMMY_CHECKER;
+}
 
+const BaseSignatureChecker& DUMMY_CHECKER = DummySignatureChecker();
+
+namespace {
 class DummySignatureCreator final : public BaseSignatureCreator {
 private:
     char m_r_len = 32;
