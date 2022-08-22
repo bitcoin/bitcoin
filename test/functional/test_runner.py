@@ -129,6 +129,7 @@ BASE_SCRIPTS = [
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
+    'rpc_quorum.py',
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
