@@ -386,7 +386,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def test_too_many_replacements_with_default_mempool_params(self):
         """
-        Test rule 5 of BIP125 (do not allow replacements that cause more than 100
+        Test rule 5 (do not allow replacements that cause more than 100
         evictions) without having to rely on non-default mempool parameters.
 
         In order to do this, create a number of "root" UTXOs, and then hang
@@ -405,7 +405,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # limit; 10 works.
         num_tx_graphs = 10
 
-        # (Number of transactions per graph, BIP125 rule 5 failure expected)
+        # (Number of transactions per graph, rule 5 failure expected)
         cases = [
             # Test the base case of evicting fewer than MAX_REPLACEMENT_LIMIT
             # transactions.

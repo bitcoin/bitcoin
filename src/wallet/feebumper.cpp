@@ -128,8 +128,8 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
     // WALLET_INCREMENTAL_RELAY_FEE value to future proof against changes to
     // network wide policy for incremental relay fee that our node may not be
     // aware of. This ensures we're over the required relay fee rate
-    // (BIP 125 rule 4).  The replacement tx will be at least as large as the
-    // original tx, so the total fee will be greater (BIP 125 rule 3)
+    // (Rule 4).  The replacement tx will be at least as large as the
+    // original tx, so the total fee will be greater (Rule 3)
     CFeeRate node_incremental_relay_fee = wallet.chain().relayIncrementalFee();
     CFeeRate wallet_incremental_relay_fee = CFeeRate(WALLET_INCREMENTAL_RELAY_FEE);
     feerate += std::max(node_incremental_relay_fee, wallet_incremental_relay_fee);

@@ -33,7 +33,7 @@ The following rules are enforced for all packages:
 * Packages cannot have conflicting transactions, i.e. no two transactions in a package can spend
    the same inputs. Packages cannot have duplicate transactions. (#20833)
 
-* No transaction in a package can conflict with a mempool transaction. BIP125 Replace By Fee is
+* No transaction in a package can conflict with a mempool transaction. Replace By Fee is
   currently disabled for packages. (#20833)
 
    - Package RBF may be enabled in the future.

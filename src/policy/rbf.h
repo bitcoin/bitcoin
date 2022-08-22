@@ -19,9 +19,9 @@
 class CFeeRate;
 class uint256;
 
-/** Maximum number of transactions that can be replaced by BIP125 RBF (Rule #5). This includes all
+/** Maximum number of transactions that can be replaced by RBF Rule #5. This includes all
  * mempool conflicts and their descendants. */
-static constexpr uint32_t MAX_BIP125_REPLACEMENT_CANDIDATES{100};
+static constexpr uint32_t MAX_REPLACEMENT_CANDIDATES{100};
 
 /** The rbf state of unconfirmed transactions */
 enum class RBFTransactionState {
@@ -47,24 +47,25 @@ enum class RBFTransactionState {
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
 
-/** Get all descendants of iters_conflicting. Also enforce BIP125 Rule #5, "The number of original
- * transactions to be replaced and their descendant transactions which will be evicted from the
- * mempool must not exceed a total of 100 transactions." Quit as early as possible. There cannot be
- * more than MAX_BIP125_REPLACEMENT_CANDIDATES potential entries.
+/** Get all descendants of iters_conflicting. Checks that there are no more than
+ * MAX_REPLACEMENT_CANDIDATES potential entries. May overestimate if the entries in
+ * iters_conflicting have overlapping descendants.
  * @param[in]   iters_conflicting   The set of iterators to mempool entries.
  * @param[out]  all_conflicts       Populated with all the mempool entries that would be replaced,
- *                                  which includes descendants of iters_conflicting. Not cleared at
- *                                  the start; any existing mempool entries will remain in the set.
- * @returns an error message if Rule #5 is broken, otherwise a std::nullopt.
+ *                                  which includes iters_conflicting and all entries' descendants.
+ *                                  Not cleared at the start; any existing mempool entries will
+ *                                  remain in the set.
+ * @returns an error message if MAX_REPLACEMENT_CANDIDATES may be exceeded, otherwise a std::nullopt.
  */
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
                                                   CTxMemPool::setEntries& all_conflicts)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
-/** BIP125 Rule #2: "The replacement transaction may only include an unconfirmed input if that input
- * was included in one of the original transactions."
- * @returns error message if Rule #2 is broken, otherwise std::nullopt. */
+/** The replacement transaction may only include an unconfirmed input if that input was included in
+ * one of the original transactions.
+ * @returns error message if tx spends unconfirmed inputs not also spent by iters_conflicting,
+ * otherwise std::nullopt. */
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,
                                                const CTxMemPool::setEntries& iters_conflicting)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
@@ -90,9 +91,8 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
                                                  CFeeRate replacement_feerate, const uint256& txid);
 
-/** Enforce BIP125 Rule #3 "The replacement transaction pays an absolute fee of at least the sum
- * paid by the original transactions." Enforce BIP125 Rule #4 "The replacement transaction must also
- * pay for its own bandwidth at or above the rate set by the node's minimum relay fee setting."
+/** The replacement transaction must pay more fees than the original transactions. The additional
+ * fees must pay for the replacement's bandwidth at or above the incremental relay feerate.
  * @param[in]   original_fees       Total modified fees of original transaction(s).
  * @param[in]   replacement_fees    Total modified fees of replacement transaction(s).
  * @param[in]   replacement_vsize   Total virtual size of replacement transaction(s).
