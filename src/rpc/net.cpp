@@ -596,7 +596,6 @@ static RPCHelpMan getnetworkinfo()
                             {RPCResult::Type::STR, "SERVICE_NAME", "the service name"},
                         }},
                         {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
-                        {RPCResult::Type::NUM, "timeoffset", "the time offset"},
                         {RPCResult::Type::NUM, "connections", "the total number of connections"},
                         {RPCResult::Type::NUM, "connections_in", "the number of inbound connections"},
                         {RPCResult::Type::NUM, "connections_out", "the number of outbound connections"},
@@ -646,7 +645,6 @@ static RPCHelpMan getnetworkinfo()
     if (node.peerman) {
         obj.pushKV("localrelay", !node.peerman->IgnoresIncomingTxs());
     }
-    obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
         obj.pushKV("connections", node.connman->GetNodeCount(ConnectionDirection::Both));
