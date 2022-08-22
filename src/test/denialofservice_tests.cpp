@@ -72,7 +72,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
         /*version=*/PROTOCOL_VERSION,
         /*relay_txs=*/true);
-    TestOnlyResetTimeData();
 
     // This test requires that we have a chain with non-zero work.
     {

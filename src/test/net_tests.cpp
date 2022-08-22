@@ -899,10 +899,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     chainstate.ResetIbd();
     m_node.args->ForceSetArg("-capturemessages", "0");
     m_node.args->ForceSetArg("-bind", "");
-    // PeerManager::ProcessMessage() calls AddTimeData() which changes the internal state
-    // in timedata.cpp and later confuses the test "timedata_tests/addtimedata". Thus reset
-    // that state as it was before our test was run.
-    TestOnlyResetTimeData();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
