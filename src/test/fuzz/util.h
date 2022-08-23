@@ -10,15 +10,18 @@
 #include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
+#include <consensus/consensus.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <optional.h>
+#include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <version.h>
 
@@ -102,6 +105,22 @@ template <typename T>
 [[ nodiscard ]] inline arith_uint256 ConsumeArithUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
+}
+
+[[ nodiscard ]] inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
+{
+    // Avoid:
+    // policy/feerate.cpp:28:34: runtime error: signed integer overflow: 34873208148477500 * 1000 cannot be represented in type 'long'
+    //
+    // Reproduce using CFeeRate(348732081484775, 10).GetFeePerK()
+    const CAmount fee = std::min<CAmount>(ConsumeMoney(fuzzed_data_provider), std::numeric_limits<CAmount>::max() / static_cast<CAmount>(100000));
+    assert(MoneyRange(fee));
+    const int64_t time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
+    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
+    const bool dip1_status = fuzzed_data_provider.ConsumeBool();
+    const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MaxBlockSigOps(dip1_status));
+    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
 }
 
 template <typename T>
