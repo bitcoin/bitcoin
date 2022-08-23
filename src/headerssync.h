@@ -140,20 +140,17 @@ public:
 
     /** Result data structure for ProcessNextHeaders. */
     struct ProcessingResult {
-        std::vector<CBlockHeader> pow_validated_headers;
         bool success{false};
         bool request_more{false};
     };
 
     /** Process a batch of headers, once a sync via this mechanism has started
      *
-     * received_headers: headers that were received over the network for processing.
-     *                   Assumes the caller has already verified the headers
-     *                   are continuous, and has checked that each header
-     *                   satisfies the proof-of-work target included in the
-     *                   header (but not necessarily verified that the
-     *                   proof-of-work target is correct and passes consensus
-     *                   rules).
+     * headers: headers that were received over the network for processing. Assumes the caller has
+     *          already verified the headers are continuous, and has checked that each header
+     *          satisfies the proof-of-work target included in the header (but not necessarily
+     *          verified that the proof-of-work target is correct and passes consensus rules).
+     *          On output, this will be replaced with headers the caller has to process.
      * full_headers_message: true if the message was at max capacity,
      *                       indicating more headers may be available
      * ProcessingResult.pow_validated_headers: will be filled in with any
@@ -165,8 +162,7 @@ public:
      * ProcessingResult.request_more: if true, the caller is suggested to call
      *                       NextHeadersRequestLocator and send a getheaders message using it.
      */
-    ProcessingResult ProcessNextHeaders(const std::vector<CBlockHeader>&
-            received_headers, bool full_headers_message);
+    ProcessingResult ProcessNextHeaders(std::vector<CBlockHeader>& headers, bool full_headers_message);
 
     /** Issue the next GETHEADERS message to our peer.
      *
@@ -198,7 +194,7 @@ private:
     bool ValidateAndStoreRedownloadedHeader(const CBlockHeader& header);
 
     /** Return a set of headers that satisfy our proof-of-work threshold */
-    std::vector<CBlockHeader> PopHeadersReadyForAcceptance();
+    void PopHeadersReadyForAcceptance(std::vector<CBlockHeader>& headers);
 
 private:
     /** NodeId of the peer (used for log messages) **/

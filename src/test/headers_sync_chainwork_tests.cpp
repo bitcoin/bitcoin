@@ -93,9 +93,11 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     headers_batch.insert(headers_batch.end(), std::next(first_chain.begin()), first_chain.end());
 
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, chain_work));
-    (void)hss->ProcessNextHeaders({first_chain.front()}, true);
+    std::vector<CBlockHeader> to_proc{first_chain.front()};
+    (void)hss->ProcessNextHeaders(to_proc, true);
     // Pretend the first header is still "full", so we don't abort.
-    auto result = hss->ProcessNextHeaders(headers_batch, true);
+    to_proc = headers_batch;
+    auto result = hss->ProcessNextHeaders(to_proc, true);
 
     // This chain should look valid, and we should have met the proof-of-work
     // requirement.
@@ -104,20 +106,23 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
 
     // Try to sneakily feed back the second chain.
-    result = hss->ProcessNextHeaders(second_chain, true);
+    to_proc = second_chain;
+    result = hss->ProcessNextHeaders(to_proc, true);
     BOOST_CHECK(!result.success); // foiled!
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
 
     // Now try again, this time feeding the first chain twice.
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, chain_work));
-    (void)hss->ProcessNextHeaders(first_chain, true);
+    to_proc = first_chain;
+    (void)hss->ProcessNextHeaders(to_proc, true);
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
 
-    result = hss->ProcessNextHeaders(first_chain, true);
+    to_proc = first_chain;
+    result = hss->ProcessNextHeaders(to_proc, true);
     BOOST_CHECK(result.success);
     BOOST_CHECK(!result.request_more);
     // All headers should be ready for acceptance:
-    BOOST_CHECK(result.pow_validated_headers.size() == first_chain.size());
+    BOOST_CHECK(to_proc.size() == first_chain.size());
     // Nothing left for the sync logic to do:
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
 
@@ -126,7 +131,8 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, chain_work));
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::PRESYNC);
      // Pretend just the first message is "full", so we don't abort.
-    (void)hss->ProcessNextHeaders({second_chain.front()}, true);
+    to_proc = {second_chain.front()};
+    (void)hss->ProcessNextHeaders(to_proc, true);
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::PRESYNC);
 
     headers_batch.clear();
@@ -134,9 +140,10 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     // Tell the sync logic that the headers message was not full, implying no
     // more headers can be requested. For a low-work-chain, this should causes
     // the sync to end with no headers for acceptance.
-    result = hss->ProcessNextHeaders(headers_batch, false);
+    to_proc = headers_batch;
+    result = hss->ProcessNextHeaders(to_proc, false);
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
-    BOOST_CHECK(result.pow_validated_headers.empty());
+    BOOST_CHECK(to_proc.empty());
     BOOST_CHECK(!result.request_more);
     // Nevertheless, no validation errors should have been detected with the
     // chain:
