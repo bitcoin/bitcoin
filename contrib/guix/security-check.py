@@ -122,6 +122,10 @@ def check_ELF_CONTROL_FLOW(binary) -> bool:
     return False
 
 def check_ELF_FORTIFY(binary) -> bool:
+    # no imported fortified funcs if we are fully static
+    # check could be changed to include all symbols
+    if binary.header.machine_type == lief.ELF.ARCH.X86_64:
+        return True
 
     # bitcoin-util does not currently contain any fortified functions
     if 'Bitcoin Core bitcoin-util utility version ' in binary.strings:
@@ -261,6 +265,8 @@ BASE_MACHO = [
 
 CHECKS = {
     lief.Binary.FORMATS.ELF: {
+        # no imported fortified funcs if we are fully static, fortification is still applied
+        # the check could be changed to include all symbols later
         lief.Header.ARCHITECTURES.X86_64: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW)],
         lief.Header.ARCHITECTURES.ARM: BASE_ELF,
         lief.Header.ARCHITECTURES.ARM64: BASE_ELF,
