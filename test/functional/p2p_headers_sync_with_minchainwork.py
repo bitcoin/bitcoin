@@ -30,17 +30,20 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # Node0 has no required chainwork; node1 requires 15 blocks on top of the genesis block; node2 requires 2047
-        self.extra_args = [["-minimumchainwork=0x0"], ["-minimumchainwork=0x1f"], ["-minimumchainwork=0x1000"]]
+        self.extra_args = [["-minimumchainwork=0x0", "-checkblockindex=0"], ["-minimumchainwork=0x1f", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0"]]
 
     def setup_network(self):
         self.setup_nodes()
-        self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
+        self.reconnect_all()
         self.sync_all()
 
     def disconnect_all(self):
         self.disconnect_nodes(0, 1)
         self.disconnect_nodes(0, 2)
+
+    def reconnect_all(self):
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -107,10 +110,34 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # getpeerinfo should show a sync in progress
         assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
 
+    def test_large_reorgs_can_succeed(self):
+        self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")
+
+        self.sync_all() # Ensure all nodes are synced.
+        self.disconnect_all()
+
+        # locator(block at height T) will have heights:
+        # [T, T-1, ..., T-10, T-12, T-16, T-24, T-40, T-72, T-136, T-264,
+        #  T-520, T-1032, T-2056, T-4104, ...]
+        # So mine a number of blocks > 4104 to ensure that the first window of
+        # received headers during a sync are fully between locator entries.
+        BLOCKS_TO_MINE = 4110
+
+        self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
+        self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
+
+        self.reconnect_all()
+
+        self.sync_blocks(timeout=300) # Ensure tips eventually agree
+
+
     def run_test(self):
         self.test_chains_sync_when_long_enough()
 
+        self.test_large_reorgs_can_succeed()
+
         self.test_peerinfo_includes_headers_presync_height()
+
 
 
 if __name__ == '__main__':
