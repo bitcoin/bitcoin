@@ -621,6 +621,10 @@ inspecting signatures in Mach-O binaries.")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
+          ((string-contains target "x86_64-linux-")
+           (list (list gcc-toolchain-14 "static")
+                 (make-bitcoin-cross-toolchain target
+                                               #:base-libc glibc-2.42)))
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
