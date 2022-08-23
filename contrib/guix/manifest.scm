@@ -465,6 +465,10 @@ inspecting signatures in Mach-O binaries.")
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  osslsigncode))
+          ((string-contains target "x86_64-linux-")
+           (list (list gcc-toolchain-14 "static")
+                 (make-bitcoin-cross-toolchain target
+                                               #:base-libc glibc-2.43)))
           ((string-contains target "-linux-")
            (list bison
                  pkg-config

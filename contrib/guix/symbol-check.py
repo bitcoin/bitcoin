@@ -36,7 +36,7 @@ import lief
 
 MAX_VERSIONS = {
 'GLIBC': {
-    lief.ELF.ARCH.X86_64: (2,31),
+    lief.ELF.ARCH.X86_64: (0,0),
     lief.ELF.ARCH.ARM:    (2,31),
     lief.ELF.ARCH.AARCH64:(2,31),
     lief.ELF.ARCH.PPC64:  (2,31),
@@ -53,7 +53,7 @@ IGNORE_EXPORTS = {
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, str]] = {
     lief.ELF.ARCH.X86_64:  {
-        lief.Header.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+        lief.Header.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.ARM:     {
         lief.Header.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
@@ -95,7 +95,6 @@ ELF_ALLOWED_LIBRARIES = {
 'libc.so.6', # C library
 'libpthread.so.0', # threading
 'libm.so.6', # math library
-'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
@@ -215,6 +214,10 @@ def check_RUNPATH(binary) -> bool:
 
 def check_ELF_libraries(binary) -> bool:
     ok: bool = True
+
+    if binary.header.machine_type == lief.ELF.ARCH.X86_64:
+        return len(binary.libraries) == 0
+
     for library in binary.libraries:
         if library not in ELF_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
