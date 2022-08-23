@@ -2937,7 +2937,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     {
         LOCK(cs_main);
         last_received_header = m_chainman.m_blockman.LookupBlockIndex(headers.back().GetHash());
-        if (IsAncestorOfBestHeaderOrTip(last_received_header)) {
+        if (!already_validated_work && IsAncestorOfBestHeaderOrTip(last_received_header)) {
             already_validated_work = true;
         }
     }
