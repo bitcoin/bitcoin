@@ -2643,12 +2643,6 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
             }
         }
 
-        if (result.success) {
-            // We only overwrite the headers passed in if processing was
-            // successful.
-            headers.swap(result.pow_validated_headers);
-        }
-
         return result.success;
     }
     // Either we didn't have a sync in progress, or something went wrong

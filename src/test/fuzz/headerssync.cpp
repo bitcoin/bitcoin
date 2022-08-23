@@ -100,12 +100,13 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
         }
 
         if (headers.empty()) return;
+        std::vector<CBlockHeader> initial_headers{headers};
         auto result = headers_sync.ProcessNextHeaders(headers, fuzzed_data_provider.ConsumeBool());
         requested_more = result.request_more;
 
         if (result.request_more) {
             if (presync) {
-                all_headers.insert(all_headers.cend(), headers.cbegin(), headers.cend());
+                all_headers.insert(all_headers.cend(), initial_headers.cbegin(), initial_headers.cend());
 
                 if (headers_sync.GetState() == HeadersSyncState::State::REDOWNLOAD) {
                     presync = false;
