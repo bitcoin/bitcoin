@@ -193,7 +193,8 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
-                                   FORCE_USE_SYSTEM_CLANG=1
+                                   FORCE_USE_SYSTEM_CLANG=1 \
+                                   NO_QT=1
 
 
 ###########################
