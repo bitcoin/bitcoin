@@ -169,7 +169,7 @@ static std::vector<RPCArg> CreateTxDoc()
     };
 }
 
-// Update PSBT with information from the mempool, the UTXO set, and the provided descriptors
+// Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors
 PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider)
 {
     // Unserialize the transactions
@@ -179,50 +179,78 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    // Fetch previous transactions (inputs):
-    CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
-    {
-        NodeContext& node = EnsureAnyNodeContext(context);
-        const CTxMemPool& mempool = EnsureMemPool(node);
-        ChainstateManager& chainman = EnsureChainman(node);
-        LOCK2(cs_main, mempool.cs);
-        CCoinsViewCache &viewChain = chainman.ActiveChainstate().CoinsTip();
-        CCoinsViewMemPool viewMempool(&viewChain, mempool);
-        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
+    if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
+    const NodeContext& node = EnsureAnyNodeContext(context);
 
-        for (const CTxIn& txin : psbtx.tx->vin) {
-            view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
+    // If we can't find the corresponding full transaction for all of our inputs,
+    // this will be used to find just the utxos for the segwit inputs for which
+    // the full transaction isn't found
+    std::map<COutPoint, Coin> coins;
+
+    // Fetch previous transactions:
+    // First, look in the txindex and the mempool
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        PSBTInput& psbt_input = psbtx.inputs.at(i);
+        const CTxIn& tx_in = psbtx.tx->vin.at(i);
+
+        // The `non_witness_utxo` is the whole previous transaction
+        if (psbt_input.non_witness_utxo) continue;
+
+        CTransactionRef tx;
+
+        // Look in the txindex
+        if (g_txindex) {
+            uint256 block_hash;
+            g_txindex->FindTx(tx_in.prevout.hash, block_hash, tx);
         }
-
-        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+        // If we still don't have it look in the mempool
+        if (!tx) {
+            tx = node.mempool->get(tx_in.prevout.hash);
+        }
+        if (tx) {
+            psbt_input.non_witness_utxo = tx;
+        } else {
+            coins[tx_in.prevout]; // Create empty map entry keyed by prevout
+        }
     }
 
-    // Fill the inputs
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        PSBTInput& input = psbtx.inputs.at(i);
+    // If we still haven't found all of the inputs, look for the missing ones in the utxo set
+    if (!coins.empty()) {
+        FindCoins(node, coins);
+        for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+            PSBTInput& input = psbtx.inputs.at(i);
 
-        if (input.non_witness_utxo || !input.witness_utxo.IsNull()) {
-            continue;
+            // If there are still missing utxos, add them if they were found in the utxo set
+            if (!input.non_witness_utxo) {
+                const CTxIn& tx_in = psbtx.tx->vin.at(i);
+                const Coin& coin = coins.at(tx_in.prevout);
+                if (!coin.out.IsNull() && IsSegWitOutput(provider, coin.out.scriptPubKey)) {
+                    input.witness_utxo = coin.out;
+                }
+            }
         }
+    }
 
-        const Coin& coin = view.AccessCoin(psbtx.tx->vin[i].prevout);
+    const PrecomputedTransactionData& txdata = PrecomputePSBTData(psbtx);
 
-        if (IsSegWitOutput(provider, coin.out.scriptPubKey)) {
-            input.witness_utxo = coin.out;
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        if (PSBTInputSigned(psbtx.inputs.at(i))) {
+            continue;
         }
 
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(provider, psbtx, i, &txdata, /*sighash=*/1);
+        SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, /*sighash=*/1);
     }
 
     // Update script/keypath information using descriptor data.
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
         UpdatePSBTOutput(provider, psbtx, i);
     }
+
+    RemoveUnnecessaryTransactions(psbtx, /*sighash_type=*/1);
+
     return psbtx;
 }
 
@@ -1632,7 +1660,7 @@ static RPCHelpMan converttopsbt()
 static RPCHelpMan utxoupdatepsbt()
 {
     return RPCHelpMan{"utxoupdatepsbt",
-            "\nUpdates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set or the mempool.\n",
+            "\nUpdates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set, txindex, or the mempool.\n",
             {
                 {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "An array of either strings or objects", {
