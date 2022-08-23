@@ -2726,20 +2726,6 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 {
     size_t nCount = headers.size();
 
-    if (nCount == 0) {
-        // Nothing interesting. Stop asking this peers for more headers.
-        // If we were in the middle of headers sync, receiving an empty headers
-        // message suggests that the peer suddenly has nothing to give us
-        // (perhaps it reorged to our chain). Clear download state for this peer.
-        LOCK(peer.m_headers_sync_mutex);
-        if (peer.m_headers_sync) {
-            peer.m_headers_sync.reset(nullptr);
-            LOCK(m_headers_presync_mutex);
-            m_headers_presync_stats.erase(pfrom.GetId());
-        }
-        return;
-    }
-
     // Before we do any processing, make sure these pass basic sanity checks.
     // We'll rely on headers having valid proof-of-work further down, as an
     // anti-DoS criteria (note: this check is required before passing any
@@ -2776,14 +2762,11 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         //   are still in PRESYNC)
         // - replaced with headers that are now ready for validation, such as
         //   during the REDOWNLOAD phase of a low-work headers sync.
-        // So just check whether we still have headers that we need to process,
-        // or not.
-        if (headers.empty()) {
-            return;
-        }
-
         have_headers_sync = !!peer.m_headers_sync;
     }
+
+    // If there is nothing left to process, stop.
+    if (headers.empty()) return;
 
     // Do these headers connect to something in our block index?
     const CBlockIndex *chain_start_header{WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock))};

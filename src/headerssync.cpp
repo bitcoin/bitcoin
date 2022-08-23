@@ -70,9 +70,6 @@ HeadersSyncState::ProcessingResult HeadersSyncState::ProcessNextHeaders(
 {
     ProcessingResult ret;
 
-    Assume(!headers.empty());
-    if (headers.empty()) return ret;
-
     Assume(m_download_state != State::FINAL);
     if (m_download_state == State::FINAL) return ret;
 
@@ -139,12 +136,10 @@ HeadersSyncState::ProcessingResult HeadersSyncState::ProcessNextHeaders(
 
 bool HeadersSyncState::ValidateAndStoreHeadersCommitments(const std::vector<CBlockHeader>& headers)
 {
-    // The caller should not give us an empty set of headers.
-    Assume(headers.size() > 0);
-    if (headers.size() == 0) return true;
-
     Assume(m_download_state == State::PRESYNC);
     if (m_download_state != State::PRESYNC) return false;
+
+    if (headers.size() == 0) return true;
 
     if (headers[0].hashPrevBlock != m_last_header_received.GetHash()) {
         // Somehow our peer gave us a header that doesn't connect.
