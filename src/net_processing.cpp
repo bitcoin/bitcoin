@@ -2807,13 +2807,13 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // At this point, the headers connect to something in our block index.
     // Do anti-DoS checks to determine if we should process or store for later
     // processing.
-    if (!already_validated_work && TryLowWorkHeadersSync(peer, pfrom,
-                chain_start_header, headers)) {
-        // If we successfully started a low-work headers sync, then there
-        // should be no headers to process any further.
-        Assume(headers.empty());
-        return;
+    if (!already_validated_work) {
+        already_validated_work = TryLowWorkHeadersSync(peer, pfrom, chain_start_header, headers);
+        have_headers_sync = already_validated_work;
     }
+
+    // If there is nothing left to process, stop.
+    if (headers.empty()) return;
 
     // At this point, we have a set of headers with sufficient work on them
     // which can be processed.
