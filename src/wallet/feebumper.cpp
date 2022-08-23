@@ -241,6 +241,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // Fill in recipients(and preserve a single change key if there is one)
     // While we're here, calculate the output amount
     std::vector<CRecipient> recipients;
+    // SYSCOIN
+    mtx = CMutableTransaction(*wtx.tx);
     CAmount output_value = 0;
     for (const auto& output : wtx.tx->vout) {
         if (!OutputIsChange(wallet, output)) {
