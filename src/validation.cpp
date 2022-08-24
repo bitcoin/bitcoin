@@ -2187,7 +2187,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
             vecNEVMDataToProcess.emplace_back(nevmDataEntry);
         }
     }
-    if(fNEVMConnection && nMedianTime > 0) {
+    if(fNEVMConnection && nMedianTime > 0 && !vecNEVMDataToProcess.empty()) {
         // process new vector in batch checking the blobs
         BlockValidationState state;
         // if not in DB then we need to verify it via Geth KZG blob verification
