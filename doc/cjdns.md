@@ -24,6 +24,8 @@ somewhat centralized. I2P connections have a source address and I2P is slow.
 CJDNS is fast but does not hide the sender and the recipient from intermediate
 routers.
 
+For information on Sybil Attacks, see [Sybil Doc](sybil.md).
+
 ## Installing CJDNS and finding a peer to connect to the network
 
 To install and set up CJDNS, follow the instructions at
