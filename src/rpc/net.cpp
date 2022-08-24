@@ -196,7 +196,7 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        const ServiceFlags services{statestats.their_services.has_value() ? statestats.their_services.value() : ServiceFlags::NODE_NONE};
+        const ServiceFlags services{statestats.m_services.has_value() ? statestats.m_services.value() : ServiceFlags::NODE_NONE};
         obj.pushKV("services", strprintf("%016x", services));
         obj.pushKV("servicesnames", GetServicesNames(services));
         if (statestats.m_relay_txs.has_value()) {
@@ -228,11 +228,11 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
         if (statestats.m_starting_height.has_value()) obj.pushKV("startingheight", statestats.m_starting_height.value());
-        if (statestats.presync_height.has_value()) obj.pushKV("presynced_headers", statestats.presync_height.value());
-        if (statestats.nSyncHeight.has_value()) obj.pushKV("synced_headers", statestats.nSyncHeight.value());
-        if (statestats.nCommonHeight.has_value()) obj.pushKV("synced_blocks", statestats.nCommonHeight.value());
+        if (statestats.m_presync_height.has_value()) obj.pushKV("presynced_headers", statestats.m_presync_height.value());
+        if (statestats.m_sync_height.has_value()) obj.pushKV("synced_headers", statestats.m_sync_height.value());
+        if (statestats.m_common_height.has_value()) obj.pushKV("synced_blocks", statestats.m_common_height.value());
         UniValue heights(UniValue::VARR);
-        for (const int height : statestats.vHeightInFlight) {
+        for (const int height : statestats.m_height_in_flight) {
             heights.push_back(height);
         }
         obj.pushKV("inflight", heights);

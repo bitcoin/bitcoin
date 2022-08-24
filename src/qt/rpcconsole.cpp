@@ -1193,9 +1193,9 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : ts.na);
-    ui->peerServices->setText(stats->nodeStateStats.their_services.has_value() ? GUIUtil::formatServicesStr(stats->nodeStateStats.their_services.value()) : ts.unknown);
-    ui->peerSyncHeight->setText(stats->nodeStateStats.nSyncHeight.has_value() ? QString("%1").arg(stats->nodeStateStats.nSyncHeight.value()) : ts.unknown);
-    ui->peerCommonHeight->setText(stats->nodeStateStats.nCommonHeight.has_value() ? QString("%1").arg(stats->nodeStateStats.nCommonHeight.value()) : ts.unknown);
+    ui->peerServices->setText(stats->nodeStateStats.m_services.has_value() ? GUIUtil::formatServicesStr(stats->nodeStateStats.m_services.value()) : ts.unknown);
+    ui->peerSyncHeight->setText(stats->nodeStateStats.m_sync_height.has_value() ? QString("%1").arg(stats->nodeStateStats.m_sync_height.value()) : ts.unknown);
+    ui->peerCommonHeight->setText(stats->nodeStateStats.m_common_height.has_value() ? QString("%1").arg(stats->nodeStateStats.m_common_height.value()) : ts.unknown);
     ui->peerHeight->setText(stats->nodeStateStats.m_starting_height.has_value() ? QString::number(stats->nodeStateStats.m_starting_height.value()) : ts.unknown);
     ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait));
     ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);

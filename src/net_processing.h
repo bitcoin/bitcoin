@@ -26,18 +26,18 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
 struct CNodeStateStats {
-    std::optional<int> nSyncHeight;
-    std::optional<int> nCommonHeight;
+    std::optional<int> m_sync_height;
+    std::optional<int> m_common_height;
     std::optional<int> m_starting_height;
     std::chrono::microseconds m_ping_wait{0us};
-    std::vector<int> vHeightInFlight;
+    std::vector<int> m_height_in_flight;
     std::optional<bool> m_relay_txs{false};
     CAmount m_fee_filter_received{0};
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
-    std::optional<ServiceFlags> their_services;
-    std::optional<int64_t> presync_height;
+    std::optional<ServiceFlags> m_services;
+    std::optional<int64_t> m_presync_height;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface

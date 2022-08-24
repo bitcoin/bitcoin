@@ -1559,14 +1559,14 @@ CNodeStateStats PeerManagerImpl::GetNodeStateStats(NodeId nodeid) const
             return stats;
         }
         if (state->pindexBestKnownBlock) {
-            stats.nSyncHeight = state->pindexBestKnownBlock->nHeight;
+            stats.m_sync_height = state->pindexBestKnownBlock->nHeight;
         }
         if (state->pindexLastCommonBlock) {
-            stats.nCommonHeight = state->pindexLastCommonBlock->nHeight;
+            stats.m_common_height = state->pindexLastCommonBlock->nHeight;
         }
         for (const QueuedBlock& queue : state->vBlocksInFlight) {
             if (queue.pindex) {
-                stats.vHeightInFlight.push_back(queue.pindex->nHeight);
+                stats.m_height_in_flight.push_back(queue.pindex->nHeight);
             }
         }
     }
@@ -1575,7 +1575,7 @@ CNodeStateStats PeerManagerImpl::GetNodeStateStats(NodeId nodeid) const
         // Peer is still being set up; return the stats that we do have.
         return stats;
     }
-    stats.their_services = peer->m_their_services;
+    stats.m_services = peer->m_their_services;
     if (peer->m_starting_height != -1) {
         stats.m_starting_height = peer->m_starting_height;
     }
@@ -1597,7 +1597,7 @@ CNodeStateStats PeerManagerImpl::GetNodeStateStats(NodeId nodeid) const
     stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
     {
         LOCK(peer->m_headers_sync_mutex);
-        stats.presync_height = peer->m_headers_sync ? peer->m_headers_sync->GetPresyncHeight() : -1;
+        stats.m_presync_height = peer->m_headers_sync ? peer->m_headers_sync->GetPresyncHeight() : -1;
     }
 
     return stats;
