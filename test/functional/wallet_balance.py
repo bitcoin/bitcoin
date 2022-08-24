@@ -55,6 +55,9 @@ class WalletTest(BitcoinTestFramework):
             ['-limitdescendantcount=3', '-walletrejectlongchains=0'],
             [],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
