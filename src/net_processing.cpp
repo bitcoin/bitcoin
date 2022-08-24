@@ -520,7 +520,7 @@ public:
     void CheckForStaleTipAndEvictPeers() override;
     std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    CNodeStateStats GetNodeStateStats(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1547,56 +1547,60 @@ PeerRef PeerManagerImpl::RemovePeer(NodeId id)
     return ret;
 }
 
-bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const
+CNodeStateStats PeerManagerImpl::GetNodeStateStats(NodeId nodeid) const
 {
+    CNodeStateStats stats;
     {
         LOCK(cs_main);
         const CNodeState* state = State(nodeid);
-        if (state == nullptr)
-            return false;
-        stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
-        stats.nCommonHeight = state->pindexLastCommonBlock ? state->pindexLastCommonBlock->nHeight : -1;
+        if (state == nullptr) {
+            // Return member-initialized sensible defaults for the fields where
+            // it makes sense and simplifies the code.
+            return stats;
+        }
+        if (state->pindexBestKnownBlock) {
+            stats.nSyncHeight = state->pindexBestKnownBlock->nHeight;
+        }
+        if (state->pindexLastCommonBlock) {
+            stats.nCommonHeight = state->pindexLastCommonBlock->nHeight;
+        }
         for (const QueuedBlock& queue : state->vBlocksInFlight) {
-            if (queue.pindex)
+            if (queue.pindex) {
                 stats.vHeightInFlight.push_back(queue.pindex->nHeight);
+            }
         }
     }
-
-    PeerRef peer = GetPeerRef(nodeid);
-    if (peer == nullptr) return false;
+    const PeerRef peer = GetPeerRef(nodeid);
+    if (peer == nullptr) {
+        // Peer is still being set up; return the stats that we do have.
+        return stats;
+    }
     stats.their_services = peer->m_their_services;
-    stats.m_starting_height = peer->m_starting_height;
+    if (peer->m_starting_height != -1) {
+        stats.m_starting_height = peer->m_starting_height;
+    }
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
     // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
     // since pingtime does not update until the ping is complete, which might take a while.
     // So, if a ping is taking an unusually long time in flight,
     // the caller can immediately detect that this is happening.
-    auto ping_wait{0us};
     if ((0 != peer->m_ping_nonce_sent) && (0 != peer->m_ping_start.load().count())) {
-        ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
+        stats.m_ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
     }
-
     if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
         stats.m_relay_txs = WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs);
         stats.m_fee_filter_received = tx_relay->m_fee_filter_received.load();
-    } else {
-        stats.m_relay_txs = false;
-        stats.m_fee_filter_received = 0;
     }
-
-    stats.m_ping_wait = ping_wait;
     stats.m_addr_processed = peer->m_addr_processed.load();
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
     stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
     {
         LOCK(peer->m_headers_sync_mutex);
-        if (peer->m_headers_sync) {
-            stats.presync_height = peer->m_headers_sync->GetPresyncHeight();
-        }
+        stats.presync_height = peer->m_headers_sync ? peer->m_headers_sync->GetPresyncHeight() : -1;
     }
 
-    return true;
+    return stats;
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)

@@ -48,6 +48,7 @@
 #include <QVariant>
 
 #include <chrono>
+#include <optional>
 
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
@@ -1192,31 +1193,15 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : ts.na);
-
-    // This check fails for example if the lock was busy and
-    // nodeStateStats couldn't be fetched.
-    if (stats->fNodeStateStatsAvailable) {
-        ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStateStats.their_services));
-        // Sync height is init to -1
-        if (stats->nodeStateStats.nSyncHeight > -1) {
-            ui->peerSyncHeight->setText(QString("%1").arg(stats->nodeStateStats.nSyncHeight));
-        } else {
-            ui->peerSyncHeight->setText(ts.unknown);
-        }
-        // Common height is init to -1
-        if (stats->nodeStateStats.nCommonHeight > -1) {
-            ui->peerCommonHeight->setText(QString("%1").arg(stats->nodeStateStats.nCommonHeight));
-        } else {
-            ui->peerCommonHeight->setText(ts.unknown);
-        }
-        ui->peerHeight->setText(QString::number(stats->nodeStateStats.m_starting_height));
-        ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait));
-        ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);
-        ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));
-        ui->peerAddrRateLimited->setText(QString::number(stats->nodeStateStats.m_addr_rate_limited));
-        ui->peerRelayTxes->setText(stats->nodeStateStats.m_relay_txs ? ts.yes : ts.no);
-    }
-
+    ui->peerServices->setText(stats->nodeStateStats.their_services.has_value() ? GUIUtil::formatServicesStr(stats->nodeStateStats.their_services.value()) : ts.unknown);
+    ui->peerSyncHeight->setText(stats->nodeStateStats.nSyncHeight.has_value() ? QString("%1").arg(stats->nodeStateStats.nSyncHeight.value()) : ts.unknown);
+    ui->peerCommonHeight->setText(stats->nodeStateStats.nCommonHeight.has_value() ? QString("%1").arg(stats->nodeStateStats.nCommonHeight.value()) : ts.unknown);
+    ui->peerHeight->setText(stats->nodeStateStats.m_starting_height.has_value() ? QString::number(stats->nodeStateStats.m_starting_height.value()) : ts.unknown);
+    ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait));
+    ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);
+    ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));
+    ui->peerAddrRateLimited->setText(QString::number(stats->nodeStateStats.m_addr_rate_limited));
+    ui->peerRelayTxes->setText(stats->nodeStateStats.m_relay_txs ? ts.yes : ts.no);
     ui->peersTabRightPanel->show();
 }
 

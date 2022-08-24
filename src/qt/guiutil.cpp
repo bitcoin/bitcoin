@@ -748,7 +748,7 @@ QString formatServicesStr(quint64 mask)
     if (strList.size())
         return strList.join(", ");
     else
-        return QObject::tr("None");
+        return QObject::tr("Unknown");
 }
 
 QString formatPingTime(std::chrono::microseconds ping_time)

@@ -156,8 +156,7 @@ void PeerTableModel::refresh()
     decltype(m_peers_data) new_peers_data;
     new_peers_data.reserve(nodes_stats.size());
     for (const auto& node_stats : nodes_stats) {
-        const CNodeCombinedStats stats{std::get<0>(node_stats), std::get<2>(node_stats), std::get<1>(node_stats)};
-        new_peers_data.append(stats);
+        new_peers_data.append(CNodeCombinedStats{node_stats.first, node_stats.second});
     }
 
     // Handle peer addition or removal as suggested in Qt Docs. See:

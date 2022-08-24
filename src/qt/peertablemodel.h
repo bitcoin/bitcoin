@@ -27,7 +27,6 @@ QT_END_NAMESPACE
 struct CNodeCombinedStats {
     CNodeStats nodeStats;
     CNodeStateStats nodeStateStats;
-    bool fNodeStateStatsAvailable;
 };
 Q_DECLARE_METATYPE(CNodeCombinedStats*)
 

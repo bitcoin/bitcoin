@@ -9,6 +9,8 @@
 #include <net.h>
 #include <validationinterface.h>
 
+#include <optional>
+
 class AddrMan;
 class CChainParams;
 class CTxMemPool;
@@ -24,18 +26,18 @@ static const bool DEFAULT_PEERBLOCKFILTERS = false;
 static const int DISCOURAGEMENT_THRESHOLD{100};
 
 struct CNodeStateStats {
-    int nSyncHeight = -1;
-    int nCommonHeight = -1;
-    int m_starting_height = -1;
-    std::chrono::microseconds m_ping_wait;
+    std::optional<int> nSyncHeight;
+    std::optional<int> nCommonHeight;
+    std::optional<int> m_starting_height;
+    std::chrono::microseconds m_ping_wait{0us};
     std::vector<int> vHeightInFlight;
-    bool m_relay_txs;
-    CAmount m_fee_filter_received;
+    std::optional<bool> m_relay_txs{false};
+    CAmount m_fee_filter_received{0};
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
-    ServiceFlags their_services;
-    int64_t presync_height{-1};
+    std::optional<ServiceFlags> their_services;
+    std::optional<int64_t> presync_height;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -59,7 +61,7 @@ public:
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
 
     /** Get statistics from node state */
-    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    virtual CNodeStateStats GetNodeStateStats(NodeId nodeid) const = 0;
 
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;

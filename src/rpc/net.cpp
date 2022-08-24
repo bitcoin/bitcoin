@@ -183,8 +183,7 @@ static RPCHelpMan getpeerinfo()
 
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
-        CNodeStateStats statestats;
-        bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
+        const CNodeStateStats statestats = peerman.GetNodeStateStats(stats.nodeid);
         obj.pushKV("id", stats.nodeid);
         obj.pushKV("addr", stats.m_addr_name);
         if (stats.addrBind.IsValid()) {
@@ -197,11 +196,11 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        ServiceFlags services{fStateStats ? statestats.their_services : ServiceFlags::NODE_NONE};
+        const ServiceFlags services{statestats.their_services.has_value() ? statestats.their_services.value() : ServiceFlags::NODE_NONE};
         obj.pushKV("services", strprintf("%016x", services));
         obj.pushKV("servicesnames", GetServicesNames(services));
-        if (fStateStats) {
-            obj.pushKV("relaytxes", statestats.m_relay_txs);
+        if (statestats.m_relay_txs.has_value()) {
+            obj.pushKV("relaytxes", statestats.m_relay_txs.value());
         }
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
@@ -217,7 +216,7 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
             obj.pushKV("minping", Ticks<SecondsDouble>(stats.m_min_ping_time));
         }
-        if (fStateStats && statestats.m_ping_wait > 0s) {
+        if (statestats.m_ping_wait > 0s) {
             obj.pushKV("pingwait", Ticks<SecondsDouble>(statestats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
@@ -228,26 +227,24 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
-        if (fStateStats) {
-            obj.pushKV("startingheight", statestats.m_starting_height);
-            obj.pushKV("presynced_headers", statestats.presync_height);
-            obj.pushKV("synced_headers", statestats.nSyncHeight);
-            obj.pushKV("synced_blocks", statestats.nCommonHeight);
-            UniValue heights(UniValue::VARR);
-            for (const int height : statestats.vHeightInFlight) {
-                heights.push_back(height);
-            }
-            obj.pushKV("inflight", heights);
-            obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
-            obj.pushKV("addr_processed", statestats.m_addr_processed);
-            obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
+        if (statestats.m_starting_height.has_value()) obj.pushKV("startingheight", statestats.m_starting_height.value());
+        if (statestats.presync_height.has_value()) obj.pushKV("presynced_headers", statestats.presync_height.value());
+        if (statestats.nSyncHeight.has_value()) obj.pushKV("synced_headers", statestats.nSyncHeight.value());
+        if (statestats.nCommonHeight.has_value()) obj.pushKV("synced_blocks", statestats.nCommonHeight.value());
+        UniValue heights(UniValue::VARR);
+        for (const int height : statestats.vHeightInFlight) {
+            heights.push_back(height);
         }
+        obj.pushKV("inflight", heights);
+        obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
+        obj.pushKV("addr_processed", statestats.m_addr_processed);
+        obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         UniValue permissions(UniValue::VARR);
         for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);
-        obj.pushKV("minfeefilter", fStateStats ? ValueFromAmount(statestats.m_fee_filter_received) : 0);
+        obj.pushKV("minfeefilter", ValueFromAmount(statestats.m_fee_filter_received));
 
         UniValue sendPerMsgType(UniValue::VOBJ);
         for (const auto& i : stats.mapSendBytesPerMsgType) {
