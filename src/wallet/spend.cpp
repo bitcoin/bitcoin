@@ -575,11 +575,11 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
     // Deduct preset inputs amount from the search target
     CAmount selection_target = nTargetValue - pre_set_inputs.total_amount;
 
-    // If automatic coin selection was disabled, we just want to return the preset inputs result
-    if (!coin_control.m_allow_other_inputs) {
-        // 'selection_target' is computed on `PreSelectedInputs::Insert` which decides whether to use the effective value
-        // or the raw output value based on the 'subtract_fee_outputs' flag.
-        if (selection_target > 0) return std::nullopt;
+    // Return if automatic coin selection is disabled, and we don't cover the selection target
+    if (!coin_control.m_allow_other_inputs && selection_target > 0) return std::nullopt;
+
+    // Return if we can cover the target only with the preset inputs
+    if (selection_target <= 0) {
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInputs(pre_set_inputs.coins, coin_selection_params.m_subtract_fee_outputs);
         result.ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
@@ -590,12 +590,14 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
     auto op_selection_result = AutomaticCoinSelection(wallet, available_coins, selection_target, coin_control, coin_selection_params);
     if (!op_selection_result) return op_selection_result;
 
-    // Add preset inputs to the automatic coin selection result
-    SelectionResult preselected(pre_set_inputs.total_amount, SelectionAlgorithm::MANUAL);
-    preselected.AddInputs(pre_set_inputs.coins, coin_selection_params.m_subtract_fee_outputs);
-    op_selection_result->Merge(preselected);
-    if (op_selection_result->GetAlgo() == SelectionAlgorithm::MANUAL) {
-        op_selection_result->ComputeAndSetWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
+    // If needed, add preset inputs to the automatic coin selection result
+    if (!pre_set_inputs.coins.empty()) {
+        SelectionResult preselected(pre_set_inputs.total_amount, SelectionAlgorithm::MANUAL);
+        preselected.AddInputs(pre_set_inputs.coins, coin_selection_params.m_subtract_fee_outputs);
+        op_selection_result->Merge(preselected);
+        op_selection_result->ComputeAndSetWaste(coin_selection_params.min_viable_change,
+                                                coin_selection_params.m_cost_of_change,
+                                                coin_selection_params.m_change_fee);
     }
     return op_selection_result;
 }
@@ -622,9 +624,6 @@ std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coi
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
     std::optional<SelectionResult> res = [&] {
-        // Pre-selected inputs already cover the target amount.
-        if (value_to_select <= 0) return std::make_optional(SelectionResult(value_to_select, SelectionAlgorithm::MANUAL));
-
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
         if (auto r1{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(1, 6, 0), available_coins, coin_selection_params, /*allow_mixed_output_types=*/false)}) return r1;
