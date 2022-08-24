@@ -214,17 +214,16 @@ and open port 8333 on your firewall (or use port mapping, i.e., `-upnp` or `-nat
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-    ./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
+./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
 ## 4. Privacy recommendations
 
-- Do not add anything but Bitcoin Core ports to the onion service created in section 3.
-  If you run a web service too, create a new onion service for that.
-  Otherwise it is trivial to link them, which may reduce privacy. Onion
-  services created automatically (as in section 2) always have only one port
-  open.
-  
-  ## 5. Security recommendations
-  
-  See [Sybil Doc](sybil.md) for more information.
-  
+Do not add anything but Bitcoin Core ports to the onion service created in section 3.
+If you run a web service too, create a new onion service for that.
+Otherwise it is trivial to link them, which may reduce privacy. Onion
+services created automatically (as in section 2) always have only one port
+open.
+
+## 5. Security recommendations
+
+See [Sybil Doc](sybil.md) for more information.

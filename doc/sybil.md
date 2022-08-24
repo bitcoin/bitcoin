@@ -8,7 +8,7 @@ If all of your connections are controlled by a Sybil attacker, they can easily p
 with more difficulty, even trick your node into falsely reporting a transaction as confirmed on the blockchain.
 
 This is significantly less of a concern if you make `-addnode` connections to trusted peers (even if they're CJDNS, I2P, or Onion addresses).
-It's also alleviated with IPv4/IPv6 connections (especially when using the `-asmap` configuration option) due to the cost of obtaining IPs in many networks. 
+It's also alleviated with IPv4/IPv6 connections (especially when using the `-asmap` configuration option) due to the cost of obtaining IPs in many networks.
 A connection to a single honest peer is enough to thwart an attempted eclipse attack.
 
 **Network Partitioning**
