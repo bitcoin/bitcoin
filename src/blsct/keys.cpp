@@ -104,6 +104,10 @@ G1Point PrivateKey::GetG1Point() const {
     return G1Point::GetBasePoint() * Scalar(std::vector<unsigned char>(k.begin(), k.end()));
 }
 
+PublicKey PrivateKey::GetPublicKey() const {
+    return PublicKey(GetG1Point());
+}
+
 Scalar PrivateKey::GetScalar() const {
     return Scalar(std::vector<unsigned char>(k.begin(), k.end()));;
 }
