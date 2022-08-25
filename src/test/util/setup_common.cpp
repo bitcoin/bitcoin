@@ -442,3 +442,9 @@ CBlock getBlock13b8a()
     stream >> block;
     return block;
 }
+
+MclTestingSetup::MclTestingSetup()
+{
+    MclInitializer::Init();
+    G1Point::Init();
+}

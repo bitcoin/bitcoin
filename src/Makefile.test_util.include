@@ -9,6 +9,9 @@ EXTRA_LIBRARIES += \
 
 TEST_UTIL_H = \
     test/util/blockfilter.h \
+    blsct/arith/g1point.h \
+    blsct/arith/mcl_initializer.h \
+    blsct/arith/scalar.h \
     test/util/chainstate.h \
     test/util/logging.h \
     test/util/mining.h \
@@ -22,7 +25,11 @@ TEST_UTIL_H = \
 
 libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtest_util_a_LIBADD = $(LIBBLS) $(LIBMCL)
 libtest_util_a_SOURCES = \
+  blsct/arith/g1point.cpp \
+  blsct/arith/mcl_initializer.cpp \
+  blsct/arith/scalar.cpp \
   test/util/blockfilter.cpp \
   test/util/logging.cpp \
   test/util/mining.cpp \
