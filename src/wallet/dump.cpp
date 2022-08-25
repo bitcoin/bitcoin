@@ -224,7 +224,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
             if (key == "checksum") {
                 std::vector<unsigned char> parsed_checksum = ParseHex(value);
-                if (parsed_checksum.size() != checksum.size()) {
+                if (parsed_checksum.size() != uint256::size()) {
                     error = Untranslated("Error: Checksum is not the correct size");
                     ret = false;
                     break;

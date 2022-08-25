@@ -287,7 +287,7 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
     // Check min_activation_height is on a retarget boundary
     BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
 
-    const uint32_t bitmask{versionbitscache.Mask(params, dep)};
+    const uint32_t bitmask{VersionBitsCache::Mask(params, dep)};
     BOOST_CHECK_EQUAL(bitmask, uint32_t{1} << bit);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
             // not take precedence over STARTED/LOCKED_IN. So all softforks on
             // the same bit might overlap, even when non-overlapping start-end
             // times are picked.
-            const uint32_t dep_mask{vbcache.Mask(chainParams->GetConsensus(), dep)};
+            const uint32_t dep_mask{VersionBitsCache::Mask(chainParams->GetConsensus(), dep)};
             BOOST_CHECK(!(chain_all_vbits & dep_mask));
             chain_all_vbits |= dep_mask;
             check_computeblockversion(vbcache, chainParams->GetConsensus(), dep);

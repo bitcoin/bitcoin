@@ -299,7 +299,7 @@ Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
     unsigned char tmp[Num3072::BYTE_SIZE];
 
     uint256 hashed_in{(HashWriter{} << in).GetSHA256()};
-    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, Num3072::BYTE_SIZE);
+    ChaCha20(hashed_in.data(), uint256::size()).Keystream(tmp, Num3072::BYTE_SIZE);
     Num3072 out{tmp};
 
     return out;

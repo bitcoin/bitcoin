@@ -834,7 +834,7 @@ static RPCHelpMan getblocktemplate()
                 break;
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
-                pblock->nVersion |= chainman.m_versionbitscache.Mask(consensusParams, pos);
+                pblock->nVersion |= VersionBitsCache::Mask(consensusParams, pos);
                 [[fallthrough]];
             case ThresholdState::STARTED:
             {
@@ -843,7 +843,7 @@ static RPCHelpMan getblocktemplate()
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-                        pblock->nVersion &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
+                        pblock->nVersion &= ~VersionBitsCache::Mask(consensusParams, pos);
                     }
                 }
                 break;

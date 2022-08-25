@@ -80,9 +80,9 @@ void AppTests::appTests()
     expectCallback("guiTests");
     m_app.baseInitialize();
     m_app.requestInitialize();
-    m_app.exec();
+    BitcoinApplication::exec();
     m_app.requestShutdown();
-    m_app.exec();
+    BitcoinApplication::exec();
 
     // Reset global state to avoid interfering with later tests.
     LogInstance().DisconnectTestLogger();
@@ -114,6 +114,6 @@ AppTests::HandleCallback::~HandleCallback()
     assert(it != callbacks.end());
     callbacks.erase(it);
     if (callbacks.empty()) {
-        m_app_tests.m_app.exit(0);
+        BitcoinApplication::exit(0);
     }
 }

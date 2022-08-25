@@ -1169,7 +1169,7 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
     if (has_signal) {
         UniValue statsUV(UniValue::VOBJ);
         std::vector<bool> signals;
-        BIP9Stats statsStruct = chainman.m_versionbitscache.Statistics(blockindex, chainman.GetConsensus(), id, &signals);
+        BIP9Stats statsStruct = VersionBitsCache::Statistics(blockindex, chainman.GetConsensus(), id, &signals);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);

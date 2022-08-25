@@ -38,8 +38,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
     ,interface(nullptr)
 #endif
 {
-    if(_trayIcon && _trayIcon->supportsMessages())
-    {
+    if (_trayIcon && QSystemTrayIcon::supportsMessages()) {
         mode = QSystemTray;
     }
 #ifdef USE_DBUS

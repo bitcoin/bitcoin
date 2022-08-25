@@ -692,7 +692,7 @@ int GuiMain(int argc, char* argv[])
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
 #endif
-            app.exec();
+            BitcoinApplication::exec();
             rv = app.getReturnValue();
         } else {
             // A dialog with detailed error will have been shown by InitError()
