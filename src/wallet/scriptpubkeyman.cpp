@@ -1964,6 +1964,13 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
     return out;
 }
 
+bool LegacyScriptPubKeyMan::DeleteRecords()
+{
+    LOCK(cs_KeyStore);
+    WalletBatch batch(m_storage.GetDatabase());
+    return batch.EraseRecords(DBKeys::LEGACY_TYPES);
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
