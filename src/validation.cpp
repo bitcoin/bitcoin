@@ -4411,7 +4411,7 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
         }
-        if (!ContextualCheckBlockHeader(ibd, block, state, m_blockman, *this, pindexPrev, m_options.m_adjusted_time_callback())) {
+        if (!ContextualCheckBlockHeader(ibd, block, state, m_blockman, *this, pindexPrev, m_options.adjusted_time_callback())) {
             LogPrint(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
