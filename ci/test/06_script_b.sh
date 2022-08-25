@@ -35,17 +35,36 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
+  set -eo pipefail
   export P_CI_DIR="${BASE_BUILD_DIR}/navcoin-$HOST/src/"
-  CI_EXEC run-clang-tidy "${MAKEJOBS}"
-  export P_CI_DIR="${BASE_BUILD_DIR}/navcoin-$HOST/"
+  ( CI_EXEC run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+  export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
           " src/compat"\
+          " src/dbwrapper.cpp"\
           " src/init"\
+          " src/kernel"\
+          " src/node/chainstate.cpp"\
           " src/policy/feerate.cpp"\
           " src/policy/packages.cpp"\
           " src/policy/settings.cpp"\
+          " src/primitives/transaction.cpp"\
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
+          " src/test/fuzz/txorphan.cpp"\
+          " src/threadinterrupt.cpp"\
+          " src/util/bip32.cpp"\
+          " src/util/bytevectorhash.cpp"\
+          " src/util/error.cpp"\
+          " src/util/getuniquepath.cpp"\
+          " src/util/hasher.cpp"\
+          " src/util/message.cpp"\
+          " src/util/moneystr.cpp"\
+          " src/util/serfloat.cpp"\
+          " src/util/spanparsing.cpp"\
+          " src/util/strencodings.cpp"\
+          " src/util/syserror.cpp"\
+          " src/util/url.cpp"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/navcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
 fi
 

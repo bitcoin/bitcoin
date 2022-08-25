@@ -19,6 +19,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
+#include <kernel/chain.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/transaction.h>
@@ -35,7 +36,6 @@
 #include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <timedata.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -401,6 +401,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
     if (block.m_max_time) *block.m_max_time = index->GetBlockTimeMax();
     if (block.m_mtp_time) *block.m_mtp_time = index->GetMedianTimePast();
     if (block.m_in_active_chain) *block.m_in_active_chain = active[index->nHeight] == index;
+    if (block.m_locator) { *block.m_locator = active.GetLocator(index); }
     if (block.m_next_block) FillBlock(active[index->nHeight] == index ? active[index->nHeight + 1] : nullptr, *block.m_next_block, lock, active);
     if (block.m_data) {
         REVERSE_LOCK(lock);
@@ -426,11 +427,11 @@ public:
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockConnected(*block, index->nHeight);
+        m_notifications->blockConnected(kernel::MakeBlockInfo(index, block.get()));
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockDisconnected(*block, index->nHeight);
+        m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
@@ -507,7 +508,7 @@ public:
     std::optional<int> getHeight() override
     {
         LOCK(::cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
+        const CChain& active = chainman().ActiveChain();
         int height = active.Height();
         if (height >= 0) {
             return height;
@@ -517,28 +518,35 @@ public:
     uint256 getBlockHash(int height) override
     {
         LOCK(::cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
+        const CChain& active = chainman().ActiveChain();
         CBlockIndex* block = active[height];
         assert(block);
         return block->GetBlockHash();
     }
     bool haveBlockOnDisk(int height) override
     {
-        LOCK(cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
+        LOCK(::cs_main);
+        const CChain& active = chainman().ActiveChain();
         CBlockIndex* block = active[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
     CBlockLocator getTipLocator() override
     {
-        LOCK(cs_main);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
+        LOCK(::cs_main);
+        const CChain& active = chainman().ActiveChain();
         return active.GetLocator();
+    }
+    CBlockLocator getActiveChainLocator(const uint256& block_hash) override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* index = chainman().m_blockman.LookupBlockIndex(block_hash);
+        if (!index) return {};
+        return chainman().ActiveChain().GetLocator(index);
     }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
-        LOCK(cs_main);
-        const CChainState& active = Assert(m_node.chainman)->ActiveChainstate();
+        LOCK(::cs_main);
+        const CChainState& active = chainman().ActiveChainstate();
         if (const CBlockIndex* fork = active.FindForkInGlobalIndex(locator)) {
             return fork->nHeight;
         }
@@ -547,20 +555,20 @@ public:
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
         WAIT_LOCK(cs_main, lock);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        return FillBlock(m_node.chainman->m_blockman.LookupBlockIndex(hash), block, lock, active);
+        const CChain& active = chainman().ActiveChain();
+        return FillBlock(chainman().m_blockman.LookupBlockIndex(hash), block, lock, active);
     }
     bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block) override
     {
         WAIT_LOCK(cs_main, lock);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
+        const CChain& active = chainman().ActiveChain();
         return FillBlock(active.FindEarliestAtLeast(min_time, min_height), block, lock, active);
     }
     bool findAncestorByHeight(const uint256& block_hash, int ancestor_height, const FoundBlock& ancestor_out) override
     {
         WAIT_LOCK(cs_main, lock);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (const CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash)) {
+        const CChain& active = chainman().ActiveChain();
+        if (const CBlockIndex* block = chainman().m_blockman.LookupBlockIndex(block_hash)) {
             if (const CBlockIndex* ancestor = block->GetAncestor(ancestor_height)) {
                 return FillBlock(ancestor, ancestor_out, lock, active);
             }
@@ -570,18 +578,18 @@ public:
     bool findAncestorByHash(const uint256& block_hash, const uint256& ancestor_hash, const FoundBlock& ancestor_out) override
     {
         WAIT_LOCK(cs_main, lock);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        const CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash);
-        const CBlockIndex* ancestor = m_node.chainman->m_blockman.LookupBlockIndex(ancestor_hash);
+        const CChain& active = chainman().ActiveChain();
+        const CBlockIndex* block = chainman().m_blockman.LookupBlockIndex(block_hash);
+        const CBlockIndex* ancestor = chainman().m_blockman.LookupBlockIndex(ancestor_hash);
         if (block && ancestor && block->GetAncestor(ancestor->nHeight) != ancestor) ancestor = nullptr;
         return FillBlock(ancestor, ancestor_out, lock, active);
     }
     bool findCommonAncestor(const uint256& block_hash1, const uint256& block_hash2, const FoundBlock& ancestor_out, const FoundBlock& block1_out, const FoundBlock& block2_out) override
     {
         WAIT_LOCK(cs_main, lock);
-        const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        const CBlockIndex* block1 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash1);
-        const CBlockIndex* block2 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash2);
+        const CChain& active = chainman().ActiveChain();
+        const CBlockIndex* block1 = chainman().m_blockman.LookupBlockIndex(block_hash1);
+        const CBlockIndex* block2 = chainman().m_blockman.LookupBlockIndex(block_hash2);
         const CBlockIndex* ancestor = block1 && block2 ? LastCommonAncestor(block1, block2) : nullptr;
         // Using & instead of && below to avoid short circuiting and leaving
         // output uninitialized. Cast bool to int to avoid -Wbitwise-instead-of-logical
@@ -593,7 +601,7 @@ public:
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         return GuessVerificationProgress(chainman().GetParams().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
@@ -693,8 +701,8 @@ public:
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
     bool havePruned() override
     {
-        LOCK(cs_main);
-        return m_node.chainman->m_blockman.m_have_pruned;
+        LOCK(::cs_main);
+        return chainman().m_blockman.m_have_pruned;
     }
     bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
@@ -716,7 +724,7 @@ public:
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);
-            const CChain& active = Assert(m_node.chainman)->ActiveChain();
+            const CChain& active = chainman().ActiveChain();
             if (old_tip == active.Tip()->GetBlockHash()) return;
         }
         SyncWithValidationInterfaceQueue();
@@ -768,6 +776,12 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
         }
     }
+    bool hasAssumedValidChain() override
+    {
+        return chainman().IsSnapshotActive();
+    }
+
+    NodeContext* context() override { return &m_node; }
     NodeContext& m_node;
 };
 } // namespace

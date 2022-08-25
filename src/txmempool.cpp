@@ -458,6 +458,7 @@ CTxMemPool::CTxMemPool(const Options& opts)
       minerPolicyEstimator{opts.estimator},
       m_max_size_bytes{opts.max_size_bytes},
       m_expiry{opts.expiry},
+      m_full_rbf{opts.full_rbf},
       m_limits{opts.limits}
 {
     _clear(); //lock free clear
@@ -1209,14 +1210,14 @@ void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, 
     }
 }
 
-bool CTxMemPool::IsLoaded() const
+bool CTxMemPool::GetLoadTried() const
 {
     LOCK(cs);
-    return m_is_loaded;
+    return m_load_tried;
 }
 
-void CTxMemPool::SetIsLoaded(bool loaded)
+void CTxMemPool::SetLoadTried(bool load_tried)
 {
     LOCK(cs);
-    m_is_loaded = loaded;
+    m_load_tried = load_tried;
 }

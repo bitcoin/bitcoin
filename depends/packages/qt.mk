@@ -21,6 +21,7 @@ $(package)_patches += fix_limits_header.patch
 $(package)_patches += use_android_ndk23.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += duplicate_lcqpafonts.patch
+$(package)_patches += fast_fixed_dtoa_no_optimize.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=5d7869f670a135ad0986e266813b9dd5bbae2b09577338f9cdf8904d4af52db0
@@ -152,6 +153,9 @@ $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
 $(package)_config_opts_linux += -dbus-runtime
+ifneq ($(LTO),)
+$(package)_config_opts_linux += -ltcg
+endif
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
@@ -173,6 +177,7 @@ $(package)_config_opts_mingw32 += "QMAKE_CFLAGS = '$($(package)_cflags) $($(pack
 $(package)_config_opts_mingw32 += "QMAKE_CXX = '$($(package)_cxx)'"
 $(package)_config_opts_mingw32 += "QMAKE_CXXFLAGS = '$($(package)_cxxflags) $($(package)_cppflags)'"
 $(package)_config_opts_mingw32 += "QMAKE_LFLAGS = '$($(package)_ldflags)'"
+$(package)_config_opts_mingw32 += "QMAKE_LIB = '$($(package)_ar) rc'"
 $(package)_config_opts_mingw32 += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_mingw32 += -pch
 
@@ -248,6 +253,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/use_android_ndk23.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \

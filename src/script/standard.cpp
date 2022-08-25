@@ -375,9 +375,9 @@ bool IsValidDestination(const CTxDestination& dest) {
     }
     /* Lexicographically sort a and b's hash, and compute parent hash. */
     if (a.hash < b.hash) {
-        ret.hash = (CHashWriter(HASHER_TAPBRANCH) << a.hash << b.hash).GetSHA256();
+        ret.hash = (HashWriter{HASHER_TAPBRANCH} << a.hash << b.hash).GetSHA256();
     } else {
-        ret.hash = (CHashWriter(HASHER_TAPBRANCH) << b.hash << a.hash).GetSHA256();
+        ret.hash = (HashWriter{HASHER_TAPBRANCH} << b.hash << a.hash).GetSHA256();
     }
     return ret;
 }
@@ -452,7 +452,7 @@ TaprootBuilder& TaprootBuilder::Add(int depth, const CScript& script, int leaf_v
     if (!IsValid()) return *this;
     /* Construct NodeInfo object with leaf hash and (if track is true) also leaf information. */
     NodeInfo node;
-    node.hash = (CHashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
+    node.hash = (HashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
     if (track) node.leaves.emplace_back(LeafInfo{script, leaf_version, {}});
     /* Insert into the branch. */
     Insert(std::move(node), depth);
@@ -610,7 +610,7 @@ std::optional<std::vector<std::tuple<int, CScript, int>>> InferTaprootTree(const
             node.done = true;
             stack.pop_back();
         } else if (node.sub[0]->done && !node.sub[1]->done && !node.sub[1]->explored && !node.sub[1]->hash.IsNull() &&
-                   (CHashWriter{HASHER_TAPBRANCH} << node.sub[1]->hash << node.sub[1]->hash).GetSHA256() == node.hash) {
+                   (HashWriter{HASHER_TAPBRANCH} << node.sub[1]->hash << node.sub[1]->hash).GetSHA256() == node.hash) {
             // Whenever there are nodes with two identical subtrees under it, we run into a problem:
             // the control blocks for the leaves underneath those will be identical as well, and thus
             // they will all be matched to the same path in the tree. The result is that at the location

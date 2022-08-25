@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-class CAutoFile;
+class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
 
@@ -220,11 +220,11 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Write estimation data to a file */
-    bool Write(CAutoFile& fileout) const
+    bool Write(AutoFile& fileout) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Read estimation data from a file */
-    bool Read(CAutoFile& filein)
+    bool Read(AutoFile& filein)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */

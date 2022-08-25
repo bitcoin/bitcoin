@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat/compat.h>
 #include <fs.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
@@ -315,12 +316,6 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, b
     env = database.env.get();
     pdb = database.m_db.get();
     strFile = fs::PathToString(database.m_filename);
-    if (!Exists(std::string("version"))) {
-        bool fTmp = fReadOnly;
-        fReadOnly = false;
-        Write(std::string("version"), CLIENT_VERSION);
-        fReadOnly = fTmp;
-    }
 }
 
 void BerkeleyDatabase::Open()

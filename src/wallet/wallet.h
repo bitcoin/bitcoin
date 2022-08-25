@@ -15,6 +15,7 @@
 #include <psbt.h>
 #include <tinyformat.h>
 #include <util/message.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -45,7 +46,6 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 
 class CScript;
 enum class FeeEstimateMode;
-struct FeeCalculation;
 struct bilingual_str;
 
 namespace wallet {
@@ -508,8 +508,8 @@ public:
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true, bool rescanning_old_block = false);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override;
-    void blockConnected(const CBlock& block, int height) override;
-    void blockDisconnected(const CBlock& block, int height) override;
+    void blockConnected(const interfaces::BlockInfo& block) override;
+    void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
@@ -528,7 +528,7 @@ public:
         //! USER_ABORT.
         uint256 last_failed_block;
     };
-    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate);
+    ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, const bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
     void ReacceptWalletTransactions() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
@@ -635,7 +635,30 @@ public:
 
     std::optional<int64_t> GetOldestKeyPoolTime() const;
 
-    std::set<CTxDestination> GetLabelAddresses(const std::string& label) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    // Filter struct for 'ListAddrBookAddresses'
+    struct AddrBookFilter {
+        // Fetch addresses with the provided label
+        std::optional<std::string> m_op_label{std::nullopt};
+        // Don't include change addresses by default
+        bool ignore_change{true};
+    };
+
+    /**
+     * Filter and retrieve destinations stored in the addressbook
+     */
+    std::vector<CTxDestination> ListAddrBookAddresses(const std::optional<AddrBookFilter>& filter) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /**
+     * Retrieve all the known labels in the address book
+     */
+    std::set<std::string> ListAddrBookLabels(const std::string& purpose) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /**
+     * Walk-through the address book entries.
+     * Stops when the provided 'ListAddrBookFunc' returns false.
+     */
+    using ListAddrBookFunc = std::function<void(const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change)>;
+    void ForEachAddrBookEntry(const ListAddrBookFunc& func) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Marks all outputs in each one of the destinations dirty, so their cache is
@@ -643,8 +666,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, bilingual_str& error);
-    bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, bilingual_str& error);
+    BResult<CTxDestination> GetNewDestination(const OutputType type, const std::string label);
+    BResult<CTxDestination> GetNewChangeDestination(const OutputType type);
 
     isminetype IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     isminetype IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -896,8 +919,11 @@ void MaybeResendWalletTxs(WalletContext& context);
 class WalletRescanReserver
 {
 private:
+    using Clock = std::chrono::steady_clock;
+    using NowFn = std::function<Clock::time_point()>;
     CWallet& m_wallet;
     bool m_could_reserve;
+    NowFn m_now;
 public:
     explicit WalletRescanReserver(CWallet& w) : m_wallet(w), m_could_reserve(false) {}
 
@@ -918,6 +944,10 @@ public:
         return (m_could_reserve && m_wallet.fScanningWallet);
     }
 
+    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); };
+
+    void setNow(NowFn now) { m_now = std::move(now); }
+
     ~WalletRescanReserver()
     {
         if (m_could_reserve) {
@@ -932,7 +962,7 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig);
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control = nullptr);
 
 bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 } // namespace wallet

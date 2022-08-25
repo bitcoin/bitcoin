@@ -6,6 +6,8 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <string>
+
 void ReplaceAll(std::string& in_out, std::string_view search, std::string_view substitute)
 {
     boost::replace_all(in_out, search, substitute);

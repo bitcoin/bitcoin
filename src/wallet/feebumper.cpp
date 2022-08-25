@@ -219,19 +219,18 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     new_coin_control.m_min_depth = 1;
 
     constexpr int RANDOM_CHANGE_POSITION = -1;
-    bilingual_str fail_reason;
-    FeeCalculation fee_calc_out;
-    std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, fail_reason, new_coin_control, fee_calc_out, false);
-    if (!txr) {
-        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
+    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
+    if (!res) {
+        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + res.GetError());
         return Result::WALLET_ERROR;
     }
 
+    const auto& txr = res.GetObj();
     // Write back new fee if successful
-    new_fee = txr->fee;
+    new_fee = txr.fee;
 
     // Write back transaction
-    mtx = CMutableTransaction(*txr->tx);
+    mtx = CMutableTransaction(*txr.tx);
 
     return Result::OK;
 }

@@ -5,8 +5,12 @@
 
 #include <rpc/blockchain.h>
 
+#include <kernel/mempool_persist.h>
+
+#include <chainparams.h>
 #include <core_io.h>
 #include <fs.h>
+#include <node/mempool_persist_args.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
@@ -16,8 +20,12 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/moneystr.h>
+#include <util/time.h>
+
+using kernel::DumpMempool;
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::MempoolPath;
 using node::NodeContext;
 
 static RPCHelpMan sendrawtransaction()
@@ -652,7 +660,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("loaded", pool.IsLoaded());
+    ret.pushKV("loaded", pool.GetLoadTried());
     ret.pushKV("size", (int64_t)pool.size());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
@@ -662,6 +670,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     ret.pushKV("incrementalrelayfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
+    ret.pushKV("fullrbf", pool.m_full_rbf);
     return ret;
 }
 
@@ -683,6 +692,7 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
                 {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
                 {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
+                {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection"},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")
@@ -714,19 +724,165 @@ static RPCHelpMan savemempool()
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
-    if (!mempool.IsLoaded()) {
+    if (!mempool.GetLoadTried()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
     }
 
-    if (!DumpMempool(mempool)) {
+    const fs::path& dump_path = MempoolPath(args);
+
+    if (!DumpMempool(mempool, dump_path)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", dump_path.u8string());
 
     return ret;
 },
+    };
+}
+
+static RPCHelpMan submitpackage()
+{
+    return RPCHelpMan{"submitpackage",
+        "Submit a package of raw transactions (serialized, hex-encoded) to local node (-regtest only).\n"
+        "The package will be validated according to consensus and mempool policy rules. If all transactions pass, they will be accepted to mempool.\n"
+        "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
+        "Warning: until package relay is in use, successful submission does not mean the transaction will propagate to other nodes on the network.\n"
+        "Currently, each transaction is broadcasted individually after submission, which means they must meet other nodes' feerate requirements alone.\n"
+        ,
+        {
+            {"package", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of raw transactions.",
+                {
+                    {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::OBJ_DYN, "tx-results", "transaction results keyed by wtxid",
+                {
+                    {RPCResult::Type::OBJ, "wtxid", "transaction wtxid", {
+                        {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                        {RPCResult::Type::STR_HEX, "other-wtxid", /*optional=*/true, "The wtxid of a different transaction with the same txid but different witness found in the mempool. This means the submitted transaction was ignored."},
+                        {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141."},
+                        {RPCResult::Type::OBJ, "fees", "Transaction fees", {
+                            {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                        }},
+                    }}
+                }},
+                {RPCResult::Type::STR_AMOUNT, "package-feerate", /*optional=*/true, "package feerate used for feerate checks in " + CURRENCY_UNIT + " per KvB. Excludes transactions which were deduplicated or accepted individually."},
+                {RPCResult::Type::ARR, "replaced-transactions", /*optional=*/true, "List of txids of replaced transactions",
+                {
+                    {RPCResult::Type::STR_HEX, "", "The transaction id"},
+                }},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("testmempoolaccept", "[rawtx1, rawtx2]") +
+            HelpExampleCli("submitpackage", "[rawtx1, rawtx2]")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            if (!Params().IsMockableChain()) {
+                throw std::runtime_error("submitpackage is for regression testing (-regtest mode) only");
+            }
+            RPCTypeCheck(request.params, {
+                UniValue::VARR,
+            });
+            const UniValue raw_transactions = request.params[0].get_array();
+            if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
+            }
+
+            std::vector<CTransactionRef> txns;
+            txns.reserve(raw_transactions.size());
+            for (const auto& rawtx : raw_transactions.getValues()) {
+                CMutableTransaction mtx;
+                if (!DecodeHexTx(mtx, rawtx.get_str())) {
+                    throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                                       "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
+                }
+                txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+            }
+
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            CTxMemPool& mempool = EnsureMemPool(node);
+            CChainState& chainstate = EnsureChainman(node).ActiveChainstate();
+            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false));
+
+            // First catch any errors.
+            switch(package_result.m_state.GetResult()) {
+                case PackageValidationResult::PCKG_RESULT_UNSET: break;
+                case PackageValidationResult::PCKG_POLICY:
+                {
+                    throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE,
+                        package_result.m_state.GetRejectReason());
+                }
+                case PackageValidationResult::PCKG_MEMPOOL_ERROR:
+                {
+                    throw JSONRPCTransactionError(TransactionError::MEMPOOL_ERROR,
+                        package_result.m_state.GetRejectReason());
+                }
+                case PackageValidationResult::PCKG_TX:
+                {
+                    for (const auto& tx : txns) {
+                        auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
+                        if (it != package_result.m_tx_results.end() && it->second.m_state.IsInvalid()) {
+                            throw JSONRPCTransactionError(TransactionError::MEMPOOL_REJECTED,
+                                strprintf("%s failed: %s", tx->GetHash().ToString(), it->second.m_state.GetRejectReason()));
+                        }
+                    }
+                    // If a PCKG_TX error was returned, there must have been an invalid transaction.
+                    NONFATAL_UNREACHABLE();
+                }
+            }
+            for (const auto& tx : txns) {
+                size_t num_submitted{0};
+                std::string err_string;
+                const auto err = BroadcastTransaction(node, tx, err_string, 0, true, true);
+                if (err != TransactionError::OK) {
+                    throw JSONRPCTransactionError(err,
+                        strprintf("transaction broadcast failed: %s (all transactions were submitted, %d transactions were broadcast successfully)",
+                            err_string, num_submitted));
+                }
+            }
+            UniValue rpc_result{UniValue::VOBJ};
+            UniValue tx_result_map{UniValue::VOBJ};
+            std::set<uint256> replaced_txids;
+            for (const auto& tx : txns) {
+                auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
+                CHECK_NONFATAL(it != package_result.m_tx_results.end());
+                UniValue result_inner{UniValue::VOBJ};
+                result_inner.pushKV("txid", tx->GetHash().GetHex());
+                if (it->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS) {
+                    result_inner.pushKV("other-wtxid", it->second.m_other_wtxid.value().GetHex());
+                }
+                if (it->second.m_result_type == MempoolAcceptResult::ResultType::VALID ||
+                    it->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY) {
+                    result_inner.pushKV("vsize", int64_t{it->second.m_vsize.value()});
+                    UniValue fees(UniValue::VOBJ);
+                    fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
+                    result_inner.pushKV("fees", fees);
+                    if (it->second.m_replaced_transactions.has_value()) {
+                        for (const auto& ptx : it->second.m_replaced_transactions.value()) {
+                            replaced_txids.insert(ptx->GetHash());
+                        }
+                    }
+                }
+                tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), result_inner);
+            }
+            rpc_result.pushKV("tx-results", tx_result_map);
+            if (package_result.m_package_feerate.has_value()) {
+                rpc_result.pushKV("package-feerate", ValueFromAmount(package_result.m_package_feerate.value().GetFeePerK()));
+            }
+            UniValue replaced_list(UniValue::VARR);
+            for (const uint256& hash : replaced_txids) replaced_list.push_back(hash.ToString());
+            rpc_result.pushKV("replaced-transactions", replaced_list);
+            return rpc_result;
+        },
     };
 }
 
@@ -742,6 +898,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getmempoolinfo},
         {"blockchain", &getrawmempool},
         {"blockchain", &savemempool},
+        {"hidden", &submitpackage},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

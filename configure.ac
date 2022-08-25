@@ -87,9 +87,6 @@ else
 AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 fi
 
-dnl Check if -latomic is required for <std::atomic>
-CHECK_ATOMIC
-
 dnl check if additional link flags are required for std::filesystem
 CHECK_FILESYSTEM
 
@@ -886,6 +883,9 @@ AC_C_BIGENDIAN
 
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
+
+dnl Check if -latomic is required for <std::atomic>
+CHECK_ATOMIC
 
 dnl The following macro will add the necessary defines to bitcoin-config.h, but
 dnl they also need to be passed down to any subprojects. Pull the results out of
@@ -1978,6 +1978,9 @@ AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/test_runner.py:test/util/test_runner.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
+AC_CONFIG_LINKS([src/qt/Makefile:src/qt/Makefile])
+AC_CONFIG_LINKS([src/qt/test/Makefile:src/qt/test/Makefile])
+AC_CONFIG_LINKS([src/test/Makefile:src/test/Makefile])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
@@ -2049,5 +2052,6 @@ echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPP
 echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
 echo "  LDFLAGS         = $LTO_LDFLAGS $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $CORE_LDFLAGS $LDFLAGS"
+echo "  AR              = $AR"
 echo "  ARFLAGS         = $ARFLAGS"
 echo

@@ -33,5 +33,7 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolOptions& mempool_opt
 
     if (auto hours = argsman.GetIntArg("-mempoolexpiry")) mempool_opts.expiry = std::chrono::hours{*hours};
 
+    mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
+
     ApplyArgsManOptions(argsman, mempool_opts.limits);
 }

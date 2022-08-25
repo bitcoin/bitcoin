@@ -10,6 +10,7 @@ EXTRA_LIBRARIES += \
 TEST_FUZZ_H = \
     test/fuzz/fuzz.h \
     test/fuzz/FuzzedDataProvider.h \
+    test/fuzz/mempool_utils.h \
     test/fuzz/util.h
 
 libtest_fuzz_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)

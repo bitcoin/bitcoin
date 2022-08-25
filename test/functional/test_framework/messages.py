@@ -39,7 +39,7 @@ MAX_BLOOM_HASH_FUNCS = 50
 COIN = 100000000  # 1 btc in satoshis
 MAX_MONEY = 21000000 * COIN
 
-BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
+MAX_BIP125_RBF_SEQUENCE = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set for every input of a tx
 
 MAX_PROTOCOL_MESSAGE_LENGTH = 4000000  # Maximum length of incoming protocol messages
@@ -206,6 +206,20 @@ def from_hex(obj, hex_string):
 def tx_from_hex(hex_string):
     """Deserialize from hex string to a transaction object"""
     return from_hex(CTransaction(), hex_string)
+
+
+# like from_hex, but without the hex part
+def from_binary(cls, stream):
+    """deserialize a binary stream (or bytes object) into an object"""
+    # handle bytes object by turning it into a stream
+    was_bytes = isinstance(stream, bytes)
+    if was_bytes:
+        stream = BytesIO(stream)
+    obj = cls()
+    obj.deserialize(stream)
+    if was_bytes:
+        assert len(stream.read()) == 0
+    return obj
 
 
 # Objects that map to navcoind objects, which can be serialized/deserialized

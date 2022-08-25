@@ -141,12 +141,13 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coins.h \
   common/bloom.h \
-  compat.h \
   compat/assumptions.h \
   compat/byteswap.h \
+  compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
   compressor.h \
+  node/connection_types.h \
   consensus/consensus.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
@@ -156,6 +157,7 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   deploymentinfo.h \
   deploymentstatus.h \
+  node/eviction.h \
   external_signer.h \
   flatfile.h \
   fs.h \
@@ -177,12 +179,14 @@ BITCOIN_CORE_H = \
   interfaces/ipc.h \
   interfaces/node.h \
   interfaces/wallet.h \
+  kernel/chain.h \
   kernel/chainstatemanager_opts.h \
   kernel/checks.h \
   kernel/coinstats.h \
   kernel/context.h \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
+  kernel/mempool_persist.h \
   key.h \
   key_io.h \
   logging.h \
@@ -204,6 +208,7 @@ BITCOIN_CORE_H = \
   node/chainstate.h \
   node/coin.h \
   node/context.h \
+  node/mempool_persist_args.h \
   node/miner.h \
   node/minisketchwrapper.h \
   node/psbt.h \
@@ -267,7 +272,6 @@ BITCOIN_CORE_H = \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
-  util/designator.h \
   util/epochguard.h \
   util/error.h \
   util/fastrange.h \
@@ -283,6 +287,7 @@ BITCOIN_CORE_H = \
   util/overloaded.h \
   util/rbf.h \
   util/readwritefile.h \
+  util/result.h \
   util/serfloat.h \
   util/settings.h \
   util/sock.h \
@@ -369,9 +374,11 @@ libbitcoin_node_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
+  kernel/chain.cpp \
   kernel/checks.cpp \
   kernel/coinstats.cpp \
   kernel/context.cpp \
+  kernel/mempool_persist.cpp \
   mapport.cpp \
   mempool_args.cpp \
   net.cpp \
@@ -381,8 +388,11 @@ libbitcoin_node_a_SOURCES = \
   node/caches.cpp \
   node/chainstate.cpp \
   node/coin.cpp \
+  node/connection_types.cpp \
   node/context.cpp \
+  node/eviction.cpp \
   node/interfaces.cpp \
+  node/mempool_persist_args.cpp \
   node/miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
@@ -870,8 +880,7 @@ endif
 
 # TODO: libbitcoinkernel is a work in progress consensus engine library, as more
 #       and more modules are decoupled from the consensus engine, this list will
-#       shrink to only those which are absolutely necessary. For example, things
-#       like index/*.cpp will be removed.
+#       shrink to only those which are absolutely necessary.
 libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
@@ -891,9 +900,11 @@ libbitcoinkernel_la_SOURCES = \
   flatfile.cpp \
   fs.cpp \
   hash.cpp \
+  kernel/chain.cpp \
   kernel/checks.cpp \
   kernel/coinstats.cpp \
   kernel/context.cpp \
+  kernel/mempool_persist.cpp \
   key.cpp \
   logging.cpp \
   node/blockstorage.cpp \

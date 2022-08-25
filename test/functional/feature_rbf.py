@@ -4,27 +4,17 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
 
-from copy import deepcopy
 from decimal import Decimal
 
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_BIP125_RBF_SEQUENCE,
     COIN,
-    COutPoint,
-    CTransaction,
-    CTxIn,
-    CTxOut,
     SEQUENCE_FINAL,
 )
-from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-)
-from test_framework.script_util import (
-    DUMMY_P2WPKH_SCRIPT,
-    DUMMY_2_P2WPKH_SCRIPT,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
@@ -35,7 +25,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
-                "-acceptnonstdtxn=1",
                 "-maxorphantx=1000",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
@@ -94,17 +83,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
+        self.log.info("Running test full replace by fee...")
+        self.test_fullrbf()
+
         self.log.info("Passed")
 
-    def make_utxo(self, node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
+    def make_utxo(self, node, amount, *, confirmed=True, scriptPubKey=None):
         """Create a txout with a given amount and scriptPubKey
 
-        confirmed - txouts created will be confirmed in the blockchain;
+        confirmed - txout created will be confirmed in the blockchain;
                     unconfirmed otherwise.
         """
-        txid, n = self.wallet.send_to(from_node=node, scriptPubKey=scriptPubKey, amount=amount)
+        txid, n = self.wallet.send_to(from_node=node, scriptPubKey=scriptPubKey or self.wallet.get_scriptPubKey(), amount=amount)
 
-        # If requested, ensure txouts are confirmed.
         if confirmed:
             mempool_size = len(node.getrawmempool())
             while mempool_size > 0:
@@ -115,30 +106,24 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 assert new_size < mempool_size
                 mempool_size = new_size
 
-        return COutPoint(int(txid, 16), n)
+        return self.wallet.get_utxo(txid=txid, vout=n)
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
         # we use MiniWallet to create a transaction template with inputs correctly set,
         # and modify the output (amount, scriptPubKey) according to our needs
-        tx_template = self.wallet.create_self_transfer()['tx']
-
-        tx1a = deepcopy(tx_template)
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1a_hex = tx1a.serialize().hex()
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
+        tx = self.wallet.create_self_transfer()["tx"]
+        tx1a_txid = self.nodes[0].sendrawtransaction(tx.serialize().hex())
 
         # Should fail because we haven't changed the fee
-        tx1b = deepcopy(tx_template)
-        tx1b.vout = [CTxOut(1 * COIN, DUMMY_2_P2WPKH_SCRIPT)]
-        tx1b_hex = tx1b.serialize().hex()
+        tx.vout[0].scriptPubKey[-1] ^= 1
 
         # This will raise an exception due to insufficient fee
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex(), 0)
 
         # Extra 0.1 BTC fee
-        tx1b.vout[0].nValue -= int(0.1 * COIN)
-        tx1b_hex = tx1b.serialize().hex()
+        tx.vout[0].nValue -= int(0.1 * COIN)
+        tx1b_hex = tx.serialize().hex()
         # Works when enabled
         tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
 
@@ -160,28 +145,28 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         chain_txids = []
         while remaining_value > 1 * COIN:
             remaining_value -= int(0.1 * COIN)
-            tx = CTransaction()
-            tx.vin = [CTxIn(prevout, nSequence=0)]
-            tx.vout = [CTxOut(remaining_value, CScript([1, OP_DROP] * 15 + [1]))]
-            tx_hex = tx.serialize().hex()
-            txid = self.nodes[0].sendrawtransaction(tx_hex, 0)
-            chain_txids.append(txid)
-            prevout = COutPoint(int(txid, 16), 0)
+            prevout = self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=prevout,
+                sequence=0,
+                fee=Decimal("0.1"),
+            )["new_utxo"]
+            chain_txids.append(prevout["txid"])
 
         # Whether the double-spend is allowed is evaluated by including all
         # child fees - 4 BTC - so this attempt is rejected.
-        dbl_tx = CTransaction()
-        dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - 3 * COIN, DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx = self.wallet.create_self_transfer(
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("3"),
+        )["tx"]
         dbl_tx_hex = dbl_tx.serialize().hex()
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
         # Accepted with sufficient fee
-        dbl_tx = CTransaction()
-        dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
+        dbl_tx.vout[0].nValue = int(0.1 * COIN)
         dbl_tx_hex = dbl_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -205,22 +190,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             if txout_value < fee:
                 return
 
-            vout = [CTxOut(txout_value, CScript([i+1]))
-                    for i in range(tree_width)]
-            tx = CTransaction()
-            tx.vin = [CTxIn(prevout, nSequence=0)]
-            tx.vout = vout
-            tx_hex = tx.serialize().hex()
+            tx = self.wallet.send_self_transfer_multi(
+                utxos_to_spend=[prevout],
+                from_node=self.nodes[0],
+                sequence=0,
+                num_outputs=tree_width,
+                amount_per_output=txout_value,
+            )
 
-            assert len(tx.serialize()) < 100000
-            txid = self.nodes[0].sendrawtransaction(tx_hex, 0)
-            yield tx
+            yield tx["txid"]
             _total_txs[0] += 1
 
-            txid = int(txid, 16)
-
-            for i, txout in enumerate(tx.vout):
-                for x in branch(COutPoint(txid, i), txout_value,
+            for utxo in tx["new_utxos"]:
+                for x in branch(utxo, txout_value,
                                   max_txs,
                                   tree_width=tree_width, fee=fee,
                                   _total_txs=_total_txs):
@@ -232,25 +214,26 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(len(tree_txs), n)
 
         # Attempt double-spend, will fail because too little fee paid
-        dbl_tx = CTransaction()
-        dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - fee * n, DUMMY_P2WPKH_SCRIPT)]
-        dbl_tx_hex = dbl_tx.serialize().hex()
+        dbl_tx_hex = self.wallet.create_self_transfer(
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=(Decimal(fee) / COIN) * n,
+        )["hex"]
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
         # 0.1 BTC fee is enough
-        dbl_tx = CTransaction()
-        dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        dbl_tx.vout = [CTxOut(initial_nValue - fee * n - int(0.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        dbl_tx_hex = dbl_tx.serialize().hex()
+        dbl_tx_hex = self.wallet.create_self_transfer(
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=(Decimal(fee) / COIN) * n + Decimal("0.1"),
+        )["hex"]
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
         mempool = self.nodes[0].getrawmempool()
 
-        for tx in tree_txs:
-            tx.rehash()
-            assert tx.hash not in mempool
+        for txid in tree_txs:
+            assert txid not in mempool
 
         # Try again, but with more total transactions than the "max txs
         # double-spent at once" anti-DoS limit.
@@ -260,33 +243,36 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             tree_txs = list(branch(tx0_outpoint, initial_nValue, n, fee=fee))
             assert_equal(len(tree_txs), n)
 
-            dbl_tx = CTransaction()
-            dbl_tx.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-            dbl_tx.vout = [CTxOut(initial_nValue - 2 * fee * n, DUMMY_P2WPKH_SCRIPT)]
-            dbl_tx_hex = dbl_tx.serialize().hex()
+            dbl_tx_hex = self.wallet.create_self_transfer(
+                utxo_to_spend=tx0_outpoint,
+                sequence=0,
+                fee=2 * (Decimal(fee) / COIN) * n,
+            )["hex"]
             # This will raise an exception
             assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
-            for tx in tree_txs:
-                tx.rehash()
-                self.nodes[0].getrawtransaction(tx.hash)
+            for txid in tree_txs:
+                self.nodes[0].getrawtransaction(txid)
 
     def test_replacement_feeperkb(self):
         """Replacement requires fee-per-KB to be higher"""
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
-        tx1a = CTransaction()
-        tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1a_hex = tx1a.serialize().hex()
-        self.nodes[0].sendrawtransaction(tx1a_hex, 0)
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )
 
         # Higher fee, but the fee per KB is much lower, so the replacement is
         # rejected.
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1b.vout = [CTxOut(int(0.001 * COIN), CScript([b'a' * 999000]))]
-        tx1b_hex = tx1b.serialize().hex()
+        tx1b_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[tx0_outpoint],
+            sequence=0,
+            num_outputs=100,
+            amount_per_output=1000,
+        )["hex"]
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
@@ -296,37 +282,36 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         utxo1 = self.make_utxo(self.nodes[0], int(1.2 * COIN))
         utxo2 = self.make_utxo(self.nodes[0], 3 * COIN)
 
-        tx1a = CTransaction()
-        tx1a.vin = [CTxIn(utxo1, nSequence=0)]
-        tx1a.vout = [CTxOut(int(1.1 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx1a_hex = tx1a.serialize().hex()
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
-
-        tx1a_txid = int(tx1a_txid, 16)
+        tx1a_utxo = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=utxo1,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )["new_utxo"]
 
         # Direct spend an output of the transaction we're replacing.
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(utxo1, nSequence=0), CTxIn(utxo2, nSequence=0)]
-        tx2.vin.append(CTxIn(COutPoint(tx1a_txid, 0), nSequence=0))
-        tx2.vout = tx1a.vout
-        tx2_hex = tx2.serialize().hex()
+        tx2_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[utxo1, utxo2, tx1a_utxo],
+            sequence=0,
+            amount_per_output=int(COIN * tx1a_utxo["value"]),
+        )["hex"]
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
         # Spend tx1a's output to test the indirect case.
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
-        tx1b.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1b_hex = tx1b.serialize().hex()
-        tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
-        tx1b_txid = int(tx1b_txid, 16)
+        tx1b_utxo = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1a_utxo,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )["new_utxo"]
 
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(utxo1, nSequence=0), CTxIn(utxo2, nSequence=0),
-                   CTxIn(COutPoint(tx1b_txid, 0))]
-        tx2.vout = tx1a.vout
-        tx2_hex = tx2.serialize().hex()
+        tx2_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[utxo1, utxo2, tx1b_utxo],
+            sequence=0,
+            amount_per_output=int(COIN * tx1a_utxo["value"]),
+        )["hex"]
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
@@ -334,18 +319,20 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_new_unconfirmed_inputs(self):
         """Replacements that add new unconfirmed inputs are rejected"""
         confirmed_utxo = self.make_utxo(self.nodes[0], int(1.1 * COIN))
-        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.1 * COIN), False)
+        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.1 * COIN), confirmed=False)
 
-        tx1 = CTransaction()
-        tx1.vin = [CTxIn(confirmed_utxo)]
-        tx1.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1_hex = tx1.serialize().hex()
-        self.nodes[0].sendrawtransaction(tx1_hex, 0)
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )
 
-        tx2 = CTransaction()
-        tx2.vin = [CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)]
-        tx2.vout = tx1.vout
-        tx2_hex = tx2.serialize().hex()
+        tx2_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[confirmed_utxo, unconfirmed_utxo],
+            sequence=0,
+            amount_per_output=1 * COIN,
+        )["hex"]
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, tx2_hex, 0)
@@ -361,45 +348,39 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         fee = int(0.0001 * COIN)
         split_value = int((initial_nValue - fee) / (MAX_REPLACEMENT_LIMIT + 1))
 
-        outputs = []
-        for _ in range(MAX_REPLACEMENT_LIMIT + 1):
-            outputs.append(CTxOut(split_value, CScript([1])))
-
-        splitting_tx = CTransaction()
-        splitting_tx.vin = [CTxIn(utxo, nSequence=0)]
-        splitting_tx.vout = outputs
-        splitting_tx_hex = splitting_tx.serialize().hex()
-
-        txid = self.nodes[0].sendrawtransaction(splitting_tx_hex, 0)
-        txid = int(txid, 16)
+        splitting_tx_utxos = self.wallet.send_self_transfer_multi(
+            from_node=self.nodes[0],
+            utxos_to_spend=[utxo],
+            sequence=0,
+            num_outputs=MAX_REPLACEMENT_LIMIT + 1,
+            amount_per_output=split_value,
+        )["new_utxos"]
 
         # Now spend each of those outputs individually
-        for i in range(MAX_REPLACEMENT_LIMIT + 1):
-            tx_i = CTransaction()
-            tx_i.vin = [CTxIn(COutPoint(txid, i), nSequence=0)]
-            tx_i.vout = [CTxOut(split_value - fee, DUMMY_P2WPKH_SCRIPT)]
-            tx_i_hex = tx_i.serialize().hex()
-            self.nodes[0].sendrawtransaction(tx_i_hex, 0)
+        for utxo in splitting_tx_utxos:
+            self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=utxo,
+                sequence=0,
+                fee=Decimal(fee) / COIN,
+            )
 
         # Now create doublespend of the whole lot; should fail.
         # Need a big enough fee to cover all spending transactions and have
         # a higher fee rate
         double_spend_value = (split_value - 100 * fee) * (MAX_REPLACEMENT_LIMIT + 1)
-        inputs = []
-        for i in range(MAX_REPLACEMENT_LIMIT + 1):
-            inputs.append(CTxIn(COutPoint(txid, i), nSequence=0))
-        double_tx = CTransaction()
-        double_tx.vin = inputs
-        double_tx.vout = [CTxOut(double_spend_value, CScript([b'a']))]
+        double_tx = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=splitting_tx_utxos,
+            sequence=0,
+            amount_per_output=double_spend_value,
+        )["tx"]
         double_tx_hex = double_tx.serialize().hex()
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
 
         # If we remove an input, it should pass
-        double_tx = CTransaction()
-        double_tx.vin = inputs[0:-1]
-        double_tx.vout = [CTxOut(double_spend_value, CScript([b'a']))]
+        double_tx.vin.pop()
         double_tx_hex = double_tx.serialize().hex()
         self.nodes[0].sendrawtransaction(double_tx_hex, 0)
 
@@ -447,7 +428,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
                 optin_parent_tx = wallet.send_self_transfer_multi(
                     from_node=normal_node,
-                    sequence=BIP125_SEQUENCE_NUMBER,
+                    sequence=MAX_BIP125_RBF_SEQUENCE,
                     utxos_to_spend=[root_utxos[graph_num]],
                     num_outputs=txs_per_graph,
                 )
@@ -494,20 +475,22 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
         # Create a non-opting in transaction
-        tx1a = CTransaction()
-        tx1a.vin = [CTxIn(tx0_outpoint, nSequence=SEQUENCE_FINAL)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1a_hex = tx1a.serialize().hex()
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
+        tx1a_utxo = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx0_outpoint,
+            sequence=SEQUENCE_FINAL,
+            fee=Decimal("0.1"),
+        )["new_utxo"]
 
         # This transaction isn't shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
+        assert_equal(self.nodes[0].getmempoolentry(tx1a_utxo["txid"])['bip125-replaceable'], False)
 
         # Shouldn't be able to double-spend
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx1b_hex = tx1b.serialize().hex()
+        tx1b_hex = self.wallet.create_self_transfer(
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("0.2"),
+        )["hex"]
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
@@ -515,17 +498,19 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
         # Create a different non-opting in transaction
-        tx2a = CTransaction()
-        tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0xfffffffe)]
-        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx2a_hex = tx2a.serialize().hex()
-        tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, 0)
+        tx2a_utxo = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1_outpoint,
+            sequence=0xfffffffe,
+            fee=Decimal("0.1"),
+        )["new_utxo"]
 
         # Still shouldn't be able to double-spend
-        tx2b = CTransaction()
-        tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx2b_hex = tx2b.serialize().hex()
+        tx2b_hex = self.wallet.create_self_transfer(
+            utxo_to_spend=tx1_outpoint,
+            sequence=0,
+            fee=Decimal("0.2"),
+        )["hex"]
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
@@ -534,34 +519,31 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # opt-in on one of the inputs
         # Transaction should be replaceable on either input
 
-        tx1a_txid = int(tx1a_txid, 16)
-        tx2a_txid = int(tx2a_txid, 16)
-
-        tx3a = CTransaction()
-        tx3a.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=SEQUENCE_FINAL),
-                    CTxIn(COutPoint(tx2a_txid, 0), nSequence=0xfffffffd)]
-        tx3a.vout = [CTxOut(int(0.9 * COIN), CScript([b'c'])), CTxOut(int(0.9 * COIN), CScript([b'd']))]
-        tx3a_hex = tx3a.serialize().hex()
-
-        tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, 0)
+        tx3a_txid = self.wallet.send_self_transfer_multi(
+            from_node=self.nodes[0],
+            utxos_to_spend=[tx1a_utxo, tx2a_utxo],
+            sequence=[SEQUENCE_FINAL, 0xfffffffd],
+            fee_per_output=int(0.1 * COIN),
+        )["txid"]
 
         # This transaction is shown as replaceable
         assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
 
-        tx3b = CTransaction()
-        tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
-        tx3b.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx3b_hex = tx3b.serialize().hex()
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1a_utxo,
+            sequence=0,
+            fee=Decimal("0.4"),
+        )
 
-        tx3c = CTransaction()
-        tx3c.vin = [CTxIn(COutPoint(tx2a_txid, 0), nSequence=0)]
-        tx3c.vout = [CTxOut(int(0.5 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx3c_hex = tx3c.serialize().hex()
-
-        self.nodes[0].sendrawtransaction(tx3b_hex, 0)
         # If tx3b was accepted, tx3c won't look like a replacement,
         # but make sure it is accepted anyway
-        self.nodes[0].sendrawtransaction(tx3c_hex, 0)
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx2a_utxo,
+            sequence=0,
+            fee=Decimal("0.4"),
+        )
 
     def test_prioritised_transactions(self):
         # Ensure that fee deltas used via prioritisetransaction are
@@ -570,17 +552,20 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # 1. Check that feeperkb uses modified fees
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
-        tx1a = CTransaction()
-        tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx1a_hex = tx1a.serialize().hex()
-        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, 0)
+        tx1a_txid = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )["txid"]
 
         # Higher fee, but the actual fee per KB is much lower.
-        tx1b = CTransaction()
-        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
-        tx1b.vout = [CTxOut(int(0.001 * COIN), CScript([b'a' * 740000]))]
-        tx1b_hex = tx1b.serialize().hex()
+        tx1b_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[tx0_outpoint],
+            sequence=0,
+            num_outputs=100,
+            amount_per_output=int(0.00001 * COIN),
+        )["hex"]
 
         # Verify tx1b cannot replace tx1a.
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
@@ -596,27 +581,29 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # 2. Check that absolute fee checks use modified fee.
         tx1_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
-        tx2a = CTransaction()
-        tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2a.vout = [CTxOut(1 * COIN, DUMMY_P2WPKH_SCRIPT)]
-        tx2a_hex = tx2a.serialize().hex()
-        self.nodes[0].sendrawtransaction(tx2a_hex, 0)
+        # tx2a
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1_outpoint,
+            sequence=0,
+            fee=Decimal("0.1"),
+        )
 
         # Lower fee, but we'll prioritise it
-        tx2b = CTransaction()
-        tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
-        tx2b.vout = [CTxOut(int(1.01 * COIN), DUMMY_P2WPKH_SCRIPT)]
-        tx2b.rehash()
-        tx2b_hex = tx2b.serialize().hex()
+        tx2b = self.wallet.create_self_transfer(
+            utxo_to_spend=tx1_outpoint,
+            sequence=0,
+            fee=Decimal("0.09"),
+        )
 
         # Verify tx2b cannot replace tx2a.
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx2b_hex, 0)
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx2b["hex"], 0)
 
         # Now prioritise tx2b to have a higher modified fee
-        self.nodes[0].prioritisetransaction(txid=tx2b.hash, fee_delta=int(0.1 * COIN))
+        self.nodes[0].prioritisetransaction(txid=tx2b["txid"], fee_delta=int(0.1 * COIN))
 
         # tx2b should now be accepted
-        tx2b_txid = self.nodes[0].sendrawtransaction(tx2b_hex, 0)
+        tx2b_txid = self.nodes[0].sendrawtransaction(tx2b["hex"], 0)
 
         assert tx2b_txid in self.nodes[0].getrawmempool()
 
@@ -649,14 +636,14 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         optin_parent_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
             utxo_to_spend=confirmed_utxo,
-            sequence=BIP125_SEQUENCE_NUMBER,
+            sequence=MAX_BIP125_RBF_SEQUENCE,
             fee_rate=Decimal('0.01'),
         )
         assert_equal(True, self.nodes[0].getmempoolentry(optin_parent_tx['txid'])['bip125-replaceable'])
 
         replacement_parent_tx = self.wallet.create_self_transfer(
             utxo_to_spend=confirmed_utxo,
-            sequence=BIP125_SEQUENCE_NUMBER,
+            sequence=MAX_BIP125_RBF_SEQUENCE,
             fee_rate=Decimal('0.02'),
         )
 
@@ -713,6 +700,34 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()["incrementalrelayfee"], Decimal("0.00001"))
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+
+    def test_fullrbf(self):
+
+        confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
+        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
+        assert self.nodes[0].getmempoolinfo()["fullrbf"]
+
+        # Create an explicitly opt-out transaction
+        optout_tx = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=MAX_BIP125_RBF_SEQUENCE + 1,
+            fee_rate=Decimal('0.01'),
+        )
+        assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
+
+        conflicting_tx = self.wallet.create_self_transfer(
+                utxo_to_spend=confirmed_utxo,
+                sequence=SEQUENCE_FINAL,
+                fee_rate=Decimal('0.02'),
+        )
+
+        # Send the replacement transaction, conflicting with the optout_tx.
+        self.nodes[0].sendrawtransaction(conflicting_tx['hex'], 0)
+
+        # Optout_tx is not anymore in the mempool.
+        assert optout_tx['txid'] not in self.nodes[0].getrawmempool()
+        assert conflicting_tx['txid'] in self.nodes[0].getrawmempool()
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()

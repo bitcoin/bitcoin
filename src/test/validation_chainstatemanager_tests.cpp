@@ -193,7 +193,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
     // Should not load malleated snapshots
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+        m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
             // A UTXO is missing but count is correct
             metadata.m_coins_count -= 1;
 
@@ -204,22 +204,22 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
             auto_infile >> coin;
     }));
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+        m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Coins count is larger than coins in file
             metadata.m_coins_count += 1;
     }));
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+        m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Coins count is smaller than coins in file
             metadata.m_coins_count -= 1;
     }));
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+        m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Wrong hash
             metadata.m_base_blockhash = uint256::ZERO;
     }));
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
-        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+        m_node, m_path_root, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Wrong hash
             metadata.m_base_blockhash = uint256::ONE;
     }));

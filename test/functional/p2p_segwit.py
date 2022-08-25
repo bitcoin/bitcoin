@@ -16,7 +16,7 @@ from test_framework.blocktools import (
 )
 from test_framework.key import ECKey
 from test_framework.messages import (
-    BIP125_SEQUENCE_NUMBER,
+    MAX_BIP125_RBF_SEQUENCE,
     CBlockHeader,
     CInv,
     COutPoint,
@@ -371,6 +371,10 @@ class SegWitTest(BitcoinTestFramework):
         block1 = self.build_next_block()
         block1.solve()
 
+        # Send an empty headers message, to clear out any prior getheaders
+        # messages that our peer may be waiting for us on.
+        self.test_node.send_message(msg_headers())
+
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
@@ -585,7 +589,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_script]))]
         tx.vout = [CTxOut(p2sh_tx.vout[0].nValue - 10000, script_pubkey)]
         tx.vout.append(CTxOut(8000, script_pubkey))  # Might burn this later
-        tx.vin[0].nSequence = BIP125_SEQUENCE_NUMBER  # Just to have the option to bump this tx from the mempool
+        tx.vin[0].nSequence = MAX_BIP125_RBF_SEQUENCE  # Just to have the option to bump this tx from the mempool
         tx.rehash()
 
         # This is always accepted, since the mempool policy is to consider segwit as always active

@@ -108,53 +108,46 @@ bool UniValue::setObject()
     return true;
 }
 
-bool UniValue::push_back(const UniValue& val_)
+void UniValue::push_back(const UniValue& val_)
 {
-    if (typ != VARR)
-        return false;
+    checkType(VARR);
 
     values.push_back(val_);
-    return true;
 }
 
-bool UniValue::push_backV(const std::vector<UniValue>& vec)
+void UniValue::push_backV(const std::vector<UniValue>& vec)
 {
-    if (typ != VARR)
-        return false;
+    checkType(VARR);
 
     values.insert(values.end(), vec.begin(), vec.end());
-
-    return true;
 }
 
 void UniValue::__pushKV(const std::string& key, const UniValue& val_)
 {
+    checkType(VOBJ);
+
     keys.push_back(key);
     values.push_back(val_);
 }
 
-bool UniValue::pushKV(const std::string& key, const UniValue& val_)
+void UniValue::pushKV(const std::string& key, const UniValue& val_)
 {
-    if (typ != VOBJ)
-        return false;
+    checkType(VOBJ);
 
     size_t idx;
     if (findKey(key, idx))
         values[idx] = val_;
     else
         __pushKV(key, val_);
-    return true;
 }
 
-bool UniValue::pushKVs(const UniValue& obj)
+void UniValue::pushKVs(const UniValue& obj)
 {
-    if (typ != VOBJ || obj.typ != VOBJ)
-        return false;
+    checkType(VOBJ);
+    obj.checkType(VOBJ);
 
     for (size_t i = 0; i < obj.keys.size(); i++)
         __pushKV(obj.keys[i], obj.values.at(i));
-
-    return true;
 }
 
 void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const
@@ -219,6 +212,14 @@ const UniValue& UniValue::operator[](size_t index) const
         return NullUniValue;
 
     return values.at(index);
+}
+
+void UniValue::checkType(const VType& expected) const
+{
+    if (typ != expected) {
+        throw std::runtime_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not of expected type " +
+                                 std::string{uvTypeName(expected)}};
+    }
 }
 
 const char *uvTypeName(UniValue::VType t)

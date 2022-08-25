@@ -19,8 +19,6 @@
 using wallet::CWallet;
 using wallet::DatabaseFormat;
 using wallet::DatabaseOptions;
-using wallet::ISMINE_SPENDABLE;
-using wallet::MakeWalletDatabase;
 using wallet::TxStateInactive;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 using wallet::WalletContext;
@@ -47,12 +45,11 @@ static void BenchUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 
 static void AddTx(CWallet& wallet)
 {
-    bilingual_str error;
-    CTxDestination dest;
-    wallet.GetNewDestination(OutputType::BECH32, "", dest, error);
+    const auto& dest = wallet.GetNewDestination(OutputType::BECH32, "");
+    assert(dest.HasRes());
 
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(dest)});
+    mtx.vout.push_back({COIN, GetScriptForDestination(dest.GetObj())});
     mtx.vin.push_back(CTxIn());
 
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});

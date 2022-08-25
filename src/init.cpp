@@ -10,6 +10,7 @@
 #include <init.h>
 
 #include <kernel/checks.h>
+#include <kernel/mempool_persist.h>
 
 #include <addrman.h>
 #include <banman.h>
@@ -41,6 +42,7 @@
 #include <node/chainstate.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -64,7 +66,6 @@
 #include <txorphanage.h>
 #include <util/asmap.h>
 #include <util/check.h>
-#include <util/designator.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -103,14 +104,16 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+using kernel::DumpMempool;
+
 using node::CacheSizes;
 using node::CalculateCacheSizes;
-using node::ChainstateLoadVerifyError;
-using node::ChainstateLoadingError;
-using node::CleanupBlockRevFiles;
+using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINTPRIORITY;
 using node::DEFAULT_STOPAFTERBLOCKIMPORT;
 using node::LoadChainstate;
+using node::MempoolPath;
+using node::ShouldPersistMempool;
 using node::NodeContext;
 using node::ThreadImport;
 using node::VerifyLoadedChainstate;
@@ -246,8 +249,8 @@ void Shutdown(NodeContext& node)
     node.addrman.reset();
     node.netgroupman.reset();
 
-    if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        DumpMempool(*node.mempool);
+    if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
+        DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
     // Drop transactions we were still watching, and record fee estimations.
@@ -558,6 +561,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-bytespersigop", strprintf("Equivalent bytes per sigop in transactions for relay and mining (default: %u)", DEFAULT_BYTES_PER_SIGOP), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarriersize", strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)", MAX_OP_RETURN_RELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", DEFAULT_MEMPOOL_FULL_RBF), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted inbound peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
@@ -966,7 +970,7 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
 
     peer_connect_timeout = args.GetIntArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
-        return InitError(Untranslated("peertimeout cannot be configured with a negative value."));
+        return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
     if (args.IsArgSet("-minrelaytxfee")) {
@@ -1092,21 +1096,8 @@ static bool LockDataDirectory(bool probeOnly)
 bool AppInitSanityChecks(const kernel::Context& kernel)
 {
     // ********************************************************* Step 4: sanity checks
-    auto maybe_error = kernel::SanityChecks(kernel);
-
-    if (maybe_error.has_value()) {
-        switch (maybe_error.value()) {
-        case kernel::SanityCheckError::ERROR_ECC:
-            InitError(Untranslated("Elliptic curve cryptography sanity check failure. Aborting."));
-            break;
-        case kernel::SanityCheckError::ERROR_RANDOM:
-            InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
-            break;
-        case kernel::SanityCheckError::ERROR_CHRONO:
-            InitError(Untranslated("Clock epoch mismatch. Aborting."));
-            break;
-        } // no default case, so the compiler can warn about missing cases
-
+    if (auto error = kernel::SanityChecks(kernel)) {
+        InitError(*error);
         return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
     }
 
@@ -1424,8 +1415,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
 
     CTxMemPool::Options mempool_opts{
-        Desig(estimator) node.fee_estimator.get(),
-        Desig(check_ratio) chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        .estimator = node.fee_estimator.get(),
+        .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
     ApplyArgsManOptions(args, mempool_opts);
     mempool_opts.check_ratio = std::clamp<int>(mempool_opts.check_ratio, 0, 1'000'000);
@@ -1440,118 +1431,60 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts);
 
         const ChainstateManager::Options chainman_opts{
-            chainparams,
-            GetAdjustedTime,
+            .chainparams = chainparams,
+            .adjusted_time_callback = GetAdjustedTime,
         };
         node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
         ChainstateManager& chainman = *node.chainman;
 
-        const bool fReset = fReindex;
-        bilingual_str strLoadError;
+        node::ChainstateLoadOptions options;
+        options.mempool = Assert(node.mempool.get());
+        options.reindex = node::fReindex;
+        options.reindex_chainstate = fReindexChainState;
+        options.prune = node::fPruneMode;
+        options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+        options.check_level = args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
+        options.check_interrupt = ShutdownRequested;
+        options.coins_error_cb = [] {
+            uiInterface.ThreadSafeMessageBox(
+                _("Error reading from database, shutting down."),
+                "", CClientUIInterface::MSG_ERROR);
+        };
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const int64_t load_block_index_start_time = GetTimeMillis();
-        std::optional<ChainstateLoadingError> maybe_load_error;
-        try {
-            maybe_load_error = LoadChainstate(fReset,
-                                              chainman,
-                                              Assert(node.mempool.get()),
-                                              fPruneMode,
-                                              fReindexChainState,
-                                              cache_sizes.block_tree_db,
-                                              cache_sizes.coins_db,
-                                              cache_sizes.coins,
-                                              /*block_tree_db_in_memory=*/false,
-                                              /*coins_db_in_memory=*/false,
-                                              /*shutdown_requested=*/ShutdownRequested,
-                                              /*coins_error_cb=*/[]() {
-                                                  uiInterface.ThreadSafeMessageBox(
-                                                                                   _("Error reading from database, shutting down."),
-                                                                                   "", CClientUIInterface::MSG_ERROR);
-                                              });
-        } catch (const std::exception& e) {
-            LogPrintf("%s\n", e.what());
-            maybe_load_error = ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
-        }
-        if (maybe_load_error.has_value()) {
-            switch (maybe_load_error.value()) {
-            case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
-                strLoadError = _("Error loading block database");
-                break;
-            case ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK:
-                // If the loaded chain has a wrong genesis, bail out immediately
-                // (we're likely using a testnet datadir, or the other way around).
-                return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
-            case ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX:
-                strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
-                break;
-            case ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED:
-                strLoadError = _("Error initializing block database");
-                break;
-            case ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED:
-                return InitError(_("Unsupported chainstate database format found. "
-                                   "Please restart with -reindex-chainstate. This will "
-                                   "rebuild the chainstate database."));
-            case ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED:
-                strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
-                break;
-            case ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED:
-                strLoadError = _("Error initializing block database");
-                break;
-            case ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED:
-                strLoadError = _("Error opening block database");
-                break;
-            case ChainstateLoadingError::ERROR_BLOCKS_WITNESS_INSUFFICIENTLY_VALIDATED:
-                strLoadError = strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
-                                         chainman.GetConsensus().SegwitHeight);
-                break;
-            case ChainstateLoadingError::SHUTDOWN_PROBED:
-                break;
-            }
-        } else {
-            std::optional<ChainstateLoadVerifyError> maybe_verify_error;
+        auto catch_exceptions = [](auto&& f) {
             try {
-                uiInterface.InitMessage(_("Verifying blocks…").translated);
-                auto check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-                if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                                      MIN_BLOCKS_TO_KEEP);
-                }
-                maybe_verify_error = VerifyLoadedChainstate(chainman,
-                                                            fReset,
-                                                            fReindexChainState,
-                                                            check_blocks,
-                                                            args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
+                return f();
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                maybe_verify_error = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
+                return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
             }
-            if (maybe_verify_error.has_value()) {
-                switch (maybe_verify_error.value()) {
-                case ChainstateLoadVerifyError::ERROR_BLOCK_FROM_FUTURE:
-                    strLoadError = _("The block database contains a block which appears to be from the future. "
-                                     "This may be due to your computer's date and time being set incorrectly. "
-                                     "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                    break;
-                case ChainstateLoadVerifyError::ERROR_CORRUPTED_BLOCK_DB:
-                    strLoadError = _("Corrupted block database detected");
-                    break;
-                case ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE:
-                    strLoadError = _("Error opening block database");
-                    break;
-                }
-            } else {
+        };
+        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
+        if (status == node::ChainstateLoadStatus::SUCCESS) {
+            uiInterface.InitMessage(_("Verifying blocks…").translated);
+            if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
+                LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                                  MIN_BLOCKS_TO_KEEP);
+            }
+            std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
+            if (status == node::ChainstateLoadStatus::SUCCESS) {
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
             }
         }
 
+        if (status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB) {
+            return InitError(error);
+        }
+
         if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
-            if (!fReset) {
+            if (!options.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
-                    strLoadError + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
-                    strLoadError.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+                    error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
+                    error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
@@ -1561,7 +1494,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     return false;
                 }
             } else {
-                return InitError(strLoadError);
+                return InitError(error);
             }
         }
     }
@@ -1587,22 +1520,22 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(*error);
         }
 
-        g_txindex = std::make_unique<TxIndex>(cache_sizes.tx_index, false, fReindex);
-        if (!g_txindex->Start(chainman.ActiveChainstate())) {
+        g_txindex = std::make_unique<TxIndex>(interfaces::MakeChain(node), cache_sizes.tx_index, false, fReindex);
+        if (!g_txindex->Start()) {
             return false;
         }
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
-        InitBlockFilterIndex(filter_type, cache_sizes.filter_index, false, fReindex);
-        if (!GetBlockFilterIndex(filter_type)->Start(chainman.ActiveChainstate())) {
+        InitBlockFilterIndex([&]{ return interfaces::MakeChain(node); }, filter_type, cache_sizes.filter_index, false, fReindex);
+        if (!GetBlockFilterIndex(filter_type)->Start()) {
             return false;
         }
     }
 
     if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX)) {
-        g_coin_stats_index = std::make_unique<CoinStatsIndex>(/* cache size */ 0, false, fReindex);
-        if (!g_coin_stats_index->Start(chainman.ActiveChainstate())) {
+        g_coin_stats_index = std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /* cache size */ 0, false, fReindex);
+        if (!g_coin_stats_index->Start()) {
             return false;
         }
     }
@@ -1669,7 +1602,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, vImportFiles, args);
+        ThreadImport(chainman, vImportFiles, args, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{});
     });
 
     // Wait for genesis block to be processed

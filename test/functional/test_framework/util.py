@@ -12,6 +12,7 @@ import inspect
 import json
 import logging
 import os
+import random
 import re
 import time
 import unittest
@@ -286,6 +287,13 @@ def sha256sum_file(filename):
             d = f.read(4096)
     return h.digest()
 
+
+# TODO: Remove and use random.randbytes(n) instead, available in Python 3.9
+def random_bytes(n):
+    """Return a random bytes object of length n."""
+    return bytes(random.getrandbits(8) for i in range(n))
+
+
 # RPC/P2P connection constants and functions
 ############################################
 
@@ -499,38 +507,26 @@ def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
 
 
 # Create large OP_RETURN txouts that can be appended to a transaction
-# to make it large (helper for constructing large transactions).
+# to make it large (helper for constructing large transactions). The
+# total serialized size of the txouts is about 66k vbytes.
 def gen_return_txouts():
-    # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
-    # So we have big transactions (and therefore can't fit very many into each block)
-    # create one script_pubkey
-    script_pubkey = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
-    for _ in range(512):
-        script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = []
     from .messages import CTxOut
-    txout = CTxOut()
-    txout.nValue = 0
-    txout.scriptPubKey = bytes.fromhex(script_pubkey)
-    for _ in range(128):
-        txouts.append(txout)
+    from .script import CScript, OP_RETURN
+    txouts = [CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'\x01'*67437]))]
+    assert_equal(sum([len(txout.serialize()) for txout in txouts]), 67456)
     return txouts
 
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
 # transaction to make it large.  See gen_return_txouts() above.
 def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txouts, utxos=None):
-    from .messages import COIN
-    fee_sats = int(fee * COIN)
     txids = []
     use_internal_utxos = utxos is None
     for _ in range(tx_batch_size):
         tx = mini_wallet.create_self_transfer(
             utxo_to_spend=None if use_internal_utxos else utxos.pop(),
-            fee_rate=0,
+            fee=fee,
         )["tx"]
-        tx.vout[0].nValue -= fee_sats
         tx.vout.extend(txouts)
         res = node.testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['fees']['base'], fee)

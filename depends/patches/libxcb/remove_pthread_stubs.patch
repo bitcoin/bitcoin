@@ -1,0 +1,12 @@
+Remove uneeded pthread-stubs dependency
+--- a/configure
++++ b/configure
+@@ -19695,7 +19695,7 @@ fi
+ NEEDED="xau >= 0.99.2"
+ case $host_os in
+ linux*) ;;
+-     *) NEEDED="$NEEDED pthread-stubs" ;;
++     *) NEEDED="$NEEDED" ;;
+ esac
+ 
+ pkg_failed=no

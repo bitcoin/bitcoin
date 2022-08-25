@@ -7,17 +7,20 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <compat.h>
+#include <compat/compat.h>
+#include <tinyformat.h>
 #include <util/time.h>
-
 #include <util/check.h>
 
-#include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <ctime>
-#include <thread>
 
-#include <tinyformat.h>
+#include <atomic>
+#include <chrono>
+#include <ctime>
+#include <locale>
+#include <thread>
+#include <sstream>
+#include <string>
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 

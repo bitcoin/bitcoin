@@ -603,10 +603,10 @@ Threads
   : Started from `main()` in `navcoind.cpp`. Responsible for starting up and
   shutting down the application.
 
-- [ThreadImport (`b-loadblk`)](https://doxygen.bitcoincore.org/init_8cpp.html#ae9e290a0e829ec0198518de2eda579d1)
+- [ThreadImport (`b-loadblk`)](https://doxygen.bitcoincore.org/namespacenode.html#ab4305679079866f0f420f7dbf278381d)
   : Loads blocks from `blk*.dat` files or `-loadblock=<file>` on startup.
 
-- [ThreadScriptCheck (`b-scriptch.x`)](https://doxygen.bitcoincore.org/validation_8cpp.html#a925a33e7952a157922b0bbb8dab29a20)
+- [CCheckQueue::Loop (`b-scriptch.x`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#a6e7fa51d3a25e7cb65446d4b50e6a987)
   : Parallel script validation threads for transactions in blocks.
 
 - [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#abb9f6ea8819672bd9a62d3695070709c)
@@ -622,7 +622,7 @@ Threads
   : Does asynchronous background tasks like dumping wallet contents, dumping
   addrman and running asynchronous validationinterface callbacks.
 
-- [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a4faed3692d57a0d7bdbecf3b37f72de0)
+- [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a52a3efff23634500bb42c6474f306091)
   : Libevent thread for tor connections.
 
 - Net threads:
@@ -634,7 +634,7 @@ Threads
   - [ThreadDNSAddressSeed (`b-dnsseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13)
     : Loads addresses of peers from the DNS.
 
-  - [ThreadMapPort (`b-upnp`)](https://doxygen.bitcoincore.org/net_8cpp.html#a63f82a71c4169290c2db1651a9bbe249)
+  - ThreadMapPort (`b-mapport`)
     : Universal plug-and-play startup/shutdown.
 
   - [ThreadSocketHandler (`b-net`)](https://doxygen.bitcoincore.org/class_c_connman.html#a765597cbfe99c083d8fa3d61bb464e34)
@@ -645,6 +645,9 @@ Threads
 
   - [ThreadOpenConnections (`b-opencon`)](https://doxygen.bitcoincore.org/class_c_connman.html#a55e9feafc3bab78e5c9d408c207faa45)
     : Initiates new connections to peers.
+
+  - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
+    : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
 
 Ignoring IDE/editor files
 --------------------------

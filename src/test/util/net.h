@@ -5,7 +5,8 @@
 #ifndef BITCOIN_TEST_UTIL_NET_H
 #define BITCOIN_TEST_UTIL_NET_H
 
-#include <compat.h>
+#include <compat/compat.h>
+#include <node/eviction.h>
 #include <netaddress.h>
 #include <net.h>
 #include <util/sock.h>
@@ -37,6 +38,14 @@ struct ConnmanTestMsg : public CConnman {
         }
         m_nodes.clear();
     }
+
+    void Handshake(CNode& node,
+                   bool successfully_connected,
+                   ServiceFlags remote_services,
+                   ServiceFlags local_services,
+                   NetPermissionFlags permission_flags,
+                   int32_t version,
+                   bool relay_txs);
 
     void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
 

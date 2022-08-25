@@ -223,6 +223,7 @@ CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disab
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
+HOST_CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
 case "$HOST" in
     *linux*)  HOST_CFLAGS+=" -ffile-prefix-map=${PWD}=." ;;
     *mingw*)  HOST_CFLAGS+=" -fno-ident" ;;
