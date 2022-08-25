@@ -60,6 +60,7 @@ public:
     bool operator==(const G1Point& b) const;
     bool operator!=(const G1Point& b) const;
 
+    bool IsValid() const;
     bool IsUnity() const;
 
     std::vector<uint8_t> GetVch() const;

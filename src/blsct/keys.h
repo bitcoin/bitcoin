@@ -12,8 +12,8 @@
 #undef DOUBLE
 #endif
 
-#include <blsct/arith/scalar.h>
 #include <blsct/arith/g1point.h>
+#include <blsct/arith/scalar.h>
 #include <hash.h>
 #include <key.h>
 #include <serialize.h>
@@ -21,12 +21,15 @@
 #include <uint256.h>
 #include <version.h>
 
-namespace blsct
-{
+namespace blsct {
 static const std::string subAddressHeader = "SubAddress\0";
 
 class PublicKey
 {
+private:
+    std::vector<uint8_t> data;
+    static constexpr size_t SIZE = 48;
+
 public:
     PublicKey() { data.clear(); }
     PublicKey(const G1Point& pk) : data(pk.GetVch()) {}
@@ -43,13 +46,15 @@ public:
 
     bool GetG1Point(G1Point& ret) const;
     std::vector<uint8_t> GetVch() const;
-
-protected:
-    std::vector<uint8_t> data;
 };
 
 class DoublePublicKey
 {
+private:
+    PublicKey vk;
+    PublicKey sk;
+    static constexpr size_t SIZE = 48 * 2;
+
 public:
     DoublePublicKey() {}
     DoublePublicKey(const G1Point& vk_, const G1Point& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
@@ -60,8 +65,8 @@ public:
     uint256 GetHash() const;
     CKeyID GetID() const;
 
-    bool GetViewKey(G1Point &ret) const;
-    bool GetSpendKey(G1Point &ret) const;
+    bool GetViewKey(G1Point& ret) const;
+    bool GetSpendKey(G1Point& ret) const;
 
     bool operator==(const DoublePublicKey& rhs) const;
 
@@ -69,128 +74,42 @@ public:
 
     std::vector<uint8_t> GetVkVch() const;
     std::vector<uint8_t> GetSkVch() const;
-
-protected:
-    PublicKey vk;
-    PublicKey sk;
 };
 
-/*
-class blsctKey
-{
+class PrivateKey {
 private:
     CPrivKey k;
+    static constexpr size_t SIZE = 32;
 
 public:
-    blsctKey() { k.clear(); }
+    PrivateKey() { k.clear(); }
 
-    blsctKey(bls::PrivateKey k_) {
-        k.resize(bls::PrivateKey::PRIVATE_KEY_SIZE);
-        std::vector<uint8_t> v = k_.Serialize();
+    PrivateKey(Scalar k_) {
+        k.resize(PrivateKey::SIZE);
+        std::vector<uint8_t> v = k_.GetVch();
         memcpy(k.data(), &v.front(), k.size());
     }
 
-    blsctKey(CPrivKey k_) {
-        k.resize(bls::PrivateKey::PRIVATE_KEY_SIZE);
+    PrivateKey(CPrivKey k_) {
+        k.resize(PrivateKey::SIZE);
         memcpy(k.data(), &k_.front(), k.size());
     }
 
-    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
-    {
-        return ::GetSerializeSize(k, nType, nVersion);
-    }
+    SERIALIZE_METHODS(PrivateKey, obj) { READWRITE(std::vector<unsigned char>(obj.k.begin(), obj.k.end())); }
 
-    template<typename Stream>
-    void Serialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION) const
-    {
-        ::Serialize(s, k, nType, nVersion);
-    }
+    bool operator==(const PrivateKey& rhs) const;
 
-    template<typename Stream>
-    void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION)
-    {
-        ::Unserialize(s, k, nType, nVersion);
-    }
+    G1Point GetG1Point() const;
+    Scalar GetScalar() const;
 
-    bool operator<(const blsctKey& rhs) const {
-        try {
-            Scalar l, r;
-            l = bls::PrivateKey::FromBytes(&k.front());
-            r = bls::PrivateKey::FromBytes(&(rhs.k).front());
-            return bn_cmp(l.bn, r.bn);
-        } catch (...) {
-            return false;
-        }
-    }
+    bool IsValid() const;
 
-    bool operator==(const blsctKey& rhs) const {
-        return k==rhs.k;
-    }
-
-    bls::G1Element GetG1Point() const {
-        try {
-            return bls::PrivateKey::FromBytes(&k.front()).GetG1Point();
-        } catch(...) {
-            return bls::G1Element();
-        }
-    }
-
-    bls::PrivateKey GetKey() const {
-        try {
-            return bls::PrivateKey::FromBytes(&k.front());
-        } catch(...) {
-            return bls::PrivateKey::FromBN(Scalar::Rand().bn);
-        }
-    }
-
-    Scalar GetScalar() const {
-        return Scalar(GetKey());
-    }
-
-    bls::PrivateKey PrivateChild(uint32_t i) const {
-        try {
-            bls::PrivateKey buf = bls::PrivateKey::FromBytes(&k.front());
-            return bls::HDKeys::DeriveChildSk(buf, i);
-        } catch(...) {
-            return bls::PrivateKey::FromBN(Scalar::Rand().bn);
-        }
-    }
-
-    bls::PrivateKey PrivateChildHash(uint256 h) const {
-        try {
-            bls::PrivateKey ret = bls::PrivateKey::FromBytes(&k.front());
-            for (auto i = 0; i < 8; i++)
-            {
-                const uint8_t* pos = h.begin() + i*4;
-                uint32_t index = (uint8_t)(pos[0]) << 24 |
-                                 (uint8_t)(pos[1]) << 16 |
-                                 (uint8_t)(pos[2]) << 8  |
-                                 (uint8_t)(pos[3]);
-                ret = bls::HDKeys::DeriveChildSk(ret, index);
-            }
-            return ret;
-        } catch(...) {
-            return  bls::PrivateKey::FromBN(Scalar::Rand().bn);
-        }
-    }
-
-    bls::G1Element PublicChild(uint32_t i) const {
-        bls::PrivateKey buf = bls::PrivateKey::FromBytes(&k.front());
-        return bls::HDKeys::DeriveChildSk(buf, i).GetG1Point();
-    }
-
-    bool IsValid() const {
-        return k.size() > 0;
-    }
-
-    void SetToZero() {
-        k.clear();
-    }
+    void SetToZero();
 
     friend class CCryptoKeyStore;
     friend class CBasicKeyStore;
 };
-*/
-}
+
+} // namespace blsct
 
 #endif // KEY_H
