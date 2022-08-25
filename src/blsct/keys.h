@@ -5,13 +5,6 @@
 #ifndef KEY_H
 #define KEY_H
 
-#ifdef _WIN32
-/* Avoid redefinition warning. */
-#undef ERROR
-#undef WSIZE
-#undef DOUBLE
-#endif
-
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/scalar.h>
 #include <hash.h>
@@ -100,6 +93,7 @@ public:
     bool operator==(const PrivateKey& rhs) const;
 
     G1Point GetG1Point() const;
+    PublicKey GetPublicKey() const;
     Scalar GetScalar() const;
 
     bool IsValid() const;
