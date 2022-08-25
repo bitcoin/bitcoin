@@ -260,32 +260,24 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Filter by spendable outputs only
             if (!spendable && only_spendable) continue;
 
-            // If the Output is P2SH and spendable, we want to know if it is
+            // Obtain script type
+            std::vector<std::vector<uint8_t>> script_solutions;
+            TxoutType type = Solver(output.scriptPubKey, script_solutions);
+
+            // If the output is P2SH and solvable, we want to know if it is
             // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
-            // this from the redeemScript. If the Output is not spendable, it will be classified
+            // this from the redeemScript. If the output is not solvable, it will be classified
             // as a P2SH (legacy), since we have no way of knowing otherwise without the redeemScript
-            CScript script;
             bool is_from_p2sh{false};
-            if (output.scriptPubKey.IsPayToScriptHash() && solvable) {
-                CTxDestination destination;
-                if (!ExtractDestination(output.scriptPubKey, destination))
-                    continue;
-                const CScriptID& hash = CScriptID(std::get<ScriptHash>(destination));
-                if (!provider->GetCScript(hash, script))
-                    continue;
+            if (type == TxoutType::SCRIPTHASH && solvable) {
+                CScript script;
+                if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
+                type = Solver(script, script_solutions);
                 is_from_p2sh = true;
-            } else {
-                script = output.scriptPubKey;
             }
 
-            COutput coin(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
-
-            // When parsing a scriptPubKey, Solver returns the parsed pubkeys or hashes (depending on the script)
-            // We don't need those here, so we are leaving them in return_values_unused
-            std::vector<std::vector<uint8_t>> return_values_unused;
-            TxoutType type;
-            type = Solver(script, return_values_unused);
-            result.Add(GetOutputType(type, is_from_p2sh), coin);
+            result.Add(GetOutputType(type, is_from_p2sh),
+                       COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
 
             // Cache total amount as we go
             result.total_amount += output.nValue;
