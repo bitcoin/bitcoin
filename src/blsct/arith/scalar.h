@@ -57,6 +57,8 @@ public:
     bool operator!=(const Scalar& b) const;
     bool operator!=(const int& b) const;
 
+    bool IsValid() const;
+
     Scalar Invert() const;
     Scalar Negate() const;
     Scalar Square() const;

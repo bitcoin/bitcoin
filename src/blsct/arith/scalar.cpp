@@ -174,6 +174,11 @@ bool Scalar::operator!=(const Scalar &b) const
     return !operator==(b);
 }
 
+bool Scalar::IsValid() const
+{
+    return mclBnFr_isValid(&m_fr) == 1;
+}
+
 Scalar Scalar::Invert() const
 {
     if (mclBnFr_isZero(&m_fr) == 1) {
