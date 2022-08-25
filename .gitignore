@@ -150,3 +150,9 @@ dist/
 /guix-build-*
 
 /ci/scratch/
+
+# ide related
+.vscode
+
+# others
+null.d

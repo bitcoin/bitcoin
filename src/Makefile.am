@@ -23,7 +23,9 @@ noinst_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/bls/include -I$(srcdir)/bls/mcl/include -I$(srcdir)/bls/mcl/src -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+BLS_INCLUDES=-I$(srcdir)/bls/include -I$(srcdir)/bls/mcl/include -I$(srcdir)/bls/mcl/src
+
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
@@ -73,10 +75,10 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 $(LIBBLS):
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+	$(AM_V_at) CC='$(CC)' CXX='$(CXX)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
 
 $(LIBMCL):
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
+	$(AM_V_at) MCL_USE_LLVM=0 CC='$(CC)' CXX='$(CXX)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -133,6 +135,10 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
+  blsct/arith/elements.h \
+  blsct/arith/g1point.h \
+  blsct/arith/mcl_initializer.h \
+  blsct/arith/scalar.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -361,6 +367,10 @@ libbitcoin_node_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  blsct/arith/elements.cpp \
+  blsct/arith/g1point.cpp \
+  blsct/arith/mcl_initializer.cpp \
+  blsct/arith/scalar.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -858,8 +868,8 @@ if BUILD_BITCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
 
 libbitcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1)
-libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBBLS) $(LIBMCL) $(LIBSECP256K1)
+libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 
 # libbitcoinkernel requires default symbol visibility, explicitly specify that
 # here so that things still work even when user configures with
@@ -884,6 +894,11 @@ endif
 libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
+  blockfilter.cpp \
+  blsct/arith/elements.cpp \
+  blsct/arith/g1point.cpp \
+  blsct/arith/mcl_initializer.cpp \
+  blsct/arith/scalar.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
