@@ -330,6 +330,7 @@ BASE_SCRIPTS = [
     'feature_blocksdir.py',
     'wallet_startup.py',
     'p2p_i2p_ports.py',
+    'p2p_i2p_sessions.py',
     'feature_config_args.py',
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
