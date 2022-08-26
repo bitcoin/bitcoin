@@ -194,7 +194,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     while (!s.eof()) {
         CService endpoint;
         s >> endpoint;
-        CAddress addr{endpoint, GetDesirableServiceFlags(NODE_NONE)};
+        CAddress addr{MaybeFlipIPv6toCJDNS(endpoint), GetDesirableServiceFlags(NODE_NONE)};
         addr.nTime = rng.rand_uniform_delay(Now<NodeSeconds>() - one_week, -one_week);
         LogPrint(BCLog::NET, "Added hardcoded seed: %s\n", addr.ToString());
         vSeedsOut.push_back(addr);
