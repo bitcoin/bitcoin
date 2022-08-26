@@ -10,16 +10,22 @@
 #include <attributes.h>
 #include <chainparamsbase.h>
 #include <coins.h>
+#include <consensus/consensus.h>
+#include <merkleblock.h>
+#include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <optional.h>
+#include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
 #include <uint256.h>
+#include <util/time.h>
 #include <version.h>
 
 #include <cstdint>
@@ -31,6 +37,16 @@
 {
     const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
     return {s.begin(), s.end()};
+}
+
+[[ nodiscard ]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+{
+    return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
+}
+
+[[ nodiscard ]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+{
+    return {ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
 }
 
 [[ nodiscard ]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
@@ -78,6 +94,13 @@ template <typename T>
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
 }
 
+[[ nodiscard ]] inline int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:00Z");
+    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
+    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(time_min, time_max);
+}
+
 [[ nodiscard ]] inline CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
@@ -102,6 +125,22 @@ template <typename T>
 [[ nodiscard ]] inline arith_uint256 ConsumeArithUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
+}
+
+[[ nodiscard ]] inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
+{
+    // Avoid:
+    // policy/feerate.cpp:28:34: runtime error: signed integer overflow: 34873208148477500 * 1000 cannot be represented in type 'long'
+    //
+    // Reproduce using CFeeRate(348732081484775, 10).GetFeePerK()
+    const CAmount fee = std::min<CAmount>(ConsumeMoney(fuzzed_data_provider), std::numeric_limits<CAmount>::max() / static_cast<CAmount>(100000));
+    assert(MoneyRange(fee));
+    const int64_t time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
+    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
+    const bool dip1_status = fuzzed_data_provider.ConsumeBool();
+    const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MaxBlockSigOps(dip1_status));
+    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
 }
 
 template <typename T>
@@ -188,6 +227,32 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
 CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
+}
+
+CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
+}
+
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeService(fuzzed_data_provider), static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
+}
+
+CNode ConsumeNode(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const NodeId node_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
+    const ServiceFlags local_services = static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+    const int my_starting_height = fuzzed_data_provider.ConsumeIntegral<int>();
+    const SOCKET socket = INVALID_SOCKET;
+    const CAddress address = ConsumeAddress(fuzzed_data_provider);
+    const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+    const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+    const CAddress addr_bind = ConsumeAddress(fuzzed_data_provider);
+    const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
+    const bool inbound = fuzzed_data_provider.ConsumeBool();
+    const bool block_relay_only = fuzzed_data_provider.ConsumeBool();
+    return {node_id, local_services, my_starting_height, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, inbound, block_relay_only};
 }
 
 void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
