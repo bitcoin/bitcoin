@@ -67,6 +67,7 @@ public:
 
     std::vector<uint8_t> GetVkVch() const;
     std::vector<uint8_t> GetSkVch() const;
+    std::vector<uint8_t> GetVch() const;
 };
 
 class PrivateKey {
