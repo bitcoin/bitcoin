@@ -27,7 +27,7 @@
 namespace llmq
 {
 
-CQuorumBlockProcessor* quorumBlockProcessor;
+std::unique_ptr<CQuorumBlockProcessor> quorumBlockProcessor;
 
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";

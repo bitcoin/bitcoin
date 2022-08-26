@@ -231,6 +231,11 @@ void PrepareShutdown(NodeContext& node)
     StopHTTPServer();
     llmq::StopLLMQSystem();
 
+    ::coinJoinServer.reset();
+#ifdef ENABLE_WALLET
+    ::coinJoinClientQueueManager.reset();
+#endif // ENABLE_WALLET
+
     // fRPCInWarmup should be `false` if we completed the loading sequence
     // before a shutdown request was received
     std::string statusmessage;
@@ -266,12 +271,18 @@ void PrepareShutdown(NodeContext& node)
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-        flatdb6.Dump(sporkManager);
+        flatdb6.Dump(*::sporkManager);
         if (!fDisableGovernance) {
             CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-            flatdb3.Dump(governance);
+            flatdb3.Dump(*::governance);
         }
     }
+
+    // After related databases and caches have been flushed, destroy pointers
+    // and reset all to nullptr.
+    ::masternodeSync.reset();
+    ::governance.reset();
+    ::sporkManager.reset();
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -355,7 +366,8 @@ void PrepareShutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager);
+        UnregisterValidationInterface(activeMasternodeManager.get());
+        activeMasternodeManager.reset();
     }
 
     {
@@ -1693,30 +1705,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         StartScriptCheckWorkerThreads(script_threads);
     }
 
-    std::vector<std::string> vSporkAddresses;
-    if (args.IsArgSet("-sporkaddr")) {
-        vSporkAddresses = args.GetArgs("-sporkaddr");
-    } else {
-        vSporkAddresses = Params().SporkAddresses();
-    }
-    for (const auto& address: vSporkAddresses) {
-        if (!sporkManager.SetSporkAddress(address)) {
-            return InitError(_("Invalid spork address specified with -sporkaddr"));
-        }
-    }
-
-    int minsporkkeys = args.GetArg("-minsporkkeys", Params().MinSporkKeys());
-    if (!sporkManager.SetMinSporkKeys(minsporkkeys)) {
-        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
-    }
-
-
-    if (args.IsArgSet("-sporkkey")) { // spork priv key
-        if (!sporkManager.SetPrivKey(args.GetArg("-sporkkey", ""))) {
-            return InitError(_("Unable to sign spork message, wrong key?"));
-        }
-    }
-
     assert(activeMasternodeInfo.blsKeyOperator == nullptr);
     assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
     fMasternodeMode = false;
@@ -1807,6 +1795,34 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, chainman, *node.mempool, args.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(node.peer_logic.get());
+
+    ::governance = std::make_unique<CGovernanceManager>();
+    assert(!::sporkManager);
+    ::sporkManager = std::make_unique<CSporkManager>();
+
+    std::vector<std::string> vSporkAddresses;
+    if (args.IsArgSet("-sporkaddr")) {
+        vSporkAddresses = args.GetArgs("-sporkaddr");
+    } else {
+        vSporkAddresses = Params().SporkAddresses();
+    }
+    for (const auto& address: vSporkAddresses) {
+        if (!::sporkManager->SetSporkAddress(address)) {
+            return InitError(_("Invalid spork address specified with -sporkaddr"));
+        }
+    }
+
+    int minsporkkeys = args.GetArg("-minsporkkeys", Params().MinSporkKeys());
+    if (!::sporkManager->SetMinSporkKeys(minsporkkeys)) {
+        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
+    }
+
+
+    if (args.IsArgSet("-sporkkey")) { // spork priv key
+        if (!::sporkManager->SetPrivKey(args.GetArg("-sporkkey", ""))) {
+            return InitError(_("Unable to sign spork message, wrong key?"));
+        }
+    }
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1938,8 +1954,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     if (fMasternodeMode) {
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager(*node.connman);
-        RegisterValidationInterface(activeMasternodeManager);
+        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
+        RegisterValidationInterface(activeMasternodeManager.get());
     }
 
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
@@ -1953,7 +1969,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     uiInterface.InitMessage(_("Loading sporks cache...").translated);
     CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-    if (!flatdb6.Load(sporkManager)) {
+    if (!flatdb6.Load(*::sporkManager)) {
         return InitError(strprintf(_("Failed to load sporks cache from %s"), (GetDataDir() / "sporks.dat").string()));
     }
 
@@ -2031,7 +2047,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 
-                llmq::InitLLMQSystem(*evoDb, *node.mempool, *node.connman, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *node.mempool, *node.connman, *::sporkManager, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2312,6 +2328,12 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     // ********************************************************* Step 10a: Setup CoinJoin
 
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.connman);
+#ifdef ENABLE_WALLET
+    ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman);
+#endif // ENABLE_WALLET
+
     g_wallet_init_interface.InitCoinJoinSettings();
 
     // ********************************************************* Step 10b: Load cache data
@@ -2340,10 +2362,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     uiInterface.InitMessage(_("Loading governance cache...").translated);
     CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
     if (fLoadCacheFiles && !fDisableGovernance) {
-        if(!flatdb3.Load(governance)) {
+        if(!flatdb3.Load(*::governance)) {
             return InitError(strprintf(_("Failed to load governance cache from %s"), (pathDB / strDBName).string()));
         }
-        governance.InitOnLoad();
+        ::governance->InitOnLoad();
     } else {
         CGovernanceManager governanceTmp;
         if(!flatdb3.Dump(governanceTmp)) {
@@ -2368,16 +2390,16 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // ********************************************************* Step 10b: schedule Dash-specific tasks
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60 * 1000);
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*node.connman)), 1 * 1000);
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*::masternodeSync)), 1 * 1000);
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), 60 * 1000);
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*deterministicMNManager)), 10 * 1000);
 
     if (!fDisableGovernance) {
-        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*node.connman)), 60 * 5 * 1000);
+        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*::governance), std::ref(*node.connman)), 60 * 5 * 1000);
     }
 
     if (fMasternodeMode) {
-        node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*node.connman)), 1 * 1000);
+        node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*::coinJoinServer)), 1 * 1000);
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*llmq::quorumDKGSessionManager)), 60 * 60 * 1000);
 #ifdef ENABLE_WALLET
     } else if(CCoinJoinClientOptions::IsEnabled()) {

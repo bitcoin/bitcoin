@@ -28,7 +28,7 @@ class UniValue;
 extern std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinClientManagers;
 
 // The object to track mixing queues
-extern CCoinJoinClientQueueManager coinJoinClientQueueManager;
+extern std::unique_ptr<CCoinJoinClientQueueManager> coinJoinClientQueueManager;
 
 class CPendingDsaRequest
 {
@@ -150,11 +150,15 @@ public:
  */
 class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
+private:
+    CConnman& connman;
+
 public:
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
+    explicit CCoinJoinClientQueueManager(CConnman& _connman) :
+        connman(_connman) {};
 
-    void ProcessDSQueue(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
-
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQueue(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61);
     void DoMaintenance();
 };
 

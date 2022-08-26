@@ -73,7 +73,7 @@ private:
     static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight, int quorumIndex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
-extern CQuorumBlockProcessor* quorumBlockProcessor;
+extern std::unique_ptr<CQuorumBlockProcessor> quorumBlockProcessor;
 
 } // namespace llmq
 

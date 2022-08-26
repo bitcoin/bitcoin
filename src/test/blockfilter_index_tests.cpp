@@ -5,10 +5,12 @@
 #include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <governance/governance.h>
 #include <index/blockfilterindex.h>
 #include <miner.h>
 #include <pow.h>
 #include <script/standard.h>
+#include <spork.h>
 #include <test/util/blockfilter.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>
@@ -62,7 +64,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;

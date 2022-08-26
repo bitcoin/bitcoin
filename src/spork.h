@@ -71,7 +71,7 @@ struct CSporkDef
     MAKE_SPORK_DEF(SPORK_23_QUORUM_POSE,                   4070908800ULL), // OFF
 };
 #undef MAKE_SPORK_DEF
-extern CSporkManager sporkManager;
+extern std::unique_ptr<CSporkManager> sporkManager;
 
 /**
  * Sporks are network parameters used primarily to prevent forking and turn

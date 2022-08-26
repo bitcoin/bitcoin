@@ -50,7 +50,7 @@ static UniValue gobject_count(const JSONRPCRequest& request)
     if (strMode != "json" && strMode != "all")
         gobject_count_help(request);
 
-    return strMode == "json" ? governance.ToJson() : governance.ToString();
+    return strMode == "json" ? governance->ToJson() : governance->ToString();
 }
 
 static void gobject_deserialize_help(const JSONRPCRequest& request)
@@ -317,7 +317,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 {
     gobject_submit_help(request);
 
-    if(!masternodeSync.IsBlockchainSynced()) {
+    if(!masternodeSync->IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
 
@@ -395,7 +395,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     // RELAY THIS OBJECT
     // Reject if rate check fails but don't update buffer
-    if (!governance.MasternodeRateCheck(govobj)) {
+    if (!governance->MasternodeRateCheck(govobj)) {
         LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure - hash = %s\n", strHash);
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
     }
@@ -404,10 +404,10 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     const NodeContext& node = EnsureNodeContext(request.context);
     if (fMissingConfirmations) {
-        governance.AddPostponedObject(govobj);
+        governance->AddPostponedObject(govobj);
         govobj.Relay(*node.connman);
     } else {
-        governance.AddGovernanceObject(govobj, *node.connman);
+        governance->AddGovernanceObject(govobj, *node.connman);
     }
 
     return govobj.GetHash().ToString();
@@ -451,8 +451,8 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
 
     int govObjType;
     {
-        LOCK(governance.cs);
-        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
+        LOCK(governance->cs);
+        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
@@ -505,7 +505,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
 
     CGovernanceException exception;
     const NodeContext& node = EnsureNodeContext(request.context);
-    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
+    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
     } else {
@@ -528,8 +528,8 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
 {
     const NodeContext& node = EnsureNodeContext(request.context);
     {
-        LOCK(governance.cs);
-        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
+        LOCK(governance->cs);
+        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
@@ -567,7 +567,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
         }
 
         CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
+        if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -721,10 +721,12 @@ static UniValue ListObjects(const std::string& strCachedSignal, const std::strin
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK2(cs_main, governance.cs);
+    LOCK2(cs_main, governance->cs);
 
-    std::vector<CGovernanceObject> objs = governance.GetAllNewerThan(nStartTime);
-    governance.UpdateLastDiffTime(GetTime());
+    std::vector<CGovernanceObject> objs;
+    governance->GetAllNewerThan(objs, nStartTime);
+
+    governance->UpdateLastDiffTime(GetTime());
     // CREATE RESULTS FOR USER
 
     for (const auto& govObj : objs) {
@@ -834,7 +836,7 @@ static UniValue gobject_diff(const JSONRPCRequest& request)
     if (strType != "proposals" && strType != "triggers" && strType != "all")
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
-    return ListObjects(strCachedSignal, strType, governance.GetLastDiffTime());
+    return ListObjects(strCachedSignal, strType, governance->GetLastDiffTime());
 }
 
 static void gobject_get_help(const JSONRPCRequest& request)
@@ -861,8 +863,8 @@ static UniValue gobject_get(const JSONRPCRequest& request)
     }
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
-    LOCK2(cs_main, governance.cs);
-    CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
+    LOCK2(cs_main, governance->cs);
+    CGovernanceObject* pGovObj = governance->FindGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance object");
@@ -958,9 +960,9 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
     // FIND OBJECT USER IS LOOKING FOR
 
-    LOCK(governance.cs);
+    LOCK(governance->cs);
 
-    CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
+    CGovernanceObject* pGovObj = governance->FindGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
@@ -972,7 +974,7 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
     // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION
 
-    std::vector<CGovernanceVote> vecVotes = governance.GetCurrentVotes(hash, mnCollateralOutpoint);
+    std::vector<CGovernanceVote> vecVotes = governance->GetCurrentVotes(hash, mnCollateralOutpoint);
     for (const auto& vote : vecVotes) {
         bResult.pushKV(vote.GetHash().ToString(),  vote.ToString());
     }
@@ -1102,8 +1104,8 @@ static UniValue voteraw(const JSONRPCRequest& request)
 
     int govObjType;
     {
-        LOCK(governance.cs);
-        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hashGovObj);
+        LOCK(governance->cs);
+        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hashGovObj);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
@@ -1137,7 +1139,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
 
     CGovernanceException exception;
     const NodeContext& node = EnsureNodeContext(request.context);
-    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
+    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());

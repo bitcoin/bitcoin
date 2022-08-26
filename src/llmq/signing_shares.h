@@ -21,6 +21,7 @@
 
 class CEvoDB;
 class CScheduler;
+class CSporkManager;
 
 class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
@@ -411,7 +412,7 @@ public:
     void UnregisterAsRecoveredSigsListener();
     void InterruptWorkerThread();
 
-    void ProcessMessage(const CNode* pnode, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode* pnode, const std::string& msg_type, CDataStream& vRecv, const CSporkManager& sporkManager);
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
     std::optional<CSigShare> CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
@@ -462,7 +463,7 @@ private:
     void WorkThreadMain();
 };
 
-extern CSigSharesManager* quorumSigSharesManager;
+extern std::unique_ptr<CSigSharesManager> quorumSigSharesManager;
 
 } // namespace llmq
 

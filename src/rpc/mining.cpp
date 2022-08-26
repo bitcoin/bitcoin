@@ -24,6 +24,7 @@
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <shutdown.h>
+#include <spork.h>
 #include <txmempool.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
@@ -151,7 +152,7 @@ UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, 
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbaseScript->reserveScript));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*sporkManager, *governance, mempool, Params()).CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -361,7 +362,7 @@ static UniValue generateblock(const JSONRPCRequest& request)
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(*sporkManager, *governance, empty_mempool, chainparams).CreateNewBlock(coinbase_script));
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
@@ -696,8 +697,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
 
     // next bock is a superblock and we need governance info to correctly construct it
-    if (AreSuperblocksEnabled()
-        && !masternodeSync.IsSynced()
+    if (AreSuperblocksEnabled(*sporkManager)
+        && !masternodeSync->IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is syncing with network...");
 
@@ -768,7 +769,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(mempool, Params()).CreateNewBlock(scriptDummy);
+        pblocktemplate = BlockAssembler(*sporkManager, *governance, mempool, Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -930,7 +931,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     }
     result.pushKV("superblock", superblockObjArray);
     result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
-    result.pushKV("superblocks_enabled", AreSuperblocksEnabled());
+    result.pushKV("superblocks_enabled", AreSuperblocksEnabled(*sporkManager));
 
     result.pushKV("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload));
 

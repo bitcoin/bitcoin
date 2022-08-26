@@ -21,20 +21,20 @@
 namespace llmq
 {
 
-CBLSWorker* blsWorker;
+std::shared_ptr<CBLSWorker> blsWorker;
 
-void InitLLMQSystem(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, bool unitTests, bool fWipe)
+void InitLLMQSystem(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkManager, bool unitTests, bool fWipe)
 {
-    blsWorker = new CBLSWorker();
+    blsWorker = std::make_shared<CBLSWorker>();
 
-    quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
-    quorumDKGSessionManager = new CDKGSessionManager(connman, *blsWorker, unitTests, fWipe);
-    quorumManager = new CQuorumManager(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = new CSigSharesManager(connman);
-    quorumSigningManager = new CSigningManager(connman, unitTests, fWipe);
-    chainLocksHandler = new CChainLocksHandler(mempool, connman);
-    quorumInstantSendManager = new CInstantSendManager(mempool, connman, unitTests, fWipe);
+    quorumDKGDebugManager = std::make_unique<CDKGDebugManager>();
+    quorumBlockProcessor = std::make_unique<CQuorumBlockProcessor>(evoDb, connman);
+    quorumDKGSessionManager = std::make_unique<CDKGSessionManager>(connman, *blsWorker, sporkManager, unitTests, fWipe);
+    quorumManager = std::make_unique<CQuorumManager>(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
+    quorumSigSharesManager = std::make_unique<CSigSharesManager>(connman);
+    quorumSigningManager = std::make_unique<CSigningManager>(connman, unitTests, fWipe);
+    chainLocksHandler = std::make_unique<CChainLocksHandler>(mempool, connman, sporkManager);
+    quorumInstantSendManager = std::make_unique<CInstantSendManager>(mempool, connman, sporkManager, unitTests, fWipe);
 
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version
@@ -43,24 +43,15 @@ void InitLLMQSystem(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, bool 
 
 void DestroyLLMQSystem()
 {
-    delete quorumInstantSendManager;
-    quorumInstantSendManager = nullptr;
-    delete chainLocksHandler;
-    chainLocksHandler = nullptr;
-    delete quorumSigningManager;
-    quorumSigningManager = nullptr;
-    delete quorumSigSharesManager;
-    quorumSigSharesManager = nullptr;
-    delete quorumManager;
-    quorumManager = nullptr;
-    delete quorumDKGSessionManager;
-    quorumDKGSessionManager = nullptr;
-    delete quorumBlockProcessor;
-    quorumBlockProcessor = nullptr;
-    delete quorumDKGDebugManager;
-    quorumDKGDebugManager = nullptr;
-    delete blsWorker;
-    blsWorker = nullptr;
+    quorumInstantSendManager.reset();
+    chainLocksHandler.reset();
+    quorumSigningManager.reset();
+    quorumSigSharesManager.reset();
+    quorumManager.reset();
+    quorumDKGSessionManager.reset();
+    quorumBlockProcessor.reset();
+    quorumDKGDebugManager.reset();
+    blsWorker.reset();
     LOCK(cs_llmq_vbc);
     llmq_versionbitscache.Clear();
 }

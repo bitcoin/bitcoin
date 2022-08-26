@@ -17,8 +17,8 @@
 
 void CMasternodeUtils::DoMaintenance(CConnman& connman)
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
-        return;
+    if (masternodeSync == nullptr || !masternodeSync->IsBlockchainSynced()) return;
+    if (ShutdownRequested()) return;
 
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET

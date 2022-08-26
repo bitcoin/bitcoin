@@ -57,16 +57,17 @@ class EVOImpl : public EVO
 public:
     CDeterministicMNList getListAtChainTip() override
     {
-        return deterministicMNManager->GetListAtChainTip();
+        return deterministicMNManager == nullptr ? CDeterministicMNList() : deterministicMNManager->GetListAtChainTip();
     }
 };
 
 class GOVImpl : public GOV
 {
 public:
-    std::vector<CGovernanceObject> getAllNewerThan(int64_t nMoreThanTime) override
+    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
     {
-        return governance.GetAllNewerThan(nMoreThanTime);
+        if (governance == nullptr) return;
+        governance->GetAllNewerThan(objs, nMoreThanTime);
     }
 };
 
@@ -75,10 +76,7 @@ class LLMQImpl : public LLMQ
 public:
     size_t getInstantSentLockCount() override
     {
-        if (!llmq::quorumInstantSendManager) {
-            return 0;
-        }
-        return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+        return llmq::quorumInstantSendManager == nullptr ? 0 : llmq::quorumInstantSendManager->GetInstantSendLockCount();
     }
 };
 
@@ -87,15 +85,15 @@ class MasternodeSyncImpl : public Masternode::Sync
 public:
     bool isSynced() override
     {
-        return masternodeSync.IsSynced();
+        return masternodeSync == nullptr ? false : masternodeSync->IsSynced();
     }
     bool isBlockchainSynced() override
     {
-        return masternodeSync.IsBlockchainSynced();
+        return masternodeSync == nullptr ? false : masternodeSync->IsBlockchainSynced();
     }
     std::string getSyncStatus() override
     {
-        return masternodeSync.GetSyncStatus();
+        return masternodeSync == nullptr ? "" : masternodeSync->GetSyncStatus();
     }
 };
 

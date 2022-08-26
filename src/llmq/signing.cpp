@@ -25,7 +25,7 @@
 namespace llmq
 {
 
-CSigningManager* quorumSigningManager;
+std::unique_ptr<CSigningManager> quorumSigningManager;
 
 UniValue CRecoveredSig::ToJson() const
 {

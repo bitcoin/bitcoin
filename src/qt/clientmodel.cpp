@@ -132,9 +132,9 @@ int64_t ClientModel::getHeaderTipTime() const
     return cachedBestHeaderTime;
 }
 
-std::vector<CGovernanceObject> ClientModel::getAllGovernanceObjects()
+void ClientModel::getAllGovernanceObjects(std::vector<CGovernanceObject> &obj)
 {
-    return m_node.gov().getAllNewerThan(0);
+    m_node.gov().getAllNewerThan(obj, 0);
 }
 
 void ClientModel::updateNumConnections(int numConnections)

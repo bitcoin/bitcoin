@@ -43,7 +43,7 @@ const int CInstantSendDb::CURRENT_VERSION;
 const uint8_t CInstantSendLock::islock_version;
 const uint8_t CInstantSendLock::isdlock_version;
 
-CInstantSendManager* quorumInstantSendManager;
+std::unique_ptr<CInstantSendManager> quorumInstantSendManager;
 
 uint256 CInstantSendLock::GetRequestId() const
 {
@@ -480,7 +480,7 @@ void CInstantSendManager::Stop()
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
-    if (!fMasternodeMode || !IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced()) {
+    if (!fMasternodeMode || !IsInstantSendEnabled() || !masternodeSync->IsBlockchainSynced()) {
         return;
     }
 
@@ -1131,7 +1131,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
 void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
-    if (!IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced() || tx->vin.empty()) {
+    if (!IsInstantSendEnabled() || !masternodeSync->IsBlockchainSynced() || tx->vin.empty()) {
         return;
     }
 
@@ -1190,7 +1190,7 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
         }
     }
 
-    if (masternodeSync.IsBlockchainSynced()) {
+    if (masternodeSync->IsBlockchainSynced()) {
         for (const auto& tx : pblock->vtx) {
             if (tx->IsCoinBase() || tx->vin.empty()) {
                 // coinbase and TXs with no inputs can't be locked
@@ -1326,7 +1326,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
 
-    if (AreChainLocksEnabled() && fDIP0008Active) {
+    if (AreChainLocksEnabled(spork_manager) && fDIP0008Active) {
         // Nothing to do here. We should keep all islocks and let chainlocks handle them.
         return;
     }
@@ -1725,22 +1725,22 @@ void CInstantSendManager::WorkThreadMain()
     }
 }
 
-bool IsInstantSendEnabled()
+bool CInstantSendManager::IsInstantSendEnabled() const
 {
-    return !fReindex && !fImporting && sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED);
+    return !fReindex && !fImporting && spork_manager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED);
 }
 
-bool IsInstantSendMempoolSigningEnabled()
+bool CInstantSendManager::IsInstantSendMempoolSigningEnabled() const
 {
-    return !fReindex && !fImporting && sporkManager.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED) == 0;
+    return !fReindex && !fImporting && spork_manager.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED) == 0;
 }
 
-bool RejectConflictingBlocks()
+bool CInstantSendManager::RejectConflictingBlocks() const
 {
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!masternodeSync->IsBlockchainSynced()) {
         return false;
     }
-    if (!sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (!spork_manager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
         LogPrint(BCLog::INSTANTSEND, "%s: spork3 is off, skipping transaction locking checks\n", __func__);
         return false;
     }

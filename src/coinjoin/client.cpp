@@ -29,14 +29,14 @@
 #include <univalue.h>
 
 std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinClientManagers;
-CCoinJoinClientQueueManager coinJoinClientQueueManager;
+std::unique_ptr<CCoinJoinClientQueueManager> coinJoinClientQueueManager;
 
 
-void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!masternodeSync->IsBlockchainSynced()) return;
 
     if (!CheckDiskSpace(GetDataDir())) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinClientQueueManager::ProcessMessage -- Not enough disk space, disabling CoinJoin.\n");
@@ -44,11 +44,11 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        CCoinJoinClientQueueManager::ProcessDSQueue(pfrom, msg_type, vRecv, connman, enable_bip61);
+        CCoinJoinClientQueueManager::ProcessDSQueue(pfrom, msg_type, vRecv, enable_bip61);
     }
 }
 
-void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, bool enable_bip61)
 {
     CCoinJoinQueue dsq;
     vRecv >> dsq;
@@ -86,7 +86,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string
 
     // if the queue is ready, submit if we can
     if (dsq.fReady && ranges::any_of(coinJoinClientManagers,
-                                     [&dmn, &connman](const auto& pair){ return pair.second->TrySubmitDenominate(dmn->pdmnState->addr, connman); })) {
+                                     [this, &dmn](const auto& pair){ return pair.second->TrySubmitDenominate(dmn->pdmnState->addr, this->connman); })) {
         LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
         return;
     } else {
@@ -117,7 +117,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& msg
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!masternodeSync->IsBlockchainSynced()) return;
 
     if (!CheckDiskSpace(GetDataDir())) {
         ResetPool();
@@ -141,7 +141,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!masternodeSync->IsBlockchainSynced()) return;
 
     if (msg_type == NetMsgType::DSSTATUSUPDATE) {
         if (!mixingMasternode) return;
@@ -272,7 +272,7 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
     nStatusMessageProgress += 10;
     std::string strSuffix;
 
-    if (fWaitForBlock || !masternodeSync.IsBlockchainSynced()) {
+    if (fWaitForBlock || !masternodeSync->IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
 
@@ -658,7 +658,7 @@ void CCoinJoinClientManager::UpdatedSuccessBlock()
 
 bool CCoinJoinClientManager::WaitForAnotherBlock() const
 {
-    if (!masternodeSync.IsBlockchainSynced()) return true;
+    if (!masternodeSync->IsBlockchainSynced()) return true;
 
     if (CCoinJoinClientOptions::IsMultiSessionEnabled()) return false;
 
@@ -740,7 +740,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
 
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!masternodeSync->IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -920,7 +920,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
 
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!masternodeSync->IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -1009,6 +1009,7 @@ CDeterministicMNCPtr CCoinJoinClientManager::GetRandomNotUsedMasternode()
 bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
+    if (coinJoinClientQueueManager == nullptr) return false;
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
@@ -1020,7 +1021,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
     // Look through the queues and see if anything matches
     CCoinJoinQueue dsq;
-    while (coinJoinClientQueueManager.GetQueueItemAndTry(dsq)) {
+    while (coinJoinClientQueueManager->GetQueueItemAndTry(dsq)) {
         auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
 
         if (!dmn) {
@@ -1785,9 +1786,10 @@ void CCoinJoinClientManager::UpdatedBlockTip(const CBlockIndex* pindex)
 void CCoinJoinClientQueueManager::DoMaintenance()
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
+    if (masternodeSync == nullptr) return;
     if (fMasternodeMode) return; // no client-side mixing on masternodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if (!masternodeSync->IsBlockchainSynced() || ShutdownRequested()) return;
 
     CheckQueue();
 }
@@ -1795,9 +1797,10 @@ void CCoinJoinClientQueueManager::DoMaintenance()
 void CCoinJoinClientManager::DoMaintenance(CConnman& connman)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
+    if (masternodeSync == nullptr) return;
     if (fMasternodeMode) return; // no client-side mixing on masternodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if (!masternodeSync->IsBlockchainSynced() || ShutdownRequested()) return;
 
     static int nTick = 0;
     static int nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN;
@@ -1845,7 +1848,10 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
 
 void DoCoinJoinMaintenance(CConnman& connman)
 {
-    coinJoinClientQueueManager.DoMaintenance();
+    if (coinJoinClientQueueManager != nullptr) {
+        coinJoinClientQueueManager->DoMaintenance();
+    }
+
     for (const auto& pair : coinJoinClientManagers) {
         pair.second->DoMaintenance(connman);
     }

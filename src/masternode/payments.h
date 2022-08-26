@@ -10,16 +10,21 @@
 #include <string>
 #include <vector>
 
+class CGovernanceManager;
 class CMasternodePayments;
 class CBlock;
 class CTransaction;
 struct CMutableTransaction;
+class CSporkManager;
 class CTxOut;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
+bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
+                       const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
+bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
+                       const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
+                       CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
 
 extern CMasternodePayments mnpayments;
 

@@ -17,7 +17,7 @@ class CActiveMasternodeManager;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
 extern CCriticalSection activeMasternodeInfoCs;
-extern CActiveMasternodeManager* activeMasternodeManager;
+extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode

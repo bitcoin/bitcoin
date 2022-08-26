@@ -14,6 +14,7 @@ class CTxOut;
 class CTransaction;
 
 class CSuperblock;
+class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CSuperblockManager;
 
@@ -55,15 +56,15 @@ public:
 class CSuperblockManager
 {
 private:
-    static bool GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
+    static bool GetBestSuperblock(CGovernanceManager& governanceManager, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
-    static bool IsSuperblockTriggered(int nBlockHeight);
+    static bool IsSuperblockTriggered(CGovernanceManager& governanceManager, int nBlockHeight);
 
-    static bool GetSuperblockPayments(int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
-    static void ExecuteBestSuperblock(int nBlockHeight);
+    static bool GetSuperblockPayments(CGovernanceManager& governanceManager, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
+    static void ExecuteBestSuperblock(CGovernanceManager& governanceManager, int nBlockHeight);
 
-    static bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    static bool IsValid(CGovernanceManager& governanceManager, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
 };
 
 /**
@@ -135,7 +136,7 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SEEN_OBJECT_EXECUTED; }
 
-    CGovernanceObject* GetGovernanceObject();
+    CGovernanceObject* GetGovernanceObject(CGovernanceManager& governanceManager);
 
     int GetBlockHeight() const
     {
@@ -147,7 +148,7 @@ public:
     CAmount GetPaymentsTotalAmount();
 
     bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-    bool IsExpired() const;
+    bool IsExpired(const CGovernanceManager& governanceManager) const;
 };
 
 #endif // BITCOIN_GOVERNANCE_CLASSES_H

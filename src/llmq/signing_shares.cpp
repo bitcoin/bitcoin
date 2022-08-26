@@ -23,7 +23,7 @@
 namespace llmq
 {
 
-CSigSharesManager* quorumSigSharesManager = nullptr;
+std::unique_ptr<CSigSharesManager> quorumSigSharesManager;
 
 void CSigShare::UpdateKey()
 {
@@ -215,7 +215,7 @@ void CSigSharesManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
+void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, const CSporkManager& sporkManager)
 {
     // non-masternodes are not interested in sigshares
     if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) {

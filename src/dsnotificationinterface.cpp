@@ -29,12 +29,14 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
     llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
-    masternodeSync.AcceptedBlockHeader(pindexNew);
+    if (masternodeSync != nullptr) {
+        masternodeSync->AcceptedBlockHeader(pindexNew);
+    }
 }
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    masternodeSync->NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -50,7 +52,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
 
-    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+    masternodeSync->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     // Update global DIP0001 activation status
     fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
@@ -71,7 +73,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 
-    if (!fDisableGovernance) governance.UpdatedBlockTip(pindexNew, connman);
+    if (!fDisableGovernance) governance->UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)
@@ -111,7 +113,7 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
-    governance.UpdateCachesAndClean();
+    governance->UpdateCachesAndClean();
 }
 
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)

@@ -55,7 +55,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 
 void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStream& vRecv, CConnman& connman)
 {
-    if (msg_type != NetMsgType::MNAUTH || !masternodeSync.IsBlockchainSynced()) {
+    if (msg_type != NetMsgType::MNAUTH || !masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
         return;
     }

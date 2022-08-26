@@ -1530,12 +1530,12 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LO
     case MSG_SPORK:
         {
             CSporkMessage spork;
-            return sporkManager.GetSporkByHash(inv.hash, spork);
+            return sporkManager->GetSporkByHash(inv.hash, spork);
         }
 
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        return ! governance.ConfirmInventoryRequest(inv);
+        return ! governance->ConfirmInventoryRequest(inv);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMineableCommitment(inv.hash);
@@ -1819,7 +1819,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             if (!push && inv.type == MSG_SPORK) {
                 CSporkMessage spork;
-                if (sporkManager.GetSporkByHash(inv.hash, spork)) {
+                if (sporkManager->GetSporkByHash(inv.hash, spork)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
                     push = true;
                 }
@@ -1828,9 +1828,9 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                if (governance.HaveObjectForHash(inv.hash)) {
+                if (governance->HaveObjectForHash(inv.hash)) {
                     ss.reserve(1000);
-                    if (governance.SerializeObjectForHash(inv.hash, ss)) {
+                    if (governance->SerializeObjectForHash(inv.hash, ss)) {
                         topush = true;
                     }
                 }
@@ -1843,9 +1843,9 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                if (governance.HaveVoteForHash(inv.hash)) {
+                if (governance->HaveVoteForHash(inv.hash)) {
                     ss.reserve(1000);
-                    if (governance.SerializeVoteForHash(inv.hash, ss)) {
+                    if (governance->SerializeVoteForHash(inv.hash, ss)) {
                         topush = true;
                     }
                 }
@@ -4108,20 +4108,20 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        coinJoinClientQueueManager.ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
+        coinJoinClientQueueManager->ProcessMessage(pfrom, msg_type, vRecv, enable_bip61);
         for (auto& pair : coinJoinClientManagers) {
             pair.second->ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
         }
 #endif // ENABLE_WALLET
-        coinJoinServer.ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
-        sporkManager.ProcessSporkMessages(pfrom, msg_type, vRecv, *connman);
-        masternodeSync.ProcessMessage(pfrom, msg_type, vRecv);
-        governance.ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
+        coinJoinServer->ProcessMessage(pfrom, msg_type, vRecv, enable_bip61);
+        sporkManager->ProcessSporkMessages(pfrom, msg_type, vRecv, *connman);
+        masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
+        governance->ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
         CMNAuth::ProcessMessage(pfrom, msg_type, vRecv, *connman);
         llmq::quorumBlockProcessor->ProcessMessage(pfrom, msg_type, vRecv);
         llmq::quorumDKGSessionManager->ProcessMessage(pfrom, msg_type, vRecv);
         llmq::quorumManager->ProcessMessage(pfrom, msg_type, vRecv);
-        llmq::quorumSigSharesManager->ProcessMessage(pfrom, msg_type, vRecv);
+        llmq::quorumSigSharesManager->ProcessMessage(pfrom, msg_type, vRecv, *sporkManager);
         llmq::quorumSigningManager->ProcessMessage(pfrom, msg_type, vRecv);
         llmq::chainLocksHandler->ProcessMessage(pfrom, msg_type, vRecv);
         llmq::quorumInstantSendManager->ProcessMessage(pfrom, msg_type, vRecv);

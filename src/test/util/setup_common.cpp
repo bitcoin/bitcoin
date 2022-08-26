@@ -10,9 +10,11 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <governance/governance.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <masternode/sync.h>
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
@@ -23,6 +25,7 @@
 #include <rpc/server.h>
 #include <script/sigcache.h>
 #include <streams.h>
+#include <spork.h>
 #include <txdb.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
@@ -36,7 +39,11 @@
 #include <util/validation.h>
 
 #include <bls/bls.h>
+#ifdef ENABLE_WALLET
+#include <coinjoin/client.h>
+#endif // ENABLE_WALLET
 #include <coinjoin/coinjoin.h>
+#include <coinjoin/server.h>
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
@@ -189,8 +196,16 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
+    ::sporkManager = std::make_unique<CSporkManager>();
+    ::governance = std::make_unique<CGovernanceManager>();
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.connman);
+#ifdef ENABLE_WALLET
+    ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman);
+#endif // ENABLE_WALLET
+
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
-    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
+    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, *sporkManager, true);
 }
 
 TestingSetup::~TestingSetup()
@@ -204,6 +219,13 @@ TestingSetup::~TestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+#ifdef ENABLE_WALLET
+    ::coinJoinClientQueueManager.reset();
+#endif // ENABLE_WALLET
+    ::coinJoinServer.reset();
+    ::masternodeSync.reset();
+    ::governance.reset();
+    ::sporkManager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
     UnloadBlockIndex(m_node.mempool);
@@ -268,7 +290,7 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
 CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     std::vector<CTransactionRef> llmqCommitments;

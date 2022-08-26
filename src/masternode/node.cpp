@@ -16,7 +16,7 @@
 // Keep track of the active Masternode
 CCriticalSection activeMasternodeInfoCs;
 CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);
-CActiveMasternodeManager* activeMasternodeManager;
+std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 std::string CActiveMasternodeManager::GetStateString() const
 {
