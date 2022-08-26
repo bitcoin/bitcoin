@@ -51,7 +51,7 @@ std::vector<uint8_t> PublicKey::GetVch() const
 
 CKeyID DoublePublicKey::GetID() const
 {
-    return CKeyID(Hash160(sk.GetVch()));
+    return CKeyID(Hash160(GetVch()));
 }
 
 bool DoublePublicKey::GetViewKey(G1Point& ret) const
@@ -94,6 +94,16 @@ std::vector<uint8_t> DoublePublicKey::GetVkVch() const
 std::vector<uint8_t> DoublePublicKey::GetSkVch() const
 {
     return sk.GetVch();
+}
+
+std::vector<uint8_t> DoublePublicKey::GetVch() const
+{
+    auto ret = vk.GetVch();
+    auto toAppend = sk.GetVch();
+
+    ret.insert(ret.end(), toAppend.begin(), toAppend.end());
+
+    return ret;
 }
 
 bool PrivateKey::operator==(const PrivateKey& rhs) const {
