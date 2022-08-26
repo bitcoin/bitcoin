@@ -140,6 +140,93 @@ BOOST_FIXTURE_TEST_CASE(descriptors_wallet_detect_change_output, TestChain100Set
     }
 }
 
+CTxDestination deriveDestination(const std::unique_ptr<Descriptor>& descriptor, int index, const FlatSigningProvider& privkey_provider)
+{
+    FlatSigningProvider provider;
+    std::vector<CScript> scripts;
+    BOOST_CHECK(descriptor->Expand(index, privkey_provider, scripts, provider));
+    CTxDestination dest;
+    BOOST_CHECK(ExtractDestination(scripts[0], dest));
+    return dest;
+}
+
+/**
+ * The old change detection process assumption can easily be broken by creating an address manually,
+ * from an external derivation path, and send coins to it. As the address was not created by the
+ * wallet, it will not be in the addressbook, there by will be treated as change when it's clearly not.
+ *
+ * The wallet will properly detect it once the transaction gets added to the wallet and the address
+ * (and all the previous unused address) are derived and stored in the address book.
+ */
+BOOST_FIXTURE_TEST_CASE(external_tx_creation_change_output_detection, TestChain100Setup)
+{
+    // Create miner wallet, 10 UTXO spendable, 100 UTXO immature.
+    std::unique_ptr<CWallet> external_wallet = CreateDescriptorWallet(this);
+    external_wallet->SetupLegacyScriptPubKeyMan();
+    // Local wallet
+    std::unique_ptr<CWallet> wallet = CreateEmtpyWallet(this, /*only_legacy=*/false);
+    wallet->SetupLegacyScriptPubKeyMan();
+
+    auto external_desc_spkm = static_cast<DescriptorScriptPubKeyMan*>(wallet->GetScriptPubKeyMan(OutputType::BECH32, /*internal=*/false));
+    std::string desc_str;
+    BOOST_CHECK(external_desc_spkm->GetDescriptorString(desc_str, true));
+    FlatSigningProvider key_provider;
+    std::string error;
+    std::unique_ptr<Descriptor> descriptor = Assert(Parse(desc_str, key_provider, error, /*require_checksum=*/false));
+
+    {
+        // Now derive a key at an index that wasn't created by the wallet and send coins to it
+        // TODO: Test this same point on a legacy wallet.
+        int addr_index = 100;
+        const CTxDestination& dest = deriveDestination(descriptor, addr_index, key_provider);
+        CAmount dest_amount = 1 * COIN;
+        CCoinControl coin_control;
+        auto res_tx = CreateTransaction(*external_wallet, {{dest, dest_amount, true}},
+                                               /*change_pos=*/std::nullopt, coin_control);
+        assert(res_tx);
+        assert(res_tx->tx->vout.size() == 2); // dest + change
+        unsigned int change_pos = *res_tx->change_pos;
+        unsigned int pos_not_change = !change_pos;
+
+        // Prior to adding the tx to the local wallet, check if can detect the output script
+        const CTxOut& output = res_tx->tx->vout.at(pos_not_change);
+        BOOST_CHECK(output.nValue == dest_amount);
+        BOOST_CHECK(WITH_LOCK(wallet->cs_wallet, return wallet->IsMine(output)));
+        // ----> todo: currently the wallet invalidly detects the external receive address as change when it is not.
+        //             this is due an non-existent address book record.
+        BOOST_CHECK(!OutputIsChange(wallet, res_tx->tx, pos_not_change));
+
+        // Now add it to the wallet and verify that is not invalidly marked as change
+        wallet->transactionAddedToMempool(res_tx->tx);
+        const CWalletTx* wtx = Assert(WITH_LOCK(wallet->cs_wallet, return wallet->GetWalletTx(res_tx->tx->GetHash())));
+        BOOST_CHECK(!OutputIsChange(wallet, wtx->tx, pos_not_change));
+        BOOST_CHECK_EQUAL(TxGetChange(*wallet, *res_tx->tx), 0);
+    }
+
+    {
+        // Now check the wallet limitations by sending coins to an address that is above the keypool size
+        int addr_index = DEFAULT_KEYPOOL_SIZE + 300;
+        const CTxDestination& dest = deriveDestination(descriptor, addr_index, key_provider);
+        CAmount dest_amount = 2 * COIN;
+        CCoinControl coin_control;
+        auto op_tx = *Assert(CreateTransaction(*external_wallet, {{dest, dest_amount, true}}, /*change_pos=*/std::nullopt, coin_control));
+
+        // Prior to adding the tx to the local wallet, check if can detect the output script
+        const CTxOut& output = op_tx.tx->vout.at(!op_tx.change_pos);
+        BOOST_CHECK(output.nValue == dest_amount);
+
+        // As this address is above our keypool, we are not able to consider it from the wallet!
+        BOOST_CHECK(!WITH_LOCK(wallet->cs_wallet, return wallet->IsMine(output)));
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, !op_tx.change_pos)); // TODO: This is probably wrong..
+
+        const CBlock& block = CreateAndProcessBlock({CMutableTransaction(*op_tx.tx)}, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey().GetID())));
+        wallet->blockConnected(ChainstateRole::NORMAL, kernel::MakeBlockInfo(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()), &block));
+
+        const CWalletTx* wtx = WITH_LOCK(wallet->cs_wallet, return wallet->GetWalletTx(op_tx.tx->GetHash()));
+        BOOST_CHECK(!wtx); // --> the transaction is not added.
+    }
+}
+
 /**
  * Test legacy-only wallet change output detection.
  *
