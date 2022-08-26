@@ -715,6 +715,9 @@ public:
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Get wallet transactions that conflict with given transaction (given transaction may or may not be in the wallet)
+    std::set<uint256> GetConflicts(const CTransaction& tx, bool tx_is_in_wallet) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     //! Check if a given transaction has any of its outputs spent by another transaction in the wallet
     bool HasWalletSpend(const CTransactionRef& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

@@ -563,12 +563,18 @@ std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
         return result;
     const CWalletTx& wtx = it->second;
 
+    return GetConflicts(*(wtx.tx), true);
+}
+// tx_is_in_wallet being true means the transaction belongs to wallet and tx_is_in_wallet being false means it is an external transaction
+std::set<uint256> CWallet::GetConflicts(const CTransaction& tx, bool tx_is_in_wallet) const
+{
+    std::set<uint256> result;
+    AssertLockHeld(cs_wallet);
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
 
-    for (const CTxIn& txin : wtx.tx->vin)
-    {
-        if (mapTxSpends.count(txin.prevout) <= 1)
-            continue;  // No conflict if zero or one spends
+    for (const CTxIn& txin : tx.vin) {
+        if (mapTxSpends.count(txin.prevout) <= (tx_is_in_wallet ? 1 : 0))
+            continue;  // No conflict if number of tx spending given output <= tx_is_in_wallet
         range = mapTxSpends.equal_range(txin.prevout);
         for (TxSpends::const_iterator _it = range.first; _it != range.second; ++_it)
             result.insert(_it->second);
