@@ -89,6 +89,7 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py --legacy-wallet',
+    'wallet_coinselection.py --descriptors',
     'wallet_hd.py --descriptors',
     'wallet_backup.py --legacy-wallet',
     'wallet_backup.py --descriptors',
