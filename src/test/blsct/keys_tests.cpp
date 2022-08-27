@@ -12,7 +12,7 @@ BOOST_FIXTURE_TEST_SUITE(blsct_keys_tests, MclTestingSetup)
 BOOST_AUTO_TEST_CASE(blsct_keys)
 {
     // Single Public Key
-    auto generator = G1Point::GetBasePoint();
+    G1Point generator = G1Point::GetBasePoint();
 
     blsct::PublicKey invalidKey;
     BOOST_CHECK(!invalidKey.IsValid());
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     BOOST_CHECK(point == keyPointFromVector);
     BOOST_CHECK(point == keyPointFromPoint);
 
-    auto randomPoint = G1Point::Rand();
+    G1Point randomPoint = G1Point::Rand();
 
     blsct::PublicKey keyFromVchRandom(randomPoint.GetVch());
     BOOST_CHECK(randomPoint.GetVch() == keyFromVchRandom.GetVch());
@@ -63,6 +63,9 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     BOOST_CHECK(pointR == keyPointFromPointRandom);
 
     // Double Public Key
+    blsct::DoublePublicKey invalidDoublePublicKey;
+    BOOST_CHECK(!invalidDoublePublicKey.IsValid());
+
     blsct::DoublePublicKey doubleKeyFromPoints(generator, pointR);
     BOOST_CHECK(doubleKeyFromPoints.IsValid());
 
@@ -91,12 +94,12 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     BOOST_CHECK(spendKey == pointR);
 
     // Private Key
+    blsct::PrivateKey invalidPrivateKey;
+    BOOST_CHECK(!invalidPrivateKey.IsValid());
+
     std::vector<unsigned char> vectorKey = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
         16, 17, 1, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-
-    blsct::PrivateKey invalidPrivateKey;
-    BOOST_CHECK(!invalidPrivateKey.IsValid());
 
     blsct::PrivateKey privateKeyFromVector(vectorKey);
     BOOST_CHECK(privateKeyFromVector.IsValid());
@@ -113,6 +116,9 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
     blsct::PublicKey publicKeyFromAddition(privateKeyFromScalar.GetG1Point() +
                                            privateKeyFromVector.GetG1Point());
     BOOST_CHECK(privateKeyFromAddition.GetPublicKey() == publicKeyFromAddition);
+
+    std::vector<blsct::PublicKey> vecKeys = {privateKeyFromScalar.GetPublicKey(), privateKeyFromVector.GetPublicKey()};
+    BOOST_CHECK(blsct::PublicKey::Aggregate(vecKeys) == publicKeyFromAddition);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
