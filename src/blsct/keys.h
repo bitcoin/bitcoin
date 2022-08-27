@@ -11,6 +11,7 @@
 #include <key.h>
 #include <serialize.h>
 #include <streams.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <version.h>
@@ -30,6 +31,8 @@ public:
     PublicKey(const std::vector<uint8_t>& pk) : data(pk) {}
 
     SERIALIZE_METHODS(PublicKey, obj) { READWRITE(obj.data); }
+
+    static PublicKey Aggregate(std::vector<PublicKey> vPk);
 
     uint256 GetHash() const;
     CKeyID GetID() const;
@@ -73,7 +76,8 @@ public:
     std::vector<uint8_t> GetVch() const;
 };
 
-class PrivateKey {
+class PrivateKey
+{
 private:
     CPrivKey k;
     static constexpr size_t SIZE = 32;
@@ -81,13 +85,15 @@ private:
 public:
     PrivateKey() { k.clear(); }
 
-    PrivateKey(Scalar k_) {
+    PrivateKey(Scalar k_)
+    {
         k.resize(PrivateKey::SIZE);
         std::vector<uint8_t> v = k_.GetVch();
         memcpy(k.data(), &v.front(), k.size());
     }
 
-    PrivateKey(CPrivKey k_) {
+    PrivateKey(CPrivKey k_)
+    {
         k.resize(PrivateKey::SIZE);
         memcpy(k.data(), &k_.front(), k.size());
     }

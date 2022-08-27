@@ -6,6 +6,25 @@
 
 namespace blsct {
 
+PublicKey PublicKey::Aggregate(std::vector<PublicKey> vPk)
+{
+    auto retPoint = G1Point();
+    bool isZero = true;
+
+    for (auto& pk : vPk) {
+        G1Point pkG1;
+
+        bool success = pk.GetG1Point(pkG1);
+        if (!success)
+            throw std::runtime_error(strprintf("%s: Vector of public keys has an invalid element", __func__));
+
+        retPoint = isZero ? pkG1 : retPoint + pkG1;
+        isZero = false;
+    }
+
+    return PublicKey(retPoint);
+}
+
 uint256 PublicKey::GetHash() const
 {
     CHashWriter ss(SER_GETHASH, 0);
@@ -111,28 +130,35 @@ std::vector<uint8_t> DoublePublicKey::GetVch() const
     return ret;
 }
 
-bool PrivateKey::operator==(const PrivateKey& rhs) const {
-    return k==rhs.k;
+bool PrivateKey::operator==(const PrivateKey& rhs) const
+{
+    return k == rhs.k;
 }
 
-G1Point PrivateKey::GetG1Point() const {
+G1Point PrivateKey::GetG1Point() const
+{
     return G1Point::GetBasePoint() * Scalar(std::vector<unsigned char>(k.begin(), k.end()));
 }
 
-PublicKey PrivateKey::GetPublicKey() const {
+PublicKey PrivateKey::GetPublicKey() const
+{
     return PublicKey(GetG1Point());
 }
 
-Scalar PrivateKey::GetScalar() const {
-    return Scalar(std::vector<unsigned char>(k.begin(), k.end()));;
+Scalar PrivateKey::GetScalar() const
+{
+    return Scalar(std::vector<unsigned char>(k.begin(), k.end()));
+    ;
 }
 
-bool PrivateKey::IsValid() const {
+bool PrivateKey::IsValid() const
+{
     if (k.size() == 0) return false;
     return GetScalar().IsValid();
 }
 
-void PrivateKey::SetToZero() {
+void PrivateKey::SetToZero()
+{
     k.clear();
 }
 } // namespace blsct
