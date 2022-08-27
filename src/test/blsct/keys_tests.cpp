@@ -4,15 +4,15 @@
 //
 #include <test/util/setup_common.h>
 
-#include <boost/test/unit_test.hpp>
 #include <blsct/keys.h>
+#include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(keys_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(blsct_keys_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(keys_constructors)
+BOOST_AUTO_TEST_CASE(blsct_keys)
 {
     // Single Public Key
-    auto generator = G1Point::GetBasePoint();    
+    auto generator = G1Point::GetBasePoint();
 
     blsct::PublicKey invalidKey;
     BOOST_CHECK(!invalidKey.IsValid());
@@ -20,7 +20,9 @@ BOOST_AUTO_TEST_CASE(keys_constructors)
     blsct::PublicKey keyFromVch(generator.GetVch());
     BOOST_CHECK(keyFromVch.IsValid());
     BOOST_CHECK(generator.GetVch() == keyFromVch.GetVch());
-    BOOST_CHECK(keyFromVch.ToString() == "97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb");
+    BOOST_CHECK(keyFromVch.ToString() ==
+                "97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac58"
+                "6c55e83ff97a1aeffb3af00adb22c6bb");
 
     blsct::PublicKey keyFromPoint(generator);
     BOOST_CHECK(keyFromPoint.IsValid());
@@ -64,7 +66,8 @@ BOOST_AUTO_TEST_CASE(keys_constructors)
     blsct::DoublePublicKey doubleKeyFromPoints(generator, pointR);
     BOOST_CHECK(doubleKeyFromPoints.IsValid());
 
-    blsct::DoublePublicKey doubleKeyFromVectors(generator.GetVch(), pointR.GetVch());
+    blsct::DoublePublicKey doubleKeyFromVectors(generator.GetVch(),
+                                                pointR.GetVch());
     BOOST_CHECK(doubleKeyFromVectors.IsValid());
 
     G1Point viewKey;
@@ -86,7 +89,30 @@ BOOST_AUTO_TEST_CASE(keys_constructors)
     ret = doubleKeyFromVectors.GetSpendKey(spendKey);
     BOOST_CHECK(ret == true);
     BOOST_CHECK(spendKey == pointR);
-}
 
+    // Private Key
+    std::vector<unsigned char> vectorKey = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+        16, 17, 1, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+    blsct::PrivateKey invalidPrivateKey;
+    BOOST_CHECK(!invalidPrivateKey.IsValid());
+
+    blsct::PrivateKey privateKeyFromVector(vectorKey);
+    BOOST_CHECK(privateKeyFromVector.IsValid());
+    BOOST_CHECK(privateKeyFromVector.GetScalar().GetVch() == vectorKey);
+
+    Scalar scalarFromVector(vectorKey);
+    blsct::PrivateKey privateKeyFromScalar(scalarFromVector);
+    BOOST_CHECK(privateKeyFromScalar.IsValid());
+    BOOST_CHECK(privateKeyFromScalar.GetScalar().GetVch() == vectorKey);
+
+    // G(a+b) == Ga + Gb
+    blsct::PrivateKey privateKeyFromAddition(privateKeyFromScalar.GetScalar() +
+                                             privateKeyFromVector.GetScalar());
+    blsct::PublicKey publicKeyFromAddition(privateKeyFromScalar.GetG1Point() +
+                                           privateKeyFromVector.GetG1Point());
+    BOOST_CHECK(privateKeyFromAddition.GetPublicKey() == publicKeyFromAddition);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
