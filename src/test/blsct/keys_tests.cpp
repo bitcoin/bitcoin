@@ -20,6 +20,7 @@ BOOST_AUTO_TEST_CASE(keys_constructors)
     blsct::PublicKey keyFromVch(generator.GetVch());
     BOOST_CHECK(keyFromVch.IsValid());
     BOOST_CHECK(generator.GetVch() == keyFromVch.GetVch());
+    BOOST_CHECK(keyFromVch.ToString() == "97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb");
 
     blsct::PublicKey keyFromPoint(generator);
     BOOST_CHECK(keyFromPoint.IsValid());

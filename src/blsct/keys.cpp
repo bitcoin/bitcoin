@@ -28,6 +28,11 @@ bool PublicKey::GetG1Point(G1Point& ret) const
     return true;
 }
 
+std::string PublicKey::ToString() const
+{
+    return HexStr(GetVch());
+};
+
 bool PublicKey::operator==(const PublicKey& rhs) const
 {
     return GetVch() == rhs.GetVch();
