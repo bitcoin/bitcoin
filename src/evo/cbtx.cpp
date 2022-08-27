@@ -159,64 +159,84 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     }
 }
 
+using QcHashMap = std::map<Consensus::LLMQType, std::vector<uint256>>;
+using QcIndexedHashMap = std::map<Consensus::LLMQType, std::map<int16_t, uint256>>;
+
+/**
+ * Handles the calculation or caching of qcHashes and qcIndexedHashes
+ * @param pindexPrev The const CBlockIndex* (ie a block) of a block. Both the Quorum list and quorum rotation actiavtion status will be retrieved based on this block.
+ * @return nullopt if quorumCommitment was unable to be found, otherwise returns the qcHashes and qcIndexedHashes that were calculated or cached
+ */
+auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev) ->
+        std::optional<std::pair<QcHashMap /*qcHashes*/, QcIndexedHashMap /*qcIndexedHashes*/>> {
+    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
+
+    static CCriticalSection cs_cache;
+    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
+    static QcHashMap qcHashes_cached GUARDED_BY(cs_cache);
+    static QcIndexedHashMap qcIndexedHashes_cached GUARDED_BY(cs_cache);
+
+    LOCK(cs_cache);
+
+    if (quorums == quorums_cached) {
+        return std::make_pair(qcHashes_cached, qcIndexedHashes_cached);
+    }
+
+    // Quorums set is different, reset cached values
+    quorums_cached.clear();
+    qcHashes_cached.clear();
+    qcIndexedHashes_cached.clear();
+
+    for (const auto& [llmqType, vecBlockIndexes] : quorums) {
+        bool rotation_enabled = llmq::utils::IsQuorumRotationEnabled(llmqType, pindexPrev);
+        auto& vec_hashes = qcHashes_cached[llmqType];
+        vec_hashes.reserve(vecBlockIndexes.size());
+        auto& map_indexed_hashes = qcIndexedHashes_cached[llmqType];
+        for (const auto& blockIndex : vecBlockIndexes) {
+            uint256 dummyHash;
+            llmq::CFinalCommitmentPtr pqc = llmq::quorumBlockProcessor->GetMinedCommitment(llmqType, blockIndex->GetBlockHash(), dummyHash);
+            if (pqc == nullptr) {
+                // this should never happen
+                return std::nullopt;
+            }
+            auto qcHash = ::SerializeHash(*pqc);
+            if (rotation_enabled) {
+                map_indexed_hashes[pqc->quorumIndex] = qcHash;
+            } else {
+                vec_hashes.emplace_back(qcHash);
+            }
+        }
+    }
+    quorums_cached = quorums;
+    return std::make_pair(qcHashes_cached, qcIndexedHashes_cached);
+}
+
+auto CalcHashCountFromQCHashes(const QcHashMap& qcHashes)
+{
+    size_t hash_count{0};
+    for (const auto& [_, vec_hashes] : qcHashes) {
+        hash_count += vec_hashes.size();
+    }
+    return hash_count;
+}
+
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state)
 {
-    static int64_t nTimeMinedAndActive = 0;
     static int64_t nTimeMined = 0;
     static int64_t nTimeLoop = 0;
     static int64_t nTimeMerkle = 0;
 
     int64_t nTime1 = GetTimeMicros();
 
-    // The returned quorums are in reversed order, so the most recent one is at index 0
-    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
-    std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
-    std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes;
-    size_t hashCount = 0;
-
-    int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
-    LogPrint(BCLog::BENCHMARK, "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
-
-    {
-        static CCriticalSection cs_cache;
-        static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
-        static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes_cached GUARDED_BY(cs_cache);
-        static std::map<Consensus::LLMQType, std::map<int16_t, uint256>> qcIndexedHashes_cached GUARDED_BY(cs_cache);
-
-        LOCK(cs_cache);
-
-        if (quorums == quorums_cached) {
-            qcHashes = qcHashes_cached;
-            qcIndexedHashes = qcIndexedHashes_cached;
-            for (const auto& [_, vec_hashes] : qcHashes) {
-                hashCount += vec_hashes.size();
-            }
-        } else {
-            for (const auto& p : quorums) {
-                auto& v = qcHashes[p.first];
-                v.reserve(p.second.size());
-                for (const auto& p2 : p.second) {
-                    uint256 minedBlockHash;
-                    llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
-                    if (qc == nullptr) return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "commitment-not-found");
-                    if (llmq::utils::IsQuorumRotationEnabled(qc->llmqType, pindexPrev)) {
-                        auto& qi = qcIndexedHashes[p.first];
-                        qi.insert(std::make_pair(qc->quorumIndex, ::SerializeHash(*qc)));
-                        continue;
-                    }
-                    v.emplace_back(::SerializeHash(*qc));
-                    hashCount++;
-                }
-            }
-            quorums_cached = quorums;
-            qcHashes_cached = qcHashes;
-            qcIndexedHashes_cached = qcIndexedHashes;
-        }
+    auto retVal = CachedGetQcHashesQcIndexedHashes(pindexPrev);
+    if (retVal == std::nullopt) {
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "commitment-not-found");
     }
+    // The returned quorums are in reversed order, so the most recent one is at index 0
+    auto [qcHashes, qcIndexedHashes] = retVal.value();
 
-
-    int64_t nTime3 = GetTimeMicros(); nTimeMined += nTime3 - nTime2;
-    LogPrint(BCLog::BENCHMARK, "            - GetMinedCommitment: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMined * 0.000001);
+    int64_t nTime2 = GetTimeMicros(); nTimeMined += nTime2 - nTime1;
+    LogPrint(BCLog::BENCHMARK, "            - CachedGetQcHashesQcIndexedHashes: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMined * 0.000001);
 
     // now add the commitments from the current block, which are not returned by GetMinedAndActiveCommitmentsUntilBlock
     // due to the use of pindexPrev (we don't have the tip index here)
@@ -229,57 +249,55 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-payload-calc-cbtx-quorummerkleroot");
             }
             if (qc.commitment.IsNull()) {
+                // having null commitments is ok but we don't use them here, move to the next tx
                 continue;
             }
             auto qcHash = ::SerializeHash(qc.commitment);
-            const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
-            auto& v = qcHashes[llmq_params.type];
             if (llmq::utils::IsQuorumRotationEnabled(qc.commitment.llmqType, pindexPrev)) {
-                auto& qi = qcIndexedHashes[qc.commitment.llmqType];
-                qi[qc.commitment.quorumIndex] = qcHash;
-                continue;
-            }
-            if (v.size() == size_t(llmq_params.signingActiveQuorumCount)) {
-                // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
-                // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
-                // fact that a block can only contain a single commitment for one LLMQ type
-                v.pop_back();
-            }
-            v.emplace_back(qcHash);
-            hashCount++;
-            if (v.size() > uint64_t(llmq_params.signingActiveQuorumCount)) {
-                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "excess-quorums-calc-cbtx-quorummerkleroot");
+                auto& map_indexed_hashes = qcIndexedHashes[qc.commitment.llmqType];
+                map_indexed_hashes[qc.commitment.quorumIndex] = qcHash;
+            } else {
+                const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
+                auto& vec_hashes = qcHashes[llmq_params.type];
+                if (vec_hashes.size() == size_t(llmq_params.signingActiveQuorumCount)) {
+                    // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
+                    // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
+                    // fact that a block can only contain a single commitment for one LLMQ type
+                    vec_hashes.pop_back();
+                }
+                vec_hashes.emplace_back(qcHash);
             }
         }
     }
 
-    if (!qcIndexedHashes.empty()) {
-        for (const auto& q : qcIndexedHashes) {
-            auto& v = qcHashes[q.first];
-            for (const auto& qq : q.second) {
-                v.emplace_back(qq.second);
-                hashCount++;
-            }
+    for (const auto& [llmqType, map_indexed_hashes] : qcIndexedHashes) {
+        auto& vec_hashes = qcHashes[llmqType];
+        for (const auto& [_, hash] : map_indexed_hashes) {
+            vec_hashes.emplace_back(hash);
         }
     }
 
-    std::vector<uint256> qcHashesVec;
-    qcHashesVec.reserve(hashCount);
+    std::vector<uint256> vec_hashes_final;
+    vec_hashes_final.reserve(CalcHashCountFromQCHashes(qcHashes));
 
-    for (const auto& p : qcHashes) {
-        // Copy p.second into qcHashesVec
-        std::copy(p.second.begin(), p.second.end(), std::back_inserter(qcHashesVec));
+    for (const auto& [llmqType, vec_hashes] : qcHashes) {
+        const auto& llmq_params = llmq::GetLLMQParams(llmqType);
+        if (vec_hashes.size() > size_t(llmq_params.signingActiveQuorumCount)) {
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "excess-quorums-calc-cbtx-quorummerkleroot");
+        }
+        // Copy vec_hashes into vec_hashes_final
+        std::copy(vec_hashes.begin(), vec_hashes.end(), std::back_inserter(vec_hashes_final));
     }
-    std::sort(qcHashesVec.begin(), qcHashesVec.end());
+    std::sort(vec_hashes_final.begin(), vec_hashes_final.end());
 
-    int64_t nTime4 = GetTimeMicros(); nTimeLoop += nTime4 - nTime3;
-    LogPrint(BCLog::BENCHMARK, "            - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeLoop * 0.000001);
+    int64_t nTime3 = GetTimeMicros(); nTimeLoop += nTime3 - nTime2;
+    LogPrint(BCLog::BENCHMARK, "            - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeLoop * 0.000001);
 
     bool mutated = false;
-    merkleRootRet = ComputeMerkleRoot(qcHashesVec, &mutated);
+    merkleRootRet = ComputeMerkleRoot(vec_hashes_final, &mutated);
 
-    int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
-    LogPrint(BCLog::BENCHMARK, "            - ComputeMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
+    int64_t nTime4 = GetTimeMicros(); nTimeMerkle += nTime4 - nTime3;
+    LogPrint(BCLog::BENCHMARK, "            - ComputeMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
 
     if (mutated) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "mutated-calc-cbtx-quorummerkleroot");
