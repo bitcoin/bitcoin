@@ -12,12 +12,17 @@ BOOST_FIXTURE_TEST_SUITE(keys_tests, MclTestingSetup)
 BOOST_AUTO_TEST_CASE(keys_constructors)
 {
     // Single Public Key
-    auto generator = G1Point::GetBasePoint();
+    auto generator = G1Point::GetBasePoint();    
+
+    blsct::PublicKey invalidKey;
+    BOOST_CHECK(!invalidKey.IsValid());
 
     blsct::PublicKey keyFromVch(generator.GetVch());
+    BOOST_CHECK(keyFromVch.IsValid());
     BOOST_CHECK(generator.GetVch() == keyFromVch.GetVch());
 
     blsct::PublicKey keyFromPoint(generator);
+    BOOST_CHECK(keyFromPoint.IsValid());
     BOOST_CHECK(generator.GetVch() == keyFromPoint.GetVch());
 
     G1Point point(generator.GetVch());
@@ -56,7 +61,10 @@ BOOST_AUTO_TEST_CASE(keys_constructors)
 
     // Double Public Key
     blsct::DoublePublicKey doubleKeyFromPoints(generator, pointR);
+    BOOST_CHECK(doubleKeyFromPoints.IsValid());
+
     blsct::DoublePublicKey doubleKeyFromVectors(generator.GetVch(), pointR.GetVch());
+    BOOST_CHECK(doubleKeyFromVectors.IsValid());
 
     G1Point viewKey;
 
