@@ -12,6 +12,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 namespace blsct {
@@ -32,6 +33,8 @@ public:
 
     uint256 GetHash() const;
     CKeyID GetID() const;
+
+    std::string ToString() const;
 
     bool operator==(const PublicKey& rhs) const;
 
