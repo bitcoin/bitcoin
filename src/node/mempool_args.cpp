@@ -45,7 +45,7 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
 
     if (auto hours = argsman.GetIntArg("-mempoolexpiry")) mempool_opts.expiry = std::chrono::hours{*hours};
 
-    // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
+    // incremental relay fee sets the minimum feerate increase necessary for replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (argsman.IsArgSet("-incrementalrelayfee")) {
         if (std::optional<CAmount> inc_relay_fee = ParseMoney(argsman.GetArg("-incrementalrelayfee", ""))) {

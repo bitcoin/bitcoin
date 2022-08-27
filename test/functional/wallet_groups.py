@@ -26,6 +26,10 @@ class WalletGroupTest(BitcoinTestFramework):
             ["-maxapsfee=0.00002719"],
             ["-maxapsfee=0.00002720"],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
+
         self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):

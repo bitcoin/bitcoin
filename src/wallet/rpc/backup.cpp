@@ -101,7 +101,7 @@ RPCHelpMan importprivkey()
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "The rescan parameter can be set to false if the key was never used to create transactions. If it is set to false,\n"
-            "but the key was used to create transactions, rescanwallet needs to be called with the appropriate block range.\n"
+            "but the key was used to create transactions, rescanblockchain needs to be called with the appropriate block range.\n"
             "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {
                     {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key (see dumpprivkey)"},
@@ -204,7 +204,7 @@ RPCHelpMan importaddress()
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "The rescan parameter can be set to false if the key was never used to create transactions. If it is set to false,\n"
-            "but the key was used to create transactions, rescanwallet needs to be called with the appropriate block range.\n"
+            "but the key was used to create transactions, rescanblockchain needs to be called with the appropriate block range.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
             "Hint: use importmulti to import more than one address.\n"
             "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
@@ -406,7 +406,7 @@ RPCHelpMan importpubkey()
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported pubkey exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "The rescan parameter can be set to false if the key was never used to create transactions. If it is set to false,\n"
-            "but the key was used to create transactions, rescanwallet needs to be called with the appropriate block range.\n"
+            "but the key was used to create transactions, rescanblockchain needs to be called with the appropriate block range.\n"
             "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {
                     {"pubkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The hex-encoded public key"},
@@ -1257,7 +1257,7 @@ RPCHelpMan importmulti()
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exist but related transactions are still missing.\n"
             "The rescan parameter can be set to false if the key was never used to create transactions. If it is set to false,\n"
-            "but the key was used to create transactions, rescanwallet needs to be called with the appropriate block range.\n"
+            "but the key was used to create transactions, rescanblockchain needs to be called with the appropriate block range.\n"
             "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {
                     {"requests", RPCArg::Type::ARR, RPCArg::Optional::NO, "Data to be imported",

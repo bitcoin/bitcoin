@@ -147,7 +147,7 @@ struct MempoolAcceptResult {
     const TxValidationState m_state;
 
     // The following fields are only present when m_result_type = ResultType::VALID or MEMPOOL_ENTRY
-    /** Mempool transactions replaced by the tx per BIP 125 rules. */
+    /** Mempool transactions replaced by the tx. */
     const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
     /** Virtual size as used by the mempool, calculated using serialized size and sigops. */
     const std::optional<int64_t> m_vsize;
@@ -336,7 +336,7 @@ bool TestBlockValidity(BlockValidationState& state,
                        CChainState& chainstate,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
-                       const std::function<int64_t()>& adjusted_time_callback,
+                       const std::function<NodeClock::time_point()>& adjusted_time_callback,
                        bool fCheckPOW = true,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -838,10 +838,6 @@ private:
 
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
-    const CChainParams m_chainparams;
-
-    const std::function<int64_t()> m_adjusted_time_callback;
-
     //! Internal helper for ActivateSnapshot().
     [[nodiscard]] bool PopulateAndValidateSnapshot(
         CChainState& snapshot_chainstate,
@@ -861,12 +857,13 @@ private:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(const Options& opts)
-        : m_chainparams{opts.chainparams},
-          m_adjusted_time_callback{Assert(opts.adjusted_time_callback)} {};
+    explicit ChainstateManager(Options options) : m_options{std::move(options)}
+    {
+        Assert(m_options.adjusted_time_callback);
+    }
 
-    const CChainParams& GetParams() const { return m_chainparams; }
-    const Consensus::Params& GetConsensus() const { return m_chainparams.GetConsensus(); }
+    const CChainParams& GetParams() const { return m_options.chainparams; }
+    const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
 
     /**
      * Alias for ::cs_main.
@@ -881,6 +878,7 @@ public:
      */
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
+    const Options m_options;
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.

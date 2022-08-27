@@ -156,7 +156,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
-    result.ComputeAndSetWaste(CAmount{0});
+    result.ComputeAndSetWaste(cost_of_change, cost_of_change, CAmount{0});
     assert(best_waste == result.GetWaste());
 
     return result;
@@ -165,6 +165,12 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
+
+    // Include change for SRD as we want to avoid making really small change if the selection just
+    // barely meets the target. Just use the lower bound change target instead of the randomly
+    // generated one, since SRD will result in a random change amount anyway; avoid making the
+    // target needlessly large.
+    target_value += CHANGE_LOWER;
 
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
@@ -389,20 +395,26 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     return waste;
 }
 
-CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng)
+CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng)
 {
     if (payment_value <= CHANGE_LOWER / 2) {
-        return CHANGE_LOWER;
+        return change_fee + CHANGE_LOWER;
     } else {
         // random value between 50ksat and min (payment_value * 2, 1milsat)
         const auto upper_bound = std::min(payment_value * 2, CHANGE_UPPER);
-        return rng.randrange(upper_bound - CHANGE_LOWER) + CHANGE_LOWER;
+        return change_fee + rng.randrange(upper_bound - CHANGE_LOWER) + CHANGE_LOWER;
     }
 }
 
-void SelectionResult::ComputeAndSetWaste(CAmount change_cost)
+void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee)
 {
-    m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    const CAmount change = GetChange(min_viable_change, change_fee);
+
+    if (change > 0) {
+        m_waste = GetSelectionWaste(m_selected_inputs, change_cost, m_target, m_use_effective);
+    } else {
+        m_waste = GetSelectionWaste(m_selected_inputs, 0, m_target, m_use_effective);
+    }
 }
 
 CAmount SelectionResult::GetWaste() const
@@ -415,6 +427,11 @@ CAmount SelectionResult::GetSelectedValue() const
     return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.txout.nValue; });
 }
 
+CAmount SelectionResult::GetSelectedEffectiveValue() const
+{
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin.GetEffectiveValue(); });
+}
+
 void SelectionResult::Clear()
 {
     m_selected_inputs.clear();
@@ -425,6 +442,16 @@ void SelectionResult::AddInput(const OutputGroup& group)
 {
     util::insert(m_selected_inputs, group.m_outputs);
     m_use_effective = !group.m_subtract_fee_outputs;
+}
+
+void SelectionResult::Merge(const SelectionResult& other)
+{
+    m_target += other.m_target;
+    m_use_effective |= other.m_use_effective;
+    if (m_algo == SelectionAlgorithm::MANUAL) {
+        m_algo = other.m_algo;
+    }
+    util::insert(m_selected_inputs, other.m_selected_inputs);
 }
 
 const std::set<COutput>& SelectionResult::GetInputSet() const
@@ -464,4 +491,24 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     }
     assert(false);
 }
+
+CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmount change_fee) const
+{
+    // change = SUM(inputs) - SUM(outputs) - fees
+    // 1) With SFFO we don't pay any fees
+    // 2) Otherwise we pay all the fees:
+    //  - input fees are covered by GetSelectedEffectiveValue()
+    //  - non_input_fee is included in m_target
+    //  - change_fee
+    const CAmount change = m_use_effective
+                           ? GetSelectedEffectiveValue() - m_target - change_fee
+                           : GetSelectedValue() - m_target;
+
+    if (change < min_viable_change) {
+        return 0;
+    }
+
+    return change;
+}
+
 } // namespace wallet
