@@ -2262,7 +2262,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
             return false;
         }
         int64_t nMedianTime = -1;
-        if(pnevmdatadb->ReadMPT(nevmDataEntry.nevmData->vchVersionHash, nMedianTime) && nMedianTime != 0) {
+        if(!fReindex && pnevmdatadb->ReadMPT(nevmDataEntry.nevmData->vchVersionHash, nMedianTime) && nMedianTime != 0) {
             LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM MPT duplicate\n");
             return false;   
         }
