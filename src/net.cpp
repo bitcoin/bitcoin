@@ -740,9 +740,8 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
         LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
-
-    // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
-    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+    // SYSCOIN reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
+    if (/*hdr.nMessageSize > MAX_SIZE || */hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
         LogPrint(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
         return -1;
     }
