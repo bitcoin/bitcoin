@@ -12,6 +12,25 @@
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 
+bool LegacyScriptPubKeyMan::GetNewDestination(const std::string label, CTxDestination& dest, std::string& error)
+{
+    LOCK(cs_wallet);
+    error.clear();
+    TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey new_key;
+    if (!GetKeyFromPool(new_key, false)) {
+        error = "Error: Keypool ran out, please call keypoolrefill first";
+        return false;
+    }
+    //LearnRelatedScripts(new_key);
+    dest = new_key.GetID();
+
+    m_wallet.SetAddressBook(dest, label, "receive");
+    return true;
+}
+
 typedef std::vector<unsigned char> valtype;
 
 namespace {
@@ -1483,14 +1502,27 @@ bool LegacyScriptPubKeyMan::AddCScriptWithDB(WalletBatch& batch, const CScript& 
     return false;
 }
 
-bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts)
+bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const auto& entry : scripts) {
-        if (!HaveCScript(CScriptID(entry)) && !AddCScriptWithDB(batch, entry)) {
+        CScriptID id(entry);
+        if (HaveCScript(id)) {
+            WalletLogPrintf("Already have script %s, skipping\n", HexStr(entry));
+            continue;
+        }
+        if (!AddCScriptWithDB(batch, entry)) {
             return false;
         }
+
+        if (timestamp > 0) {
+            m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
+        }
     }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
     return true;
 }
 
@@ -1503,8 +1535,13 @@ bool LegacyScriptPubKeyMan::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey
         const CKeyID& id = entry.first;
         assert(key.VerifyPubKey(pubkey));
         mapKeyMetadata[id].nCreateTime = timestamp;
+        // Skip if we already have the key
+        if (HaveKey(id)) {
+            WalletLogPrintf("Already have key with pubkey %s, skipping\n", HexStr(pubkey));
+            continue;
+        }
         // If the private key is not present in the wallet, insert it.
-        if (!HaveKey(id) && !AddKeyPubKeyWithDB(batch, key, pubkey)) {
+        if (!AddKeyPubKeyWithDB(batch, key, pubkey)) {
             return false;
         }
         UpdateTimeFirstKey(timestamp);
@@ -1522,7 +1559,12 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
         }
         const CPubKey& pubkey = entry->second;
         CPubKey temp;
-        if (!GetPubKey(id, temp) && !AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
+        if (GetPubKey(id, temp)) {
+            // Already have pubkey, skipping
+            WalletLogPrintf("Already have pubkey %s, skipping\n", HexStr(temp));
+            continue;
+        }
+        if (!AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
             return false;
         }
         mapKeyMetadata[id].nCreateTime = timestamp;
@@ -1538,7 +1580,7 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
     return true;
 }
 
-bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool internal, const int64_t timestamp)
+bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const CScript& script : script_pub_keys) {
@@ -1549,7 +1591,7 @@ bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::string& label, const 
         }
         CTxDestination dest;
         ExtractDestination(script, dest);
-        if (!internal && IsValidDestination(dest)) {
+        if (apply_label && IsValidDestination(dest)) {
             m_wallet.SetAddressBookWithDB(batch, dest, label, "receive");
         }
     }

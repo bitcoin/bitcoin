@@ -181,13 +181,14 @@ public:
     }
     int64_t getKeysLeftSinceAutoBackup() override { return m_wallet->nKeysLeftSinceAutoBackup; }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    bool getKeyFromPool(bool internal, CPubKey& pub_key) override
+    bool getNewDestination(const std::string label, CTxDestination& dest) override
     {
         auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
         if (!spk_man) {
             return false;
         }
-        return spk_man->GetKeyFromPool(pub_key, internal);
+        std::string error;
+        return m_wallet->GetNewDestination(label, dest, error);
     }
     bool getPubKey(const CKeyID& address, CPubKey& pub_key) override {
         auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
@@ -300,7 +301,7 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        CReserveKey m_key(m_wallet.get());
+        ReserveDestination m_dest(m_wallet.get());
         CTransactionRef tx;
         if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
                 fail_reason, coin_control, sign)) {
@@ -313,7 +314,7 @@ public:
         WalletOrderForm order_form) override
     {
         LOCK2(m_wallet->cs_wallet, cs_main);
-        CReserveKey m_key(m_wallet.get());
+        ReserveDestination m_dest(m_wallet.get());
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }

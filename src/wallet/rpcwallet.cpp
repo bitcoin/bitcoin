@@ -62,6 +62,23 @@ static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& pa
     return avoid_reuse;
 }
 
+
+/** Used by RPC commands that have an include_watchonly parameter.
+ *  We default to true for watchonly wallets if include_watchonly isn't
+ *  explicitly set.
+ */
+static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& pwallet)
+{
+    if (include_watchonly.isNull()) {
+        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
+        return pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    }
+
+    // otherwise return whatever include_watchonly was set to
+    return include_watchonly.get_bool();
+}
+
+
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 /*
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
@@ -204,20 +221,12 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         label = LabelFromValue(request.params[0]);
 
-    if (!pwallet->IsLocked(true)) {
-        pwallet->TopUpKeyPool();
+    CTxDestination dest;
+    std::string error;
+    if (!pwallet->GetNewDestination(label, dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
-
-    // Generate a new key that is added to wallet
-    CPubKey newKey;
-    if (!spk_man->GetKeyFromPool(newKey, false)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    }
-    CKeyID keyID = newKey.GetID();
-
-    pwallet->SetAddressBook(keyID, label, "receive");
-
-    return EncodeDestination(keyID);
+    return EncodeDestination(dest);
 }
 
 static UniValue getrawchangeaddress(const JSONRPCRequest& request)
@@ -245,20 +254,12 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
-    if (!pwallet->IsLocked(true)) {
-        pwallet->TopUpKeyPool();
+    CTxDestination dest;
+    std::string error;
+    if (!pwallet->GetNewChangeDestination(dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
     }
-
-    CReserveKey reservekey(pwallet);
-    CPubKey vchPubKey;
-    if (!reservekey.GetReservedKey(vchPubKey, true))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-
-    reservekey.KeepKey();
-
-    CKeyID keyID = vchPubKey.GetID();
-
-    return EncodeDestination(keyID);
+    return EncodeDestination(dest);
 }
 
 
@@ -753,7 +754,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
             {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
             {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend in the wallet's balance."},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Also include balance in watch-only addresses (see 'importaddress')"},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also include balance in watch-only addresses (see 'importaddress')"},
             {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
         },
         RPCResult{
@@ -791,10 +792,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         fAddLocked = addlocked.get_bool();
     }
 
-    bool include_watchonly = false;
-    if (!request.params[3].isNull() && request.params[3].get_bool()) {
-        include_watchonly = true;
-    }
+    bool include_watchonly = ParseIncludeWatchonly(request.params[3], *pwallet);
 
     bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[4]);
     const auto bal = pwallet->GetBalance(min_depth, avoid_reuse, fAddLocked);
@@ -1064,9 +1062,9 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         fIncludeEmpty = params[2].get_bool();
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!params[3].isNull())
-        if(params[3].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+    if (ParseIncludeWatchonly(params[3], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     bool has_filtered_address = false;
     CTxDestination filtered_address = CNoDestination();
@@ -1207,7 +1205,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum number of confirmations before payments are included."},
             {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend."},
             {"include_empty", RPCArg::Type::BOOL, /* default */ "false", "Whether to include addresses that haven't received any payments."},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses (see 'importaddress')."},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses (see 'importaddress')"},
             {"address_filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If present, only return information on this address."},
         },
         RPCResult{
@@ -1258,7 +1256,7 @@ static UniValue listreceivedbylabel(const JSONRPCRequest& request)
             {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum number of confirmations before payments are included."},
             {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend."},
             {"include_empty", RPCArg::Type::BOOL, /* default */ "false", "Whether to include labels that haven't received any payments."},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses (see 'importaddress')."},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses (see 'importaddress')"},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "",
@@ -1418,7 +1416,7 @@ static UniValue listtransactions(const JSONRPCRequest& request)
                   "with the specified label, or \"*\" to disable filtering and return all transactions."},
             {"count", RPCArg::Type::NUM, /* default */ "10", "The number of transactions to return"},
             {"skip", RPCArg::Type::NUM, /* default */ "0", "The number of transactions to skip"},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Include transactions to watch-only addresses (see 'importaddress')"},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Include transactions to watch-only addresses (see 'importaddress')"},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "",
@@ -1481,9 +1479,10 @@ static UniValue listtransactions(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         nFrom = request.params[2].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[3].isNull())
-        if(request.params[3].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
@@ -1528,7 +1527,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
         {
             {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, the block hash to list transactions since, otherwise list all transactions."},
             {"target_confirmations", RPCArg::Type::NUM, /* default */ "1", "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Include transactions to watch-only addresses (see 'importaddress')"},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Include transactions to watch-only addresses (see 'importaddress')"},
             {"include_removed", RPCArg::Type::BOOL, /* default */ "true", "Show transactions that were removed due to a reorg in the \"removed\" array\n"
     "                                                           (not guaranteed to work on pruned nodes)"},
         },
@@ -1607,8 +1606,8 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
         }
     }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        filter = filter | ISMINE_WATCH_ONLY;
+    if (ParseIncludeWatchonly(request.params[2], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
     }
 
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
@@ -1663,7 +1662,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         "\nGet detailed information about in-wallet transaction <txid>\n",
         {
             {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
-            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses in balance calculation and details[]"},
+            {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses in balance calculation and details[]"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
@@ -1720,9 +1719,10 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     hash.SetHex(request.params[0].get_str());
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[1].isNull())
-        if(request.params[1].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -3154,8 +3154,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         if (options.exists("changePosition"))
             change_position = options["changePosition"].get_int();
 
-        if (options.exists("includeWatching"))
-            coinControl.fAllowWatchOnly = options["includeWatching"].get_bool();
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(options["includeWatching"], *pwallet);
 
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
@@ -3183,6 +3182,9 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             }
         }
       }
+    } else {
+        // if options is null and not a bool
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, *pwallet);
     }
 
     if (tx.vout.size() == 0)
@@ -3229,7 +3231,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                         {
                             {"changeAddress", RPCArg::Type::STR, /* default */ "pool address", "The dash address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                            {"includeWatching", RPCArg::Type::BOOL, /* default */ "false", "Also select inputs which are watch only.\n"
+                            {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only.\n"
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                           "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
                             {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
@@ -3370,7 +3372,10 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     }
     pwallet->chain().findCoins(coins);
 
-    return SignTransaction(mtx, request.params[1], &*pwallet->GetLegacyScriptPubKeyMan(), coins, false, request.params[2]);
+    // Parse the prevtxs array
+    ParsePrevouts(request.params[1], nullptr, coins);
+
+    return SignTransaction(mtx, &*pwallet->GetLegacyScriptPubKeyMan(), coins, request.params[2]);
 }
 
 static UniValue rescanblockchain(const JSONRPCRequest& request)
@@ -3861,7 +3866,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                         },
                     },
                 },
-                },
+            },
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
@@ -3884,7 +3889,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                 {
                     {"changeAddress", RPCArg::Type::STR_HEX, /* default */ "pool address", "The dash address to receive the change"},
                     {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                    {"includeWatching", RPCArg::Type::BOOL, /* default */ "false", "Also select inputs which are watch only"},
+                    {"includeWatching", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also select inputs which are watch only"},
                     {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
                     {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
                     {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"

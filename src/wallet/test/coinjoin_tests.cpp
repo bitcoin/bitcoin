@@ -175,14 +175,12 @@ public:
     {
         CompactTallyItem tallyItem;
         CTransactionRef tx;
-        CReserveKey destKey(wallet.get());
+        ReserveDestination reserveDest(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         bilingual_str strError;
         CCoinControl coinControl;
-        CPubKey pubKey;
-        BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
-        tallyItem.txdest = pubKey.GetID();
+        BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
         for (CAmount nAmount : vecAmounts) {
             BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             {
@@ -200,7 +198,7 @@ public:
             }
         }
         assert(tallyItem.vecInputCoins.size() == vecAmounts.size());
-        destKey.KeepKey();
+        reserveDest.KeepDestination();
         return tallyItem;
     }
 };
