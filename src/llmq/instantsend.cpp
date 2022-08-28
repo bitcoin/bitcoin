@@ -1737,7 +1737,7 @@ bool CInstantSendManager::IsInstantSendMempoolSigningEnabled() const
 
 bool CInstantSendManager::RejectConflictingBlocks() const
 {
-    if (!masternodeSync->IsBlockchainSynced()) {
+    if (masternodeSync == nullptr || !masternodeSync->IsBlockchainSynced()) {
         return false;
     }
     if (!spork_manager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
