@@ -2147,7 +2147,7 @@ bool FillNEVMData(CTransactionRef tx) {
     }
     return true; 
 }
-bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut) {
+bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     if(!NEVMDataVecOut.empty()) {
         return pnevmdatadb->FlushErase(NEVMDataVecOut);
     }
@@ -2201,15 +2201,17 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
     if(nMedianTime > 0 && !pnevmdatadb->FlushData(vecNEVMDataToProcess)) {
         return false;
     }
-    // upon success write version hashes to db and strip scriptPubKeys
-    for (auto &nevmDataEntry : vecNEVMDataToProcess) {
-        // upon receiving block we prune data and store in separate db
+    for (auto &nevmDataEntry : vecNevmData) {
+        // upon receiving block/tx we strip data from script
         std::vector<unsigned char> data;
         if(nevmDataEntry.scriptPubKey) {
             nevmDataEntry.nevmData->vchData.clear();
             nevmDataEntry.nevmData->SerializeData(data);
             nevmDataEntry.scriptPubKey[0] = CScript() << OP_RETURN << data;
         }
+    }
+    // upon success write version hashes to db 
+    for (const auto &nevmDataEntry : vecNEVMDataToProcess) {
         // save the version hashes so we can remove from db (above) if something goes wrong with proceeding block/tx validations
         nevmDataVecOut.emplace_back(nevmDataEntry.nevmData->vchVersionHash);
     }
@@ -2253,6 +2255,18 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
             vecNevmData.emplace_back(entry);
         }
     }
+    std::set<std::vector<uint8_t> > setVH;
+    for (const auto &nevmDataEntry : vecNevmData) {
+        if(!setVH.emplace(nevmDataEntry.nevmData->vchVersionHash).second) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM data duplicate\n");
+            return false;
+        }
+        int64_t nMedianTime = -1;
+        if(pnevmdatadb->ReadMPT(nevmDataEntry.nevmData->vchVersionHash, nMedianTime) && nMedianTime != 0) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM MPT duplicate\n");
+            return false;   
+        }
+    }
     if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
             if(nevmDataEntry.nevmData) {
@@ -2288,9 +2302,20 @@ bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const in
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    for (const auto &nevmDataEntry : vecNevmData) {
+        if(pnevmdatadb->ExistsMPT(nevmDataEntry.nevmData->vchVersionHash)) {
+            LogPrint(BCLog::SYS, "ProcessNEVMData(tx): NEVM MPT duplicate\n");
+            return false;   
+        }
+    }
+    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
         return false;
-    }  
+    }
+    // set MPT to 0 for mempool
+    if(!pnevmdatadb->FlushSetMPTs(nevmDataVecOut, 0)) {
+        LogPrint(BCLog::SYS, "ProcessNEVMData(tx) could not set MPT to 0\n");
+        return false;
+    }
     return true;
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.

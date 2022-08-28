@@ -1088,7 +1088,7 @@ bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock);
 bool FillNEVMData(const CBlock &block);
 bool FillNEVMData(CBlock& block);
 bool FillNEVMData(CTransactionRef tx);
-bool EraseNEVMData(NEVMDataVec &NEVMDataVecOut);
+bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
 bool ProcessNEVMData(const node::BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata = false);
 bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef &tx, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut);
 /**

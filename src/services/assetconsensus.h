@@ -44,6 +44,10 @@ public:
         const auto& pair = std::make_pair(nVersionHash, true);
         return Exists(pair);
     } 
+    bool ExistsMPT(const std::vector<uint8_t>& nVersionHash) {
+        const auto& pair = std::make_pair(nVersionHash, false);
+        return Exists(pair);
+    } 
     bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& vchData) {
         const auto& pair = std::make_pair(nVersionHash, true);
         return Read(pair, vchData);

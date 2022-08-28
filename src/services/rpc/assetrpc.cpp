@@ -125,6 +125,9 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                     std::vector<uint8_t> vchData;
                     if(pcursor->GetValue(vchData)) {
                         oBlob.__pushKV("versionhash",  HexStr(key.first));
+                        int64_t mpt = -1;
+                        pnevmdatadb.ReadMPT(key.first, mpt);
+                        oBlob.__pushKV("mpt", mpt);
                         oBlob.__pushKV("datasize", (int)vchData.size());
                         if(getdata) {  
                             oBlob.__pushKV("data", HexStr(vchData));

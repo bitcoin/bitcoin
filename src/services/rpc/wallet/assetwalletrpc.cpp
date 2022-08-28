@@ -1985,18 +1985,14 @@ static RPCHelpMan syscoincreaterawnevmblob()
     try {
         res = send().HandleRequest(requestSend);
     } catch(...) {
-        NEVMDataVec nevmDataVecOut;
-        nevmDataVecOut.emplace_back(nevmData.vchVersionHash);
-        if(!EraseNEVMData(nevmDataVecOut)) {
+        if(!EraseNEVMData({nevmData.vchVersionHash})) {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
         }
         throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
     }
     const UniValue &txidObj = find_value(res.get_obj(), "txid");
     if(txidObj.isNull()) {
-        NEVMDataVec nevmDataVecOut;
-        nevmDataVecOut.emplace_back(nevmData.vchVersionHash);
-        if(!EraseNEVMData(nevmDataVecOut)) {
+        if(!EraseNEVMData({nevmData.vchVersionHash})) {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
         }
     } else {
