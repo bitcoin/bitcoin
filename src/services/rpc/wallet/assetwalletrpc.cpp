@@ -1978,9 +1978,10 @@ static RPCHelpMan syscoincreaterawnevmblob()
         throw JSONRPCError(RPC_DATABASE_ERROR, "NEVM data already exists in DB");
     }
     // FillNEVMData should fill in this data prior to relay
-    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
+    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData) || !pnevmdatadb->FlushSetMPTs({nevmData.vchVersionHash}, 0)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
     }
+    
     UniValue res;
     try {
         res = send().HandleRequest(requestSend);

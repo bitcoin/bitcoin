@@ -1227,12 +1227,31 @@ bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
         try {
             nTime = 0;
             // check if expired if so delete data
-            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nMedianTime > (nTime+NEVM_DATA_EXPIRE_TIME)) {
-               // erase both pairs
-               batch.Erase(pair);
-               pair.second = true;
-               if(Exists(pair))   
-                  batch.Erase(pair);
+            bool getpair = pcursor->GetKey(pair);
+            if(getpair) {
+                if(pair.second == false && pcursor->GetValue(nTime) && nTime > 0 && nMedianTime > (nTime+NEVM_DATA_EXPIRE_TIME)) {
+                    // erase both pairs
+                    batch.Erase(pair);
+                    pair.second = true;
+                    if(Exists(pair)) {  
+                        batch.Erase(pair);
+                    }
+                // find inconsistency in the two pair types and remove
+                } else {
+                    if(pair.second) {
+                        pair.second = false;
+                        if(!Exists(pair)) {
+                            pair.second = true;
+                            batch.Erase(pair);
+                        }
+                    } else {
+                        pair.second = true;
+                        if(!Exists(pair)) {
+                            pair.second = false;
+                            batch.Erase(pair);
+                        }
+                    }
+                }   
             }
             pcursor->Next();
         }
