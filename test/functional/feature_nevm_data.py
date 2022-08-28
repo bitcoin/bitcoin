@@ -49,6 +49,7 @@ class NEVMDataTest(DashTestFramework):
         print('Ensure fees will be properly calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
         assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
         foundCount = 0
+        self.sync_blocks()
         print('Testing nodes to see if MAX_DATA_BLOBS blobs exist at 2MB each...')
         for i, blobVH in enumerate(self.blobVHs):
             mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
