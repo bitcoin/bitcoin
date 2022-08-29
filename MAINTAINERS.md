@@ -53,7 +53,7 @@ general at this time). As a rough measure, scoped maintainers should avoid
 "stepping on the toes" of work that is being guided by another maintainer or
 contributor.
 
-Historically, one Bitcoin's maintainers was a designated "Lead Maintainer",
+Historically, one of Bitcoin's maintainers was a designated "Lead Maintainer",
 which was most recently @laanwj. However, [in a blog
 post](https://laanwj.github.io/2021/01/21/decentralize.html), @laanwj stated
 that they wanted to take more of a background role as a maintainer and have not
