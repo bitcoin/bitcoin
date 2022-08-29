@@ -48,7 +48,11 @@ CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminef
     return nCredit;
 }
 
-bool ScriptIsChange(const CWallet& wallet, const CScript& script)
+/**
+ * Uses the address book to return whether the script is change or not.
+ * Based on the naive assumption that any entry in the address book without a label is a change address.
+ */
+bool ScriptIsChangeOld(const CWallet& wallet, const CScript& script) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     // TODO: fix handling of 'change' outputs. The assumption is that any
     // payment to a script that is ours, but is not in the address book
@@ -68,6 +72,50 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
         }
     }
     return false;
+}
+
+bool ScriptIsChange(const CWallet& wallet, const CScript& script)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    // If the script is not from one of our internal spkms, we don't consider it change.
+    // This applies to transactions sending coins back to the source as well. Eg: If the
+    // source address is not under one of the wallet internal spkms, we don't consider
+    // the output as change.
+    std::set<ScriptPubKeyMan*> internal_spkms = wallet.GetAllScriptPubKeyMans(/*only_internal=*/true);
+    SignatureData sigdata;
+    ScriptPubKeyMan* spkm{nullptr};
+    for (const auto& iter_spk_man : internal_spkms) {
+        if (iter_spk_man && iter_spk_man->IsMine(script)) {
+            spkm = iter_spk_man;
+            break;
+        }
+    }
+    if (!spkm) return false;
+
+    // check if it's solvable
+    if (auto desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)) {
+        return WITH_LOCK(desc_spkm->cs_desc_man, return desc_spkm->GetWalletDescriptor().descriptor->IsSolvable());
+    } else {
+        // Legacy
+        auto legacy_spkm = dynamic_cast<LegacyScriptPubKeyMan*>(spkm);
+        if (!legacy_spkm) return false; // unknown spkm
+
+        CTxDestination dest;
+        if (!ExtractDestination(script, dest) || !IsValidDestination(dest)) return false;
+
+        // If the wallet supports HD split
+        if (legacy_spkm->IsHDEnabled() && wallet.CanSupportFeature(FEATURE_HD_SPLIT)) {
+            std::unique_ptr<CKeyMetadata> meta = legacy_spkm->GetMetadata(dest);
+            if (meta && meta->has_key_origin) {
+                // bip32 internal path /0'/1'/*
+                if (meta->key_origin.path.empty() || meta->key_origin.path.size() > 3) return false; // shouldn't happen, legacy supports bip32 derivation path only
+                return (meta->key_origin.path.at(1) & ~0x80000000); // BIP32_HARDENED_KEY_LIMIT=0x80000000
+            }
+        }
+
+        // HD wallet not enabled or no key origin, use the address book as last resource fallback.
+        return ScriptIsChangeOld(wallet, script);
+    }
 }
 
 bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)

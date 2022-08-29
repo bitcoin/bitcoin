@@ -938,7 +938,7 @@ public:
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
 
     //! Returns all unique ScriptPubKeyMans
-    std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans() const;
+    std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans(bool only_internal=false) const;
 
     //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
     ScriptPubKeyMan* GetScriptPubKeyMan(const OutputType& type, bool internal) const;
