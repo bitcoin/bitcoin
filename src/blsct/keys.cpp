@@ -148,7 +148,6 @@ PublicKey PrivateKey::GetPublicKey() const
 Scalar PrivateKey::GetScalar() const
 {
     return Scalar(std::vector<unsigned char>(k.begin(), k.end()));
-    ;
 }
 
 bool PrivateKey::IsValid() const
