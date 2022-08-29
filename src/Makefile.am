@@ -78,7 +78,6 @@ $(LIBBLS):
 	$(AM_V_at) \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CFLAGS)'
 		CPPFLAGS='$(CPPFLAGS)' \
 		CXXFLAGS='$(CXXFLAGS)' \
 		LDFLAGS='$(LDFLAGS)' \
@@ -90,7 +89,6 @@ $(LIBMCL):
 		MCL_USE_LLVM=0 \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CFLAGS)'
 		CPPFLAGS='$(CPPFLAGS)' \
 		CXXFLAGS='$(CXXFLAGS)' \
 		LDFLAGS='$(LDFLAGS)' \
