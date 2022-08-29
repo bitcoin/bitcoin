@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
 import asyncio
-import os
 import struct
 import sys
 
@@ -66,27 +65,21 @@ class InvalidMessagesTest(BitcoinTestFramework):
         msg_at_size = msg_unrecognized(str_data="b" * valid_data_limit)
         assert len(msg_at_size.serialize()) == msg_limit
 
-        increase_allowed = 0.5
-        if [s for s in os.environ.get("BITCOIN_CONFIG", "").split(" ") if "--with-sanitizers" in s and "address" in s]:
-            increase_allowed = 3.5
-        with node.assert_memory_usage_stable(increase_allowed=increase_allowed):
-            self.log.info(
-                "Sending a bunch of large, junk messages to test "
-                "memory exhaustion. May take a bit...")
+        self.log.info("Sending a bunch of large, junk messages to test memory exhaustion. May take a bit...")
 
-            # Run a bunch of times to test for memory exhaustion.
-            for _ in range(80):
-                node.p2p.send_message(msg_at_size)
+        # Run a bunch of times to test for memory exhaustion.
+        for _ in range(80):
+            node.p2p.send_message(msg_at_size)
 
-            # Check that, even though the node is being hammered by nonsense from one
-            # connection, it can still service other peers in a timely way.
-            for _ in range(20):
-                conn2.sync_with_ping(timeout=2)
+        # Check that, even though the node is being hammered by nonsense from one
+        # connection, it can still service other peers in a timely way.
+        for _ in range(20):
+            conn2.sync_with_ping(timeout=2)
 
-            # Peer 1, despite serving up a bunch of nonsense, should still be connected.
-            self.log.info("Waiting for node to drop junk messages.")
-            node.p2p.sync_with_ping(timeout=320)
-            assert node.p2p.is_connected
+        # Peer 1, despite serving up a bunch of nonsense, should still be connected.
+        self.log.info("Waiting for node to drop junk messages.")
+        node.p2p.sync_with_ping(timeout=320)
+        assert node.p2p.is_connected
 
         #
         # 1.

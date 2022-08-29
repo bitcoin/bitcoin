@@ -397,7 +397,8 @@ def main():
 def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False):
     args = args or []
 
-    # Warn if dashd is already running (unix only)
+    # Warn if dashd is already running
+    # pidof might fail or return an empty string if bitcoind is not running
     try:
         pidof_output = subprocess.check_output(["pidof", "dashd"])
         if not (pidof_output is None or pidof_output == b''):
