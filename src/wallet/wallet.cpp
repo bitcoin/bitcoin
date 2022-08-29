@@ -3541,13 +3541,20 @@ bool CWallet::IsActiveScriptPubKeyMan(const ScriptPubKeyMan& spkm) const
     return false;
 }
 
-std::set<ScriptPubKeyMan*> CWallet::GetAllScriptPubKeyMans() const
+std::set<ScriptPubKeyMan*> CWallet::GetAllScriptPubKeyMans(bool only_internal) const
 {
     std::set<ScriptPubKeyMan*> spk_mans;
-    for (const auto& spk_man_pair : m_spk_managers) {
-        spk_mans.insert(spk_man_pair.second.get());
+    if (only_internal) {
+        for (const auto& spk_man_pair : m_internal_spk_managers) {
+            spk_mans.insert(spk_man_pair.second);
+        }
+        return spk_mans;
+    } else {
+        for (const auto &spk_man_pair: m_spk_managers) {
+            spk_mans.insert(spk_man_pair.second.get());
+        }
+        return spk_mans;
     }
-    return spk_mans;
 }
 
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const OutputType& type, bool internal) const
