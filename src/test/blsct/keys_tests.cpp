@@ -7,7 +7,7 @@
 #include <blsct/keys.h>
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(blsct_keys_tests, MclTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(keys_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(blsct_keys)
 {
