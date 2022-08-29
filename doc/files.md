@@ -45,7 +45,7 @@ Chain option                   | Data directory path
 
 Subdirectory       | File(s)               | Description
 -------------------|-----------------------|------------
-`blocks/`          |                       | Blocks directory; can be specified by `-blocksdir` option (except for `blocks/index/`)
+`blocks/`          |                       | Blocks directory; can be changed by specifying the parent dir with the `-blocksdir` option (except for `blocks/index/`)
 `blocks/index/`    | LevelDB database      | Block index; `-blocksdir` option does not affect this path
 `blocks/`          | `blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Actual Bitcoin blocks (in network format, dumped in raw on disk, 128 MiB per file)
 `blocks/`          | `revNNNNN.dat`<sup>[\[2\]](#note2)</sup> | Block undo data (custom format)
