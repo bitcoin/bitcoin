@@ -289,57 +289,15 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
     return false;
 }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept
 {
-    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
-    const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
-    const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
-    const int32_t version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
-    const bool relay_txs{fuzzed_data_provider.ConsumeBool()};
-
-    const CNetMsgMaker mm{0};
-
-    CSerializedNetMsg msg_version{
-        mm.Make(NetMsgType::VERSION,
-                version,                                        //
-                Using<CustomUintFormatter<8>>(remote_services), //
-                int64_t{},                                      // dummy time
-                int64_t{},                                      // ignored service bits
-                CService{},                                     // dummy
-                int64_t{},                                      // ignored service bits
-                CService{},                                     // ignored
-                uint64_t{1},                                    // dummy nonce
-                std::string{},                                  // dummy subver
-                int32_t{},                                      // dummy starting_height
-                relay_txs),
-    };
-
-    (void)connman.ReceiveMsgFrom(node, msg_version);
-    node.fPauseSend = false;
-    connman.ProcessMessagesOnce(node);
-    {
-        LOCK(node.cs_sendProcessing);
-        peerman.SendMessages(&node);
-    }
-    if (node.fDisconnect) return;
-    assert(node.nVersion == version);
-    assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
-    assert(node.nServices == remote_services);
-    CNodeStateStats statestats;
-    assert(peerman.GetNodeStateStats(node.GetId(), statestats));
-    assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
-    node.m_permissionFlags = permission_flags;
-    if (successfully_connected) {
-        CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
-        (void)connman.ReceiveMsgFrom(node, msg_verack);
-        node.fPauseSend = false;
-        connman.ProcessMessagesOnce(node);
-        {
-            LOCK(node.cs_sendProcessing);
-            peerman.SendMessages(&node);
-        }
-        assert(node.fSuccessfullyConnected == true);
-    }
+    connman.Handshake(node,
+                      /*successfully_connected=*/fuzzed_data_provider.ConsumeBool(),
+                      /*remote_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
+                      /*local_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
+                      /*permission_flags=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS),
+                      /*version=*/fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max()),
+                      /*relay_txs=*/fuzzed_data_provider.ConsumeBool());
 }
 
 CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::optional<CAmount>& max) noexcept
@@ -567,6 +525,11 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
         net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
     }
     return net_addr;
+}
+
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), NodeSeconds{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<uint32_t>()}}};
 }
 
 FILE* FuzzedFileProvider::open()

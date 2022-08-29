@@ -480,21 +480,21 @@ BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
 // try a few edge cases for port, service flags and time.
 
 static const std::vector<CAddress> fixture_addresses({
-    CAddress(
+    CAddress{
         CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
         NODE_NONE,
-        0x4966bc61U /* Fri Jan  9 02:54:25 UTC 2009 */
-    ),
-    CAddress(
+        NodeSeconds{0x4966bc61s}, /* Fri Jan  9 02:54:25 UTC 2009 */
+    },
+    CAddress{
         CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
         NODE_NETWORK,
-        0x83766279U /* Tue Nov 22 11:22:33 UTC 2039 */
-    ),
-    CAddress(
+        NodeSeconds{0x83766279s}, /* Tue Nov 22 11:22:33 UTC 2039 */
+    },
+    CAddress{
         CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
         static_cast<ServiceFlags>(NODE_WITNESS | NODE_COMPACT_FILTERS | NODE_NETWORK_LIMITED),
-        0xffffffffU /* Sun Feb  7 06:28:15 UTC 2106 */
-    )
+        NodeSeconds{0xffffffffs}, /* Sun Feb  7 06:28:15 UTC 2106 */
+    },
 });
 
 // fixture_addresses should equal to this when serialized in V1 format.

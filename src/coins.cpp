@@ -99,9 +99,9 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     TRACE5(utxocache, add,
            outpoint.hash.data(),
            (uint32_t)outpoint.n,
-           (uint32_t)coin.nHeight,
-           (int64_t)coin.out.nValue,
-           (bool)coin.IsCoinBase());
+           (uint32_t)it->second.coin.nHeight,
+           (int64_t)it->second.coin.out.nValue,
+           (bool)it->second.coin.IsCoinBase());
 }
 
 void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
@@ -296,7 +296,7 @@ bool CCoinsViewErrorCatcher::GetCoin(const COutPoint &outpoint, Coin &coin) cons
     try {
         return CCoinsViewBacked::GetCoin(outpoint, coin);
     } catch(const std::runtime_error& e) {
-        for (auto f : m_err_callbacks) {
+        for (const auto& f : m_err_callbacks) {
             f();
         }
         LogPrintf("Error reading from database: %s\n", e.what());

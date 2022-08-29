@@ -96,20 +96,12 @@ inline uint160 Hash160(const T1& in1)
 }
 
 /** A writer stream (for serialization) that computes a 256-bit hash. */
-class CHashWriter
+class HashWriter
 {
 private:
     CSHA256 ctx;
 
-    const int nType;
-    const int nVersion;
 public:
-
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
-
-    int GetType() const { return nType; }
-    int GetVersion() const { return nVersion; }
-
     void write(Span<const std::byte> src)
     {
         ctx.Write(UCharCast(src.data()), src.size());
@@ -143,6 +135,26 @@ public:
         uint256 result = GetHash();
         return ReadLE64(result.begin());
     }
+
+    template <typename T>
+    HashWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
+class CHashWriter : public HashWriter
+{
+private:
+    const int nType;
+    const int nVersion;
+
+public:
+    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
+
+    int GetType() const { return nType; }
+    int GetVersion() const { return nVersion; }
 
     template<typename T>
     CHashWriter& operator<<(const T& obj) {
@@ -203,12 +215,12 @@ unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vData
 
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
 
-/** Return a CHashWriter primed for tagged hashes (as specified in BIP 340).
+/** Return a HashWriter primed for tagged hashes (as specified in BIP 340).
  *
  * The returned object will have SHA256(tag) written to it twice (= 64 bytes).
  * A tagged hash can be computed by feeding the message into this object, and
- * then calling CHashWriter::GetSHA256().
+ * then calling HashWriter::GetSHA256().
  */
-CHashWriter TaggedHash(const std::string& tag);
+HashWriter TaggedHash(const std::string& tag);
 
 #endif // BITCOIN_HASH_H

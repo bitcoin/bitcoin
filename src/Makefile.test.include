@@ -123,7 +123,9 @@ BITCOIN_TESTS =\
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
+  test/rbf_tests.cpp \
   test/rest_tests.cpp \
+  test/result_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
@@ -166,6 +168,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  wallet/test/feebumper_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/spend_tests.cpp \
   wallet/test/wallet_tests.cpp \
@@ -173,6 +176,7 @@ BITCOIN_TESTS += \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/wallet_transaction_tests.cpp \
   wallet/test/coinselector_tests.cpp \
+  wallet/test/availablecoins_tests.cpp \
   wallet/test/init_tests.cpp \
   wallet/test/ismine_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp
@@ -331,6 +335,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
  test/fuzz/tx_pool.cpp \
+ test/fuzz/txorphan.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/utxo_snapshot.cpp \
  test/fuzz/validation_load_mempool.cpp \
@@ -341,7 +346,7 @@ nodist_test_test_navcoin_SOURCES = $(GENERATED_TEST_FILES)
 
 $(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(BITCOIN_TESTS:=.log)
+CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(addsuffix .log,$(basename $(BITCOIN_TESTS)))
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
@@ -378,7 +383,7 @@ endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
 if ENABLE_TESTS
-UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
+UNIVALUE_TESTS = univalue/test/object univalue/test/unitester
 noinst_PROGRAMS += $(UNIVALUE_TESTS)
 TESTS += $(UNIVALUE_TESTS)
 
@@ -386,11 +391,6 @@ univalue_test_unitester_SOURCES = $(UNIVALUE_TEST_UNITESTER_INT)
 univalue_test_unitester_LDADD = $(LIBUNIVALUE)
 univalue_test_unitester_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) -DJSON_TEST_SRC=\"$(srcdir)/$(UNIVALUE_TEST_DATA_DIR_INT)\"
 univalue_test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
-
-univalue_test_no_nul_SOURCES = $(UNIVALUE_TEST_NO_NUL_INT)
-univalue_test_no_nul_LDADD = $(LIBUNIVALUE)
-univalue_test_no_nul_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
-univalue_test_no_nul_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 
 univalue_test_object_SOURCES = $(UNIVALUE_TEST_OBJECT_INT)
 univalue_test_object_LDADD = $(LIBUNIVALUE)
@@ -420,14 +420,5 @@ endif
 	 echo "static unsigned const char $(*F)[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};};"; \
-	} > "$@.new" && mv -f "$@.new" "$@"
-	@echo "Generated $@"
-
-%.raw.h: %.raw
-	@$(MKDIR_P) $(@D)
-	@{ \
-	 echo "static unsigned const char $(*F)_raw[] = {" && \
-	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"

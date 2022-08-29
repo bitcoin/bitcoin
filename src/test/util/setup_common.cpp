@@ -4,6 +4,8 @@
 
 #include <test/util/setup_common.h>
 
+#include <kernel/validation_cache_sizes.h>
+
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
@@ -14,13 +16,14 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
-#include <mempool_args.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
+#include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/validation_cache_args.h>
 #include <noui.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -36,7 +39,6 @@
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <util/designator.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>
@@ -53,10 +55,10 @@
 #include <functional>
 #include <stdexcept>
 
+using kernel::ValidationCacheSizes;
+using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::CalculateCacheSizes;
-using node::fPruneMode;
-using node::fReindex;
 using node::LoadChainstate;
 using node::NodeContext;
 using node::RegenerateCommitments;
@@ -136,8 +138,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.kernel = std::make_unique<kernel::Context>();
     SetupEnvironment();
     SetupNetworking();
-    InitSignatureCache();
-    InitScriptExecutionCache();
+
+    ValidationCacheSizes validation_cache_sizes{};
+    ApplyArgsManOptions(*m_node.args, validation_cache_sizes);
+    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
+    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
+
     m_node.chain = interfaces::MakeChain(m_node);
     fCheckBlockIndex = true;
     static bool noui_connected = false;
@@ -158,12 +164,13 @@ BasicTestingSetup::~BasicTestingSetup()
 CTxMemPool::Options MemPoolOptionsForTest(const NodeContext& node)
 {
     CTxMemPool::Options mempool_opts{
-        Desig(estimator) node.fee_estimator.get(),
+        .estimator = node.fee_estimator.get(),
         // Default to always checking mempool regardless of
         // chainparams.DefaultConsistencyChecks for tests
-        Desig(check_ratio) 1,
+        .check_ratio = 1,
     };
-    ApplyArgsManOptions(*node.args, mempool_opts);
+    const auto err{ApplyArgsManOptions(*node.args, ::Params(), mempool_opts)};
+    Assert(!err);
     return mempool_opts;
 }
 
@@ -184,8 +191,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_cache_sizes = CalculateCacheSizes(m_args);
 
     const ChainstateManager::Options chainman_opts{
-        chainparams,
-        GetAdjustedTime,
+        .chainparams = chainparams,
+        .adjusted_time_callback = GetAdjustedTime,
     };
     m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
@@ -219,25 +226,20 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    auto maybe_load_error = LoadChainstate(fReindex.load(),
-                                           *Assert(m_node.chainman.get()),
-                                           Assert(m_node.mempool.get()),
-                                           fPruneMode,
-                                           m_args.GetBoolArg("-reindex-chainstate", false),
-                                           m_cache_sizes.block_tree_db,
-                                           m_cache_sizes.coins_db,
-                                           m_cache_sizes.coins,
-                                           /*block_tree_db_in_memory=*/true,
-                                           /*coins_db_in_memory=*/true);
-    assert(!maybe_load_error.has_value());
+    node::ChainstateLoadOptions options;
+    options.mempool = Assert(m_node.mempool.get());
+    options.block_tree_db_in_memory = true;
+    options.coins_db_in_memory = true;
+    options.reindex = node::fReindex;
+    options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);
+    options.prune = node::fPruneMode;
+    options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+    options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
+    auto [status, error] = LoadChainstate(*Assert(m_node.chainman), m_cache_sizes, options);
+    assert(status == node::ChainstateLoadStatus::SUCCESS);
 
-    auto maybe_verify_error = VerifyLoadedChainstate(
-        *Assert(m_node.chainman),
-        fReindex.load(),
-        m_args.GetBoolArg("-reindex-chainstate", false),
-        m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
-        m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL));
-    assert(!maybe_verify_error.has_value());
+    std::tie(status, error) = VerifyLoadedChainstate(*Assert(m_node.chainman), options);
+    assert(status == node::ChainstateLoadStatus::SUCCESS);
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {

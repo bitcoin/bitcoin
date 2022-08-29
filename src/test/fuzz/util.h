@@ -8,7 +8,7 @@
 #include <arith_uint256.h>
 #include <chainparamsbase.h>
 #include <coins.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <merkleblock.h>
@@ -287,16 +287,12 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
-inline CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-}
+CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <bool ReturnUniquePtr = false>
 auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<NodeId>& node_id_in = std::nullopt) noexcept
 {
     const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegralInRange<NodeId>(0, std::numeric_limits<NodeId>::max()));
-    const ServiceFlags local_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
     const auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider);
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
     const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
@@ -307,7 +303,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id,
-                                       local_services,
                                        sock,
                                        address,
                                        keyed_net_group,
@@ -318,7 +313,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
                                        inbound_onion);
     } else {
         return CNode{node_id,
-                     local_services,
                      sock,
                      address,
                      keyed_net_group,
@@ -331,7 +325,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
-void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, PeerManager& peerman, CNode& node) noexcept;
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept;
 
 class FuzzedFileProvider
 {
@@ -361,17 +355,16 @@ public:
 
 class FuzzedAutoFileProvider
 {
-    FuzzedDataProvider& m_fuzzed_data_provider;
     FuzzedFileProvider m_fuzzed_file_provider;
 
 public:
-    FuzzedAutoFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}, m_fuzzed_file_provider{fuzzed_data_provider}
+    FuzzedAutoFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_file_provider{fuzzed_data_provider}
     {
     }
 
-    CAutoFile open()
+    AutoFile open()
     {
-        return {m_fuzzed_file_provider.open(), m_fuzzed_data_provider.ConsumeIntegral<int>(), m_fuzzed_data_provider.ConsumeIntegral<int>()};
+        return AutoFile{m_fuzzed_file_provider.open()};
     }
 };
 

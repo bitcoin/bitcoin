@@ -1,13 +1,21 @@
 Checks: '
 -*,
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
+performance-for-range-copy,
+performance-unnecessary-copy-initialization,
 readability-redundant-declaration,
+readability-redundant-string-init,
 '
 WarningsAsErrors: '
 bugprone-argument-comment,
+misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
+performance-for-range-copy,
+performance-unnecessary-copy-initialization,
 readability-redundant-declaration,
+readability-redundant-string-init,
 '

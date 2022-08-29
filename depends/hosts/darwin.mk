@@ -17,6 +17,7 @@ darwin_native_toolchain=native_cctools
 
 clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
+llvm_config_prog=$(build_prefix)/bin/llvm-config
 
 clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
 else
@@ -34,8 +35,10 @@ darwin_native_toolchain=
 # Source: https://lists.gnu.org/archive/html/bug-make/2017-11/msg00017.html
 clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
+llvm_config_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-config")
 
 clang_resource_dir=$(shell clang -print-resource-dir)
+llvm_lib_dir=$(shell $(llvm_config_prog) --libdir)
 endif
 
 cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL DSYMUTIL

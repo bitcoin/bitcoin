@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <logging.h>
 #include <threadinterrupt.h>
 #include <tinyformat.h>

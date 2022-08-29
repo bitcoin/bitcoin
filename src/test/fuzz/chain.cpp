@@ -23,7 +23,7 @@ FUZZ_TARGET(chain)
     disk_block_index->phashBlock = &zero;
     {
         LOCK(::cs_main);
-        (void)disk_block_index->GetBlockHash();
+        (void)disk_block_index->ConstructBlockHash();
         (void)disk_block_index->GetBlockPos();
         (void)disk_block_index->GetBlockTime();
         (void)disk_block_index->GetBlockTimeMax();
@@ -31,7 +31,6 @@ FUZZ_TARGET(chain)
         (void)disk_block_index->GetUndoPos();
         (void)disk_block_index->HaveTxsDownloaded();
         (void)disk_block_index->IsValid();
-        (void)disk_block_index->ToString();
     }
 
     const CBlockHeader block_header = disk_block_index->GetBlockHeader();

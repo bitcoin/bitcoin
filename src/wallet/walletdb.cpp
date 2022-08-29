@@ -856,18 +856,18 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
 
     // Set the descriptor caches
-    for (auto desc_cache_pair : wss.m_descriptor_caches) {
+    for (const auto& desc_cache_pair : wss.m_descriptor_caches) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_cache_pair.first);
         assert(spk_man);
         ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
     }
 
     // Set the descriptor keys
-    for (auto desc_key_pair : wss.m_descriptor_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         ((DescriptorScriptPubKeyMan*)spk_man)->AddKey(desc_key_pair.first.second, desc_key_pair.second);
     }
-    for (auto desc_key_pair : wss.m_descriptor_crypt_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_crypt_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
     }
@@ -883,12 +883,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (result != DBErrors::LOAD_OK)
         return result;
 
-    // Last client version to open this wallet, was previously the file version number
+    // Last client version to open this wallet
     int last_client = CLIENT_VERSION;
-    m_batch->Read(DBKeys::VERSION, last_client);
-
-    int wallet_version = pwallet->GetVersion();
-    pwallet->WalletLogPrintf("Wallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
+    bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
+    pwallet->WalletLogPrintf("Wallet file version = %d, last client version = %d\n", pwallet->GetVersion(), last_client);
 
     pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
@@ -909,7 +907,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (wss.fIsEncrypted && (last_client == 40000 || last_client == 50000))
         return DBErrors::NEED_REWRITE;
 
-    if (last_client < CLIENT_VERSION) // Update
+    if (!has_last_client || last_client != CLIENT_VERSION) // Update
         m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
 
     if (wss.fAnyUnordered)

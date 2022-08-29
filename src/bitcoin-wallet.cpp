@@ -9,7 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <interfaces/init.h>
 #include <key.h>
 #include <logging.h>

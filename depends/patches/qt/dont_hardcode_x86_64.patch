@@ -73,7 +73,7 @@ diff --git a/mkspecs/features/mac/default_post.prf b/mkspecs/features/mac/defaul
 index 92a9112bca6..d888731ec8d 100644
 --- old/qtbase/mkspecs/features/mac/default_post.prf
 +++ new/qtbase/mkspecs/features/mac/default_post.prf
-@@ -90,6 +90,11 @@ app_extension_api_only {
+@@ -95,6 +95,11 @@ app_extension_api_only {
      QMAKE_LFLAGS              += $$QMAKE_CFLAGS_APPLICATION_EXTENSION
  }
  
@@ -85,7 +85,7 @@ index 92a9112bca6..d888731ec8d 100644
  macx-xcode {
      qmake_pkginfo_typeinfo.name = QMAKE_PKGINFO_TYPEINFO
      !isEmpty(QMAKE_PKGINFO_TYPEINFO): \
-@@ -145,9 +150,6 @@ macx-xcode {
+@@ -150,9 +155,6 @@ macx-xcode {
      simulator: VALID_SIMULATOR_ARCHS = $$QMAKE_APPLE_SIMULATOR_ARCHS
      VALID_ARCHS = $$VALID_DEVICE_ARCHS $$VALID_SIMULATOR_ARCHS
  

@@ -15,7 +15,7 @@
 #include <support/cleanse.h>
 #include <util/time.h> // for GetTime()
 #ifdef WIN32
-#include <compat.h> // for Windows API
+#include <compat/compat.h>
 #endif
 
 #include <algorithm>

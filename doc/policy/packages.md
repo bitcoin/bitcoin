@@ -33,7 +33,7 @@ The following rules are enforced for all packages:
 * Packages cannot have conflicting transactions, i.e. no two transactions in a package can spend
    the same inputs. Packages cannot have duplicate transactions. (#20833)
 
-* No transaction in a package can conflict with a mempool transaction. BIP125 Replace By Fee is
+* No transaction in a package can conflict with a mempool transaction. Replace By Fee is
   currently disabled for packages. (#20833)
 
    - Package RBF may be enabled in the future.
@@ -81,7 +81,7 @@ If any transactions in the package are already in the mempool, they are not subm
 ("deduplicated") and are thus excluded from this calculation.
 
 To meet the two feerate requirements of a mempool, i.e., the pre-configured minimum relay feerate
-(`minRelayTxFee`) and the dynamic mempool minimum feerate, the total package feerate is used instead
+(`-minrelaytxfee`) and the dynamic mempool minimum feerate, the total package feerate is used instead
 of the individual feerate. The individual transactions are allowed to be below the feerate
 requirements if the package meets the feerate requirements. For example, the parent(s) in the
 package can pay no fees but be paid for by the child.

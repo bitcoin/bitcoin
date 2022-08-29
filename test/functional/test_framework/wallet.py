@@ -7,7 +7,6 @@
 from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
-from random import choice
 from typing import (
     Any,
     List,
@@ -40,6 +39,7 @@ from test_framework.script import (
     LegacySignatureHash,
     LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
+    OP_RETURN,
     OP_TRUE,
     SIGHASH_ALL,
     taproot_construct,
@@ -103,6 +103,18 @@ class MiniWallet:
 
     def _create_utxo(self, *, txid, vout, value, height):
         return {"txid": txid, "vout": vout, "value": value, "height": height}
+
+    def _bulk_tx(self, tx, target_weight):
+        """Pad a transaction with extra outputs until it reaches a target weight (or higher).
+        returns the tx
+        """
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'a'])))
+        dummy_vbytes = (target_weight - tx.get_weight() + 3) // 4
+        tx.vout[-1].scriptPubKey = CScript([OP_RETURN, b'a' * dummy_vbytes])
+        # Lower bound should always be off by at most 3
+        assert_greater_than_or_equal(tx.get_weight(), target_weight)
+        # Higher bound should always be off by at most 3 + 12 weight (for encoding the length)
+        assert_greater_than_or_equal(target_weight + 15, tx.get_weight())
 
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
@@ -197,7 +209,7 @@ class MiniWallet:
         return utxos
 
     def send_self_transfer(self, *, from_node, **kwargs):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        """Call create_self_transfer and send the transaction."""
         tx = self.create_self_transfer(**kwargs)
         self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
         return tx
@@ -232,21 +244,28 @@ class MiniWallet:
         *,
         utxos_to_spend: Optional[List[dict]] = None,
         num_outputs=1,
+        amount_per_output=0,
         sequence=0,
         fee_per_output=1000,
+        target_weight=0
     ):
         """
         Create and return a transaction that spends the given UTXOs and creates a
-        certain number of outputs with equal amounts.
+        certain number of outputs with equal amounts. The output amounts can be
+        set by amount_per_output or automatically calculated with a fee_per_output.
         """
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
+        sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
+        assert_equal(len(utxos_to_spend), len(sequence))
         # create simple tx template (1 input, 1 output)
         tx = self.create_self_transfer(
             fee_rate=0,
-            utxo_to_spend=utxos_to_spend[0], sequence=sequence)["tx"]
+            utxo_to_spend=utxos_to_spend[0])["tx"]
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
+        for txin, seq in zip(tx.vin, sequence):
+            txin.nSequence = seq
         tx.wit.vtxinwit = [deepcopy(tx.wit.vtxinwit[0]) for _ in range(len(utxos_to_spend))]
         tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
 
@@ -258,7 +277,11 @@ class MiniWallet:
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         for o in tx.vout:
-            o.nValue = outputs_value_total // num_outputs
+            o.nValue = amount_per_output or (outputs_value_total // num_outputs)
+
+        if target_weight:
+            self._bulk_tx(tx, target_weight)
+
         txid = tx.rehash()
         return {
             "new_utxos": [self._create_utxo(
@@ -272,21 +295,23 @@ class MiniWallet:
             "tx": tx,
         }
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), utxo_to_spend=None, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), fee=Decimal("0"), utxo_to_spend=None, locktime=0, sequence=0, target_weight=0):
+        """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
         utxo_to_spend = utxo_to_spend or self.get_utxo()
+        assert fee_rate >= 0
+        assert fee >= 0
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(104)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
-        send_value = utxo_to_spend["value"] - (fee_rate * vsize / 1000)
+        send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(COIN * send_value), self._scriptPubKey)]
+        tx.vout = [CTxOut(int(COIN * send_value), bytearray(self._scriptPubKey))]
         tx.nLockTime = locktime
         if self._mode == MiniWalletMode.RAW_P2PK:
             self.sign_tx(tx)
@@ -297,9 +322,13 @@ class MiniWallet:
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
         else:
             assert False
-        tx_hex = tx.serialize().hex()
 
         assert_equal(tx.get_vsize(), vsize)
+
+        if target_weight:
+            self._bulk_tx(tx, target_weight)
+
+        tx_hex = tx.serialize().hex()
         new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, height=0)
 
         return {"txid": new_utxo["txid"], "wtxid": tx.getwtxid(), "hex": tx_hex, "tx": tx, "new_utxo": new_utxo}
@@ -308,6 +337,17 @@ class MiniWallet:
         txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
+
+    def send_self_transfer_chain(self, *, from_node, chain_length, utxo_to_spend=None):
+        """Create and send a "chain" of chain_length transactions. The nth transaction in
+        the chain is a child of the n-1th transaction and parent of the n+1th transaction.
+
+        Returns the chaintip (nth) utxo
+        """
+        chaintip_utxo = utxo_to_spend or self.get_utxo()
+        for _ in range(chain_length):
+            chaintip_utxo = self.send_self_transfer(utxo_to_spend=chaintip_utxo, from_node=from_node)["new_utxo"]
+        return chaintip_utxo
 
 
 def getnewdestination(address_type='bech32m'):
@@ -401,23 +441,3 @@ def create_raw_chain(node, first_coin, address, privkeys, chain_length=25):
         chain_txns.append(tx)
 
     return (chain_hex, chain_txns)
-
-def bulk_transaction(tx, node, target_weight, privkeys, prevtxs=None):
-    """Pad a transaction with extra outputs until it reaches a target weight (or higher).
-    returns CTransaction object
-    """
-    tx_heavy = deepcopy(tx)
-    assert_greater_than_or_equal(target_weight, tx_heavy.get_weight())
-    while tx_heavy.get_weight() < target_weight:
-        random_spk = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
-        for _ in range(512*2):
-            random_spk += choice("0123456789ABCDEF")
-        tx_heavy.vout.append(CTxOut(0, bytes.fromhex(random_spk)))
-    # Re-sign the transaction
-    if privkeys:
-        signed = node.signrawtransactionwithkey(tx_heavy.serialize().hex(), privkeys, prevtxs)
-        return tx_from_hex(signed["hex"])
-    # OP_TRUE
-    tx_heavy.wit.vtxinwit = [CTxInWitness()]
-    tx_heavy.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
-    return tx_heavy

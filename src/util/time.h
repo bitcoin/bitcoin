@@ -6,10 +6,10 @@
 #ifndef BITCOIN_UTIL_TIME_H
 #define BITCOIN_UTIL_TIME_H
 
-#include <compat.h>
+#include <compat/compat.h>
 
 #include <chrono>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 using namespace std::chrono_literals;
@@ -24,6 +24,7 @@ struct NodeClock : public std::chrono::system_clock {
 };
 using NodeSeconds = std::chrono::time_point<NodeClock, std::chrono::seconds>;
 
+using SteadyClock = std::chrono::steady_clock;
 using SteadySeconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::seconds>;
 using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
 using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
@@ -54,6 +55,7 @@ constexpr int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 constexpr int64_t count_milliseconds(std::chrono::milliseconds t) { return t.count(); }
 constexpr int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
 
+using HoursDouble = std::chrono::duration<double, std::chrono::hours::period>;
 using SecondsDouble = std::chrono::duration<double, std::chrono::seconds::period>;
 
 /**

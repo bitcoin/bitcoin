@@ -5,9 +5,12 @@
 #ifndef BITCOIN_TIMEDATA_H
 #define BITCOIN_TIMEDATA_H
 
+#include <util/time.h>
+
 #include <algorithm>
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <chrono>
+#include <cstdint>
 #include <vector>
 
 static const int64_t DEFAULT_MAX_TIME_ADJUSTMENT = 70 * 60;
@@ -72,7 +75,7 @@ public:
 
 /** Functions to keep track of adjusted P2P time */
 int64_t GetTimeOffset();
-int64_t GetAdjustedTime();
+NodeClock::time_point GetAdjustedTime();
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
 
 /**

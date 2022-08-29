@@ -11,7 +11,9 @@
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
+#include <timedata.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <optional>
@@ -38,16 +40,16 @@ class AddrInfo : public CAddress
 {
 public:
     //! last try whatsoever by us (memory only)
-    int64_t nLastTry{0};
+    NodeSeconds m_last_try{0s};
 
     //! last counted attempt (memory only)
-    int64_t nLastCountAttempt{0};
+    NodeSeconds m_last_count_attempt{0s};
 
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
-    int64_t nLastSuccess{0};
+    NodeSeconds m_last_success{0s};
 
     //! connection attempts since last successful attempt
     int nAttempts{0};
@@ -64,7 +66,7 @@ public:
     SERIALIZE_METHODS(AddrInfo, obj)
     {
         READWRITEAS(CAddress, obj);
-        READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
+        READWRITE(obj.source, Using<ChronoFormatter<int64_t>>(obj.m_last_success), obj.nAttempts);
     }
 
     AddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -91,10 +93,10 @@ public:
     int GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const;
 
     //! Determine whether the statistics about this entry are bad enough so that it can just be deleted
-    bool IsTerrible(int64_t nNow = GetAdjustedTime()) const;
+    bool IsTerrible(NodeSeconds now = Now<NodeSeconds>()) const;
 
     //! Calculate the relative chance this entry should be given when selecting nodes to connect to
-    double GetChance(int64_t nNow = GetAdjustedTime()) const;
+    double GetChance(NodeSeconds now = Now<NodeSeconds>()) const;
 };
 
 class AddrManImpl
@@ -112,26 +114,26 @@ public:
 
     size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
+    bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool Good(const CService& addr, int64_t nTime)
+    bool Good(const CService& addr, NodeSeconds time)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
+    void Attempt(const CService& addr, bool fCountFailure, NodeSeconds time)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, int64_t> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, int64_t> Select(bool newOnly) const
+    std::pair<CAddress, NodeSeconds> Select(bool newOnly) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Connected(const CService& addr, int64_t nTime)
+    void Connected(const CService& addr, NodeSeconds time)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void SetServices(const CService& addr, ServiceFlags nServices)
@@ -202,7 +204,7 @@ private:
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
-    int64_t nLastGood GUARDED_BY(cs){1};
+    NodeSeconds m_last_good GUARDED_BY(cs){1s};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -233,25 +235,25 @@ private:
 
     /** Attempt to add a single address to addrman's new table.
      *  @see AddrMan::Add() for parameters. */
-    bool AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool AddSingle(const CAddress& addr, const CNetAddr& source, std::chrono::seconds time_penalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Good_(const CService& addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Good_(const CService& addr, bool test_before_evict, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool Add_(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool Add_(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Attempt_(const CService& addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Attempt_(const CService& addr, bool fCountFailure, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, int64_t> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, NodeSeconds> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Connected_(const CService& addr, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, int64_t> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 

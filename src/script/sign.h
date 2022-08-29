@@ -52,6 +52,8 @@ public:
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
 };
 
+/** A signature checker that accepts all signatures */
+extern const BaseSignatureChecker& DUMMY_CHECKER;
 /** A signature creator that just produces 71-byte empty signatures. */
 extern const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR;
 /** A signature creator that just produces 72-byte empty signatures. */
@@ -96,12 +98,6 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
 void UpdateInput(CTxIn& input, const SignatureData& data);
-
-/* Check whether we know how to sign for an output like this, assuming we
- * have all private keys. While this function does not need private keys, the passed
- * provider is used to look up public keys and redeemscripts by hash.
- * Solvability is unrelated to whether we consider this output to be ours. */
-bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
 /** Check whether a scriptPubKey is known to be segwit. */
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);

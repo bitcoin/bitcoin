@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(unlimited_recv)
     i2p::sam::Session session(gArgs.GetDataDirNet() / "test_i2p_private_key", CService{}, &interrupt);
 
     {
-        ASSERT_DEBUG_LOG("Creating SAM session");
+        ASSERT_DEBUG_LOG("Creating persistent SAM session");
         ASSERT_DEBUG_LOG("too many bytes without a terminator");
 
         i2p::Connection conn;
