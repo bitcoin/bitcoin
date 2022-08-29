@@ -262,12 +262,14 @@ BOOST_FIXTURE_TEST_CASE(external_tx_creation_change_output_detection, TestChain1
         auto op_tx = *Assert(CreateTransaction(*external_wallet, {{dest, dest_amount, true}}, /*change_pos=*/std::nullopt, coin_control));
 
         // Prior to adding the tx to the local wallet, check if can detect the output script
-        const CTxOut& output = op_tx.tx->vout.at(!op_tx.change_pos);
+        unsigned int change_pos = *op_tx.change_pos;
+        unsigned int pos_not_change = !change_pos;
+        const CTxOut& output = op_tx.tx->vout.at(pos_not_change);
         BOOST_CHECK(output.nValue == dest_amount);
 
         // As this address is above our keypool, we are not able to consider it from the wallet!
         BOOST_CHECK(!WITH_LOCK(wallet->cs_wallet, return wallet->IsMine(output)));
-        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, !op_tx.change_pos)); // TODO: This is probably wrong..
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, pos_not_change));
 
         const CBlock& block = CreateAndProcessBlock({CMutableTransaction(*op_tx.tx)}, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey().GetID())));
         wallet->blockConnected(ChainstateRole::NORMAL, kernel::MakeBlockInfo(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()), &block));
