@@ -73,6 +73,12 @@ BOOST_AUTO_TEST_CASE(blsct_keys)
                                                 pointR.GetVch());
     BOOST_CHECK(doubleKeyFromVectors.IsValid());
 
+    std::vector<unsigned char> serializedDoubleKey = doubleKeyFromPoints.GetVch();
+    std::vector<unsigned char> serializedViewKey(serializedDoubleKey.begin(), serializedDoubleKey.begin() + blsct::PublicKey::SIZE);
+    std::vector<unsigned char> serializedSpendKey(serializedDoubleKey.begin() + blsct::PublicKey::SIZE, serializedDoubleKey.end());
+    BOOST_CHECK(serializedViewKey == generator.GetVch());
+    BOOST_CHECK(serializedSpendKey == pointR.GetVch());
+
     G1Point viewKey;
 
     ret = doubleKeyFromPoints.GetViewKey(viewKey);
