@@ -37,9 +37,9 @@ judge the general consensus of contributors. The review process that
 establishes general consensus is detailed in
 [CONTRIBUTING.mg](/CONTRIBUTING.md).
 
-Thus maintainers role is not directly elevated above that of regular
+Thus maintainers' role is not directly elevated above that of regular
 contributors, as maintainers serve mostly as arbiters of if changes are
-acceptable to the contributors to the project in aggregate.
+acceptable to the contributors of the project in aggregate.
 
 The role of the Maintainer is currently evolving with respect to "Scoped
 Maintainers". The concept of a scoped maintainer is that it is helpful to add
