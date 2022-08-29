@@ -8,7 +8,6 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
-#include <sync.h>
 
 #include <memory>
 #include <optional>

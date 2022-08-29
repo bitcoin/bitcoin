@@ -86,10 +86,6 @@ Changes to GUI or wallet related settings can be found in the GUI or Wallet sect
 New settings
 ------------
 
-- A new `mempoolfullrbf` option has been added, which enables the mempool to
-  accept transaction replacement without enforcing BIP125 replaceability
-  signaling. (#25353)
-
 Tools and Utilities
 -------------------
 

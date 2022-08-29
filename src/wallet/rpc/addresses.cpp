@@ -34,7 +34,7 @@ RPCHelpMan getnewaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -58,12 +58,13 @@ RPCHelpMan getnewaddress()
         output_type = parsed.value();
     }
 
-    auto op_dest = pwallet->GetNewDestination(output_type, label);
-    if (!op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+    CTxDestination dest;
+    bilingual_str error;
+    if (!pwallet->GetNewDestination(output_type, label, dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
     }
 
-    return EncodeDestination(op_dest.GetObj());
+    return EncodeDestination(dest);
 },
     };
 }
@@ -86,7 +87,7 @@ RPCHelpMan getrawchangeaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -105,11 +106,12 @@ RPCHelpMan getrawchangeaddress()
         output_type = parsed.value();
     }
 
-    auto op_dest = pwallet->GetNewChangeDestination(output_type);
-    if (!op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+    CTxDestination dest;
+    bilingual_str error;
+    if (!pwallet->GetNewChangeDestination(output_type, dest, error)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
     }
-    return EncodeDestination(op_dest.GetObj());
+    return EncodeDestination(dest);
 },
     };
 }
@@ -131,7 +133,7 @@ RPCHelpMan setlabel()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -148,7 +150,7 @@ RPCHelpMan setlabel()
         pwallet->SetAddressBook(dest, label, "send");
     }
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -181,7 +183,7 @@ RPCHelpMan listaddressgroupings()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -252,7 +254,7 @@ RPCHelpMan addmultisigaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
@@ -327,7 +329,7 @@ RPCHelpMan keypoolrefill()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     if (pwallet->IsLegacy() && pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
@@ -350,7 +352,7 @@ RPCHelpMan keypoolrefill()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
     }
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -374,14 +376,14 @@ RPCHelpMan newkeypool()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
     spk_man.NewKeyPool();
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -548,7 +550,7 @@ RPCHelpMan getaddressinfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -635,6 +637,17 @@ RPCHelpMan getaddressinfo()
     };
 }
 
+/** Convert CAddressBookData to JSON record.  */
+static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool verbose)
+{
+    UniValue ret(UniValue::VOBJ);
+    if (verbose) {
+        ret.pushKV("name", data.GetLabel());
+    }
+    ret.pushKV("purpose", data.purpose);
+    return ret;
+}
+
 RPCHelpMan getaddressesbylabel()
 {
     return RPCHelpMan{"getaddressesbylabel",
@@ -658,7 +671,7 @@ RPCHelpMan getaddressesbylabel()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -667,10 +680,10 @@ RPCHelpMan getaddressesbylabel()
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    pwallet->ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label, const std::string& _purpose, bool _is_change) {
-        if (_is_change) return;
-        if (_label == label) {
-            std::string address = EncodeDestination(_dest);
+    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
+        if (item.second.IsChange()) continue;
+        if (item.second.GetLabel() == label) {
+            std::string address = EncodeDestination(item.first);
             // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
             // case it does.
@@ -680,11 +693,9 @@ RPCHelpMan getaddressesbylabel()
             // and since duplicate addresses are unexpected (checked with
             // std::set in O(log(N))), UniValue::__pushKV is used instead,
             // which currently is O(1).
-            UniValue value(UniValue::VOBJ);
-            value.pushKV("purpose", _purpose);
-            ret.__pushKV(address, value);
+            ret.__pushKV(address, AddressBookDataToJSON(item.second, false));
         }
-    });
+    }
 
     if (ret.empty()) {
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label));
@@ -721,7 +732,7 @@ RPCHelpMan listlabels()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    if (!pwallet) return NullUniValue;
 
     LOCK(pwallet->cs_wallet);
 
@@ -731,7 +742,13 @@ RPCHelpMan listlabels()
     }
 
     // Add to a set to sort by label name, then insert into Univalue array
-    std::set<std::string> label_set = pwallet->ListAddrBookLabels(purpose);
+    std::set<std::string> label_set;
+    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
+        if (entry.second.IsChange()) continue;
+        if (purpose.empty() || entry.second.purpose == purpose) {
+            label_set.insert(entry.second.GetLabel());
+        }
+    }
 
     UniValue ret(UniValue::VARR);
     for (const std::string& name : label_set) {
@@ -763,7 +780,7 @@ RPCHelpMan walletdisplayaddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-            if (!wallet) return UniValue::VNULL;
+            if (!wallet) return NullUniValue;
             CWallet* const pwallet = wallet.get();
 
             LOCK(pwallet->cs_wallet);

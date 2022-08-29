@@ -7,15 +7,10 @@
 
 #include <consensus/amount.h>
 #include <hash.h>
-#include <script/script.h>
-#include <serialize.h>
 #include <tinyformat.h>
-#include <uint256.h>
 #include <util/strencodings.h>
-#include <version.h>
 
-#include <cassert>
-#include <stdexcept>
+#include <assert.h>
 
 std::string COutPoint::ToString() const
 {

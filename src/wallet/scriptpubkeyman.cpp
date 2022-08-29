@@ -21,22 +21,26 @@ namespace wallet {
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 
-BResult<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const OutputType type)
+bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, bilingual_str& error)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        return _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types");;
+        error = _("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types");
+        return false;
     }
     assert(type != OutputType::BECH32M);
 
     LOCK(cs_KeyStore);
+    error.clear();
 
     // Generate a new key that is added to wallet
     CPubKey new_key;
     if (!GetKeyFromPool(new_key, type)) {
-        return _("Error: Keypool ran out, please call keypoolrefill first");
+        error = _("Error: Keypool ran out, please call keypoolrefill first");
+        return false;
     }
     LearnRelatedScripts(new_key, type);
-    return GetDestinationForKey(new_key, type);
+    dest = GetDestinationForKey(new_key, type);
+    return true;
 }
 
 typedef std::vector<unsigned char> valtype;
@@ -1654,11 +1658,12 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
-BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
+bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, bilingual_str& error)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
     if (!CanGetAddresses()) {
-        return _("No addresses available");
+        error = _("No addresses available");
+        return false;
     }
     {
         LOCK(cs_desc_man);
@@ -1676,14 +1681,15 @@ BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const Outpu
         std::vector<CScript> scripts_temp;
         if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
             // We can't generate anymore keys
-            return _("Error: Keypool ran out, please call keypoolrefill first");
+            error = _("Error: Keypool ran out, please call keypoolrefill first");
+            return false;
         }
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
             // We can't generate anymore keys
-            return _("Error: Keypool ran out, please call keypoolrefill first");
+            error = _("Error: Keypool ran out, please call keypoolrefill first");
+            return false;
         }
 
-        CTxDestination dest;
         std::optional<OutputType> out_script_type = m_wallet_descriptor.descriptor->GetOutputType();
         if (out_script_type && out_script_type == type) {
             ExtractDestination(scripts_temp[0], dest);
@@ -1692,7 +1698,7 @@ BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const Outpu
         }
         m_wallet_descriptor.next_index++;
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
-        return dest;
+        return true;
     }
 }
 
@@ -1763,14 +1769,9 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
 bool DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
 {
     LOCK(cs_desc_man);
-    auto op_dest = GetNewDestination(type);
+    bool result = GetNewDestination(type, address, error);
     index = m_wallet_descriptor.next_index - 1;
-    if (op_dest) {
-        address = op_dest.GetObj();
-    } else {
-        error = op_dest.GetError();
-    }
-    return op_dest.HasRes();
+    return result;
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)

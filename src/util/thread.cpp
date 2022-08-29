@@ -9,7 +9,6 @@
 #include <util/threadnames.h>
 
 #include <exception>
-#include <functional>
 
 void util::TraceThread(const char* thread_name, std::function<void()> thread_func)
 {

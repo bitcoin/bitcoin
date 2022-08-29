@@ -13,6 +13,9 @@
 #include <string>
 #include <vector>
 
+#define BOOST_FIXTURE_TEST_SUITE(a, b)
+#define BOOST_AUTO_TEST_CASE(funcName) void funcName()
+#define BOOST_AUTO_TEST_SUITE_END()
 #define BOOST_CHECK(expr) assert(expr)
 #define BOOST_CHECK_EQUAL(v1, v2) assert((v1) == (v2))
 #define BOOST_CHECK_THROW(stmt, excMatch) { \
@@ -32,7 +35,9 @@
 	} \
     }
 
-void univalue_constructor()
+BOOST_FIXTURE_TEST_SUITE(univalue_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(univalue_constructor)
 {
     UniValue v1;
     BOOST_CHECK(v1.isNull());
@@ -80,17 +85,7 @@ void univalue_constructor()
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
-void univalue_push_throw()
-{
-    UniValue j;
-    BOOST_CHECK_THROW(j.push_back(1), std::runtime_error);
-    BOOST_CHECK_THROW(j.push_backV({1}), std::runtime_error);
-    BOOST_CHECK_THROW(j.__pushKV("k", 1), std::runtime_error);
-    BOOST_CHECK_THROW(j.pushKV("k", 1), std::runtime_error);
-    BOOST_CHECK_THROW(j.pushKVs({}), std::runtime_error);
-}
-
-void univalue_typecheck()
+BOOST_AUTO_TEST_CASE(univalue_typecheck)
 {
     UniValue v1;
     BOOST_CHECK(v1.setNumStr("1"));
@@ -139,7 +134,7 @@ void univalue_typecheck()
     BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
-void univalue_set()
+BOOST_AUTO_TEST_CASE(univalue_set)
 {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
@@ -198,18 +193,18 @@ void univalue_set()
     BOOST_CHECK(v.isNull());
 }
 
-void univalue_array()
+BOOST_AUTO_TEST_CASE(univalue_array)
 {
     UniValue arr(UniValue::VARR);
 
     UniValue v((int64_t)1023LL);
-    arr.push_back(v);
+    BOOST_CHECK(arr.push_back(v));
 
     std::string vStr("zippy");
-    arr.push_back(vStr);
+    BOOST_CHECK(arr.push_back(vStr));
 
     const char *s = "pippy";
-    arr.push_back(s);
+    BOOST_CHECK(arr.push_back(s));
 
     std::vector<UniValue> vec;
     v.setStr("boing");
@@ -218,13 +213,13 @@ void univalue_array()
     v.setStr("going");
     vec.push_back(v);
 
-    arr.push_backV(vec);
+    BOOST_CHECK(arr.push_backV(vec));
 
-    arr.push_back(uint64_t{400ULL});
-    arr.push_back(int64_t{-400LL});
-    arr.push_back(int{-401});
-    arr.push_back(-40.1);
-    arr.push_back(true);
+    BOOST_CHECK(arr.push_back((uint64_t) 400ULL));
+    BOOST_CHECK(arr.push_back((int64_t) -400LL));
+    BOOST_CHECK(arr.push_back((int) -401));
+    BOOST_CHECK(arr.push_back(-40.1));
+    BOOST_CHECK(arr.push_back(true));
 
     BOOST_CHECK_EQUAL(arr.empty(), false);
     BOOST_CHECK_EQUAL(arr.size(), 10);
@@ -257,7 +252,7 @@ void univalue_array()
     BOOST_CHECK_EQUAL(arr.size(), 0);
 }
 
-void univalue_object()
+BOOST_AUTO_TEST_CASE(univalue_object)
 {
     UniValue obj(UniValue::VOBJ);
     std::string strKey, strVal;
@@ -265,39 +260,39 @@ void univalue_object()
 
     strKey = "age";
     v.setInt(100);
-    obj.pushKV(strKey, v);
+    BOOST_CHECK(obj.pushKV(strKey, v));
 
     strKey = "first";
     strVal = "John";
-    obj.pushKV(strKey, strVal);
+    BOOST_CHECK(obj.pushKV(strKey, strVal));
 
     strKey = "last";
-    const char* cVal = "Smith";
-    obj.pushKV(strKey, cVal);
+    const char *cVal = "Smith";
+    BOOST_CHECK(obj.pushKV(strKey, cVal));
 
     strKey = "distance";
-    obj.pushKV(strKey, int64_t{25});
+    BOOST_CHECK(obj.pushKV(strKey, (int64_t) 25));
 
     strKey = "time";
-    obj.pushKV(strKey, uint64_t{3600});
+    BOOST_CHECK(obj.pushKV(strKey, (uint64_t) 3600));
 
     strKey = "calories";
-    obj.pushKV(strKey, int{12});
+    BOOST_CHECK(obj.pushKV(strKey, (int) 12));
 
     strKey = "temperature";
-    obj.pushKV(strKey, double{90.012});
+    BOOST_CHECK(obj.pushKV(strKey, (double) 90.012));
 
     strKey = "moon";
-    obj.pushKV(strKey, true);
+    BOOST_CHECK(obj.pushKV(strKey, true));
 
     strKey = "spoon";
-    obj.pushKV(strKey, false);
+    BOOST_CHECK(obj.pushKV(strKey, false));
 
     UniValue obj2(UniValue::VOBJ);
-    obj2.pushKV("cat1", 9000);
-    obj2.pushKV("cat2", 12345);
+    BOOST_CHECK(obj2.pushKV("cat1", 9000));
+    BOOST_CHECK(obj2.pushKV("cat2", 12345));
 
-    obj.pushKVs(obj2);
+    BOOST_CHECK(obj.pushKVs(obj2));
 
     BOOST_CHECK_EQUAL(obj.empty(), false);
     BOOST_CHECK_EQUAL(obj.size(), 11);
@@ -376,7 +371,7 @@ void univalue_object()
 static const char *json1 =
 "[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
 
-void univalue_readwrite()
+BOOST_AUTO_TEST_CASE(univalue_readwrite)
 {
     UniValue v;
     BOOST_CHECK(v.read(json1));
@@ -419,10 +414,11 @@ void univalue_readwrite()
     BOOST_CHECK(!v.read("{} 42"));
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
 int main (int argc, char *argv[])
 {
     univalue_constructor();
-    univalue_push_throw();
     univalue_typecheck();
     univalue_set();
     univalue_array();

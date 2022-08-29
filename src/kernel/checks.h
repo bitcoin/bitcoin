@@ -7,16 +7,20 @@
 
 #include <optional>
 
-struct bilingual_str;
-
 namespace kernel {
 
 struct Context;
 
+enum class SanityCheckError {
+    ERROR_ECC,
+    ERROR_RANDOM,
+    ERROR_CHRONO,
+};
+
 /**
  *  Ensure a usable environment with all necessary library support.
  */
-std::optional<bilingual_str> SanityChecks(const Context&);
+std::optional<SanityCheckError> SanityChecks(const Context&);
 
 }
 

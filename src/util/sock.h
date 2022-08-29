@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_SOCK_H
 #define BITCOIN_UTIL_SOCK_H
 
-#include <compat/compat.h>
+#include <compat.h>
 #include <threadinterrupt.h>
 #include <util/time.h>
 

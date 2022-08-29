@@ -59,7 +59,7 @@ public:
     explicit GCSFilter(const Params& params = Params());
 
     /** Reconstructs an already-created filter from an encoding. */
-    GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter, bool skip_decode_check);
+    GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter);
 
     /** Builds a new filter from the params and set of elements. */
     GCSFilter(const Params& params, const ElementSet& elements);
@@ -122,7 +122,7 @@ public:
 
     //! Reconstruct a BlockFilter from parts.
     BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
-                std::vector<unsigned char> filter, bool skip_decode_check);
+                std::vector<unsigned char> filter);
 
     //! Construct a new BlockFilter of the specified type from a block.
     BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo);
@@ -164,7 +164,7 @@ public:
         if (!BuildParams(params)) {
             throw std::ios_base::failure("unknown filter_type");
         }
-        m_filter = GCSFilter(params, std::move(encoded_filter), /*skip_decode_check=*/false);
+        m_filter = GCSFilter(params, std::move(encoded_filter));
     }
 };
 

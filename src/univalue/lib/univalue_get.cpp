@@ -46,7 +46,8 @@ bool ParseDouble(const std::string& str, double *out)
 
 const std::vector<std::string>& UniValue::getKeys() const
 {
-    checkType(VOBJ);
+    if (typ != VOBJ)
+        throw std::runtime_error("JSON value is not an object as expected");
     return keys;
 }
 
@@ -59,19 +60,22 @@ const std::vector<UniValue>& UniValue::getValues() const
 
 bool UniValue::get_bool() const
 {
-    checkType(VBOOL);
+    if (typ != VBOOL)
+        throw std::runtime_error("JSON value is not a boolean as expected");
     return getBool();
 }
 
 const std::string& UniValue::get_str() const
 {
-    checkType(VSTR);
+    if (typ != VSTR)
+        throw std::runtime_error("JSON value is not a string as expected");
     return getValStr();
 }
 
 double UniValue::get_real() const
 {
-    checkType(VNUM);
+    if (typ != VNUM)
+        throw std::runtime_error("JSON value is not a number as expected");
     double retval;
     if (!ParseDouble(getValStr(), &retval))
         throw std::runtime_error("JSON double out of range");
@@ -80,12 +84,15 @@ double UniValue::get_real() const
 
 const UniValue& UniValue::get_obj() const
 {
-    checkType(VOBJ);
+    if (typ != VOBJ)
+        throw std::runtime_error("JSON value is not an object as expected");
     return *this;
 }
 
 const UniValue& UniValue::get_array() const
 {
-    checkType(VARR);
+    if (typ != VARR)
+        throw std::runtime_error("JSON value is not an array as expected");
     return *this;
 }
+

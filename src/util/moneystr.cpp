@@ -10,7 +10,6 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cstdint>
 #include <optional>
 
 std::string FormatMoney(const CAmount n)

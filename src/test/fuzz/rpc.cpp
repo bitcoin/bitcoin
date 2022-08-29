@@ -159,7 +159,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "signrawtransactionwithkey",
     "submitblock",
     "submitheader",
-    "submitpackage",
     "syncwithvalidationinterfacequeue",
     "testmempoolaccept",
     "uptime",

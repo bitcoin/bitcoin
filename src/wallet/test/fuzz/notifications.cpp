@@ -69,14 +69,15 @@ struct FuzzedWallet {
     CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
     {
         auto type{fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)};
-        BResult<CTxDestination> op_dest;
+        CTxDestination dest;
+        bilingual_str error;
         if (fuzzed_data_provider.ConsumeBool()) {
-            op_dest = wallet->GetNewDestination(type, "");
+            assert(wallet->GetNewDestination(type, "", dest, error));
         } else {
-            op_dest = wallet->GetNewChangeDestination(type);
+            assert(wallet->GetNewChangeDestination(type, dest, error));
         }
-        assert(op_dest.HasRes());
-        return GetScriptForDestination(op_dest.GetObj());
+        assert(error.empty());
+        return GetScriptForDestination(dest);
     }
 };
 
@@ -137,13 +138,8 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                     block.vtx.emplace_back(MakeTransactionRef(tx));
                 }
                 // Mine block
-                const uint256& hash = block.GetHash();
-                interfaces::BlockInfo info{hash};
-                info.prev_hash = &block.hashPrevBlock;
-                info.height = chain.size();
-                info.data = &block;
-                a.wallet->blockConnected(info);
-                b.wallet->blockConnected(info);
+                a.wallet->blockConnected(block, chain.size());
+                b.wallet->blockConnected(block, chain.size());
                 // Store the coins for the next block
                 Coins coins_new;
                 for (const auto& tx : block.vtx) {
@@ -159,13 +155,8 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                 auto& [coins, block]{chain.back()};
                 if (block.vtx.empty()) return; // Can only disconnect if the block was submitted first
                 // Disconnect block
-                const uint256& hash = block.GetHash();
-                interfaces::BlockInfo info{hash};
-                info.prev_hash = &block.hashPrevBlock;
-                info.height = chain.size() - 1;
-                info.data = &block;
-                a.wallet->blockDisconnected(info);
-                b.wallet->blockDisconnected(info);
+                a.wallet->blockDisconnected(block, chain.size() - 1);
+                b.wallet->blockDisconnected(block, chain.size() - 1);
                 chain.pop_back();
             });
         auto& [coins, first_block]{chain.front()};

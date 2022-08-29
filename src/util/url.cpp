@@ -5,8 +5,7 @@
 #include <util/url.h>
 
 #include <event2/http.h>
-
-#include <cstdlib>
+#include <stdlib.h>
 #include <string>
 
 std::string urlDecode(const std::string &urlEncoded) {

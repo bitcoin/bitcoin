@@ -11,6 +11,7 @@
 #include <flatfile.h>
 #include <primitives/block.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <uint256.h>
 
 #include <vector>
@@ -262,7 +263,6 @@ public:
 
     uint256 GetBlockHash() const
     {
-        assert(phashBlock != nullptr);
         return *phashBlock;
     }
 
@@ -301,7 +301,13 @@ public:
         return pbegin[(pend - pbegin) / 2];
     }
 
-    std::string ToString() const;
+    std::string ToString() const
+    {
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+            pprev, nHeight,
+            hashMerkleRoot.ToString(),
+            GetBlockHash().ToString());
+    }
 
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
@@ -396,7 +402,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 ConstructBlockHash() const
+    uint256 GetBlockHash() const
     {
         CBlockHeader block;
         block.nVersion = nVersion;
@@ -408,8 +414,16 @@ public:
         return block.GetHash();
     }
 
-    uint256 GetBlockHash() = delete;
-    std::string ToString() = delete;
+
+    std::string ToString() const
+    {
+        std::string str = "CDiskBlockIndex(";
+        str += CBlockIndex::ToString();
+        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
+            GetBlockHash().ToString(),
+            hashPrev.ToString());
+        return str;
+    }
 };
 
 /** An in-memory indexed chain of blocks. */

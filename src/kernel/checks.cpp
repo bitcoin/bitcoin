@@ -7,24 +7,21 @@
 #include <key.h>
 #include <random.h>
 #include <util/time.h>
-#include <util/translation.h>
-
-#include <memory>
 
 namespace kernel {
 
-std::optional<bilingual_str> SanityChecks(const Context&)
+std::optional<SanityCheckError> SanityChecks(const Context&)
 {
     if (!ECC_InitSanityCheck()) {
-        return Untranslated("Elliptic curve cryptography sanity check failure. Aborting.");
+        return SanityCheckError::ERROR_ECC;
     }
 
     if (!Random_SanityCheck()) {
-        return Untranslated("OS cryptographic RNG sanity check failure. Aborting.");
+        return SanityCheckError::ERROR_RANDOM;
     }
 
     if (!ChronoSanityCheck()) {
-        return Untranslated("Clock epoch mismatch. Aborting.");
+        return SanityCheckError::ERROR_CHRONO;
     }
 
     return std::nullopt;

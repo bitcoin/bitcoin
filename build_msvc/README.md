@@ -3,9 +3,7 @@ Building Navcoin Core with Visual Studio
 
 Introduction
 ---------------------
-Visual Studio 2022 is minimum required to build Navcoin Core.
-
-Solution and project files to build with `msbuild` or Visual Studio can be found in the `build_msvc` directory.
+Solution and project files to build Navcoin Core with `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2022 and Visual Studio 2019 (building with earlier versions of Visual Studio should not be expected to work).
 
 To build Navcoin Core from the command-line, it is sufficient to only install the Visual Studio Build Tools component.
 

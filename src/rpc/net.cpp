@@ -60,7 +60,7 @@ static RPCHelpMan getconnectioncount()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    return connman.GetNodeCount(ConnectionDirection::Both);
+    return (int)connman.GetNodeCount(ConnectionDirection::Both);
 },
     };
 }
@@ -84,7 +84,7 @@ static RPCHelpMan ping()
 
     // Request that each node send a ping during next message processing pass
     peerman.SendPings();
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -195,9 +195,8 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        ServiceFlags services{fStateStats ? statestats.their_services : ServiceFlags::NODE_NONE};
-        obj.pushKV("services", strprintf("%016x", services));
-        obj.pushKV("servicesnames", GetServicesNames(services));
+        obj.pushKV("services", strprintf("%016x", stats.nServices));
+        obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
@@ -304,7 +303,7 @@ static RPCHelpMan addnode()
     {
         CAddress addr;
         connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), ConnectionType::MANUAL);
-        return UniValue::VNULL;
+        return NullUniValue;
     }
 
     if (strCommand == "add")
@@ -320,7 +319,7 @@ static RPCHelpMan addnode()
         }
     }
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -423,7 +422,7 @@ static RPCHelpMan disconnectnode()
         throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
     }
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -640,9 +639,9 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections", node.connman->GetNodeCount(ConnectionDirection::Both));
-        obj.pushKV("connections_in", node.connman->GetNodeCount(ConnectionDirection::In));
-        obj.pushKV("connections_out", node.connman->GetNodeCount(ConnectionDirection::Out));
+        obj.pushKV("connections", (int)node.connman->GetNodeCount(ConnectionDirection::Both));
+        obj.pushKV("connections_in", (int)node.connman->GetNodeCount(ConnectionDirection::In));
+        obj.pushKV("connections_out", (int)node.connman->GetNodeCount(ConnectionDirection::Out));
     }
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
@@ -745,7 +744,7 @@ static RPCHelpMan setban()
             throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
         }
     }
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -819,7 +818,7 @@ static RPCHelpMan clearbanned()
 
     node.banman->ClearBanned();
 
-    return UniValue::VNULL;
+    return NullUniValue;
 },
     };
 }
@@ -894,7 +893,7 @@ static RPCHelpMan getnodeaddresses()
 
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
+        obj.pushKV("time", (int)addr.nTime);
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringIP());
         obj.pushKV("port", addr.GetPort());
@@ -942,7 +941,7 @@ static RPCHelpMan addpeeraddress()
 
     if (LookupHost(addr_string, net_addr, false)) {
         CAddress address{{net_addr, port}, ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
-        address.nTime = AdjustedTime();
+        address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
         if (node.addrman->Add({address}, address)) {

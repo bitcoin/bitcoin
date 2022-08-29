@@ -5,11 +5,9 @@
 #include <map>
 
 #include <dbwrapper.h>
-#include <hash.h>
 #include <index/blockfilterindex.h>
 #include <node/blockstorage.h>
 #include <util/system.h>
-#include <validation.h>
 
 using node::UndoReadFromDisk;
 
@@ -95,9 +93,9 @@ struct DBHashKey {
 
 static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
-BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
+BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain)), m_filter_type(filter_type)
+    : m_filter_type(filter_type)
 {
     const std::string& filter_name = BlockFilterTypeName(filter_type);
     if (filter_name.empty()) throw std::invalid_argument("unknown filter_type");
@@ -110,7 +108,7 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
-bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
+bool BlockFilterIndex::Init()
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
@@ -125,15 +123,15 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& blo
         m_next_filter_pos.nFile = 0;
         m_next_filter_pos.nPos = 0;
     }
-    return true;
+    return BaseIndex::Init();
 }
 
-bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
+bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
 {
     const FlatFilePos& pos = m_next_filter_pos;
 
     // Flush current filter file to disk.
-    AutoFile file{m_filter_fileseq->Open(pos)};
+    CAutoFile file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         return error("%s: Failed to open filter file %d", __func__, pos.nFile);
     }
@@ -142,25 +140,21 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     }
 
     batch.Write(DB_FILTER_POS, pos);
-    return true;
+    return BaseIndex::CommitInternal(batch);
 }
 
-bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, BlockFilter& filter) const
+bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const
 {
-    AutoFile filein{m_filter_fileseq->Open(pos, true)};
+    CAutoFile filein(m_filter_fileseq->Open(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull()) {
         return false;
     }
 
-    // Check that the hash of the encoded_filter matches the one stored in the db.
     uint256 block_hash;
     std::vector<uint8_t> encoded_filter;
     try {
         filein >> block_hash >> encoded_filter;
-        uint256 result;
-        CHash256().Write(encoded_filter).Finalize(result);
-        if (result != hash) return error("Checksum mismatch in filter decode.");
-        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), /*skip_decode_check=*/true);
+        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));
     }
     catch (const std::exception& e) {
         return error("%s: Failed to deserialize block filter from disk: %s", __func__, e.what());
@@ -179,7 +173,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
-        AutoFile last_file{m_filter_fileseq->Open(pos)};
+        CAutoFile last_file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
         if (last_file.IsNull()) {
             LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
             return 0;
@@ -205,7 +199,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
         return 0;
     }
 
-    AutoFile fileout{m_filter_fileseq->Open(pos)};
+    CAutoFile fileout(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull()) {
         LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return 0;
@@ -215,25 +209,22 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     return data_size;
 }
 
-bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
+bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     CBlockUndo block_undo;
     uint256 prev_header;
 
-    if (block.height > 0) {
-        // pindex variable gives indexing code access to node internals. It
-        // will be removed in upcoming commit
-        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
+    if (pindex->nHeight > 0) {
         if (!UndoReadFromDisk(block_undo, pindex)) {
             return false;
         }
 
         std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
+        if (!m_db->Read(DBHeightKey(pindex->nHeight - 1), read_out)) {
             return false;
         }
 
-        uint256 expected_block_hash = *Assert(block.prev_hash);
+        uint256 expected_block_hash = pindex->pprev->GetBlockHash();
         if (read_out.first != expected_block_hash) {
             return error("%s: previous block header belongs to unexpected block %s; expected %s",
                          __func__, read_out.first.ToString(), expected_block_hash.ToString());
@@ -242,18 +233,18 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         prev_header = read_out.second.header;
     }
 
-    BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
+    BlockFilter filter(m_filter_type, block, block_undo);
 
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
-    value.first = block.hash;
+    value.first = pindex->GetBlockHash();
     value.second.hash = filter.GetHash();
     value.second.header = filter.ComputeHeader(prev_header);
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(block.height), value)) {
+    if (!m_db->Write(DBHeightKey(pindex->nHeight), value)) {
         return false;
     }
 
@@ -287,15 +278,17 @@ static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
     return true;
 }
 
-bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
+bool BlockFilterIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
+    assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
+
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
 
     // During a reorg, we need to copy all filters for blocks that are getting disconnected from the
     // height index to the hash index so we can still find them when the height index entries are
     // overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip.height, current_tip.height)) {
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip->nHeight, current_tip->nHeight)) {
         return false;
     }
 
@@ -305,7 +298,7 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, con
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
-    return true;
+    return BaseIndex::Rewind(current_tip, new_tip);
 }
 
 static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
@@ -388,7 +381,7 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
         return false;
     }
 
-    return ReadFilterFromDisk(entry.pos, entry.hash, filter_out);
+    return ReadFilterFromDisk(entry.pos, filter_out);
 }
 
 bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
@@ -432,7 +425,7 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
     filters_out.resize(entries.size());
     auto filter_pos_it = filters_out.begin();
     for (const auto& entry : entries) {
-        if (!ReadFilterFromDisk(entry.pos, entry.hash, *filter_pos_it)) {
+        if (!ReadFilterFromDisk(entry.pos, *filter_pos_it)) {
             return false;
         }
         ++filter_pos_it;
@@ -469,12 +462,12 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
     for (auto& entry : g_filter_indexes) fn(entry.second);
 }
 
-bool InitBlockFilterIndex(std::function<std::unique_ptr<interfaces::Chain>()> make_chain, BlockFilterType filter_type,
+bool InitBlockFilterIndex(BlockFilterType filter_type,
                           size_t n_cache_size, bool f_memory, bool f_wipe)
 {
     auto result = g_filter_indexes.emplace(std::piecewise_construct,
                                            std::forward_as_tuple(filter_type),
-                                           std::forward_as_tuple(make_chain(), filter_type,
+                                           std::forward_as_tuple(filter_type,
                                                                  n_cache_size, f_memory, f_wipe));
     return result.second;
 }

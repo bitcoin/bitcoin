@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_SERFLOAT_H
 #define BITCOIN_UTIL_SERFLOAT_H
 
-#include <cstdint>
+#include <stdint.h>
 
 /* Encode a double using the IEEE 754 binary64 format. All NaNs are encoded as x86/ARM's
  * positive quiet NaN with payload 0. */

@@ -6,8 +6,6 @@
 #include <random.h>
 #include <util/bytevectorhash.h>
 
-#include <vector>
-
 ByteVectorHash::ByteVectorHash() :
     m_k0(GetRand<uint64_t>()),
     m_k1(GetRand<uint64_t>())

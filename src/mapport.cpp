@@ -19,7 +19,7 @@
 #include <util/thread.h>
 
 #ifdef USE_NATPMP
-#include <compat/compat.h>
+#include <compat.h>
 #include <natpmp.h>
 #endif // USE_NATPMP
 

@@ -370,21 +370,23 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        auto op_dest = walletModel->wallet().getNewDestination(address_type, strLabel);
-        if (!op_dest) {
+        CTxDestination dest;
+        if(!walletModel->wallet().getNewDestination(address_type, strLabel, dest))
+        {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-            if (!ctx.isValid()) {
+            if(!ctx.isValid())
+            {
                 // Unlock wallet failed or was cancelled
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            op_dest = walletModel->wallet().getNewDestination(address_type, strLabel);
-            if (!op_dest) {
+            if(!walletModel->wallet().getNewDestination(address_type, strLabel, dest))
+            {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();
             }
         }
-        strAddress = EncodeDestination(op_dest.GetObj());
+        strAddress = EncodeDestination(dest);
     }
     else
     {

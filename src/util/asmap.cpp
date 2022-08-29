@@ -8,13 +8,10 @@
 #include <crypto/common.h>
 #include <fs.h>
 #include <logging.h>
-#include <serialize.h>
 #include <streams.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdio>
-#include <utility>
+#include <map>
 #include <vector>
 
 namespace {
@@ -198,7 +195,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
 {
     std::vector<bool> bits;
     FILE *filestr = fsbridge::fopen(path, "rb");
-    AutoFile file{filestr};
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open asmap file from disk\n");
         return bits;

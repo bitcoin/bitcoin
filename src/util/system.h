@@ -14,7 +14,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <compat/compat.h>
+#include <compat.h>
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>

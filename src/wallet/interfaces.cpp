@@ -146,10 +146,11 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    BResult<CTxDestination> getNewDestination(const OutputType type, const std::string label) override
+    bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->GetNewDestination(type, label);
+        bilingual_str error;
+        return m_wallet->GetNewDestination(type, label, dest, error);
     }
     bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
     {
@@ -190,27 +191,29 @@ public:
         std::string* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
-        const auto& entry = m_wallet->FindAddressBookEntry(dest, /*allow_change=*/false);
-        if (!entry) return false; // addr not found
+        auto it = m_wallet->m_address_book.find(dest);
+        if (it == m_wallet->m_address_book.end() || it->second.IsChange()) {
+            return false;
+        }
         if (name) {
-            *name = entry->GetLabel();
+            *name = it->second.GetLabel();
         }
         if (is_mine) {
             *is_mine = m_wallet->IsMine(dest);
         }
         if (purpose) {
-            *purpose = entry->purpose;
+            *purpose = it->second.purpose;
         }
         return true;
     }
-    std::vector<WalletAddress> getAddresses() const override
+    std::vector<WalletAddress> getAddresses() override
     {
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletAddress> result;
-        m_wallet->ForEachAddrBookEntry([&](const CTxDestination& dest, const std::string& label, const std::string& purpose, bool is_change) EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet) {
-            if (is_change) return;
-            result.emplace_back(dest, m_wallet->IsMine(dest), label, purpose);
-        });
+        for (const auto& item : m_wallet->m_address_book) {
+            if (item.second.IsChange()) continue;
+            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
+        }
         return result;
     }
     std::vector<std::string> getAddressReceiveRequests() override {
@@ -249,21 +252,22 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
     }
-    BResult<CTransactionRef> createTransaction(const std::vector<CRecipient>& recipients,
+    CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
-        CAmount& fee) override
+        CAmount& fee,
+        bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        const auto& res = CreateTransaction(*m_wallet, recipients, change_pos,
-                                     coin_control, sign);
-        if (!res) return res.GetError();
-        const auto& txr = res.GetObj();
-        fee = txr.fee;
-        change_pos = txr.change_pos;
+        FeeCalculation fee_calc_out;
+        std::optional<CreatedTransactionResult> txr = CreateTransaction(*m_wallet, recipients, change_pos,
+                fail_reason, coin_control, fee_calc_out, sign);
+        if (!txr) return {};
+        fee = txr->fee;
+        change_pos = txr->change_pos;
 
-        return txr.tx;
+        return txr->tx;
     }
     void commitTransaction(CTransactionRef tx,
         WalletValueMap value_map,
@@ -569,13 +573,11 @@ public:
         options.require_existing = true;
         return MakeWallet(m_context, LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
-    BResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
-        bilingual_str error;
-        BResult<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings))};
-        if (!wallet) return error;
-        return wallet;
+
+        return MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
     }
     std::string getWalletDir() override
     {
