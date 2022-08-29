@@ -31,8 +31,8 @@ from version 0.13 should not require any additional actions.
 
 When upgrading from a version prior to 18.0.1, the
 first startup of Dash Core will run a migration process which can take anywhere
-from a few minutes to thirty minutes to finish. After the migration, a 
-downgrade to an older version is only possible with a reindex 
+from a few minutes to thirty minutes to finish. After the migration, a
+downgrade to an older version is only possible with a reindex
 (or reindex-chainstate).
 
 Downgrade warning
