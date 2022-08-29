@@ -23,9 +23,10 @@ class PublicKey
 {
 private:
     std::vector<uint8_t> data;
-    static constexpr size_t SIZE = 48;
 
 public:
+    static constexpr size_t SIZE = 48;
+
     PublicKey() { data.clear(); }
     PublicKey(const G1Point& pk) : data(pk.GetVch()) {}
     PublicKey(const std::vector<uint8_t>& pk) : data(pk) {}
@@ -52,9 +53,10 @@ class DoublePublicKey
 private:
     PublicKey vk;
     PublicKey sk;
-    static constexpr size_t SIZE = 48 * 2;
 
 public:
+    static constexpr size_t SIZE = 48 * 2;
+
     DoublePublicKey() {}
     DoublePublicKey(const G1Point& vk_, const G1Point& sk_) : vk(vk_.GetVch()), sk(sk_.GetVch()) {}
     DoublePublicKey(const std::vector<uint8_t>& vk_, const std::vector<uint8_t>& sk_) : vk(vk_), sk(sk_) {}
@@ -80,9 +82,10 @@ class PrivateKey
 {
 private:
     CPrivKey k;
-    static constexpr size_t SIZE = 32;
 
 public:
+    static constexpr size_t SIZE = 32;
+
     PrivateKey() { k.clear(); }
 
     PrivateKey(Scalar k_)
