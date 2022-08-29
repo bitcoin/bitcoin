@@ -920,10 +920,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
     fCheckpointsEnabled = args.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
     hashAssumeValid = uint256S(args.GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
-    if (!hashAssumeValid.IsNull())
-        LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
-    else
-        LogPrintf("Validating signatures for all blocks.\n");
 
     if (args.IsArgSet("-minimumchainwork")) {
         const std::string minChainWorkStr = args.GetArg("-minimumchainwork", "");
@@ -933,10 +929,6 @@ bool AppInitParameterInteraction(const ArgsManager& args, bool use_syscall_sandb
         nMinimumChainWork = UintToArith256(uint256S(minChainWorkStr));
     } else {
         nMinimumChainWork = UintToArith256(chainparams.GetConsensus().nMinimumChainWork);
-    }
-    LogPrintf("Setting nMinimumChainWork=%s\n", nMinimumChainWork.GetHex());
-    if (nMinimumChainWork < UintToArith256(chainparams.GetConsensus().nMinimumChainWork)) {
-        LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainparams.GetConsensus().nMinimumChainWork.GetHex());
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files

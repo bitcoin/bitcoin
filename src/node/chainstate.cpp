@@ -32,6 +32,16 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
+    if (!hashAssumeValid.IsNull()) {
+        LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
+    } else {
+        LogPrintf("Validating signatures for all blocks.\n");
+    }
+    LogPrintf("Setting nMinimumChainWork=%s\n", nMinimumChainWork.GetHex());
+    if (nMinimumChainWork < UintToArith256(chainman.GetConsensus().nMinimumChainWork)) {
+        LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainman.GetConsensus().nMinimumChainWork.GetHex());
+    }
+
     LOCK(cs_main);
     chainman.InitializeChainstate(options.mempool);
     chainman.m_total_coinstip_cache = cache_sizes.coins;
