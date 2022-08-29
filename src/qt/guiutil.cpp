@@ -437,7 +437,6 @@ bool isDust(interfaces::Node& node, const QString& address, const CAmount& amoun
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
     QString escaped = str.toHtmlEscaped();
-    escaped = escaped.replace(" ", "&nbsp;");
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
