@@ -587,7 +587,7 @@ class WalletTest(BitcoinTestFramework):
 
         # Get all non-zero utxos together
         chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
-        singletxid = self.nodes[0].sendtoaddress(chain_addrs[0], self.nodes[0].getbalance(), "", "", True)
+        singletxid = self.nodes[0].sendall(recipients=[chain_addrs[0]])['txid']
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         node0_balance = self.nodes[0].getbalance()
         # Split into two chains
