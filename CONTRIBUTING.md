@@ -314,8 +314,7 @@ be different, one should be prepared to expend more time and effort than for
 other kinds of patches because of increased peer review and consensus building
 requirements.
 
-Maintainers fulfil the role of evaluating PRs having met the above conditions
-and merging, as detailed in [MAINTAINERS.md](/MAINTAINERS.md).
+Maintainers fulfill the role of evaluating and merging PRs that have met the above conditions, as detailed in [MAINTAINERS.md](/MAINTAINERS.md).
 
 
 ### Peer Review
