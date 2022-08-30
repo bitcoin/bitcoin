@@ -28,9 +28,9 @@ NODE2_BLOCKS_REQUIRED = 2047
 class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
+        self.num_nodes = 4
         # Node0 has no required chainwork; node1 requires 15 blocks on top of the genesis block; node2 requires 2047
-        self.extra_args = [["-minimumchainwork=0x0", "-checkblockindex=0"], ["-minimumchainwork=0x1f", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0"]]
+        self.extra_args = [["-minimumchainwork=0x0", "-checkblockindex=0"], ["-minimumchainwork=0x1f", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0", "-whitelist=noban@127.0.0.1"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -40,17 +40,34 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def disconnect_all(self):
         self.disconnect_nodes(0, 1)
         self.disconnect_nodes(0, 2)
+        self.disconnect_nodes(0, 3)
 
     def reconnect_all(self):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
         with self.nodes[1].assert_debug_log(expected_msgs=["[net] Ignoring low-work chain (height=14)"]), self.nodes[2].assert_debug_log(expected_msgs=["[net] Ignoring low-work chain (height=14)"]):
             self.generate(self.nodes[0], NODE1_BLOCKS_REQUIRED-1, sync_fun=self.no_op)
 
-        for node in self.nodes[1:]:
+        # Node3 should always allow headers due to noban permissions
+        self.log.info("Check that node3 will sync headers (due to noban permissions)")
+
+        def check_node3_chaintips(num_tips, tip_hash, height):
+            node3_chaintips = self.nodes[3].getchaintips()
+            assert(len(node3_chaintips) == num_tips)
+            assert {
+                'height': height,
+                'hash': tip_hash,
+                'branchlen': height,
+                'status': 'headers-only',
+            } in node3_chaintips
+
+        check_node3_chaintips(2, self.nodes[0].getbestblockhash(), NODE1_BLOCKS_REQUIRED-1)
+
+        for node in self.nodes[1:3]:
             chaintips = node.getchaintips()
             assert(len(chaintips) == 1)
             assert {
@@ -63,7 +80,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.log.info("Generate more blocks to satisfy node1's minchainwork requirement, and verify node2 still has no new headers in headers tree")
         with self.nodes[2].assert_debug_log(expected_msgs=["[net] Ignoring low-work chain (height=15)"]):
             self.generate(self.nodes[0], NODE1_BLOCKS_REQUIRED - self.nodes[0].getblockcount(), sync_fun=self.no_op)
-        self.sync_blocks(self.nodes[0:2])
+        self.sync_blocks(self.nodes[0:2]) # node3 will sync headers (noban permissions) but not blocks (due to minchainwork)
 
         assert {
             'height': 0,
@@ -74,10 +91,13 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         assert(len(self.nodes[2].getchaintips()) == 1)
 
-        self.log.info("Generate long chain for node0/node1")
+        self.log.info("Check that node3 accepted these headers as well")
+        check_node3_chaintips(2, self.nodes[0].getbestblockhash(), NODE1_BLOCKS_REQUIRED)
+
+        self.log.info("Generate long chain for node0/node1/node3")
         self.generate(self.nodes[0], NODE2_BLOCKS_REQUIRED-self.nodes[0].getblockcount(), sync_fun=self.no_op)
 
-        self.log.info("Verify that node2 will sync the chain when it gets long enough")
+        self.log.info("Verify that node2 and node3 will sync the chain when it gets long enough")
         self.sync_blocks()
 
     def test_peerinfo_includes_headers_presync_height(self):

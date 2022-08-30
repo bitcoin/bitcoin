@@ -2820,6 +2820,13 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
     }
 
+    // If our peer has NetPermissionFlags::NoBan privileges, then bypass our
+    // anti-DoS logic (this saves bandwidth when we connect to a trusted peer
+    // on startup).
+    if (pfrom.HasPermission(NetPermissionFlags::NoBan)) {
+        already_validated_work = true;
+    }
+
     // At this point, the headers connect to something in our block index.
     // Do anti-DoS checks to determine if we should process or store for later
     // processing.
