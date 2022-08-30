@@ -78,8 +78,12 @@ $(LIBBLS):
 	$(AM_V_at) \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS)' \
+		CPPFLAGS='$(CPPFLAGS)' \
+		CXXFLAGS='$(CXXFLAGS)' \
 		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
 
 $(LIBMCL):
@@ -87,8 +91,12 @@ $(LIBMCL):
 		MCL_USE_LLVM=0 \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS)' \
+		CPPFLAGS='$(CPPFLAGS)' \
+		CXXFLAGS='$(CXXFLAGS)' \
 		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
