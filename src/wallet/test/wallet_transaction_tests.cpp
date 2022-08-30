@@ -138,6 +138,56 @@ BOOST_FIXTURE_TEST_CASE(descriptors_wallet_detect_change_output, TestChain100Set
     for (const auto& dest_type : {OutputType::LEGACY, OutputType::BECH32, OutputType::P2SH_SEGWIT, OutputType::BECH32M}) {
         CreateTxAndVerifyChange(wallet, external_wallet, dest_type, 15 * COIN);
     }
+
+    // ### Now verify the negative paths:
+
+    {
+        // 1) The change output goes to an address in one of the wallet external path
+        CCoinControl coin_control;
+        coin_control.destChange = *Assert(wallet->GetNewDestination(OutputType::BECH32, ""));
+        auto op_tx = *Assert(CreateTransaction(*wallet, {{CNoDestination{CScript() << OP_TRUE}, 1 * COIN, true}}, /*change_pos=*/std::nullopt, coin_control));
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+        wallet->transactionAddedToMempool(op_tx.tx);
+        auto wtx = WITH_LOCK(wallet->cs_wallet, return wallet->GetWalletTx(op_tx.tx->GetHash()));
+        assert(wtx);
+        BOOST_CHECK(!OutputIsChange(wallet, wtx->tx, *op_tx.change_pos));
+    }
+
+    {
+        // 2) The change goes back to the source.
+        // As the source is an external destination, and we are currently detecting change through it output script, the change will be marked as external (not change).
+
+        // Create source address
+        auto dest = *Assert(wallet->GetNewDestination(OutputType::BECH32, ""));
+        auto op_tx_source = CreateAndAddTx(wallet, dest, 15 * COIN);
+        const CBlock& block = CreateAndProcessBlock({CMutableTransaction(*op_tx_source.tx)}, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey().GetID())));
+        wallet->blockConnected(ChainstateRole::NORMAL, kernel::MakeBlockInfo(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()), &block));
+
+        // Now create the tx that spends from the source and sends the change to it.
+        LOCK(wallet->cs_wallet);
+        CCoinControl coin_control;
+        unsigned int change_pos = *op_tx_source.change_pos;
+        coin_control.Select(COutPoint(op_tx_source.tx->GetHash(), !change_pos));
+        coin_control.destChange = dest;
+        auto op_tx = *Assert(CreateTransaction(*wallet, {{CNoDestination{CScript() << OP_TRUE}, 1 * COIN, true}}, /*change_pos=*/std::nullopt, coin_control));
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+        wallet->transactionAddedToMempool(op_tx.tx);
+        auto wtx = wallet->GetWalletTx(op_tx.tx->GetHash());
+        assert(wtx);
+        BOOST_CHECK(!OutputIsChange(wallet, wtx->tx, *op_tx.change_pos));
+    }
+
+    {
+        // 3) Test what happens when the user sets an address book label to a destination created from an internal key.
+        auto op_tx = CreateAndAddTx(wallet, *Assert(wallet->GetNewDestination(OutputType::BECH32, "")), 15 * COIN);
+        BOOST_CHECK(OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+        // Now change the change destination label
+        CTxDestination change_dest;
+        BOOST_CHECK(ExtractDestination(op_tx.tx->vout.at(*op_tx.change_pos).scriptPubKey, change_dest));
+        BOOST_CHECK(wallet->SetAddressBook(change_dest, "not_a_change_address", AddressPurpose::RECEIVE));
+        // TODO: FIXME, Currently, change detection fails when the user sets a custom label to a destination created from an internal path.
+        BOOST_CHECK(OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+    }
 }
 
 CTxDestination deriveDestination(const std::unique_ptr<Descriptor>& descriptor, int index, const FlatSigningProvider& privkey_provider)
