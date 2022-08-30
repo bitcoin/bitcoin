@@ -35,6 +35,7 @@ struct CNodeStateStats {
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
     ServiceFlags their_services;
+    int64_t presync_height{-1};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
