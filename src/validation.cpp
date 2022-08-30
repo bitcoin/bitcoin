@@ -3718,7 +3718,7 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
     {
         LOCK(cs_main);
         // Don't report headers presync progress if we already have a post-minchainwork header chain.
-        // This means we lose reporting for potentially legimate, but unlikely, deep reorgs, but
+        // This means we lose reporting for potentially legitimate, but unlikely, deep reorgs, but
         // prevent attackers that spam low-work headers from filling our logs.
         if (m_best_header->nChainWork >= UintToArith256(GetConsensus().nMinimumChainWork)) return;
         // Rate limit headers presync updates to 4 per second, as these are not subject to DoS
