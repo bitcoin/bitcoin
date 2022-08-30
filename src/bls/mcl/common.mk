@@ -48,7 +48,7 @@ ifneq ($(findstring $(ARCH),x86_64/amd64),)
   #LOW_ASM_SRC=src/asm/low_x86-64.asm
   #ASM=nasm -felf64
 endif
-ifeq ($(ARCH),x86)
+ifneq ($(findstring $(ARCH),x86/i386/i686),)
   CPU=x86
   INTEL=1
   BIT=32
