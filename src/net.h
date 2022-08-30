@@ -325,13 +325,13 @@ public:
 class TransportSerializer {
 public:
     // prepare message for transport (header construction, error-correction computation, payload encryption, etc.)
-    virtual void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) = 0;
+    virtual void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const = 0;
     virtual ~TransportSerializer() {}
 };
 
-class V1TransportSerializer  : public TransportSerializer {
+class V1TransportSerializer : public TransportSerializer {
 public:
-    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) override;
+    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
 
 /** Information about a peer */
@@ -341,10 +341,10 @@ class CNode
     friend struct ConnmanTestMsg;
 
 public:
-    std::unique_ptr<TransportDeserializer> m_deserializer;
-    std::unique_ptr<TransportSerializer> m_serializer;
+    const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
+    const std::unique_ptr<const TransportSerializer> m_serializer;
 
-    NetPermissionFlags m_permissionFlags{NetPermissionFlags::None};
+    NetPermissionFlags m_permissionFlags{NetPermissionFlags::None}; // treated as const outside of fuzz tester
 
     /**
      * Socket used for communication with the node.
@@ -368,7 +368,7 @@ public:
 
     RecursiveMutex cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize{0};
+    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
     RecursiveMutex cs_sendProcessing;
 
@@ -393,7 +393,7 @@ public:
      * from the wire. This cleaned string can safely be logged or displayed.
      */
     std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
-    bool m_prefer_evict{false}; // This peer is preferred for eviction.
+    bool m_prefer_evict{false}; // This peer is preferred for eviction. (treated as const)
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);
     }
