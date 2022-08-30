@@ -732,7 +732,7 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block, consensusParams))
+    if (!HasValidProofOfWork({block}, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     // Signet only: check block solution

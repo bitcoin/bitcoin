@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
     for (int n=0; n<100; n++) {
         int r = InsecureRandRange(150000);
         CBlockIndex* tip = (r < 100000) ? &vBlocksMain[r] : &vBlocksSide[r - 100000];
-        CBlockLocator locator = chain.GetLocator(tip);
+        CBlockLocator locator = GetLocator(tip);
 
         // The first result must be the block itself, the last one must be genesis.
         BOOST_CHECK(locator.vHave.front() == tip->GetBlockHash());

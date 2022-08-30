@@ -201,6 +201,7 @@ SYSCOIN_CORE_H = \
   flatfile.h \
   ctpl_stl.h \
   fs.h \
+  headerssync.h \
   httprpc.h \
   httpserver.h \
   i2p.h \
@@ -329,6 +330,7 @@ SYSCOIN_CORE_H = \
   unordered_lru_cache.h \
   util/asmap.h \
   util/bip32.h \
+  util/bitdeque.h \
   util/bytevectorhash.h \
   util/check.h \
   util/epochguard.h \
@@ -523,6 +525,7 @@ libsyscoin_node_a_SOURCES = \
   dbwrapper.cpp \
   deploymentstatus.cpp \
   flatfile.cpp \
+  headerssync.cpp \
   httprpc.cpp \
   httpserver.cpp \
   i2p.cpp \

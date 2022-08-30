@@ -10,6 +10,7 @@
 #endif
 
 #include <qt/syscoinunits.h>
+#include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsdialog.h>
 
@@ -27,7 +28,6 @@
 #endif
 
 #include <memory>
-class ClientModel;
 class NetworkStyle;
 class Notificator;
 class OptionsModel;
@@ -211,6 +211,7 @@ private:
     void updateNetworkState();
 
     void updateHeadersSyncProgressLabel();
+    void updateHeadersPresyncProgressLabel(int64_t height, const QDateTime& blockDate);
 
     /** Open the OptionsDialog on the specified tab index */
     void openOptionsDialogWithTab(OptionsDialog::Tab tab);
@@ -235,7 +236,7 @@ public Q_SLOTS:
     /** Get restart command-line parameters and request restart */
     void handleRestart(const QStringList &args);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers, SynchronizationState sync_state);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state);
     /** SYSCOIN Set additional data sync status shown in the UI */
     void setAdditionalDataSyncProgress(double nSyncProgress);
     /** Notify the user of an event from the core network or transaction handling code.

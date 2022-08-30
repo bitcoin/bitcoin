@@ -8,7 +8,8 @@
 
 #include <net.h>
 #include <validationinterface.h>
-
+// SYSCOIN
+#include <headerssync.h>
 class AddrMan;
 class CChainParams;
 class CTxMemPool;
@@ -34,6 +35,7 @@ struct CNodeStateStats {
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
     ServiceFlags their_services;
+    int64_t presync_height{-1};
 };
 // SYSCOIN
 extern RecursiveMutex g_cs_orphans;
@@ -226,6 +228,14 @@ struct Peer {
 
     /** Time of the last getheaders message to this peer */
     NodeClock::time_point m_last_getheaders_timestamp{};
+    /** Protects m_headers_sync **/
+    Mutex m_headers_sync_mutex;
+    /** Headers-sync state for this peer (eg for initial sync, or syncing large
+     * reorgs) **/
+    std::unique_ptr<HeadersSyncState> m_headers_sync PT_GUARDED_BY(m_headers_sync_mutex) GUARDED_BY(m_headers_sync_mutex) {};
+
+    /** Whether we've sent our peer a sendheaders message. **/
+    std::atomic<bool> m_sent_sendheaders{false};
     // SYSCOIN
     /** This peer's a masternode connection */
     std::atomic<bool> m_masternode_connection{false};

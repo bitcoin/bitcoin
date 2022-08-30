@@ -58,7 +58,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
     if (fuzzed_data_provider.ConsumeBool()) {
         for (const auto& block : *g_chain) {
             BlockValidationState dummy;
-            bool processed{chainman.ProcessNewBlockHeaders({*block}, dummy)};
+            bool processed{chainman.ProcessNewBlockHeaders({*block}, true, dummy)};
             Assert(processed);
             const auto* index{WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block->GetHash()))};
             Assert(index);
