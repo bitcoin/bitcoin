@@ -585,15 +585,9 @@ class WalletTest(BitcoinTestFramework):
 
         # ==Check that wallet prefers to use coins that don't exceed mempool limits =====
 
-        # Get all non-zero utxos together
+        # Get all non-zero utxos together and split into two chains
         chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
-        singletxid = self.nodes[0].sendall(recipients=[chain_addrs[0]])['txid']
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        node0_balance = self.nodes[0].getbalance()
-        # Split into two chains
-        rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
-        signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
+        self.nodes[0].sendall(recipients=chain_addrs)
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Make a long chain of unconfirmed payments without hitting mempool limit
