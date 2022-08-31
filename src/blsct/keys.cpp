@@ -68,7 +68,7 @@ bool PublicKey::IsValid() const
     return g1.IsValid();
 }
 
-std::vector<uint8_t> PublicKey::GetVch() const
+std::vector<unsigned char> PublicKey::GetVch() const
 {
     return data;
 }
@@ -110,17 +110,17 @@ bool DoublePublicKey::IsValid() const
     return vk.IsValid() && sk.IsValid();
 }
 
-std::vector<uint8_t> DoublePublicKey::GetVkVch() const
+std::vector<unsigned char> DoublePublicKey::GetVkVch() const
 {
     return vk.GetVch();
 }
 
-std::vector<uint8_t> DoublePublicKey::GetSkVch() const
+std::vector<unsigned char> DoublePublicKey::GetSkVch() const
 {
     return sk.GetVch();
 }
 
-std::vector<uint8_t> DoublePublicKey::GetVch() const
+std::vector<unsigned char> DoublePublicKey::GetVch() const
 {
     auto ret = vk.GetVch();
     auto toAppend = sk.GetVch();
