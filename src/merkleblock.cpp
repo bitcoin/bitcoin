@@ -29,7 +29,7 @@ std::vector<bool> BytesToBits(const std::vector<unsigned char>& bytes)
 
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids)
 {
-    header = block.GetBlockHeader();
+    header = block;
 
     std::vector<bool> vMatch;
     std::vector<uint256> vHashes;
