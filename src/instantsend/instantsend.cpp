@@ -101,7 +101,7 @@ instantsend::PendingState CInstantSendManager::FetchPendingLocks()
     std::vector<uint256> removed;
     removed.reserve(std::min(maxCount, pendingInstantSendLocks.size()));
 
-    for (const auto& [islockHash, nodeid_islptr_pair] : pendingInstantSendLocks) {
+    for (auto& [islockHash, nodeid_islptr_pair] : pendingInstantSendLocks) {
         // Check if we've reached max count
         if (ret.m_pending_is.size() >= maxCount) {
             ret.m_pending_work = true;

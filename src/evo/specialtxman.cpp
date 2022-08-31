@@ -503,7 +503,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
         newList.UpdateMN(dmn.proTxHash, newState);
     });
 
-    mnListRet = std::move(newList);
+    mnListRet = newList;
 
     return true;
 }

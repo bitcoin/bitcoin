@@ -6,6 +6,7 @@ misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
 performance-for-range-copy,
+performance-move-const-arg,
 performance-unnecessary-copy-initialization,
 readability-const-return-type,
 readability-redundant-declaration,
@@ -17,7 +18,11 @@ bugprone-use-after-move,
 misc-unused-using-decls,
 modernize-use-default-member-init,
 modernize-use-nullptr,
+performance-move-const-arg,
 performance-unnecessary-copy-initialization,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '
+CheckOptions:
+ - key: performance-move-const-arg.CheckTriviallyCopyableMove
+   value: false
