@@ -4074,7 +4074,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), *peer);
             }
             return;
-        } else if (prev_block->nChainWork + CalculateHeadersWork({cmpctblock.header}) < GetAntiDoSWorkThreshold()) {
+        } else if (prev_block->nChainWork + GetBlockProof(cmpctblock.header) < GetAntiDoSWorkThreshold()) {
             // If we get a low-work header in a compact block, we can ignore it.
             LogPrint(BCLog::NET, "Ignoring low-work compact block from peer %d\n", pfrom.GetId());
             return;
@@ -4416,7 +4416,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             // Check work on this block against our anti-dos thresholds.
             const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
-            if (prev_block && prev_block->nChainWork + CalculateHeadersWork({pblock->GetBlockHeader()}) >= GetAntiDoSWorkThreshold()) {
+            if (prev_block && prev_block->nChainWork + GetBlockProof(pblock->GetBlockHeader()) >= GetAntiDoSWorkThreshold()) {
                 min_pow_checked = true;
             }
         }
