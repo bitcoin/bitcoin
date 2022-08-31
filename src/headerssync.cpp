@@ -9,15 +9,15 @@
 #include <util/check.h>
 #include <util/vector.h>
 
-// The two constants below are computed using the simulation script on
-// https://gist.github.com/sipa/016ae445c132cdf65a2791534dfb7ae1
+// The two constants below are computed using the simulation script in
+// contrib/devtools/headerssync-params.py.
 
-//! Store a commitment to a header every HEADER_COMMITMENT_PERIOD blocks.
-constexpr size_t HEADER_COMMITMENT_PERIOD{584};
+//! Store one header commitment per HEADER_COMMITMENT_PERIOD blocks.
+constexpr size_t HEADER_COMMITMENT_PERIOD{600};
 
 //! Only feed headers to validation once this many headers on top have been
 //! received and validated against commitments.
-constexpr size_t REDOWNLOAD_BUFFER_SIZE{13959}; // 13959/584 = ~23.9 commitments
+constexpr size_t REDOWNLOAD_BUFFER_SIZE{14308}; // 14308/600 = ~23.8 commitments
 
 // Our memory analysis assumes 48 bytes for a CompressedHeader (so we should
 // re-calculate parameters if we compress further)
