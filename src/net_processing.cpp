@@ -1680,6 +1680,11 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
                 } else {
                     connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCK, *pblock));
                 }
+            } else if (inv.IsMsgMWEBHeader()) {
+                if (pblock->GetHogEx() != nullptr && !pblock->mweb_block.IsNull()) {
+                    CMerkleBlockWithMWEB merkle_block_with_mweb(*pblock);
+                    connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MWEBHEADER, merkle_block_with_mweb));
+                }
             }
         }
 

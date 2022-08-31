@@ -8,7 +8,7 @@ from test_framework.blocktools import (create_coinbase, NORMAL_GBT_REQUEST_PARAM
 from test_framework.messages import (CBlock, MWEBBlock)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
-from test_framework.ltc_util import create_hogex, get_mweb_header_tip, setup_mweb_chain
+from test_framework.ltc_util import create_hogex, get_mweb_header, setup_mweb_chain
 
 class MWEBMiningTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -28,7 +28,7 @@ class MWEBMiningTest(BitcoinTestFramework):
         next_height = int(gbt["height"])        
 
         # Build MWEB block
-        mweb_header = get_mweb_header_tip(node)
+        mweb_header = get_mweb_header(node)
         mweb_header.height = next_height
         mweb_header.rehash()
         mweb_block = MWEBBlock(mweb_header)
@@ -46,7 +46,7 @@ class MWEBMiningTest(BitcoinTestFramework):
         block.nBits = int(gbt["bits"], 16)
         block.nNonce = 0
         block.vtx = vtx
-        block.mweb_block = mweb_block.serialize().hex()
+        block.mweb_block = mweb_block
         block.hashMerkleRoot = block.calc_merkle_root()
 
         # Call getblocktemplate with the block proposal

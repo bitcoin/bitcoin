@@ -260,6 +260,13 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char* WTXIDRELAY;
+/**
+ * Contains a CMerkleBlockWithMWEB.
+ * Sent in response to a getdata message which requested a
+ * block using the inventory type MSG_MWEB_HEADER.
+ * @since protocol version 70017 as described by LIP-0007
+ */
+extern const char* MWEBHEADER;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -427,6 +434,7 @@ enum GetDataMsg : uint32_t {
     // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
     MSG_MWEB_BLOCK = MSG_WITNESS_BLOCK | MSG_MWEB_FLAG,
     MSG_MWEB_TX = MSG_WITNESS_TX | MSG_MWEB_FLAG,
+    MSG_MWEB_HEADER = 8 | MSG_MWEB_FLAG,            //!< Defined in LIP-0007
 };
 
 /** inv message data */
@@ -451,6 +459,7 @@ public:
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
     bool IsMsgMWEBBlk() const { return type == MSG_MWEB_BLOCK; }
+    bool IsMsgMWEBHeader() const { return type == MSG_MWEB_HEADER; }
 
     // Combined-message helper methods
     bool IsGenTxMsg() const
@@ -459,7 +468,7 @@ public:
     }
     bool IsGenBlkMsg() const
     {
-        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK || type == MSG_MWEB_BLOCK;
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK || type == MSG_MWEB_BLOCK || type == MSG_MWEB_HEADER;
     }
 
     uint32_t type;
