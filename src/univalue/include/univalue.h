@@ -80,14 +80,14 @@ public:
     bool isArray() const { return (typ == VARR); }
     bool isObject() const { return (typ == VOBJ); }
 
-    void push_back(const UniValue& val);
+    void push_back(UniValue val);
     void push_backV(const std::vector<UniValue>& vec);
     template <class It>
     void push_backV(It first, It last);
 
-    void __pushKV(const std::string& key, const UniValue& val);
-    void pushKV(const std::string& key, const UniValue& val);
-    void pushKVs(const UniValue& obj);
+    void __pushKV(std::string key, UniValue val);
+    void pushKV(std::string key, UniValue val);
+    void pushKVs(UniValue obj);
 
     std::string write(unsigned int prettyIndent = 0,
                       unsigned int indentLevel = 0) const;
