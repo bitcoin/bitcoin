@@ -6,6 +6,7 @@
 #define SYSCOIN_THREADINTERRUPT_H
 
 #include <sync.h>
+#include <threadsafety.h>
 
 #include <atomic>
 #include <chrono>
