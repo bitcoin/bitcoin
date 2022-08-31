@@ -831,7 +831,7 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
-static std::string FormatException(const std::exception* pex, const char* pszThread)
+static std::string FormatException(const std::exception* pex, std::string_view pszThread)
 {
 #ifdef WIN32
     char pszModule[MAX_PATH] = "";
@@ -847,7 +847,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
             "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 }
 
-void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception* pex, std::string_view pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
