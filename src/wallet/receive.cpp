@@ -110,11 +110,6 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
     }
 }
 
-bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
-{
-    return ScriptIsChange(wallet, txout.scriptPubKey);
-}
-
 CAmount OutputGetChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -259,7 +254,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
-            if (!include_change && OutputIsChange(wallet, txout))
+            if (!include_change && IsOutputChange(wallet, *wtx.tx, i))
                 continue;
         }
         else if (!(fIsMine & filter))
@@ -425,14 +420,14 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
             // group change with input addresses
             if (any_mine)
             {
-               for (const CTxOut& txout : wtx.tx->vout)
-                   if (OutputIsChange(wallet, txout))
-                   {
+               for (size_t pos = 0; pos < wtx.tx->vout.size(); pos++) {
+                   if (IsOutputChange(wallet, *wtx.tx, pos)) {
                        CTxDestination txoutAddr;
-                       if(!ExtractDestination(txout.scriptPubKey, txoutAddr))
+                       if (!ExtractDestination(wtx.tx->vout[pos].scriptPubKey, txoutAddr))
                            continue;
                        grouping.insert(txoutAddr);
                    }
+               }
             }
             if (grouping.size() > 0)
             {
