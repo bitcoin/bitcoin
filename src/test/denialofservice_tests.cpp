@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         /*successfully_connected=*/true,
         /*remote_services=*/ServiceFlags(NODE_NETWORK),
         /*local_services=*/ServiceFlags(NODE_NETWORK),
-        /*permission_flags=*/NetPermissionFlags::None,
         /*version=*/PROTOCOL_VERSION,
         /*relay_txs=*/true);
     TestOnlyResetTimeData();

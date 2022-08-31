@@ -260,7 +260,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
         }
         UniValue permissions(UniValue::VARR);
-        for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {
+        for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);

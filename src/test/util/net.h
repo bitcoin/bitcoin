@@ -43,7 +43,6 @@ struct ConnmanTestMsg : public CConnman {
                    bool successfully_connected,
                    ServiceFlags remote_services,
                    ServiceFlags local_services,
-                   NetPermissionFlags permission_flags,
                    int32_t version,
                    bool relay_txs)
         EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
