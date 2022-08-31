@@ -334,6 +334,11 @@ public:
     void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
 
+struct CNodeOptions
+{
+    std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
+};
+
 /** Information about a peer */
 class CNode
 {
@@ -522,7 +527,7 @@ public:
           const std::string& addrNameIn,
           ConnectionType conn_type_in,
           bool inbound_onion,
-          std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
+          CNodeOptions&& node_opts = {});
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 

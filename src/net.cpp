@@ -556,7 +556,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              pszDest ? pszDest : "",
                              conn_type,
                              /*inbound_onion=*/false,
-                             std::move(i2p_transient_session));
+                             CNodeOptions{ .i2p_sam_session = std::move(i2p_transient_session) });
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -2722,7 +2722,7 @@ CNode::CNode(NodeId idIn,
              const std::string& addrNameIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
-             std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+             CNodeOptions&& node_opts)
     : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
       m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
       m_sock{sock},
@@ -2735,7 +2735,7 @@ CNode::CNode(NodeId idIn,
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
       m_conn_type{conn_type_in},
-      m_i2p_sam_session{std::move(i2p_sam_session)}
+      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
