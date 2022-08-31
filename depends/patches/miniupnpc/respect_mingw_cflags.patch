@@ -1,0 +1,23 @@
+commit fec515a7ac9991a0ee91068fda046b54b191155e
+Author: fanquake <fanquake@gmail.com>
+Date:   Wed Jul 27 15:52:37 2022 +0100
+
+    build: respect CFLAGS in makefile.mingw
+    
+    Similar to the other Makefile.
+
+    Cherry-pick of https://github.com/miniupnp/miniupnp/pull/619.
+
+diff --git a/Makefile.mingw b/Makefile.mingw
+index 2bff7bd..88430d2 100644
+--- a/Makefile.mingw
++++ b/Makefile.mingw
+@@ -19,7 +19,7 @@ else
+ RM = rm -f
+ endif
+ #CFLAGS = -Wall -g -DDEBUG -D_WIN32_WINNT=0X501
+-CFLAGS = -Wall -W -Wstrict-prototypes -Os -DNDEBUG -D_WIN32_WINNT=0X501
++CFLAGS ?= -Wall -W -Wstrict-prototypes -Os -DNDEBUG -D_WIN32_WINNT=0X501
+ LDLIBS = -lws2_32 -liphlpapi
+ # -lwsock32
+ # -liphlpapi is needed for GetBestRoute() and GetIpAddrTable()
