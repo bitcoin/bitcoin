@@ -4416,7 +4416,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             // Check work on this block against our anti-dos thresholds.
             const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
-            if (prev_block && prev_block->nChainWork + GetBlockProof(pblock->GetBlockHeader()) >= GetAntiDoSWorkThreshold()) {
+            if (prev_block && prev_block->nChainWork + GetBlockProof(*pblock) >= GetAntiDoSWorkThreshold()) {
                 min_pow_checked = true;
             }
         }
