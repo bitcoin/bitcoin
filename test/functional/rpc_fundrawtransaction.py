@@ -635,7 +635,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn fee with many inputs")
 
         # Empty node1, send some small coins from node0 to node1.
-        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
+        self.nodes[1].sendall(recipients=[self.nodes[0].getnewaddress()])
         self.generate(self.nodes[1], 1)
 
         for _ in range(20):
@@ -661,7 +661,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn sign+send with many inputs")
 
         # Again, empty node1, send some small coins from node0 to node1.
-        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
+        self.nodes[1].sendall(recipients=[self.nodes[0].getnewaddress()])
         self.generate(self.nodes[1], 1)
 
         for _ in range(20):
