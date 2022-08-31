@@ -18,6 +18,9 @@
 #include <validation.h> // For g_chainman
 #include <warnings.h>
 
+#include <string>
+#include <utility>
+
 using node::ReadBlockFromDisk;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
@@ -62,8 +65,8 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
     batch.Write(DB_BEST_BLOCK, locator);
 }
 
-BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain)
-    : m_chain{std::move(chain)} {}
+BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
+    : m_chain{std::move(chain)}, m_name{std::move(name)} {}
 
 BaseIndex::~BaseIndex()
 {
