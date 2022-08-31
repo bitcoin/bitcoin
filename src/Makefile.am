@@ -75,10 +75,31 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 $(LIBBLS):
-	$(AM_V_at) CC='$(CC)' CXX='$(CXX)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+	$(AM_V_at) \
+		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		CC='$(CC)' \
+		CXX='$(CXX)' \
+		CFLAGS='$(CXXFLAGS)' \
+		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
+		$(MAKE) $(AM_MAKEFLAGS) -C bls lib/libbls384_256.a
+	$(RANLIB) bls/lib/libbls384_256.a
 
 $(LIBMCL):
-	$(AM_V_at) MCL_USE_LLVM=0 CC='$(CC)' CXX='$(CXX)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' $(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
+	$(AM_V_at) \
+		MCL_USE_LLVM=0 \
+		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		CC='$(CC)' \
+		CXX='$(CXX)' \
+		CFLAGS='$(CXXFLAGS)' \
+		LDFLAGS='$(LDFLAGS)' \
+		ARFLAGS='$(ARFLAGS)' \
+		AR='$(AR)' \
+		RANLIB='$(RANLIB)' \
+		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
+	$(RANLIB) bls/mcl/lib/libmcl.a
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
