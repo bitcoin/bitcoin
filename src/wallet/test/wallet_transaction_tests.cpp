@@ -188,6 +188,21 @@ BOOST_FIXTURE_TEST_CASE(descriptors_wallet_detect_change_output, TestChain100Set
         // TODO: FIXME, Currently, change detection fails when the user sets a custom label to a destination created from an internal path.
         BOOST_CHECK(OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
     }
+
+    {
+        // 4) Test coins reception into an internal address directly.
+        //    As the wallet is receiving those coins from outside, them should not be detected as change.
+
+        // Add balance to external wallet
+        auto op_funding_tx = CreateAndAddTx(wallet, *external_wallet->GetNewDestination(OutputType::BECH32, ""), 15 * COIN);
+        const CBlock& block = CreateAndProcessBlock({CMutableTransaction(*op_funding_tx.tx)}, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey().GetID())));
+        auto block_info = kernel::MakeBlockInfo(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()), &block);
+        for (const auto& it_wallet : {wallet.get(), external_wallet.get()}) it_wallet->blockConnected(ChainstateRole::NORMAL, block_info);
+
+        // Send coins to the local wallet internal address directly.
+        auto op_tx = CreateAndAddTx(external_wallet, *Assert(wallet->GetNewChangeDestination(OutputType::BECH32)), 10 * COIN);
+        BOOST_CHECK(!OutputIsChange(wallet, op_tx.tx, *op_tx.change_pos));
+    }
 }
 
 CTxDestination deriveDestination(const std::unique_ptr<Descriptor>& descriptor, int index, const FlatSigningProvider& privkey_provider)

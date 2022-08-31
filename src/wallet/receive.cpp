@@ -56,6 +56,7 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
     // source address is not under one of the wallet internal spkms, we don't consider
     // the output as change.
     // Important note: the legacy spkm is on the internal spkm set as well
+    // Future: Specialize `ScriptIsChange` into `TxOutputIsChange` so we can distinguish coins received on internal addresses from change outputs.
     std::set<ScriptPubKeyMan*> internal_spkms = wallet.GetAllScriptPubKeyMans(/*only_internal=*/true);
     SignatureData sigdata;
     ScriptPubKeyMan* spkm{nullptr};
