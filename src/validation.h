@@ -430,9 +430,8 @@ enum class CoinsCacheSizeState
  * library, callbacks via the validation interface, or read/write-to-disk
  * functions (eventually this will also be via callbacks).
  *
- * Anything that is contingent on the current tip of the chain is stored here,
- * whereas block information and metadata independent of the current tip is
- * kept in `BlockManager`.
+ * Anything contingent on the chain's current tip is stored here, whereas
+ * block information and metadata independent of the current tip are kept in `BlockManager`.
  */
 class CChainState
 {
