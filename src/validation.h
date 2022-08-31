@@ -394,7 +394,7 @@ bool TestBlockValidity(BlockValidationState& state,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Check with the proof of work on each blockheader matches the value in nBits */
-bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams);
+bool HasValidProofOfWork(const std::span<const CBlockHeader> headers, const Consensus::Params& consensusParams);
 
 /** Check if a block has been mutated (with respect to its merkle root and witness commitments). */
 bool IsBlockMutated(const CBlock& block, bool check_witness_root);
