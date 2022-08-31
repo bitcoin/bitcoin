@@ -48,6 +48,19 @@ CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminef
     return nCredit;
 }
 
+bool IsOutputChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    // If at least one of the inputs is from the wallet, then there might be a change output.
+    // Otherwise, it's definitely not a change output.
+    if (!std::any_of(tx.vin.begin(), tx.vin.end(),
+                     [&wallet](const CTxIn& in) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) { return InputIsMine(wallet, in); })) {
+        return false;
+    }
+
+    return ScriptIsChange(wallet, tx.vout.at(change_pos).scriptPubKey);
+}
+
 bool ScriptIsChange(const CWallet& wallet, const CScript& script)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -56,7 +69,6 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
     // source address is not under one of the wallet internal spkms, we don't consider
     // the output as change.
     // Important note: the legacy spkm is on the internal spkm set as well
-    // Future: Specialize `ScriptIsChange` into `TxOutputIsChange` so we can distinguish coins received on internal addresses from change outputs.
     std::set<ScriptPubKeyMan*> internal_spkms = wallet.GetAllScriptPubKeyMans(/*only_internal=*/true);
     SignatureData sigdata;
     ScriptPubKeyMan* spkm{nullptr};
@@ -103,21 +115,21 @@ bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
     return ScriptIsChange(wallet, txout.scriptPubKey);
 }
 
-CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
+CAmount OutputGetChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos)
 {
     AssertLockHeld(wallet.cs_wallet);
+    const CTxOut& txout = tx.vout.at(change_pos);
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
+    return IsOutputChange(wallet, tx, change_pos) ? txout.nValue : 0;
 }
 
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
 {
     LOCK(wallet.cs_wallet);
     CAmount nChange = 0;
-    for (const CTxOut& txout : tx.vout)
-    {
-        nChange += OutputGetChange(wallet, txout);
+    for (size_t change_pos=0 ; change_pos<tx.vout.size(); change_pos++) {
+        nChange += OutputGetChange(wallet, tx, change_pos);
         if (!MoneyRange(nChange))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }

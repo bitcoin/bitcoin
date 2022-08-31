@@ -80,7 +80,7 @@ std::unique_ptr<CWallet> CreateEmtpyWallet(TestChain100Setup* context, bool only
 
 bool OutputIsChange(const std::unique_ptr<CWallet>& wallet, const CTransactionRef& tx, unsigned int change_pos)
 {
-    return WITH_LOCK(wallet->cs_wallet, return OutputIsChange(*wallet, tx->vout.at(change_pos)));
+    return WITH_LOCK(wallet->cs_wallet, return IsOutputChange(*wallet, *tx, change_pos));
 }
 
 // Creates a transaction and adds it to the wallet via the mempool signal
