@@ -151,8 +151,7 @@ QModelIndex PeerTableModel::index(int row, int column, const QModelIndex& parent
 
 void PeerTableModel::refresh()
 {
-    interfaces::Node::NodesStats nodes_stats;
-    m_node.getNodesStats(nodes_stats);
+    interfaces::Node::NodesStats nodes_stats{m_node.getNodesStats()};
     decltype(m_peers_data) new_peers_data;
     new_peers_data.reserve(nodes_stats.size());
     for (const auto& node_stats : nodes_stats) {

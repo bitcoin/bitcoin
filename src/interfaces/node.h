@@ -127,7 +127,7 @@ public:
 
     //! Get stats for connected nodes.
     using NodesStats = std::vector<std::pair<CNodeStats, CNodeStateStats>>;
-    virtual bool getNodesStats(NodesStats& stats) = 0;
+    virtual NodesStats getNodesStats() = 0;
 
     //! Get ban map entries.
     virtual bool getBanned(banmap_t& banmap) = 0;

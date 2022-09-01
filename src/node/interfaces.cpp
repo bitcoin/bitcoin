@@ -165,10 +165,10 @@ public:
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
     }
-    bool getNodesStats(NodesStats& stats) override
+    NodesStats getNodesStats() override
     {
-        stats.clear();
-        if (!m_context->connman) return false;
+        interfaces::Node::NodesStats stats;
+        if (!m_context->connman) return stats;
 
         std::vector<CNodeStats> stats_temp;
         m_context->connman->GetNodeStats(stats_temp);
@@ -186,7 +186,7 @@ public:
                 }
             }
         }
-        return true;
+        return stats;
     }
     bool getBanned(banmap_t& banmap) override
     {
