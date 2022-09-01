@@ -336,6 +336,7 @@ public:
 
 struct CNodeOptions
 {
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
 };
 
@@ -349,7 +350,7 @@ public:
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
     const std::unique_ptr<const TransportSerializer> m_serializer;
 
-    NetPermissionFlags m_permissionFlags{NetPermissionFlags::None}; // treated as const outside of fuzz tester
+    const NetPermissionFlags m_permissionFlags;
 
     /**
      * Socket used for communication with the node.

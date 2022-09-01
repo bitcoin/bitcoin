@@ -1027,9 +1027,11 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                              addr_bind,
                              /*addrNameIn=*/"",
                              ConnectionType::INBOUND,
-                             inbound_onion);
+                             inbound_onion,
+                             CNodeOptions{
+                               .permission_flags = permissionFlags,
+                             });
     pnode->AddRef();
-    pnode->m_permissionFlags = permissionFlags;
     pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
@@ -2725,6 +2727,7 @@ CNode::CNode(NodeId idIn,
              CNodeOptions&& node_opts)
     : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
       m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
+      m_permissionFlags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
