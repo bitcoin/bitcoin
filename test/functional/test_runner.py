@@ -358,6 +358,7 @@ BASE_SCRIPTS = [
     'feature_asset_mint.py',
     'feature_asset_burn.py',
     'feature_asset_notary.py',
+    'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time

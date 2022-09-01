@@ -320,7 +320,7 @@ private:
     std::string m_name;
 
     /** Internal database handle. */
-    std::unique_ptr<WalletDatabase> const m_database;
+    std::unique_ptr<WalletDatabase> m_database;
 
     /**
      * The following is used to keep track of how far behind the wallet is
@@ -917,6 +917,7 @@ public:
     void DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool internal);
 
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
+    void SetupDescriptorScriptPubKeyMans(const CExtKey& master_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void SetupDescriptorScriptPubKeyMans() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Return the DescriptorScriptPubKeyMan for a WalletDescriptor if it is already in the wallet
@@ -929,6 +930,20 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /** Move all records from the BDB database to a new SQLite database for storage.
+     * The original BDB file will be deleted and replaced with a new SQLite file.
+     * A backup is not created.
+     * May crash if something unexpected happens in the filesystem.
+     */
+    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Get all of the descriptors from a legacy wallet
+    std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Adds the ScriptPubKeyMans given in MigrationData to this wallet, removes LegacyScriptPubKeyMan,
+    //! and where needed, moves tx and address book entries to watchonly_wallet or solvable_wallet
+    bool ApplyMigrationData(MigrationData& data, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
@@ -990,6 +1005,16 @@ bool AddAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &assetInf
 bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig);
 
 bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
+
+struct MigrationResult {
+    std::string wallet_name;
+    std::shared_ptr<CWallet> watchonly_wallet;
+    std::shared_ptr<CWallet> solvables_wallet;
+    fs::path backup_path;
+};
+
+//! Do all steps to migrate a legacy wallet to a descriptor wallet
+util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>&& wallet, WalletContext& context);
 } // namespace wallet
 
 #endif // SYSCOIN_WALLET_WALLET_H
