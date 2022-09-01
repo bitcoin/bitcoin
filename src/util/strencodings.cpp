@@ -12,6 +12,7 @@
 #include <limits>
 #include <optional>
 // SYSCOIN
+#include <tinyformat.h>
 #include <math.h>
 #include <errno.h>
 #include <ostream>

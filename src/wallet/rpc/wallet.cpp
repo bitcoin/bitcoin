@@ -725,7 +725,7 @@ static RPCHelpMan migratewallet()
             HelpExampleCli("migratewallet", "")
             + HelpExampleRpc("migratewallet", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return NullUniValue;
