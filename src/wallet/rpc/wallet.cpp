@@ -701,6 +701,59 @@ RPCHelpMan simulaterawtransaction()
     };
 }
 
+static RPCHelpMan migratewallet()
+{
+    return RPCHelpMan{"migratewallet",
+        "EXPERIMENTAL warning: This call may not work as expected and may be changed in future releases\n"
+        "\nMigrate the wallet to a descriptor wallet.\n"
+        "A new wallet backup will need to be made.\n"
+        "\nThe migration process will create a backup of the wallet before migrating. This backup\n"
+        "file will be named <wallet name>-<timestamp>.legacy.bak and can be found in the directory\n"
+        "for this wallet. In the event of an incorrect migration, the backup can be restored using restorewallet." +
+        HELP_REQUIRING_PASSPHRASE,
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "wallet_name", "The name of the primary migrated wallet"},
+                {RPCResult::Type::STR, "watchonly_name", /*optional=*/true, "The name of the migrated wallet containing the watchonly scripts"},
+                {RPCResult::Type::STR, "solvables_name", /*optional=*/true, "The name of the migrated wallet containing solvable but not watched scripts"},
+                {RPCResult::Type::STR, "backup_path", "The location of the backup of the original wallet"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("migratewallet", "")
+            + HelpExampleRpc("migratewallet", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return NullUniValue;
+
+            EnsureWalletIsUnlocked(*wallet);
+
+            WalletContext& context = EnsureWalletContext(request.context);
+
+            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(std::move(wallet), context);
+            if (!res) {
+                throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
+            }
+
+            UniValue r{UniValue::VOBJ};
+            r.pushKV("wallet_name", res->wallet_name);
+            if (res->watchonly_wallet) {
+                r.pushKV("watchonly_name", res->watchonly_wallet->GetName());
+            }
+            if (res->solvables_wallet) {
+                r.pushKV("solvables_name", res->solvables_wallet->GetName());
+            }
+            r.pushKV("backup_path", res->backup_path.u8string());
+
+            return r;
+        },
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -820,6 +873,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &listwallets},
         {"wallet", &loadwallet},
         {"wallet", &lockunspent},
+        {"wallet", &migratewallet},
         {"wallet", &newkeypool},
         {"wallet", &removeprunedfunds},
         {"wallet", &rescanblockchain},
