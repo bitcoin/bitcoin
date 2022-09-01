@@ -108,6 +108,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         self.run_rbf_opt_in_test()
         self.run_externally_generated_address_test()
+        self.run_coinjoin_metadata_test()
         self.run_invalid_parameters_test()
 
     def run_rbf_opt_in_test(self):
@@ -276,6 +277,59 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_equal(['pizza1'], self.nodes[0].getaddressinfo(addr1)['labels'])
         assert_equal(['pizza2'], self.nodes[0].getaddressinfo(addr2)['labels'])
         assert_equal(['pizza3'], self.nodes[0].getaddressinfo(addr3)['labels'])
+
+    def run_coinjoin_metadata_test(self):
+        self.log.info("Test listtransactions RPC output for a simple coinjoin")
+
+        addr_pay0 = self.nodes[0].getnewaddress()
+        addr_pay1 = self.nodes[1].getnewaddress()
+        addr_change0 = self.nodes[0].getrawchangeaddress()
+        addr_change1 = self.nodes[1].getrawchangeaddress()
+
+        rawtx = self.nodes[0].createrawtransaction(
+            inputs=(
+                {
+                    'txid': self.nodes[0].send(outputs=({self.nodes[0].getnewaddress(): 50},), options={'change_position': 1})['txid'],
+                    'vout': 0,
+                },
+                {
+                    'txid': self.nodes[1].send(outputs=({self.nodes[1].getnewaddress(): 50},), options={'change_position': 1})['txid'],
+                    'vout': 0,
+                },
+            ), outputs=(
+                {addr_pay0: 1},
+                {addr_change0: 47},
+                {addr_change1: 47},
+                {addr_pay1: 2},
+                # 3 BTC left for fee
+            )
+        )
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        rawtx = self.nodes[1].signrawtransactionwithwallet(rawtx)['hex']
+        self.sync_all()
+        txid = self.nodes[0].sendrawtransaction(rawtx, 0)
+        self.nodes[1].sendrawtransaction(rawtx, 0)
+
+        # Currently, the result is nonsensical/broken:
+        # node 0 thinks it received 1 BTC, then sent 2 BTC + 47 BTC change + 1 BTC with a -47 BTC fee
+        # node 1 thinks it received 2 BTC, then sent 2 BTC + 47 BTC change + 1 BTC with a -47 BTC fee
+        txlist_node0 = self.nodes[0].listtransactions('*', 5)
+        txlist_node1 = self.nodes[1].listtransactions('*', 5)
+        assert txlist_node0.pop(0)['txid'] != txid
+        assert txlist_node1.pop(0)['txid'] != txid
+        txlist = list((tx['address'], tx['amount'], tx['category'], tx.get('fee', None)) for tx in txlist_node0 + txlist_node1)
+        assert_equal(txlist, [
+            # node 0:
+            (addr_pay0, 1, 'receive', None),
+            (addr_pay1, -2, 'send', 47),
+            (addr_change1, -47, 'send', 47),
+            (addr_pay0, -1, 'send', 47),
+            # node 1:
+            (addr_pay1, 2, 'receive', None),
+            (addr_pay1, -2, 'send', 47),
+            (addr_change0, -47, 'send', 47),
+            (addr_pay0, -1, 'send', 47),
+        ])
 
     def run_invalid_parameters_test(self):
         self.log.info("Test listtransactions RPC parameter validity")
