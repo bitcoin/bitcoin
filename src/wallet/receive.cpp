@@ -202,11 +202,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
-    if (nDebit > 0) // debit>0 means we signed/sent this transaction
-    {
-        CAmount nValueOut = wtx.tx->GetValueOut();
-        nFee = nDebit - nValueOut;
-    }
+    CAmount my_output_amount{0};
 
     LOCK(wallet.cs_wallet);
     // Sent/received.
@@ -219,6 +215,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
+            my_output_amount += txout.nValue;
             if (!include_change && OutputIsChange(wallet, txout))
                 continue;
         }
@@ -246,6 +243,10 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
             listReceived.push_back(output);
     }
 
+    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    {
+        nFee = nDebit - my_output_amount;
+    }
 }
 
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
