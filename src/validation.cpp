@@ -2153,10 +2153,7 @@ bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) { 
-    int64_t nTimeNow = 0;
-    if(nMedianTime > 0)
-        nTimeNow = TicksSinceEpoch<std::chrono::seconds>(adjusted_time_callback());
+bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const int64_t &nTimeNow, NEVMDataVec &nevmDataVecOut) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
@@ -2226,7 +2223,7 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut, bool stripdata) {
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2267,7 +2264,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
             return false;   
         }
     }
-    if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, nTimeNow, nevmDataVecOut)) {
         for (auto &nevmDataEntry : vecNevmData) {
             if(nevmDataEntry.nevmData) {
                 delete nevmDataEntry.nevmData;
@@ -2284,7 +2281,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
     }
     return true;
 }
-bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const int64_t nMedianTime, const std::function<NodeClock::time_point()>& adjusted_time_callback, NEVMDataVec &nevmDataVecOut) {
+bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut) {
     if(!tx->IsNEVMData()) {
         return true;
     }
@@ -2308,7 +2305,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const in
             return false;   
         }
     }
-    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, adjusted_time_callback, nevmDataVecOut)) {
+    if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, nTimeNow, nevmDataVecOut)) {
         return false;
     }
     // set MPT to 0 for mempool
@@ -2512,8 +2509,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     AssetMap mapAssets;
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
-    std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     NEVMDataVec NEVMDataVecOut;
+    std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     return ConnectBlock(block, state, pindex, view, fJustCheck, mapAssets, mapMintKeys, mapNEVMTxRoots, NEVMDataVecOut, vecTXIDPairs, bReverify);       
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
@@ -2703,7 +2700,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 if(nevmData.IsNull()) {
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-data-invalid");
                 }
-                NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
+                // if data exists go ahead and store the MPT so it can track pruning later
+                if(pnevmdatadb->ExistsData(nevmData.vchVersionHash))
+                    NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
@@ -3303,7 +3302,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(NEVMDataVecOut, pindexNew->GetMedianTimePast())){
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(NEVMDataVecOut, pindexNew->GetMedianTimePast())) {
             return error("Error flushing to Syscoin DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     } 
@@ -3688,11 +3687,6 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
     // and mark all of them as conflicting.
     LogPrint(BCLog::CHAINLOCKS, "CChainState::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
     EnforceBlock(state, pindex);
-    // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
-    // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
-    if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
-        LogPrintf("CChainState::%s -- CNEVMDataDB::Prune failed\n", __func__);
-    }
     // no cs_main allowed
     bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
     if (activateNeeded) {
@@ -4980,7 +4974,9 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                 if(nevmData.IsNull()) {
                     return error("%s: Consensus::CheckTxInputs %s nevm-data-invalid", __func__, txHash.ToString());
                 }
-                NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
+                // if data exists go ahead and store the MPT so it can track pruning later
+                if(pnevmdatadb->ExistsData(nevmData.vchVersionHash))
+                    NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
             }
             vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
 
@@ -5079,6 +5075,9 @@ bool CChainState::ReplayBlocks()
     if(passetdb != nullptr){
         if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(mapNEVMDataConnect, pindexNew->GetMedianTimePast())){
             return error("RollbackBlock(): Error flushing to Syscoin dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
+        }
+        if(!pnevmdatadb->Prune(pindexNew->GetMedianTimePast())) {
+            return error("RollbackBlock(): -- CNEVMDataDB::Prune failed on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
     dbTx->Commit();

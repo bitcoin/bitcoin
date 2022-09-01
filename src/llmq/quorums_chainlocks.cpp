@@ -17,6 +17,7 @@
 #include <scheduler.h>
 #include <util/thread.h>
 #include <util/system.h>
+#include <services/assetconsensus.h>
 namespace llmq
 {
 
@@ -160,6 +161,11 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
         mapAttemptSignedRequestIds.clear();
+        // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
+        // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
+        if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
+            LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
+        }
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
         return true;
     }
@@ -193,6 +199,11 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 mapAttemptSignedRequestIds.clear();
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
+                // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
+                // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
+                if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
+                    LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
+                }
                 return true;
             }
         }

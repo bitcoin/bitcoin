@@ -326,7 +326,9 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-unexpected\n");
                 return false;  
             }
-            NEVMDataVecOut.emplace_back(nevmData.vchVersionHash); 
+            // only disconnect MPT (set to 0) if it already exists (don't add new MPT if doesn't exist in a rollback)
+            if(pnevmdatadb->ExistsMPT(nevmData.vchVersionHash))
+                NEVMDataVecOut.emplace_back(nevmData.vchVersionHash); 
         } 
     } 
     return true;       
@@ -643,13 +645,13 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                 return FormatSyscoinErrorMessage(state, "asset-non-existing", bSanityCheck);
             }
             else
-                mapAsset->second.second = std::move(theAsset);      
+                mapAsset->second.second = std::move(theAsset);     
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && nHeight > nLastKnownHeightOnStart) {
                 return FormatSyscoinErrorMessage(state, "asset-already-existing1", bSanityCheck);
             }
-            mapAsset->second.second = std::move(dbAsset);      
+            mapAsset->second.second = std::move(dbAsset);   
         }
     } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE && !mapAsset->second.second.IsNull() && nHeight > nLastKnownHeightOnStart) {
         return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
@@ -788,126 +790,126 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
             if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
-            if (theAsset.nPrecision != storedAssetRef.nPrecision) {
+            if (theAsset.nPrecision != storedAssetRef.nPrecision) { // NOLINT(*-use-after-move) 
                 return FormatSyscoinErrorMessage(state, "asset-invalid-precision", bSanityCheck);
             } 
-            if (!theAsset.strSymbol.empty()) {
+            if (!theAsset.strSymbol.empty()) { // NOLINT(*-use-after-move) 
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
-            if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) {
+            if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) { // NOLINT(*-use-after-move) 
                  return FormatSyscoinErrorMessage(state, "asset-invalid-notaryendpoint", bSanityCheck);
             }
-            if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
+            if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) { // NOLINT(*-use-after-move) 
                  return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
             }
             // cannot init or send supply
-            if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
+            if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) { // NOLINT(*-use-after-move) 
                 return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
-            if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_DATA) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-pubdata-privileges", bSanityCheck);
                 }
-                if (theAsset.strPubData.size() > MAX_VALUE_LENGTH) {
+                if (theAsset.strPubData.size() > MAX_VALUE_LENGTH) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-pubdata-too-big", bSanityCheck);
                 } 
                 // ensure prevdata is set to what db is now to be able to undo in disconnectblock
-                if(theAsset.strPrevPubData != storedAssetRef.strPubData && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.strPrevPubData != storedAssetRef.strPubData && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevdata", bSanityCheck);
                 }
                 // replace db data with new data
-                storedAssetRef.strPubData = std::move(theAsset.strPubData);
+                storedAssetRef.strPubData = std::move(theAsset.strPubData); // NOLINT(*-use-after-move) 
                 if (!storedAssetRef.strPubData.empty()) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_DATA;
                 } else {
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_DATA;
                 }
             } else {
-                if(!theAsset.strPrevPubData.empty() || !theAsset.strPubData.empty()) {
+                if(!theAsset.strPrevPubData.empty() || !theAsset.strPubData.empty()) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-data", bSanityCheck);
                 }
             }
                                         
-            if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_CONTRACT) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CONTRACT) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-contract-privileges", bSanityCheck);
                 }
-                if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) {
+                if (!theAsset.vchContract.empty() && theAsset.vchContract.size() != MAX_GUID_LENGTH) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
                 }
-                if(theAsset.vchPrevContract != storedAssetRef.vchContract && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.vchPrevContract != storedAssetRef.vchContract && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevcontract", bSanityCheck);
                 }
-                storedAssetRef.vchContract = std::move(theAsset.vchContract);
+                storedAssetRef.vchContract = std::move(theAsset.vchContract); // NOLINT(*-use-after-move) 
                 if (!storedAssetRef.vchContract.empty()) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_CONTRACT;
                 } else {
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_CONTRACT;
                 }
             } else {
-                if(!theAsset.vchContract.empty() || !theAsset.vchPrevContract.empty()) {
+                if(!theAsset.vchContract.empty() || !theAsset.vchPrevContract.empty()) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-contract", bSanityCheck);
                 }
             }
 
-            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_KEY) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-key-privileges", bSanityCheck);
                 }
-                if (!theAsset.vchNotaryKeyID.empty() && theAsset.vchNotaryKeyID.size() != MAX_GUID_LENGTH) {
+                if (!theAsset.vchNotaryKeyID.empty() && theAsset.vchNotaryKeyID.size() != MAX_GUID_LENGTH) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
                 }  
-                if(theAsset.vchPrevNotaryKeyID != storedAssetRef.vchNotaryKeyID && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.vchPrevNotaryKeyID != storedAssetRef.vchNotaryKeyID && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary-key", bSanityCheck);
                 }
-                storedAssetRef.vchNotaryKeyID = std::move(theAsset.vchNotaryKeyID);
+                storedAssetRef.vchNotaryKeyID = std::move(theAsset.vchNotaryKeyID); // NOLINT(*-use-after-move) 
                 if (!storedAssetRef.vchNotaryKeyID.empty()) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_NOTARY_KEY;
                 } else {
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_NOTARY_KEY;
                 }
             } else {
-                if(!theAsset.vchNotaryKeyID.empty() || !theAsset.vchPrevNotaryKeyID.empty()) {
+                if(!theAsset.vchNotaryKeyID.empty() || !theAsset.vchPrevNotaryKeyID.empty()) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary-key", bSanityCheck);
                 }   
             }
 
-            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_NOTARY_DETAILS) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-notary-privileges", bSanityCheck);
                 }
-                if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) {
+                if (theAsset.notaryDetails.strEndPoint.size() > MAX_VALUE_LENGTH) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-notary-too-big", bSanityCheck);
                 }
-                if(theAsset.prevNotaryDetails != storedAssetRef.notaryDetails && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.prevNotaryDetails != storedAssetRef.notaryDetails && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevnotary", bSanityCheck);
                 }
-                storedAssetRef.notaryDetails = std::move(theAsset.notaryDetails);
+                storedAssetRef.notaryDetails = std::move(theAsset.notaryDetails); // NOLINT(*-use-after-move) 
                 if (!storedAssetRef.notaryDetails.IsNull()) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_NOTARY_DETAILS;
                 } else {
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_NOTARY_DETAILS;
                 }
             } else {
-                if(!theAsset.notaryDetails.IsNull() || !theAsset.prevNotaryDetails.IsNull()) {
+                if(!theAsset.notaryDetails.IsNull() || !theAsset.prevNotaryDetails.IsNull()) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-notary", bSanityCheck);
                 }   
             }
 
-            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_AUXFEE) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_AUXFEE) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-auxfee-key-privileges", bSanityCheck);
                 }
-                if(!theAsset.auxFeeDetails.vchAuxFeeKeyID.empty() && theAsset.auxFeeDetails.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) {
+                if(!theAsset.auxFeeDetails.vchAuxFeeKeyID.empty() && theAsset.auxFeeDetails.vchAuxFeeKeyID.size() != MAX_GUID_LENGTH) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-auxfee-key", bSanityCheck);
                 }
-                if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
+                if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-auxfees-too-big", bSanityCheck);
                 }
-                if(theAsset.prevAuxFeeDetails != storedAssetRef.auxFeeDetails && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.prevAuxFeeDetails != storedAssetRef.auxFeeDetails && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevauxfees", bSanityCheck);
                 }
-                storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails);
+                storedAssetRef.auxFeeDetails = std::move(theAsset.auxFeeDetails); // NOLINT(*-use-after-move) 
                 
                 if (!storedAssetRef.auxFeeDetails.IsNull()) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_AUXFEE;
@@ -915,22 +917,22 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
                     storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_AUXFEE;
                 }
             } else {
-                if(!theAsset.auxFeeDetails.IsNull() || !theAsset.prevAuxFeeDetails.IsNull()) {
+                if(!theAsset.auxFeeDetails.IsNull() || !theAsset.prevAuxFeeDetails.IsNull()) {// NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
                 }   
             }
 
-            if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+            if(theAsset.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) { // NOLINT(*-use-after-move) 
                 if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_CAPABILITYFLAGS) && nHeight > nLastKnownHeightOnStart) {
                     return FormatSyscoinErrorMessage(state, "asset-insufficient-flags-privileges", bSanityCheck);
                 }
-                if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags && nHeight > nLastKnownHeightOnStart) {
+                if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags && nHeight > nLastKnownHeightOnStart) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
                 }
-                if(theAsset.nUpdateCapabilityFlags > ASSET_CAPABILITY_ALL) {
+                if(theAsset.nUpdateCapabilityFlags > ASSET_CAPABILITY_ALL) { // NOLINT(*-use-after-move) 
                     return FormatSyscoinErrorMessage(state, "asset-invalid-capabilityflags", bSanityCheck);
                 }
-                storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags);
+                storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags); // NOLINT(*-use-after-move) 
                 if (storedAssetRef.nUpdateCapabilityFlags != 0) {
                     storedAssetRef.nUpdateMask |= ASSET_UPDATE_CAPABILITYFLAGS;
                 } else {
@@ -1170,12 +1172,11 @@ bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDa
         const auto& pair = std::make_pair(dataProcess.nevmData->vchVersionHash, true);
         batch.Write(pair, dataProcess.nevmData->vchData);
     }
-    if(!vecNEVMDataToProcess.empty())
-        LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
+    LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
     return WriteBatch(batch);
 }
 // called on connect - put median passed time into index so we can track pruning
-bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMedianTime) {
+bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t& nMedianTime) {
     if(vecDataKeys.empty())
         return true;
     CDBBatch batch(*this);    
@@ -1183,21 +1184,18 @@ bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t nMe
         const auto& pair = std::make_pair(key, false);
         batch.Write(pair, nMedianTime);
     }
-    if(!vecDataKeys.empty())
-        LogPrint(BCLog::SYS, "Flushing, setting %d nevm heights\n", vecDataKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, setting %d nevm MPTs\n", vecDataKeys.size());
     return WriteBatch(batch);
 }
 bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
     if(vecDataKeys.empty())
         return true;
-    CDBBatch batch(*this);    
+    CDBBatch batch(*this);   
     for (const auto &key : vecDataKeys) {
         const auto& pair = std::make_pair(key, false);
-        if(Exists(pair))
-            batch.Write(pair, 0);
+        batch.Write(pair, 0);
     }
-    if(!vecDataKeys.empty())
-        LogPrint(BCLog::SYS, "Flushing, resetting %d nevm heights\n", vecDataKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, resetting %d nevm MPTs\n", vecDataKeys.size());
     return WriteBatch(batch);
 }
 bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
@@ -1205,16 +1203,15 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
         return true;
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
-        // erase data and time keys
+        // erase data and MPT keys
         const auto pairData = std::make_pair(key, true);
-        const auto pairTime = std::make_pair(key, false);
+        const auto pairMPT = std::make_pair(key, false);
         if(Exists(pairData))
             batch.Erase(pairData);
-        if(Exists(pairTime))   
-            batch.Erase(pairTime);
+        if(Exists(pairMPT))   
+            batch.Erase(pairMPT);
     }
-    if(!vecDataKeys.empty())
-        LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
     return WriteBatch(batch);
 }
 bool CNEVMDataDB::Prune(const int64_t nMedianTime) {

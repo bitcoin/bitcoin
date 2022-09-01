@@ -6,8 +6,6 @@
 #define SYSCOIN_BLOCKENCODINGS_H
 
 #include <primitives/block.h>
-// SYSCOIN
-#include <functional>
 namespace node {
 class BlockManager;
 } // namespace node
@@ -143,7 +141,7 @@ public:
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
     bool IsTxAvailable(size_t index) const;
     // SYSCOIN
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData, const int64_t nMedianTime = 0, const int nHeight = 0, const std::function<NodeClock::time_point()>& adjusted_time_callback = nullptr, const node::BlockManager* blockman = nullptr);
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData, const int64_t &nMedianTime = 0, const int nHeight = 0, const int64_t& nTimeNow = 0, const node::BlockManager* blockman = nullptr);
 };
 
 #endif // SYSCOIN_BLOCKENCODINGS_H

@@ -1974,7 +1974,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
             throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
         }
     }
-    if(pnevmdatadb->ExistsData(nevmData.vchVersionHash)) {
+    if(!fRegTest && pnevmdatadb->ExistsData(nevmData.vchVersionHash)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "NEVM data already exists in DB");
     }
     // FillNEVMData should fill in this data prior to relay

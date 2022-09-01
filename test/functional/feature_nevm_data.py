@@ -114,8 +114,6 @@ class NEVMDataTest(DashTestFramework):
         self.nodes[0].syscoincreaterawnevmblob('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         self.nodes[3].syscoincreaterawnevmblob('f40bd0d7f1b38686c799d32c854e11cc3c05d8f203080147f2d7587847da31af', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcae')
-        print('Checking for duplicate blob cannot create...')
-        assert_raises_rpc_error(-20, 'NEVM data already exists in DB', self.nodes[3].syscoincreaterawnevmblob, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aa')
         print('Generating blocks without waiting for mempools to sync...')
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:4])
@@ -124,7 +122,6 @@ class NEVMDataTest(DashTestFramework):
         self.sync_mempools(self.nodes[0:4])
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         print('Check for consistency...')
-        assert_raises_rpc_error(-20, 'NEVM data already exists in DB', self.nodes[0].syscoincreaterawnevmblob, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aa')
         assert_equal(self.nodes[0].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
@@ -147,6 +144,7 @@ class NEVMDataTest(DashTestFramework):
         self.sync_blocks(self.nodes[0:4])
         print('Test reindex...')
         self.restart_node(1, extra_args=self.extra_args[1] + ["-reindex"])
+        force_finish_mnsync(self.nodes[0])
         self.connect_nodes(1, 0)
         self.connect_nodes(0, 1)
         self.bump_mocktime(5, nodes=self.nodes[0:3])
@@ -158,6 +156,7 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[1].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         print('Start node 4...')
         self.start_node(4, extra_args=self.extra_args[4])
+        force_finish_mnsync(self.nodes[4])
         self.connect_nodes(4, 0)
         self.connect_nodes(3, 0)
         self.connect_nodes(2, 0)
@@ -182,9 +181,11 @@ class NEVMDataTest(DashTestFramework):
         self.bump_mocktime(3) # push median time over expiry
         time.sleep(1)
         self.generate(self.nodes[0], 10)
+        time.sleep(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.bump_mocktime(2) # push median time over expiry
         self.generate(self.nodes[0], 10)
+        time.sleep(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
@@ -193,6 +194,23 @@ class NEVMDataTest(DashTestFramework):
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[3].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[2].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[1].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+        print('Checking for duplicate versionhash...')
+        txGood = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aa')['txid']
+        self.sync_mempools(self.nodes[0:4])   
+        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'ab')['txid'] 
+        time.sleep(1)
+        # should give 'ProcessNEVMData(block): NEVM data duplicate' because it tries to create duplicate within block
+        assert_raises_rpc_error(-32603, "ProcessNewBlock, block not accepted", self.generate, self.nodes[1], 1)
+        time.sleep(1)
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[2].getrawtransaction, txid=txBad)
+        tip = self.generate(self.nodes[3], 1, sync_fun=self.no_op)[-1]
+        self.nodes[2].getrawtransaction(txid=txGood, blockhash=tip)
+        assert_raises_rpc_error(-5, "No such transaction found", self.nodes[2].getrawtransaction, txid=txBad, blockhash=tip)
+        time.sleep(1)
+        self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
+        self.nodes[1].getrawtransaction(txid=txBad)
+        # should give 'ProcessNEVMData(block): NEVM MPT duplicate' because it tries to assign new MPT while one is already confirmed
+        assert_raises_rpc_error(-32603, "ProcessNewBlock, block not accepted", self.generate, self.nodes[1], 1)
 
     def run_test(self):
         self.nodes[1].createwallet("")
