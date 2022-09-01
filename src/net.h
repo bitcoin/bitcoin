@@ -338,6 +338,7 @@ struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
+    bool prefer_evict = false;
 };
 
 /** Information about a peer */
@@ -399,7 +400,7 @@ public:
      * from the wire. This cleaned string can safely be logged or displayed.
      */
     std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
-    bool m_prefer_evict{false}; // This peer is preferred for eviction. (treated as const)
+    const bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);
     }
