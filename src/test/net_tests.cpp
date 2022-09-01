@@ -953,7 +953,7 @@ void message_serialize_deserialize_test(bool v2, const std::vector<CSerializedNe
 
             bool reject_message{true};
             bool disconnect{true};
-            CNetMessage result{deserializer->GetMessage(GetTime<std::chrono::microseconds>(), reject_message, disconnect)};
+            CNetMessage result{deserializer->GetMessage(GetTime<std::chrono::microseconds>(), reject_message, disconnect, {})};
             BOOST_CHECK(!reject_message);
             BOOST_CHECK(!disconnect);
             BOOST_CHECK_EQUAL(result.m_type, msg_orig.m_type);

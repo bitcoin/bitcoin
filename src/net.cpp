@@ -691,7 +691,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
             // decompose a transport agnostic CNetMessage from the deserializer
             bool reject_message{false};
             bool disconnect{false};
-            CNetMessage msg = m_deserializer->GetMessage(time, reject_message, disconnect);
+            CNetMessage msg = m_deserializer->GetMessage(time, reject_message, disconnect, {});
 
             if (disconnect) {
                 // v2 p2p incorrect MAC tag. Disconnect from peer.
@@ -789,7 +789,10 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message, bool& disconnect)
+CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time,
+                                                bool& reject_message,
+                                                bool& disconnect,
+                                                Span<const std::byte> aad)
 {
     // Initialize out parameter
     reject_message = false;
@@ -894,7 +897,10 @@ int V2TransportDeserializer::readData(Span<const uint8_t> pkt_bytes)
     return copy_bytes;
 }
 
-CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message, bool& disconnect)
+CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds time,
+                                                bool& reject_message,
+                                                bool& disconnect,
+                                                Span<const std::byte> aad)
 {
     const size_t min_contents_size = 1; // BIP324 1-byte message type id is the minimum contents
 
@@ -913,7 +919,7 @@ CNetMessage V2TransportDeserializer::GetMessage(const std::chrono::microseconds 
 
     BIP324HeaderFlags flags;
     size_t msg_type_size = 1; // at least one byte needed for message type
-    if (m_cipher_suite->Crypt({},
+    if (m_cipher_suite->Crypt(aad,
                               Span{reinterpret_cast<const std::byte*>(vRecv.data() + BIP324_LENGTH_FIELD_LEN), BIP324_HEADER_LEN + m_contents_size + RFC8439_EXPANSION},
                               Span{reinterpret_cast<std::byte*>(vRecv.data()), m_contents_size}, flags, false)) {
         // MAC check was successful
@@ -1006,7 +1012,7 @@ bool V2TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
 
     BIP324HeaderFlags flags{BIP324_NONE};
     // encrypt the payload, this should always succeed (controlled buffers, don't check the MAC during encrypting)
-    auto success = m_cipher_suite->Crypt({},
+    auto success = m_cipher_suite->Crypt(msg.aad,
                                          Span{reinterpret_cast<const std::byte*>(msg.data.data()), contents_size},
                                          Span{reinterpret_cast<std::byte*>(msg.data.data()), encrypted_pkt_size},
                                          flags, true);

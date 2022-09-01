@@ -70,7 +70,7 @@ FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serializa
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             bool reject_message{false};
             bool disconnect{false};
-            CNetMessage msg = deserializer.GetMessage(m_time, reject_message, disconnect);
+            CNetMessage msg = deserializer.GetMessage(m_time, reject_message, disconnect, {});
             assert(msg.m_type.size() <= CMessageHeader::COMMAND_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
