@@ -2255,12 +2255,24 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
     std::set<std::vector<uint8_t> > setVH;
     for (const auto &nevmDataEntry : vecNevmData) {
         if(!setVH.emplace(nevmDataEntry.nevmData->vchVersionHash).second) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM data duplicate\n");
+            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM data duplicate%s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
+            for (auto &nevmDataEntry : vecNevmData) {
+                if(nevmDataEntry.nevmData) {
+                    delete nevmDataEntry.nevmData;
+                    nevmDataEntry.nevmData = nullptr;
+                }
+            }
             return false;
         }
         int64_t nMedianTime = -1;
         if(!fReindex && pnevmdatadb->ReadMPT(nevmDataEntry.nevmData->vchVersionHash, nMedianTime) && nMedianTime != 0) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM MPT duplicate\n");
+            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM MPT duplicate %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
+            for (auto &nevmDataEntry : vecNevmData) {
+                if(nevmDataEntry.nevmData) {
+                    delete nevmDataEntry.nevmData;
+                    nevmDataEntry.nevmData = nullptr;
+                }
+            }
             return false;   
         }
     }
