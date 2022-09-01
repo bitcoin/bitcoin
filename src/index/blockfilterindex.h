@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_BLOCKFILTERINDEX_H
 #define BITCOIN_INDEX_BLOCKFILTERINDEX_H
 
+#include <attributes.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <flatfile.h>
@@ -47,9 +48,9 @@ protected:
 
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
 
-    BaseIndex::DB& GetDB() const override { return *m_db; }
+    BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
 
-    const char* GetName() const override { return m_name.c_str(); }
+    const char* GetName() const LIFETIMEBOUND override { return m_name.c_str(); }
 
 public:
     /** Constructs the index, which becomes available to be queried. */

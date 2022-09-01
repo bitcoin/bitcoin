@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <attributes.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -65,8 +66,8 @@ public:
     GCSFilter(const Params& params, const ElementSet& elements);
 
     uint32_t GetN() const { return m_N; }
-    const Params& GetParams() const { return m_params; }
-    const std::vector<unsigned char>& GetEncoded() const { return m_encoded; }
+    const Params& GetParams() const LIFETIMEBOUND { return m_params; }
+    const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND { return m_encoded; }
 
     /**
      * Checks if the element may be in the set. False positives are possible
@@ -128,10 +129,10 @@ public:
     BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo);
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
-    const uint256& GetBlockHash() const { return m_block_hash; }
-    const GCSFilter& GetFilter() const { return m_filter; }
+    const uint256& GetBlockHash() const LIFETIMEBOUND { return m_block_hash; }
+    const GCSFilter& GetFilter() const LIFETIMEBOUND { return m_filter; }
 
-    const std::vector<unsigned char>& GetEncodedFilter() const
+    const std::vector<unsigned char>& GetEncodedFilter() const LIFETIMEBOUND
     {
         return m_filter.GetEncoded();
     }
