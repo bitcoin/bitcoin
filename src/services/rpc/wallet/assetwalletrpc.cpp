@@ -1974,21 +1974,18 @@ static RPCHelpMan syscoincreaterawnevmblob()
             throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
         }
     }
-    if(!fRegTest && pnevmdatadb->ExistsData(nevmData.vchVersionHash)) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, "NEVM data already exists in DB");
-    }
     // FillNEVMData should fill in this data prior to relay
-    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData)) {
+    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData) || !pnevmdatadb->WriteDataSize(nevmData.vchVersionHash, nevmData.vchData.size())) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
     }
     UniValue res;
     try {
         res = send().HandleRequest(requestSend);
-    } catch(...) {
+    } catch(std::exception &e) {
         if(!EraseNEVMData({nevmData.vchVersionHash})) {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
         }
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
+        throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Transaction not complete or invalid %s", e.what()));
     }
     const UniValue &txidObj = find_value(res.get_obj(), "txid");
     if(txidObj.isNull()) {
@@ -2086,7 +2083,6 @@ static RPCHelpMan syscoincreatenevmblob()
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
             resObj.__pushKV("datasize", nevmData.nSize);
-            resObj.__pushKV("data", HexStr(nevmData.vchData));
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   

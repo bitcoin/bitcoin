@@ -2169,7 +2169,8 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
+        bool existsData = pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
+        bool dataDoesntExistsInDb = nMedianTime == 0 || !existsData;
         // dataDoesntExistInDb is checked here as its not OK semantically for data to be empty within the time window but pragmatically its fine protocol wise as we have the data
         // however this situation is possible since in PartiallyDownloadedBlock::InitData it will use mempool (local txs) that have already stripped data so its expected for the vchData to be empty for those (they are local anyway)
         // it wouldn't be OK for enforceNotHaveData if data existed when it shouldn't (means a peer is spamming)
@@ -2179,6 +2180,18 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         } else if(enforceNotHaveData && !nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
             return false;
+        }
+        // we don't be checking KZG commitment so we need to ensure enough fees were paid
+        if(existsData) {
+            uint32_t nReadData;
+            if(!pnevmdatadb->ReadDataSize(nevmDataEntry.nevmData->vchVersionHash, nReadData)) {
+                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM cant read data size of VH %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
+                return false;
+            }
+            if(nevmDataEntry.nevmData->nSize != nReadData) {
+                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->nSize, nReadData);
+                return false;
+            }
         }
         if(!nevmDataEntry.nevmData->vchData.empty() && dataDoesntExistsInDb) {
             vecNEVMDataToProcess.emplace_back(nevmDataEntry);
@@ -2252,28 +2265,21 @@ bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t 
             vecNevmData.emplace_back(entry);
         }
     }
-    std::set<std::vector<uint8_t> > setVH;
+    std::map<std::vector<uint8_t>, uint32_t> mapVH;
     for (const auto &nevmDataEntry : vecNevmData) {
-        if(!setVH.emplace(nevmDataEntry.nevmData->vchVersionHash).second) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM data duplicate%s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
-            for (auto &nevmDataEntry : vecNevmData) {
-                if(nevmDataEntry.nevmData) {
-                    delete nevmDataEntry.nevmData;
-                    nevmDataEntry.nevmData = nullptr;
+        auto it = mapVH.try_emplace(nevmDataEntry.nevmData->vchVersionHash, nevmDataEntry.nevmData->nSize);
+        // if it wasn't inserted (was found already) check that the commitment sizes match
+        if(!it.second) {
+            if(it.first->second != nevmDataEntry.nevmData->nSize) {
+                LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), it.first->second, nevmDataEntry.nevmData->nSize);
+                for (auto &nevmDataEntry : vecNevmData) {
+                    if(nevmDataEntry.nevmData) {
+                        delete nevmDataEntry.nevmData;
+                        nevmDataEntry.nevmData = nullptr;
+                    }
                 }
+                return false;
             }
-            return false;
-        }
-        int64_t nMedianTime = -1;
-        if(!fReindex && pnevmdatadb->ReadMPT(nevmDataEntry.nevmData->vchVersionHash, nMedianTime) && nMedianTime != 0) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData(block): NEVM MPT duplicate %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
-            for (auto &nevmDataEntry : vecNevmData) {
-                if(nevmDataEntry.nevmData) {
-                    delete nevmDataEntry.nevmData;
-                    nevmDataEntry.nevmData = nullptr;
-                }
-            }
-            return false;   
         }
     }
     if(!vecNevmData.empty() && !ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, nTimeNow, nevmDataVecOut)) {
@@ -2311,18 +2317,7 @@ bool ProcessNEVMData(const BlockManager& blockman, CTransactionRef& tx, const in
     entry.nevmData = &nevmData;
     entry.scriptPubKey = &scriptPubKey;
     vecNevmData.emplace_back(entry);
-    for (const auto &nevmDataEntry : vecNevmData) {
-        if(pnevmdatadb->ExistsMPT(nevmDataEntry.nevmData->vchVersionHash)) {
-            LogPrint(BCLog::SYS, "ProcessNEVMData(tx): NEVM MPT duplicate\n");
-            return false;   
-        }
-    }
     if(!ProcessNEVMDataHelper(blockman, vecNevmData, nMedianTime, nTimeNow, nevmDataVecOut)) {
-        return false;
-    }
-    // set MPT to 0 for mempool
-    if(!pnevmdatadb->FlushSetMPTs(nevmDataVecOut, 0)) {
-        LogPrint(BCLog::SYS, "ProcessNEVMData(tx) could not set MPT to 0\n");
         return false;
     }
     return true;
@@ -3632,7 +3627,6 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
                 // SYSCOIN
                 GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
                 GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, m_chainman, fInitialDownload);
-
                 // Always notify the UI if a new block tip was connected
                 uiInterface.NotifyBlockTip(GetSynchronizationState(fInitialDownload), pindexNewTip);
             }
@@ -3951,7 +3945,6 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
     }
 
     ConflictingChainFound(pindex);
-    
     GetMainSignals().SynchronousUpdatedBlockTip(m_chain.Tip(), nullptr, IsInitialBlockDownload());
     GetMainSignals().UpdatedBlockTip(m_chain.Tip(), nullptr, m_chainman, IsInitialBlockDownload());
 

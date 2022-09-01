@@ -1171,6 +1171,8 @@ bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDa
     for (const auto &dataProcess : vecNEVMDataToProcess) {
         const auto& pair = std::make_pair(dataProcess.nevmData->vchVersionHash, true);
         batch.Write(pair, dataProcess.nevmData->vchData);
+        // write the size of the data
+        batch.Write(dataProcess.nevmData->vchVersionHash, dataProcess.nevmData->nSize);
     }
     LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
     return WriteBatch(batch);
@@ -1203,11 +1205,14 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
         return true;
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
-        // erase data and MPT keys
         const auto pairData = std::make_pair(key, true);
         const auto pairMPT = std::make_pair(key, false);
-        if(Exists(pairData))
+        // erase size
+        batch.Erase(key);
+        // erase data and MPT keys
+        if(Exists(pairData)) {
             batch.Erase(pairData);
+        }
         if(Exists(pairMPT))   
             batch.Erase(pairMPT);
     }
@@ -1231,6 +1236,8 @@ bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
                 if(Exists(pair)) {  
                     batch.Erase(pair);
                 }
+                // erase size
+                batch.Erase(pair.first);
             }
             pcursor->Next();
         }

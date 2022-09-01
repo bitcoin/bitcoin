@@ -120,16 +120,18 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
             key.first.clear();
 			if (pcursor->GetKey(key)) {
                 UniValue oBlob(UniValue::VOBJ);
-                // data
-                if(key.second == true) {
-                    std::vector<uint8_t> vchData;
-                    if(pcursor->GetValue(vchData)) {
+                // MPT
+                if(key.second == false) {
+                    uint64_t nMedianTime;
+                    if(pcursor->GetValue(nMedianTime)) {
                         oBlob.__pushKV("versionhash",  HexStr(key.first));
-                        int64_t mpt = -1;
-                        pnevmdatadb.ReadMPT(key.first, mpt);
-                        oBlob.__pushKV("mpt", mpt);
-                        oBlob.__pushKV("datasize", (int)vchData.size());
-                        if(getdata) {  
+                        oBlob.__pushKV("mpt", nMedianTime);
+                        uint32_t nSize;
+                        pnevmdatadb.ReadDataSize(key.first, nSize);
+                        oBlob.__pushKV("datasize", nSize);
+                        if(getdata) {
+                            std::vector<uint8_t> vchData;
+                            pnevmdatadb.ReadData(key.first, vchData);
                             oBlob.__pushKV("data", HexStr(vchData));
                         }    
                     }
@@ -574,15 +576,18 @@ static RPCHelpMan getnevmblobdata()
     BlockValidationState state;
     std::vector<uint8_t> vchVH = ParseHex(request.params[0].get_str());
     std::vector<uint8_t> vchData;
-    if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+    int64_t mpt = -1;
+    uint32_t nSize;
+    if(!pnevmdatadb->ReadMPT(vchVH, mpt) && !pnevmdatadb->ReadDataSize(vchVH, nSize)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
     }
-    int64_t mpt = -1;
-    pnevmdatadb->ReadMPT(vchVH, mpt);
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
-    oNEVM.__pushKV("datasize", (int)vchData.size());
+    oNEVM.__pushKV("datasize", nSize);
     if(bGetData) {  
+        if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
+        }
         oNEVM.__pushKV("data", HexStr(vchData));
     }
     return oNEVM;

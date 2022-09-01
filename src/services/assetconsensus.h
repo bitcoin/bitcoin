@@ -55,7 +55,13 @@ public:
     bool ReadMPT(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime) {
         const auto& pair = std::make_pair(nVersionHash, false);
         return Read(pair, nMedianTime);
-    } 
+    }
+    bool ReadDataSize(const std::vector<uint8_t>& nVersionHash, uint32_t &nSize) {
+        return Read(nVersionHash, nSize);
+    }
+    bool WriteDataSize(const std::vector<uint8_t>& nVersionHash, const uint32_t &nSize) {
+        return Write(nVersionHash, nSize);
+    }
     bool WriteData(const std::vector<uint8_t>& nVersionHash, const std::vector<uint8_t>& vchData) {
         const auto& pair = std::make_pair(nVersionHash, true);
         return Write(pair, vchData);
