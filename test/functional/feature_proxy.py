@@ -332,6 +332,16 @@ class ProxyTest(BitcoinTestFramework):
         msg = "Error: Invalid -i2psam address or hostname: 'def:xyz'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
+        self.log.info("Test passing invalid -onlynet=i2p without -i2psam raises expected init error")
+        self.nodes[1].extra_args = ["-onlynet=i2p"]
+        msg = "Error: Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing invalid -onlynet=cjdns without -cjdnsreachable raises expected init error")
+        self.nodes[1].extra_args = ["-onlynet=cjdns"]
+        msg = "Error: Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
         self.log.info("Test passing -onlynet=onion with -onion=0/-noonion raises expected init error")
         msg = (
             "Error: Outbound connections restricted to Tor (-onlynet=onion) but "
