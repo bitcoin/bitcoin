@@ -211,7 +211,7 @@ class NEVMDataTest(DashTestFramework):
         txGood = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabc')['txid']
         self.sync_mempools(self.nodes[0:4])
         # different size
-        txBad = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'ab')['txid'] 
+        txBad = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'ab')['txid']
         time.sleep(1)
         # should give 'ProcessNEVMData(block): NEVM mismatch in commitment' because it tries to create duplicate within block of different size
         assert_raises_rpc_error(-32603, "ProcessNewBlock, block not accepted", self.generate, self.nodes[0], 1)
@@ -219,7 +219,7 @@ class NEVMDataTest(DashTestFramework):
         self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
         assert_raises_rpc_error(-5, "No such transaction found", self.nodes[1].getrawtransaction, txid=txBad, blockhash=tip)
         self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
-        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'ab')['txid'] 
+        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'ab')['txid']
         self.nodes[1].getrawtransaction(txid=txBad)
         # should give 'ProcessNEVMDataHelper(block): NEVM mismatch in commitment' because it tries to assign new MPT while one is already confirmed
         tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]

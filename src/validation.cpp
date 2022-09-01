@@ -2185,7 +2185,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         if(existsData) {
             uint32_t nReadData;
             if(!pnevmdatadb->ReadDataSize(nevmDataEntry.nevmData->vchVersionHash, nReadData)) {
-                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM cant read data size of VH %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
+                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM cannot read data size of VH %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
                 return false;
             }
             if(nevmDataEntry.nevmData->nSize != nReadData) {
