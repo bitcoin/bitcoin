@@ -216,6 +216,7 @@ class BlockchainTest(BitcoinTestFramework):
                     'since': 144,
                     'signal_activate': "30000000",
                     'signal_abandon': "50000000",
+                    'signals': [],
                 },
                 'active': False
             },

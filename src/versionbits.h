@@ -36,6 +36,13 @@ enum class ThresholdState {
 // will either be nullptr or a block with (height + 1) % Period() == 0.
 typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 
+struct SignalInfo
+{
+    int height;
+    int revision; // -1 = this revision
+    bool activate; // true = activate, false = abandon
+};
+
 /**
  * Abstract class that implements BIP9-style threshold logic, and caches results.
  */
@@ -56,6 +63,9 @@ public:
 
     /** Report BINANA id, based on nVersion signalling standard */
     bool BINANA(int& year, int& number, int& revision) const;
+
+    /** Returns signalling information */
+    std::vector<SignalInfo> GetSignalInfo(const CBlockIndex* pindex) const;
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache
@@ -79,6 +89,9 @@ public:
 
     /** Report BINANA details, based on nVersion signalling standard */
     bool BINANA(int& year, int& number, int& revision, const Consensus::Params& params, Consensus::DeploymentPos pos) const;
+
+    /** Returns signalling information */
+    std::vector<SignalInfo> GetSignalInfo(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos) const;
 
     void Clear() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };

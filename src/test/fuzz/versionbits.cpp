@@ -13,10 +13,16 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <vector>
+
+bool operator==(const SignalInfo& a, const SignalInfo& b)
+{
+    return a.height == b.height && a.revision == b.revision && a.activate == b.activate;
+}
 
 namespace {
 class TestConditionChecker : public AbstractThresholdConditionChecker
@@ -165,6 +171,18 @@ FUZZ_TARGET(versionbits, .init = initialize)
     // Now that we have chosen time and versions, setup to mine blocks
     Blocks blocks(block_start_time, interval);
 
+    const auto siginfo_nosignal = [&]() -> std::optional<SignalInfo> {
+        int year, number, revision;
+        if (checker.BINANA(year, number, revision)) {
+            if ((ver_nosignal & 0xFFFFFF00l) == (ver_activate & 0xFFFFFF00l)) {
+                return SignalInfo{.height = 0, .revision = static_cast<uint8_t>(ver_nosignal & 0xFF), .activate = true};
+            } else if ((ver_nosignal & 0xFFFFFF00l) == (ver_abandon & 0xFFFFFF00l)) {
+                return SignalInfo{.height = 0, .revision = static_cast<uint8_t>(ver_nosignal & 0xFF), .activate = false};
+            }
+        }
+        return std::nullopt;
+    }();
+
     /* Strategy:
      *  * we mine n*period blocks, with zero/one of
      *    those blocks signalling activation, and zero/one of
@@ -207,8 +225,13 @@ FUZZ_TARGET(versionbits, .init = initialize)
     bool sig_abandon = false;
     int next_active = 0;
     int next_abandon = 0;
+
+    std::vector<SignalInfo> exp_siginfo = checker.GetSignalInfo(nullptr); // dummy
+    assert(exp_siginfo.empty());
+
     for (int b = 1; b <= period; ++b) {
         CBlockIndex* current_block = blocks.tip();
+        const int next_height = (current_block != nullptr ? current_block->nHeight + 1 : 0);
 
         if (current_block != nullptr) {
             // state and since don't change within the period
@@ -221,14 +244,24 @@ FUZZ_TARGET(versionbits, .init = initialize)
         while (b > next_abandon) next_abandon += 1 + fuzzed_data_provider.ConsumeIntegral<uint8_t>();
         while (b > next_active) next_active += 1 + fuzzed_data_provider.ConsumeIntegral<uint8_t>();
         if (b == next_abandon) {
+            exp_siginfo.push_back({.height = next_height, .revision = -1, .activate = false});
             blocks.mine_block(ver_abandon);
             sig_abandon = true;
         } else if (b == next_active) {
+            exp_siginfo.push_back({.height = next_height, .revision = -1, .activate = true});
             blocks.mine_block(ver_activate);
             sig_active = true;
         } else {
+            if (siginfo_nosignal) {
+                exp_siginfo.push_back(*siginfo_nosignal);
+                exp_siginfo.back().height = next_height;
+            }
             blocks.mine_block(ver_nosignal);
         }
+
+        const std::vector<SignalInfo> siginfo = checker.GetSignalInfo(blocks.tip());
+        assert(siginfo.size() == exp_siginfo.size());
+        assert(std::equal(siginfo.begin(), siginfo.end(), exp_siginfo.rbegin(), exp_siginfo.rend()));
     }
 
     // grab the final block and the state it's left us in
