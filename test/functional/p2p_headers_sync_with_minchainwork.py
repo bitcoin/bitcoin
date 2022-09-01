@@ -28,6 +28,8 @@ NODE2_BLOCKS_REQUIRED = 2047
 class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        # SYSCOIN
+        self.rpc_timeout = 240
         self.num_nodes = 4
         # Node0 has no required chainwork; node1 requires 15 blocks on top of the genesis block; node2 requires 2047
         self.extra_args = [["-minimumchainwork=0x0", "-checkblockindex=0"], ["-minimumchainwork=0x1f", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0", "-whitelist=noban@127.0.0.1"]]
@@ -148,7 +150,7 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
 
         self.reconnect_all()
 
-        self.sync_blocks(timeout=300) # Ensure tips eventually agree
+        self.sync_blocks(timeout=1600) # Ensure tips eventually agree
 
 
     def run_test(self):
