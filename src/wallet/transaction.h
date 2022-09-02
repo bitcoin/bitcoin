@@ -19,6 +19,8 @@
 #include <variant>
 #include <vector>
 
+class CScript;
+
 namespace wallet {
 //! State of transaction confirmed in a block.
 struct TxStateConfirmed {
@@ -161,6 +163,7 @@ public:
      *     "timesmart"       - serialized nTimeSmart value
      *     "spent"           - serialized vfSpent value that existed prior to
      *                         2014 (removed in commit 93a18a3)
+     *     "fout"            - serialized m_foreign_outputs value
      */
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
@@ -182,6 +185,12 @@ public:
      * externally and came in through the network or sendrawtransaction RPC.
      */
     bool fFromMe;
+    /**
+     * If true, the indexed output is not counted as one "sent" by this wallet,
+     * even if the transaction debits the wallet. Note that it may be smaller
+     * than the actual output count.
+     */
+    std::vector<bool> m_foreign_outputs;
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -211,6 +220,7 @@ public:
         nTimeReceived = 0;
         nTimeSmart = 0;
         fFromMe = false;
+        m_foreign_outputs.clear();
         fChangeCached = false;
         nChangeCached = 0;
         nOrderPos = -1;
@@ -231,6 +241,16 @@ public:
         }
         if (nTimeSmart) {
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
+        }
+        if (!m_foreign_outputs.empty()) {
+            std::string s((m_foreign_outputs.size() + 7) / 8, 0);
+            for (auto i{m_foreign_outputs.size()}; i; ) {
+                --i;
+                if (m_foreign_outputs[i]) {
+                    s[i / 8] |= 1 << (i % 8);
+                }
+            }
+            mapValueCopy["fout"] = s;
         }
 
         std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
@@ -259,6 +279,25 @@ public:
         nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
         const auto it_ts = mapValue.find("timesmart");
         nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi<int64_t>(it_ts->second)) : 0;
+        const auto it_fout{mapValue.find("fout")};
+        if (it_fout != mapValue.end()) {
+            auto& s{it_fout->second};
+            m_foreign_outputs.clear();
+            m_foreign_outputs.resize(s.size() * 8);
+            for (auto octet{s.size()}; octet; ) {
+                --octet;
+                for (int bit{0}; bit < 8; ++bit) {
+                    if (s[octet] & (1 << bit)) {
+                        m_foreign_outputs[(octet * 8) + bit] = true;
+                    }
+                }
+            }
+            while (!m_foreign_outputs.back()) {
+                m_foreign_outputs.pop_back();
+            }
+            assert(m_foreign_outputs.size() <= tx->vout.size());
+            mapValue.erase("fout");
+        }
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
@@ -299,6 +338,19 @@ public:
     const uint256& GetHash() const { return tx->GetHash(); }
     const uint256& GetWitnessHash() const { return tx->GetWitnessHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
+
+    bool IsForeignOutput(size_t output_index) const {
+        return (m_foreign_outputs.size() > output_index) && m_foreign_outputs[output_index];
+    }
+    void SetForeignOutput(size_t output_index) {
+        if (m_foreign_outputs.size() <= output_index) {
+            m_foreign_outputs.resize(output_index + 1);
+        }
+        if (m_foreign_outputs[output_index]) return;
+        m_foreign_outputs[output_index] = true;
+        MarkDirty();
+    }
+    void SetForeignOutput(const CScript&);
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the

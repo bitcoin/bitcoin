@@ -24,4 +24,15 @@ int64_t CWalletTx::GetTxTime() const
     int64_t n = nTimeSmart;
     return n ? n : nTimeReceived;
 }
+
+void CWalletTx::SetForeignOutput(const CScript& script)
+{
+    for (auto i{tx->vout.size()}; i; ) {
+        --i;
+        if (tx->vout[i].scriptPubKey == script) {
+            SetForeignOutput(i);
+            break;
+        }
+    }
+}
 } // namespace wallet

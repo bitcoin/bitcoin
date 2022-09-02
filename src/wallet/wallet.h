@@ -133,6 +133,7 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
     |   WALLET_FLAG_NAMED_REQUIRED;
 
 static inline const std::map<std::string, uint64_t> KNOWN_WALLET_FLAGS_BY_NAME{
+    {"foreign_outputs", 0},
 };
 
 static constexpr uint64_t MUTABLE_WALLET_FLAGS =

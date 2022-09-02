@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <optional>
+#include <set>
 
 using interfaces::FoundBlock;
 
@@ -620,6 +621,18 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         return;
     }
 
+    // Build set of foreign outputs
+    std::set<CScript> foreign_outputs;
+    if (!copyFrom->m_foreign_outputs.empty()) {
+        assert(copyFrom->m_foreign_outputs.size() <= copyFrom->tx->vout.size());
+        for (auto i{copyFrom->m_foreign_outputs.size()}; i; ) {
+            --i;
+            if (copyFrom->m_foreign_outputs[i]) {
+                foreign_outputs.insert(copyFrom->tx->vout[i].scriptPubKey);
+            }
+        }
+    }
+
     // Now copy data from copyFrom to rest:
     for (TxSpends::iterator it = range.first; it != range.second; ++it)
     {
@@ -636,6 +649,19 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         copyTo->fFromMe = copyFrom->fFromMe;
         // nOrderPos not copied on purpose
         // cached members not copied on purpose
+
+        if (!foreign_outputs.empty()) {
+            // Find outputs in copyTo and set them as foreign
+            auto& outputs{copyTo->tx->vout};
+            for (auto i{outputs.size()}; i; ) {
+                --i;
+                auto& output_spk{outputs[i].scriptPubKey};
+                auto output_it{foreign_outputs.find(output_spk)};
+                if (output_it != foreign_outputs.end()) {
+                    copyTo->SetForeignOutput(i);
+                }
+            }
+        }
     }
 }
 
@@ -1049,6 +1075,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 bool CWallet::WriteTx(CWalletTx& wtx)
 {
     WalletBatch batch(GetDatabase());
+    if ((!wtx.m_foreign_outputs.empty()) && !IsWalletFlagSet("foreign_outputs")) {
+        SetWalletFlag("foreign_outputs", {.required = true, .version = 0});
+    }
     if (!batch.WriteTx(wtx)) {
         return false;
     }
