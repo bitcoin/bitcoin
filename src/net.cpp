@@ -556,7 +556,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              pszDest ? pszDest : "",
                              conn_type,
                              /*inbound_onion=*/false,
-                             std::move(i2p_transient_session));
+                             CNodeOptions{ .i2p_sam_session = std::move(i2p_transient_session) });
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -637,7 +637,7 @@ void CNode::CopyStats(CNodeStats& stats)
         X(mapRecvBytesPerMsgType);
         X(nRecvBytes);
     }
-    X(m_permissionFlags);
+    X(m_permission_flags);
 
     X(m_last_ping_time);
     X(m_min_ping_time);
@@ -936,27 +936,27 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock)), NODE_NONE};
 
-    NetPermissionFlags permissionFlags = NetPermissionFlags::None;
-    hListenSocket.AddSocketPermissionFlags(permissionFlags);
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    hListenSocket.AddSocketPermissionFlags(permission_flags);
 
-    CreateNodeFromAcceptedSocket(std::move(sock), permissionFlags, addr_bind, addr);
+    CreateNodeFromAcceptedSocket(std::move(sock), permission_flags, addr_bind, addr);
 }
 
 void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                            NetPermissionFlags permissionFlags,
+                                            NetPermissionFlags permission_flags,
                                             const CAddress& addr_bind,
                                             const CAddress& addr)
 {
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    AddWhitelistPermissionFlags(permissionFlags, addr);
-    if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::Implicit)) {
-        NetPermissions::ClearFlag(permissionFlags, NetPermissionFlags::Implicit);
-        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::ForceRelay);
-        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::Relay);
-        NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::Mempool);
-        NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::NoBan);
+    AddWhitelistPermissionFlags(permission_flags, addr);
+    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
+        NetPermissions::ClearFlag(permission_flags, NetPermissionFlags::Implicit);
+        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::ForceRelay);
+        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Relay);
+        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Mempool);
+        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::NoBan);
     }
 
     {
@@ -987,7 +987,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
-    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && banned)
+    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && banned)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         return;
@@ -995,7 +995,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
     bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
-    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
+    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
         return;
@@ -1014,7 +1014,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
     ServiceFlags nodeServices = nLocalServices;
-    if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::BloomFilter)) {
+    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::BloomFilter)) {
         nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
     }
 
@@ -1027,10 +1027,12 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                              addr_bind,
                              /*addrNameIn=*/"",
                              ConnectionType::INBOUND,
-                             inbound_onion);
+                             inbound_onion,
+                             CNodeOptions{
+                               .permission_flags = permission_flags,
+                               .prefer_evict = discouraged,
+                             });
     pnode->AddRef();
-    pnode->m_permissionFlags = permissionFlags;
-    pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
@@ -2722,20 +2724,22 @@ CNode::CNode(NodeId idIn,
              const std::string& addrNameIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
-             std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+             CNodeOptions&& node_opts)
     : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
       m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
+      m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
       m_inbound_onion{inbound_onion},
+      m_prefer_evict{node_opts.prefer_evict},
       nKeyedNetGroup{nKeyedNetGroupIn},
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
       m_conn_type{conn_type_in},
-      m_i2p_sam_session{std::move(i2p_sam_session)}
+      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 

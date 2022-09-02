@@ -242,7 +242,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
         UniValue permissions(UniValue::VARR);
-        for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {
+        for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);

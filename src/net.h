@@ -204,7 +204,7 @@ public:
     mapMsgTypeSize mapSendBytesPerMsgType;
     uint64_t nRecvBytes;
     mapMsgTypeSize mapRecvBytesPerMsgType;
-    NetPermissionFlags m_permissionFlags;
+    NetPermissionFlags m_permission_flags;
     std::chrono::microseconds m_last_ping_time;
     std::chrono::microseconds m_min_ping_time;
     // Our address, as reported by the peer
@@ -334,6 +334,13 @@ public:
     void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) const override;
 };
 
+struct CNodeOptions
+{
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
+    bool prefer_evict = false;
+};
+
 /** Information about a peer */
 class CNode
 {
@@ -344,7 +351,7 @@ public:
     const std::unique_ptr<TransportDeserializer> m_deserializer; // Used only by SocketHandler thread
     const std::unique_ptr<const TransportSerializer> m_serializer;
 
-    NetPermissionFlags m_permissionFlags{NetPermissionFlags::None}; // treated as const outside of fuzz tester
+    const NetPermissionFlags m_permission_flags;
 
     /**
      * Socket used for communication with the node.
@@ -393,9 +400,9 @@ public:
      * from the wire. This cleaned string can safely be logged or displayed.
      */
     std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
-    bool m_prefer_evict{false}; // This peer is preferred for eviction. (treated as const)
+    const bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
-        return NetPermissions::HasFlag(m_permissionFlags, permission);
+        return NetPermissions::HasFlag(m_permission_flags, permission);
     }
     /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
@@ -522,7 +529,7 @@ public:
           const std::string& addrNameIn,
           ConnectionType conn_type_in,
           bool inbound_onion,
-          std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
+          CNodeOptions&& node_opts = {});
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 
@@ -890,12 +897,12 @@ private:
      * Create a `CNode` object from a socket that has just been accepted and add the node to
      * the `m_nodes` member.
      * @param[in] sock Connected socket to communicate with the peer.
-     * @param[in] permissionFlags The peer's permissions.
+     * @param[in] permission_flags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
      * @param[in] addr The address and port at the peer's side of the connection.
      */
     void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                      NetPermissionFlags permissionFlags,
+                                      NetPermissionFlags permission_flags,
                                       const CAddress& addr_bind,
                                       const CAddress& addr);
 
