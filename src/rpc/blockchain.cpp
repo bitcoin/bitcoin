@@ -1229,41 +1229,38 @@ RPCHelpMan getblockchaininfo()
             + HelpExampleRpc("getblockchaininfo", "")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const ArgsManager& args{EnsureAnyArgsman(request.context)};
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
-    CChainState& active_chainstate = chainman.ActiveChainstate();
+        {
+            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            LOCK(cs_main);
+            CChainState& active_chainstate = chainman.ActiveChainstate();
 
-    const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
-    const int height{tip.nHeight};
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("chain", chainman.GetParams().NetworkIDString());
-    obj.pushKV("blocks", height);
-    obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-    obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
-    obj.pushKV("difficulty", GetDifficulty(&tip));
-    obj.pushKV("time", tip.GetBlockTime());
-    obj.pushKV("mediantime", tip.GetMedianTimePast());
-    obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
-    obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
-    obj.pushKV("chainwork", tip.nChainWork.GetHex());
-    obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
-    obj.pushKV("pruned", node::fPruneMode);
-    if (node::fPruneMode) {
-        obj.pushKV("pruneheight", chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight);
+            const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
+            const int height{tip.nHeight};
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("chain", chainman.GetParams().NetworkIDString());
+            obj.pushKV("blocks", height);
+            obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
+            obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
+            obj.pushKV("difficulty", GetDifficulty(&tip));
+            obj.pushKV("time", tip.GetBlockTime());
+            obj.pushKV("mediantime", tip.GetMedianTimePast());
+            obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
+            obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
+            obj.pushKV("chainwork", tip.nChainWork.GetHex());
+            obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
+            obj.pushKV("pruned", node::fPruneMode);
+            if (node::fPruneMode) {
+                const bool automatic_pruning{node::nPruneTarget != std::numeric_limits<uint64_t>::max()};
+                obj.pushKV("pruneheight", chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight);
+                obj.pushKV("automatic_pruning", automatic_pruning);
+                if (automatic_pruning) {
+                    obj.pushKV("prune_target_size", node::nPruneTarget);
+                }
+            }
 
-        // if 0, execution bypasses the whole if block.
-        bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
-        obj.pushKV("automatic_pruning",  automatic_pruning);
-        if (automatic_pruning) {
-            obj.pushKV("prune_target_size",  node::nPruneTarget);
-        }
-    }
-
-    obj.pushKV("warnings", GetWarnings(false).original);
-    return obj;
-},
+            obj.pushKV("warnings", GetWarnings(false).original);
+            return obj;
+        },
     };
 }
 
