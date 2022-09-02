@@ -2152,7 +2152,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
                 } else {
                     // SYSCOIN
-                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock, bRecent};
+                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock, !bRecent};
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
                 }
             } else {
