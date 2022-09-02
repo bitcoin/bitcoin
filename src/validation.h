@@ -91,10 +91,6 @@ extern GlobalMutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 /** Used to notify getblocktemplate RPC of new tips. */
 extern uint256 g_best_block;
-/** Whether there are dedicated script-checking threads running.
- * False indicates all script checking is done on the main threadMessageHandler thread.
- */
-extern bool g_parallel_script_checks;
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
