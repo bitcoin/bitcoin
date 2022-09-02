@@ -1461,9 +1461,18 @@ RPCHelpMan submitrawtransactiontowallet()
 {
     return RPCHelpMan{"submitrawtransactiontowallet",
         "EXPERIMENTAL warning: this call may be changed in future releases.\n"
-        "\nSubmit a raw transaction to the wallet directly.\n",
+        "\nSubmit a raw transaction to the wallet directly, possibly providing initial metadata.\n",
         {
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
+            {"options", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED_NAMED_ARG, "Options",
+                {
+                    {"foreign_outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "List of outputs sent by other wallets (eg, for a CoinJoin transaction)",
+                        {
+                            {"output_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Index of an output to mark as foreign"},
+                        },
+                    },
+                },
+            },
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -1483,13 +1492,44 @@ RPCHelpMan submitrawtransactiontowallet()
 
             RPCTypeCheck(request.params, {
                 UniValue::VSTR, // hexstring
-            }, /*fAllowNull=*/false);
+                UniValue::VOBJ, // options
+            }, /*fAllowNull=*/true);
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
             }
             CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+
+            std::optional<std::vector<bool>> foreign_outputs;
+            if (!request.params[1].isNull()) {
+                const UniValue& options{request.params[1]};
+                RPCTypeCheckObj(options, {
+                    {"foreign_outputs", UniValueType(UniValue::VARR)},
+                }, /*fAllowNull=*/true, /*fStrict=*/true);
+
+                if (!options["foreign_outputs"].isNull()) {
+                    auto output_count{tx->vout.size()};
+                    foreign_outputs.emplace(output_count);
+                    const auto& foreign_outputs_uv{options["foreign_outputs"].get_array().getValues()};
+                    size_t final_foreign_outputs_size{0};
+                    for (const auto& output_index_uv : foreign_outputs_uv) {
+                        const auto output_index{output_index_uv.getInt<size_t>()};
+                        if (output_index >= output_count) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("foreign_outputs includes output index %s, but transaction only has %s outputs.", output_index, output_count));
+                        }
+                        if ((*foreign_outputs)[output_index]) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("foreign_outputs includes output index %s more than once.", output_index));
+                        }
+                        (*foreign_outputs)[output_index] = true;
+                        if (output_index >= final_foreign_outputs_size) {
+                            final_foreign_outputs_size = output_index + 1;
+                        }
+                    }
+                    foreign_outputs->resize(final_foreign_outputs_size);
+                }
+            }
+
             {
                 LOCK(pwallet->cs_wallet);
                 if (!(pwallet->IsMine(*tx) || pwallet->IsFromMe(*tx))) {
@@ -1497,6 +1537,17 @@ RPCHelpMan submitrawtransactiontowallet()
                 }
                 if (pwallet->mapWallet.count(tx->GetHash()) == 0) {
                     pwallet->CommitTransaction(tx, /*mapValue=*/{}, /*orderForm=*/{});
+                }
+
+                if (foreign_outputs) {
+                    auto wtx_it{pwallet->mapWallet.find(tx->GetHash())};
+                    CHECK_NONFATAL(wtx_it != pwallet->mapWallet.end());
+                    auto& wtx{wtx_it->second};
+
+                    if (wtx.m_foreign_outputs != foreign_outputs.value()) {
+                        wtx.m_foreign_outputs = foreign_outputs.value();
+                        pwallet->WriteTx(wtx);
+                    }
                 }
             }
 
