@@ -226,7 +226,6 @@ class NEVMDataTest(DashTestFramework):
         time.sleep(1)
         assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[2].getrawtransaction, txid=txBad)
         assert(self.nodes[2].getbestblockhash() != tip)
-        assert(False)
 
     def run_test(self):
         self.nodes[1].createwallet("")
