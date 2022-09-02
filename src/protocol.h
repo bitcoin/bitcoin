@@ -267,6 +267,13 @@ extern const char* WTXIDRELAY;
  * @since protocol version 70017 as described by LIP-0007
  */
 extern const char* MWEBHEADER;
+/**
+ * Contains a block hash and its serialized leafset.
+ * Sent in response to a getdata message which requested
+ * data using the inventory type MSG_MWEB_LEAFSET.
+ * @since protocol version 70017 as described by LIP-0007
+ */
+extern const char* MWEBLEAFSET;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -435,6 +442,7 @@ enum GetDataMsg : uint32_t {
     MSG_MWEB_BLOCK = MSG_WITNESS_BLOCK | MSG_MWEB_FLAG,
     MSG_MWEB_TX = MSG_WITNESS_TX | MSG_MWEB_FLAG,
     MSG_MWEB_HEADER = 8 | MSG_MWEB_FLAG,            //!< Defined in LIP-0007
+    MSG_MWEB_LEAFSET = 9 | MSG_MWEB_FLAG,           //!< Defined in LIP-0007
 };
 
 /** inv message data */
@@ -460,6 +468,7 @@ public:
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
     bool IsMsgMWEBBlk() const { return type == MSG_MWEB_BLOCK; }
     bool IsMsgMWEBHeader() const { return type == MSG_MWEB_HEADER; }
+    bool IsMsgMWEBLeafset() const { return type == MSG_MWEB_LEAFSET; }
 
     // Combined-message helper methods
     bool IsGenTxMsg() const

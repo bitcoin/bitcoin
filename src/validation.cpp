@@ -3047,6 +3047,52 @@ bool ActivateBestChain(BlockValidationState &state, const CChainParams& chainpar
     return ::ChainstateActive().ActivateBestChain(state, chainparams, std::move(pblock));
 }
 
+bool ActivateArbitraryChain(BlockValidationState& state, CCoinsViewCache& view, const CChainParams& chainparams, CBlockIndex* pindex)
+{
+    AssertLockHeld(cs_main);
+
+    const CBlockIndex* pindexFork = ::ChainstateActive().m_chain.FindFork(pindex);
+    CBlockIndex* pindexTip = ::ChainstateActive().m_chain.Tip();
+
+    // Disconnect blocks from view until we reach the fork block
+    while (pindexTip->GetBlockHash() != pindexFork->GetBlockHash()) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindexTip, chainparams.GetConsensus())) {
+            return error("ActivateArbitraryChain(): Failed to read block %s", pindexTip->GetBlockHash().ToString());
+        }
+
+        if (::ChainstateActive().DisconnectBlock(block, pindexTip, view) != DISCONNECT_OK) {
+            return error("ActivateArbitraryChain(): DisconnectBlock %s failed", pindexTip->GetBlockHash().ToString());
+        }
+
+        pindexTip = pindexTip->pprev;
+    }
+
+    // Build list of new blocks to connect.
+    std::vector<CBlockIndex*> vpindexToConnect;
+    vpindexToConnect.reserve(pindex->nHeight - pindexTip->nHeight);
+
+    CBlockIndex* pindexIter = pindex;
+    while (pindexIter && pindexIter->nHeight != pindexTip->nHeight) {
+        vpindexToConnect.push_back(pindexIter);
+        pindexIter = pindexIter->pprev;
+    }
+
+    // Connect the new blocks
+    for (CBlockIndex* pindexConnect : reverse_iterate(vpindexToConnect)) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindexConnect, chainparams.GetConsensus())) {
+            return error("ActivateArbitraryChain(): Failed to read block %s", pindexConnect->GetBlockHash().ToString());
+        }
+
+        if (!::ChainstateActive().ConnectBlock(block, state, pindexConnect, view, chainparams, true)) {
+            return error("ActivateArbitraryChain(): ConnectBlock %s failed", pindexConnect->GetBlockHash().ToString());
+        }
+    }
+
+    return true;
+}
+
 bool CChainState::PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex *pindex)
 {
     {

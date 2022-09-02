@@ -102,6 +102,8 @@ static const unsigned int MAX_HEADERS_RESULTS = 2000;
 static const int MAX_CMPCTBLOCK_DEPTH = 5;
 /** Maximum depth of blocks we're willing to respond to GETBLOCKTXN requests for. */
 static const int MAX_BLOCKTXN_DEPTH = 10;
+/** Maximum depth of blocks we're willing to serve MWEB leafsets for. */
+static const int MAX_MWEB_LEAFSET_DEPTH = 10;
 /** Size of the "block download window": how far ahead of our current height do we fetch?
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
@@ -1536,22 +1538,8 @@ static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& 
     connman.ForEachNodeThen(std::move(sortfunc), std::move(pushfunc));
 }
 
-void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, const CInv& inv, CConnman& connman)
+static void ActivateBestChainIfNeeded(const CChainParams& chainparams, const CInv& inv)
 {
-    bool send = false;
-    std::shared_ptr<const CBlock> a_recent_block;
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
-    bool fWitnessesPresentInARecentCompactBlock;
-    bool fMWEBPresentInARecentCompactBlock;
-    const Consensus::Params& consensusParams = chainparams.GetConsensus();
-    {
-        LOCK(cs_most_recent_block);
-        a_recent_block = most_recent_block;
-        a_recent_compact_block = most_recent_compact_block;
-        fWitnessesPresentInARecentCompactBlock = fWitnessesPresentInMostRecentCompactBlock;
-        fMWEBPresentInARecentCompactBlock = fMWEBPresentInMostRecentCompactBlock;
-    }
-
     bool need_activate_chain = false;
     {
         LOCK(cs_main);
@@ -1568,12 +1556,40 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
             }
         }
     } // release cs_main before calling ActivateBestChain
+
     if (need_activate_chain) {
+        // Grab the current most_recent_block and pass it to ActivateBestChain
+        // which hopefully will prevent needing to load blocks from disk.
+        std::shared_ptr<const CBlock> a_recent_block;
+        {
+            LOCK(cs_most_recent_block);
+            a_recent_block = most_recent_block;
+        }
+
         BlockValidationState state;
         if (!ActivateBestChain(state, chainparams, a_recent_block)) {
             LogPrint(BCLog::NET, "failed to activate chain (%s)\n", state.ToString());
         }
     }
+}
+
+void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, const CInv& inv, CConnman& connman)
+{
+    bool send = false;
+    std::shared_ptr<const CBlock> a_recent_block;
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
+    bool fWitnessesPresentInARecentCompactBlock;
+    bool fMWEBPresentInARecentCompactBlock;
+    const Consensus::Params& consensusParams = chainparams.GetConsensus();
+    {
+        LOCK(cs_most_recent_block);
+        a_recent_block = most_recent_block;
+        a_recent_compact_block = most_recent_compact_block;
+        fWitnessesPresentInARecentCompactBlock = fWitnessesPresentInMostRecentCompactBlock;
+        fMWEBPresentInARecentCompactBlock = fMWEBPresentInMostRecentCompactBlock;
+    }
+
+    ActivateBestChainIfNeeded(chainparams, inv);
 
     LOCK(cs_main);
     const CBlockIndex* pindex = LookupBlockIndex(inv.hash);
@@ -1702,6 +1718,63 @@ void static ProcessGetBlockData(CNode& pfrom, const CChainParams& chainparams, c
     }
 }
 
+class CMWEBLeafsetMsg
+{
+public:
+    CMWEBLeafsetMsg() = default;
+    CMWEBLeafsetMsg(uint256 block_hash_in, BitSet leafset_in)
+        : block_hash(std::move(block_hash_in)), leafset(std::move(leafset_in)) { }
+
+    SERIALIZE_METHODS(CMWEBLeafsetMsg, obj) { READWRITE(obj.block_hash, obj.leafset); }
+
+    uint256 block_hash;
+    BitSet leafset;
+};
+
+static void ProcessGetMWEBLeafset(CNode& pfrom, const CChainParams& chainparams, const CInv& inv, CConnman& connman)
+{
+    ActivateBestChainIfNeeded(chainparams, inv);
+
+    LOCK(cs_main);
+    CBlockIndex* pindex = LookupBlockIndex(inv.hash);
+    if (!pindex) {
+        return;
+    }
+
+    // TODO: Add an outbound limit
+
+    // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
+    if (::ChainActive().Tip()->nHeight - pindex->nHeight > MAX_MWEB_LEAFSET_DEPTH) {
+        LogPrint(BCLog::NET, "Ignore block request below MAX_MWEB_LEAFSET_DEPTH threshold from peer=%d\n", pfrom.GetId());
+
+        // disconnect node and prevent it from stalling (would otherwise wait for the MWEB leafset)
+        if (!pfrom.HasPermission(PF_NOBAN)) {
+            pfrom.fDisconnect = true;
+        }
+
+        return;
+    }
+
+    // Pruned nodes may have deleted the block, so check whether
+    // it's available before trying to send.
+    if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->nStatus & BLOCK_HAVE_MWEB) {
+        // Rewind leafset to block height
+        BlockValidationState state;
+        CCoinsViewCache temp_view(&::ChainstateActive().CoinsTip());
+        if (!ActivateArbitraryChain(state, temp_view, chainparams, pindex)) {
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        // Serve leafset to peer
+        const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
+        auto pLeafset = temp_view.GetMWEBCacheView()->GetLeafSet();
+
+        CMWEBLeafsetMsg leafset_msg(pindex->GetBlockHash(), pLeafset->ToBitSet());
+        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MWEBLEAFSET, leafset_msg));
+    }
+}
+
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
 static CTransactionRef FindTxForGetData(const CTxMemPool& mempool, const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main)
 {
@@ -1798,6 +1871,8 @@ void static ProcessGetData(CNode& pfrom, Peer& peer, const CChainParams& chainpa
         const CInv &inv = *it++;
         if (inv.IsGenBlkMsg()) {
             ProcessGetBlockData(pfrom, chainparams, inv, connman);
+        } else if (inv.IsMsgMWEBLeafset()) {
+            ProcessGetMWEBLeafset(pfrom, chainparams, inv, connman);
         }
         // else: If the first item on the queue is an unknown type, we erase it
         // and continue processing the queue on the next call.

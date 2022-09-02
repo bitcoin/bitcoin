@@ -182,6 +182,15 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
  * validationinterface callback.
  */
 bool ActivateBestChain(BlockValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
+
+/**
+ * Make the provided index the tip of the chain, regardless of the amount of work.
+ * 
+ * Unlike ActivateBestChain, this only updates the provided coins view, not the active chain state.
+ * No calls to any validationinterface callbacks will be made.
+ */
+bool ActivateArbitraryChain(BlockValidationState& state, CCoinsViewCache& view, const CChainParams& chainparams, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */

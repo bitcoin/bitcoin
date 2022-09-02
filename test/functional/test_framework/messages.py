@@ -72,6 +72,7 @@ MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG
 MSG_MWEB_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG | MSG_MWEB_FLAG
 MSG_MWEB_TX = MSG_WITNESS_TX | MSG_MWEB_FLAG
 MSG_MWEB_HEADER = 8 | MSG_MWEB_FLAG
+MSG_MWEB_LEAFSET = 9 | MSG_MWEB_FLAG
 
 FILTER_TYPE_BASIC = 0
 
@@ -354,7 +355,8 @@ class CInv:
         MSG_FILTERED_BLOCK: "filtered Block",
         MSG_CMPCT_BLOCK: "CompactBlock",
         MSG_WTX: "WTX",
-        MSG_MWEB_HEADER: "MWEB Header"
+        MSG_MWEB_HEADER: "MWEB Header",
+        MSG_MWEB_LEAFSET: "MWEB Leafset"
     }
 
     def __init__(self, t=0, h=0):
@@ -2045,7 +2047,7 @@ class MWEBInput:
         self.hash = None
 
     def deserialize(self, f):
-        self.features = f.read(1)
+        self.features = struct.unpack("B", f.read(1))[0]
         self.output_id = Hash.deserialize(f)
         self.commitment = deser_pubkey(f)
         self.output_pubkey = deser_pubkey(f)
@@ -2060,14 +2062,14 @@ class MWEBInput:
     def serialize(self):
         r = b""
         r += struct.pack("B", self.features)
-        r += ser_uint256(self.output_id)
+        r += self.output_id.serialize()
         r += ser_pubkey(self.commitment)
         r += ser_pubkey(self.output_pubkey)
         if self.features & 1:
             r += ser_pubkey(self.input_pubkey)
         if self.features & 2:
-            r += ser_compact_size(self.extradata)
-            r += ser_fixed_bytes(self.extradata, len(self.extradata))#extradata
+            r += ser_compact_size(len(self.extradata))
+            r += ser_fixed_bytes(self.extradata, len(self.extradata))
         r += ser_signature(self.signature)
         return r
     
@@ -2405,3 +2407,25 @@ class msg_mwebheader:
 
     def __repr__(self):
         return "msg_mwebheader(merkleblockwithmweb=%s)" % (repr(self.merkleblockwithmweb))
+
+class msg_mwebleafset:
+    __slots__ = ("block_hash", "leafset")
+    msgtype = b"mwebleafset"
+
+    def __init__(self, block_hash=None, leafset=None):
+        self.block_hash = block_hash
+        self.leafset = leafset
+
+    def deserialize(self, f):
+        self.block_hash = Hash.deserialize(f)
+        self.leafset = deser_fixed_bytes(f, deser_compact_size(f))
+
+    def serialize(self):
+        r = b""
+        r += ser_compact_size(len(self.leafset))
+        r += ser_fixed_bytes(self.leafset, len(self.leafset))
+        return r
+
+    def __repr__(self):
+        leafset_hex = ser_fixed_bytes(self.leafset, len(self.leafset)).hex() #encode(self.leafset, 'hex_codec').decode('ascii')
+        return "msg_mwebleafset(block_hash=%s, leafset=%s%s)" % (repr(self.block_hash), repr(leafset_hex)[:50], "..." if len(leafset_hex) > 50 else "")
