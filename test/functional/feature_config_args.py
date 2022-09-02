@@ -222,9 +222,6 @@ class ConfArgsTest(BitcoinTestFramework):
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
         ]):
             self.nodes[0].setmocktime(start + 65)
-            
-    def test_chain_arg_collisions(self):
-        pass
 
     def run_test(self):
         self.test_log_buffer()
