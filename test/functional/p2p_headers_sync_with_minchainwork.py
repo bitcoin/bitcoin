@@ -54,7 +54,7 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
         self.connect_nodes(0, 3)
         self.connect_nodes(1, 0)
         self.connect_nodes(1, 2)
-        self.connect_nodes(1, 3)  
+        self.connect_nodes(1, 3)
         force_finish_mnsync(self.nodes[0])
         force_finish_mnsync(self.nodes[1])
         force_finish_mnsync(self.nodes[2])
