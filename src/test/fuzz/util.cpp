@@ -295,7 +295,6 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
                       /*successfully_connected=*/fuzzed_data_provider.ConsumeBool(),
                       /*remote_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
                       /*local_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
-                      /*permission_flags=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS),
                       /*version=*/fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max()),
                       /*relay_txs=*/fuzzed_data_provider.ConsumeBool());
 }
