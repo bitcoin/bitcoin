@@ -2184,13 +2184,11 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         // we don't be checking KZG commitment so we need to ensure enough fees were paid
         if(existsData) {
             uint32_t nReadData;
-            if(!pnevmdatadb->ReadDataSize(nevmDataEntry.nevmData->vchVersionHash, nReadData)) {
-                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM cannot read data size of VH %s\n", HexStr(nevmDataEntry.nevmData->vchVersionHash));
-                return false;
-            }
-            if(nevmDataEntry.nevmData->nSize != nReadData) {
-                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->nSize, nReadData);
-                return false;
+            if(pnevmdatadb->ReadDataSize(nevmDataEntry.nevmData->vchVersionHash, nReadData)) {
+                if(nevmDataEntry.nevmData->nSize != nReadData) {
+                    LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->nSize, nReadData);
+                    return false;
+                }
             }
         }
         if(!nevmDataEntry.nevmData->vchData.empty() && dataDoesntExistsInDb) {
