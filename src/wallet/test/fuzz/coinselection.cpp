@@ -49,7 +49,7 @@ FUZZ_TARGET(coinselection)
 
     const CFeeRate long_term_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CFeeRate effective_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-    const CAmount cost_of_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    const CAmount cost_of_change{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
     const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
     const bool subtract_fee_outputs{fuzzed_data_provider.ConsumeBool()};
 

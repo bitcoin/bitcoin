@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     expected_result.Clear();
 
     // Cost of change is less than the difference between target value and utxo sum
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0));
+    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 1));
     expected_result.Clear();
 
     // Select 10 Cent

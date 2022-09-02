@@ -64,7 +64,7 @@ static void CoinSelection(benchmark::Bench& bench)
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     FastRandomContext rand{};
-    const CoinSelectionParams coin_selection_params{
+    CoinSelectionParams coin_selection_params{
         rand,
         /*change_output_size=*/ 34,
         /*change_spend_size=*/ 148,
@@ -75,6 +75,9 @@ static void CoinSelection(benchmark::Bench& bench)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
+
+    coin_selection_params.m_cost_of_change = CAmount(1);
+
     bench.run([&] {
         auto result = AttemptSelection(wallet, 1003 * COIN, filter_standard, available_coins, coin_selection_params, /*allow_mixed_output_types=*/true);
         assert(result);
@@ -114,7 +117,7 @@ static void BnBExhaustion(benchmark::Bench& bench)
     bench.run([&] {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0); // Should exhaust
+        SelectCoinsBnB(utxo_pool, target, 1); // Should exhaust
 
         // Cleanup
         utxo_pool.clear();
