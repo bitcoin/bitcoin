@@ -19,7 +19,7 @@ from test_framework.blocktools import (
     create_block,
 )
 
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, force_finish_mnsync
 
 NODE1_BLOCKS_REQUIRED = 15
 NODE2_BLOCKS_REQUIRED = 2047
@@ -29,7 +29,7 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         # SYSCOIN
-        self.rpc_timeout = 240
+        self.rpc_timeout = 480
         self.num_nodes = 4
         # Node0 has no required chainwork; node1 requires 15 blocks on top of the genesis block; node2 requires 2047
         self.extra_args = [["-minimumchainwork=0x0", "-checkblockindex=0"], ["-minimumchainwork=0x1f", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0"], ["-minimumchainwork=0x1000", "-checkblockindex=0", "-whitelist=noban@127.0.0.1"]]
@@ -38,6 +38,10 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
         self.setup_nodes()
         self.reconnect_all()
         self.sync_all()
+        force_finish_mnsync(self.nodes[0])
+        force_finish_mnsync(self.nodes[1])
+        force_finish_mnsync(self.nodes[2])
+        force_finish_mnsync(self.nodes[3])
 
     def disconnect_all(self):
         self.disconnect_nodes(0, 1)
@@ -48,6 +52,13 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.connect_nodes(0, 3)
+        self.connect_nodes(1, 0)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(1, 3)  
+        force_finish_mnsync(self.nodes[0])
+        force_finish_mnsync(self.nodes[1])
+        force_finish_mnsync(self.nodes[2])
+        force_finish_mnsync(self.nodes[3])
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -150,7 +161,7 @@ class RejectLowDifficultyHeadersTest(SyscoinTestFramework):
 
         self.reconnect_all()
 
-        self.sync_blocks(timeout=1600) # Ensure tips eventually agree
+        self.sync_blocks(timeout=1200) # Ensure tips eventually agree
 
 
     def run_test(self):
