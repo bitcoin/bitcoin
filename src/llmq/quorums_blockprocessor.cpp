@@ -324,7 +324,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const u
             // should not happen as it was verified before processing the block
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
         }
-        for(const auto& commitment: qc.commitments) {
+        for(auto& commitment: qc.commitments) {
             // only allow one commitment per type and per block
             if (ret.count(commitment.llmqType)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
