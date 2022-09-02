@@ -213,7 +213,8 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         // Only need to handle txouts if AT LEAST one of these is true:
         //   1) they debit from us (sent)
         //   2) the output is to us (received)
-        if (nDebit > 0)
+        const bool we_sent_this{nDebit > 0 && !wtx.IsForeignOutput(i)};
+        if (we_sent_this)
         {
             my_output_amount += txout.nValue;
             if (!include_change && OutputIsChange(wallet, txout))
@@ -235,8 +236,9 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         COutputEntry output = {address, txout.nValue, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
+        if (we_sent_this) {
             listSent.push_back(output);
+        }
 
         // If we are receiving the output, add it as a "received" entry
         if (fIsMine & filter)
