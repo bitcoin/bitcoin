@@ -27,9 +27,10 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, bool f
         shorttxids[i - 1] = GetShortID(tx.GetWitnessHash());
     }
     // SYSCOIN
+    CBlock& blockRef = const_cast<CBlock&>(block);
     if(!block.vchNEVMBlockData.empty()) {
         if(fMoveNEVMData) {
-            vchNEVMBlockData = std::move(block.vchNEVMBlockData);
+            vchNEVMBlockData = std::move(blockRef.vchNEVMBlockData);
         } else {
             vchNEVMBlockData = block.vchNEVMBlockData;
         }

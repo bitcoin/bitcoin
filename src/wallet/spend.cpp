@@ -286,7 +286,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     AvailableCoins(wallet, availableCoins);
 
-    for (const COutput& coin : availableCoins) {
+    for (COutput& coin : availableCoins) {
         CTxDestination address;
         if ((coin.fSpendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.fSolvable)) &&
             ExtractDestination(FindNonChangeParentOutput(wallet, *coin.tx->tx, coin.i).scriptPubKey, address)) {
@@ -1412,7 +1412,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     nChangePosInOut = txr.change_pos;
     // SYSCOIN
     const bool hasAssets = tx.HasAssets();
-    tx.voutAssets = std::move(tx_new->voutAssets);
+    tx.voutAssets = tx_new->voutAssets;
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
     }

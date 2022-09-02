@@ -290,47 +290,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     assert(false);
 }
 
-// TODO: from v23 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
-bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
-{
-    addressRet.clear();
-    std::vector<valtype> vSolutions;
-    typeRet = Solver(scriptPubKey, vSolutions);
-    if (typeRet == TxoutType::NONSTANDARD) {
-        return false;
-    } else if (typeRet == TxoutType::NULL_DATA) {
-        // This is data, not addresses
-        return false;
-    }
-
-    if (typeRet == TxoutType::MULTISIG)
-    {
-        nRequiredRet = vSolutions.front()[0];
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-            CPubKey pubKey(vSolutions[i]);
-            if (!pubKey.IsValid())
-                continue;
-
-            CTxDestination address = PKHash(pubKey);
-            addressRet.push_back(address);
-        }
-
-        if (addressRet.empty())
-            return false;
-    }
-    else
-    {
-        nRequiredRet = 1;
-        CTxDestination address;
-        if (!ExtractDestination(scriptPubKey, address))
-           return false;
-        addressRet.push_back(address);
-    }
-
-    return true;
-}
-
 namespace {
 class CScriptVisitor
 {
@@ -431,13 +390,7 @@ void TaprootSpendData::Merge(TaprootSpendData other)
         merkle_root = other.merkle_root;
     }
     for (auto& [key, control_blocks] : other.scripts) {
-        // Once P0083R3 is supported by all our targeted platforms,
-        // this loop body can be replaced with:
-        // scripts[key].merge(std::move(control_blocks));
-        auto& target = scripts[key];
-        for (auto& control_block: control_blocks) {
-            target.insert(std::move(control_block));
-        }
+        scripts[key].merge(std::move(control_blocks));
     }
 }
 
