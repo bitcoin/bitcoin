@@ -1457,6 +1457,54 @@ RPCHelpMan sendall()
     };
 }
 
+RPCHelpMan submitrawtransactiontowallet()
+{
+    return RPCHelpMan{"submitrawtransactiontowallet",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n"
+        "\nSubmit a raw transaction to the wallet directly.\n",
+        {
+            {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            "\nCreate a transaction\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\" : \\\"mytxid\\\",\\\"vout\\\":0}]\" \"{\\\"myaddress\\\":0.01}\"") +
+            "\nSign the transaction, and get back the hex\n"
+            + HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"") +
+            "\nSend the transaction (signed hex)\n"
+            + HelpExampleCli("submitrawtransactiontowallet", "\"signedhex\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("submitrawtransactiontowallet", "\"signedhex\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const pwallet{GetWalletForJSONRPCRequest(request)};
+            if (!pwallet) return UniValue::VNULL;
+
+            RPCTypeCheck(request.params, {
+                UniValue::VSTR, // hexstring
+            }, /*fAllowNull=*/false);
+
+            CMutableTransaction mtx;
+            if (!DecodeHexTx(mtx, request.params[0].get_str())) {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+            }
+            CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+            {
+                LOCK(pwallet->cs_wallet);
+                if (!(pwallet->IsMine(*tx) || pwallet->IsFromMe(*tx))) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction is not related to this wallet.");
+                }
+                if (pwallet->mapWallet.count(tx->GetHash()) == 0) {
+                    pwallet->CommitTransaction(tx, /*mapValue=*/{}, /*orderForm=*/{});
+                }
+            }
+
+            return UniValue::VNULL;
+        }
+    };
+}
+
 RPCHelpMan walletprocesspsbt()
 {
     return RPCHelpMan{"walletprocesspsbt",

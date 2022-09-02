@@ -809,6 +809,7 @@ RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
 RPCHelpMan send();
 RPCHelpMan sendall();
+RPCHelpMan submitrawtransactiontowallet();
 RPCHelpMan walletprocesspsbt();
 RPCHelpMan walletcreatefundedpsbt();
 RPCHelpMan signrawtransactionwithwallet();
@@ -888,6 +889,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &signrawtransactionwithwallet},
         {"wallet", &simulaterawtransaction},
         {"wallet", &sendall},
+        {"wallet", &submitrawtransactiontowallet},
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},
