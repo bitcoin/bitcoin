@@ -161,6 +161,11 @@ G1Point G1Point::Rand()
     return g * Scalar::Rand();
 }
 
+bool G1Point::IsValid() const
+{
+    return mclBnG1_isValid(&m_p) == 1;
+}
+
 bool G1Point::IsUnity() const
 {
     return mclBnG1_isZero(&m_p);

@@ -160,6 +160,7 @@ BITCOIN_CORE_H = \
   blsct/arith/g1point.h \
   blsct/arith/mcl_initializer.h \
   blsct/arith/scalar.h \
+  blsct/keys.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -387,6 +388,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/g1point.cpp \
   blsct/arith/mcl_initializer.cpp \
   blsct/arith/scalar.cpp \
+  blsct/keys.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -911,6 +913,7 @@ libbitcoinkernel_la_SOURCES = \
   blsct/arith/g1point.cpp \
   blsct/arith/mcl_initializer.cpp \
   blsct/arith/scalar.cpp \
+  blsct/keys.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
