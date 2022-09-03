@@ -177,7 +177,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     for (auto &tx : txn_available) {
         if(tx && tx->IsNEVMData()) {
             if(!FillNEVMData(tx)) {
-                LogPrintf("PartiallyDownloadedBlock::InitData: FillNEVMData invalid\n");
+                LogPrint(BCLog::CMPCTBLOCK, "PartiallyDownloadedBlock::InitData: FillNEVMData invalid\n");
                 return READ_STATUS_INVALID;
             }
         }
