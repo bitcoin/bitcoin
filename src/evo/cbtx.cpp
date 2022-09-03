@@ -171,7 +171,7 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev) ->
         std::optional<std::pair<QcHashMap /*qcHashes*/, QcIndexedHashMap /*qcIndexedHashes*/>> {
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
 
-    static CCriticalSection cs_cache;
+    static Mutex cs_cache;
     static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
     static QcHashMap qcHashes_cached GUARDED_BY(cs_cache);
     static QcIndexedHashMap qcIndexedHashes_cached GUARDED_BY(cs_cache);
