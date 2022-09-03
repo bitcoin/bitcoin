@@ -331,6 +331,34 @@ class ListTransactionsTest(BitcoinTestFramework):
             (addr_pay0, -1, 'send', 47),
         ])
 
+        # Directly resubmit the transaction to the wallets, this time providing info on foreign outputs
+        self.nodes[0].submitrawtransactiontowallet(rawtx, {'foreign_outputs': (0, 2)})
+        self.nodes[1].submitrawtransactiontowallet(rawtx, {'foreign_outputs': (1, 3)})
+
+        def final_check():
+            # Now node 0 should show it received 1 BTC, then sent 2 BTC with a 1 BTC fee
+            # Now node 1 should show it received 2 BTC, then sent 1 BTC with a 2 BTC fee
+            txlist_node0 = self.nodes[0].listtransactions('*', 3)
+            txlist_node1 = self.nodes[1].listtransactions('*', 3)
+            assert txlist_node0.pop(0)['txid'] != txid
+            assert txlist_node1.pop(0)['txid'] != txid
+            txlist = list((tx['address'], tx['amount'], tx['category'], tx.get('fee', None)) for tx in txlist_node0 + txlist_node1)
+            assert_equal(txlist, [
+                # node 0:
+                (addr_pay0, 1, 'receive', None),
+                (addr_pay1, -2, 'send', -1),
+                # node 1:
+                (addr_pay1, 2, 'receive', None),
+                (addr_pay0, -1, 'send', -2),
+            ])
+
+        final_check()
+
+        # Ensure metadata is preserved across restart
+        self.restart_node(0)
+        self.restart_node(1)
+        final_check()
+
     def run_invalid_parameters_test(self):
         self.log.info("Test listtransactions RPC parameter validity")
         assert_raises_rpc_error(-8, 'Label argument must be a valid label name or "*".', self.nodes[0].listtransactions, label="")
