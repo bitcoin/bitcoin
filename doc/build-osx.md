@@ -96,11 +96,14 @@ Skip if you don't intend to use the GUI.
 brew install qt@5
 ```
 
-Ensure that the `qt@5` package is installed, not the `qt` package.
-If 'qt' is installed, the build process will fail.
-if installed, remove the `qt` package with the following command:
+Note: Ensure that _only_ `qt@5` is installed:
+
+If the `qt` package, which provides Qt 6, is installed alongside `qt@5`, configuring will find Qt 5, but compiling will fail because some headers are incorrectly imported from Qt 6 locations.
+
+You may check for and uninstall the `qt` package with the following commands:
 
 ``` bash
+brew list --version | grep qt
 brew uninstall qt
 ```
 
