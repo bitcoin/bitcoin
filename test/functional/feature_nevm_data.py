@@ -119,7 +119,11 @@ class NEVMDataTest(DashTestFramework):
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
         # change data, only size matters
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'adfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaf')
+        txBad = self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'adfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaf')['txid']
+        time.sleep(1)
+        # should get 'ProcessNEVMDataHelper(block): NEVM mismatch in commitment' where the size matches but the data is different
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[2].getrawtransaction, txid=txBad)
+        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         print('Generating blocks without waiting for mempools to sync...')
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:4])
@@ -132,7 +136,7 @@ class NEVMDataTest(DashTestFramework):
         self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaf')['txid']
+        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')['txid']
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
         assert_equal(self.nodes[0].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')

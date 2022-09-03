@@ -2166,15 +2166,12 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
     for (auto &nevmDataEntry : vecNevmData) {
+        std::vector<uint8_t> vchData;
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
-        bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        bool existsData = pnevmdatadb->ExistsData(nevmDataEntry.nevmData->vchVersionHash);
-        bool dataDoesntExistsInDb = nMedianTime == 0 || !existsData;
-        // dataDoesntExistInDb is checked here as its not OK semantically for data to be empty within the time window but pragmatically its fine protocol wise as we have the data
-        // however this situation is possible since in PartiallyDownloadedBlock::InitData it will use mempool (local txs) that have already stripped data so its expected for the vchData to be empty for those (they are local anyway)
-        // it wouldn't be OK for enforceNotHaveData if data existed when it shouldn't (means a peer is spamming)
-        if(enforceHaveData && dataDoesntExistsInDb && nevmDataEntry.nevmData->vchData.empty()) {
+        const bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        const bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
+        const bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ReadData(nevmDataEntry.nevmData->vchVersionHash, vchData);
+        if(enforceHaveData && nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
         } else if(enforceNotHaveData && !nevmDataEntry.nevmData->vchData.empty()) {
@@ -2182,13 +2179,10 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
             return false;
         }
         // we don't be checking KZG commitment so we need to ensure enough fees were paid
-        if(existsData) {
-            uint32_t nReadData;
-            if(pnevmdatadb->ReadDataSize(nevmDataEntry.nevmData->vchVersionHash, nReadData)) {
-                if(nevmDataEntry.nevmData->nSize != nReadData) {
-                    LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->nSize, nReadData);
-                    return false;
-                }
+        if(!dataDoesntExistsInDb) {
+            if(nevmDataEntry.nevmData->vchData != vchData) {
+                LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->vchData.size(), vchData.size());
+                return false;
             }
         }
         if(!nevmDataEntry.nevmData->vchData.empty() && dataDoesntExistsInDb) {
