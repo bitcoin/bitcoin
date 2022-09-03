@@ -133,3 +133,29 @@ listening port to 0 when listening for incoming I2P connections and advertises
 its own I2P address with port 0. Furthermore, it will not attempt to connect to
 I2P addresses with a non-zero port number because with SAM v3.1 the destination
 port (`TO_PORT`) is always set to 0 and is not in the control of Bitcoin Core.
+
+## Bandwidth
+
+I2P routers may route a large amount of general network traffic with their
+default settings. Check your router's configuration to limit the amount of this
+traffic relayed, if desired.
+
+With `i2pd`, the amount of bandwidth being shared with the wider network can be
+adjusted with the `bandwidth`, `share` and `transittunnels` options in your
+`i2pd.conf` file. For example, to limit total I2P traffic to 256KB/s and share
+50% of this limit for a maximum of 20 transit tunnels:
+
+```
+bandwidth = 256
+share = 50
+
+[limits]
+transittunnels = 20
+```
+
+If you prefer not to relay any public I2P traffic and only permit I2P traffic
+from programs which are connecting via the SAM proxy, e.g. Bitcoin Core, you
+can set the `notransit` option to `true`.
+
+Similar bandwidth configuration options for the Java I2P router can be found in
+`http://127.0.0.1:7657/config` under the "Bandwidth" tab.
