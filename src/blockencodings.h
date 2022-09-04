@@ -125,7 +125,6 @@ public:
         }
     }
 };
-static std::vector<unsigned char> emptyVecData;
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
@@ -138,10 +137,10 @@ public:
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData);
+    ReadStatus InitData(CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
     // SYSCOIN
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockData=emptyVecData, const int64_t &nMedianTime = 0, const int nHeight = 0, const int64_t& nTimeNow = 0, const node::BlockManager* blockman = nullptr);
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, const int64_t &nMedianTime = 0, const int nHeight = 0, const int64_t& nTimeNow = 0, const node::BlockManager* blockman = nullptr);
 };
 
 #endif // SYSCOIN_BLOCKENCODINGS_H

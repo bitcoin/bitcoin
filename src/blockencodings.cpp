@@ -55,7 +55,7 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
 
 
 
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn, std::vector<unsigned char> &vchNEVMBlockDataIn) {
+ReadStatus PartiallyDownloadedBlock::InitData(CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
     if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_WEIGHT / MIN_SERIALIZABLE_TRANSACTION_WEIGHT)
@@ -171,8 +171,8 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
     // SYSCOIN
-    if(!vchNEVMBlockDataIn.empty()) {
-        vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
+    if(!cmpctblock.vchNEVMBlockData.empty()) {
+        vchNEVMBlockData = std::move(cmpctblock.vchNEVMBlockData);
     }
     for (auto &tx : txn_available) {
         if(tx && tx->IsNEVMData()) {
@@ -194,7 +194,7 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] != nullptr;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, std::vector<unsigned char> &vchNEVMBlockDataIn, const int64_t &nMedianTime, const int nHeight, const int64_t& nTimeNow, const node::BlockManager* blockman) {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, const int64_t &nMedianTime, const int nHeight, const int64_t& nTimeNow, const node::BlockManager* blockman) {
     assert(!header.IsNull());
     uint256 hash = header.GetHash();
     block = header;
@@ -217,8 +217,8 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_INVALID;
 
     // SYSCOIN
-    if(!vchNEVMBlockDataIn.empty() && block.vchNEVMBlockData.empty())
-        block.vchNEVMBlockData = std::move(vchNEVMBlockDataIn);
+    if(!vchNEVMBlockData.empty() && block.vchNEVMBlockData.empty())
+        block.vchNEVMBlockData = std::move(vchNEVMBlockData);
 
     NEVMDataVec nevmDataVecOut;
     bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;

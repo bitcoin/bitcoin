@@ -4396,7 +4396,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
 
                 PartiallyDownloadedBlock& partialBlock = *(*queuedBlockIt)->partialBlock;
-                ReadStatus status = partialBlock.InitData(cmpctblock, vExtraTxnForCompact, cmpctblock.vchNEVMBlockData);
+                ReadStatus status = partialBlock.InitData(cmpctblock, vExtraTxnForCompact);
                 if (status == READ_STATUS_INVALID) {
                     RemoveBlockRequest(pindex->GetBlockHash()); // Reset in-flight state in case Misbehaving does not result in a disconnect
                     Misbehaving(*peer, 100, "invalid compact block");
@@ -4418,9 +4418,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // Dirty hack to jump to BLOCKTXN code (TODO: move message handling into their own functions)
                     BlockTransactions txn;
                     txn.blockhash = cmpctblock.header.GetHash();
-                    // SYSCOIN
-                    if(!partialBlock.vchNEVMBlockData.empty())
-                        txn.vchNEVMBlockData = partialBlock.vchNEVMBlockData;
                     blockTxnMsg << txn;
                     fProcessBLOCKTXN = true;
                 } else {
@@ -4434,14 +4431,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Optimistically try to reconstruct anyway since we might be
                 // able to without any round trips.
                 PartiallyDownloadedBlock tempBlock(&m_mempool);
-                ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact, cmpctblock.vchNEVMBlockData);
+                ReadStatus status = tempBlock.InitData(cmpctblock, vExtraTxnForCompact);
                 if (status != READ_STATUS_OK) {
                     // TODO: don't ignore failures
                     return;
                 }
                 std::vector<CTransactionRef> dummy;
                 // SYSCOIN
-                status = tempBlock.FillBlock(*pblock, dummy, cmpctblock.vchNEVMBlockData, m_chainman.ActiveTip()->GetMedianTimePast(), m_chainman.ActiveHeight(), TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
+                status = tempBlock.FillBlock(*pblock, dummy, m_chainman.ActiveTip()->GetMedianTimePast(), m_chainman.ActiveHeight(), TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -4526,7 +4523,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
             // SYSCOIN
-            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, resp.vchNEVMBlockData, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), m_chainman.ActiveChain().Tip()->nHeight, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
+            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), m_chainman.ActiveChain().Tip()->nHeight, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
             if (status == READ_STATUS_INVALID) {
                 RemoveBlockRequest(resp.blockhash); // Reset in-flight state in case Misbehaving does not result in a disconnect
                 Misbehaving(*peer, 100, "invalid compact block/non-matching block transactions");
