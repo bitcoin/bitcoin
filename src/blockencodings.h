@@ -55,7 +55,7 @@ public:
     // A BlockTransactions message
     uint256 blockhash;
     std::vector<CTransactionRef> txn;
-    // SYSCOIN
+    // SYSCOIN TODO: remove this field it shouldn't be required
     std::vector<unsigned char> vchNEVMBlockData{};
     BlockTransactions() {}
     explicit BlockTransactions(const BlockTransactionsRequest& req) :
