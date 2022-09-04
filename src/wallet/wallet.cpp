@@ -390,25 +390,31 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
     ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
 
-    if (!fs::exists(backup_file)) {
-        error = Untranslated("Backup file does not exist");
-        status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
-        return nullptr;
-    }
-
     const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
-
-    if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-        error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
-        status = DatabaseStatus::FAILED_ALREADY_EXISTS;
-        return nullptr;
-    }
-
     auto wallet_file = wallet_path / "wallet.dat";
-    fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
+    std::shared_ptr<CWallet> wallet;
 
-    auto wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+    try {
+        if (!fs::exists(backup_file)) {
+            error = Untranslated("Backup file does not exist");
+            status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
+            return nullptr;
+        }
 
+        if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
+            error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
+            status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+            return nullptr;
+        }
+
+        fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
+
+        wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+    } catch (const std::exception& e) {
+        assert(!wallet);
+        if (!error.empty()) error += Untranslated("\n");
+        error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
+    }
     if (!wallet) {
         fs::remove(wallet_file);
         fs::remove(wallet_path);
