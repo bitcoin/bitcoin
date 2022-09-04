@@ -1089,13 +1089,13 @@ std::string ArgsManager::GetChainName() const
         //check if m_settings has multiple chain commands. If so, throw error.
         std::string error{"Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one."};
         if (is_chain_arg_set_persistent && !is_chain_arg_set_command_line) {
-            error += "/n chain argument is being set in a config file and by network arguments in the commandline.";
+            error += "\n Chain argument is being set in a config file and by network arguments in the commandline.";
         } else if(is_chain_arg_set_command_line && !is_chain_arg_set_persistent) {
-            error += "/n chain argument is being set in commandline with network argument.";
+            error += "\n Chain argument is being set in commandline with network argument.";
         } else if(is_chain_arg_set_persistent && is_chain_arg_set_command_line) {
-            error += "/n chain argument is being set in a config file and by commandline.";
+            error += "\n Chain argument is being set in a config file and by commandline.";
         } else if (!is_chain_arg_set_persistent && !is_chain_arg_set_command_line) {
-            error += "/n to many network flags being set in the commandline.";
+            error += "\n Too many network flags being set in the commandline.";
         }
         
 
