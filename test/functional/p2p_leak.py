@@ -132,6 +132,9 @@ class P2PLeakTest(BitcoinTestFramework):
         # Give the node enough time to possibly leak out a message
         time.sleep(PEER_TIMEOUT + 2)
 
+        self.log.info("Connect peer to ensure the net thread runs the disconnect logic at least once")
+        self.nodes[0].add_p2p_connection(P2PInterface())
+
         # Make sure only expected messages came in
         assert not no_version_idle_peer.unexpected_msg
         assert not no_version_idle_peer.got_sendaddrv2
@@ -156,7 +159,7 @@ class P2PLeakTest(BitcoinTestFramework):
 
         self.log.info('Check that old peers are disconnected')
         p2p_old_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(['peer=3 using obsolete version 31799; disconnecting']):
+        with self.nodes[0].assert_debug_log(["using obsolete version 31799; disconnecting"]):
             p2p_old_peer.send_message(self.create_old_version(31799))
             p2p_old_peer.wait_for_disconnect()
 
