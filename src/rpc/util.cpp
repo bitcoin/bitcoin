@@ -98,7 +98,7 @@ CAmount AmountFromValue(const UniValue& value, int decimals)
 
 uint256 ParseHashV(const UniValue& v, std::string strName)
 {
-    std::string strHex(v.get_str());
+    const std::string& strHex(v.get_str());
     if (64 != strHex.length())
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", strName, 64, strHex.length(), strHex));
     if (!IsHex(strHex)) // Note: IsHex("") is false

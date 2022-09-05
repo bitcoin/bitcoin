@@ -364,7 +364,7 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     }
 
     if (m_log_threadnames && m_started_new_line) {
-        const auto threadname = util::ThreadGetInternalName();
+        const auto& threadname = util::ThreadGetInternalName();
         str_prefixed.insert(0, "[" + (threadname.empty() ? "unknown" : threadname) + "] ");
     }
 

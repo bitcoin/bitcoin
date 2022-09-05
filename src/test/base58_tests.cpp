@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
     UniValue tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        UniValue test = tests[idx];
+        const UniValue& test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     std::vector<unsigned char> result;
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        UniValue test = tests[idx];
+        const UniValue& test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {

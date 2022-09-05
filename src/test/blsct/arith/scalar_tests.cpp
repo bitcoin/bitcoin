@@ -349,7 +349,8 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
     Scalar base(0b1);
     int64_t exp = 1;
-    for(unsigned int i=0; i<64; ++i) {
+    // We limit the loops to 30 counts as int64_t will just overflow
+    for(unsigned int i=0; i<31; ++i) {
         Scalar a = base << i;
         BOOST_CHECK_EQUAL(a.GetInt64(), exp);
         exp <<= 1;
@@ -483,7 +484,8 @@ BOOST_AUTO_TEST_CASE(test_scalar_getint64)
     {
         Scalar base(0b1);
         int64_t exp = 1;
-        for (uint8_t i=0; i<64; ++i) {
+        // We limit the loops to 30 counts as int64_t will just overflow
+        for(unsigned int i=0; i<31; ++i) {
             Scalar a = base << i;
             BOOST_CHECK_EQUAL(a.GetInt64(), exp);
             exp <<= 1;

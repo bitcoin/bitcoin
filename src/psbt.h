@@ -869,6 +869,12 @@ struct PSBTOutput
                         s_tree >> depth;
                         s_tree >> leaf_ver;
                         s_tree >> script;
+                        if (depth > TAPROOT_CONTROL_MAX_NODE_COUNT) {
+                            throw std::ios_base::failure("Output Taproot tree has as leaf greater than Taproot maximum depth");
+                        }
+                        if ((leaf_ver & ~TAPROOT_LEAF_MASK) != 0) {
+                            throw std::ios_base::failure("Output Taproot tree has a leaf with an invalid leaf version");
+                        }
                         m_tap_tree->Add((int)depth, script, (int)leaf_ver, true /* track */);
                     }
                     if (!m_tap_tree->IsComplete()) {
@@ -890,6 +896,9 @@ struct PSBTOutput
                     s >> leaf_hashes;
                     size_t after_hashes = s.size();
                     size_t hashes_len = before_hashes - after_hashes;
+                    if (hashes_len > value_len) {
+                        throw std::ios_base::failure("Output Taproot BIP32 keypath has an invalid length");
+                    }
                     size_t origin_len = value_len - hashes_len;
                     m_tap_bip32_paths.emplace(xonly, std::make_pair(leaf_hashes, DeserializeKeyOrigin(s, origin_len)));
                     break;

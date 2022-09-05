@@ -77,20 +77,14 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
     return LookupHelper(tr_trees, output_key, builder);
 }
 
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
+FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
-    FlatSigningProvider ret;
-    ret.scripts = a.scripts;
-    ret.scripts.insert(b.scripts.begin(), b.scripts.end());
-    ret.pubkeys = a.pubkeys;
-    ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
-    ret.keys = a.keys;
-    ret.keys.insert(b.keys.begin(), b.keys.end());
-    ret.origins = a.origins;
-    ret.origins.insert(b.origins.begin(), b.origins.end());
-    ret.tr_trees = a.tr_trees;
-    ret.tr_trees.insert(b.tr_trees.begin(), b.tr_trees.end());
-    return ret;
+    scripts.merge(b.scripts);
+    pubkeys.merge(b.pubkeys);
+    keys.merge(b.keys);
+    origins.merge(b.origins);
+    tr_trees.merge(b.tr_trees);
+    return *this;
 }
 
 void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)

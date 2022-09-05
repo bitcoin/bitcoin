@@ -588,7 +588,6 @@ CScript BuildScript(Ts&&... inputs)
     int cnt{0};
 
     ([&ret, &cnt] (Ts&& input) {
-        cnt++;
         if constexpr (std::is_same_v<std::remove_cv_t<std::remove_reference_t<Ts>>, CScript>) {
             // If it is a CScript, extend ret with it. Move or copy the first element instead.
             if (cnt == 0) {
@@ -600,6 +599,7 @@ CScript BuildScript(Ts&&... inputs)
             // Otherwise invoke CScript::operator<<.
             ret << input;
         }
+        cnt++;
     } (std::forward<Ts>(inputs)), ...);
 
     return ret;

@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_ts_only)
     auto sl = Scalars::RandVec(n);
     auto sr = Scalars::RandVec(n);
 
-    auto l1 = sl;
+    const auto &l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_only)
     auto sr = Scalars::RandVec(n);
 
     auto l0 = (al - one_n * z);
-    auto l1 = sl;
+    const auto &l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 
@@ -428,7 +428,7 @@ bool RangeProof(
     // t(x) = <l(x),r(x)> = <l0, r0> + (<l1, r0> + <l0, r1>) * x + <l1, r1> * x^2
     auto y_n = Scalars::FirstNPow(n, y);
     auto l0 = al - one_n * z;
-    auto l1 = sl;
+    const auto &l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 

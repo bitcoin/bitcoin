@@ -11,13 +11,16 @@ Supporting RPCs are:
   addresses.
 - `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 - `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
-- `importmulti` takes as input descriptors to import into the wallet
+- `importmulti` takes as input descriptors to import into a legacy wallet
   (since v0.18).
 - `generatetodescriptor` takes as input a descriptor and generates coins to it
   (`regtest` only, since v0.19).
 - `utxoupdatepsbt` takes as input descriptors to add information to the psbt
   (since v0.19).
-- `createmultisig` and `addmultisigaddress` return descriptors as well (since v0.20)
+- `createmultisig` and `addmultisigaddress` return descriptors as well (since v0.20).
+- `importdescriptors` takes as input descriptors to import into a descriptor wallet
+  (since v0.21).
+- `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
@@ -77,6 +80,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - `tr(KEY)` or `tr(KEY,TREE)` (top level only): P2TR output with the specified key as internal key, and optionally a tree of script paths.
 - `addr(ADDR)` (top level only): the script which ADDR expands to.
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
+- `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
 
 `KEY` expressions:
 - Optionally, key origin information, consisting of:
@@ -87,7 +91,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - Followed by the actual key, which is either:
   - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
     - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
-    - Inside `tr`, x-only pubkeys are also permitted (64 hex characters).
+    - Inside `tr` and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.

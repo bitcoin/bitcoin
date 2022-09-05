@@ -54,14 +54,17 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_equal(len(peers), 1)
         peer_0_peer_1_id = peers[0]["id"]
 
-        self.log.info("Arguments must be sensible")
-        assert_raises_rpc_error(-8, "hash must be of length 64 (not 4, for '1234')", self.nodes[0].getblockfrompeer, "1234", 0)
+        self.log.info("Arguments must be valid")
+        assert_raises_rpc_error(-8, "hash must be of length 64 (not 4, for '1234')", self.nodes[0].getblockfrompeer, "1234", peer_0_peer_1_id)
+        assert_raises_rpc_error(-3, "Expected type string, got number", self.nodes[0].getblockfrompeer, 1234, peer_0_peer_1_id)
+        assert_raises_rpc_error(-3, "Expected type number, got string", self.nodes[0].getblockfrompeer, short_tip, "0")
 
         self.log.info("We must already have the header")
         assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
-        assert_raises_rpc_error(-1, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
+        for peer_id in [-1, peer_0_peer_1_id + 1]:
+            assert_raises_rpc_error(-1, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_id)
 
         self.log.info("Fetching from pre-segwit peer generates error")
         self.nodes[0].add_p2p_connection(P2PInterface(), services=P2P_SERVICES & ~NODE_WITNESS)

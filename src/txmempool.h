@@ -365,7 +365,7 @@ enum class MemPoolRemovalReason {
  * - a transaction which doesn't meet the minimum fee requirements.
  * - a new transaction that double-spends an input of a transaction already in
  * the pool where the new transaction does not meet the Replace-By-Fee
- * requirements as defined in BIP 125.
+ * requirements as defined in doc/policy/mempool-replacements.md.
  * - a non-standard transaction.
  *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:
@@ -451,7 +451,7 @@ protected:
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool m_is_loaded GUARDED_BY(cs){false};
+    bool m_load_tried GUARDED_BY(cs){false};
 
     CFeeRate GetMinFee(size_t sizelimit) const;
 
@@ -568,6 +568,13 @@ public:
 
     const int64_t m_max_size_bytes;
     const std::chrono::seconds m_expiry;
+    const CFeeRate m_incremental_relay_feerate;
+    const CFeeRate m_min_relay_feerate;
+    const CFeeRate m_dust_relay_feerate;
+    const bool m_permit_bare_multisig;
+    const std::optional<unsigned> m_max_datacarrier_bytes;
+    const bool m_require_standard;
+    const bool m_full_rbf;
 
     using Limits = kernel::MemPoolLimits;
 
@@ -701,11 +708,11 @@ public:
     void CalculateDescendants(txiter it, setEntries& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
-      *  for larger-sized transactions.
-      *  The incrementalRelayFee policy variable is used to bound the time it
-      *  takes the fee rate to go back down all the way to 0. When the feerate
-      *  would otherwise be half of this, it is set to 0 instead.
-      */
+     *  for larger-sized transactions.
+     *  The m_incremental_relay_feerate policy variable is used to bound the time it
+     *  takes the fee rate to go back down all the way to 0. When the feerate
+     *  would otherwise be half of this, it is set to 0 instead.
+     */
     CFeeRate GetMinFee() const {
         return GetMinFee(m_max_size_bytes);
     }
@@ -727,11 +734,17 @@ public:
      */
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) const;
 
-    /** @returns true if the mempool is fully loaded */
-    bool IsLoaded() const;
+    /**
+     * @returns true if we've made an attempt to load the mempool regardless of
+     *          whether the attempt was successful or not
+     */
+    bool GetLoadTried() const;
 
-    /** Sets the current loaded state */
-    void SetIsLoaded(bool loaded);
+    /**
+     * Set whether or not we've made an attempt to load the mempool (regardless
+     * of whether the attempt was successful or not)
+     */
+    void SetLoadTried(bool load_tried);
 
     unsigned long size() const
     {

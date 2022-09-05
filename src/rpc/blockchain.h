@@ -55,7 +55,7 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 UniValue CreateUTXOSnapshot(
     node::NodeContext& node,
     CChainState& chainstate,
-    CAutoFile& afile,
+    AutoFile& afile,
     const fs::path& path,
     const fs::path& tmppath);
 

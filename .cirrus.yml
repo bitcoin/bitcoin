@@ -97,8 +97,8 @@ task:
   name: "Win64 native [vs2022]"
   << : *FILTER_TEMPLATE
   windows_container:
-    cpu: 4
-    memory: 8G
+    cpu: 6
+    memory: 12G
     image: cirrusci/windowsservercore:visualstudio2022
   timeout_in: 120m
   env:
@@ -109,9 +109,9 @@ task:
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
     WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
-    QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.3/single/qt-everywhere-opensource-src-5.15.3.zip'
-    QT_LOCAL_PATH: 'C:\qt-everywhere-opensource-src-5.15.3.zip'
-    QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.3'
+    QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.5/single/qt-everywhere-opensource-src-5.15.5.zip'
+    QT_LOCAL_PATH: 'C:\qt-everywhere-opensource-src-5.15.5.zip'
+    QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.5'
     QTBASEDIR: 'C:\Qt_static'
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     QT_CONFIGURE_COMMAND: '..\configure -release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
@@ -162,7 +162,7 @@ task:
   ccache_cache:
     folder: '%CCACHE_DIR%'
   install_tools_script:
-    - choco install --yes --no-progress ccache
+    - choco install --yes --no-progress ccache --version=4.6.1
     - choco install --yes --no-progress python3 --version=3.9.6
     - pip install zmq
     - ccache --version
@@ -259,12 +259,20 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
 
 task:
-  name: '[ASan + LSan + UBSan + integer, no depends] [jammy]'
+  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:jammy
+  # We can't use a 'container' for the USDT interface tests as the CirrusCI
+  # containers don't have privileges to hook into bitcoind. CirrusCI uses
+  # Google Compute Engine instances: https://cirrus-ci.org/guide/custom-vms/
+  # Images can be found here: https://cloud.google.com/compute/docs/images/os-details
+  compute_engine_instance:
+    image_project: ubuntu-os-cloud
+    image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
+    cpu: 4
+    memory: 12G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    HOME: /root/  # Only needed for compute_engine_instance
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 

@@ -165,7 +165,7 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
     SigVersion sigversion = SigVersion::TAPSCRIPT;
 
-    uint256 leaf_hash = (CHashWriter(HASHER_TAPLEAF) << uint8_t(leaf_version) << script).GetSHA256();
+    uint256 leaf_hash = (HashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
 
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
@@ -240,6 +240,11 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
         std::vector<unsigned char> sig;
         if (sigdata.taproot_key_path_sig.size() == 0) {
             if (creator.CreateSchnorrSig(provider, sig, sigdata.tr_spenddata.internal_key, nullptr, &sigdata.tr_spenddata.merkle_root, SigVersion::TAPROOT)) {
+                sigdata.taproot_key_path_sig = sig;
+            }
+        }
+        if (sigdata.taproot_key_path_sig.size() == 0) {
+            if (creator.CreateSchnorrSig(provider, sig, output, nullptr, nullptr, SigVersion::TAPROOT)) {
                 sigdata.taproot_key_path_sig = sig;
             }
         }
@@ -591,8 +596,11 @@ public:
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override { return true; }
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const override { return true; }
 };
-const DummySignatureChecker DUMMY_CHECKER;
+}
 
+const BaseSignatureChecker& DUMMY_CHECKER = DummySignatureChecker();
+
+namespace {
 class DummySignatureCreator final : public BaseSignatureCreator {
 private:
     char m_r_len = 32;
@@ -626,25 +634,6 @@ public:
 
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
 const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
-
-bool IsSolvable(const SigningProvider& provider, const CScript& script)
-{
-    // This check is to make sure that the script we created can actually be solved for and signed by us
-    // if we were to have the private keys. This is just to make sure that the script is valid and that,
-    // if found in a transaction, we would still accept and relay that transaction. In particular,
-    // it will reject witness outputs that require signing with an uncompressed public key.
-    SignatureData sigs;
-    // Make sure that STANDARD_SCRIPT_VERIFY_FLAGS includes SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, the most
-    // important property this function is designed to test for.
-    static_assert(STANDARD_SCRIPT_VERIFY_FLAGS & SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, "IsSolvable requires standard script flags to include WITNESS_PUBKEYTYPE");
-    if (ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, script, sigs)) {
-        // VerifyScript check is just defensive, and should never fail.
-        bool verified = VerifyScript(sigs.scriptSig, script, &sigs.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER);
-        assert(verified);
-        return true;
-    }
-    return false;
-}
 
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
 {

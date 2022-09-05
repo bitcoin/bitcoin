@@ -265,7 +265,7 @@ int ParseSighashString(const UniValue& sighash)
             {std::string("SINGLE"), int(SIGHASH_SINGLE)},
             {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
         };
-        std::string strHashType = sighash.get_str();
+        const std::string& strHashType = sighash.get_str();
         const auto& it = map_sighash_values.find(strHashType);
         if (it != map_sighash_values.end()) {
             hash_type = it->second;

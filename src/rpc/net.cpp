@@ -23,6 +23,7 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <version.h>
@@ -60,7 +61,7 @@ static RPCHelpMan getconnectioncount()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    return (int)connman.GetNodeCount(ConnectionDirection::Both);
+    return connman.GetNodeCount(ConnectionDirection::Both);
 },
     };
 }
@@ -84,7 +85,7 @@ static RPCHelpMan ping()
 
     // Request that each node send a ping during next message processing pass
     peerman.SendPings();
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -195,8 +196,9 @@ static RPCHelpMan getpeerinfo()
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
-        obj.pushKV("services", strprintf("%016x", stats.nServices));
-        obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
+        ServiceFlags services{fStateStats ? statestats.their_services : ServiceFlags::NODE_NONE};
+        obj.pushKV("services", strprintf("%016x", services));
+        obj.pushKV("servicesnames", GetServicesNames(services));
         obj.pushKV("lastsend", count_seconds(stats.m_last_send));
         obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
@@ -303,7 +305,7 @@ static RPCHelpMan addnode()
     {
         CAddress addr;
         connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), ConnectionType::MANUAL);
-        return NullUniValue;
+        return UniValue::VNULL;
     }
 
     if (strCommand == "add")
@@ -319,7 +321,7 @@ static RPCHelpMan addnode()
         }
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -422,7 +424,7 @@ static RPCHelpMan disconnectnode()
         throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
     }
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -603,7 +605,7 @@ static RPCHelpMan getnetworkinfo()
                             }},
                         }},
                         {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -639,13 +641,16 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections", (int)node.connman->GetNodeCount(ConnectionDirection::Both));
-        obj.pushKV("connections_in", (int)node.connman->GetNodeCount(ConnectionDirection::In));
-        obj.pushKV("connections_out", (int)node.connman->GetNodeCount(ConnectionDirection::Out));
+        obj.pushKV("connections", node.connman->GetNodeCount(ConnectionDirection::Both));
+        obj.pushKV("connections_in", node.connman->GetNodeCount(ConnectionDirection::In));
+        obj.pushKV("connections_out", node.connman->GetNodeCount(ConnectionDirection::Out));
     }
     obj.pushKV("networks",      GetNetworksInfo());
-    obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
-    obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
+    if (node.mempool) {
+        // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
+        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_min_relay_feerate.GetFeePerK()));
+        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_incremental_relay_feerate.GetFeePerK()));
+    }
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(g_maplocalhost_mutex);
@@ -744,7 +749,7 @@ static RPCHelpMan setban()
             throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
         }
     }
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -818,7 +823,7 @@ static RPCHelpMan clearbanned()
 
     node.banman->ClearBanned();
 
-    return NullUniValue;
+    return UniValue::VNULL;
 },
     };
 }
@@ -893,7 +898,7 @@ static RPCHelpMan getnodeaddresses()
 
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("time", (int)addr.nTime);
+        obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringIP());
         obj.pushKV("port", addr.GetPort());
@@ -941,7 +946,7 @@ static RPCHelpMan addpeeraddress()
 
     if (LookupHost(addr_string, net_addr, false)) {
         CAddress address{{net_addr, port}, ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
-        address.nTime = GetAdjustedTime();
+        address.nTime = Now<NodeSeconds>();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
         if (node.addrman->Add({address}, address)) {

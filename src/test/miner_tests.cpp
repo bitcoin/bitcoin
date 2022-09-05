@@ -325,7 +325,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        m_node.chainman->ActiveChain().SetTip(next);
+        m_node.chainman->ActiveChain().SetTip(*next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     // Extend to a 210000-long block chain.
@@ -337,7 +337,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        m_node.chainman->ActiveChain().SetTip(next);
+        m_node.chainman->ActiveChain().SetTip(*next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
@@ -362,7 +362,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     // Delete the dummy blocks again.
     while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
         CBlockIndex* del = m_node.chainman->ActiveChain().Tip();
-        m_node.chainman->ActiveChain().SetTip(del->pprev);
+        m_node.chainman->ActiveChain().SetTip(*Assert(del->pprev));
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
         delete del->phashBlock;
         delete del;
@@ -389,7 +389,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     tx.nLockTime = 0;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Fee(HIGHFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
 
     {
@@ -403,7 +403,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
 
     const int SEQUENCE_LOCK_TIME = 512; // Sequence locks pass 512 seconds later
@@ -426,7 +426,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
+    BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast())); // Locktime passes on 2nd block
 
@@ -437,7 +437,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     prevheights[0] = baseheight + 4;
     hash = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Time(GetTime()).FromTx(tx));
-    BOOST_CHECK(!CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime fails
+    BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1)); // Locktime passes 1 second later
 
@@ -446,7 +446,7 @@ void MinerTestingSetup::TestBasicMining(const CChainParams& chainparams, const C
     prevheights[0] = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     tx.nLockTime = 0;
     tx.vin[0].nSequence = 0;
-    BOOST_CHECK(CheckFinalTxAtTip(m_node.chainman->ActiveChain().Tip(), CTransaction{tx})); // Locktime passes
+    BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx})); // Sequence locks pass
     tx.vin[0].nSequence = 1;
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
