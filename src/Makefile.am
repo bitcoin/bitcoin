@@ -993,6 +993,7 @@ syscoin_wallet_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_wallet_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
 syscoin_wallet_LDADD = \
+  $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBSYSCOIN_NODE) \
