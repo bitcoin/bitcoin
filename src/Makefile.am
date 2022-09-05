@@ -1103,7 +1103,6 @@ libsyscoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/standard.cpp \
-  rpc/server.cpp \
   shutdown.cpp \
   signet.cpp \
   support/cleanse.cpp \

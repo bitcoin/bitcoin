@@ -139,7 +139,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "listassets",
     "listnevmblobdata",
     "assetallocationverifyzdag",
-    "syscoinsetethheaders",
     "syscoinstopgeth",
     "syscoinstartgeth",
     "syscoincheckmint",

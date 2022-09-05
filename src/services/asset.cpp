@@ -127,63 +127,6 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
     }
     return true;
 }
-
-CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision){
-    if(!value.isObject()) {
-        SetNull();
-        return;
-    }
-    const UniValue& addressObj = find_value(value.get_obj(), "auxfee_address");
-    if(!addressObj.isStr()) {
-        SetNull();
-        return;
-    }
-    const std::string &strAuxFee = addressObj.get_str();
-    if(!strAuxFee.empty()) {
-        CTxDestination txDest = DecodeDestination(strAuxFee);
-        if (!IsValidDestination(txDest)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address");
-        }
-        if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
-            CKeyID keyID = ToKeyID(*witness_id);
-            vchAuxFeeKeyID = std::vector<unsigned char>(keyID.begin(), keyID.end());
-        } else {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address: Please use P2PWKH address.");
-        }
-    }
-    const UniValue& arrObj = find_value(value.get_obj(), "fee_struct");
-    if(!arrObj.isArray()) {
-        SetNull();
-        return;
-    }
-    const UniValue& arr = arrObj.get_array();
-    for (size_t i = 0; i < arr.size(); ++i) {
-        const UniValue& auxFeeObj = arr[i];
-        if(!auxFeeObj.isArray()) {
-            SetNull();
-            return;
-        }
-        const UniValue& auxFeeArr = auxFeeObj.get_array();
-        if(auxFeeArr.size() != 2 || (!auxFeeArr[0].isNum() && !auxFeeArr[0].isStr()) || !auxFeeArr[1].isNum()) {
-            SetNull();
-            return;
-        }
-        double iPct = std::round(auxFeeArr[1].get_real()*100000.0);
-
-        if (iPct < 0 || iPct > 65535) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "percentage must be between 0.00 and 65.535");
-        }
-        vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), (uint16_t)iPct));
-    }
-}
-UniValue AssetPublicDataToJson(const std::string &strPubData) {
-    UniValue pubDataObj(UniValue::VOBJ);
-    if(pubDataObj.read(strPubData)) {
-        auto decoded = DecodeBase64(pubDataObj["desc"].get_str());
-        pubDataObj.pushKV("desc", std::string{(*decoded).begin(), (*decoded).end()});
-    }
-    return pubDataObj;
-}
 void CAuxFeeDetails::ToJson(UniValue& value, const uint32_t& nBaseAsset) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
@@ -196,43 +139,17 @@ void CAuxFeeDetails::ToJson(UniValue& value, const uint32_t& nBaseAsset) const {
     value.__pushKV("fee_struct", feeStruct);
 }
 
-CNotaryDetails::CNotaryDetails(const UniValue& value){
-    if(!value.isObject()) {
-        SetNull();
-        return;
-    }
-    const UniValue& endpointObj = find_value(value.get_obj(), "endpoint");
-    if(!endpointObj.isStr()) {
-        SetNull();
-        return;
-    }
-    strEndPoint = EncodeBase64(endpointObj.get_str());
-    const UniValue& isObj = find_value(value.get_obj(), "instant_transfers");
-    if(!isObj.isBool()) {
-        SetNull();
-        return;
-    }  
-    bEnableInstantTransfers = isObj.get_bool()? 1: 0;
-    const UniValue& hdObj = find_value(value.get_obj(), "hd_required");
-    if(!hdObj.isBool()) {
-        SetNull();
-        return;
-    }   
-    bRequireHD = hdObj.get_bool()? 1: 0;
-}
-
 void CNotaryDetails::ToJson(UniValue& value) const {
     auto decoded = DecodeBase64(strEndPoint);
     value.pushKV("endpoint", std::string{(*decoded).begin(), (*decoded).end()});
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
 }
-
-bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
-    auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
-    if(itVout != voutAssets.end()) {
-        itVout->vchNotarySig = vchSig;
-        return true;
+UniValue AssetPublicDataToJson(const std::string &strPubData) {
+    UniValue pubDataObj(UniValue::VOBJ);
+    if(pubDataObj.read(strPubData)) {
+        auto decoded = DecodeBase64(pubDataObj["desc"].get_str());
+        pubDataObj.pushKV("desc", std::string{(*decoded).begin(), (*decoded).end()});
     }
-    return false;
+    return pubDataObj;
 }

@@ -156,6 +156,14 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
 	}
 	return true;
 }
+bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
+    auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
+    if(itVout != voutAssets.end()) {
+        itVout->vchNotarySig = vchSig;
+        return true;
+    }
+    return false;
+}
 bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
@@ -1038,74 +1046,6 @@ static RPCHelpMan syscoincheckmint()
     };
 }
 
-static RPCHelpMan syscoinsetethheaders()
-{
-    return RPCHelpMan{"syscoinsetethheaders",
-        "\nSets NEVM headers in Syscoin to validate transactions through the NEVM bridge. Only useful for testing in regtest mode.\n",
-        {
-            {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block hashes, tx root) from NEVM blockchain", 
-                {
-                    {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block hashes, tx root] ",
-                        {
-                            {"block_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the block"},
-                            {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The NEVM TX root of the block height"},
-                            {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The NEVM TX Receipt root of the block height"},
-                        }
-                    }
-                },
-                "[blockhash, txroot, txreceiptroot] ..."
-            }
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "status", "Result"},
-            }},
-        RPCExamples{
-            HelpExampleCli("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-            + HelpExampleRpc("syscoinsetethheaders", "\"[[\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-        },
-    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{
-    if(!fRegTest) {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "This function is only available in regtest mode for testing");
-    }
-    const UniValue &params = request.params;
-    LOCK(cs_setethstatus);
-    NEVMTxRootMap txRootMap;       
-    const UniValue &headerArray = params[0].get_array();
-    for(size_t i =0;i<headerArray.size();i++){
-        NEVMTxRoot txRoot;
-        const UniValue &tupleArray = headerArray[i].get_array();
-        if(tupleArray.size() != 3)
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a NEVM header input, should be size of 3");
-        std::string blockHashStr = tupleArray[0].get_str();
-        uint256 nBlockHash;
-        blockHashStr = RemovePrefix(blockHashStr, "0x");  // strip 0x
-        if(!ParseHashStr(blockHashStr, nBlockHash)) {
-             throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse block hash");
-        }
-        std::string strTxRoot = tupleArray[1].get_str();
-        strTxRoot = RemovePrefix(strTxRoot, "0x");  // strip 0x
-        // reverse endianness of root's as they are stored in eth as LE
-        std::vector<unsigned char> vchTxRoot(ParseHex(strTxRoot));
-        std::reverse(vchTxRoot.begin(), vchTxRoot.end());
-        txRoot.nTxRoot = uint256S(HexStr(vchTxRoot));
-        std::string strReceiptRoot = tupleArray[2].get_str();
-        strReceiptRoot = RemovePrefix(strReceiptRoot, "0x");  // strip 0x
-        std::vector<unsigned char> vchReceiptRoot(ParseHex(strReceiptRoot));
-        std::reverse(vchReceiptRoot.begin(), vchReceiptRoot.end());
-        txRoot.nReceiptRoot = uint256S(HexStr(vchReceiptRoot));
-        txRootMap.try_emplace(nBlockHash, txRoot);
-    } 
-    bool res = pnevmtxrootsdb->FlushWrite(txRootMap);
-    UniValue ret(UniValue::VOBJ);
-    ret.__pushKV("status", res? "success": "fail");
-    return ret;
-},
-    };
-}
-
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
 {
@@ -1118,7 +1058,6 @@ void RegisterAssetRPCCommands(CRPCTable &t)
         {"syscoin", &listassets},
         {"syscoin", &listnevmblobdata},
         {"syscoin", &assetallocationverifyzdag},
-        {"syscoin", &syscoinsetethheaders}, 
         {"syscoin", &syscoinstopgeth},
         {"syscoin", &syscoinstartgeth},
         {"syscoin", &syscoincheckmint},

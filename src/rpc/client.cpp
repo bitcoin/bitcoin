@@ -216,7 +216,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "voteraw", 1, "collateralTxIndex" },
     { "voteraw", 5, "time" },
     { "convertaddresswallet", 2, "rescan" },
-    { "syscoinsetethheaders", 0, "headers" },
     { "listassets", 0, "count" },
     { "listassets", 1, "from" },
     { "listassets", 2, "options" },
