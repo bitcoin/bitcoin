@@ -35,8 +35,8 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
        4. m_confirm_target (user-set member variable of wallet)
        The first parameter that is set is used.
     */
-     CFeeRate feerate_needed;
-     if (coin_control.m_feerate) { // 1.
+    CFeeRate feerate_needed;
+    if (coin_control.m_feerate) { // 1.
         feerate_needed = *(coin_control.m_feerate);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
         // Allow to override automatic min/max check over coin control instance
@@ -87,7 +87,7 @@ CFeeRate GetDiscardRate(const CWallet& wallet)
     CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, false /* conservative */);
     // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
     discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
-    // Discard rate must be at least dustRelayFee
+    // Discard rate must be at least dust relay feerate
     discard_rate = std::max(discard_rate, wallet.chain().relayDustFee());
     return discard_rate;
 }

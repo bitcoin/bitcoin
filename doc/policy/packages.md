@@ -81,7 +81,7 @@ If any transactions in the package are already in the mempool, they are not subm
 ("deduplicated") and are thus excluded from this calculation.
 
 To meet the two feerate requirements of a mempool, i.e., the pre-configured minimum relay feerate
-(`minRelayTxFee`) and the dynamic mempool minimum feerate, the total package feerate is used instead
+(`-minrelaytxfee`) and the dynamic mempool minimum feerate, the total package feerate is used instead
 of the individual feerate. The individual transactions are allowed to be below the feerate
 requirements if the package meets the feerate requirements. For example, the parent(s) in the
 package can pay no fees but be paid for by the child.

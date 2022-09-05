@@ -11,7 +11,7 @@
 #include <limits>
 // SYSCOIN
 #include <map>
-#include <math.h>
+#include <cmath>
 namespace Consensus {
 
 /**

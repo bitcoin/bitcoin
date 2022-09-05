@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //! @file
-//! @brief Common init functions shared by bitcoin-node, bitcoin-wallet, etc.
+//! @brief Common init functions shared by syscoin-node, syscoin-wallet, etc.
 
 #ifndef SYSCOIN_INIT_COMMON_H
 #define SYSCOIN_INIT_COMMON_H

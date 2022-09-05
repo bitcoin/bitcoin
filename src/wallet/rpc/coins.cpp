@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Syscoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +13,7 @@
 #include <wallet/wallet.h>
 
 #include <univalue.h>
-// SYSCOIN
-#include <services/asset.h>
+
 
 namespace wallet {
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -516,12 +515,8 @@ RPCHelpMan listunspent()
                               "See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
-                            // SYSCOIN
-                            {"assetGuid", RPCArg::Type::STR, RPCArg::Default{"0"}, "Asset GUID to filter. 0(default) for Syscoin."},
                             {"minimumAmount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)}, "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
-                            {"minimumAmountAsset", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)}, "Minimum asset value of each UTXO"},
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
-                            {"maximumAmountAsset", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum asset value of each UTXO"},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                         },
@@ -538,9 +533,6 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "label", /*optional=*/true, "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
-                            // SYSCOIN
-                            {RPCResult::Type::STR, "asset_guid", /*optional=*/true, "the transaction output asset guid if asset output"},
-                            {RPCResult::Type::STR_AMOUNT, "asset_amount", /*optional=*/true, "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::NUM, "ancestorsize", /*optional=*/true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
@@ -609,12 +601,7 @@ RPCHelpMan listunspent()
     CAmount nMinimumAmount = 0;
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
-    // SYSCOIN
-    CAmount nMinimumAmountAsset = 0;
-    CAmount nMaximumAmountAsset = MAX_ASSET;
-    CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
-    uint64_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -625,11 +612,6 @@ RPCHelpMan listunspent()
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
-                // SYSCOIN
-                {"assetGuid", UniValueType(UniValue::VSTR)},
-                {"minimumAmountAsset", UniValueType()},
-                {"maximumAmountAsset", UniValueType()},
-                {"minimumSumAmountAsset", UniValueType()},
             },
             true, true);
 
@@ -644,20 +626,6 @@ RPCHelpMan listunspent()
 
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].getInt<int64_t>();
-        // SYSCOIN
-        if (options.exists("assetGuid")) {
-            if(!ParseUInt64(options["assetGuid"].get_str(), &nAsset))
-                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
-        }
-
-        if (options.exists("minimumAmountAsset"))
-            nMinimumAmountAsset = AmountFromValue(options["minimumAmountAsset"]);
-
-        if (options.exists("maximumAmountAsset"))
-            nMaximumAmountAsset = AmountFromValue(options["maximumAmountAsset"]);
-
-        if (options.exists("minimumSumAmountAsset"))
-            nMinimumSumAmountAsset = AmountFromValue(options["minimumSumAmountAsset"]);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -673,8 +641,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        // SYSCOIN
-        AvailableCoins(*pwallet, vecOutputs, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount, false, CAssetCoinInfo(nAsset, nMaximumAmountAsset));
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount).All();
     }
 
     LOCK(pwallet->cs_wallet);
@@ -683,7 +650,7 @@ RPCHelpMan listunspent()
 
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
-        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+        const CScript& scriptPubKey = out.txout.scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
         bool reused = avoid_reuse && pwallet->IsSpentKey(scriptPubKey);
 
@@ -691,8 +658,8 @@ RPCHelpMan listunspent()
             continue;
 
         UniValue entry(UniValue::VOBJ);
-        entry.pushKV("txid", out.tx->GetHash().GetHex());
-        entry.pushKV("vout", out.i);
+        entry.pushKV("txid", out.outpoint.hash.GetHex());
+        entry.pushKV("vout", (int)out.outpoint.n);
 
         if (fValidAddress) {
             entry.pushKV("address", EncodeDestination(address));
@@ -737,26 +704,21 @@ RPCHelpMan listunspent()
         }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
-        entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
-        // SYSCOIN
-        if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
-            entry.pushKV("asset_guid", UniValue(out.tx->tx->vout[out.i].assetInfo.nAsset).write());
-            entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, GetBaseAssetID(out.tx->tx->vout[out.i].assetInfo.nAsset)));
-        }
-        entry.pushKV("confirmations", out.nDepth);
-        if (!out.nDepth) {
+        entry.pushKV("amount", ValueFromAmount(out.txout.nValue));
+        entry.pushKV("confirmations", out.depth);
+        if (!out.depth) {
             size_t ancestor_count, descendant_count, ancestor_size;
             CAmount ancestor_fees;
-            pwallet->chain().getTransactionAncestry(out.tx->GetHash(), ancestor_count, descendant_count, &ancestor_size, &ancestor_fees);
+            pwallet->chain().getTransactionAncestry(out.outpoint.hash, ancestor_count, descendant_count, &ancestor_size, &ancestor_fees);
             if (ancestor_count) {
                 entry.pushKV("ancestorcount", uint64_t(ancestor_count));
                 entry.pushKV("ancestorsize", uint64_t(ancestor_size));
                 entry.pushKV("ancestorfees", uint64_t(ancestor_fees));
             }
         }
-        entry.pushKV("spendable", out.fSpendable);
-        entry.pushKV("solvable", out.fSolvable);
-        if (out.fSolvable) {
+        entry.pushKV("spendable", out.spendable);
+        entry.pushKV("solvable", out.solvable);
+        if (out.solvable) {
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
             if (provider) {
                 auto descriptor = InferDescriptor(scriptPubKey, *provider);
@@ -765,9 +727,10 @@ RPCHelpMan listunspent()
         }
         PushParentDescriptors(*pwallet, scriptPubKey, entry);
         if (avoid_reuse) entry.pushKV("reused", reused);
-        entry.pushKV("safe", out.fSafe);
+        entry.pushKV("safe", out.safe);
         results.push_back(entry);
     }
+
     return results;
 },
     };

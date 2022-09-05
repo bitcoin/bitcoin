@@ -112,7 +112,7 @@ Arguments passed:
 
 The following tracepoints cover the in-memory UTXO cache. UTXOs are, for example,
 added to and removed (spent) from the cache when we connect a new block.
-**Note**: Bitcoin Core uses temporary clones of the _main_ UTXO cache
+**Note**: Syscoin Core uses temporary clones of the _main_ UTXO cache
 (`chainstate.CoinsTip()`). For example, the RPCs `generateblock` and
 `getblocktemplate` call `TestBlockValidity()`, which applies the UTXO set
 changes to a temporary cache. Similarly, mempool consistency checks, which are
@@ -167,6 +167,49 @@ Arguments passed:
 3. Block height the coin was uncached, as `uint32`
 4. Value of the coin as `int64`
 5. If the coin is a coinbase as `bool`
+
+### Context `coin_selection`
+
+#### Tracepoint `coin_selection:selected_coins`
+
+Is called when `SelectCoins` completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Coin selection algorithm name as `pointer to C-style string`
+3. Selection target value as `int64`
+4. Calculated waste metric of the solution as `int64`
+5. Total value of the selected inputs as `int64`
+
+#### Tracepoint `coin_selection:normal_create_tx_internal`
+
+Is called when the first `CreateTransactionInternal` completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Whether `CreateTransactionInternal` succeeded as `bool`
+3. The expected transaction fee as an `int64`
+4. The position of the change output as an `int32`
+
+#### Tracepoint `coin_selection:attempting_aps_create_tx`
+
+Is called when `CreateTransactionInternal` is called the second time for the optimistic
+Avoid Partial Spends selection attempt. This is used to determine whether the next
+tracepoints called are for the Avoid Partial Spends solution, or a different transaction.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+
+#### Tracepoint `coin_selection:aps_create_tx_internal`
+
+Is called when the second `CreateTransactionInternal` with Avoid Partial Spends enabled completes.
+
+Arguments passed:
+1. Wallet name as `pointer to C-style string`
+2. Whether the Avoid Partial Spends solution will be used as `bool`
+3. Whether `CreateTransactionInternal` succeeded as` bool`
+4. The expected transaction fee as an `int64`
+5. The position of the change output as an `int32`
 
 ## Adding tracepoints to Syscoin Core
 

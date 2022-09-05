@@ -8,7 +8,7 @@ with no central authority: managing transactions and issuing money are carried o
 
 The software is a community-driven open source project, released under the MIT license.
 
-See https://github.com/syscoin/syscoin and https://syscoin.org/ for further information about the project.
+See https://github.com/syscoin/syscoin and https://syscoincore.org/ for further information about the project.
 
 \section Navigation
 Use <a href="modules.html"><code>Modules</code></a>, <a href="namespaces.html"><code>Namespaces</code></a>, <a href="classes.html"><code>Classes</code></a>, or <a href="files.html"><code>Files</code></a> at the top of the page to start navigating the code.

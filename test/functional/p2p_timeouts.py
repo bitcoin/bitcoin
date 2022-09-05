@@ -32,6 +32,7 @@ class TestP2PConn(P2PInterface):
         # Don't send a verack in response
         pass
 
+
 class TimeoutsTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True

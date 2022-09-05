@@ -269,14 +269,13 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     for (const auto& inputs : wtx.tx->vin) {
         new_coin_control.Select(COutPoint(inputs.prevout));
     }
-    new_coin_control.fAllowOtherInputs = true;
+    new_coin_control.m_allow_other_inputs = true;
 
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
-    bilingual_str fail_reason;
-    FeeCalculation fee_calc_out;
+
     constexpr int RANDOM_CHANGE_POSITION = -1;
-    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, fail_reason, new_coin_control, fee_calc_out, false, wtx.tx->nVersion);
+    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
     if (!res) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;

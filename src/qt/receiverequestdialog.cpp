@@ -6,7 +6,6 @@
 #include <qt/forms/ui_receiverequestdialog.h>
 
 #include <qt/syscoinunits.h>
-#include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrimagewidget.h>

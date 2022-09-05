@@ -12,8 +12,8 @@ The following interfaces are defined here:
 
 * [`Handler`](handler.h) — returned by `handleEvent` methods on interfaces above and used to manage lifetimes of event handlers.
 
-* [`Init`](init.h) — used by multiprocess code to access interfaces above on startup. Added in [#19160](https://github.com/bitcoin/bitcoin/pull/19160).
+* [`Init`](init.h) — used by multiprocess code to access interfaces above on startup. Added in [#19160](https://github.com/syscoin/syscoin/pull/19160).
 
-* [`Ipc`](ipc.h) — used by multiprocess code to access `Init` interface across processes. Added in [#19160](https://github.com/bitcoin/bitcoin/pull/19160).
+* [`Ipc`](ipc.h) — used by multiprocess code to access `Init` interface across processes. Added in [#19160](https://github.com/syscoin/syscoin/pull/19160).
 
-The interfaces above define boundaries between major components of bitcoin code (node, wallet, and gui), making it possible for them to run in [different processes](../../doc/multiprocess.md), and be tested, developed, and understood independently. These interfaces are not currently designed to be stable or to be used externally.
+The interfaces above define boundaries between major components of syscoin code (node, wallet, and gui), making it possible for them to run in [different processes](../../doc/multiprocess.md), and be tested, developed, and understood independently. These interfaces are not currently designed to be stable or to be used externally.

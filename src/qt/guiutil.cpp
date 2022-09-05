@@ -210,8 +210,7 @@ QString formatSyscoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        // SYSCOIN
-        ret += QString("?amount=%1").arg(SyscoinUnits::format(SyscoinUnit::SYS, info.amount, 0, false, SyscoinUnits::SeparatorStyle::NEVER));
+        ret += QString("?amount=%1").arg(SyscoinUnits::format(SyscoinUnit::SYS, info.amount, false, SyscoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }
 

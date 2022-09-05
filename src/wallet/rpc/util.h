@@ -11,9 +11,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-namespace node {
+
 class JSONRPCRequest;
-}
 class UniValue;
 struct bilingual_str;
 

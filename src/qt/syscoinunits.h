@@ -70,9 +70,8 @@ public:
     static qint64 factor(Unit unit);
     //! Number of decimals left
     static int decimals(Unit unit);
-    // SYSCOIN
     //! Format as string
-    static QString format(Unit unit, const CAmount& amount, const uint64_t &nAsset = 0, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
+    static QString format(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
     //! Format as string (with unit)
     static QString formatWithUnit(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
     //! Format as HTML string (with unit)

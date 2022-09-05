@@ -24,4 +24,5 @@ void noui_test_redirect();
 
 /** Reconnects the regular Non-GUI handlers after having used noui_test_redirect */
 void noui_reconnect();
+
 #endif // SYSCOIN_NOUI_H

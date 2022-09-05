@@ -461,6 +461,12 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
 bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
+
+    if (m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        // Nothing to do here if private keys are not enabled
+        return true;
+    }
+
     bool hd_upgrade = false;
     bool split_upgrade = false;
     if (IsFeatureSupported(new_version, FEATURE_HD) && !IsHDEnabled()) {
@@ -2271,6 +2277,11 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     case OutputType::BECH32M: {
         desc_prefix = "tr(" + xpub  + "/86'";
         break;
+    }
+    case OutputType::UNKNOWN: {
+        // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
+        // so if we get to this point something is wrong
+        assert(false);
     }
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());

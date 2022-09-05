@@ -113,6 +113,7 @@ class BlockchainTest(SyscoinTestFramework):
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
+
         keys = [
             'bestblockhash',
             'blocks',

@@ -93,7 +93,7 @@ BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
 gen-syscoin-conf.sh
 ===================
 
-Generates a syscoin.conf file in `share/examples/` by parsing the output from `bitcoind --help`. This script is run during the
+Generates a syscoin.conf file in `share/examples/` by parsing the output from `syscoind --help`. This script is run during the
 release process to include a syscoin.conf with the release binaries and can also be run by users to generate a file locally.
 When generating a file as part of the release process, make sure to commit the changes after running the script.
 

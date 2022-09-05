@@ -44,7 +44,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/dbwrapper.cpp"\
           " src/init"\
           " src/kernel"\
-          " src/node/mempool_args.cpp"\
           " src/node/chainstate.cpp"\
           " src/node/mempool_args.cpp"\
           " src/node/validation_cache_args.cpp"\

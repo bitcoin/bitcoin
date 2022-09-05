@@ -33,8 +33,6 @@
 #include <string>
 
 #include <univalue.h>
-// SYSCOIN
-#include <services/asset.h>
 
 using node::GetTransaction;
 using node::NodeContext;
@@ -240,7 +238,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
+            ssHeader << pindex->GetBlockHeader();
         }
 
         std::string binaryHeader = ssHeader.str();
@@ -252,7 +250,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
+            ssHeader << pindex->GetBlockHeader();
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";
@@ -331,9 +329,7 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::JSON: {
-        // SYSCOIN
-        ChainstateManager& chainman = EnsureAnyChainman(context);
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity, &chainman);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -579,7 +575,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 
     switch (rf) {
     case RESTResponseFormat::JSON: {
-        node::JSONRPCRequest jsonRequest;
+        JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
         jsonRequest.params = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo().HandleRequest(jsonRequest);
@@ -637,23 +633,15 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
-    CBlockIndex* blockindex = nullptr;
-    const NodeContext* const node = GetNodeContext(context, req);
+
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
-    // SYSCOIN
-    else{
-        uint32_t nBlockHeight;
-        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)) {
-            LOCK(cs_main);
-            blockindex = node->chainman->ActiveChain()[nBlockHeight];
-        }
-    }
+
+    const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
     uint256 hashBlock = uint256();
-    // SYSCOIN
-    const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
+    const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
     if (!tx) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
@@ -872,11 +860,6 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             UniValue o(UniValue::VOBJ);
             ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
             utxo.pushKV("scriptPubKey", o);
-            // SYSCOIN
-            if(!coin.out.assetInfo.IsNull()) {
-                utxo.pushKV("asset_guid", UniValue(coin.out.assetInfo.nAsset).write());
-                utxo.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, GetBaseAssetID(coin.out.assetInfo.nAsset)));
-            }
             utxos.push_back(utxo);
         }
         objGetUTXOResponse.pushKV("utxos", utxos);
@@ -900,7 +883,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     std::string height_str;
     const RESTResponseFormat rf = ParseDataFormat(height_str, str_uri_part);
 
-    int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/bitcoin/bitcoin/pull/18785
+    int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/syscoin/syscoin/pull/18785
     if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
     }

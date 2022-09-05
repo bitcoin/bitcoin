@@ -176,6 +176,7 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
+
     // Open the config file
     bool openSyscoinConf();
 

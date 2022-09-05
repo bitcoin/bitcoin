@@ -38,8 +38,6 @@ struct COutputEntry
     CTxDestination destination;
     CAmount amount;
     int vout;
-    // SYSCOIN
-    CAssetCoinInfo assetInfo;
 };
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         std::list<COutputEntry>& listReceived,

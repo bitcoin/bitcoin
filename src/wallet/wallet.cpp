@@ -44,12 +44,6 @@
 #include <assert.h>
 #include <optional>
 
-// SYSCOIN
-#include <services/asset.h> // GetAsset, FillNotarySig
-#include <evo/deterministicmns.h>
-#include <rpc/util.h>
-#include <core_io.h>
-#include <governance/governance.h>
 using interfaces::FoundBlock;
 
 namespace wallet {
@@ -985,15 +979,6 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(wtx, &batch);
-        // SYSCOIN
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-            if (IsMine(wtx.tx->vout[i]) && !IsSpent(COutPoint(hash, i))) {
-                if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
-                    LockCoin(COutPoint(hash, i));
-                }
-            }
-        }
     }
 
     if (!fInsertedNew)
@@ -1048,9 +1033,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 #ifndef WIN32
         // Substituting the wallet name isn't currently supported on windows
         // because windows shell escaping has not been implemented yet:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
+        // https://github.com/syscoin/syscoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
+        // https://github.com/syscoin/syscoin/pull/13339#issuecomment-461288094
         ReplaceAll(strCmd, "%w", ShellEscape(GetName()));
 #endif
         std::thread t(runCommand, strCmd);
@@ -1133,13 +1118,9 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
              * This can happen when restoring an old wallet backup that does not contain
              * the mostly recently created transactions from newer versions of the wallet.
              */
-            // SYSCOIN
-            const bool IsNEVMData = tx.IsNEVMData();
+
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
-                // SYSCOIN
-                if(IsNEVMData && txout.nValue == 0)
-                    continue;
                 for (const auto& spk_man : GetScriptPubKeyMans(txout.scriptPubKey)) {
                     for (auto &dest : spk_man->MarkUnusedAddresses(txout.scriptPubKey)) {
                         // If internal flag is not defined try to infer it from the ScriptPubKeyMan
@@ -1163,8 +1144,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
             TxState tx_state = std::visit([](auto&& s) -> TxState { return s; }, state);
-            // SYSCOIN
-            CWalletTx* wtx = AddToWallet(ptx, tx_state, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, rescanning_old_block);
+            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, rescanning_old_block);
             if (!wtx) {
                 // Can only be nullptr if there was a db write error (missing db, read-only db or a db engine internal writing error).
                 // As we only store arriving transaction in this process, and we don't want an inconsistent state, let's throw an error.
@@ -1335,7 +1315,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         //    provide the conflicting block's hash and height, and for backwards
         //    compatibility reasons it may not be not safe to store conflicted
         //    wallet transactions with a null block hash. See
-        //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
+        //    https://github.com/syscoin/syscoin/pull/18600#discussion_r420195993.
         // 2. For most of these transactions, the wallet's internal conflict
         //    detection in the blockConnected handler will subsequently call
         //    MarkConflicted and update them with CONFLICTED status anyway. This
@@ -1343,7 +1323,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         //    block, or that has ancestors in the wallet with inputs spent by
         //    the block.
         // 3. Longstanding behavior since the sync implementation in
-        //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
+        //    https://github.com/syscoin/syscoin/pull/9371 and the prior sync
         //    implementation before that was to mark these transactions
         //    unconfirmed rather than conflicted.
         //
@@ -1351,7 +1331,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // when improving this code in the future. The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
-        // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
+        // https://github.com/syscoin-core/syscoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
         SyncTransaction(tx, TxStateInactive{});
     }
 }
@@ -1443,15 +1423,9 @@ isminetype CWallet::IsMine(const CScript& script) const
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     AssertLockHeld(cs_wallet);
-    // SYSCOIN
-    const bool IsNEVMData = tx.IsNEVMData();
-    for (const CTxOut& txout : tx.vout) {
-        // SYSCOIN
-        if(IsNEVMData && txout.nValue == 0)
-            continue;
+    for (const CTxOut& txout : tx.vout)
         if (IsMine(txout))
             return true;
-    }
     return false;
 }
 
@@ -1570,13 +1544,16 @@ void CWallet::InitWalletFlags(uint64_t flags)
 }
 
 // Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
-// or a max-sized low-S signature (e.g. 72 bytes) if use_max_sig is true
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool use_max_sig)
+// or a max-sized low-S signature (e.g. 72 bytes) depending on coin_control
+bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, const CCoinControl* coin_control)
 {
     // Fill in dummy signatures for fee calculation.
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
+    // Use max sig if watch only inputs were used or if this particular input is an external input
+    // to ensure a sufficient fee is attained for the requested feerate.
+    const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(tx_in.prevout));
     if (!ProduceSignature(provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
     }
@@ -1643,12 +1620,9 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
             nIn++;
             continue;
         }
-        // Use max sig if watch only inputs were used or if this particular input is an external input
-        // to ensure a sufficient fee is attained for the requested feerate.
-        const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(txin.prevout));
         const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
-        if (!provider || !DummySignInput(*provider, txin, txout, use_max_sig)) {
-            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, use_max_sig)) {
+        if (!provider || !DummySignInput(*provider, txin, txout, coin_control)) {
+            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, coin_control)) {
                 return false;
             }
         }
@@ -2262,27 +2236,6 @@ DBErrors CWallet::LoadWallet()
 
     return nLoadWalletRet;
 }
-// SYSCOIN
-// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
-// This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
-void CWallet::AutoLockMasternodeCollaterals()
-{
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-
-    LOCK(cs_wallet);
-    for (const auto& pair : mapWallet) {
-        if(!pair.second.tx) {
-            continue;
-        }
-        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
-            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(COutPoint(pair.first, i))) {
-                if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i)))) {
-                    LockCoin(COutPoint(pair.first, i));
-                }
-            }
-        }
-    }
-}
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
@@ -2600,24 +2553,6 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
          it != setLockedCoins.end(); it++) {
         COutPoint outpt = (*it);
         vOutpts.push_back(outpt);
-    }
-}
-
-// SYSCOIN
-void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
-{
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-
-    AssertLockHeld(cs_wallet);
-
-    for (const auto& pair : mapWallet) {
-        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
-            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(COutPoint(pair.first, i))) {
-                if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i)))) {
-                    vOutpts.emplace_back(COutPoint(pair.first, i));
-                }
-            }
-        }
     }
 }
 
@@ -3050,6 +2985,14 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_default_max_tx_fee = max_fee.value();
     }
 
+    if (args.IsArgSet("-consolidatefeerate")) {
+        if (std::optional<CAmount> consolidate_feerate = ParseMoney(args.GetArg("-consolidatefeerate", ""))) {
+            walletInstance->m_consolidate_feerate = CFeeRate(*consolidate_feerate);
+        } else {
+            error = AmountErrMsg("consolidatefeerate", args.GetArg("-consolidatefeerate", ""));
+            return nullptr;
+        }
+    }
 
     if (chain && chain->relayMinFee().GetFeePerK() > HIGH_TX_FEE_PER_KB) {
         warnings.push_back(AmountHighWarn("-minrelaytxfee") + Untranslated(" ") +
@@ -3095,7 +3038,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
             // Wallet is assumed to be from another chain, if genesis block in the active
             // chain differs from the genesis block known to the wallet.
             if (chain.getBlockHash(0) != locator.vHave.back()) {
-                error = Untranslated("Wallet files should not be reused across chains. Restart bitcoind with -walletcrosschain to override.");
+                error = Untranslated("Wallet files should not be reused across chains. Restart syscoind with -walletcrosschain to override.");
                 return false;
             }
         }
@@ -3243,6 +3186,7 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 void CWallet::postInitProcess()
 {
     LOCK(cs_wallet);
+
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
@@ -3254,30 +3198,6 @@ void CWallet::postInitProcess()
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
     return GetDatabase().Backup(strDest);
-}
-// SYSCOIN
-bool CWallet::LoadGovernanceObject(const CGovernanceObject& obj)
-{
-    AssertLockHeld(cs_wallet);
-    return m_gobjects.emplace(obj.GetHash(), obj).second;
-}
-
-bool CWallet::WriteGovernanceObject(const CGovernanceObject& obj)
-{
-    AssertLockHeld(cs_wallet);
-    WalletBatch batch(GetDatabase());
-    return batch.WriteGovernanceObject(obj) && LoadGovernanceObject(obj);
-}
-
-std::vector<const CGovernanceObject*> CWallet::GetGovernanceObjects()
-{
-    AssertLockHeld(cs_wallet);
-    std::vector<const CGovernanceObject*> vecObjects;
-    vecObjects.reserve(m_gobjects.size());
-    for (auto& obj : m_gobjects) {
-        vecObjects.push_back(&obj.second);
-    }
-    return vecObjects;
 }
 
 CKeyPool::CKeyPool()

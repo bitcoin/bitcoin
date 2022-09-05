@@ -21,8 +21,8 @@ from textwrap import indent
 
 WORKINGDIR = "/tmp/syscoin_verify_binaries"
 HASHFILE = "hashes.tmp"
-HOST1="https://syscoincore.org"
-HOST2="https://syscoin.org"
+HOST1 = "https://syscoincore.org"
+HOST2 = "https://syscoin.org"
 VERSIONPREFIX = "syscoin-core-"
 SIGNATUREFILENAME = "SHA256SUMS.asc"
 

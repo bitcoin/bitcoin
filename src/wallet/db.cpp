@@ -45,7 +45,7 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
                     // as a wallet.
                     paths.emplace_back();
                 } else {
-                    // Found top-level btree file not called wallet.dat. Current bitcoin
+                    // Found top-level btree file not called wallet.dat. Current syscoin
                     // software will never create these files but will allow them to be
                     // opened in a shared database environment for backwards compatibility.
                     // Add it to the list of available wallets.

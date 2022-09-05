@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_CONSENSUS_AMOUNT_H
 #define SYSCOIN_CONSENSUS_AMOUNT_H
 // SYSCOIN
-#include <uint256.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <cstdint>

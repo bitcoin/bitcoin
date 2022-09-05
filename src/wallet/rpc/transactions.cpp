@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Syscoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,6 @@
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
-// SYSCOIN
-#include <services/asset.h>
-extern bool ListTransactionSyscoinInfo(const wallet::CWalletTx& wtx, const CAssetCoinInfo assetInfo, const std::string strCategory, UniValue& output);
 
 using interfaces::FoundBlock;
 
@@ -352,13 +349,6 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             if (fLong)
                 WalletTxToJSON(wallet, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
-            // SYSCOIN
-            if(!s.assetInfo.IsNull()) {
-                UniValue output(UniValue::VOBJ);
-                if(ListTransactionSyscoinInfo(wtx, s.assetInfo, "send", output)){
-                    entry.pushKV("systx", output);
-                }
-            }
             ret.push_back(entry);
         }
     }
@@ -401,13 +391,6 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             entry.pushKV("vout", r.vout);
             if (fLong)
                 WalletTxToJSON(wallet, wtx, entry);
-            // SYSCOIN
-            if(!r.assetInfo.IsNull()) {
-                UniValue output(UniValue::VOBJ);
-                if(ListTransactionSyscoinInfo(wtx, r.assetInfo, "receive", output)){
-                    entry.pushKV("systx", output);
-                }
-            }
             ret.push_back(entry);
         }
     }
@@ -477,7 +460,6 @@ RPCHelpMan listtransactions()
                             {RPCResult::Type::NUM, "vout", "the vout value"},
                             {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                  "'send' category of transactions."},
-                            {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                         },
                         TransactionDescriptionString()),
                         {
@@ -591,7 +573,6 @@ RPCHelpMan listsinceblock()
                                 {RPCResult::Type::NUM, "vout", "the vout value"},
                                 {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                      "'send' category of transactions."},
-                                {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                             },
                             TransactionDescriptionString()),
                             {
@@ -738,7 +719,6 @@ RPCHelpMan gettransaction()
                                     "'send' category of transactions."},
                                 {RPCResult::Type::BOOL, "abandoned", /*optional=*/true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
                                      "'send' category of transactions."},
-                                {RPCResult::Type::ANY, "systx", /*optional=*/true, "The systx metadata for asset based transaction"},
                                 {RPCResult::Type::ARR, "parent_descs", /*optional=*/true, "Only if 'category' is 'received'. List of parent descriptors for the scriptPubKey of this coin.", {
                                     {RPCResult::Type::STR, "desc", "The descriptor string."},
                                 }},

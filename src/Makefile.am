@@ -386,7 +386,6 @@ SYSCOIN_CORE_H = \
   wallet/receive.h \
   wallet/rpc/util.h \
   wallet/rpc/wallet.h \
-  wallet/rpc/coins.h \
   wallet/rpc/spend.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \

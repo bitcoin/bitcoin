@@ -1554,7 +1554,7 @@ std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptCo
     if (!match) return {};
     std::vector<std::unique_ptr<PubkeyProvider>> keys;
     keys.reserve(match->second.size());
-    for (const auto &keyspan : match->second) {
+    for (const auto keyspan : match->second) {
         if (keyspan.size() != 32) return {};
         auto key = InferXOnlyPubkey(XOnlyPubKey{keyspan}, ctx, provider);
         if (!key) return {};

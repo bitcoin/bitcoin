@@ -78,9 +78,6 @@ private:
     {
         COLUMN_CHECKBOX = 0,
         COLUMN_AMOUNT,
-        // SYSCOIN
-        COLUMN_AMOUNT_ASSET,
-        COLUMN_ASSET,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
         COLUMN_DATE,
@@ -90,7 +87,6 @@ private:
     enum
     {
         TxHashRole = Qt::UserRole,
-        AssetRole,
         VOutRole
     };
 
@@ -99,9 +95,6 @@ private:
 private Q_SLOTS:
     void showMenu(const QPoint &);
     void copyAmount();
-    // SYSCOIN
-    void copyAmountAsset();
-    void copyAsset();
     void copyLabel();
     void copyAddress();
     void copyTransactionOutpoint();

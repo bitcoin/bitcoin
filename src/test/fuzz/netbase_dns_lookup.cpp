@@ -12,23 +12,9 @@
 #include <string>
 #include <vector>
 
-namespace {
-FuzzedDataProvider* fuzzed_data_provider_ptr = nullptr;
-
-std::vector<CNetAddr> fuzzed_dns_lookup_function(const std::string& name, bool allow_lookup)
-{
-    std::vector<CNetAddr> resolved_addresses;
-    while (fuzzed_data_provider_ptr->ConsumeBool()) {
-        resolved_addresses.push_back(ConsumeNetAddr(*fuzzed_data_provider_ptr));
-    }
-    return resolved_addresses;
-}
-} // namespace
-
 FUZZ_TARGET(netbase_dns_lookup)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    fuzzed_data_provider_ptr = &fuzzed_data_provider;
     const std::string name = fuzzed_data_provider.ConsumeRandomLengthString(512);
     const unsigned int max_results = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const bool allow_lookup = fuzzed_data_provider.ConsumeBool();
@@ -82,5 +68,4 @@ FUZZ_TARGET(netbase_dns_lookup)
             assert(resolved_subnet.IsValid());
         }
     }
-    fuzzed_data_provider_ptr = nullptr;
 }

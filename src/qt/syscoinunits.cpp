@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Syscoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,11 +9,7 @@
 #include <QStringList>
 
 #include <cassert>
-// SYSCOIN
-#include <primitives/transaction.h>
-#include <services/asset.h>
-#include <rpc/util.h>
-#include <math.h>
+
 static constexpr auto MAX_DIGITS_SYS = 16;
 
 SyscoinUnits::SyscoinUnits(QObject *parent):
@@ -87,22 +83,13 @@ int SyscoinUnits::decimals(Unit unit)
     assert(false);
 }
 
-QString SyscoinUnits::format(Unit unit, const CAmount& nIn, const uint64_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
+QString SyscoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
     qint64 n = (qint64)nIn;
-    // SYSCOIN 
-    qint64 coin;
-    int num_decimals;
-    uint8_t nPrecision = 8;
-    if(nAsset > 0 && GetAssetPrecision(GetBaseAssetID(nAsset), nPrecision)) {
-        num_decimals = (int)nPrecision;
-        coin = (qint64)pow(10.0, num_decimals);
-    } else {
-        coin = factor(unit);
-        num_decimals = decimals(unit);
-    }
+    qint64 coin = factor(unit);
+    int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
@@ -143,8 +130,7 @@ QString SyscoinUnits::format(Unit unit, const CAmount& nIn, const uint64_t &nAss
 
 QString SyscoinUnits::formatWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    // SYSCOIN
-    return format(unit, amount, 0, plussign, separators) + QString(" ") + shortName(unit);
+    return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
 }
 
 QString SyscoinUnits::formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
@@ -158,11 +144,10 @@ QString SyscoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, Separa
 {
     assert(amount >= 0);
     QString value;
-    // SYSCOIN
     if (privacy) {
-        value = format(unit, 0, 0, false, separators, true).replace('0', '#');
+        value = format(unit, 0, false, separators, true).replace('0', '#');
     } else {
-        value = format(unit, amount, 0, false, separators, true);
+        value = format(unit, amount, false, separators, true);
     }
     return value + QString(" ") + shortName(unit);
 }

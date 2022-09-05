@@ -507,7 +507,6 @@ static void SetupUIArgs(ArgsManager& argsman)
     argsman.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", SyscoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
 }
 
-#ifndef SYSCOIN_QT_TEST
 int GuiMain(int argc, char* argv[])
 {
 #ifdef WIN32
@@ -710,4 +709,3 @@ int GuiMain(int argc, char* argv[])
     }
     return rv;
 }
-#endif // SYSCOIN_QT_TEST

@@ -36,7 +36,7 @@ enum class SyscallSandboxPolicy {
 //!
 //! This function is a no-op unless SetupSyscallSandbox(...) has been called.
 //!
-//! SetupSyscallSandbox(...) is called during syscoind initialization if Bitcoin Core was compiled
+//! SetupSyscallSandbox(...) is called during syscoind initialization if Syscoin Core was compiled
 //! with seccomp-bpf support (--with-seccomp) *and* the parameter -sandbox=<mode> was passed to
 //! syscoind.
 //!

@@ -236,7 +236,7 @@ void Shutdown(NodeContext& node)
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
     LogPrintf("%s: In progress...\n", __func__);
-    //Assert(node.args);
+    Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
     /// for example if the data directory was found to be locked.

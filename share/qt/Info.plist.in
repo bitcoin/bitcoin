@@ -35,7 +35,7 @@
 
   <key>CFBundleExecutable</key>
   <string>Syscoin-Qt</string>
-  
+
   <key>CFBundleName</key>
   <string>Syscoin-Qt</string>
 

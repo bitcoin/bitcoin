@@ -187,7 +187,7 @@ class SignRawTransactionWithWalletTest(SyscoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(
@@ -222,7 +222,7 @@ class SignRawTransactionWithWalletTest(SyscoinTestFramework):
         # Fund that address and make the spend
         txid = self.nodes[0].sendtoaddress(address, 1)
         vout = find_vout_for_address(self.nodes[0], txid, address)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         utxo = self.nodes[0].listunspent()[0]
         amt = Decimal(1) + utxo["amount"] - Decimal(0.00001)
         tx = self.nodes[0].createrawtransaction(

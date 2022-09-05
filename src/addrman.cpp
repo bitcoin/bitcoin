@@ -19,7 +19,7 @@
 #include <util/check.h>
 #include <util/time.h>
 
-#include <math.h>
+#include <cmath>
 #include <optional>
 
 /** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */

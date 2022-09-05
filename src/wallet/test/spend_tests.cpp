@@ -28,14 +28,12 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
         CRecipient recipient{GetScriptForRawPubKey({}), 50 * COIN - leftover_input_amount, true /* subtract fee */};
         constexpr int RANDOM_CHANGE_POSITION = -1;
-        bilingual_str error;
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
-        FeeCalculation fee_calc;
-        auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, error, coin_control, fee_calc);
+        auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, coin_control);
         BOOST_CHECK(res);
         const auto& txr = *res;
         BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
@@ -50,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
 
     // Send slightly less than full input amount to recipient, check leftover
     // input amount is paid to recipient not the miner (to_reduce == fee - 123)
-    BOOST_CHECK_EQUAL(1463, check_tx(123));
+    BOOST_CHECK_EQUAL(fee, check_tx(123));
 
     // Send full input minus fee amount to recipient, check leftover input
     // amount is paid to recipient not the miner (to_reduce == 0)
@@ -60,8 +58,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // leftover input amount is paid to recipient not the miner (to_reduce ==
     // -123). This overpays the recipient instead of overpaying the miner more
     // than double the necessary fee.
-    // SYSCOIN
-    BOOST_CHECK_EQUAL(1463, check_tx(fee + 123));
+    BOOST_CHECK_EQUAL(fee, check_tx(fee + 123));
 }
 
 static void TestFillInputToWeight(int64_t additional_weight, std::vector<int64_t> expected_stack_sizes)

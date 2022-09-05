@@ -57,7 +57,7 @@ class BIP68Test(SyscoinTestFramework):
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
 
         # Generate some coins
-        self.generate(self.nodes[0], 110, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 110)
 
         self.log.info("Running test disable flag")
         self.test_disable_flag()
@@ -145,7 +145,7 @@ class BIP68Test(SyscoinTestFramework):
             for i in range(num_outputs):
                 outputs[addresses[i]] = random.randint(1, 20)*0.01
             self.nodes[0].sendmany("", outputs)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            self.generate(self.nodes[0], 1)
 
         utxos = self.nodes[0].listunspent()
 
@@ -290,7 +290,7 @@ class BIP68Test(SyscoinTestFramework):
         self.nodes[0].setmocktime(cur_time+600)
         # Save block template now to use for the reorg later
         tmpl = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         assert tx2.hash not in self.nodes[0].getrawmempool()
 
         # Now that tx2 is not in the mempool, a sequence locked spend should
@@ -298,7 +298,7 @@ class BIP68Test(SyscoinTestFramework):
         tx3 = test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
         assert tx3.hash in self.nodes[0].getrawmempool()
 
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         assert tx3.hash not in self.nodes[0].getrawmempool()
 
         # One more test, this time using height locks

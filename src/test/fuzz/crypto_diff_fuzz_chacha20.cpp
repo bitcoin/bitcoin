@@ -271,7 +271,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
 
     ChaCha20 chacha20;
     ECRYPT_ctx ctx;
-    // D. J. Bernstein doesn't initialise ctx to 0 while Bitcoin Core initialises chacha20 to 0 in the constructor
+    // D. J. Bernstein doesn't initialise ctx to 0 while Syscoin Core initialises chacha20 to 0 in the constructor
     for (int i = 0; i < 16; i++) {
         ctx.input[i] = 0;
     }
