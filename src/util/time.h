@@ -109,6 +109,9 @@ T GetTime()
  */
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
+// SYSCOIN
+std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
+std::string DurationToDHMS(int64_t nDurationTime);
 int64_t ParseISO8601DateTime(const std::string& str);
 
 /**

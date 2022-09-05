@@ -43,7 +43,8 @@
 #include <algorithm>
 #include <assert.h>
 #include <optional>
-
+// SYSCOIN
+#include <evo/deterministicmns.h>
 using interfaces::FoundBlock;
 
 namespace wallet {
@@ -2236,7 +2237,27 @@ DBErrors CWallet::LoadWallet()
 
     return nLoadWalletRet;
 }
+// SYSCOIN
+// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
+void CWallet::AutoLockMasternodeCollaterals()
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
+    LOCK(cs_wallet);
+    for (const auto& pair : mapWallet) {
+        if(!pair.second.tx) {
+            continue;
+        }
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(COutPoint(pair.first, i))) {
+                if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i)))) {
+                    LockCoin(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+}
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
     AssertLockHeld(cs_wallet);
@@ -2555,7 +2576,23 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
         vOutpts.push_back(outpt);
     }
 }
+// SYSCOIN
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
 
+    AssertLockHeld(cs_wallet);
+
+    for (const auto& pair : mapWallet) {
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(COutPoint(pair.first, i))) {
+                if (deterministicMNManager && (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i)))) {
+                    vOutpts.emplace_back(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+}
 /** @} */ // end of Actions
 
 void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
@@ -3199,7 +3236,30 @@ bool CWallet::BackupWallet(const std::string& strDest) const
 {
     return GetDatabase().Backup(strDest);
 }
+// SYSCOIN
+bool CWallet::LoadGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    return m_gobjects.emplace(obj.GetHash(), obj).second;
+}
 
+bool CWallet::WriteGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    WalletBatch batch(GetDatabase());
+    return batch.WriteGovernanceObject(obj) && LoadGovernanceObject(obj);
+}
+
+std::vector<const CGovernanceObject*> CWallet::GetGovernanceObjects()
+{
+    AssertLockHeld(cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects;
+    vecObjects.reserve(m_gobjects.size());
+    for (auto& obj : m_gobjects) {
+        vecObjects.push_back(&obj.second);
+    }
+    return vecObjects;
+}
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();

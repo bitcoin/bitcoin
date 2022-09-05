@@ -1388,7 +1388,7 @@ RPCHelpMan sendall()
                 }
             } else {
                 for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, /*nMinimumAmount=*/0).All()) {
-                    CHECK_NONFATAL(output.nInputBytes > 0);
+                    CHECK_NONFATAL(output.input_bytes > 0);
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }

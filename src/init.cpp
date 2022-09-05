@@ -118,7 +118,6 @@
 #include <netfulfilledman.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
-#include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
 #include <flatdatabase.h>
 #include <llmq/quorums.h>

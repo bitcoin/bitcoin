@@ -1169,6 +1169,7 @@ util::Result<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wall
     if (!outpoint.IsNull()) {
         coinControl.Select(outpoint);
     }
-    return CreateTransaction(wallet, vecSend, nChangePosInOut, coinControl, false);
+    constexpr int RANDOM_CHANGE_POSITION = -1;
+    return CreateTransaction(wallet, vecSend, RANDOM_CHANGE_POSITION, coinControl, false);
 }
 } // namespace wallet

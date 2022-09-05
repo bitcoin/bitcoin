@@ -254,7 +254,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1);
         key.pushKV("internal", UniValue(true));
         keys.push_back(key);
-        JSONRPCRequest request;
+        node::JSONRPCRequest request;
         request.context = &context;
         request.params.setArray();
         request.params.push_back(keys);
@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
             LOCK(Assert(m_node.chainman)->GetMutex());
             wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         }
-        JSONRPCRequest request;
+        node::JSONRPCRequest request;
         request.context = &context;
         request.params.setArray();
         request.params.push_back(backup_file);
@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
         WalletContext context;
         context.args = &m_args;
-        JSONRPCRequest request;
+        node::JSONRPCRequest request;
         request.context = &context;
         request.params.setArray();
         request.params.push_back(backup_file);

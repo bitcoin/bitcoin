@@ -134,7 +134,6 @@ SYSCOIN_CORE_H = \
   services/asset.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
-  services/rpc/wallet/assetwalletrpc.h \
   spork.h \
   dsnotificationinterface.h \
   governance/governance.h \

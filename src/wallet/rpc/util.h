@@ -11,8 +11,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+// SYSCOIN
+namespace node {
 class JSONRPCRequest;
+}
 class UniValue;
 struct bilingual_str;
 

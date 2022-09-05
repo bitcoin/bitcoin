@@ -238,7 +238,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
         }
 
         std::string binaryHeader = ssHeader.str();
@@ -250,7 +250,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            ssHeader << pindex->GetBlockHeader(Params().GetConsensus());
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";
@@ -575,7 +575,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 
     switch (rf) {
     case RESTResponseFormat::JSON: {
-        JSONRPCRequest jsonRequest;
+        node::JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
         jsonRequest.params = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo().HandleRequest(jsonRequest);
@@ -629,7 +629,8 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         return false;
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, strURIPart);
-
+    CBlockIndex* blockindex = nullptr;
+    const NodeContext* const node = GetNodeContext(context, req);
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
@@ -637,11 +638,19 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
+    // SYSCOIN
+    else{
+        uint32_t nBlockHeight;
+        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)) {
+            LOCK(cs_main);
+            blockindex = node->chainman->ActiveChain()[nBlockHeight];
+        }
+    }
 
-    const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
     uint256 hashBlock = uint256();
-    const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
+    // SYSCOIN
+    const CTransactionRef tx = GetTransaction(blockindex, node->mempool.get(), hash, Params().GetConsensus(), hashBlock);
     if (!tx) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }

@@ -86,24 +86,24 @@ static void FundSpecialTx(wallet::CWallet& pwallet, CMutableTransaction& tx, con
         coinControl.destChange = fundDest;
 
         std::vector<COutput> vecOutputs;
-        AvailableCoins(pwallet, vecOutputs);
+        vecOutputs = AvailableCoins(pwallet).All();
 
         for (const auto& out : vecOutputs) {
             CTxDestination txDest;
-            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == fundDest) {
-                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+            if (ExtractDestination(out.txout.scriptPubKey, txDest) && txDest == fundDest) {
+                coinControl.Select(COutPoint(out.outpoint.hash, out.outpoint.n));
             }
         }
 
         if (!coinControl.HasSelected()) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
         }
-        int nChangePosInOut = -1;
-        bilingual_str error;
+        constexpr int RANDOM_CHANGE_POSITION = -1;
         CTransactionRef wtx;
-        FeeCalculation fee_calc_out;
-        auto res = CreateTransaction(pwallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out);
-        if (!res) throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+        auto res = CreateTransaction(pwallet, vecSend, RANDOM_CHANGE_POSITION, coinControl);
+        if (!res) {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
+        }
         auto &txr = *res;
         wtx = txr.tx;
         tx.vin = wtx->vin;
