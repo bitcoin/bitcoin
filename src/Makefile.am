@@ -480,12 +480,6 @@ libsyscoin_node_a_SOURCES = \
   services/rpc/assetrpc.cpp \
   core_write.cpp \
   dsnotificationinterface.cpp \
-  governance/governance.cpp \
-  governance/governanceclasses.cpp \
-  governance/governanceobject.cpp \
-  governance/governancevalidators.cpp \
-  governance/governancevote.cpp \
-  governance/governancevotedb.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -800,6 +794,12 @@ libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   services/asset.cpp \
   services/assetconsensus.cpp \
+  governance/governance.cpp \
+  governance/governanceclasses.cpp \
+  governance/governanceobject.cpp \
+  governance/governancevalidators.cpp \
+  governance/governancevote.cpp \
+  governance/governancevotedb.cpp \
   auxpow.cpp \
   base58.cpp \
   bech32.cpp \
@@ -994,20 +994,14 @@ syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
 syscoin_wallet_LDADD = \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_WALLET) \
-  $(LIBSYSCOIN_NODE) \
-  $(LIBSYSCOIN_BLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBCHIABLS) \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
-  $(LIBLEVELDB) \
-  $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBNEVM)
-
-syscoin_wallet_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+  $(BDB_LIBS) \
+  $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
