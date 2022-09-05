@@ -913,6 +913,7 @@ endif
 # SYSCOIN need getauxwork and mempool stuff inside of wallet so server needs linking here for now but order has to be after wallet
 syscoin_bin_ldadd = \
   $(LIBSYSCOIN_WALLET) \
+  $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_BLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
@@ -991,7 +992,22 @@ syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
 syscoin_wallet_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_wallet_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd) $(LIBSYSCOIN_NODE) 
+syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL)
+syscoin_wallet_LDADD = \
+  $(LIBSYSCOIN_WALLET_TOOL) \
+  $(LIBSYSCOIN_WALLET) \
+  $(LIBSYSCOIN_NODE) \
+  $(LIBSYSCOIN_BLS) \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBCHIABLS) \
+  $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_CONSENSUS) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV) \
+  $(LIBSECP256K1) \
+  $(LIBNEVM)
 
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
