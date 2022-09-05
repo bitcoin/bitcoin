@@ -331,6 +331,7 @@ BASE_SCRIPTS = [
     'wallet_startup.py',
     'p2p_i2p_ports.py',
     'feature_config_args.py',
+    'feature_chain_arg_collision.py',
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
