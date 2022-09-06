@@ -83,7 +83,6 @@
     #include <limits.h>
 #endif
 RecursiveMutex cs_geth;
-RecursiveMutex cs_setethstatus;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::vector<CInv> vInvToSend;

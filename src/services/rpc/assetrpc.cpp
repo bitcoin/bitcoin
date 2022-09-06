@@ -24,6 +24,7 @@
 #include <key_io.h>
 using node::ReadBlockFromDisk;
 using node::GetTransaction;
+extern RecursiveMutex cs_setethstatus;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
     auto decoded = DecodeBase64(asset.strSymbol);
