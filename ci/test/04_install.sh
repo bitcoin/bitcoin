@@ -6,12 +6,17 @@
 
 export LC_ALL=C.UTF-8
 
+if [[ $DOCKER_NAME_TAG == centos* ]]; then
+  export LC_ALL=en_US.utf8
+fi
+
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   set +o errexit
   pushd /usr/local/Homebrew || exit 1
   git reset --hard origin/master
   popd || exit 1
   set -o errexit
+  ${CI_RETRY_EXE} brew unlink python@2
   ${CI_RETRY_EXE} brew update
   # brew upgrade returns an error if any of the packages is already up to date
   # Failure is safe to ignore, unless we really need an update.
@@ -81,7 +86,10 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
   DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
-if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+if [[ $DOCKER_NAME_TAG == centos* ]]; then
+  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install epel-release
+  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install $DOCKER_PACKAGES $PACKAGES
+elif [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi

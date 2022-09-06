@@ -468,6 +468,14 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
         SaveErrors(read_errors, errors);
         return false;
     }
+    for (const auto& setting : m_settings.rw_settings) {
+        std::string section;
+        std::string key = setting.first;
+        (void)InterpretOption(section, key, /* value */ {}); // Split setting key into section and argname
+        if (!GetArgFlags('-' + key)) {
+            LogPrintf("Ignoring unknown rw_settings value %s\n", setting.first);
+        }
+    }
     return true;
 }
 
@@ -1344,8 +1352,9 @@ void ScheduleBatchPriority()
 {
 #ifdef SCHED_BATCH
     const static sched_param param{};
-    if (pthread_setschedparam(pthread_self(), SCHED_BATCH, &param) != 0) {
-        LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
+    const int rc = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
+    if (rc != 0) {
+        LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(rc));
     }
 #endif
 }
