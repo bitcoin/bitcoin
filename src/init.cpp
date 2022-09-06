@@ -1891,7 +1891,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
 
 
-        LogPrintf("MASTERNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
         // Create register and init activeMasternodeManager
         activeMasternodeManager.reset();
