@@ -15,6 +15,7 @@ class NEVMDataTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_bdb()
 
     def nevm_data_max_size_blob(self):
         print('Testing for max size of a blob (2MB)')
