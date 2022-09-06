@@ -276,6 +276,20 @@ class SendallTest(BitcoinTestFramework):
                 recipients=[self.remainder_target],
                 fee_rate=100000)
 
+    # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
+    def sendall_fails_with_transaction_too_large(self):
+        self.log.info("Test that sendall fails if resulting transaction is too large")
+        # create many inputs
+        outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(1600)}
+        self.def_wallet.sendmany(amounts=outputs)
+        self.generate(self.nodes[0], 1)
+
+        assert_raises_rpc_error(
+                -4,
+                "Transaction too large.",
+                self.wallet.sendall,
+                recipients=[self.remainder_target])
+
     def run_test(self):
         self.nodes[0].createwallet("activewallet")
         self.wallet = self.nodes[0].get_wallet_rpc("activewallet")
@@ -326,6 +340,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when providing a fee that is too high
         self.sendall_fails_on_high_fee()
+
+        # Sendall fails when many inputs result to too large transaction
+        self.sendall_fails_with_transaction_too_large()
 
 if __name__ == '__main__':
     SendallTest().main()
