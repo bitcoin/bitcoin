@@ -929,7 +929,7 @@ static RPCHelpMan syscoinstopgeth()
     },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    if(!StopGethNode())
+    if(!StopGeth())
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
@@ -955,7 +955,7 @@ static RPCHelpMan syscoinstartgeth()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    if(!chainman.ActiveChainstate().RestartGethNode()) {
+    if(!RestartGeth(chainman)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Could not restart geth, see debug.log for more information...");
     }
     // SYSCOIN do not re-validate eth txroots

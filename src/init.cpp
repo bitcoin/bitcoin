@@ -368,7 +368,7 @@ void Shutdown(NodeContext& node)
         client->stop();
     }
     // SYSCOIN
-    StopGethNode();
+    StopGethNode(false);
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
