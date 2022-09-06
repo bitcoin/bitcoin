@@ -1264,11 +1264,15 @@ RPCHelpMan sendall()
                         {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
                                               "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                               "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
-                        {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with send_max. A JSON array of JSON objects",
+                        {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with send_max.",
                             {
-                                {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
-                                {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
-                                {"sequence", RPCArg::Type::NUM, RPCArg::Optional::NO, "The sequence number"},
+                                {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                    {
+                                        {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                        {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                                        {"sequence", RPCArg::Type::NUM, RPCArg::DefaultHint{"depends on the value of the 'replaceable' and 'locktime' arguments"}, "The sequence number"},
+                                    },
+                                },
                             },
                         },
                         {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
