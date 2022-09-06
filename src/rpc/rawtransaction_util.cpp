@@ -20,7 +20,6 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
-
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
 {
     if (outputs_in.isNull()) {
@@ -115,9 +114,6 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
-        // SYSCOIN
-        } else if (name_ == "version") {
-            rawTx.nVersion = outputs[name_].getInt<int>();
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
