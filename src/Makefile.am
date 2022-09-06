@@ -926,7 +926,6 @@ syscoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBNEVM)
-  
 
 syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
@@ -934,13 +933,13 @@ syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoind_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoind_LDFLAGS = $(syscoin_bin_ldflags)
-syscoind_LDADD = $(syscoin_bin_ldadd)
+syscoind_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
 
 syscoin_node_SOURCES = $(syscoin_daemon_sources) init/syscoin-node.cpp
 syscoin_node_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_node_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_node_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_node_LDADD = $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+syscoin_node_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
@@ -992,7 +991,7 @@ syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
 syscoin_wallet_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_wallet_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd)
+syscoin_wallet_LDADD = $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd)
 
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
@@ -1104,6 +1103,7 @@ libsyscoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/standard.cpp \
+  rpc/server.cpp \
   shutdown.cpp \
   signet.cpp \
   support/cleanse.cpp \

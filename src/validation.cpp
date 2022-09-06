@@ -66,16 +66,11 @@
 #include <string>
 
 // SYSCOIN
-#include <key_io.h>
 #include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
-#include <services/asset.h>
-#include <messagesigner.h>
-#include <rpc/request.h>
 #include <signal.h>
-#include <node/transaction.h>
 #include <fstream>
 // SYSCOIN
 #if ENABLE_ZMQ
@@ -88,12 +83,6 @@
     #include <limits.h>
 #endif
 RecursiveMutex cs_geth;
-struct DescriptorDetails {
-    std::string version;
-    std::string binURL;
-    std::string sha256Sum;
-    std::string signature;
-};
 extern RecursiveMutex cs_setethstatus;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
