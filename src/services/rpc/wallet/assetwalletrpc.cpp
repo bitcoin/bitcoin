@@ -207,6 +207,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
     UniValue optionsObj(UniValue::VOBJ);
     // should fill in VH and Size and fill in data through GETDATA net protocol by putting vchData into DB which it will read from
     outputObj.__pushKV("data", HexStr(data));
+    LogPrintf("syscoincreaterawnevmblob data length %d nSize %d\n", data.size(), nevmData.nSize);
     optionsObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
     output.push_back(outputObj);
     UniValue paramsSend(UniValue::VARR);
