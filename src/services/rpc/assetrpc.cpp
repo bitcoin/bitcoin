@@ -564,7 +564,7 @@ static RPCHelpMan getnevmblobdata()
     return RPCHelpMan{"getnevmblobdata",
         "\nReturn NEVM blob information and status from a version hash.\n",
         {
-            {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The version hash of the NEVM blob"},
+            {"versionhash_or_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The version hash or txid of the NEVM blob"},
             {"getdata", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Optional, retrieve the blob data"}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
@@ -578,21 +578,55 @@ static RPCHelpMan getnevmblobdata()
     if(request.params.size() > 1) {
         bGetData = request.params[1].get_bool();
     }
+    node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    CBlockIndex* pblockindex = nullptr;
+    uint256 hashBlock;
+    uint256 txhash = ParseHashV(request.params[0], "parameter 1");
+    std::vector<uint8_t> vchVH;
+    CNEVMData nevmData;
+    {
+        LOCK(cs_main);
+        const Coin& coin = AccessByTxid(node.chainman->ActiveChainstate().CoinsTip(), txhash);
+        if (!coin.IsSpent()) {
+            pblockindex = node.chainman->ActiveChain()[coin.nHeight];
+        }
+        if (pblockindex == nullptr) {
+            uint32_t nBlockHeight;
+            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {	    
+                pblockindex = node.chainman->ActiveChain()[nBlockHeight];
+            }
+        } 
+        CTransactionRef tx;
+        hashBlock.SetNull();
+        if(pblockindex != nullptr) {
+            tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
+        }
+        if(!tx || hashBlock.IsNull()) {
+            vchVH = ParseHex(request.params[0].get_str());
+        }
+        else {
+            nevmData = CNEVMData(*tx);
+            if(nevmData.IsNull()){
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse blob data from transaction");
+            }
+            vchVH = nevmData.vchVersionHash;
+        }
+    }
+    
     UniValue oNEVM(UniValue::VOBJ);
     BlockValidationState state;
-    std::vector<uint8_t> vchVH = ParseHex(request.params[0].get_str());
     std::vector<uint8_t> vchData;
     int64_t mpt = -1;
     uint32_t nSize;
     if(!pnevmdatadb->ReadMPT(vchVH, mpt) && !pnevmdatadb->ReadDataSize(vchVH, nSize)) {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
+        throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
     }
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
     if(bGetData) {  
         if(!pnevmdatadb->ReadData(vchVH, vchData)) {
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Could not find data");
+            throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
         }
         oNEVM.__pushKV("data", HexStr(vchData));
     }
