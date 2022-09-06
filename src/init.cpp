@@ -1594,7 +1594,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage(_("Loading P2P addresses…"));
         auto addrman{LoadAddrman(*node.netgroupman, args)};
         if (!addrman) return InitError(util::ErrorString(addrman));
-        node.addrman = std::move(*addrman);
+        node.addrman = std::move(addrman.value());
     }
 
     FastRandomContext rng;
