@@ -4,7 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import os
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
+from test_framework.util import (
+    assert_raises_process_error,
+)
+
 
 class FeatureChainArgCollision(BitcoinTestFramework):
     """
@@ -13,72 +19,76 @@ class FeatureChainArgCollision(BitcoinTestFramework):
     This is for providing a more verbose error message of where chain arguments are colliding.
     It helps when you forget about a chain argument from a config file.
     """
-    
+
     def set_test_params(self):
-        self.setup_clean_chain = False
+        self.setup_clean_chain = True
         self.num_nodes = 1
-        self.supports_cli = False     
-        
+
     def test_network_flag_chain_arg_collision(self):
         """
         Tests for bitcoind -regtest -chain=test
         """
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
-            extra_args=['-chain=test'],
-            expected_msg="""************************
-EXCEPTION: St13runtime_error       
-Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one. Chain argument is being set in commandline with network argument.       
-bitcoin in AppInit()       
-
-Assertion failed: (globalChainBaseParams), function BaseParams, file chainparamsbase.cpp, line 35."""
+            extra_args=["-chain=test"],
+            expected_msg="Chain argument is being set in commandline with network argument.",
+            match=ErrorMatch.PARTIAL_REGEX,
         )
-        
+
     def test_multiple_network_flag(self):
         """
         Tests for bitcoind -regtest -testnet
         """
         self.stop_node(0)
+        # todo: add match for error message
         self.nodes[0].assert_start_raises_init_error(
-            extra_args=['-testnet'],
-            expected_msg="""************************
-EXCEPTION: St13runtime_error       
-Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one. Too many network flags being set in the commandline.       
-bitcoin in AppInit()       
-
-Assertion failed: (globalChainBaseParams), function BaseParams, file chainparamsbase.cpp, line 35."""
+            extra_args=["-testnet"],
+            expected_msg="Too many network flags being set in the commandline.",
+            match=ErrorMatch.PARTIAL_REGEX,
         )
-        
+
     def test_config_chain_arg(self):
         """
         Tests for chain=regtest in an include.conf file imported into a bitcoin.conf file.
         """
 
         self.stop_node(0)
-        inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
-            conf.write(f'includeconf={inc_conf_file_path}\n')
-            
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
-            conf.write('chain=regtest\n')
-            
-        self.nodes[0].assert_start_raises_init_error(
-            expected_msg="""************************
-EXCEPTION: St13runtime_error       
-Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one. Chain argument is being set in a config file and by network arguments in the commandline.       
-bitcoin in AppInit()       
+        inc_conf_file_path = os.path.join(self.nodes[0].datadir, "include.conf")
+        with open(
+            os.path.join(self.nodes[0].datadir, "bitcoin.conf"), "a", encoding="utf-8"
+        ) as conf:
+            conf.write(f"includeconf={inc_conf_file_path}\n")
 
-Assertion failed: (globalChainBaseParams), function BaseParams, file chainparamsbase.cpp, line 35."""
+        with open(inc_conf_file_path, "w", encoding="utf-8") as conf:
+            conf.write("chain=regtest\n")
+
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg="Chain argument is being set in a config file and by network arguments in the commandline.",
+            match=ErrorMatch.PARTIAL_REGEX,
         )
-        
+
+    def test_cli(self):
+        """
+        Test bitcoin cli, bitcoind is launched with -regtest flag by default.
+        """
+        assert_raises_process_error(
+            1,
+            "Too many network flags being set in the commandline.",
+            fun=self.nodes[0].cli("-testnet", "-getinfo").send_cli,
+        )
+        assert_raises_process_error(
+            1,
+            "Chain argument is being set in commandline with network argument",
+            fun=self.nodes[0].cli("-chain=test", "-getinfo").send_cli,
+        )
+
     def run_test(self):
+
+        self.test_cli()
+        self.test_config_chain_arg()
         self.test_network_flag_chain_arg_collision()
         self.test_multiple_network_flag()
-        self.test_config_chain_arg()
-        
 
-            
-    
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     FeatureChainArgCollision().main()
-    
