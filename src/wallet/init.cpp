@@ -137,7 +137,6 @@ bool WalletInit::ParameterInteraction() const
 
 void WalletInit::Construct(NodeContext& node) const
 {
-    LOCK(cs_main);
     ArgsManager& args = *Assert(node.args);
     if (args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -150,7 +149,6 @@ void WalletInit::Construct(NodeContext& node) const
 // SYSCOIN
 void WalletInit::AutoLockMasternodeCollaterals(NodeContext& node) const
 {
-    LOCK(cs_main);
     if(!node.wallet_loader) {
         LogPrintf("Wallet disabled, cannot lock masternode collateral!\n");
         return;
