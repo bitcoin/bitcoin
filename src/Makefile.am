@@ -614,7 +614,8 @@ libsyscoin_zmq_a_SOURCES = \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp \
   zmq/zmqrpc.cpp \
-  zmq/zmqutil.cpp
+  zmq/zmqutil.cpp\
+  rpc/server.cpp
 endif
 
 
@@ -991,7 +992,7 @@ syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
 syscoin_wallet_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_wallet_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_wallet_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_wallet_LDADD = $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd)
+syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd)
 
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
@@ -1103,7 +1104,6 @@ libsyscoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/standard.cpp \
-  rpc/server.cpp \
   shutdown.cpp \
   signet.cpp \
   support/cleanse.cpp \
