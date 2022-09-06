@@ -51,21 +51,6 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
-
-    QTableView* tableView = ui->recentRequestsView;
-    tableView->verticalHeader()->hide();
-    tableView->setAlternatingRowColors(true);
-    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-    tableView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
-    tableView->horizontalHeader()->setStretchLastSection(true);
-
-    QSettings settings;
-    if (!tableView->horizontalHeader()->restoreState(settings.value("RecentRequestsViewHeaderState").toByteArray())) {
-        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-    }
 }
 
 void ReceiveCoinsDialog::setModel(WalletModel *_model)
@@ -79,8 +64,23 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         updateDisplayUnit();
 
         QTableView* tableView = ui->recentRequestsView;
+
+        tableView->verticalHeader()->hide();
         tableView->setModel(_model->getRecentRequestsTableModel());
         tableView->sortByColumn(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+
+        tableView->setAlternatingRowColors(true);
+        tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+        tableView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
+        tableView->horizontalHeader()->setStretchLastSection(true);
+
+        QSettings settings;
+        if (!tableView->horizontalHeader()->restoreState(settings.value("RecentRequestsViewHeaderState").toByteArray())) {
+            tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+            tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+            tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        }
 
         connect(tableView->selectionModel(),
             &QItemSelectionModel::selectionChanged, this,
