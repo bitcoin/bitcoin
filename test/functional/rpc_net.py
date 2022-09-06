@@ -129,6 +129,7 @@ class NetTest(BitcoinTestFramework):
                 "id": no_version_peer_id,
                 "inbound": True,
                 "inflight": [],
+                "relaytxpackages" : False,
                 "last_block": 0,
                 "last_transaction": 0,
                 "lastrecv": 0,
