@@ -775,7 +775,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
-
+    // SYSCOIN
+    txNew.nVersion = coin_control.m_version;
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
@@ -882,7 +883,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
         // Include the fee cost for outputs.
         if (!coin_selection_params.m_subtract_fee_outputs) {
-            coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
+            // SYSCOIN need to account for CNEVMData.nSize for PoDA fees
+            coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION, SER_SIZE, txNew.nVersion);
         }
 
         if (IsDust(txout, wallet.chain().relayDustFee())) {

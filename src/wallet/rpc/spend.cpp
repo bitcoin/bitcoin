@@ -1221,11 +1221,12 @@ RPCHelpMan send()
             int change_position;
             bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
+            CCoinControl coin_control;
             // SYSCOIN
             if(options.exists("version")) {
                 rawTx.nVersion = options["version"].getInt<int>();
+                coin_control.m_version = rawTx.nVersion;
             }
-            CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;

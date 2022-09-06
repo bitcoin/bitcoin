@@ -1361,7 +1361,8 @@ protected:
     const int nVersion;
     int nTxVersion{0};
 public:
-    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn) {}
+    // SYSCOIN
+    explicit CSizeComputer(int nVersionIn, int nProtocolIn = SER_SIZE, int nTxVersionIn = 0) : nSize(0), nProtocol(nProtocolIn), nVersion(nVersionIn), nTxVersion(nTxVersionIn) {}
 
     void write(Span<const std::byte> src)
     {
@@ -1467,6 +1468,11 @@ size_t GetSerializeSize(const T& t, int nVersion = 0, int nProtocol = SER_SIZE)
     return (CSizeComputer(nVersion, nProtocol) << t).size();
 }
 // SYSCOIN
+template <typename T>
+size_t GetSerializeSize(const T& t, int nVersion, int nProtocol, int nTxVersion)
+{
+    return (CSizeComputer(nVersion, nProtocol, nTxVersion) << t).size();
+}
 template <typename S, typename T>
 size_t GetSerializeSize(const S& s, const T& t)
 {

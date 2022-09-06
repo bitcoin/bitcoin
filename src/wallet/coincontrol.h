@@ -60,7 +60,9 @@ public:
     int m_max_depth = DEFAULT_MAX_DEPTH;
     //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
     FlatSigningProvider m_external_provider;
-
+    // SYSCOIN
+    //! Custom transaction vesion
+    int m_version = CTransaction::CURRENT_VERSION;
     CCoinControl();
 
     bool HasSelected() const
