@@ -66,11 +66,34 @@
 #include <string>
 
 // SYSCOIN
+#include <key_io.h>
 #include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
-
+#include <services/asset.h>
+#include <messagesigner.h>
+#include <rpc/request.h>
+#include <signal.h>
+#include <node/transaction.h>
+#include <fstream>
+// SYSCOIN
+#if ENABLE_ZMQ
+#include <zmq/zmqabstractnotifier.h>
+#include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
+#endif
+#ifdef MAC_OSX
+    #include <mach-o/dyld.h>
+    #include <limits.h>
+#endif
+RecursiveMutex cs_geth;
+struct DescriptorDetails {
+    std::string version;
+    std::string binURL;
+    std::string sha256Sum;
+    std::string signature;
+};
 extern RecursiveMutex cs_setethstatus;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
@@ -2048,7 +2071,7 @@ bool CChainState::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootM
             bool bResponse = false;
             GetMainSignals().NotifyNEVMComms("status", bResponse);
             if(!bResponse) {
-                if(RestartGethNode(m_chainman)) {
+                if(RestartGethNode()) {
                     // try again after resetting connection
                     GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight);
                     if(nHeight > nLastKnownHeightOnStart)
@@ -2391,12 +2414,6 @@ void StopScriptCheckWorkerThreads()
 }
 
 // SYSCOIN
-bool StopGeth() {
-    return StopGethNode(false);
-}
-bool RestartGeth(ChainstateManager& chainman) {
-    return RestartGethNode(chainman);
-}
 bool GetBlockHash(ChainstateManager& chainman, uint256& hashRet, int nBlockHeight)
 {
     LOCK(cs_main);
@@ -6068,6 +6085,407 @@ bool PruneSyscoinDBs(ChainstateManager& chainman) {
 	return ret;
 }
 
+
+void recursive_copy(const fs::path &src, const fs::path &dst)
+{
+  if (fs::exists(dst)){
+    throw std::runtime_error(dst.generic_string() + " exists");
+  }
+
+  if (fs::is_directory(src)) {
+    TryCreateDirectories(dst);
+    for (const auto &item : fs::directory_iterator(src)) {
+      recursive_copy(item.path(), dst/fs::u8path(fs::PathToString(item.path().filename())));
+    }
+  } 
+  else if (fs::is_regular_file(src)) {
+    fs::copy(src, dst);
+  } 
+  else {
+    throw std::runtime_error(dst.generic_string() + " not dir or file");
+  }
+}
+#ifdef WIN32
+    #include <windows.h>
+    #include <winnt.h>
+    #include <winternl.h>
+    #include <stdio.h>
+    #include <errno.h>
+    #include <assert.h>
+    #include <process.h>
+    pid_t fork(fs::path appIn, std::string arg)
+    {
+        std::string app = fs::PathToString(appIn);
+        std::string appQuoted = strprintf("%s", fs::quoted(app));
+        PROCESS_INFORMATION pi;
+        STARTUPINFOW si;
+        ZeroMemory(&pi, sizeof(pi));
+        ZeroMemory(&si, sizeof(si));
+        GetStartupInfoW (&si);
+        si.cb = sizeof(si); 
+        //Prepare CreateProcess args
+        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
+        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
+
+        std::wstring app_w(app.length(), L' '); // Make room for characters
+        std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
+
+        std::wstring arg_w(arg.length(), L' '); // Make room for characters
+        std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
+
+        std::wstring input = appQuoted_w + L" " + arg_w;
+        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
+        const wchar_t* app_const = app_w.c_str();
+        LogPrintf("CreateProcessW app %s %s\n",app,arg);
+        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE, 
+              CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+        if(!result)
+        {
+            LogPrintf("CreateProcess failed (%d)\n", GetLastError());
+            return 0;
+        }
+        pid_t pid = (pid_t)pi.dwProcessId;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return pid;
+    }
+#endif
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
+
+std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs::path& dataDir) {
+    const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+    std::vector<std::string> cmdLineRet;
+    cmdLineRet.push_back(fs::PathToString(binaryURL));
+    for(const auto &cmd: cmdLine){
+        cmdLineRet.push_back(cmd);
+    }
+    cmdLineRet.push_back("--datadir");
+    cmdLineRet.push_back(fs::PathToString(dataDir));
+    if(fTestNet || fRegTest) {
+        cmdLineRet.push_back("--tanenbaum");
+    } else {
+        cmdLineRet.push_back("--syscoin");
+    }
+    // Geth should subscribe to our publisher
+    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
+    cmdLineRet.push_back("--nevmpub");
+    cmdLineRet.push_back(strPub);
+    return cmdLineRet;
+}
+bool CChainState::RestartGethNode() {
+    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
+    if(NEVMSub.empty()) {
+        LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
+        return false;
+    }
+    StopGethNode();
+#if ENABLE_ZMQ
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
+    }
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
+    if(fNEVMConnection) {
+        if(!g_zmq_notification_interface) {
+            LogPrintf("RestartGethNode: Could not establish ZMQ interface connections, check your ZMQ settings and try again...\n");
+        }
+    }
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
+    }
+#endif
+    if(!StartGethNode()) {
+        LogPrintf("RestartGethNode: Could not start Geth\n");
+        return false;
+    }
+    {
+        LOCK(cs_main);
+        if(!ResetLastBlock()) {
+            LogPrintf("RestartGethNode: Could not reset last invalid block\n");
+            return false;
+        }
+    }
+    bool bResponse = false;
+    GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
+    if(!bResponse) {
+        LogPrintf("RestartGethNode: Could not start network\n");
+        return false;  
+    }
+    return true;
+}
+#ifdef WIN32
+// Convert a wide Unicode string to an UTF8 string
+std::string utf8_encode(const std::wstring &wstr)
+{
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo( size_needed, 0 );
+    WideCharToMultiByte (CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
+}
+#endif
+fs::path FindExecPath(std::string &binArchitectureTag) {
+    fs::path fpathDefault;
+    #ifdef WIN32
+        binArchitectureTag = "windows";
+        WCHAR pszExePath[MAX_PATH];
+        GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
+        fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
+    #endif    
+    #ifdef MAC_OSX
+        binArchitectureTag = "darwin";
+        char buf [PATH_MAX];
+        uint32_t bufsize = PATH_MAX;
+        if(!_NSGetExecutablePath(buf, &bufsize))
+            puts(buf);
+        fpathDefault = fs::u8path(std::string(buf));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
+    #endif
+    #ifndef WIN32
+        binArchitectureTag = "linux";
+        char pszExePath[MAX_PATH+1];
+        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
+        if (r == -1)
+            return fpathDefault;
+        pszExePath[r] = '\0';
+        fpathDefault = fs::u8path(std::string(pszExePath));
+        fpathDefault = fpathDefault.parent_path();
+        return fpathDefault;
+    #endif
+    return fpathDefault;
+}
+bool StartGethNode()
+{
+    LOCK(cs_geth);
+
+    LogPrintf("%s: Starting SysGeth\n", __func__);
+    fs::path gethFilename = fs::u8path(GetGethFilename());
+    std::string binArchitectureTag;
+    const fs::path &fpathDefault = FindExecPath(binArchitectureTag);
+
+    
+    fs::path binaryURL = fpathDefault / "../Resources" / gethFilename;
+    binaryURL = binaryURL.make_preferred();
+    // current executable path
+    if(!fs::exists(binaryURL)) {
+        fs::path binaryURLTmp = binaryURL;
+        binaryURL = fpathDefault / gethFilename;
+        binaryURL = binaryURL.make_preferred();
+        LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+        // current executable path + bin/[os]
+        if(!fs::exists(binaryURL)) {
+            fs::path binaryURLTmp = binaryURL;
+            binaryURL = fpathDefault / fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
+            binaryURL = binaryURL.make_preferred();
+            LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+            // $path
+            if(!fs::exists(binaryURL)) {
+                fs::path binaryURLTmp = binaryURL;
+                binaryURL = gethFilename;
+                binaryURL = binaryURL.make_preferred();
+                LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+                // $path + bin/[os]
+                if(!fs::exists(binaryURL)) {
+                    fs::path binaryURLTmp = binaryURL;
+                    binaryURL = fs::u8path("bin") / fs::u8path(binArchitectureTag) / gethFilename;
+                    binaryURL = binaryURL.make_preferred();
+                    LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+                    // usr/local/bin
+                    if(!fs::exists(binaryURL)) {
+                        fs::path binaryURLTmp = binaryURL;
+                        binaryURL = fs::u8path("/usr/local/bin") / gethFilename;
+                        binaryURL = binaryURL.make_preferred();
+                        LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+                        if(!fs::exists(binaryURL)) {
+                            fs::path binaryURLTmp = binaryURL;
+                            binaryURL = gArgs.GetDataDirBase() / gethFilename;
+                            binaryURL = binaryURL.make_preferred();
+                            LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if(!fs::exists(binaryURL)) {
+        LogPrintf("Could not find sysgeth\n");
+        return false;
+    }
+
+    const fs::path &dataDir = gArgs.GetDataDirNet() / "geth";
+    std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(binaryURL, dataDir);
+    const fs::path &log = gArgs.GetDataDirNet() / "sysgeth.log";
+
+    #ifndef WIN32
+    // Prevent killed child-processes remaining as "defunct"
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sa.sa_flags = SA_NOCLDWAIT;
+        
+    sigaction( SIGCHLD, &sa, nullptr ) ;
+        
+    // Duplicate ("fork") the process. Will return zero in the child
+    // process, and the child's PID in the parent (or negative on error).
+    pid_t pid = fork() ;
+    if( pid < 0 ) {
+        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
+        return false;
+    }  
+    // TODO: sanitize environment variables as per
+    // https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
+    if( pid == 0 ) {  
+        std::vector<char*> commandVector;
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
+        }  
+    
+        // push NULL to the end of the vector (execvp expects NULL as last element)
+        commandVector.push_back(nullptr);
+        char **command = commandVector.data();    
+        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]); 
+        int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
+        if (err == -1) {
+            LogPrintf("Could not open sysgeth.log\n");
+        }
+        if (-1 == dup2(err, fileno(stderr))) { LogPrintf("Cannot redirect stderr for syssgeth\n"); return false; }   
+        fflush(stderr); close(err);                               
+        execvp(command[0], &command[0]);
+        if (errno != 0) {
+            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
+        }
+    }
+    #else
+        std::string commandStr;
+        // the first cmd is the binary file which is not needed as binaryURL is that, in windows we only need params passed as commandStr
+        vecCmdLineStr.erase(vecCmdLineStr.begin());
+        for(const std::string &cmdStr: vecCmdLineStr) {
+            commandStr += cmdStr + " ";
+        }
+        pid_t pid = fork(binaryURL, commandStr);
+        if( pid <= 0 ) {
+            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
+            return false;
+        }
+    #endif
+    if(pid > 0)
+        LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    return true;
+}
+bool StopGethNode(bool bOnStart)
+{
+    if(!fNEVMConnection) {
+        return false;
+    }
+    if(!bOnStart) {
+        bool bResponse = false;
+        GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
+        if(bResponse) {
+            return true;
+        }
+    }
+    
+    #ifndef USE_SYSCALL_SANDBOX
+    #if HAVE_SYSTEM
+    LogPrintf("Killing any sysgeth processes that may be already running...\n");
+    std::string cmd = "pkill -9 -f sysgeth";
+    #ifdef WIN32
+        cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
+    #endif
+    std::thread t(runCommand, cmd);
+    if (t.joinable())
+        t.join();
+    #endif
+    #endif
+    
+    return true;
+}
+void DoGethMaintenance() {
+    if(ShutdownRequested()) {
+        return;
+    }
+    // hasn't started yet so start
+    if(!fReindexGeth ) {
+        LogPrintf("%s: Stopping Geth\n", __func__); 
+        StopGethNode(true);
+        LogPrintf("%s: Starting Geth because PID's were uninitialized\n", __func__);
+        if(!StartGethNode()) {
+            LogPrintf("%s: Failed to start Geth\n", __func__); 
+        }
+    } else {
+        fReindexGeth = false;
+        LogPrintf("%s: Stopping Geth\n", __func__); 
+        StopGethNode(true);
+        // copy wallet dir if exists
+        const fs::path &dataDir = gArgs.GetDataDirNet();
+        const fs::path &gethDir = dataDir / "geth";
+        const fs::path &gethKeyStoreDir = gethDir / "keystore";
+        const fs::path &gethNodeKeyPath = gethDir / "geth" / "nodekey";
+        const fs::path &keyStoreTmpDir = dataDir / "keystoretmp";
+        const fs::path &nodeKeyTmpDir = dataDir / "nodekeytmp";
+        bool existedKeystore = fs::exists(gethKeyStoreDir);
+        bool existedKeystoreTmp = fs::exists(keyStoreTmpDir);
+        if(existedKeystore && !existedKeystoreTmp){
+            LogPrintf("%s: Copying keystore for Geth to a temp directory\n", __func__); 
+            try{
+                recursive_copy(gethKeyStoreDir, keyStoreTmpDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying keystore geth directory to keystoretmp %s\n", e.what());
+                return;
+            }
+        }
+        bool existedNodekey = fs::exists(gethNodeKeyPath);
+        bool existedNodekeyTmp = fs::exists(nodeKeyTmpDir);
+        if(existedNodekey && !existedNodekeyTmp){
+            LogPrintf("%s: Copying temporary nodekey\n", __func__); 
+            try{
+                recursive_copy(gethNodeKeyPath, nodeKeyTmpDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying nodekey %s\n", e.what());
+                return;
+            }
+        }
+        LogPrintf("%s: Removing Geth data directory\n", __func__);
+        // clean geth data dir
+        fs::remove_all(gethDir);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
+        // replace keystore dir
+        if(existedKeystore){
+            LogPrintf("%s: Replacing keystore with temp keystore directory\n", __func__);
+            try{
+                fs::create_directory(gethDir);
+                recursive_copy(keyStoreTmpDir, gethKeyStoreDir);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying keystore geth keystoretmp directory to keystore %s\n", e.what());
+                return;
+            }
+            fs::remove_all(keyStoreTmpDir);
+        }
+        // preserve nodekey file
+        if(existedNodekey){
+            LogPrintf("%s: Replacing nodekey with temp nodekey\n", __func__);
+            try{
+                fs::create_directory(gethDir / "geth");
+                recursive_copy(nodeKeyTmpDir, gethNodeKeyPath);
+            } catch(const  std::runtime_error& e) {
+                LogPrintf("Failed copying temporary nodekey %s\n", e.what());
+                return;
+            }
+            fs::remove_all(nodeKeyTmpDir);
+        }
+        LogPrintf("%s: Restarting Geth \n", __func__);
+        if(!StartGethNode())
+            LogPrintf("%s: Failed to start Geth\n", __func__); 
+        // set flag that geth is resyncing
+        fGethSynced = false;
+        LogPrintf("%s: Done, waiting for resync...\n", __func__);
+    }
+}
 
 void ChainstateManager::MaybeRebalanceCaches()
 {

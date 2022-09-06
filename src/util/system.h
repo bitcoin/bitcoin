@@ -51,7 +51,7 @@ extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
 extern CAmount nMNCollateralRequired;
 extern uint32_t nLastKnownHeightOnStart;
 class UniValue;
-class ChainstateManager;
+
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
@@ -116,10 +116,6 @@ void DeleteOldAssetDir();
 void DeleteOldEthDir();
 fs::path GetDefaultDataDir();
 // SYSCOIN
-bool RestartGethNode(ChainstateManager& chainman);
-void DoGethMaintenance();
-bool StartGethNode();
-bool StopGethNode(bool bOnStart);
 std::string GetDefaultPubNEVM();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.

@@ -686,6 +686,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
     // SYSCOIN
+    bool RestartGethNode();
     void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
@@ -1094,9 +1095,10 @@ public:
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+void DoGethMaintenance();
+bool StartGethNode();
+bool StopGethNode(bool bOnStart = false);
 bool ProcessNEVMBlob(const CNEVMData &nevmData);
-bool StopGeth();
-bool RestartGeth(ChainstateManager& chainman);
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
