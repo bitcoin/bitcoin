@@ -286,7 +286,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
     assert(false);
 }
 
-static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
+static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
 {
     if (level_str == "trace") {
         return BCLog::Level::Trace;
@@ -353,11 +353,11 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
         if (mocktime > 0s) {
             strStamped += " (mocktime: " + FormatISO8601DateTime(count_seconds(mocktime)) + ")";
         }
-        strStamped += ' ' + str;
-    } else
-        strStamped = str;
+        strStamped += ' ';
+    }
 
-    return strStamped;
+    static const auto c{m_colorman({Color::Attribute::FgCyan})};
+    return c(strStamped) + str;
 }
 
 namespace BCLog {
@@ -382,6 +382,30 @@ namespace BCLog {
     }
 } // namespace BCLog
 
+std::string BCLog::Color::ComputeSequence() const
+{
+    std::string sequence;
+    if (attributes.empty()) {
+        return sequence;
+    }
+
+    for (auto attribute : attributes) {
+        sequence += strprintf("%d;", static_cast<int>(attribute));
+    }
+
+    sequence.pop_back();
+    return sequence;
+}
+
+std::string BCLog::Color::Wrap(const std::string& str) const
+{
+    if (!enabled) {
+        return str;
+    }
+
+    return strprintf("%s%sm%s%s%dm", escape_sequence, m_sequence, str, escape_sequence, static_cast<int>(Attribute::Reset));
+}
+
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
@@ -404,16 +428,26 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         }
 
         s += "] ";
-        str_prefixed.insert(0, s);
+        static auto c{m_colorman({Color::Attribute::FgBlue})};
+        str_prefixed.insert(0, c(s));
     }
 
     if (m_log_sourcelocations && m_started_new_line) {
-        str_prefixed.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
+        static auto loc_file_color{m_colorman({Color::Attribute::Faint})};
+        const auto source_loc_file{"[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] "};
+
+        static auto loc_func_color{m_colorman({Color::Attribute::FgGreen, Color::Attribute::Faint})};
+        const auto source_loc_func{"[" + logging_function + "] "};
+
+        str_prefixed.insert(0, loc_file_color(source_loc_file) + loc_func_color(source_loc_func));
     }
 
     if (m_log_threadnames && m_started_new_line) {
         const auto& threadname = util::ThreadGetInternalName();
-        str_prefixed.insert(0, "[" + (threadname.empty() ? "unknown" : threadname) + "] ");
+        static auto c{m_colorman({Color::Attribute::FgRed})};
+
+        const auto name{"[" + (threadname.empty() ? "unknown" : threadname) + "] "};
+        str_prefixed.insert(0, c(name));
     }
 
     str_prefixed = LogTimestampStr(str_prefixed);
@@ -447,7 +481,10 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
                 m_fileout = new_fileout;
             }
         }
-        FileWriteStr(str_prefixed, m_fileout);
+
+        // Remove ANSI color codes before writing to the log file
+        const std::string str_sanitized{ColorMan::StripColors(str_prefixed)};
+        FileWriteStr(str_sanitized, m_fileout);
     }
 }
 

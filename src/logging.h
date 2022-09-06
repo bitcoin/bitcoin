@@ -16,6 +16,7 @@
 #include <functional>
 #include <list>
 #include <mutex>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -68,6 +69,121 @@ namespace BCLog {
         BLOCKSTORE  = (1 << 26),
         ALL         = ~(uint32_t)0,
     };
+
+
+    constexpr auto escape_sequence{"\033["};
+
+    class Color
+    {
+    public:
+        enum class Attribute {
+            /* Base attributes */
+            Reset = 0,
+            Bold = 1,
+            Faint = 2,
+            Italic = 3,
+            Underline = 4,
+            BlinkSlow = 5,
+            BlinkRapid = 6,
+            ReverseVideo = 7,
+            Concealed = 8,
+            CrossedOut = 9,
+
+            /* Foreground colors */
+            FgBlack = 30,
+            FgRed = 31,
+            FgGreen = 32,
+            FgYellow = 33,
+            FgBlue = 34,
+            FgMagenta = 35,
+            FgCyan = 36,
+            FgWhite = 37,
+
+            /* Foreground bright colors */
+            FgHiBlack = 90,
+            FgHiRed = 91,
+            FgHiGreen = 92,
+            FgHiYellow = 93,
+            FgHiBlue = 94,
+            FgHiMagenta = 95,
+            FgHiCyan = 96,
+            FgHiWhite = 97,
+
+            /* Background colors */
+            BgBlack = 40,
+            BgRed = 41,
+            BgGreen = 42,
+            BgYellow = 43,
+            BgBlue = 44,
+            BgMagenta = 45,
+            BgCyan = 46,
+            BgWhite = 47,
+
+            /* Background bright colors */
+            BgHiBlack = 100,
+            BgHiRed = 101,
+            BgHiGreen = 102,
+            BgHiYellow = 103,
+            BgHiBlue = 104,
+            BgHiMagenta = 105,
+            BgHiCyan = 106,
+            BgHiWhite = 107,
+        };
+
+        std::set<Attribute> attributes{};
+
+        Color() = delete;
+        Color(std::initializer_list<Attribute> attributes, const bool& enabled) : enabled(enabled)
+        {
+            for (auto attribute : attributes) {
+                this->attributes.insert(attribute);
+            }
+
+            m_sequence = this->ComputeSequence();
+        }
+
+        std::string Wrap(const std::string& str) const;
+        std::string operator()(const std::string& str) const { return Wrap(str); }
+
+        std::string m_sequence;
+        const bool& enabled;
+
+    private:
+        std::string ComputeSequence() const;
+    };
+
+    class ColorMan
+    {
+    public:
+        ColorMan()
+        {
+            m_enable_colors = getenv("TERM") != nullptr && getenv("TERM") != std::string("dumb") && (getenv("ANSI_COLORS_DISABLED") == nullptr || getenv("ANSI_COLORS_DISABLED") == std::string("0"));
+        }
+
+        bool m_enable_colors;
+        void SetEnableColors(bool enable) { m_enable_colors = enable; }
+
+        class Color operator()(std::initializer_list<Color::Attribute> attributes) const
+        {
+            return Color(attributes, m_enable_colors);
+        }
+
+        static std::string StripColors(const std::string& str) {
+            std::string ret;
+            bool in_color{false};
+            for (size_t i = 0; i < str.size(); ++i) {
+                if (str[i] == '\x1b') {
+                    in_color = true;
+                } else if (in_color && str[i] == 'm') {
+                    in_color = false;
+                } else if (!in_color) {
+                    ret += str[i];
+                }
+            }
+            return ret;
+        }
+    };
+
     enum class Level {
         Trace = 0, // High-volume or detailed logging for development/debugging
         Debug,     // Reasonably noisy logging, but still usable in production
@@ -194,6 +310,7 @@ namespace BCLog {
         std::string LogLevelToStr(BCLog::Level level) const;
 
         bool DefaultShrinkDebugFile() const;
+        ColorMan m_colorman;
     };
 
 } // namespace BCLog

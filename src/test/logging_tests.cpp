@@ -57,6 +57,7 @@ struct LogSetup : public BasicTestingSetup {
 
         LogInstance().SetLogLevel(BCLog::Level::Debug);
         LogInstance().SetCategoryLogLevel({});
+        LogInstance().m_colorman.SetEnableColors(false);
     }
 
     ~LogSetup()
