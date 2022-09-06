@@ -74,12 +74,12 @@ class FeatureChainArgCollision(BitcoinTestFramework):
         assert_raises_process_error(
             1,
             "Too many network flags being set in the commandline.",
-            fun=self.nodes[0].cli("-testnet", "-getinfo").send_cli,
+            self.nodes[0].cli("-testnet", "-getinfo").send_cli,
         )
         assert_raises_process_error(
             1,
             "Chain argument is being set in commandline with network argument",
-            fun=self.nodes[0].cli("-chain=test", "-getinfo").send_cli,
+            self.nodes[0].cli("-chain=test", "-getinfo").send_cli,
         )
 
     def run_test(self):
