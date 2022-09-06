@@ -270,7 +270,7 @@ void CreateWalletActivity::createWallet()
         auto wallet{node().walletLoader().createWallet(name, m_passphrase, flags, m_warning_message)};
 
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         } else {
             m_error_message = util::ErrorString(wallet);
         }
@@ -359,7 +359,7 @@ void OpenWalletActivity::open(const std::string& path)
         auto wallet{node().walletLoader().loadWallet(path, m_warning_message)};
 
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         } else {
             m_error_message = util::ErrorString(wallet);
         }
@@ -412,7 +412,7 @@ void RestoreWalletActivity::restore(const fs::path& backup_file, const std::stri
         auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message)};
 
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         } else {
             m_error_message = util::ErrorString(wallet);
         }
