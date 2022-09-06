@@ -301,6 +301,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
     coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
     coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
+    coin_selection_params_bnb.m_subtract_fee_outputs = true;
+
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", m_args, CreateMockWalletDatabase());
         wallet->LoadWallet();
@@ -318,7 +320,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         available_coins.Clear();
         add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate);
         available_coins.All().at(0).input_bytes = 40;
-        coin_selection_params_bnb.m_subtract_fee_outputs = true;
         const auto result9 = SelectCoinsBnB(GroupCoins(available_coins.All()), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);
