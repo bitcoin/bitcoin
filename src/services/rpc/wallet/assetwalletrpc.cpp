@@ -16,9 +16,6 @@
 #include <wallet/rpc/spend.h>
 #include <rpc/server.h>
 using namespace wallet;
-extern std::string EncodeDestination(const CTxDestination& dest);
-extern CTxDestination DecodeDestination(const std::string& str);
-
 static RPCHelpMan convertaddresswallet()
 {
     return RPCHelpMan{"convertaddresswallet",

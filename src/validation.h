@@ -1100,6 +1100,7 @@ bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);
 bool ProcessNEVMBlob(const CNEVMData &nevmData);
 // SYSCOIN
+extern RecursiveMutex cs_setethstatus;
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
 bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock);

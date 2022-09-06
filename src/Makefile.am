@@ -934,13 +934,13 @@ syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoind_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoind_LDFLAGS = $(syscoin_bin_ldflags)
-syscoind_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd)
+syscoind_LDADD = $(syscoin_bin_ldadd)
 
 syscoin_node_SOURCES = $(syscoin_daemon_sources) init/syscoin-node.cpp
 syscoin_node_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_node_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_node_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_node_LDADD = $(LIBSYSCOIN_NODE) $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+syscoin_node_LDADD = $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp

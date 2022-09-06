@@ -21,10 +21,7 @@
 #include <rpc/server_util.h>
 #include <interfaces/node.h>
 #include <llmq/quorums_chainlocks.h>
-extern RecursiveMutex cs_setethstatus;
-extern std::string EncodeDestination(const CTxDestination& dest);
-extern CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr, bool forcelegacy = false);
-
+#include <key_io.h>
 using node::ReadBlockFromDisk;
 using node::GetTransaction;
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
