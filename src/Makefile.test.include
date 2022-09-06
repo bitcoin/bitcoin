@@ -257,6 +257,7 @@ BITCOIN_TESTS =\
   test/key_tests.cpp \
   test/lcg.h \
   test/limitedmap_tests.cpp \
+  test/llmq_dkg_tests.cpp \
   test/logging_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/validation_tests.cpp \

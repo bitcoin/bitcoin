@@ -210,6 +210,30 @@ public:
     bool someoneComplain{false};
 };
 
+class DKGError {
+public:
+    enum type {
+        COMPLAIN_LIE = 0,
+        COMMIT_OMIT,
+        COMMIT_LIE,
+        CONTRIBUTION_OMIT,
+        CONTRIBUTION_LIE,
+        JUSTIFY_OMIT,
+        JUSTIFY_LIE,
+        _COUNT
+    };
+    static constexpr DKGError::type from_string(std::string_view in) {
+        if (in == "complain-lie") return COMPLAIN_LIE;
+        if (in == "commit-omit") return COMMIT_OMIT;
+        if (in == "commit-lie") return COMMIT_LIE;
+        if (in == "contribution-omit") return CONTRIBUTION_OMIT;
+        if (in == "contribution-lie") return CONTRIBUTION_LIE;
+        if (in == "justify-lie") return JUSTIFY_LIE;
+        if (in == "justify-omit") return JUSTIFY_OMIT;
+        return _COUNT;
+    }
+};
+
 /**
  * The DKG session is a single instance of the DKG process. It is owned and called by CDKGSessionHandler, which passes
  * received DKG messages to the session. The session is not persistent and will loose it's state (the whole object is
@@ -281,7 +305,7 @@ public:
 
     bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash, int _quorumIndex);
 
-    std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
+    [[nodiscard]] std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
 
     /**
      * The following sets of methods are for the first 4 phases handled in the session. The flow of message calls
@@ -325,16 +349,16 @@ public:
     // Phase 5: aggregate/finalize
     std::vector<CFinalCommitment> FinalizeCommitments();
 
-    bool AreWeMember() const { return !myProTxHash.IsNull(); }
+    [[nodiscard]] bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
     void RelayInvToParticipants(const CInv& inv) const;
 
 public:
-    CDKGMember* GetMember(const uint256& proTxHash) const;
+    [[nodiscard]] CDKGMember* GetMember(const uint256& proTxHash) const;
 
 private:
-    bool ShouldSimulateError(const std::string& type) const;
+    [[nodiscard]] bool ShouldSimulateError(DKGError::type type) const;
 };
 
 class CDKGLogger : public CBatchedLogger
@@ -346,7 +370,8 @@ public:
         CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, quorumIndex=%d, height=%d, member=%d, func=%s)", _llmqTypeName, _quorumIndex, _height, _areWeMember, _func)){};
 };
 
-void SetSimulatedDKGErrorRate(const std::string& type, double rate);
+void SetSimulatedDKGErrorRate(DKGError::type type, double rate);
+double GetSimulatedErrorRate(DKGError::type type);
 
 } // namespace llmq
 

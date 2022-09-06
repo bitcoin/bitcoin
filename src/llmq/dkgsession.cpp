@@ -24,36 +24,21 @@
 
 namespace llmq
 {
+static std::array<std::atomic<double>, int(DKGError::type::_COUNT)> simDkgErrorMap{};
 
-// Supported error types:
-// - contribution-omit
-// - contribution-lie
-// - complain-lie
-// - justify-lie
-// - justify-omit
-// - commit-omit
-// - commit-lie
-
-static CCriticalSection cs_simDkgError;
-static std::map<std::string, double> simDkgErrorMap;
-
-void SetSimulatedDKGErrorRate(const std::string& type, double rate)
+void SetSimulatedDKGErrorRate(DKGError::type type, double rate)
 {
-    LOCK(cs_simDkgError);
-    simDkgErrorMap[type] = rate;
+    if (int(type) >= DKGError::type::_COUNT) return;
+    simDkgErrorMap[int(type)] = rate;
 }
 
-static double GetSimulatedErrorRate(const std::string& type)
+double GetSimulatedErrorRate(DKGError::type type)
 {
-    LOCK(cs_simDkgError);
-    auto it = simDkgErrorMap.find(type);
-    if (it != simDkgErrorMap.end()) {
-        return it->second;
-    }
-    return 0;
+    if (int(type) >= DKGError::type::_COUNT) return 0;
+    return simDkgErrorMap[int(type)];
 }
 
-bool CDKGSession::ShouldSimulateError(const std::string& type) const
+bool CDKGSession::ShouldSimulateError(DKGError::type type) const
 {
     if (params.type != Consensus::LLMQType::LLMQ_TEST) {
         return false;
@@ -162,7 +147,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending contributions");
 
-    if (ShouldSimulateError("contribution-omit")) {
+    if (ShouldSimulateError(DKGError::type::CONTRIBUTION_OMIT)) {
         logger.Batch("omitting");
         return;
     }
@@ -181,7 +166,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
         const auto& m = members[i];
         CBLSSecretKey skContrib = m_sk_contributions[i];
 
-        if (i != myIdx && ShouldSimulateError("contribution-lie")) {
+        if (i != myIdx && ShouldSimulateError(DKGError::type::CONTRIBUTION_LIE)) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());
             skContrib.MakeNewKey();
         }
@@ -314,7 +299,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
     if (!qc.contributions->Decrypt(*myIdx, WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator), skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
-    } else if (member->idx != myIdx && ShouldSimulateError("complain-lie")) {
+    } else if (member->idx != myIdx && ShouldSimulateError(DKGError::type::COMPLAIN_LIE)) {
         logger.Batch("lying/complaining for %s", member->dmn->proTxHash.ToString());
         complain = true;
     }
@@ -691,7 +676,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
 
         CBLSSecretKey skContribution = m_sk_contributions[i];
 
-        if (i != myIdx && ShouldSimulateError("justify-lie")) {
+        if (i != myIdx && ShouldSimulateError(DKGError::type::JUSTIFY_LIE)) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());
             skContribution.MakeNewKey();
         }
@@ -699,7 +684,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         qj.contributions.emplace_back(i, skContribution);
     }
 
-    if (ShouldSimulateError("justify-omit")) {
+    if (ShouldSimulateError(DKGError::type::JUSTIFY_OMIT)) {
         logger.Batch("omitting");
         return;
     }
@@ -941,7 +926,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         return;
     }
 
-    if (ShouldSimulateError("commit-omit")) {
+    if (ShouldSimulateError(DKGError::type::COMMIT_OMIT)) {
         logger.Batch("omitting");
         return;
     }
@@ -979,7 +964,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     qc.quorumVvecHash = ::SerializeHash(*vvec);
 
     int lieType = -1;
-    if (ShouldSimulateError("commit-lie")) {
+    if (ShouldSimulateError(DKGError::type::COMMIT_LIE)) {
         lieType = GetRandInt(5);
         logger.Batch("lying on commitment. lieType=%d", lieType);
     }
