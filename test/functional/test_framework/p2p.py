@@ -33,6 +33,7 @@ from test_framework.messages import (
     MAX_HEADERS_RESULTS,
     msg_addr,
     msg_addrv2,
+    msg_ancpkginfo,
     msg_block,
     MSG_BLOCK,
     msg_blocktxn,
@@ -102,10 +103,13 @@ TXID_RELAY_DELAY = 2
 ORPHAN_ANCESTOR_GETDATA_INTERVAL = 60
 # How long a transaction has to be in the mempool before it can unconditionally be relayed
 UNCONDITIONAL_RELAY_DELAY = 120
+# Delay for requesting transactions if the peer has MAX_PEER_TX_REQUEST_IN_FLIGHT or more requests
+OVERLOADED_PEER_TX_DELAY = 2
 
 MESSAGEMAP = {
     b"addr": msg_addr,
     b"addrv2": msg_addrv2,
+    b"ancpkginfo": msg_ancpkginfo,
     b"block": msg_block,
     b"blocktxn": msg_blocktxn,
     b"cfcheckpt": msg_cfcheckpt,

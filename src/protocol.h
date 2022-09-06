@@ -269,6 +269,8 @@ extern const char* SENDTXRCNCL;
  * Indicates that a node wants to relay packages, described in BIP 331.
  */
 extern const char* SENDPACKAGES;
+/** List of wtxids corresponding to a transaction's ancestor package. */
+extern const char* ANCPKGINFO;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -474,6 +476,7 @@ enum GetDataMsg : uint32_t {
     // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
     // use and remains unused.
     // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    MSG_ANCPKGINFO = 7,                              //!< Defined in BIP331
 };
 
 /** inv message data */
@@ -497,6 +500,7 @@ public:
     bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
+    bool IsMsgAncPkgInfo() const { return type == MSG_ANCPKGINFO; }
 
     // Combined-message helper methods
     bool IsGenTxMsg() const

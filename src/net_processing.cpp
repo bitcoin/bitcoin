@@ -964,6 +964,10 @@ private:
     CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, NetEventsInterface::g_msgproc_mutex);
 
+    /** Get AncPkgInfo for a transaction. Returns std::nullopt if something is wrong and the
+     * node should be disconnected. */
+    std::optional<std::vector<uint256>> MaybeGetAncPkgInfo(Peer& peer, const CTransactionRef& tx);
+
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
@@ -2421,6 +2425,31 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
     return {};
 }
 
+std::optional<std::vector<uint256>> PeerManagerImpl::MaybeGetAncPkgInfo(Peer& peer, const CTransactionRef& tx)
+{
+    if (!peer.m_package_relay) {
+        return std::nullopt;
+    }
+    CTxMemPool::setEntries ancestors;
+    {
+        LOCK(m_mempool.cs);
+        auto txiter{m_mempool.GetIter(tx->GetHash())};
+        if (txiter == std::nullopt) {
+            // This tx is no longer in mempool (maybe in mapRelay)
+            return std::vector<uint256>({});
+        }
+        ancestors = m_mempool.AssumeCalculateMemPoolAncestors(__func__, **txiter, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false);
+        // Otherwise the transaction will appear multiple times in the wtxids list.
+        Assume(ancestors.count(txiter.value()) == 0);
+    }
+    std::vector<uint256> ancestor_package_wtxids;
+    std::transform(ancestors.cbegin(), ancestors.cend(), std::back_inserter(ancestor_package_wtxids),
+        [](const auto& entry){return entry->GetTx().GetWitnessHash();});
+    // Last wtxid is the representative tx, even if it has no unconfirmed ancestors.
+    ancestor_package_wtxids.push_back(tx->GetWitnessHash());
+    return ancestor_package_wtxids;
+}
+
 void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
 {
     AssertLockNotHeld(cs_main);
@@ -2438,7 +2467,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     // Process as many TX items from the front of the getdata queue as
     // possible, since they're common and it's efficient to batch process
     // them.
-    while (it != peer.m_getdata_requests.end() && it->IsGenTxMsg()) {
+    while (it != peer.m_getdata_requests.end() && (it->IsGenTxMsg() || it->IsMsgAncPkgInfo())) {
         if (interruptMsgProc) return;
         // The send buffer provides backpressure. If there's no space in
         // the buffer, pause processing until the next call.
@@ -2454,9 +2483,24 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
         CTransactionRef tx = FindTxForGetData(*tx_relay, ToGenTxid(inv), mempool_req, now);
         if (tx) {
-            // WTX and WITNESS_TX imply we serialize with witness
-            int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+            if (inv.IsGenTxMsg()) {
+                // WTX and WITNESS_TX imply we serialize with witness
+                int nSendFlags = (inv.IsMsgTx() ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
+                m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
+            } else if (inv.IsMsgAncPkgInfo()) {
+                auto ancestor_wtxids = MaybeGetAncPkgInfo(peer, tx);
+                if (ancestor_wtxids == std::nullopt) {
+                    pfrom.fDisconnect = true;
+                    // No need to process the other requests if we are disconnecting the peer.
+                    LogPrint(BCLog::NET, "\nDisconnecting peer %d -- requested ancpkginfo but not allowed\n", pfrom.GetId());
+                    return;
+                } else if (ancestor_wtxids->empty()) {
+                    // Couldn't create the ancpkginfo for some reason, send a notfound.
+                    vNotFound.push_back(inv);
+                    continue;
+                }
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ANCPKGINFO, ancestor_wtxids.value()));
+            }
             m_mempool.RemoveUnbroadcastTx(tx->GetHash());
             // As we're going to send tx, make sure its unconfirmed parents are made requestable.
             std::vector<uint256> parent_ids_to_add;
@@ -2469,6 +2513,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     for (const CTxMemPoolEntry& parent : parents) {
                         if (parent.GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
                             parent_ids_to_add.push_back(parent.GetTx().GetHash());
+                            parent_ids_to_add.push_back(parent.GetTx().GetWitnessHash());
                         }
                     }
                 }
