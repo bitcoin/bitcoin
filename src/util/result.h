@@ -390,6 +390,33 @@ decltype(auto) operator>>(SrcResult&& src LIFETIMEBOUND, DstResult&& dst)
     return static_cast<SrcType&&>(src);
 }
 
+//! Wrapper around util::Result that is less awkward to use with pointer types.
+//!
+//! It overloads pointer and bool operators so it isn't necessary to dereference
+//! the result object twice to access the result value, so it possible to call
+//! methods with `result->Method()` rather than `(*result)->Method()` and check
+//! whether the pointer is null with `if (result)` rather than `if (result &&
+//! *result)`.
+//!
+//! The `ResultPtr` class just adds syntax sugar to `Result` class. It is still
+//! possible to access the result pointer directly using `ResultPtr` `value()`
+//! and `has_value()` methods.
+template <typename T, typename F = void>
+class ResultPtr : public Result<T, F>
+{
+public:
+    // Inherit Result constructors (excluding copy and move constructors).
+    using Result<T, F>::Result;
+
+    // Inherit Result copy and move constructors.
+    template<typename O>
+    ResultPtr(O&& other) : Result<T, F>{std::forward<O>(other)} {}
+
+    explicit operator bool() const noexcept { return this->has_value() && this->value(); }
+    auto* operator->() const { assert(this->value()); return &*this->value(); }
+    auto& operator*() const { assert(this->value()); return *this->value(); }
+};
+
 //! Join error and warning messages in a space separated string. This is
 //! intended for simple applications where there's probably only one error or
 //! warning message to report, but multiple messages should not be lost if they
