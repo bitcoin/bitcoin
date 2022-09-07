@@ -431,7 +431,7 @@ void BitcoinGUI::createActions()
 
             bool wallet_name_ok;
             /*: Title of pop-up window shown when the user is attempting to
-+                restore a wallet. */
+                restore a wallet. */
             QString title = tr("Restore Wallet");
             //: Label of the input field where the name of the wallet is entered.
             QString label = tr("Wallet Name");
