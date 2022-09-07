@@ -82,7 +82,6 @@ class FeatureChainArgCollision(BitcoinTestFramework):
         )
 
     def run_test(self):
-
         self.test_cli()
         self.test_config_chain_arg()
         self.test_network_flag_chain_arg_collision()
