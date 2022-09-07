@@ -618,7 +618,7 @@ inspecting signatures in Mach-O binaries.")
         perl
         python-3
         ;; Git
-        git
+        git-minimal
         ;; Tests
         (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
