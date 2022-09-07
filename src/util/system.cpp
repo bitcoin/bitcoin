@@ -1094,13 +1094,9 @@ std::string ArgsManager::GetChainName() const
         }
         throw std::runtime_error(error);
     }
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fSigNet) {
-        return CBaseChainParams::SIGNET;
-    }
-    if (fTestNet)
-        return CBaseChainParams::TESTNET;
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fSigNet) return CBaseChainParams::SIGNET;   
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
