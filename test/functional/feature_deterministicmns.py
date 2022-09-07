@@ -143,9 +143,19 @@ class DIP3Test(SyscoinTestFramework):
         for mn in mns:
             # lock again after reorg above
             try:
+                mn.node.lockunspent(False, [{'txid': mn.collateral_txid, 'vout': mn.collateral_vout}], True)
+            finally:
+                continue
+
+        for mn in mns:
+            # lock again after reorg above
+            try:
                 self.nodes[0].lockunspent(False, [{'txid': mn.collateral_txid, 'vout': mn.collateral_vout}], True)
             finally:
-                self.test_protx_update_service(mn)
+                continue
+
+        for mn in mns:
+            self.test_protx_update_service(mn)
 
         self.log.info("testing P2SH/multisig for payee addresses")
 
