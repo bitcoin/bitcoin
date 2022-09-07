@@ -589,26 +589,47 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
-    def connect_nodes(self, a, b):
+    def connect_nodes(self, a, b, peer_advertises_v2=False):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
         from_num_peers = 1 + len(from_connection.getpeerinfo())
         to_num_peers = 1 + len(to_connection.getpeerinfo())
         ip_port = "127.0.0.1:" + str(p2p_port(b))
-        from_connection.addnode(ip_port, "onetry")
+
+        if peer_advertises_v2:
+            from_connection.addnode(ip_port, "onetry", True)
+        else:
+            # skip the optional third argument (default false) for
+            # compatibility with older clients
+            from_connection.addnode(ip_port, "onetry")
+
+        min_verack_msg_bytes = 21 if peer_advertises_v2 else 24
         # poll until version handshake complete to avoid race conditions
         # with transaction relaying
         # See comments in net_processing:
         # * Must have a version message before anything else
         # * Must have a verack message before anything else
-        self.wait_until(lambda: sum(peer['version'] != 0 for peer in from_connection.getpeerinfo()) == from_num_peers)
-        self.wait_until(lambda: sum(peer['version'] != 0 for peer in to_connection.getpeerinfo()) == to_num_peers)
-        self.wait_until(lambda: sum(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()) == from_num_peers)
-        self.wait_until(lambda: sum(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in to_connection.getpeerinfo()) == to_num_peers)
-        # The message bytes are counted before processing the message, so make
-        # sure it was fully processed by waiting for a ping.
-        self.wait_until(lambda: sum(peer["bytesrecv_per_msg"].pop("pong", 0) >= 32 for peer in from_connection.getpeerinfo()) == from_num_peers)
-        self.wait_until(lambda: sum(peer["bytesrecv_per_msg"].pop("pong", 0) >= 32 for peer in to_connection.getpeerinfo()) == to_num_peers)
+        # * The message bytes are counted before processing the message, so make
+        #   sure it was fully processed by waiting for a ping.
+
+        def check_initiator_handshake():
+            peerinfo = from_connection.getpeerinfo()
+            if len(peerinfo) != from_num_peers:
+                return False
+
+            responder = list(filter(lambda x: x["addr"] == ip_port, peerinfo))[0]
+            return responder['version'] != 0 and responder['bytesrecv_per_msg'].pop('verack', 0) >= min_verack_msg_bytes and responder['bytesrecv_per_msg'].pop("pong", 0) >= 29
+
+        def check_responder_handshake():
+            peerinfo = to_connection.getpeerinfo()
+            if len(peerinfo) != to_num_peers:
+                return False
+
+            initiator = list(filter(lambda x: x["addrbind"] == ip_port, peerinfo))[0]
+            return initiator['version'] != 0 and initiator['bytesrecv_per_msg'].pop('verack', 0) >= min_verack_msg_bytes and initiator['bytesrecv_per_msg'].pop("pong", 0) >= 29
+
+        self.wait_until(check_initiator_handshake)
+        self.wait_until(check_responder_handshake)
 
     def disconnect_nodes(self, a, b):
         def disconnect_nodes_helper(node_a, node_b):
