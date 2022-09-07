@@ -72,6 +72,13 @@ class AcceptBlockTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+    def check_hash_in_chaintips(self, node, blockhash):
+        tips = node.getchaintips()
+        for x in tips:
+            if x["hash"] == blockhash:
+                return True
+        return False
+
     def run_test(self):
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
@@ -89,10 +96,15 @@ class AcceptBlockTest(BitcoinTestFramework):
             blocks_h2[i].solve()
             block_time += 1
         test_node.send_and_ping(msg_block(blocks_h2[0]))
-        min_work_node.send_and_ping(msg_block(blocks_h2[1]))
+
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {blocks_h2[1].hash}, missing anti-dos proof-of-work validation"]):
+            min_work_node.send_and_ping(msg_block(blocks_h2[1]))
 
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 1)
+
+        # Ensure that the header of the second block was also not accepted by node1
+        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash), False)
         self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.

@@ -1061,27 +1061,42 @@ std::string ArgsManager::GetChainName() const
         LOCK(cs_args);
         util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
             /* ignore_default_section_config= */ false,
-            /*ignore_nonpersistent=*/false,
+            /* ignore_nonpersistent= */ false,
             /* get_chain_name= */ true);
         return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
     };
-
+    auto is_chain_arg_present = [&](const std:: string& arg, const bool is_persistent) {
+        LOCK(cs_args);
+        util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
+            /* ignore_default_section_config= */ (!is_persistent),
+            /* ignore_nonpersistent= */ is_persistent,
+            /* get_chain_name= */ true);
+        return !value.isNull();
+    };
     const bool fRegTest = get_net("-regtest");
     const bool fSigNet  = get_net("-signet");
     const bool fTestNet = get_net("-testnet");
-    const bool is_chain_arg_set = IsArgSet("-chain");
-
-    if ((int)is_chain_arg_set + (int)fRegTest + (int)fSigNet + (int)fTestNet > 1) {
-        throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one.");
+    const int network_flag_count = (int)fRegTest + (int)fSigNet + (int)fTestNet;
+    const bool is_chain_arg_persistent = is_chain_arg_present("chain", /* is_persistent= */ true);
+    const bool is_chain_arg_command_line = is_chain_arg_present("chain", /* is_persistent= */ false);
+    const int chain_arg_count = (int)is_chain_arg_persistent + (int)is_chain_arg_command_line;
+    if ((chain_arg_count + network_flag_count) > 1) {    
+        //check if m_settings has multiple chain commands. If so, throw error.
+        std::string error{"Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one."};
+        if (is_chain_arg_persistent && !is_chain_arg_command_line) {
+            error += " Chain argument is being set in a config file and by network arguments in the commandline.";
+        } else if(is_chain_arg_command_line && !is_chain_arg_persistent) {
+            error += " Chain argument is being set in commandline with network argument.";
+        } else if(is_chain_arg_persistent && is_chain_arg_command_line) {
+            error += " Chain argument is being set in a config file and by commandline.";
+        } else if (!is_chain_arg_persistent && !is_chain_arg_command_line) {
+            error += " Too many network flags being set in the commandline.";
+        }
+        throw std::runtime_error(error);
     }
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fSigNet) {
-        return CBaseChainParams::SIGNET;
-    }
-    if (fTestNet)
-        return CBaseChainParams::TESTNET;
-
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fSigNet) return CBaseChainParams::SIGNET;   
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 

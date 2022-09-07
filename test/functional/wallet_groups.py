@@ -26,6 +26,10 @@ class WalletGroupTest(BitcoinTestFramework):
             ["-maxapsfee=0.00002719"],
             ["-maxapsfee=0.00002720"],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
+
         self.rpc_timeout = 480
 
     def skip_test_if_missing_module(self):
@@ -150,7 +154,7 @@ class WalletGroupTest(BitcoinTestFramework):
         assert_equal(2, len(tx6["vout"]))
 
         # Empty out node2's wallet
-        self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
+        self.nodes[2].sendall(recipients=[self.nodes[0].getnewaddress()])
         self.sync_all()
         self.generate(self.nodes[0], 1)
 

@@ -572,7 +572,7 @@ public:
             if (pos++) ret += ",";
             std::string tmp;
             if (!scriptarg->ToStringHelper(arg, tmp, type, cache)) return false;
-            ret += std::move(tmp);
+            ret += tmp;
         }
         return true;
     }
@@ -596,7 +596,7 @@ public:
                     tmp = pubkey->ToString();
                     break;
             }
-            ret += std::move(tmp);
+            ret += tmp;
         }
         std::string subscript;
         if (!ToStringSubScriptHelper(arg, subscript, type, cache)) return false;
@@ -612,7 +612,7 @@ public:
         return AddChecksum(ret);
     }
 
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
         bool ret = ToStringHelper(&arg, out, StringType::PRIVATE);
         out = AddChecksum(out);
@@ -698,6 +698,7 @@ public:
         return OutputTypeFromDestination(m_destination);
     }
     bool IsSingleType() const final { return true; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 };
 
 /** A parsed raw(H) descriptor. */
@@ -718,6 +719,7 @@ public:
         return OutputTypeFromDestination(dest);
     }
     bool IsSingleType() const final { return true; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 };
 
 /** A parsed pk(P) descriptor. */
@@ -912,7 +914,7 @@ protected:
             }
             std::string tmp;
             if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
-            ret += std::move(tmp);
+            ret += tmp;
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';
                 path.pop_back();
