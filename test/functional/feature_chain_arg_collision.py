@@ -39,7 +39,6 @@ class FeatureChainArgCollision(BitcoinTestFramework):
         Tests for bitcoind -regtest -testnet
         """
         self.stop_node(0)
-        # todo: add match for error message
         self.nodes[0].assert_start_raises_init_error(
             extra_args=["-testnet"],
             expected_msg="Too many network flags being set in the commandline.",
@@ -52,7 +51,8 @@ class FeatureChainArgCollision(BitcoinTestFramework):
         """
 
         self.stop_node(0)
-        inc_conf_file_path = os.path.join(self.nodes[0].datadir, "include.conf")
+        inc_conf_file_path = os.path.join(
+            self.nodes[0].datadir, "include.conf")
         with open(
             os.path.join(self.nodes[0].datadir, "bitcoin.conf"), "a", encoding="utf-8"
         ) as conf:
