@@ -141,7 +141,11 @@ class DIP3Test(SyscoinTestFramework):
 
         self.log.info("testing ProUpServTx")
         for mn in mns:
-            self.test_protx_update_service(mn)
+            # lock again after reorg above
+            try:
+                self.nodes[0].lockunspent(False, [{'txid': mn.collateral_txid, 'vout': mn.collateral_vout}], True)
+            finally:
+                self.test_protx_update_service(mn)
 
         self.log.info("testing P2SH/multisig for payee addresses")
 
@@ -234,6 +238,8 @@ class DIP3Test(SyscoinTestFramework):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
+        # lock after creating collateral
+        node.lockunspent(False, [{'txid': mn.collateral_txid, 'vout': mn.collateral_vout}], True)
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
