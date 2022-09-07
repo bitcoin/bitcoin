@@ -61,7 +61,7 @@ public:
     //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
     FlatSigningProvider m_external_provider;
     // SYSCOIN
-    //! Custom transaction vesion
+    //! Custom transaction version
     int m_version = CTransaction::CURRENT_VERSION;
     CCoinControl();
 
