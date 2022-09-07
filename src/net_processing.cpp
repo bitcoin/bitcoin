@@ -286,7 +286,7 @@ struct Peer {
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
-        std::chrono::microseconds m_next_inv_send_time{0};
+        std::chrono::microseconds m_next_inv_send_time GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
@@ -295,7 +295,7 @@ struct Peer {
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
-    std::vector<CAddress> m_addrs_to_send;
+    std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Probabilistic filter to track recent addr messages relayed with this
      *  peer. Used to avoid relaying redundant addresses to this peer.
      *
@@ -305,7 +305,7 @@ struct Peer {
      *
      *  Presence of this filter must correlate with m_addr_relay_enabled.
      **/
-    std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    std::unique_ptr<CRollingBloomFilter> m_addr_known GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Whether we are participating in address relay with this connection.
      *
      *  We set this bool to true for outbound peers (other than
@@ -324,7 +324,7 @@ struct Peer {
     /** Whether a Peer can only be relayed blocks */
     const bool m_block_relay_only{false};
     /** Whether a getaddr request to this peer is outstanding. */
-    bool m_getaddr_sent{false};
+    bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
     mutable Mutex m_addr_send_times_mutex;
     /** Time point to send the next ADDR message to this peer. */
@@ -335,12 +335,12 @@ struct Peer {
      *  messages, indicating a preference to receive ADDRv2 instead of ADDR ones. */
     std::atomic_bool m_wants_addrv2{false};
     /** Whether this peer has already sent us a getaddr message. */
-    bool m_getaddr_recvd{false};
+    bool m_getaddr_recvd GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Number of addresses that can be processed from this peer. Start at 1 to
      *  permit self-announcement. */
-    double m_addr_token_bucket{1.0};
+    double m_addr_token_bucket GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1.0};
     /** When m_addr_token_bucket was last updated */
-    std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
+    std::chrono::microseconds m_addr_token_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){GetTime<std::chrono::microseconds>()};
     /** Total number of addresses that were dropped due to rate limiting. */
     std::atomic<uint64_t> m_addr_rate_limited{0};
     /** Total number of addresses that were processed (excludes rate-limited ones). */
@@ -350,7 +350,7 @@ struct Peer {
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
     /** Whether we've sent this peer a getheaders in response to an inv prior to initial-headers-sync completing */
-    bool m_inv_triggered_getheaders_before_sync{false};
+    bool m_inv_triggered_getheaders_before_sync GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
@@ -358,7 +358,7 @@ struct Peer {
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
     /** Time of the last getheaders message to this peer */
-    std::atomic<std::chrono::seconds> m_last_getheaders_timestamp{0s};
+    std::atomic<std::chrono::seconds> m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0s};
 
     explicit Peer(NodeId id, ServiceFlags our_services, bool block_relay_only)
         : m_id(id)
@@ -549,9 +549,9 @@ public:
     void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
+    bool SendMessages(CNode* pto) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
@@ -570,7 +570,7 @@ public:
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
     void EraseObjectRequest(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -584,7 +584,7 @@ private:
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -638,20 +638,21 @@ private:
     void ProcessHeadersMessage(CNode& pfrom, Peer& peer,
                                const std::vector<CBlockHeader>& headers,
                                bool via_compact_block)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
     /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
     /** Deal with state tracking and headers sync for peers that send the
      * occasional non-connecting header (this can happen due to BIP 130 headers
      * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
     void HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
     /** Return true if the headers connect to each other, false otherwise */
     bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
     /** Request further headers from this peer with a given locator.
      * We don't issue a getheaders message if we have a recent one outstanding.
      * This returns true if a getheaders is actually sent, and false otherwise.
      */
-    bool MaybeSendGetHeaders(CNode& pfrom, const std::string& msg_type, const CBlockLocator& locator, Peer& peer);
+    bool MaybeSendGetHeaders(CNode& pfrom, const std::string& msg_type, const CBlockLocator& locator, Peer& peer)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     /** Potentially fetch blocks from this peer upon receipt of a new headers tip */
     void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex* pindexLast);
     /** Update peer state based on received headers message */
@@ -670,7 +671,8 @@ private:
     void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
 
     /** Send `addr` messages on a regular schedule. */
-    void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time);
+    void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Relay (gossip) an address to a few randomly chosen nodes.
      *
@@ -679,7 +681,8 @@ private:
      * @param[in] fReachable   Whether the address' network is reachable. We relay unreachable
      *                         addresses less.
      */
-    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -807,13 +810,16 @@ private:
      *  @return   True if address relay is enabled with peer
      *            False if address relay is disallowed
      */
-    bool SetupAddressRelay(const CNode& node, Peer& peer);
+    bool SetupAddressRelay(const CNode& node, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
 
     /** Hash of the last block we received via INV */
-    uint256 m_last_block_inv_triggering_headers_sync{};
+    uint256 m_last_block_inv_triggering_headers_sync GUARDED_BY(g_msgproc_mutex){};
 
     /**
      * Sources of received blocks, saved to be able punish them when processing
@@ -889,7 +895,7 @@ private:
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
 
     /** Height of the highest block announced using BIP 152 high-bandwidth mode. */
-    int m_highest_fast_announce{0};
+    int m_highest_fast_announce GUARDED_BY(::cs_main){0};
 
     /* Returns a bool indicating whether we requested this block.
      * Also used if a block was /not/ received and timed out or started with another peer
@@ -981,13 +987,13 @@ static bool IsAddrCompatible(const Peer& peer, const CAddress& addr)
     return peer.m_wants_addrv2 || addr.IsAddrV1Compatible();
 }
 
-static void AddAddressKnown(Peer& peer, const CAddress& addr)
+void PeerManagerImpl::AddAddressKnown(Peer& peer, const CAddress& addr)
 {
     assert(peer.m_addr_known);
     peer.m_addr_known->insert(addr.GetKey());
 }
 
-static void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand)
+void PeerManagerImpl::PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand)
 {
     // Known checking here is only to save space from duplicates.
     // Before sending, we'll filter it again for known addresses that were
@@ -3250,6 +3256,8 @@ void PeerManagerImpl::ProcessMessage(
     const std::chrono::microseconds time_received,
     const std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     statsClient.inc("message.received." + SanitizeString(msg_type), 1.0f);
 
@@ -4971,6 +4979,8 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 
 bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     bool fMoreWork = false;
 
     PeerRef peer = GetPeerRef(pfrom->GetId());
@@ -5313,7 +5323,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
     // Remove addr records that the peer already knows about, and add new
     // addrs to the m_addr_known filter on the same pass.
-    auto addr_already_known = [&peer](const CAddress& addr) {
+    auto addr_already_known = [&peer](const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
         bool ret = peer.m_addr_known->contains(addr.GetKey());
         if (!ret) peer.m_addr_known->insert(addr.GetKey());
         return ret;
@@ -5379,6 +5389,8 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
 
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     assert(m_llmq_ctx);
 
     const bool is_masternode = m_mn_activeman != nullptr;
