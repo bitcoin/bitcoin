@@ -236,6 +236,24 @@ class TestNode():
                 rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.chain, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
+                wait_until(lambda: rpc.getmempoolinfo()['loaded'])
+                # Wait for the node to finish reindex, block import, and
+                # loading the mempool. Usually importing happens fast or
+                # even "immediate" when the node is started. However, there
+                # is no guarantee and sometimes ThreadImport might finish
+                # later. This is going to cause intermittent test failures,
+                # because generally the tests assume the node is fully
+                # ready after being started.
+                #
+                # For example, the node will reject block messages from p2p
+                # when it is still importing with the error "Unexpected
+                # block message received"
+                #
+                # The wait is done here to make tests as robust as possible
+                # and prevent racy tests and intermittent failures as much
+                # as possible. Some tests might not need this, but the
+                # overhead is trivial, and the added gurantees are worth
+                # the minimal performance cost.
                 self.log.debug("RPC successfully started")
                 if self.use_cli:
                     return
@@ -268,6 +286,9 @@ class TestNode():
             assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
             return self.rpc / wallet_path
+
+    def version_is_at_least(self, ver):
+        return self.version is None or self.version >= ver
 
     def stop_node(self, expected_stderr='', wait=0):
         """Stop the node."""
