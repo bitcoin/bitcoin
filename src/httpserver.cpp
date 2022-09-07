@@ -157,7 +157,8 @@ static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
 //! List of 'external' RPC users (global variable, used by httprpc)
 std::vector<std::string> g_external_usernames;
 //! Handlers for (sub)paths
-static std::vector<HTTPPathHandler> pathHandlers;
+static Mutex g_httppathhandlers_mutex;
+static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_mutex);
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;
 
@@ -250,6 +251,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
     std::string path;
+    LOCK(g_httppathhandlers_mutex);
     std::vector<HTTPPathHandler>::const_iterator i = pathHandlers.begin();
     std::vector<HTTPPathHandler>::const_iterator iend = pathHandlers.end();
     for (; i != iend; ++i) {
@@ -681,11 +683,13 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
+    LOCK(g_httppathhandlers_mutex);
     pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 {
+    LOCK(g_httppathhandlers_mutex);
     std::vector<HTTPPathHandler>::iterator i = pathHandlers.begin();
     std::vector<HTTPPathHandler>::iterator iend = pathHandlers.end();
     for (; i != iend; ++i)
