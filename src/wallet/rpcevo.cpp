@@ -238,7 +238,7 @@ static RPCHelpMan protx_register()
     if (collateralHash.IsNull() || collateralIndex < 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
     }
-
+   
     ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
     paramIdx += 2;
     CTxDestination fundDest;
@@ -457,7 +457,11 @@ static RPCHelpMan protx_register_fund()
     ptx.collateralOutpoint.n = collateralIndex;
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
+    UniValue res = SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
+    uint256 txid = ParseHashV(res,"txhash");
+    LOCK(pwallet->cs_wallet);
+    pwallet->LockCoin(COutPoint(txid, ptx.collateralOutpoint.n));
+    return res;
 },
     };
 }  
