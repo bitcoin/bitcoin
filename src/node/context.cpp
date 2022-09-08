@@ -15,6 +15,7 @@
 #include <scheduler.h>
 #include <txmempool.h>
 #include <validation.h>
+#include <sv2_template_provider.h>
 
 namespace node {
 NodeContext::NodeContext() = default;
