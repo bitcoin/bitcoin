@@ -166,4 +166,28 @@ BOOST_AUTO_TEST_CASE(SetNewPrevHash_test)
     BOOST_CHECK_EQUAL(bytes.size(), 80);
     BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
+
+BOOST_AUTO_TEST_CASE(SubmitSolution_test)
+{
+    uint8_t input[]{
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // template_id
+        0x02, 0x00, 0x00, 0x00, // version
+        0x97, 0x3c, 0x0e, 0x63, // header_timestamp
+        0xff, 0xff, 0x7f, 0x03, // header_nonce
+        0x5d, 0x00, // 2 byte length of coinbase_tx
+        2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // coinbase_tx
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 34, 1, 24, 0,
+        0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 1, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 20,
+        83, 18, 96, 170, 42, 25, 158, 34, 140, 83, 125, 250, 66, 200, 43, 234, 44,
+        124, 31, 77, 0, 0, 0, 0,
+    };
+    CDataStream ss(input, SER_NETWORK, PROTOCOL_VERSION);
+
+    SubmitSolution submit_solution;
+    ss >> submit_solution;
+    BOOST_CHECK_EQUAL(submit_solution.m_template_id, 2);
+    BOOST_CHECK_EQUAL(submit_solution.m_version, 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

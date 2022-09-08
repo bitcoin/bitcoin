@@ -331,4 +331,60 @@ public:
     }
 };
 
+/**
+ * The client sends a SubmitSolution after finding a coinbase transaction/nonce
+ * pair which double-SHA256 hashes at or below SetNewPrevHash::target. The template provider
+ * finds the cached block according to the template id and reconstructs the block with the
+ * values from SubmitSolution. The template provider must then propagate the block to the
+ * Bitcoin Network.
+ */
+class SubmitSolution : Sv2Msg
+{
+public:
+    /**
+     * The id referenced in a NewTemplate.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * The version field in the block header. Bits not defined by BIP320 as additional
+     * nonce MUST be the same as they appear in the NewWork message, other bits may
+     * be set to any value.
+     */
+    uint32_t m_version;
+
+    /**
+     * The nTime field in the block header. This MUST be greater than or equal to
+     * the header_timestamp field in the latest SetNewPrevHash message and lower
+     * than or equal to that value plus the number of seconds since the receipt
+     * of that message.
+     */
+    uint32_t m_header_timestamp;
+
+    /**
+     * The nonce field in the header.
+     */
+    uint32_t m_header_nonce;
+
+    /**
+     * The full serialized coinbase transaction, meeting all the requirements of the NewWork message, above.
+     */
+    CMutableTransaction m_coinbase_tx;
+
+    SubmitSolution(){};
+
+    template <typename Stream>
+    void Unserialize(Stream& s) {
+        s >> m_template_id
+          >> m_version
+          >> m_header_timestamp
+          >> m_header_nonce;
+
+        // Ignore the 2 byte length as the rest of the stream is assumed to be
+        // the m_coinbase_tx.
+        s.ignore(2);
+        s >> m_coinbase_tx;
+    }
+};
+
 #endif // SV2_TEMPLATE_PROVIDER_H
