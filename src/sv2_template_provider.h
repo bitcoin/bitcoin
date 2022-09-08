@@ -551,6 +551,11 @@ private:
     CTxMemPool& m_mempool;
 
     /**
+     * A cache that maps ids used in NewTemplate messages and its associated block.
+     */
+    std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>> m_blocks_cache;
+
+    /**
      * Generate recv and error events on each clients socket connection.
      */
     void GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &error_set);
