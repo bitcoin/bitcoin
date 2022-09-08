@@ -44,6 +44,11 @@ void Sv2TemplateProvider::StopThreads()
     }
 }
 
+void Sv2TemplateProvider::Interrupt()
+{
+    m_flag_interrupt_sv2 = true;
+}
+
 #ifdef USE_POLL
 void Sv2TemplateProvider::GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &err_set) {
     std::set<SOCKET> recv_select_set, error_select_set;

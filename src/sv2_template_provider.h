@@ -537,6 +537,12 @@ private:
     std::vector<Sv2Client*> m_sv2_clients;
 
     /**
+     * Signal for handling interrupts and stopping the template provider event loop.
+     */
+    std::atomic<bool> m_flag_interrupt_sv2{false};
+    CThreadInterrupt m_interrupt_sv2;
+
+    /**
      * ChainstateManager and CTxMemPool are both used to build new valid blocks,
      * getting the best known block hash and checking whether the node is still
      * in IBD.
