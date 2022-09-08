@@ -57,6 +57,16 @@ void Sv2TemplateProvider::Interrupt()
     m_flag_interrupt_sv2 = true;
 }
 
+void Sv2TemplateProvider::UpdatePrevHash()
+{
+    auto cached_block = m_blocks_cache.find(m_new_template.m_template_id);
+
+    if (cached_block != m_blocks_cache.end()) {
+        const CBlock block = cached_block->second->block;
+        m_prev_hash = SetNewPrevHash{block, m_new_template.m_template_id};
+    }
+}
+
 void Sv2TemplateProvider::UpdateTemplate(bool future)
 {
     AssertLockHeld(cs_main);
