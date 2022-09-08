@@ -417,6 +417,7 @@ libbitcoin_node_a_SOURCES = \
   rpc/signmessage.cpp \
   rpc/txoutproof.cpp \
   script/sigcache.cpp \
+  sv2_template_provider.cpp \
   shutdown.cpp \
   signet.cpp \
   timedata.cpp \
