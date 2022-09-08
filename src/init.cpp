@@ -106,6 +106,8 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#include <sv2_template_provider.h>
+
 using kernel::DumpMempool;
 using kernel::ValidationCacheSizes;
 
@@ -202,6 +204,9 @@ void Interrupt(NodeContext& node)
     if (g_txindex) {
         g_txindex->Interrupt();
     }
+    if (node.sv2_template_provider) {
+        node.sv2_template_provider->Interrupt();
+    }
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
     if (g_coin_stats_index) {
         g_coin_stats_index->Interrupt();
@@ -239,6 +244,8 @@ void Shutdown(NodeContext& node)
 
     StopTorControl();
 
+    if (node.sv2_template_provider) node.sv2_template_provider->StopThreads();
+
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, scheduler and load block thread.
     if (node.scheduler) node.scheduler->stop();
@@ -252,6 +259,7 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
     node.netgroupman.reset();
+    node.sv2_template_provider.reset();
 
     if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
         DumpMempool(*node.mempool, MempoolPath(*node.args));
@@ -1784,6 +1792,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }, DUMP_BANS_INTERVAL);
 
     if (node.peerman) node.peerman->StartScheduledTasks(*node.scheduler);
+
+#ifdef ENABLE_TEMPLATE_PROVIDER
+    assert(!node.sv2_template_provider);
+    node.sv2_template_provider = std::make_unique<Sv2TemplateProvider>(*node.chainman, *node.mempool);
+
+    uint16_t sv2_port{static_cast<uint16_t>(gArgs.GetIntArg("-stratumv2", 8442))};
+    node.sv2_template_provider->BindListenPort(sv2_port);
+    node.sv2_template_provider->Start();
+#endif
 
 #if HAVE_SYSTEM
     StartupNotify(args);
