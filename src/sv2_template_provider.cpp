@@ -2,6 +2,7 @@
 #include <consensus/merkle.h>
 #include <netbase.h>
 #include <validation.h>
+#include <util/thread.h>
 
 #ifdef USE_POLL
 #include <poll.h>
@@ -44,6 +45,23 @@ void Sv2TemplateProvider::BindListenPort(uint16_t port)
     }
 
     m_listening_socket = std::move(sock);
+};
+
+void Sv2TemplateProvider::Start()
+{
+    TemplateId id;
+    id.m_id = 0;
+    m_template_id = id;
+    m_blocks_cache = std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>>();
+
+    {
+      LOCK2(cs_main, m_mempool.cs);
+      UpdateTemplate(true);
+    }
+
+    UpdatePrevHash();
+
+    m_thread_sv2_handler = std::thread(&util::TraceThread, "sv2", [this] { ThreadSv2Handler(); });
 };
 
 void Sv2TemplateProvider::ThreadSv2Handler()
