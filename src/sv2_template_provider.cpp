@@ -45,6 +45,7 @@ void Sv2TemplateProvider::BindListenPort(uint16_t port)
     }
 
     m_listening_socket = std::move(sock);
+    LogPrintf("Sv2 Template Provider listening on port: %d\n", port);
 };
 
 void Sv2TemplateProvider::Start()
