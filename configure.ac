@@ -342,6 +342,14 @@ AC_ARG_ENABLE([lto],
     [enable_lto=$enableval],
     [enable_lto=no])
 
+dnl Enable running a StratumV2 Template Provider server.
+AC_ARG_ENABLE([template-provider],
+  [AS_HELP_STRING([--enable-template-provider],
+  [build with a stratumv2 template provider. (default is no)])],
+  [enable_template_provider=$enableval],
+  [enable_template_provider=no])
+AC_DEFINE([ENABLE_TEMPLATE_PROVIDER], [1], [Define if the Template Provider is enabled])
+
 AC_LANG_PUSH([C++])
 
 dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
@@ -2054,6 +2062,7 @@ echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
 echo "  LTO             = $enable_lto"
+echo "  with stratumv2 template provider = $enable_template_provider"
 echo
 echo "  target os       = $host_os"
 echo "  build os        = $build_os"

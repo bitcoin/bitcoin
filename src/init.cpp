@@ -605,6 +605,10 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-sandbox=<mode>", "Use the experimental syscall sandbox in the specified mode (-sandbox=log-and-abort or -sandbox=abort). Allow only expected syscalls to be used by bitcoind. Note that this is an experimental new feature that may cause bitcoind to exit or crash unexpectedly: use with caution. In the \"log-and-abort\" mode the invocation of an unexpected syscall results in a debug handler being invoked which will log the incident and terminate the program (without executing the unexpected syscall). In the \"abort\" mode the invocation of an unexpected syscall results in the entire process being killed immediately by the kernel without executing the unexpected syscall.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif // USE_SYSCALL_SANDBOX
 
+#if ENABLE_TEMPLATE_PROVIDER
+    argsman.AddArg("-stratumv2=<port>", "Listen for stratumv2 connections on <port>. Bitcoind will act as a Template Provider. (default: 8442)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+#endif
+
     // Add the hidden options
     argsman.AddHiddenArgs(hidden_args);
 }
