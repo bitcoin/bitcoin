@@ -591,6 +591,12 @@ private:
     void UpdatePrevHash();
 
     /**
+     * Called when a best new block is found on the network. The template provider will notify and
+     * send the best NewTemplate and SetNewPrevHash to all clients.
+     */
+    void OnNewBlock();
+
+    /**
      * Generate recv and error events on each clients socket connection.
      */
     void GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &error_set);

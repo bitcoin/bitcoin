@@ -83,6 +83,35 @@ void Sv2TemplateProvider::UpdateTemplate(bool future)
     m_new_template = new_template;
 }
 
+void Sv2TemplateProvider::OnNewBlock() {
+    for (Sv2Client* client : m_sv2_clients) {
+        if (!client->m_setup_connection_confirmed) {
+            continue;
+        }
+
+        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+
+        try {
+            ss << Sv2Header{Sv2MsgType::NEW_TEMPLATE, m_new_template.GetMsgLen()}
+               << m_new_template;
+        } catch(const std::exception &e) {
+            LogPrintf("Error writing m_new_template\n");
+        }
+
+        write(client->m_sock->Get(), ss.data(), ss.size());
+        ss.clear();
+
+        try {
+            ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_prev_hash.GetMsgLen()}
+               << m_prev_hash;
+        } catch(const std::exception &e) {
+            LogPrintf("Error writing m_prev_hash\n");
+        }
+
+        write(client->m_sock->Get(), ss.data(), ss.size());
+    }
+}
+
 #ifdef USE_POLL
 void Sv2TemplateProvider::GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &err_set) {
     std::set<SOCKET> recv_select_set, error_select_set;
