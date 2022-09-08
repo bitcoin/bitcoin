@@ -395,6 +395,9 @@ public:
 
     //! Set mock time.
     virtual void setMockTime(int64_t time) = 0;
+
+    //! Mock the scheduler to fast forward in time.
+    virtual void schedulerMockForward(std::chrono::seconds delta_seconds) = 0;
 };
 
 //! Return implementation of Chain interface.
