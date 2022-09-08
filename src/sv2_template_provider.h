@@ -7,6 +7,11 @@
 #include <uint256.h>
 
 /**
+ * A type mainly used as the message length field in stratum v2 messages.
+ */
+using u24_t = uint8_t[3];
+
+/**
  * Base class for all stratum v2 messages.
  */
 class Sv2Msg
