@@ -27,6 +27,18 @@ public:
 };
 
 /**
+ * All the stratum v2 message types handled by the template provider.
+ */
+enum Sv2MsgType : uint8_t
+{
+    SETUP_CONNECTION = 0x00,
+    SETUP_CONNECTION_SUCCESS = 0x01,
+    NEW_TEMPLATE = 0x71,
+    SET_NEW_PREV_HASH = 0x72,
+    SUBMIT_SOLUTION = 0x76,
+};
+
+/**
  * The first message sent by the client to the server to establish a connection
  * and specifies the subprotocol (Template Provider).
  */
