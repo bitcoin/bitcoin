@@ -532,12 +532,22 @@ private:
     std::thread m_thread_sv2_handler;
 
     /**
+     * A list of all connected stratum v2 clients.
+     */
+    std::vector<Sv2Client*> m_sv2_clients;
+
+    /**
      * ChainstateManager and CTxMemPool are both used to build new valid blocks,
      * getting the best known block hash and checking whether the node is still
      * in IBD.
      */
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
+
+    /**
+     * Generate recv and error events on each clients socket connection.
+     */
+    void GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &error_set);
 };
 
 
