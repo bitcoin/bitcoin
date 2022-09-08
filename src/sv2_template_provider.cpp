@@ -46,6 +46,90 @@ void Sv2TemplateProvider::BindListenPort(uint16_t port)
     m_listening_socket = std::move(sock);
 };
 
+void Sv2TemplateProvider::ThreadSv2Handler()
+{
+    m_best_block_hash = m_chainman.ActiveChainstate().m_chain.Tip()->GetBlockHash();
+
+    while (!m_flag_interrupt_sv2) {
+        if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+            m_interrupt_sv2.sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        {
+            LOCK2(cs_main, m_mempool.cs);
+            WAIT_LOCK(g_best_block_mutex, lock);
+            {
+                auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
+                if (g_best_block_cv.wait_until(lock, checktime) == std::cv_status::timeout)
+                {
+                    if (m_best_block_hash != g_best_block) {
+                        UpdateTemplate(true);
+                        UpdatePrevHash();
+                        OnNewBlock();
+
+                        m_best_block_hash = g_best_block;
+                    }
+                }
+            }
+        }
+
+        std::set<SOCKET> recv_set, err_set;
+        GenerateSocketEvents(recv_set, err_set);
+
+        if (m_listening_socket->Get() != INVALID_SOCKET && recv_set.count(m_listening_socket->Get()) > 0) {
+            struct sockaddr_storage sockaddr;
+            socklen_t sockaddr_len = sizeof(sockaddr);
+
+            SOCKET hSocket = accept(m_listening_socket->Get(), (struct sockaddr*)&sockaddr, &sockaddr_len);
+            auto sock = std::make_unique<Sock>(hSocket);
+
+            Sv2Client* client = new Sv2Client(std::move(sock));
+            m_sv2_clients.push_back(client);
+        }
+
+        std::vector<Sv2Client*> clients_copy = m_sv2_clients;
+        for (Sv2Client* client: clients_copy) {
+            if (client->m_disconnect_flag) {
+                m_sv2_clients.erase(remove(m_sv2_clients.begin(), m_sv2_clients.end(), client), m_sv2_clients.end());
+                delete client;
+            }
+        };
+
+        for (Sv2Client* client : m_sv2_clients) {
+            bool recv_flag = recv_set.count(client->m_sock->Get()) > 0;
+            bool err_flag = err_set.count(client->m_sock->Get()) > 0;
+
+            if (err_flag) {
+                client->m_disconnect_flag = true;
+            }
+
+            if (recv_flag) {
+                uint8_t bytes_recv_buf[0x10000];
+                int num_bytes_recv = recv(client->m_sock->Get(), (char*)bytes_recv_buf, sizeof(bytes_recv_buf), MSG_DONTWAIT);
+
+                if (num_bytes_recv <= 0) {
+                    client->m_disconnect_flag = true;
+                    continue;
+                }
+
+                CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                ss << Span<uint8_t>(&bytes_recv_buf[0], num_bytes_recv);
+
+                Sv2Header sv2_header;
+                try {
+                    ss >> sv2_header;
+                } catch (const std::exception &e) {
+                    client->m_disconnect_flag = true;
+                    continue;
+                }
+
+                ProcessSv2Message(sv2_header, ss, client);
+            }
+        }
+    }
+}
+
 void Sv2TemplateProvider::StopThreads()
 {
     if (m_thread_sv2_handler.joinable()) {
