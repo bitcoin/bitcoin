@@ -3,6 +3,7 @@
 
 #include <streams.h>
 #include <node/miner.h>
+#include <arith_uint256.h>
 #include <uint256.h>
 
 /**
@@ -261,6 +262,72 @@ public:
             +  sizeof(m_coinbase_tx_locktime)
             + 1 // m_merkle_path byte len
             +  m_merkle_path.size() * sizeof(uint256);
+    }
+};
+
+/**
+ * When the template provider creates a new valid best block, the template provider
+ * MUST immediately send the SetNewPrevHash  message. This message can also be used
+ * for a future template, indicating the client can begin work on a previously
+ * received and cached NewTemplate which contains the same template id.
+ */
+class SetNewPrevHash : Sv2Msg
+{
+public:
+    /**
+     * The id referenced in a previous NewTemplate message.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * Previous block’s hash, as it must appear in the next block’s header.
+     */
+    uint256 m_prev_hash;
+
+    /**
+     * The nTime field in the block header at which the client should start (usually current time).
+     * This is NOT the minimum valid nTime value.
+     */
+    uint32_t m_header_timestamp;
+
+    /**
+     * Block header field.
+     */
+    uint32_t m_nBits;
+
+    /**
+     * The maximum double-SHA256 hash value which would represent a valid block.
+     * Note that this may be lower than the target implied by nBits in several cases,
+     * including weak-block based block propagation.
+     */
+    uint256 m_target;
+
+    SetNewPrevHash(){};
+
+    explicit SetNewPrevHash(const CBlock& block, uint64_t template_id)
+    {
+        m_template_id = template_id;
+        m_prev_hash = block.hashPrevBlock;
+        m_header_timestamp = block.nTime;
+        m_nBits = block.nBits;
+        m_target = ArithToUint256(arith_uint256().SetCompact(block.nBits));
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const {
+        s << m_template_id
+          << m_prev_hash
+          << m_header_timestamp
+          << m_nBits
+          << m_target;
+    }
+
+    uint32_t GetMsgLen() const {
+        return sizeof(m_template_id)
+            + sizeof(m_prev_hash)
+            + sizeof(m_header_timestamp)
+            + sizeof(m_nBits)
+            + sizeof(m_target);
     }
 };
 
