@@ -2,6 +2,8 @@
 #define SV2_TEMPLATE_PROVIDER_H
 
 #include <streams.h>
+#include <node/miner.h>
+#include <uint256.h>
 
 /**
  * Base class for all stratum v2 messages.
@@ -128,6 +130,137 @@ public:
 
     uint32_t GetMsgLen() const {
         return sizeof(m_used_version) + sizeof(m_flags);
+    }
+};
+
+/**
+ * The work template for downstream devices. Can be used for future work or immediate work.
+ * The NewTemplate will be matched to a cached block using the template id.
+ */
+class NewTemplate : Sv2Msg
+{
+public:
+    /**
+     * Server’s identification of the template. Strictly increasing, the current UNIX 
+     * time may be used in place of an ID.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * True if the template is intended for future SetNewPrevHash message sent on the channel.
+     * If False, the job relates to the last sent SetNewPrevHash message on the channel 
+     * and the miner should start to work on the job immediately. */
+    bool m_future_template;
+
+    /**
+     * Valid header version field that reflects the current network consensus. 
+     * The general purpose bits (as specified in BIP320) can be freely manipulated 
+     * by the downstream node. The downstream node MUST NOT rely on the upstream 
+     * node to set the BIP320 bits to any particular value.
+     */
+    uint32_t m_version;
+
+    /**
+     * The coinbase transaction nVersion field.
+     */
+    uint32_t m_coinbase_tx_version;
+
+    /**
+     * Up to 8 bytes (not including the length byte) which are to be placed at
+     * the beginning of the coinbase field in the coinbase transaction.
+     */
+    CScript m_coinbase_prefix;
+
+    /**
+     * The coinbase transaction input’s nSequence field.
+     */
+    uint32_t m_coinbase_tx_input_sequence;
+
+    /**
+     * The value, in satoshis, available for spending in coinbase outputs added 
+     * by the client. Includes both transaction fees and block subsidy. 
+     */
+    uint64_t m_coinbase_tx_value_remaining;
+
+    /**
+     * The number of transaction outputs included in coinbase_tx_outputs.
+     */
+    uint32_t m_coinbase_tx_outputs_count;
+
+    /**
+     * Bitcoin transaction outputs to be included as the last outputs in the coinbase transaction. 
+     */
+    std::vector<CTxOut> m_coinbase_tx_outputs;
+
+    /**
+     * The locktime field in the coinbase transaction.
+     */
+    uint32_t m_coinbase_tx_locktime;
+
+    /**
+     * Merkle path hashes ordered from deepest.
+     */
+    std::vector<uint256> m_merkle_path;
+
+    NewTemplate(){};
+
+    explicit NewTemplate(const CBlock& block, uint64_t template_id, bool future_template)
+        : m_template_id{template_id}, m_future_template{future_template}
+    {
+        m_version = block.GetBlockHeader().nVersion;
+
+        const CTransactionRef coinbase_tx = block.vtx[0];
+        m_coinbase_tx_version = coinbase_tx->CURRENT_VERSION;
+        m_coinbase_prefix = coinbase_tx->vin[0].scriptSig;
+        m_coinbase_tx_input_sequence = coinbase_tx->vin[0].nSequence;
+
+        // NOTE: Currently set to 0 values, in order to integrate with the current
+        // stratum v2 pool and proxy implementations.
+        m_coinbase_tx_value_remaining = 0;
+        m_coinbase_tx_outputs_count = 0;
+        m_coinbase_tx_outputs = coinbase_tx->vout;
+        m_coinbase_tx_locktime =  coinbase_tx->nLockTime;
+
+        for (const auto& tx : block.vtx) {
+            m_merkle_path.push_back(tx->GetHash());
+        }
+    };
+
+    template <typename Stream>
+    void Serialize(Stream& s) const {
+        s << m_template_id
+          << m_future_template
+          << m_version
+          << m_coinbase_tx_version
+          << static_cast<uint8_t>(m_coinbase_prefix.size() + 1)
+          << m_coinbase_prefix
+          << m_coinbase_tx_input_sequence
+          << m_coinbase_tx_value_remaining
+          << m_coinbase_tx_outputs_count;
+
+        // m_coinbase_tx_outputs currently set to 0, in order to integrate
+        // with the current stratum v2 pool and proxy implementations.
+        s << static_cast<uint16_t>(0)
+          << m_coinbase_tx_locktime
+          << static_cast<uint8_t>(m_merkle_path.size())
+          << m_merkle_path;
+    }
+
+    uint32_t GetMsgLen() const {
+        return sizeof(m_template_id)
+            +  sizeof(m_future_template)
+            +  sizeof(m_version)
+            +  sizeof(m_coinbase_tx_version)
+            + 1 // m_coinbase_prefix byte len
+            +  m_coinbase_prefix.size()
+            +  sizeof(m_coinbase_tx_input_sequence)
+            +  sizeof(m_coinbase_tx_value_remaining)
+            +  sizeof(m_coinbase_tx_outputs_count)
+            + 2 // m_coinbase_tx_outputs byte len
+            +  m_coinbase_tx_outputs.size()
+            +  sizeof(m_coinbase_tx_locktime)
+            + 1 // m_merkle_path byte len
+            +  m_merkle_path.size() * sizeof(uint256);
     }
 };
 

@@ -57,12 +57,70 @@ BOOST_AUTO_TEST_CASE(SetupConnectionSuccess_test)
     BOOST_CHECK_EQUAL(ss.size(), 6);
 
     std::vector<uint8_t> bytes;
-    for (int i = 0; i < sizeof(expected); ++i) {
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
         uint8_t b;
         ss >> b;
         bytes.push_back(b);
     }
     BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
+}
+
+BOOST_AUTO_TEST_CASE(NewTemplate_test)
+{
+    uint8_t expected[]{
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // template id
+        0x00, // future template
+        0x00, 0x00, 0x00, 0x30, // version
+        0x02, 0x00, 0x00, 0x00, // coinbase tx version
+        0x05, // coinbase_prefix len
+        0x04, 0x03, 0x01, 0x21, 0x00,  // coinbase_prefix
+        0xff, 0xff, 0xff, 0xff, // coinbase_tx_input_sequence
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // coinbase_tx_value remaining
+        0x00, 0x00, 0x00, 0x00, // cointbase_tx_outputs count
+        0x00, 0x00, // coinbase_tx_ouputs
+        0x00, 0x00, 0x00, 0x00, // coinbase_tx_locktime
+        0x01, 0x01, // merkle_path length
+        0x1a, 0x62, 0x40, 0x82, 0x3d, 0xe4, 0xc8, 0xd6, 0xaa, 0xf8, 0x26, 0x85, // merkle path
+        0x1b, 0xdf, 0x2b, 0x0e, 0x8d, 0x5a, 0xcf, 0x7c, 0x31, 0xe8, 0x57, 0x8c,
+        0xff, 0x4c, 0x39, 0x4b, 0x5a, 0x32, 0xbd, 0x4e,
+    };
+
+    NewTemplate new_template;
+    new_template.m_template_id = 1;
+    new_template.m_future_template = false;
+    new_template.m_version = 805306368;
+    new_template.m_coinbase_tx_version = 2;
+
+    std::vector<uint8_t> coinbase_prefix{0x03, 0x01, 0x21, 0x00};
+    CScript prefix(coinbase_prefix.begin(), coinbase_prefix.end());
+    new_template.m_coinbase_prefix = prefix;
+
+    new_template.m_coinbase_tx_input_sequence = 4294967295;
+    new_template.m_coinbase_tx_value_remaining = 0;
+    new_template.m_coinbase_tx_outputs_count = 0;
+
+    std::vector<CTxOut> coinbase_tx_ouputs;
+    new_template.m_coinbase_tx_outputs = coinbase_tx_ouputs;
+
+    new_template.m_coinbase_tx_locktime = 0;
+
+    std::vector<uint256> merkle_path;
+    CMutableTransaction mtx_tx;
+    CTransaction tx{mtx_tx};
+    merkle_path.push_back(tx.GetHash());
+
+    new_template.m_merkle_path = merkle_path;
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << new_template;
+
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+        bytes.push_back(b);
+    }
     BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
 
