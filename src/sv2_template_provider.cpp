@@ -5,6 +5,13 @@
 #include <poll.h>
 #endif
 
+uint64_t TemplateId::Next() {
+    uint64_t next = m_id;
+    m_id += 1;
+
+    return next;
+}
+
 void Sv2TemplateProvider::BindListenPort(uint16_t port)
 {
     CService addr_bind = LookupNumeric("0.0.0.0", port);

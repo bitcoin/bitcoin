@@ -13,6 +13,16 @@
 using u24_t = uint8_t[3];
 
 /**
+ * The template id tracked by the template provider for NewTemplates.
+ */
+class TemplateId
+{
+public:
+    uint64_t m_id;
+    uint64_t Next();
+};
+
+/**
  * Base class for all stratum v2 messages.
  */
 class Sv2Msg
@@ -554,6 +564,11 @@ private:
      * A cache that maps ids used in NewTemplate messages and its associated block.
      */
     std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>> m_blocks_cache;
+
+    /**
+     * The current best known new template id and is incremented on each new template.
+     */
+    TemplateId m_template_id;
 
     /**
      * Generate recv and error events on each clients socket connection.
