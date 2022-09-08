@@ -485,4 +485,55 @@ public:
              m_setup_connection_confirmed{false}, m_disconnect_flag{false} {};
 };
 
+/**
+ * The main class that runs the template provider server.
+ */
+class Sv2TemplateProvider
+{
+public:
+    explicit Sv2TemplateProvider(ChainstateManager& chainman, CTxMemPool& mempool) : 
+        m_chainman{chainman}, m_mempool{mempool} {};
+
+    /**
+     * Creates a socket and listens for new stratum v2 connections.
+     */
+    void BindListenPort(uint16_t port);
+
+    /**
+     * Starts the template provider server and thread.
+     */
+    void Start();
+
+    /**
+     * The main thread for the template provider, contains an event loop handling
+     * all tasks for the template provider.
+     */
+    void ThreadSv2Handler();
+
+    /**
+     * Tear down of the template provider thread and any other neccessary tear down.
+     */
+    void StopThreads();
+
+    /**
+     * Triggered on interrupt signals to stop the main event loop in ThreadSv2Handler().
+     */
+    void Interrupt();
+
+private:
+    /**
+     * The main listening socket for new stratum v2 connections.
+     */
+    std::unique_ptr<Sock> m_listening_socket;
+
+    /**
+     * ChainstateManager and CTxMemPool are both used to build new valid blocks,
+     * getting the best known block hash and checking whether the node is still
+     * in IBD.
+     */
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
+};
+
+
 #endif // SV2_TEMPLATE_PROVIDER_H
