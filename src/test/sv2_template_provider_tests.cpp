@@ -43,4 +43,27 @@ BOOST_AUTO_TEST_CASE(SetupConnection_test)
     BOOST_CHECK_EQUAL(setup_conn.m_device_id, "some-device-uuid");
 }
 
+BOOST_AUTO_TEST_CASE(SetupConnectionSuccess_test)
+{
+    uint8_t expected[]{
+       0x02, 0x00, // used_version
+       0x03, 0x00, 0x00, 0x00, // flags
+    };
+
+    SetupConnectionSuccess setup_conn_success{2, 3};
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << setup_conn_success;
+    BOOST_CHECK_EQUAL(ss.size(), 6);
+
+    std::vector<uint8_t> bytes;
+    for (int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+        bytes.push_back(b);
+    }
+    BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

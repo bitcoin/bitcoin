@@ -98,4 +98,37 @@ public:
     }
 };
 
+/**
+ * Response to the SetupConnection message if the server accepts the connection. 
+ * The client is required to verify the set of feature flags that the server
+ * supports and act accordingly.
+ */
+class SetupConnectionSuccess : Sv2Msg
+{
+public:
+    /**
+     * Selected version proposed by the connecting node that the upstream node supports. 
+     * This version will be used on the connection for the rest of its life.
+     */
+    uint16_t m_used_version;
+
+    /**
+     * Flags indicating optional protocol features the server supports. Each protocol 
+     * from protocol field has its own values/flags.
+     */
+    uint32_t m_flags;
+
+    explicit SetupConnectionSuccess(uint16_t used_version, uint32_t flags): m_used_version{used_version}, m_flags{flags} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const {
+        s << m_used_version
+          << m_flags;
+    }
+
+    uint32_t GetMsgLen() const {
+        return sizeof(m_used_version) + sizeof(m_flags);
+    }
+};
+
 #endif // SV2_TEMPLATE_PROVIDER_H
