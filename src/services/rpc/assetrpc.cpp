@@ -618,7 +618,7 @@ static RPCHelpMan getnevmblobdata()
     std::vector<uint8_t> vchData;
     int64_t mpt = -1;
     uint32_t nSize;
-    if(!pnevmdatadb->ReadMPT(vchVH, mpt) && !pnevmdatadb->ReadDataSize(vchVH, nSize)) {
+    if(!pnevmdatadb->ReadMPT(vchVH, mpt) || !pnevmdatadb->ReadDataSize(vchVH, nSize)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
     }
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
