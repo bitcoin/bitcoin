@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 
 
@@ -82,6 +83,11 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[1].reconsiderblock(blocks[-4])
         # Should be back at the tip by now
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+
+        self.log.info("Verify that invalidating an unknown block throws an error")
+        chain_tips = self.nodes[1].getchaintips()
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
+        assert_equal(chain_tips, self.nodes[1].getchaintips())
 
 
 if __name__ == '__main__':
