@@ -43,6 +43,22 @@ BOOST_AUTO_TEST_CASE(SetupConnection_test)
     BOOST_CHECK_EQUAL(setup_conn.m_device_id, "some-device-uuid");
 }
 
+BOOST_AUTO_TEST_CASE(Sv2Header_SetupConnection_test)
+{
+    uint8_t input[]{
+        0x00, 0x00, // extension type
+        0x00, // msg type (SetupConnection)
+        0x52, 0x00, 0x00, // msg length
+    };
+
+    CDataStream ss(input, SER_NETWORK, PROTOCOL_VERSION);
+    Sv2Header sv2_header;
+    ss >> sv2_header;
+
+    BOOST_CHECK_EQUAL(sv2_header.m_msg_type, Sv2MsgType::SETUP_CONNECTION);
+    BOOST_CHECK_EQUAL(sv2_header.m_msg_len, 82);
+}
+
 BOOST_AUTO_TEST_CASE(SetupConnectionSuccess_test)
 {
     uint8_t expected[]{
@@ -63,6 +79,35 @@ BOOST_AUTO_TEST_CASE(SetupConnectionSuccess_test)
         bytes.push_back(b);
     }
     BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
+}
+
+BOOST_AUTO_TEST_CASE(Sv2Header_SetupConnectionSuccess_test)
+{
+    uint8_t expected[]{
+       0x00, 0x00, // extension type
+       0x01, // msg type (SetupConnectionSuccess)
+       0x06, 0x00, 0x00, // msg length
+       0x02, 0x00, // used_version
+       0x03, 0x00, 0x00, 0x00, // flags
+    };
+
+    SetupConnectionSuccess setup_conn_success{2, 3};
+    Sv2Header sv2_header{Sv2MsgType::SETUP_CONNECTION_SUCCESS, setup_conn_success.GetMsgLen()};
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << sv2_header << setup_conn_success;
+
+    BOOST_CHECK_EQUAL(ss.size(), 12);
+
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+
+        bytes.push_back(b);
+    }
+    BOOST_CHECK_EQUAL(bytes.size(), 12);
     BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
 
@@ -124,6 +169,31 @@ BOOST_AUTO_TEST_CASE(NewTemplate_test)
     BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
 
+BOOST_AUTO_TEST_CASE(Sv2Header_NewTemplate_test)
+{
+    uint8_t expected[] = {
+        0x00, 0x00, // extension type
+        0x71, // msg type (NewTemplate)
+        0x00, 0x00, 0x00, // msg length
+    };
+
+    Sv2Header sv2_header{Sv2MsgType::NEW_TEMPLATE, 0};
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << sv2_header;
+    BOOST_CHECK_EQUAL(ss.size(), 6);
+
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+        bytes.push_back(b);
+    }
+    BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
+}
+
+
 BOOST_AUTO_TEST_CASE(SetNewPrevHash_test)
 {
     uint8_t expected[]{
@@ -167,6 +237,30 @@ BOOST_AUTO_TEST_CASE(SetNewPrevHash_test)
     BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
 
+BOOST_AUTO_TEST_CASE(Sv2Header_SetNewPrevHash_test)
+{
+    uint8_t expected[]{
+        0x00, 0x00, // extension type
+        0x72, // msg type (SetNewPrevHash)
+        0x00, 0x00, 0x00, // msg length
+    };
+
+    Sv2Header sv2_header{Sv2MsgType::SET_NEW_PREV_HASH, 0};
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << sv2_header;
+    BOOST_CHECK_EQUAL(ss.size(), 6);
+
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+        bytes.push_back(b);
+    }
+    BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
+}
+
 BOOST_AUTO_TEST_CASE(SubmitSolution_test)
 {
     uint8_t input[]{
@@ -188,6 +282,29 @@ BOOST_AUTO_TEST_CASE(SubmitSolution_test)
     ss >> submit_solution;
     BOOST_CHECK_EQUAL(submit_solution.m_template_id, 2);
     BOOST_CHECK_EQUAL(submit_solution.m_version, 2);
+}
+
+BOOST_AUTO_TEST_CASE(Sv2Header_SubmitSolution_test)
+{
+    uint8_t expected[]{
+        0x00, 0x00, // extension type
+        0x76, // msg type (SubmitSolution)
+        0x00, 0x00, 0x00, // msg length
+    };
+
+    Sv2Header sv2_header{Sv2MsgType::SUBMIT_SOLUTION, 0};
+
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << sv2_header;
+
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < sizeof(expected); ++i) {
+        uint8_t b;
+        ss >> b;
+        bytes.push_back(b);
+    }
+    BOOST_CHECK_EQUAL(bytes.size(), 6);
+    BOOST_CHECK(std::equal(bytes.begin(), bytes.end(), expected));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

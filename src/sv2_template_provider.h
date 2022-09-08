@@ -404,4 +404,62 @@ public:
     }
 };
 
+/**
+ * Header for all stratum v2 messages. Each header must contain the message type,
+ * the length of the serialized message and a 2 byte extension field currently
+ * not utilised by the template provider.
+ */
+class Sv2Header
+{
+public:
+    /**
+     * Unique identifier of the message.
+     */
+    Sv2MsgType m_msg_type;
+
+    /**
+     * Serialized length of the message.
+     */
+    uint32_t m_msg_len;
+
+    Sv2Header(){};
+    explicit Sv2Header(Sv2MsgType msg_type, uint32_t msg_len) : m_msg_type{msg_type}, m_msg_len{msg_len} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const {
+        // The Template Provider currently does not use the extension_type field,
+        // but the field is still required for all headers.
+        uint16_t extension_type = 0;
+
+        u24_t msg_len;
+        msg_len[2] = (m_msg_len >> 16) & 0xff;
+        msg_len[1] = (m_msg_len >> 8) & 0xff;
+        msg_len[0] = m_msg_len & 0xff;
+
+        s << extension_type
+          << static_cast<uint8_t>(m_msg_type)
+          << msg_len;
+    };
+
+    template <typename Stream>
+    void Unserialize(Stream& s) {
+        // Ignore the extension type (2 bytes) as the Template Provider currently doesn't
+        // interpret this field.
+        s.ignore(2);
+
+        uint8_t msg_type;
+        s >> msg_type;
+        m_msg_type = static_cast<Sv2MsgType>(msg_type);
+
+        u24_t msg_len_bytes;
+        for (unsigned int i = 0; i < sizeof(u24_t); ++i) {
+            s >> msg_len_bytes[i];
+        }
+
+        m_msg_len = msg_len_bytes[2];
+        m_msg_len = m_msg_len << 8 | msg_len_bytes[1];
+        m_msg_len = m_msg_len << 8 | msg_len_bytes[0];
+    }
+};
+
 #endif // SV2_TEMPLATE_PROVIDER_H
