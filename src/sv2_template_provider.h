@@ -13,6 +13,12 @@
 using u24_t = uint8_t[3];
 
 /**
+ * The template provider subprotocol used in setup connection messages. The stratum v2 
+ * template provider only recognizes its own subprotocol.
+ */
+static constexpr uint8_t SETUP_CONN_TP_PROTOCOL{0x02};
+
+/**
  * The template id tracked by the template provider for NewTemplates.
  */
 class TemplateId
@@ -600,6 +606,11 @@ private:
      * Generate recv and error events on each clients socket connection.
      */
     void GenerateSocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &error_set);
+
+    /**
+     * Main handler for all received stratum v2 messages.
+     */
+    void ProcessSv2Message(const Sv2Header& sv2_header, CDataStream& ss, Sv2Client* client);
 };
 
 

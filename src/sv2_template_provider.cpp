@@ -1,4 +1,5 @@
 #include <sv2_template_provider.h>
+#include <consensus/merkle.h>
 #include <netbase.h>
 #include <validation.h>
 
@@ -109,6 +110,99 @@ void Sv2TemplateProvider::OnNewBlock() {
         }
 
         write(client->m_sock->Get(), ss.data(), ss.size());
+    }
+}
+
+void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataStream& ss, Sv2Client* client)
+{
+    if (!client) return;
+
+    switch(sv2_header.m_msg_type)
+    {
+        case SETUP_CONNECTION:
+        {
+            if (client->m_setup_connection_confirmed) {
+                return;
+            }
+
+            SetupConnection setup_conn;
+            ss >> setup_conn;
+            ss.clear();
+
+            if (setup_conn.m_protocol == SETUP_CONN_TP_PROTOCOL) {
+               client->m_setup_connection_confirmed = true;
+
+               SetupConnectionSuccess setup_success{2, 0};
+
+               ss << Sv2Header{Sv2MsgType::SETUP_CONNECTION_SUCCESS, setup_success.GetMsgLen()}
+                  << setup_success;
+
+               write(client->m_sock->Get(), ss.data(), ss.size());
+               ss.clear();
+
+               NewTemplate copy_new_template = m_new_template;
+               copy_new_template.m_future_template = false;
+
+               try {
+                   ss << Sv2Header{Sv2MsgType::NEW_TEMPLATE, copy_new_template.GetMsgLen()}
+                      << copy_new_template;
+               } catch(const std::exception &e) {
+                   LogPrintf("Error writing copy_new_template\n");
+               }
+
+               write(client->m_sock->Get(), ss.data(), ss.size());
+               ss.clear();
+
+               try {
+                   ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_prev_hash.GetMsgLen()}
+                      << m_prev_hash;
+               } catch(const std::exception &e) {
+                   LogPrintf("Error writing prev_hash\n");
+               }
+
+               write(client->m_sock->Get(), ss.data(), ss.size());
+               ss.clear();
+            }
+            break;
+        }
+        case SUBMIT_SOLUTION:
+        {
+            SubmitSolution submit_solution;
+            ss >> submit_solution;
+
+            auto cached_block = m_blocks_cache.find(submit_solution.m_template_id);
+            if (cached_block != m_blocks_cache.end()) {
+                auto block_template = *cached_block->second;
+                CBlock& block = block_template.block;
+
+                auto coinbase_tx = CTransaction(std::move(submit_solution.m_coinbase_tx));
+                block.vtx[0] = std::make_shared<CTransaction>(std::move(coinbase_tx));
+
+                block.nVersion = submit_solution.m_version;
+                block.nTime = submit_solution.m_header_timestamp;
+                block.nNonce = submit_solution.m_header_nonce;
+                block.hashMerkleRoot = BlockMerkleRoot(block);
+
+                auto blockptr = std::make_shared<CBlock>(std::move(block));
+
+                bool new_block{true};
+                m_chainman.ProcessNewBlock(blockptr, true /* force_processing */, false /* min_pow_checked */, &new_block /* new_block */);
+                m_blocks_cache.erase(submit_solution.m_template_id);
+
+                {
+                    LOCK2(cs_main, m_mempool.cs);
+                    UpdateTemplate(true);
+                    UpdatePrevHash();
+                }
+
+                 OnNewBlock();
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
 
