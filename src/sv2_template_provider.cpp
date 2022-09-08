@@ -288,7 +288,7 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                 auto blockptr = std::make_shared<CBlock>(std::move(block));
 
                 bool new_block{true};
-                m_chainman.ProcessNewBlock(blockptr, true /* force_processing */, false /* min_pow_checked */, &new_block /* new_block */);
+                m_chainman.ProcessNewBlock(blockptr, true /* force_processing */, true /* min_pow_checked */, &new_block);
                 m_blocks_cache.erase(submit_solution.m_template_id);
 
                 {
