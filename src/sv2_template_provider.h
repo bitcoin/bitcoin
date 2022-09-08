@@ -527,6 +527,11 @@ private:
     std::unique_ptr<Sock> m_listening_socket;
 
     /**
+     * The main thread for the template provider.
+     */
+    std::thread m_thread_sv2_handler;
+
+    /**
      * ChainstateManager and CTxMemPool are both used to build new valid blocks,
      * getting the best known block hash and checking whether the node is still
      * in IBD.

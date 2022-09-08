@@ -32,3 +32,10 @@ void Sv2TemplateProvider::BindListenPort(uint16_t port)
 
     m_listening_socket = std::move(sock);
 };
+
+void Sv2TemplateProvider::StopThreads()
+{
+    if (m_thread_sv2_handler.joinable()) {
+        m_thread_sv2_handler.join();
+    }
+}
