@@ -5,6 +5,7 @@
 #include <node/miner.h>
 #include <arith_uint256.h>
 #include <uint256.h>
+#include <util/sock.h>
 
 /**
  * A type mainly used as the message length field in stratum v2 messages.
@@ -460,6 +461,28 @@ public:
         m_msg_len = m_msg_len << 8 | msg_len_bytes[1];
         m_msg_len = m_msg_len << 8 | msg_len_bytes[0];
     }
+};
+
+class Sv2Client
+{
+public:
+    /**
+     * Receiving and sending socket for the connected client
+     */
+    std::unique_ptr<Sock> m_sock;
+
+    /**
+     * Whether the client has confirmed the connection with a successful SetupConnection.
+     */
+    bool m_setup_connection_confirmed;
+
+    /**
+     * Whether the client is a candidate for disconnection.
+     */
+    bool m_disconnect_flag;
+
+    explicit Sv2Client(std::unique_ptr<Sock> sock) : m_sock{std::move(sock)},
+             m_setup_connection_confirmed{false}, m_disconnect_flag{false} {};
 };
 
 #endif // SV2_TEMPLATE_PROVIDER_H
