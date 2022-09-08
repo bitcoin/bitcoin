@@ -1,5 +1,6 @@
 #include <sv2_template_provider.h>
 #include <netbase.h>
+#include <validation.h>
 
 #ifdef USE_POLL
 #include <poll.h>
@@ -54,6 +55,22 @@ void Sv2TemplateProvider::StopThreads()
 void Sv2TemplateProvider::Interrupt()
 {
     m_flag_interrupt_sv2 = true;
+}
+
+void Sv2TemplateProvider::UpdateTemplate(bool future)
+{
+    AssertLockHeld(cs_main);
+    AssertLockHeld(m_mempool.cs);
+
+    node::BlockAssembler::Options options;
+    options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
+    options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
+
+    std::unique_ptr<node::CBlockTemplate> blocktemplate = node::BlockAssembler(m_chainman.ActiveChainstate(), &m_mempool, options).CreateNewBlock(CScript());
+
+    NewTemplate new_template{blocktemplate->block, m_template_id.Next(), future};
+    m_blocks_cache.insert({new_template.m_template_id, std::move(blocktemplate)});
+    m_new_template = new_template;
 }
 
 #ifdef USE_POLL

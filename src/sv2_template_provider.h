@@ -566,9 +566,19 @@ private:
     std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>> m_blocks_cache;
 
     /**
+     * The best known template to give all sv2 clients.
+     */
+    NewTemplate m_new_template;
+
+    /**
      * The current best known new template id and is incremented on each new template.
      */
     TemplateId m_template_id;
+
+    /**
+     * Builds a new block, caches it and builds the most recent and best NewTemplate from the new block.
+     */
+    void UpdateTemplate(bool future);
 
     /**
      * Generate recv and error events on each clients socket connection.
