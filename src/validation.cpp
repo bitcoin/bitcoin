@@ -2158,7 +2158,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         const bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         const bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         const bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ReadData(nevmDataEntry.nevmData->vchVersionHash, vchData);
-        if(enforceHaveData && nevmDataEntry.nevmData->vchData.empty()) {
+        if(enforceHaveData && dataDoesntExistsInDb && nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
         } else if(enforceNotHaveData && !nevmDataEntry.nevmData->vchData.empty()) {
