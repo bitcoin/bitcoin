@@ -2165,8 +2165,8 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
             return false;
         }
-        // we don't be checking KZG commitment so we need to ensure enough fees were paid
-        if(!dataDoesntExistsInDb) {
+        // we won't be checking KZG commitment so we need to ensure enough fees were paid
+        if(nMedianTime > 0 && dataDoesntExistsInDb) {
             if(nevmDataEntry.nevmData->vchData != vchData) {
                 LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->vchData.size(), vchData.size());
                 return false;
