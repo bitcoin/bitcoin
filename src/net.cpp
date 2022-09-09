@@ -1648,6 +1648,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             if (add_fixed_seeds_now) {
                 std::vector<CAddress> seed_addrs{ConvertSeeds(Params().FixedSeeds())};
+                // We will not make outgoing connections to peers that are unreachable
+                // (e.g. because of -onlynet configuration).
+                // Therefore, we do not add them to addrman in the first place.
+                // Note that if you change -onlynet setting from one network to another,
+                // peers.dat will contain only peers of unreachable networks and
+                // manual intervention will be needed (either delete peers.dat after
+                // configuration change or manually add some reachable peer using addnode),
+                // see <https://github.com/bitcoin/bitcoin/issues/26035> for details.
                 seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
                                                [](const CAddress& addr) { return !IsReachable(addr); }),
                                 seed_addrs.end());
