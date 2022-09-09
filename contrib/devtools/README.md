@@ -17,6 +17,23 @@ the script should be called from the git root folder as follows.
 git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 ```
 
+colorize_logging.py
+===================
+
+Colorizes the terminal log output of `bitcoind` or `bitcoin-qt`.
+Colors can be customized by changing the script's color definitions.
+
+Can be used by running the following command:
+
+```
+./src/bitcoind | ./contrib/devtools/colorize_logging.py
+```
+
+```
+./src/qt/bitcoin-qt -printtoconsole | ./contrib/devtools/colorize_logging.py
+```
+
+
 copyright\_header.py
 ====================
 
