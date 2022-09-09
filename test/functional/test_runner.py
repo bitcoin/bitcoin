@@ -609,13 +609,13 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enab
     while not job_queue.done():
         if failfast and not all_passed:
             break
-        for test_result, testdir, stdout, stderr in job_queue.get_next():
+        for test_result, testdir, stdout, stderr, skip_reason in job_queue.get_next():
             test_results.append(test_result)
             done_str = f"{len(test_results)}/{test_count} - {BOLD[1]}{test_result.name}{BOLD[0]}"
             if test_result.status == "Passed":
                 logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
             elif test_result.status == "Skipped":
-                logging.debug("%s skipped" % (done_str))
+                logging.debug(f"{done_str} skipped ({skip_reason})")
             else:
                 all_passed = False
                 print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
@@ -743,10 +743,12 @@ class TestHandler:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
                     log_out.close(), log_err.close()
+                    skip_reason = None
                     if proc.returncode == TEST_EXIT_PASSED and stderr == "":
                         status = "Passed"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
+                        skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
                     elif attempt < self.attempts:
                         # cleanup
                         if self.use_term_control:
@@ -782,7 +784,7 @@ class TestHandler:
                         clearline = '\r' + (' ' * dot_count) + '\r'
                         print(clearline, end='', flush=True)
                     dot_count = 0
-                    ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr))
+                    ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr, skip_reason))
             if ret:
                 return ret
             if self.use_term_control:
