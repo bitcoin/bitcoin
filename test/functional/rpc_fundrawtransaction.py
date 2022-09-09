@@ -106,6 +106,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1)
         self.generate(self.nodes[0], 121)
 
+        self.test_add_inputs_default_value()
         self.test_weight_calculation()
         self.test_change_position()
         self.test_simple()
@@ -1072,6 +1073,121 @@ class RawTransactionsTest(BitcoinTestFramework):
         funded_tx = wallet.fundrawtransaction(raw_tx, {"input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 65539}]})
 
         self.nodes[2].unloadwallet("extfund")
+
+    def test_add_inputs_default_value(self):
+        self.log.info("Test 'add_inputs' default value")
+
+        # Create and fund the wallet with 5 BTC
+        self.nodes[2].createwallet("test_preset_inputs")
+        wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs")
+        addr1 = wallet.getnewaddress(address_type="bech32")
+        self.nodes[0].sendtoaddress(addr1, 5)
+        self.generate(self.nodes[0], 1)
+
+        # Covered cases:
+        # 1. Default add_inputs value with no preset inputs (add_inputs=true):
+        #       Expect: automatically add coins from the wallet to the tx.
+        # 2. Default add_inputs value with preset inputs (add_inputs=false):
+        #       Expect: disallow automatic coin selection.
+        # 3. Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount).
+        #       Expect: include inputs from the wallet.
+        # 4. Explicit add_inputs=true and preset inputs (with preset inputs covering the target amount).
+        #       Expect: only preset inputs are used.
+        # 5. Explicit add_inputs=true, no preset inputs (same as (1) but with an explicit set):
+        #       Expect: include inputs from the wallet.
+
+        # Case (1), 'send' command
+        # 'add_inputs' value is true unless "inputs" are specified, in such case, add_inputs=false.
+        # So, the wallet will automatically select coins and create the transaction if only the outputs are provided.
+        tx = wallet.send(outputs=[{addr1: 3}])
+        assert tx["complete"]
+
+        # Case (2), 'send' command
+        # Select an input manually, which doesn't cover the entire output amount and
+        # verify that the dynamically set 'add_inputs=false' value works.
+
+        # Fund wallet with 2 outputs, 5 BTC each.
+        addr2 = wallet.getnewaddress(address_type="bech32")
+        source_tx = self.nodes[0].send(outputs=[{addr1: 5}, {addr2: 5}], options={"change_position": 0})
+        self.generate(self.nodes[0], 1)
+
+        # Select only one input.
+        options = {
+            "inputs": [
+                {
+                    "txid": source_tx["txid"],
+                    "vout": 1  # change position was hardcoded to index 0
+                }
+            ]
+        }
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{addr1: 8}], options=options)
+
+        # Case (3), Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount)
+        options["add_inputs"] = True
+        options["add_to_wallet"] = False
+        tx = wallet.send(outputs=[{addr1: 8}], options=options)
+        assert tx["complete"]
+
+        # Case (4), Explicit add_inputs=true and preset inputs (with preset inputs covering the target amount)
+        options["inputs"].append({
+            "txid": source_tx["txid"],
+            "vout": 2  # change position was hardcoded to index 0
+        })
+        tx = wallet.send(outputs=[{addr1: 8}], options=options)
+        assert tx["complete"]
+        # Check that only the preset inputs were added to the tx
+        decoded_psbt_inputs = self.nodes[0].decodepsbt(tx["psbt"])['tx']['vin']
+        assert_equal(len(decoded_psbt_inputs), 2)
+        for input in decoded_psbt_inputs:
+            assert_equal(input["txid"], source_tx["txid"])
+
+        # Case (5), assert that inputs are added to the tx by explicitly setting add_inputs=true
+        options = {"add_inputs": True, "add_to_wallet": True}
+        tx = wallet.send(outputs=[{addr1: 8}], options=options)
+        assert tx["complete"]
+
+        ################################################
+
+        # Case (1), 'walletcreatefundedpsbt' command
+        # Default add_inputs value with no preset inputs (add_inputs=true)
+        inputs = []
+        outputs = {self.nodes[1].getnewaddress(): 8}
+        assert "psbt" in wallet.walletcreatefundedpsbt(inputs=inputs, outputs=outputs)
+
+        # Case (2), 'walletcreatefundedpsbt' command
+        # Default add_inputs value with preset inputs (add_inputs=false).
+        inputs = [{
+            "txid": source_tx["txid"],
+            "vout": 1  # change position was hardcoded to index 0
+        }]
+        outputs = {self.nodes[1].getnewaddress(): 8}
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, inputs=inputs, outputs=outputs)
+
+        # Case (3), Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount)
+        options["add_inputs"] = True
+        options["add_to_wallet"] = False
+        assert "psbt" in wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, options=options)
+
+        # Case (4), Explicit add_inputs=true and preset inputs (with preset inputs covering the target amount)
+        inputs.append({
+            "txid": source_tx["txid"],
+            "vout": 2  # change position was hardcoded to index 0
+        })
+        psbt_tx = wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, options=options)
+        # Check that only the preset inputs were added to the tx
+        decoded_psbt_inputs = self.nodes[0].decodepsbt(psbt_tx["psbt"])['tx']['vin']
+        assert_equal(len(decoded_psbt_inputs), 2)
+        for input in decoded_psbt_inputs:
+            assert_equal(input["txid"], source_tx["txid"])
+
+        # Case (5), 'walletcreatefundedpsbt' command
+        # Explicit add_inputs=true, no preset inputs
+        options = {
+            "add_inputs": True
+        }
+        assert "psbt" in wallet.walletcreatefundedpsbt(inputs=[], outputs=outputs, options=options)
+
+        self.nodes[2].unloadwallet("test_preset_inputs")
 
     def test_weight_calculation(self):
         self.log.info("Test weight calculation with external inputs")
