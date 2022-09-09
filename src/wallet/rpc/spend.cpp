@@ -1137,7 +1137,7 @@ RPCHelpMan send()
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                 Cat<std::vector<RPCArg>>(
                 {
-                    {"add_inputs", RPCArg::Type::BOOL, RPCArg::Default{false}, "If inputs are specified, automatically include more if they are not enough."},
+                    {"add_inputs", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false when \"inputs\" are specified, true otherwise"},"Automatically include coins from the wallet to cover the target amount.\n"},
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
@@ -1582,7 +1582,7 @@ RPCHelpMan walletcreatefundedpsbt()
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         Cat<std::vector<RPCArg>>(
                         {
-                            {"add_inputs", RPCArg::Type::BOOL, RPCArg::Default{false}, "If inputs are specified, automatically include more if they are not enough."},
+                            {"add_inputs", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false when \"inputs\" are specified, true otherwise"}, "Automatically include coins from the wallet to cover the target amount.\n"},
                             {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
