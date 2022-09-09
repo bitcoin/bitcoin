@@ -438,7 +438,7 @@ UniValue CGovernanceObject::ToJson() const
 
 void CGovernanceObject::UpdateLocalValidity()
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
 }
@@ -526,6 +526,9 @@ CAmount CGovernanceObject::GetMinCollateralFee(bool fork_active) const
 
 bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(::mempool.cs); // because of GetTransaction
+
     strError = "";
     fMissingConfirmations = false;
     uint256 nExpectedHash = GetHash();
