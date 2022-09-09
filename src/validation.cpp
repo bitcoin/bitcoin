@@ -2800,11 +2800,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
-
-    int64_t nTime6 = GetTimeMicros(); nTimeIndex += nTime6 - nTime5;
-    LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
     // SYSCOIN
     evoDb->WriteBestBlock(pindex->GetBlockHash());
+    int64_t nTime6 = GetTimeMicros(); nTimeIndex += nTime6 - nTime5;
+    LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
     TRACE6(validation, block_connected,
         block_hash.data(),
         pindex->nHeight,
