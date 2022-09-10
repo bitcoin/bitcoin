@@ -174,7 +174,14 @@ ReadStatus PartiallyDownloadedBlock::InitData(CBlockHeaderAndShortTxIDs& cmpctbl
     if(!cmpctblock.vchNEVMBlockData.empty()) {
         vchNEVMBlockData = std::move(cmpctblock.vchNEVMBlockData);
     }
-
+    for (auto &tx : txn_available) {
+        if(tx && tx->IsNEVMData()) {
+            if(!FillNEVMData(tx)) {
+                LogPrint(BCLog::CMPCTBLOCK, "PartiallyDownloadedBlock::InitData: FillNEVMData invalid\n");
+                return READ_STATUS_INVALID;
+            }
+        }
+    }
     LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, PROTOCOL_VERSION));
 
     return READ_STATUS_OK;

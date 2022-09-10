@@ -2166,7 +2166,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
             return false;
         }
         // we won't be checking KZG commitment so we need to ensure enough fees were paid
-        if(nMedianTime > 0 && dataDoesntExistsInDb) {
+        if(!dataDoesntExistsInDb) {
             if(nevmDataEntry.nevmData->vchData != vchData) {
                 LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->vchData.size(), vchData.size());
                 return false;
