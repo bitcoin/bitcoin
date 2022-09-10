@@ -7,14 +7,13 @@
 
 #include <clientversion.h>
 #include <fs.h>
+#include <logging.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
 #include <rpc/blockchain.h>
 #include <validation.h>
 
 #include <univalue.h>
-
-#include <boost/test/unit_test.hpp>
 
 const auto NoMalleation = [](AutoFile& file, node::SnapshotMetadata& meta){};
 
@@ -36,8 +35,8 @@ CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F ma
 
     UniValue result = CreateUTXOSnapshot(
         node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
-    BOOST_TEST_MESSAGE(
-        "Wrote UTXO snapshot to " << fs::PathToString(snapshot_path.make_preferred()) << ": " << result.write());
+    LogPrintf(
+        "Wrote UTXO snapshot to %s: %s", fs::PathToString(snapshot_path.make_preferred()), result.write());
 
     // Read the written snapshot in and then activate it.
     //
