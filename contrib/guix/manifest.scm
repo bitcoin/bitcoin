@@ -21,7 +21,6 @@
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
-             (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages python-crypto)
@@ -615,7 +614,6 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
         ;; Scripting
-        perl
         python-3
         ;; Git
         git
