@@ -20,7 +20,6 @@
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
-             (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages python-crypto)
@@ -598,7 +597,6 @@ parse, modify and abstract ELF, PE and MachO formats.")
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
         ;; Scripting
-        perl
         python-minimal ;; (3.9)
         ;; Git
         git
