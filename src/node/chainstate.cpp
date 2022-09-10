@@ -4,9 +4,11 @@
 
 #include <node/chainstate.h>
 
+#include <arith_uint256.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/params.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <sync.h>
@@ -21,6 +23,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <vector>
 
