@@ -1751,11 +1751,12 @@ AM_CONDITIONAL([BUILD_SYSCOIN_UTIL], [test $build_syscoin_util = "yes"])
 AC_MSG_RESULT($build_syscoin_util)
 
 AC_MSG_CHECKING([whether to build experimental syscoin-chainstate])
-if test "$build_experimental_kernel_lib" = "no"; then
-AC_MSG_ERROR([experimental syscoin-chainstate cannot be built without the experimental syscoinkernel library. Use --with-experimental-kernel-lib]);
-else
-  AM_CONDITIONAL([BUILD_SYSCOIN_CHAINSTATE], [test $build_syscoin_chainstate = "yes"])
+if test "$build_syscoin_chainstate" = "yes"; then
+  if test "$build_experimental_kernel_lib" = "no"; then
+    AC_MSG_ERROR([experimental syscoin-chainstate cannot be built without the experimental syscoinkernel library. Use --with-experimental-kernel-lib]);
+  fi
 fi
+AM_CONDITIONAL([BUILD_SYSCOIN_CHAINSTATE], [test $build_syscoin_chainstate = "yes"])
 AC_MSG_RESULT($build_syscoin_chainstate)
 
 AC_MSG_CHECKING([whether to build libraries])
