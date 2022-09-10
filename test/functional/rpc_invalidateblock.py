@@ -85,9 +85,8 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that invalidating an unknown block throws an error")
-        chain_tips = self.nodes[1].getchaintips()
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
-        assert_equal(chain_tips, self.nodes[1].getchaintips())
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
 
 if __name__ == '__main__':
