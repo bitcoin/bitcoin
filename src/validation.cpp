@@ -2183,7 +2183,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         // if not in DB then we need to verify it via Geth KZG blob verification
         GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
         int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
-        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fs (%.2fms/blob)\n", nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
+        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
 
         if(state.IsInvalid()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s\n", state.ToString());
