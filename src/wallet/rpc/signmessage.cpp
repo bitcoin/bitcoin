@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/wallet.h>
 #include <key_io.h>
 #include <rpc/util.h>
 #include <util/message.h>
 #include <wallet/rpc/util.h>
-#include <wallet/wallet.h>
 
 #include <univalue.h>
 
@@ -35,10 +35,8 @@ RPCHelpMan signmessage()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            const auto pwallet = GetWalletInterfaceForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
-
-            LOCK(pwallet->cs_wallet);
 
             EnsureWalletIsUnlocked(*pwallet);
 
@@ -56,7 +54,7 @@ RPCHelpMan signmessage()
             }
 
             std::string signature;
-            SigningResult err = pwallet->SignMessage(strMessage, *pkhash, signature);
+            SigningResult err = pwallet->signMessage(strMessage, *pkhash, signature);
             if (err == SigningResult::SIGNING_FAILED) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
             } else if (err != SigningResult::OK) {
