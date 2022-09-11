@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <interfaces/wallet.h>
 #include <key_io.h>
 #include <rpc/util.h>
 #include <util/moneystr.h>
@@ -406,13 +407,11 @@ RPCHelpMan listlockunspent()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    const auto pwallet = GetWalletInterfaceForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     std::vector<COutPoint> vOutpts;
-    pwallet->ListLockedCoins(vOutpts);
+    pwallet->listLockedCoins(vOutpts);
 
     UniValue ret(UniValue::VARR);
 
