@@ -299,8 +299,8 @@ static RPCHelpMan getchainlocks()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::ANY, "recent_chainlock", "Most recent chainlock share"},
-                    {RPCResult::Type::ANY, "active_chainlock", "Most active chainlock"},
+                    {RPCResult::Type::STR, "recent_chainlock", "Most recent chainlock share"},
+                    {RPCResult::Type::STR, "active_chainlock", "Most active chainlock"},
                     
                 }},
             RPCExamples{

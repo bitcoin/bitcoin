@@ -181,7 +181,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
                         "       \"" + FeeModes("\"\n\"") + "\""},
             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
             HelpExampleCli("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
             + HelpExampleRpc("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
@@ -207,7 +207,6 @@ static RPCHelpMan syscoincreaterawnevmblob()
     UniValue optionsObj(UniValue::VOBJ);
     // should fill in VH and Size and fill in data through GETDATA net protocol by putting vchData into DB which it will read from
     outputObj.__pushKV("data", HexStr(data));
-    LogPrintf("syscoincreaterawnevmblob data length %d nSize %d\n", data.size(), nevmData.nSize);
     optionsObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
     output.push_back(outputObj);
     UniValue paramsSend(UniValue::VARR);
@@ -227,17 +226,21 @@ static RPCHelpMan syscoincreaterawnevmblob()
         vecNEVMDataToProcess.emplace_back(nevmHelper);
         // process new vector in batch checking the blobs
         BlockValidationState state;
+        int64_t nTimeStart = GetTimeMicros();
         // if not in DB then we need to verify it via Geth KZG blob verification
         GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+        int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
+        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * 0.000001, nTimeDiff * 0.001 / vecNEVMDataToProcess.size());
         if(state.IsInvalid()) {
             throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
+            return false;
         }
     }
+    UniValue res;
     // FillNEVMData should fill in this data prior to relay
     if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData) || !pnevmdatadb->WriteDataSize(nevmData.vchVersionHash, nevmData.vchData.size())) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
     }
-    UniValue res;
     try {
         res = send().HandleRequest(requestSend);
     } catch(std::exception &e) {
@@ -270,7 +273,7 @@ static RPCHelpMan syscoincreatenevmblob()
                         "       \"" + FeeModes("\"\n\"") + "\""},
             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
             HelpExampleCli("syscoincreatenevmblob", "\"data\"")
             + HelpExampleRpc("syscoincreatenevmblob", "\"data\"")
@@ -320,8 +323,11 @@ static RPCHelpMan syscoincreatenevmblob()
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmData;
+    int64_t nTimeStart = GetTimeMicros();
     // if not in DB then we need to verify it via Geth KZG blob verification
     GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmData, state);
+    int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
+    LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: created blob in %.2lldums\n", nTimeDiff);
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }

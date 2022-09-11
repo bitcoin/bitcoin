@@ -13,7 +13,7 @@ static RPCHelpMan masternode_outputs()
         "\nPrint masternode compatible outputs\n",
         {              
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_outputs", "")
             + HelpExampleRpc("masternode_outputs", "")

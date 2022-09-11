@@ -121,13 +121,13 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                 }},
             }},
         }},
-        {RPCResult::Type::ANY, "sysx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proRegTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpServTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpRegTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpRevTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "cbTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "qcTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "sysx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "proRegTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "proUpServTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "proUpRegTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "proUpRevTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "cbTx", /*optional=*/true, ""},
+        {RPCResult::Type::STR, "qcTx", /*optional=*/true, ""},
     };
 }
 

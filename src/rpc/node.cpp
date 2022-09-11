@@ -39,7 +39,7 @@ static RPCHelpMan mnsync()
             {
                 {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"},
             },
-            RPCResult{RPCResult::Type::ANY, "result", "Result"},
+            RPCResult{RPCResult::Type::STR, "result", "Result"},
             RPCExamples{
                 HelpExampleCli("mnsync", "status")
                 + HelpExampleRpc("mnsync", "status")
@@ -93,11 +93,11 @@ static RPCHelpMan spork()
             },
             {
                 RPCResult{"for command = \"show\"",
-                    RPCResult::Type::ANY, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
+                    RPCResult::Type::STR, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
                 RPCResult{"for command = \"active\"",
-                    RPCResult::Type::ANY, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
+                    RPCResult::Type::STR, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
                 RPCResult{"for updating",
-                    RPCResult::Type::ANY, "result", "\"success\" if spork value was updated or this help otherwise"},
+                    RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"},
             },
             RPCExamples{
                 HelpExampleCli("spork", "SPORK_9_NEW_SIGS 4070908800") 
@@ -472,7 +472,7 @@ static RPCHelpMan echo(const std::string& name)
                     {"arg8", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
                     {"arg9", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
                 },
-                RPCResult{RPCResult::Type::ANY, "", "Returns whatever was passed in"},
+                RPCResult{RPCResult::Type::STR, "", "Returns whatever was passed in"},
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {

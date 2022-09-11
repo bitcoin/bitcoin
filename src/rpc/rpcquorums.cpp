@@ -30,7 +30,7 @@ static RPCHelpMan quorum_list()
             {"count", RPCArg::Type::NUM, RPCArg::Default{0}, "Number of quorums to list. Will list active quorums\n"
                                 "if \"count\" is not specified.\n"},                 
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_list", "1")
             + HelpExampleRpc("quorum_list", "1")
@@ -110,7 +110,7 @@ static RPCHelpMan quorum_info()
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash of quorum.\n"},      
             {"includeSkShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include secret key share in output.\n"},                 
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_info", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_info", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -147,7 +147,7 @@ static RPCHelpMan quorum_dkgstatus()
             {"detail_level", RPCArg::Type::NUM, RPCArg::Default{0}, "Detail level of output.\n"
                             "0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"},                     
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_dkgstatus", "0")
             + HelpExampleRpc("quorum_dkgstatus", "0")
@@ -235,7 +235,7 @@ static RPCHelpMan quorum_memberof()
             {"scanQuorumsCount", RPCArg::Type::NUM, RPCArg::Default{-1}, "Number of quorums to scan for. If not specified,\n"
                                  "the active quorum count for each specific quorum type is used."},                     
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_memberof", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_memberof", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -299,7 +299,7 @@ static RPCHelpMan quorum_sign()
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier.\n"},
             {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Submits the signature share to the network if this is true.\n"},               
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_sign", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_sign", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -367,7 +367,7 @@ static RPCHelpMan quorum_hasrecsig()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_hasrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_hasrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -398,7 +398,7 @@ static RPCHelpMan quorum_verify()
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier. Set to \"\" if you want to specify signHeight instead.\n"},   
             {"signHeight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The height at which the message was signed. Only works when quorumHash is \"\".\n"},                
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_verify", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_verify", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -448,7 +448,7 @@ static RPCHelpMan quorum_getrecsig()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_getrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_getrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -484,7 +484,7 @@ static RPCHelpMan quorum_isconflicting()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_isconflicting", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_isconflicting", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -513,7 +513,7 @@ static RPCHelpMan quorum_selectquorum()
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},                    
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_selectquorum", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("quorum_selectquorum", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -565,7 +565,7 @@ static RPCHelpMan quorum_dkgsimerror()
                         " - commit-lie\n"},
             {"rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Rate at which to simulate this error type.\n"},                    
         },
-        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCResult{RPCResult::Type::STR, "", ""},
         RPCExamples{
                 HelpExampleCli("quorum_dkgsimerror", "contribution-omit 1")
             + HelpExampleRpc("quorum_dkgsimerror", "\"contribution-omit\", 1")
