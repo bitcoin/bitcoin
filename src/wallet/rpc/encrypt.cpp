@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/wallet.h>
 #include <rpc/util.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
@@ -119,12 +120,10 @@ RPCHelpMan walletpassphrasechange()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    const auto pwallet = GetWalletInterfaceForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->IsCrypted()) {
+    if (!pwallet->isCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
     }
 
@@ -142,7 +141,7 @@ RPCHelpMan walletpassphrasechange()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
-    if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
+    if (!pwallet->changeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     }
 
