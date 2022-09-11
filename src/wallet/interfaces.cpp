@@ -136,10 +136,10 @@ public:
     {
         return m_wallet->EncryptWallet(wallet_passphrase);
     }
-    bool isCrypted() override { return m_wallet->IsCrypted(); }
+    bool isCrypted() const override { return m_wallet->IsCrypted(); }
     bool lock() override { return m_wallet->Lock(); }
     bool unlock(const SecureString& wallet_passphrase) override { return m_wallet->Unlock(wallet_passphrase); }
-    bool isLocked() override { return m_wallet->IsLocked(); }
+    bool isLocked() const override { return m_wallet->IsLocked(); }
     bool changeWalletPassphrase(const SecureString& old_wallet_passphrase,
         const SecureString& new_wallet_passphrase) override
     {
@@ -147,7 +147,7 @@ public:
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
-    std::string getWalletName() override { return m_wallet->GetName(); }
+    std::string getWalletName() const override { return m_wallet->GetName(); }
     util::Result<CTxDestination> getNewDestination(const OutputType type, const std::string& label) override
     {
         LOCK(m_wallet->cs_wallet);
@@ -165,12 +165,12 @@ public:
     {
         return m_wallet->SignMessage(message, pkhash, str_sig);
     }
-    bool isSpendable(const CTxDestination& dest) override
+    bool isSpendable(const CTxDestination& dest) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(dest) & ISMINE_SPENDABLE;
     }
-    bool haveWatchOnly() override
+    bool haveWatchOnly() const override
     {
         auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
         if (spk_man) {
@@ -189,7 +189,7 @@ public:
     bool getAddress(const CTxDestination& dest,
         std::string* name,
         isminetype* is_mine,
-        std::string* purpose) override
+        std::string* purpose) const override
     {
         LOCK(m_wallet->cs_wallet);
         const auto& entry = m_wallet->FindAddressBookEntry(dest, /*allow_change=*/false);
@@ -215,7 +215,7 @@ public:
         });
         return result;
     }
-    std::vector<std::string> getAddressReceiveRequests() override {
+    std::vector<std::string> getAddressReceiveRequests() const override {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetAddressReceiveRequests();
     }
@@ -241,12 +241,12 @@ public:
         std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_wallet->GetDatabase());
         return m_wallet->UnlockCoin(output, batch.get());
     }
-    bool isLockedCoin(const COutPoint& output) override
+    bool isLockedCoin(const COutPoint& output) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsLockedCoin(output);
     }
-    void listLockedCoins(std::vector<COutPoint>& outputs) override
+    void listLockedCoins(std::vector<COutPoint>& outputs) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
@@ -274,13 +274,13 @@ public:
         LOCK(m_wallet->cs_wallet);
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
-    bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
+    bool transactionCanBeAbandoned(const uint256& txid) const override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const uint256& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->AbandonTransaction(txid);
     }
-    bool transactionCanBeBumped(const uint256& txid) override
+    bool transactionCanBeBumped(const uint256& txid) const override
     {
         return feebumper::TransactionCanBeBumped(*m_wallet.get(), txid);
     }
@@ -302,7 +302,7 @@ public:
         return feebumper::CommitTransaction(*m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
                feebumper::Result::OK;
     }
-    CTransactionRef getTx(const uint256& txid) override
+    CTransactionRef getTx(const uint256& txid) const override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
@@ -311,7 +311,7 @@ public:
         }
         return {};
     }
-    WalletTx getWalletTx(const uint256& txid) override
+    WalletTx getWalletTx(const uint256& txid) const override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
@@ -320,7 +320,7 @@ public:
         }
         return {};
     }
-    std::set<WalletTx> getWalletTxs() override
+    std::set<WalletTx> getWalletTxs() const override
     {
         LOCK(m_wallet->cs_wallet);
         std::set<WalletTx> result;
@@ -332,7 +332,7 @@ public:
     bool tryGetTxStatus(const uint256& txid,
         interfaces::WalletTxStatus& tx_status,
         int& num_blocks,
-        int64_t& block_time) override
+        int64_t& block_time) const override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
@@ -352,7 +352,7 @@ public:
         WalletTxStatus& tx_status,
         WalletOrderForm& order_form,
         bool& in_mempool,
-        int& num_blocks) override
+        int& num_blocks) const override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
@@ -374,7 +374,7 @@ public:
     {
         return m_wallet->FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, n_signed);
     }
-    WalletBalances getBalances() override
+    WalletBalances getBalances() const override
     {
         const auto bal = GetBalance(*m_wallet);
         WalletBalances result;
@@ -389,7 +389,7 @@ public:
         }
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
+    bool tryGetBalances(WalletBalances& balances, uint256& block_hash) const override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
         if (!locked_wallet) {
@@ -399,37 +399,37 @@ public:
         balances = getBalances();
         return true;
     }
-    CAmount getBalance() override { return GetBalance(*m_wallet).m_mine_trusted; }
-    CAmount getAvailableBalance(const CCoinControl& coin_control) override
+    CAmount getBalance() const override { return GetBalance(*m_wallet).m_mine_trusted; }
+    CAmount getAvailableBalance(const CCoinControl& coin_control) const override
     {
         return GetAvailableBalance(*m_wallet, &coin_control);
     }
-    isminetype txinIsMine(const CTxIn& txin) override
+    isminetype txinIsMine(const CTxIn& txin) const override
     {
         LOCK(m_wallet->cs_wallet);
         return InputIsMine(*m_wallet, txin);
     }
-    isminetype txoutIsMine(const CTxOut& txout) override
+    isminetype txoutIsMine(const CTxOut& txout) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(txout);
     }
-    isminetype destIsMine(const CTxDestination& dest) override
+    isminetype destIsMine(const CTxDestination& dest) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(dest);
     }
-    CAmount getDebit(const CTxIn& txin, isminefilter filter) override
+    CAmount getDebit(const CTxIn& txin, isminefilter filter) const override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetDebit(txin, filter);
     }
-    CAmount getCredit(const CTxOut& txout, isminefilter filter) override
+    CAmount getCredit(const CTxOut& txout, isminefilter filter) const override
     {
         LOCK(m_wallet->cs_wallet);
         return OutputGetCredit(*m_wallet, txout, filter);
     }
-    CoinsList listCoins() override
+    CoinsList listCoins() const override
     {
         LOCK(m_wallet->cs_wallet);
         CoinsList result;
@@ -442,7 +442,7 @@ public:
         }
         return result;
     }
-    std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) override
+    std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) const override
     {
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletTxOut> result;
@@ -459,11 +459,11 @@ public:
         }
         return result;
     }
-    CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(*m_wallet, tx_bytes); }
+    CAmount getRequiredFee(unsigned int tx_bytes) const override { return GetRequiredFee(*m_wallet, tx_bytes); }
     CAmount getMinimumFee(unsigned int tx_bytes,
         const CCoinControl& coin_control,
         int* returned_target,
-        FeeReason* reason) override
+        FeeReason* reason) const override
     {
         FeeCalculation fee_calc;
         CAmount result;
@@ -472,23 +472,23 @@ public:
         if (reason) *reason = fee_calc.reason;
         return result;
     }
-    unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
-    bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
-    bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
-    bool hasExternalSigner() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
-    bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
-    bool taprootEnabled() override {
+    unsigned int getConfirmTarget() const override { return m_wallet->m_confirm_target; }
+    bool hdEnabled() const override { return m_wallet->IsHDEnabled(); }
+    bool canGetAddresses() const override { return m_wallet->CanGetAddresses(); }
+    bool hasExternalSigner() const override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
+    bool privateKeysDisabled() const override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
+    bool taprootEnabled() const override {
         if (m_wallet->IsLegacy()) return false;
         auto spk_man = m_wallet->GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/false);
         return spk_man != nullptr;
     }
-    OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
-    CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
+    OutputType getDefaultAddressType() const override { return m_wallet->m_default_address_type; }
+    CAmount getDefaultMaxTxFee() const override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
         RemoveWallet(m_context, m_wallet, false /* load_on_start */);
     }
-    bool isLegacy() override { return m_wallet->IsLegacy(); }
+    bool isLegacy() const override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));
