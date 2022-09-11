@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <interfaces/wallet.h>
 #include <key_io.h>
 #include <rpc/util.h>
 #include <util/bip32.h>
@@ -33,12 +34,10 @@ RPCHelpMan getnewaddress()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    const auto pwallet = GetWalletInterfaceForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->CanGetAddresses()) {
+    if (!pwallet->canGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
@@ -47,18 +46,18 @@ RPCHelpMan getnewaddress()
     if (!request.params[0].isNull())
         label = LabelFromValue(request.params[0]);
 
-    OutputType output_type = pwallet->m_default_address_type;
+    OutputType output_type = pwallet->getDefaultAddressType();
     if (!request.params[1].isNull()) {
         std::optional<OutputType> parsed = ParseOutputType(request.params[1].get_str());
         if (!parsed) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
-        } else if (parsed.value() == OutputType::BECH32M && pwallet->GetLegacyScriptPubKeyMan()) {
+        } else if (parsed.value() == OutputType::BECH32M && pwallet->isLegacy()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Legacy wallets cannot provide bech32m addresses");
         }
         output_type = parsed.value();
     }
 
-    auto op_dest = pwallet->GetNewDestination(output_type, label);
+    auto op_dest = pwallet->getNewDestination(output_type, label);
     if (!op_dest) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
@@ -130,10 +129,8 @@ RPCHelpMan setlabel()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    const auto pwallet = GetWalletInterfaceForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
-
-    LOCK(pwallet->cs_wallet);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
@@ -142,10 +139,10 @@ RPCHelpMan setlabel()
 
     std::string label = LabelFromValue(request.params[1]);
 
-    if (pwallet->IsMine(dest)) {
-        pwallet->SetAddressBook(dest, label, "receive");
+    if (pwallet->destIsMine(dest)) {
+        pwallet->setAddressBook(dest, label, "receive");
     } else {
-        pwallet->SetAddressBook(dest, label, "send");
+        pwallet->setAddressBook(dest, label, "send");
     }
 
     return UniValue::VNULL;
@@ -762,11 +759,8 @@ RPCHelpMan walletdisplayaddress()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            const auto wallet = GetWalletInterfaceForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;
-            CWallet* const pwallet = wallet.get();
-
-            LOCK(pwallet->cs_wallet);
 
             CTxDestination dest = DecodeDestination(request.params[0].get_str());
 
@@ -775,7 +769,7 @@ RPCHelpMan walletdisplayaddress()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }
 
-            if (!pwallet->DisplayAddress(dest)) {
+            if (!wallet->displayAddress(dest)) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Failed to display address");
             }
 
