@@ -224,6 +224,9 @@ public:
     //! Return whether transaction output belongs to wallet.
     virtual wallet::isminetype txoutIsMine(const CTxOut& txout) = 0;
 
+    //! Return whether a transaction output to a destination belongs to wallet.
+    virtual wallet::isminetype destIsMine(const CTxDestination& dest) = 0;
+
     //! Return debit amount if transaction input belongs to wallet.
     virtual CAmount getDebit(const CTxIn& txin, wallet::isminefilter filter) = 0;
 
