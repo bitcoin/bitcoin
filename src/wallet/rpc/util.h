@@ -39,6 +39,7 @@ std::shared_ptr<interfaces::Wallet> GetWalletInterfaceForJSONRPCRequest(const JS
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name);
 
 void EnsureWalletIsUnlocked(const CWallet&);
+void EnsureWalletIsUnlocked(const interfaces::Wallet&);
 WalletContext& EnsureWalletContext(const std::any& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet);

@@ -91,6 +91,13 @@ void EnsureWalletIsUnlocked(const CWallet& wallet)
     }
 }
 
+void EnsureWalletIsUnlocked(const interfaces::Wallet& wallet)
+{
+    if (wallet.isLocked()) {
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+    }
+}
+
 WalletContext& EnsureWalletContext(const std::any& context)
 {
     auto wallet_context = util::AnyPtr<WalletContext>(context);
