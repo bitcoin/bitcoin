@@ -4,6 +4,7 @@
 
 #include <wallet/rpc/util.h>
 
+#include <interfaces/wallet.h>
 #include <rpc/util.h>
 #include <util/translation.h>
 #include <util/url.h>
@@ -74,6 +75,13 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     }
     throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED,
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
+}
+
+std::shared_ptr<interfaces::Wallet> GetWalletInterfaceForJSONRPCRequest(const JSONRPCRequest& request)
+{
+    WalletContext& context = EnsureWalletContext(request.context);
+    auto wallet = GetWalletForJSONRPCRequest(request);
+    return MakeWallet(context, wallet);
 }
 
 void EnsureWalletIsUnlocked(const CWallet& wallet)

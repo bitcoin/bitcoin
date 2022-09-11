@@ -16,6 +16,10 @@ class JSONRPCRequest;
 class UniValue;
 struct bilingual_str;
 
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
+
 namespace wallet {
 class CWallet;
 class LegacyScriptPubKeyMan;
@@ -31,6 +35,7 @@ extern const std::string HELP_REQUIRING_PASSPHRASE;
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
+std::shared_ptr<interfaces::Wallet> GetWalletInterfaceForJSONRPCRequest(const JSONRPCRequest& request);
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name);
 
 void EnsureWalletIsUnlocked(const CWallet&);
