@@ -72,6 +72,7 @@
 #include <services/assetconsensus.h>
 #include <signal.h>
 #include <fstream>
+#include <cachemultimap.h>
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
@@ -151,6 +152,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
+std::map<std::vector<uint8_t>, std::vector<uint8_t> > mapPoDA;
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
@@ -2140,6 +2142,11 @@ bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
+void WritePoDA(const std::vector<CNEVMDataProcessHelper> &vecNEVMDataToProcess) {
+    for (const auto &dataProcess : vecNEVMDataToProcess) {
+        mapPoDA.try_emplace(dataProcess.nevmData->vchVersionHash, dataProcess.nevmData->vchData);
+    }
+}
 bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataProcessHelper> &vecNevmData, const int64_t nMedianTime, const int64_t &nTimeNow, NEVMDataVec &nevmDataVecOut) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
@@ -2157,7 +2164,12 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTime > 0 && nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         const bool enforceHaveData = nMedianTime > 0 && nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        const bool dataDoesntExistsInDb = nMedianTime == 0 || !pnevmdatadb->ReadData(nevmDataEntry.nevmData->vchVersionHash, vchData);
+        auto itData = mapPoDA.find(nevmDataEntry.nevmData->vchVersionHash);
+        if(itData == mapPoDA.end()){
+            pnevmdatadb->ReadData(nevmDataEntry.nevmData->vchVersionHash, vchData);
+        }
+        const std::vector<uint8_t> &vchDataRef = itData == mapPoDA.end()? vchData: itData->second;
+        const bool dataDoesntExistsInDb = nMedianTime == 0 || vchDataRef.empty();
         if(enforceHaveData && dataDoesntExistsInDb && nevmDataEntry.nevmData->vchData.empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
@@ -2167,7 +2179,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         }
         // we won't be checking KZG commitment so we need to ensure enough fees were paid
         if(!dataDoesntExistsInDb) {
-            if(nevmDataEntry.nevmData->vchData != vchData) {
+            if(nevmDataEntry.nevmData->vchData != vchDataRef) {
                 LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment (%s) size for fees (first %d vs second %d)\n", HexStr(nevmDataEntry.nevmData->vchVersionHash), nevmDataEntry.nevmData->vchData.size(), vchData.size());
                 return false;
             }
@@ -2192,8 +2204,8 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
     }
     {
         int64_t nTimeStart = GetTimeMicros();
-        if(nMedianTime > 0 && !pnevmdatadb->FlushData(vecNEVMDataToProcess)) {
-            return false;
+        if(nMedianTime > 0) {
+            WritePoDA(vecNEVMDataToProcess);
         }
         int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
         LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: flushed %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
@@ -2223,7 +2235,8 @@ bool EnsureOnlyOutputZero(const std::vector<CTxOut>& vout, unsigned int nOut) {
     return vout[nOut].nValue == 0;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(const BlockManager& blockman, CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+bool ProcessNEVMData(const BlockManager& blockman, const CBlock &blockIn, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut, bool stripdata) {
+    CBlock& block = const_cast<CBlock&>(blockIn);
     std::vector<CNEVMDataProcessHelper> vecNevmData;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2689,15 +2702,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                     return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
                 }
             }
-            else if (tx.IsNEVMData()) {
-                CNEVMData nevmData(tx);
-                if(nevmData.IsNull()) {
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-data-invalid");
-                }
-                // if data exists go ahead and store the MPT so it can track pruning later
-                if(pnevmdatadb->ExistsData(nevmData.vchVersionHash))
-                    NEVMDataVecOut.emplace_back(nevmData.vchVersionHash);
-            }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
                 LogPrintf("ERROR: %s: accumulated fee in the block out of range.\n", __func__);
@@ -2749,6 +2753,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
+    bool PODAContext = pindex->nHeight >= Params().GetConsensus().nPODAStartBlock;
+    if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), NEVMDataVecOut)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
+    }
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
     if (bRegTestContext && bReverify && pindex->nHeight >= m_params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck, NEVMDataVecOut)) {
         return false; // state filled by ConnectNEVMCommitment
@@ -2761,7 +2769,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-validation-failed");
     }
-
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     const CAmount &blockReward = GetBlockSubsidy(pindex->nHeight, m_params.GetConsensus());
     CAmount nMNSeniorityRet = 0;
@@ -2976,6 +2983,9 @@ bool CChainState::FlushStateToDisk(
             // SYSCOIN
             if (!evoDb->CommitRootTransaction()) {
                 return AbortNode(state, "Failed to commit EvoDB");
+            }
+            if (!pnevmdatadb->FlushData(mapPoDA)) {
+                return AbortNode(state, "Failed to commit PoDA");
             }
             nLastFlush = nNow;
             full_flush_completed = true;

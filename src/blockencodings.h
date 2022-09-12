@@ -139,8 +139,7 @@ public:
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
     ReadStatus InitData(CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
-    // SYSCOIN
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, const int64_t &nMedianTime = 0, const int nHeight = 0, const int64_t& nTimeNow = 0, const node::BlockManager* blockman = nullptr);
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };
 
 #endif // SYSCOIN_BLOCKENCODINGS_H

@@ -177,7 +177,7 @@ static RPCHelpMan bls_generate()
         "\nReturns a BLS secret/public key pair.\n",
         {              
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::OBJ, "", ""},
         RPCExamples{
                 HelpExampleCli("bls_generate", "")
             + HelpExampleRpc("bls_generate", "")

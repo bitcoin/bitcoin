@@ -193,7 +193,7 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] != nullptr;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, const int64_t &nMedianTime, const int nHeight, const int64_t& nTimeNow, const node::BlockManager* blockman) {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) {
     assert(!header.IsNull());
     uint256 hash = header.GetHash();
     block = header;
@@ -219,15 +219,8 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
     if(!vchNEVMBlockData.empty() && block.vchNEVMBlockData.empty())
         block.vchNEVMBlockData = std::move(vchNEVMBlockData);
 
-    NEVMDataVec nevmDataVecOut;
-    bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
-    if(PODAContext && blockman && !ProcessNEVMData(*blockman, block, nMedianTime, nTimeNow, nevmDataVecOut)) {
-        return READ_STATUS_INVALID;
-    }
     BlockValidationState state;
     if (!CheckBlock(block, state, Params().GetConsensus())) {
-        // SYSCOIN
-        EraseNEVMData(nevmDataVecOut);
         // TODO: We really want to just check merkle tree manually here,
         // but that is expensive, and CheckBlock caches a block's
         // "checked-status" (in the CBlock?). CBlock should be able to

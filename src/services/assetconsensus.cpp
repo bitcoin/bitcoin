@@ -1164,18 +1164,20 @@ CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 
 CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
 }
-bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDataToProcess) {
-    if(vecNEVMDataToProcess.empty())
+bool CNEVMDataDB::FlushData(std::map<std::vector<uint8_t>, std::vector<uint8_t> > &mapPoDA) {
+    if(mapPoDA.size() == 0)
         return true;
     CDBBatch batch(*this);    
-    for (const auto &dataProcess : vecNEVMDataToProcess) {
-        const auto& pair = std::make_pair(dataProcess.nevmData->vchVersionHash, true);
-        batch.Write(pair, dataProcess.nevmData->vchData);
+    for (auto &itMap : mapPoDA) {
+        const auto& pair = std::make_pair(itMap.first, true);
         // write the size of the data
-        batch.Write(dataProcess.nevmData->vchVersionHash, dataProcess.nevmData->nSize);
+        batch.Write(itMap.first, (uint32_t)itMap.second.size());
+        batch.Write(pair, std::move(itMap.second));
     }
-    LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
-    return WriteBatch(batch, true);
+    LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", mapPoDA.size());
+    auto res = WriteBatch(batch, true);
+    mapPoDA.clear();
+    return res;
 }
 // called on connect - put median passed time into index so we can track pruning
 bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t& nMedianTime, const bool ibd) {

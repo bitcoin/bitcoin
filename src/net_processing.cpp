@@ -733,8 +733,8 @@ private:
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex) LOCKS_EXCLUDED(::cs_main);
 
-    /** SYSCOIN Process a new block. Perform any post-processing housekeeping */
-    bool ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+    /** Process a new block. Perform any post-processing housekeeping */
+    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
 
     /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
@@ -3219,8 +3219,7 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, CDataStream& 
               headers);
     m_connman.PushMessage(&node, std::move(msg));
 }
-// SYSCOIN
-bool PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
     bool new_block{false};
     m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
@@ -3229,11 +3228,7 @@ bool PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
     } else {
         LOCK(cs_main);
         mapBlockSource.erase(block->GetHash());
-        // SYSCOIN
-        return false;
     }
-    // SYSCOIN
-    return true;
 }
 
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -4438,7 +4433,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
                 std::vector<CTransactionRef> dummy;
                 // SYSCOIN
-                status = tempBlock.FillBlock(*pblock, dummy, m_chainman.ActiveTip()->GetMedianTimePast(), m_chainman.ActiveHeight(), TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
+                status = tempBlock.FillBlock(*pblock, dummy);
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -4523,7 +4518,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
             PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
             // SYSCOIN
-            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn, m_chainman.ActiveChain().Tip()->GetMedianTimePast(), m_chainman.ActiveChain().Tip()->nHeight, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), &m_chainman.m_blockman);
+            ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn);
             if (status == READ_STATUS_INVALID) {
                 RemoveBlockRequest(resp.blockhash); // Reset in-flight state in case Misbehaving does not result in a disconnect
                 Misbehaving(*peer, 100, "invalid compact block/non-matching block transactions");
@@ -4639,13 +4634,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
-        // SYSCOIN
-        NEVMDataVec nevmDataVecOut;
-        bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
-        if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, *pblock, nMedianTime, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()), nevmDataVecOut)) {
-            LogPrint(BCLog::NET, "Unexpected NEVM block message received from peer %d\n", pfrom.GetId());
-            return;  
-        }
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
         bool forceProcessing = false;
@@ -4668,10 +4656,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 min_pow_checked = true;
             }
         }
-        // SYSCOIN
-        if(!ProcessBlock(pfrom, pblock, forceProcessing, min_pow_checked)) {
-            EraseNEVMData(nevmDataVecOut);
-        }
+        ProcessBlock(pfrom, pblock, forceProcessing, min_pow_checked);
         return;
     }
 

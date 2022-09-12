@@ -84,7 +84,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     pnevmtxmintdb.reset(new CNEVMMintedTxDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
     pblockindexdb.reset(new CBlockIndexDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
     // PoDA data cannot be deleted from disk on reindex because chain on disk does not have PoDA information to recreate it
-    pnevmdatadb.reset(new CNEVMDataDB(1000 << 20, options.block_tree_db_in_memory));
+    pnevmdatadb.reset(new CNEVMDataDB(cache_sizes.coins_db, options.block_tree_db_in_memory));
     if (!evoDb->CommitRootTransaction()) {
         return {ChainstateLoadStatus::FAILURE, _("Failed to commit EvoDB")};
     }
@@ -209,7 +209,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         pnevmtxrootsdb.reset(new CNEVMTxRootsDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
         pnevmtxmintdb.reset(new CNEVMMintedTxDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
         pblockindexdb.reset(new CBlockIndexDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
-        pnevmdatadb.reset(new CNEVMDataDB(1000 << 20, options.block_tree_db_in_memory));
+        pnevmdatadb.reset(new CNEVMDataDB(cache_sizes.coins_db, options.block_tree_db_in_memory));
         if (!evoDb->CommitRootTransaction()) {
             return {ChainstateLoadStatus::FAILURE, _("Failed to commit EvoDB")};
         }
