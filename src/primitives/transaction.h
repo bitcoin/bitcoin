@@ -236,7 +236,6 @@ struct CMutableTransaction;
 template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
-
     s >> tx.nVersion;
     s.SetTxVersion(tx.nVersion);
     unsigned char flags = 0;
@@ -508,9 +507,10 @@ public:
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const std::vector<uint8_t> &vchNEVMDataIn)  : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), vchNEVMData(vchNEVMDataIn) {}
     SERIALIZE_METHODS(CTxOut, obj)
     {
+        READWRITE(obj.nValue, obj.scriptPubKey);
         if(obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
             if(s.GetType() == SER_NETWORK) {
-                READWRITE(obj.nValue, obj.scriptPubKey, obj.vchNEVMData);
+                READWRITE(obj.vchNEVMData);
             } else {
                 if(s.GetType() == SER_SIZE) {
                     CNEVMData nevmData(obj.scriptPubKey);
@@ -519,10 +519,7 @@ public:
                     }
                     s.seek(nevmData.nSize * NEVM_DATA_SCALE_FACTOR);
                 }
-                READWRITE(obj.nValue, obj.scriptPubKey);
             }
-        } else {
-            READWRITE(obj.nValue, obj.scriptPubKey);
         }
     }
 
