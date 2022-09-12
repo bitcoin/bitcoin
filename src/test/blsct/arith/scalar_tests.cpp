@@ -355,11 +355,11 @@ BOOST_AUTO_TEST_CASE(test_scalar_bitwise_compl)
 
 BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
-    Scalar base(0b1);
+    Scalar one(1);
     uint64_t exp = 1;
-    for(unsigned int i=0; i<64; ++i) {
-        Scalar a = base << i;
-        BOOST_CHECK_EQUAL(a.GetUint64(), exp);
+    for (size_t i = 0; i < 64; ++i) {
+        Scalar act = one << i;
+        BOOST_CHECK_EQUAL(act.GetUint64(), exp);
         exp <<= 1;
     }
 }
