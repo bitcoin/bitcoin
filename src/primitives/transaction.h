@@ -43,8 +43,8 @@ using CompressedScript = prevector<33, unsigned char>;
  * or with `ADDRV2_FORMAT`.
  */
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-// SYSCOIN (1/100)
-static const float NEVM_DATA_SCALE_FACTOR = 0.01;
+// SYSCOIN
+static const int NEVM_DATA_SCALE_FACTOR = 100;
 enum {
     ASSET_UPDATE_DATA=1, // can you update public data field?
     ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
@@ -517,7 +517,9 @@ public:
                     if(nevmData.IsNull()) {
                         throw std::ios_base::failure("Unknown transaction nevm data");
                     }
-                    s.seek(nevmData.nSize * NEVM_DATA_SCALE_FACTOR);
+                    int nSize = nevmData.nSize;
+                    nSize /= NEVM_DATA_SCALE_FACTOR;
+                    s.seek(nSize);
                 }
                 READWRITE(obj.nValue, obj.scriptPubKey);
             }
