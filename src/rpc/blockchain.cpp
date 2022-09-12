@@ -1304,7 +1304,17 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const ChainstateManager& 
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_TESTDUMMY);
     return softforks;
 }
-} // anon namespace
+
+std::string ScriptFlagsToString(uint32_t flags)
+{
+    if (flags == SCRIPT_VERIFY_NONE) {
+        return "none";
+    } else if (flags == (SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH)) {
+        return "witness,p2sh";
+    }
+    NONFATAL_UNREACHABLE(); // all flags must be covered above
+}
+} // namespace
 
 static RPCHelpMan getdeploymentinfo()
 {
@@ -1319,6 +1329,9 @@ static RPCHelpMan getdeploymentinfo()
                 {RPCResult::Type::NUM, "height", "requested block height (or tip)"},
                 {RPCResult::Type::OBJ_DYN, "deployments", "", {
                     {RPCResult::Type::OBJ, "xxxx", "name of the deployment", RPCHelpForDeployment}
+                }},
+                {RPCResult::Type::OBJ_DYN, "script_flag_exceptions", "All script flag exceptions for this network. Exempted blocks are not necessarily part of the chain, e.g. during IBD or an extreme reorg.", {
+                    {RPCResult::Type::STR, "block_hash", "The script flags for this block hash"},
                 }},
             }
         },
@@ -1339,11 +1352,16 @@ static RPCHelpMan getdeploymentinfo()
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
                 }
             }
+            UniValue script_flag_exceptions{UniValue::VOBJ};
+            for (const auto& [block, flags] : chainman.GetConsensus().script_flag_exceptions) {
+                script_flag_exceptions.pushKV(block.ToString(), ScriptFlagsToString(flags));
+            }
 
             UniValue deploymentinfo(UniValue::VOBJ);
             deploymentinfo.pushKV("hash", blockindex->GetBlockHash().ToString());
             deploymentinfo.pushKV("height", blockindex->nHeight);
             deploymentinfo.pushKV("deployments", DeploymentInfo(blockindex, chainman));
+            deploymentinfo.pushKV("script_flag_exceptions", script_flag_exceptions);
             return deploymentinfo;
         },
     };

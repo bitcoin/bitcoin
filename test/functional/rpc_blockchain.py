@@ -214,7 +214,8 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'active': False
             },
-          }
+          },
+          "script_flag_exceptions": {}
         })
 
     def _test_getdeploymentinfo(self):
