@@ -13,9 +13,9 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
-#include <optional>
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <set>
 
 namespace wallet {
@@ -65,27 +65,27 @@ public:
 
     bool HasSelected() const
     {
-        return (m_selected_inputs.size() > 0);
+        return !m_selected_inputs.empty();
     }
 
     bool IsSelected(const COutPoint& output) const
     {
-        return (m_selected_inputs.count(output) > 0);
+        return m_selected_inputs.count(output) > 0;
     }
 
     bool IsExternalSelected(const COutPoint& output) const
     {
-        return (m_external_txouts.count(output) > 0);
+        return m_external_txouts.count(output) > 0;
     }
 
-    bool GetExternalOutput(const COutPoint& outpoint, CTxOut& txout) const
+    std::optional<CTxOut> GetExternalOutput(const COutPoint& outpoint) const
     {
         const auto ext_it = m_external_txouts.find(outpoint);
         if (ext_it == m_external_txouts.end()) {
-            return false;
+            return std::nullopt;
         }
-        txout = ext_it->second;
-        return true;
+
+        return std::make_optional(ext_it->second);
     }
 
     void Select(const COutPoint& output)

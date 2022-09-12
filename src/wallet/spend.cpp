@@ -52,9 +52,7 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
 TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
 {
     CMutableTransaction txNew(tx);
-    if (!wallet->DummySignTx(txNew, txouts, coin_control)) {
-        return TxSize{-1, -1};
-    }
+    if (!wallet->DummySignTx(txNew, txouts, coin_control)) return TxSize{-1, -1};
     CTransaction ctx(txNew);
     int64_t vsize = GetVirtualTransactionSize(ctx);
     int64_t weight = GetTransactionWeight(ctx);
@@ -72,11 +70,9 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *walle
             assert(input.prevout.n < mi->second.tx->vout.size());
             txouts.emplace_back(mi->second.tx->vout.at(input.prevout.n));
         } else if (coin_control) {
-            CTxOut txout;
-            if (!coin_control->GetExternalOutput(input.prevout, txout)) {
-                return TxSize{-1, -1};
-            }
-            txouts.emplace_back(txout);
+            const auto& txout{coin_control->GetExternalOutput(input.prevout)};
+            if (!txout) return TxSize{-1, -1};
+            txouts.emplace_back(*txout);
         } else {
             return TxSize{-1, -1};
         }
@@ -178,9 +174,12 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
         } else {
             // The input is external. We did not find the tx in mapWallet.
-            if (!coin_control.GetExternalOutput(outpoint, txout)) {
+            const auto out{coin_control.GetExternalOutput(outpoint)};
+            if (!out) {
                 return util::Error{strprintf(_("Not found pre-selected input %s"), outpoint.ToString())};
             }
+
+            txout = *out;
         }
 
         if (input_bytes == -1) {
