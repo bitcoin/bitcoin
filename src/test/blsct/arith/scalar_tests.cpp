@@ -729,10 +729,10 @@ BOOST_AUTO_TEST_CASE(test_scalar_hash)
     // - 4-byte little-endian array representing the parameter of Hash function
 
     Scalar a(1);
-    const int n = 42;
+    const int n = 51;
     uint256 digest = a.GetHashWithSalt(n);
     auto act = digest.GetHex();
-    std::string exp("cd3f58bb5489460619c322a3b0ec0a21432a22a03ca345e458165b0aaf1202c0");
+    std::string exp("def41d150b8d183ab49b001838f5c824ceba560e68e3e1a5d43f62cbd30a37f8");
     BOOST_CHECK(act == exp);
 }
 
