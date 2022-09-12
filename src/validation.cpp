@@ -2159,15 +2159,15 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVM
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         const bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-        if(enforceHaveData  && nevmDataPayload->vchNEVMData->empty()) {
+        if(enforceHaveData  && (!nevmDataPayload->vchNEVMData || nevmDataPayload->vchNEVMData->empty())) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
-        } else if(enforceNotHaveData && !nevmDataPayload->vchNEVMData->empty()) {
+        } else if(enforceNotHaveData && nevmDataPayload->vchNEVMData && !nevmDataPayload->vchNEVMData->empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
             return false;
         }
         bool bDataMismatch = false;
-        if(!nevmDataPayload->vchNEVMData->empty() && !BlobExistsInCache(nevmDataPayload, bDataMismatch)) {
+        if(nevmDataPayload->vchNEVMData && !nevmDataPayload->vchNEVMData->empty() && !BlobExistsInCache(nevmDataPayload, bDataMismatch)) {
             vecNEVMDataToProcess.emplace_back(nevmDataPayload);
         }
         if(bDataMismatch) {
