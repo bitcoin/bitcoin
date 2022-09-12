@@ -666,11 +666,11 @@ private:
         AssertLockHeld(m_pool.cs);
         CAmount mempoolRejectFee = m_pool.GetMinFee().GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
+            return state.Invalid(TxValidationResult::TX_LOW_FEE, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
         if (package_fee < m_pool.m_min_relay_feerate.GetFee(package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
+            return state.Invalid(TxValidationResult::TX_LOW_FEE, "min relay fee not met",
                                  strprintf("%d < %d", package_fee, m_pool.m_min_relay_feerate.GetFee(package_size)));
         }
         return true;
@@ -862,7 +862,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // method of ensuring the tx remains bumped. For example, the fee-bumping child could disappear
     // due to a replacement.
     if (!bypass_limits && ws.m_modified_fees < m_pool.m_min_relay_feerate.GetFee(ws.m_vsize)) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
+        return state.Invalid(TxValidationResult::TX_LOW_FEE, "min relay fee not met",
                              strprintf("%d < %d", ws.m_modified_fees, m_pool.m_min_relay_feerate.GetFee(ws.m_vsize)));
     }
     // No individual transactions are allowed below the mempool min feerate except from disconnected
@@ -971,7 +971,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
     //   might replace them, under these rules.
     if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+        return state.Invalid(TxValidationResult::TX_LOW_FEE, "insufficient fee", *err_string);
     }
 
     // Calculate all conflicting entries and enforce Rule #5.
@@ -992,7 +992,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
     if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                          m_pool.m_incremental_relay_feerate, hash)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+        return state.Invalid(TxValidationResult::TX_LOW_FEE, "insufficient fee", *err_string);
     }
     return true;
 }
@@ -1485,6 +1485,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptAncestorPackage(const Package& p
             if (single_res_it != subpackage_result.m_tx_results.end()) {
                 const auto single_res = single_res_it->second;
                 if (single_res.m_state.GetResult() != TxValidationResult::TX_MEMPOOL_POLICY &&
+                    single_res.m_state.GetResult() != TxValidationResult::TX_LOW_FEE &&
                     single_res.m_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
                     // Package validation policy only differs from individual policy in its evaluation
                     // of feerate. For example, if a transaction fails here due to violation of a

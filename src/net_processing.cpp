@@ -801,9 +801,14 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
 
     /**
-     * Filter for transactions that were recently rejected by the mempool.
-     * These are not rerequested until the chain tip changes, at which point
-     * the entire filter is reset.
+     * Filter for transactions that were recently rejected by the mempool for reasons other than too
+     * low fee. This filter only contains wtxids and txids of individual transactions.
+     *
+     * Upon receiving an announcement for a transaction, if it exists in this filter, do not
+     * download the txdata. Upon receiving a package info, if it contains a transaction in this
+     * filter, do not download the tx data.
+     *
+     * Reset this filter when the chain tip changes.
      *
      * Without this filter we'd be re-requesting txs from each of our peers,
      * increasing bandwidth consumption considerably. For instance, with 100
@@ -835,6 +840,33 @@ private:
      * Memory used: 1.3 MB
      */
     CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
+    /**
+     * Filter for transactions or packages of transactions that were recently rejected by
+     * the mempool but are eligible for reconsideration if submitted with other transactions.
+     * This filter only contains wtxids of individual transactions and combined hashes of packages
+     * (see GetCombinedHash and GetPackageHash).
+     *
+     * When a transaction's error is TX_LOW_FEE (in a package or by itself), add its wtxid to this
+     * filter. If it was in a package, also add the combined hash of the transactions in its
+     * subpackage to this filter. When a package fails for any reason, add the combined hash of all
+     * transactions in the package info to this filter.
+     *
+     * Upon receiving an announcement for a transaction, if it exists in this filter, do not
+     * download the txdata. Upon receiving a package info, if the combined hash of its transactions
+     * are in this filter, do not download the txdata.
+     *
+     * Reset this filter when the chain tip changes.
+     *
+     * We will only add wtxids to this filter. Groups of multiple transactions are represented by
+     * the hash of their wtxids, concatenated together in lexicographical order.
+     *
+     * Parameters are picked to be identical to that of m_recent_rejects, with the same rationale.
+     * Memory used: 1.3 MB
+     * FIXME: this filter can probably be smaller, but how much smaller?
+     */
+    CRollingBloomFilter m_recent_rejects_reconsiderable GUARDED_BY(::cs_main){120'000, 0.000'001};
+    /** The block hash of the chain tip at which transactions in m_recent_rejects and
+     * m_recent_rejects_reconsiderable were rejected. */
     uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
 
     /*
@@ -1821,6 +1853,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     case TxValidationResult::TX_CONFLICT:
     case TxValidationResult::TX_MEMPOOL_POLICY:
     case TxValidationResult::TX_NO_MEMPOOL:
+    case TxValidationResult::TX_LOW_FEE:
         break;
     }
     return false;
@@ -2113,6 +2146,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_orphanage
         // txs a second chance.
         hashRecentRejectsChainTip = m_chainman.ActiveChain().Tip()->GetBlockHash();
         m_recent_rejects.reset();
+        m_recent_rejects_reconsiderable.reset();
     }
 
     const uint256& hash = gtxid.GetHash();
@@ -2124,7 +2158,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_orphanage
         if (m_recent_confirmed_transactions.contains(hash)) return true;
     }
 
-    return m_recent_rejects.contains(hash) || m_mempool.exists(gtxid);
+    return m_recent_rejects.contains(hash) || m_recent_rejects_reconsiderable.contains(hash) || m_mempool.exists(gtxid);
 }
 
 bool PeerManagerImpl::AlreadyHaveBlock(const uint256& block_hash)
@@ -4354,7 +4388,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
-                m_recent_rejects.insert(tx.GetWitnessHash());
+                if (state.GetResult() == TxValidationResult::TX_LOW_FEE) {
+                    m_recent_rejects_reconsiderable.insert(tx.GetWitnessHash());
+                } else {
+                    m_recent_rejects.insert(tx.GetWitnessHash());
+                }
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
                 // If the transaction failed for TX_INPUTS_NOT_STANDARD,
                 // then we know that the witness was irrelevant to the policy

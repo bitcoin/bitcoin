@@ -962,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_state.GetResult(), PackageValidationResult::PCKG_TX);
         BOOST_CHECK(submit_cpfp_deprio.m_state.IsInvalid());
         BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetResult(),
-                          TxValidationResult::TX_MEMPOOL_POLICY);
+                          TxValidationResult::TX_LOW_FEE);
         BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_tx_results.find(tx_child->GetWitnessHash())->second.m_state.GetResult(),
                           TxValidationResult::TX_MISSING_INPUTS);
         BOOST_CHECK(submit_cpfp_deprio.m_tx_results.find(tx_parent->GetWitnessHash())->second.m_state.GetRejectReason() == "min relay fee not met");
@@ -1114,7 +1114,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(high_parent_fee, GetVirtualTransactionSize(*tx_parent_rich)));
         BOOST_CHECK(it_child != submit_rich_parent.m_tx_results.end());
         BOOST_CHECK_EQUAL(it_child->second.m_result_type, MempoolAcceptResult::ResultType::INVALID);
-        BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MEMPOOL_POLICY);
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_LOW_FEE);
         BOOST_CHECK(it_child->second.m_state.GetRejectReason() == "min relay fee not met");
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
