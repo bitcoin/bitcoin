@@ -879,7 +879,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
     for (const auto& recipient : vecSend)
     {
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        // SYSCOIN
+        CTxOut txout(recipient.nAmount, recipient.scriptPubKey, recipient.vchNEVMData);
 
         // Include the fee cost for outputs.
         if (!coin_selection_params.m_subtract_fee_outputs) {
@@ -1093,7 +1094,8 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        // SYSCOIN
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1, txOut.vchNEVMData};
         vecSend.push_back(recipient);
     }
 
@@ -1165,7 +1167,7 @@ util::Result<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wall
     scriptChange << OP_RETURN << ToByteVector(hash);
 
     std::vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, amount, false});
+    vecSend.push_back((CRecipient){scriptChange, amount, false, {}});
 
     CCoinControl coinControl;
     if (!outpoint.IsNull()) {

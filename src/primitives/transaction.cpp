@@ -784,19 +784,15 @@ CNEVMData::CNEVMData(const CTransaction &tx) {
     SetNull();
     UnserializeFromTx(tx);
 }
-CNEVMData::CNEVMData(const CMutableTransaction &mtx) {
+CNEVMDataPayload::CNEVMDataPayload(const CTransaction &tx) {
     SetNull();
-    UnserializeFromTx(mtx);
-}
-CNEVMData::CNEVMData(const CScript &script) {
-    SetNull();
-    UnserializeFromScript(script);
+    UnserializeFromTx(tx);
 }
 int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
     try {
 		CDataStream dsNEVMData(vchPayload, SER_NETWORK, PROTOCOL_VERSION);
 		Unserialize(dsNEVMData);
-        if(vchVersionHash.size() != 32 || (!vchData.empty() && nSize != vchData.size())) {
+        if(vchVersionHash.size() != 32) {
             SetNull();
             return -1;
         }
@@ -810,19 +806,9 @@ int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload)
     }
 	return -1;
 }
-bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
-	std::vector<unsigned char> vchData;
-	if (!GetSyscoinData(scriptPubKey, vchData))
-	{
-		SetNull();
-		return false;
-	}
-	if(UnserializeFromData(vchData) != 0)
-	{	
-		SetNull();
-		return false;
-	}
-    return true;
+CNEVMData::CNEVMData(const CScript &script) {
+    SetNull();
+    UnserializeFromScript(script);
 }
 bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
 	std::vector<unsigned char> vchData;
@@ -839,10 +825,9 @@ bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
 	}
     return true;
 }
-bool CNEVMData::UnserializeFromTx(const CMutableTransaction &mtx) {
+bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
 	std::vector<unsigned char> vchData;
-	int nOut;
-	if (!GetSyscoinData(mtx, vchData, nOut))
+	if (!GetSyscoinData(scriptPubKey, vchData))
 	{
 		SetNull();
 		return false;
@@ -852,6 +837,31 @@ bool CNEVMData::UnserializeFromTx(const CMutableTransaction &mtx) {
 		SetNull();
 		return false;
 	}
+    return true;
+}
+int CNEVMDataPayload::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
+	return nevmData.UnserializeFromData(vchPayload);
+}
+bool CNEVMDataPayload::UnserializeFromTx(const CTransaction &tx) {
+	std::vector<unsigned char> vchData;
+	int nOut;
+	if (!GetSyscoinData(tx, vchData, nOut))
+	{
+		SetNull();
+		return false;
+	}
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	}
+    if(!tx.vout[nOut].vchNEVMData.empty()) {
+        vchNEVMData = &tx.vout[nOut].vchNEVMData;
+        if(nevmData.nSize != vchNEVMData->size()) {
+            SetNull();
+            return -1;
+        }
+    }
     return true;
 }
 void CNEVMData::SerializeData(std::vector<unsigned char> &vchData) {

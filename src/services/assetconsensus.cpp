@@ -322,10 +322,6 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-invalid\n");
                 return false; 
             }
-            if(!nevmData.vchData.empty()) {
-                LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: nevm-data-unexpected\n");
-                return false;  
-            }
             // only disconnect MPT (set to 0) if it already exists (don't add new MPT if doesn't exist in a rollback)
             if(pnevmdatadb->ExistsMPT(nevmData.vchVersionHash))
                 NEVMDataVecOut.emplace_back(nevmData.vchVersionHash); 
@@ -1165,14 +1161,16 @@ CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "nevmdata", nCacheSize, fMemory, fWipe) {
 }
 bool CNEVMDataDB::FlushData(std::map<std::vector<uint8_t>, std::vector<uint8_t> > &mapPoDA) {
-    if(mapPoDA.size() == 0)
+    if(mapPoDA.empty()) {
+        LogPrintf("CNEVMDataDB::FlushData empty\n");
         return true;
+    }
     CDBBatch batch(*this);    
-    for (auto &itMap : mapPoDA) {
-        const auto& pair = std::make_pair(itMap.first, true);
+    for (auto const& [key, val] : mapPoDA) {
+        const auto& pair = std::make_pair(key, true);
         // write the size of the data
-        batch.Write(itMap.first, (uint32_t)itMap.second.size());
-        batch.Write(pair, std::move(itMap.second));
+        batch.Write(key, (uint32_t)val.size());
+        batch.Write(pair, val);
     }
     LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", mapPoDA.size());
     auto res = WriteBatch(batch, true);

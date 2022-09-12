@@ -478,7 +478,7 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
     }
     return true;
 }
-bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<CNEVMDataProcessHelper> &nevmData, BlockValidationState &state)
+bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMDataPayload*> &vecNEVMDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -490,9 +490,9 @@ bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<CNEVMDa
         }
     }
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    WriteCompactSize(ss, nevmData.size());
-    for(const CNEVMDataProcessHelper &entry: nevmData) {
-        ss << entry.nevmData->vchVersionHash << entry.nevmData->vchData;
+    WriteCompactSize(ss, vecNEVMDataPayload.size());
+    for(const auto &nevmDataPayload: vecNEVMDataPayload) {
+        ss << nevmDataPayload->nevmData.vchVersionHash << *nevmDataPayload->vchNEVMData;
     }
 
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm check blob to %s, subscriber %s\n", this->address, this->addresssub);
@@ -564,7 +564,7 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
     }
     return true;
 }
-bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state)
+bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMDataPayload &nevmDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -589,19 +589,21 @@ bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<u
         }
         const std::vector<unsigned char> evmData{parts[1].begin(), parts[1].end()};
         CDataStream ss(evmData, SER_NETWORK, PROTOCOL_VERSION);
+        std::vector<uint8_t> vchNEVMDataRead;
         try {
-            ss >> nevmData.vchVersionHash >> nevmData.vchData;
-            nevmData.nSize = nevmData.vchData.size();
+            ss >> nevmDataPayload.nevmData.vchVersionHash >> vchNEVMDataRead;
+            nevmDataPayload.nevmData.nSize = vchNEVMDataRead.size();
             
         } catch (const std::exception& e) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
         }
-        if(nevmData.IsNull()) {
+        if(nevmDataPayload.IsNull()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse");
         }
-        if(nevmData.vchData.empty()) {
+        if(vchNEVMDataRead.empty()) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-data");
         }
+        nevmDataPayload.vchNEVMData = new std::vector<uint8_t>{vchNEVMDataRead};
     } else {
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
     }

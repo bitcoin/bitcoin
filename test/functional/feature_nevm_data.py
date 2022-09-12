@@ -35,7 +35,7 @@ class NEVMDataTest(DashTestFramework):
         vh = secrets.token_hex(32)
         print('Trying 2MB + 1 to ensure it cannot create blob...')
         blobDataMaxPlus = secrets.token_hex(MAX_NEVM_DATA_BLOB + 1)
-        assert_raises_rpc_error(-20, 'Transaction not complete or invalid', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
+        assert_raises_rpc_error(-1, 'Unknown transaction nevm data', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
         print('Trying 2MB * MAX_DATA_BLOBS per block...')
         self.blobVHs = []
         for i in range(0, 33):
@@ -52,10 +52,15 @@ class NEVMDataTest(DashTestFramework):
         self.sync_blocks()
         print('Testing nodes to see if MAX_DATA_BLOBS blobs exist at 2MB each...')
         for i, blobVH in enumerate(self.blobVHs):
-            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
-            # mpt > 0 means it got confirmed
-            if(mpt > 0):
-                foundCount += 1
+            mpt = 0
+            try:
+                mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+                # mpt > 0 means it got confirmed
+                if(mpt > 0):
+                    foundCount += 1
+            except Exception:
+                pass
+
         assert_equal(foundCount, MAX_DATA_BLOBS)
         print('Generating next block...')
         tip = self.generate(self.nodes[0], 1)[-1]
@@ -63,10 +68,14 @@ class NEVMDataTest(DashTestFramework):
         foundCount = 0
         print('Testing nodes to see if MAX_DATA_BLOBS+1 blobs exist...')
         for i, blobVH in enumerate(self.blobVHs):
-            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
-            # mpt > 0 means it got confirmed
-            if(mpt > 0):
-                foundCount += 1
+            mpt = 0
+            try:
+                mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+                # mpt > 0 means it got confirmed
+                if(mpt > 0):
+                    foundCount += 1
+            except Exception:
+                pass
 
         assert_equal(foundCount, MAX_DATA_BLOBS+1)
 
@@ -84,10 +93,14 @@ class NEVMDataTest(DashTestFramework):
         foundCount = 0
         print('Testing nodes to see if only MAX_DATA_BLOBS blobs exist...')
         for i, blobVH in enumerate(self.blobVHs):
-            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
-            # mpt > 0 means it got confirmed
-            if(mpt > 0):
-                foundCount += 1
+            mpt = 0
+            try:
+                mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+                # mpt > 0 means it got confirmed
+                if(mpt > 0):
+                    foundCount += 1
+            except Exception:
+                pass
 
         assert_equal(foundCount, MAX_DATA_BLOBS)
         # clear the rest of the blobs
@@ -96,10 +109,14 @@ class NEVMDataTest(DashTestFramework):
         foundCount = 0
         print('Testing nodes to see if MAX_DATA_BLOBS*2 blobs exist...')
         for i, blobVH in enumerate(self.blobVHs):
-            mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
-            # mpt > 0 means it got confirmed
-            if(mpt > 0):
-                foundCount += 1
+            mpt = 0
+            try:
+                mpt = self.nodes[1].getnevmblobdata(blobVH)['mpt']
+                # mpt > 0 means it got confirmed
+                if(mpt > 0):
+                    foundCount += 1
+            except Exception:
+                pass
 
         assert_equal(foundCount, MAX_DATA_BLOBS*2)
 
@@ -206,25 +223,19 @@ class NEVMDataTest(DashTestFramework):
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[3].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[2].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
         assert_raises_rpc_error(-32602, 'Could not find data', self.nodes[1].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
-        print('Checking for duplicate versionhash but different blob size...')
+        print('Checking for duplicate versionhash but different blob size/commitment...')
         txGood = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabc')['txid']
         self.sync_mempools(self.nodes[0:4])
         # different size
         txBad = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabd')['txid']
-        # should give 'ProcessNEVMData(block): NEVM mismatch in commitment' because it tries to create duplicate within block of different data
-        tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
-        time.sleep(1)
-        assert(self.nodes[1].getbestblockhash() != tip)
-        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
+        # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different size
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txBad)
         tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]
         self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
-        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabe')['txid']
-        self.nodes[1].getrawtransaction(txid=txBad)
-        # should give 'ProcessNEVMDataHelper(block): NEVM mismatch in commitment' because it tries to assign new MPT while one is already confirmed
-        tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]
-        time.sleep(1)
-        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[2].getrawtransaction, txid=txBad)
-        assert(self.nodes[2].getbestblockhash() != tip)
+        # different data (but same size)
+        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabd')['txid']
+        # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different data
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
 
     def run_test(self):
         self.nodes[1].createwallet("")

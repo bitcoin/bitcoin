@@ -55,7 +55,6 @@ struct LockPoints;
 namespace llmq {
     class CChainLockSig;
 }
-class CNEVMData;
 struct AssumeutxoData;
 namespace node {
 class SnapshotMetadata;
@@ -105,6 +104,7 @@ extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
+extern std::map<std::vector<uint8_t>, std::vector<uint8_t> > mapPoDA;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 /** Whether there are dedicated script-checking threads running.
  * False indicates all script checking is done on the main threadMessageHandler thread.
@@ -1098,17 +1098,13 @@ bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_
 void DoGethMaintenance();
 bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);
-bool ProcessNEVMBlob(const CNEVMData &nevmData);
 // SYSCOIN
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
-bool FillNEVMData(const std::shared_ptr<const CBlock> &pblock);
-bool FillNEVMData(const CBlock &block);
-bool FillNEVMData(CBlock& block);
-bool FillNEVMData(CTransactionRef tx);
+bool FillNEVMData(const CTransactionRef &tx);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
-bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut, bool stripdata = false);
-bool ProcessNEVMData(const node::BlockManager& blockman, CTransactionRef &tx, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec &nevmDataVecOut);
+bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec *nevmDataVecOut, bool fJustCheck);
+bool ProcessNEVMData(const node::BlockManager& blockman, const CTransaction &tx, const int64_t &nMedianTime, const int64_t& nTimeNow, bool fJustCheck);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

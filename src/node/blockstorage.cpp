@@ -756,12 +756,32 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consens
 }
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
 {
-    return ReadBlockOrHeader(block, pos, consensusParams);
+    auto res = ReadBlockOrHeader(block, pos, consensusParams);
+    // SYSCOIN
+    for (auto &tx : block.vtx) {
+        if(tx && tx->IsNEVMData()) {
+            if(!FillNEVMData(tx)) {
+                return error("ReadBlockFromDisk(): FillNEVMData() failed for %s",
+                block.GetHash().GetHex());
+            }
+        }
+    }
+    return res;
 }
 
- bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
-    return ReadBlockOrHeader(block, pindex, consensusParams);
+    auto res = ReadBlockOrHeader(block, pindex, consensusParams);
+    // SYSCOIN
+    for (auto &tx : block.vtx) {
+        if(tx && tx->IsNEVMData()) {
+            if(!FillNEVMData(tx)) {
+                return error("ReadBlockFromDisk(): FillNEVMData() failed for %s",
+                pindex->GetBlockHash().GetHex());
+            }
+        }
+    }
+    return res;
 }
 
  bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
@@ -829,13 +849,6 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, c
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
 {
-    // SYSCOIN
-    NEVMDataVec dataVec;
-    bool PODAContext = nHeight >= Params().GetConsensus().nPODAStartBlock;
-    if(PODAContext && !ProcessNEVMData(*this, block, 0, 0, dataVec, true)) {
-        error("%s: ProcessNEVMData failed", __func__); 
-        return FlatFilePos();
-    }
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION, SER_DISK);
     FlatFilePos blockPos;
     if (dbp != nullptr) {

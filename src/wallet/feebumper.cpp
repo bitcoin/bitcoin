@@ -228,7 +228,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     CAmount output_value = 0;
     for (const auto& output : wtx.tx->vout) {
         if (!OutputIsChange(wallet, output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            // SYSCOIN
+            CRecipient recipient = {output.scriptPubKey, output.nValue, false, output.vchNEVMData};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;

@@ -111,9 +111,14 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             }
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
-
             CTxOut out(0, CScript() << OP_RETURN << data);
+            // SYSCOIN
+            if(outputs.exists("datanevm")) {
+                out.vchNEVMData = ParseHexV(outputs["datanevm"].getValStr(), "DataNEVM");
+            }
             rawTx.vout.push_back(out);
+        } else if (name_ == "datanevm") {
+            // no-op handled in "data"
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {

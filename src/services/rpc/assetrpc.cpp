@@ -583,7 +583,7 @@ static RPCHelpMan getnevmblobdata()
     uint256 hashBlock;
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
     std::vector<uint8_t> vchVH;
-    CNEVMData nevmData;
+    uint32_t nSize = 0;
     {
         LOCK(cs_main);
         const Coin& coin = AccessByTxid(node.chainman->ActiveChainstate().CoinsTip(), txhash);
@@ -601,11 +601,13 @@ static RPCHelpMan getnevmblobdata()
         if(pblockindex != nullptr) {
             tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
         }
+        uint32_t nSize;
         if(!tx || hashBlock.IsNull()) {
             vchVH = ParseHex(request.params[0].get_str());
         }
         else {
-            nevmData = CNEVMData(*tx);
+            CNEVMData nevmData(*tx);
+            nSize = nevmData.nSize;
             if(nevmData.IsNull()){
                 throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse blob data from transaction");
             }
@@ -617,16 +619,20 @@ static RPCHelpMan getnevmblobdata()
     BlockValidationState state;
     std::vector<uint8_t> vchData;
     int64_t mpt = -1;
-    uint32_t nSize;
-    if(!pnevmdatadb->ReadMPT(vchVH, mpt) || !pnevmdatadb->ReadDataSize(vchVH, nSize)) {
+    if(!pnevmdatadb->ReadMPT(vchVH, mpt)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
     }
+    if(nSize == 0)
+        pnevmdatadb->ReadDataSize(vchVH, nSize);
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
-    if(bGetData) {  
+    if(bGetData) {
         if(!pnevmdatadb->ReadData(vchVH, vchData)) {
-            throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
+            auto it = mapPoDA.find(vchVH);
+            if(it == mapPoDA.end())
+                throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
+            vchData = it->second;
         }
         oNEVM.__pushKV("data", HexStr(vchData));
     }

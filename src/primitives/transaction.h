@@ -439,21 +439,18 @@ class CNEVMData {
 public:
     std::vector<uint8_t> vchVersionHash;
     uint32_t nSize;
-    std::vector<uint8_t> vchData;
     CNEVMData() {
         SetNull();
     }
     explicit CNEVMData(const CScript &script);
     explicit CNEVMData(const CTransaction &tx);
-    explicit CNEVMData(const CMutableTransaction &mtx);
     
     inline void ClearData() {
         vchVersionHash.clear();
-        vchData.clear();
         nSize = 0;
     }
     SERIALIZE_METHODS(CNEVMData, obj) {
-        READWRITE(obj.vchVersionHash, obj.nSize, obj.vchData);
+        READWRITE(obj.vchVersionHash, obj.nSize);
     }
     inline void SetNull() { ClearData(); }
     inline bool IsNull() const { return (vchVersionHash.empty() || nSize == 0); }
@@ -463,9 +460,32 @@ public:
     int UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
-struct CNEVMDataProcessHelper {
-    CNEVMData* nevmData;
-    CScript *scriptPubKey;
+class CNEVMDataPayload {
+public:
+    CNEVMData nevmData;
+    const std::vector<uint8_t> *vchNEVMData{nullptr};
+    CNEVMDataPayload() {
+        SetNull();
+    }
+    explicit CNEVMDataPayload(const CTransaction &tx);
+    explicit CNEVMDataPayload(const CNEVMData &nevmDataIn, const std::vector<uint8_t> &vchNEVMDataIn): nevmData(nevmDataIn) {
+        vchNEVMData = new std::vector<uint8_t>{vchNEVMDataIn};
+    }
+    SERIALIZE_METHODS(CNEVMDataPayload, obj) {
+        READWRITE(obj.nevmData);
+    }
+    inline void ClearData() {
+        nevmData.ClearData();
+        if(vchNEVMData) {
+            delete vchNEVMData;
+        }
+        vchNEVMData = nullptr;
+    }
+    inline void SetNull() { ClearData(); }
+    inline bool IsNull() const { return (nevmData.IsNull()); }
+    bool UnserializeFromTx(const CTransaction &tx);
+    int UnserializeFromData(const std::vector<unsigned char> &vchData);
+    void SerializeData(std::vector<unsigned char>& vchData);
 };
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
@@ -477,6 +497,7 @@ public:
     CScript scriptPubKey;
     // SYSCOIN
     CAssetCoinInfo assetInfo;
+    std::vector<uint8_t> vchNEVMData;
     CTxOut()
     {
         SetNull();
@@ -484,30 +505,23 @@ public:
     // SYSCOIN
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
-    
-   SERIALIZE_METHODS(CTxOut, obj)
+    CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const std::vector<uint8_t> &vchNEVMDataIn)  : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), vchNEVMData(vchNEVMDataIn) {}
+    SERIALIZE_METHODS(CTxOut, obj)
     {
-        const bool &bProcessData = (s.GetType() == SER_GETHASH) || (s.GetType() == SER_SIZE);
-        if(bProcessData && obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
-            CNEVMData nevmData(obj.scriptPubKey);
-            if(nevmData.IsNull()) {
-                throw std::ios_base::failure("Unknown transaction nevm data");
-            }
-            if(s.GetType() == SER_SIZE) {
+        if(s.GetType() == SER_NETWORK) {
+            READWRITE(obj.nValue, obj.scriptPubKey, obj.vchNEVMData);
+        } else {
+            if(s.GetType() == SER_SIZE && obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
+                CNEVMData nevmData(obj.scriptPubKey);
+                if(nevmData.IsNull()) {
+                    throw std::ios_base::failure("Unknown transaction nevm data");
+                }
                 int nSize = nevmData.nSize;
                 nSize /= NEVM_DATA_SCALE_FACTOR;
                 s.seek(nSize);
             }
-            if(!nevmData.vchData.empty()) {
-                std::vector<unsigned char> data;
-                nevmData.vchData.clear();
-                nevmData.SerializeData(data);
-                CScript scriptPubKey = CScript() << OP_RETURN << data;
-                READWRITE(obj.nValue, scriptPubKey);
-                return;
-            }
+            READWRITE(obj.nValue, obj.scriptPubKey);
         }
-        READWRITE(obj.nValue, obj.scriptPubKey);
     }
 
 
@@ -516,6 +530,7 @@ public:
         assetInfo.SetNull();
         nValue = -1;
         scriptPubKey.clear();
+        vchNEVMData.clear();
     }
 
     bool IsNull() const
@@ -527,7 +542,8 @@ public:
     {
         return (a.nValue       == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&
-                a.assetInfo == b.assetInfo);
+                a.assetInfo    == b.assetInfo &&
+                a.vchNEVMData  == b.vchNEVMData);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)

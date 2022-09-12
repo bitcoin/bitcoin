@@ -201,15 +201,16 @@ static RPCHelpMan syscoincreaterawnevmblob()
     nevmData.nSize = vchData.size();
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
-    nevmData.vchData = vchData;
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
+    UniValue outputObjNEVM(UniValue::VOBJ);
     UniValue optionsObj(UniValue::VOBJ);
     // should fill in VH and Size and fill in data through GETDATA net protocol by putting vchData into DB which it will read from
     outputObj.__pushKV("data", HexStr(data));
-    LogPrintf("syscoincreaterawnevmblob data length %d nSize %d\n", data.size(), nevmData.nSize);
+    outputObjNEVM.__pushKV("datanevm", HexStr(vchData));
     optionsObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
     output.push_back(outputObj);
+    output.push_back(outputObjNEVM);
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(output);
     paramsSend.push_back(request.params[2]);
@@ -221,10 +222,9 @@ static RPCHelpMan syscoincreaterawnevmblob()
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
     if(fNEVMConnection) {
-        std::vector<CNEVMDataProcessHelper> vecNEVMDataToProcess;
-        CNEVMDataProcessHelper nevmHelper;
-        nevmHelper.nevmData = &nevmData;
-        vecNEVMDataToProcess.emplace_back(nevmHelper);
+        std::vector<const CNEVMDataPayload*> vecNEVMDataToProcess;
+        CNEVMDataPayload nevmDataPayload(nevmData, vchData);
+        vecNEVMDataToProcess.emplace_back(&nevmDataPayload);
         // process new vector in batch checking the blobs
         BlockValidationState state;
         // if not in DB then we need to verify it via Geth KZG blob verification
@@ -232,29 +232,9 @@ static RPCHelpMan syscoincreaterawnevmblob()
         if(state.IsInvalid()) {
             throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
         }
+        nevmDataPayload.ClearData();
     }
-    // FillNEVMData should fill in this data prior to relay
-    if(!pnevmdatadb->WriteData(nevmData.vchVersionHash, nevmData.vchData) || !pnevmdatadb->WriteDataSize(nevmData.vchVersionHash, nevmData.vchData.size())) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not commit NEVM data to DB");
-    }
-    UniValue res;
-    try {
-        res = send().HandleRequest(requestSend);
-    } catch(std::exception &e) {
-        if(!EraseNEVMData({nevmData.vchVersionHash})) {
-            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
-        }
-        throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Transaction not complete or invalid %s", e.what()));
-    }
-    const UniValue &txidObj = find_value(res.get_obj(), "txid");
-    if(txidObj.isNull()) {
-        if(!EraseNEVMData({nevmData.vchVersionHash})) {
-            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not rollback NEVM data commit from DB");
-        }
-    } else {
-        return res;
-    }
-    throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or invalid");
+    return send().HandleRequest(requestSend);
 },
     };
 }
@@ -319,15 +299,16 @@ static RPCHelpMan syscoincreatenevmblob()
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
-    CNEVMData nevmData;
+    CNEVMDataPayload nevmDataPayload;
     // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmData, state);
+    GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmDataPayload, state);
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
     UniValue paramsSend(UniValue::VARR);
-    paramsSend.push_back(HexStr(nevmData.vchVersionHash));
-    paramsSend.push_back(HexStr(nevmData.vchData));
+    paramsSend.push_back(HexStr(nevmDataPayload.nevmData.vchVersionHash));
+    paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
+    nevmDataPayload.ClearData();
     paramsSend.push_back(request.params[1]);
     paramsSend.push_back(request.params[2]);
     paramsSend.push_back(request.params[3]);
@@ -340,8 +321,8 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.__pushKV("versionhash", HexStr(nevmData.vchVersionHash));
-            resObj.__pushKV("datasize", nevmData.nSize);
+            resObj.__pushKV("versionhash", HexStr(nevmDataPayload.nevmData.vchVersionHash));
+            resObj.__pushKV("datasize", nevmDataPayload.nevmData.nSize);
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   
