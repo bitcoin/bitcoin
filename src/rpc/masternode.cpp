@@ -43,7 +43,7 @@ static RPCHelpMan masternode_list()
             {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter results. Partial match by outpoint by default in all modes,\n"
                             "additional matches in some modes are also available.\n"},           
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_list", "")
             + HelpExampleRpc("masternode_list", "")
@@ -68,7 +68,7 @@ static RPCHelpMan masternode_connect()
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the masternode to connect."},                
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_connect", "")
             + HelpExampleRpc("masternode_connect", "")
@@ -100,7 +100,7 @@ static RPCHelpMan masternode_count()
         "\nGet information about number of masternodes\n",
         {              
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_count", "")
             + HelpExampleRpc("masternode_count", "")
@@ -147,7 +147,7 @@ static RPCHelpMan masternode_winner()
         "\nPrint info on next masternode winner to vote for\n",
         {              
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_winner", "")
             + HelpExampleRpc("masternode_winner", "")
@@ -165,7 +165,7 @@ static RPCHelpMan masternode_current()
         "\nPrint info on current masternode winner to be paid the next block (calculated locally)\n",
         {              
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_current", "")
             + HelpExampleRpc("masternode_current", "")
@@ -183,7 +183,7 @@ static RPCHelpMan masternode_status()
         "\nPrint masternode status outputs\n",
         {              
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_status", "")
             + HelpExampleRpc("masternode_status", "")
@@ -263,7 +263,7 @@ static RPCHelpMan masternode_winners()
             {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Number of last winners to return."}, 
             {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter for returned winners."},    
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_winners", "")
             + HelpExampleRpc("masternode_winners", "")
@@ -321,7 +321,7 @@ RPCHelpMan masternode_payments()
                                                                     "Will return <count> previous blocks if <count> is negative.\n"
                                                                     "Both 1 and -1 correspond to the chain tip."},    
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternode_payments", "")
             + HelpExampleRpc("masternode_payments", "")
@@ -439,7 +439,7 @@ RPCHelpMan masternodelist()
             {"mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Mode."},
             {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "filter."},    
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("masternodelist", "")
             + HelpExampleRpc("masternodelist", "")

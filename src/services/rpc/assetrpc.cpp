@@ -567,7 +567,7 @@ static RPCHelpMan getnevmblobdata()
             {"versionhash_or_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The version hash or txid of the NEVM blob"},
             {"getdata", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Optional, retrieve the blob data"}
         },
-        RPCResult{RPCResult::Type::STR, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
             HelpExampleCli("getnevmblobdata", "")
             + HelpExampleRpc("getnevmblobdata", "")
@@ -851,7 +851,7 @@ static RPCHelpMan syscoingetspvproof()
         {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "If specified, looks for txid in the block with this hash"}
     },
     RPCResult{
-        RPCResult::Type::STR, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
+        RPCResult::Type::ANY, "proof", "JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)"},
     RPCExamples{""},
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
