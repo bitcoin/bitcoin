@@ -670,11 +670,11 @@ private:
         AssertLockHeld(m_pool.cs);
         CAmount mempoolRejectFee = m_pool.GetMinFee().GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
+            return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
         if (package_fee < m_pool.m_min_relay_feerate.GetFee(package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
+            return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "min relay fee not met",
                                  strprintf("%d < %d", package_fee, m_pool.m_min_relay_feerate.GetFee(package_size)));
         }
         return true;
@@ -867,6 +867,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // method of ensuring the tx remains bumped. For example, the fee-bumping child could disappear
     // due to a replacement.
     if (!bypass_limits && ws.m_modified_fees < m_pool.m_min_relay_feerate.GetFee(ws.m_vsize)) {
+        // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
+        // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
                              strprintf("%d < %d", ws.m_modified_fees, m_pool.m_min_relay_feerate.GetFee(ws.m_vsize)));
     }
@@ -981,6 +983,9 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
     //   might replace them, under these rules.
     if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
+        // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
+        // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
+        // This must be changed if package RBF is enabled.
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
 
@@ -1002,6 +1007,9 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
     if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                          m_pool.m_incremental_relay_feerate, hash)}) {
+        // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
+        // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
+        // This must be changed if package RBF is enabled.
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
     return true;
@@ -1139,7 +1147,8 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     if (!args.m_package_submission && !bypass_limits) {
         LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
         if (!m_pool.exists(GenTxid::Txid(hash)))
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool full");
+            // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
+            return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
     }
     return true;
 }
@@ -1510,7 +1519,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
                 // in package validation, because its fees should only be "used" once.
                 assert(m_pool.exists(GenTxid::Wtxid(wtxid)));
                 results_final.emplace(wtxid, single_res);
-            } else if (single_res.m_state.GetResult() != TxValidationResult::TX_MEMPOOL_POLICY &&
+            } else if (single_res.m_state.GetResult() != TxValidationResult::TX_RECONSIDERABLE &&
                        single_res.m_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
                 // Package validation policy only differs from individual policy in its evaluation
                 // of feerate. For example, if a transaction fails here due to violation of a
