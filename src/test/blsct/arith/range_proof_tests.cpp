@@ -9,7 +9,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_foo)
+BOOST_AUTO_TEST_CASE(test_range_proof_)
 {
     BOOST_CHECK(1 == 1);
 }

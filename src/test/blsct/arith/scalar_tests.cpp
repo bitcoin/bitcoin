@@ -9,6 +9,7 @@
 #include <blsct/arith/scalar.h>
 #include <uint256.h>
 
+#include <cinttypes>
 #include <limits>
 
 #define SCALAR_CURVE_ORDER_MINUS_1(x) Scalar x("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000", 16)
@@ -159,11 +160,25 @@ BOOST_AUTO_TEST_CASE(test_scalar_constructors)
         BOOST_CHECK_EQUAL(a.GetString(), "0");
     }
 
-    //// uint64_t
-    for(size_t shift = 0; shift < 64; ++shift) {
-        uint64_t ui = 1 << shift;
-        Scalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetUint64(), ui);
+    //// int64_t
+    {
+        uint64_t one = 1;
+        {
+            // test up to shift = 62 excluding the sign bit
+            for(size_t shift = 0; shift < 63; ++shift) {
+                int64_t i = one << shift;
+                Scalar a(i);
+                BOOST_CHECK_EQUAL(a.GetUint64(), i);
+            }
+        }
+        {
+            // shift = 63 generates a negative value
+            // and that should be translated to fr order - the negative value
+            int64_t i = one << 63;  // this becomes negative zero
+            Scalar a(i);
+            // -1 = 73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+            BOOST_CHECK(a.GetString() == "73eda753299d7d483339d80809a1d80553bda402fffe5bfe7fffffff00000001");
+        }
     }
 }
 
@@ -341,7 +356,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_bitwise_compl)
 BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
     Scalar base(0b1);
-    int64_t exp = 1;
+    uint64_t exp = 1;
     for(unsigned int i=0; i<64; ++i) {
         Scalar a = base << i;
         BOOST_CHECK_EQUAL(a.GetUint64(), exp);
@@ -352,7 +367,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 BOOST_AUTO_TEST_CASE(test_scalar_assign)
 {
     {
-        uint64_t n = UINT64_MAX;
+        int64_t n = INT64_MAX;
         Scalar a = n;
         BOOST_CHECK_EQUAL(a.GetUint64(), n);
     }
@@ -468,18 +483,21 @@ BOOST_AUTO_TEST_CASE(test_scalar_rand)
 BOOST_AUTO_TEST_CASE(test_scalar_getuint64)
 {
     {
-        Scalar a(UINT64_MAX);
+        // Scalar(int) operator takes int64_t, so let it take INT64_MAX
+        Scalar a(INT64_MAX);
         uint64_t b = a.GetUint64();
-        uint64_t c = 9223372036854775807;
+        uint64_t c = 9223372036854775807;  // is INT64_MAX
         BOOST_CHECK_EQUAL(b, c);
     }
     {
+        // assignment operator takes int64_t, so whatever base << i becomes
+        // Scalar is expected to have value interpreted as int64_t
         Scalar base(0b1);
-        int64_t exp = 1;
+        int64_t n = 1;
         for (uint8_t i=0; i<64; ++i) {
             Scalar a = base << i;
-            BOOST_CHECK_EQUAL(a.GetUint64(), exp);
-            exp <<= 1;
+            BOOST_CHECK_EQUAL(a.GetUint64(), n);
+            n <<= 1;
         }
     }
 }

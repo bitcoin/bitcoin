@@ -40,7 +40,8 @@ public:
     Scalar ApplyBitwiseOp(const Scalar& a, const Scalar& b,
                           std::function<uint8_t(uint8_t, uint8_t)> op) const;
 
-    void operator=(const uint64_t& n);
+    void operator=(const int64_t& n);
+    void operator=(const Scalar& b);
 
     Scalar operator+(const Scalar& b) const;
     Scalar operator-(const Scalar& b) const;

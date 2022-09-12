@@ -6,7 +6,7 @@
 
 Scalar::Scalar(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, n);
+    mclBnFr_setInt(&m_fr, n);  // this takes int64_t
 }
 
 Scalar::Scalar(const std::vector<uint8_t> &v)
@@ -149,9 +149,14 @@ Scalar Scalar::operator>>(unsigned int shift) const
     return ret;
 }
 
-void Scalar::operator=(const uint64_t& n)
+void Scalar::operator=(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, (mclInt)n);
+    mclBnFr_setInt(&m_fr, n);
+}
+
+void Scalar::operator=(const Scalar& b)
+{
+    m_fr = b.m_fr;
 }
 
 bool Scalar::operator==(const int &b) const

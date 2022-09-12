@@ -9,7 +9,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(generators_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_create_instance_before_init)
+BOOST_AUTO_TEST_CASE(test_generators_)
 {
     BOOST_CHECK(1 == 2);
 }
