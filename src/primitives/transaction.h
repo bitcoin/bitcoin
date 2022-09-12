@@ -43,8 +43,8 @@ using CompressedScript = prevector<33, unsigned char>;
  * or with `ADDRV2_FORMAT`.
  */
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-// SYSCOIN
-static const int NEVM_DATA_SCALE_FACTOR = 100;
+// SYSCOIN (1/100)
+static const float NEVM_DATA_SCALE_FACTOR = 0.01;
 enum {
     ASSET_UPDATE_DATA=1, // can you update public data field?
     ASSET_UPDATE_CONTRACT=2, // can you update smart contract?
@@ -73,7 +73,7 @@ const int SYSCOIN_TX_VERSION_ASSET_SEND = 132;
 const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 133;
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_NEVM = 134;
 const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 135;
-const int SYSCOIN_TX_VERSION_NEVM_DATA = 136;
+const int SYSCOIN_TX_VERSION_NEVM_DATA = 137;
 const int SYSCOIN_TX_MIN_ASSET_GUID = SYSCOIN_TX_VERSION_ALLOCATION_SEND * 10;
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 const int MAX_MEMO = 256;
@@ -508,18 +508,20 @@ public:
     CTxOut(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const std::vector<uint8_t> &vchNEVMDataIn)  : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), vchNEVMData(vchNEVMDataIn) {}
     SERIALIZE_METHODS(CTxOut, obj)
     {
-        if(s.GetType() == SER_NETWORK) {
-            READWRITE(obj.nValue, obj.scriptPubKey, obj.vchNEVMData);
-        } else {
-            if(s.GetType() == SER_SIZE && obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
-                CNEVMData nevmData(obj.scriptPubKey);
-                if(nevmData.IsNull()) {
-                    throw std::ios_base::failure("Unknown transaction nevm data");
+        if(obj.scriptPubKey.IsUnspendable() && IsSyscoinNEVMDataTx(s.GetTxVersion())) {
+            if(s.GetType() == SER_NETWORK) {
+                READWRITE(obj.nValue, obj.scriptPubKey, obj.vchNEVMData);
+            } else {
+                if(s.GetType() == SER_SIZE) {
+                    CNEVMData nevmData(obj.scriptPubKey);
+                    if(nevmData.IsNull()) {
+                        throw std::ios_base::failure("Unknown transaction nevm data");
+                    }
+                    s.seek(nevmData.nSize * NEVM_DATA_SCALE_FACTOR);
                 }
-                int nSize = nevmData.nSize;
-                nSize /= NEVM_DATA_SCALE_FACTOR;
-                s.seek(nSize);
+                READWRITE(obj.nValue, obj.scriptPubKey);
             }
+        } else {
             READWRITE(obj.nValue, obj.scriptPubKey);
         }
     }
