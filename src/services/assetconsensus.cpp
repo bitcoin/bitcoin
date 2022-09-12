@@ -1175,10 +1175,10 @@ bool CNEVMDataDB::FlushData(const std::vector<CNEVMDataProcessHelper> &vecNEVMDa
         batch.Write(dataProcess.nevmData->vchVersionHash, dataProcess.nevmData->nSize);
     }
     LogPrint(BCLog::SYS, "Flushing, storing %d nevm blobs\n", vecNEVMDataToProcess.size());
-    return WriteBatch(batch);
+    return WriteBatch(batch, true);
 }
 // called on connect - put median passed time into index so we can track pruning
-bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t& nMedianTime) {
+bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t& nMedianTime, const bool ibd) {
     if(vecDataKeys.empty())
         return true;
     CDBBatch batch(*this);    
@@ -1187,7 +1187,7 @@ bool CNEVMDataDB::FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t& nM
         batch.Write(pair, nMedianTime);
     }
     LogPrint(BCLog::SYS, "Flushing, setting %d nevm MPTs\n", vecDataKeys.size());
-    return WriteBatch(batch);
+    return WriteBatch(batch, !ibd);
 }
 bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
     if(vecDataKeys.empty())
@@ -1198,7 +1198,7 @@ bool CNEVMDataDB::FlushResetMPTs(const NEVMDataVec &vecDataKeys) {
         batch.Write(pair, 0);
     }
     LogPrint(BCLog::SYS, "Flushing, resetting %d nevm MPTs\n", vecDataKeys.size());
-    return WriteBatch(batch);
+    return WriteBatch(batch, true);
 }
 bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     if(vecDataKeys.empty())
@@ -1217,7 +1217,7 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
             batch.Erase(pairMPT);
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
-    return WriteBatch(batch);
+    return WriteBatch(batch, true);
 }
 bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
     CDBBatch batch(*this);

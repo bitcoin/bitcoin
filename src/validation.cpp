@@ -2183,15 +2183,20 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<CNEVMDataPr
         // if not in DB then we need to verify it via Geth KZG blob verification
         GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
         int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
-        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
         if(state.IsInvalid()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s\n", state.ToString());
             return false;
+        } else {
+            LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
         }
     }
-
-    if(nMedianTime > 0 && !pnevmdatadb->FlushData(vecNEVMDataToProcess)) {
-        return false;
+    {
+        int64_t nTimeStart = GetTimeMicros();
+        if(nMedianTime > 0 && !pnevmdatadb->FlushData(vecNEVMDataToProcess)) {
+            return false;
+        }
+        int64_t nTimeDiff = GetTimeMicros() - nTimeStart;
+        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: flushed %d blobs in %.2fs (%.2fms/blob)\n", vecNEVMDataToProcess.size(), nTimeDiff * MICRO, nTimeDiff * MILLI / vecNEVMDataToProcess.size());
     }
     for (auto &nevmDataEntry : vecNevmData) {
         // upon receiving block/tx we strip data from script
@@ -3290,7 +3295,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(NEVMDataVecOut, pindexNew->GetMedianTimePast())) {
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(NEVMDataVecOut, pindexNew->GetMedianTimePast(), ibd)) {
             return error("Error flushing to Syscoin DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     } 
@@ -5059,7 +5064,7 @@ bool CChainState::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(mapNEVMDataConnect, pindexNew->GetMedianTimePast())){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd) || !pnevmdatadb->FlushSetMPTs(mapNEVMDataConnect, pindexNew->GetMedianTimePast(), ibd)){
             return error("RollbackBlock(): Error flushing to Syscoin dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
         if(!pnevmdatadb->Prune(pindexNew->GetMedianTimePast())) {
