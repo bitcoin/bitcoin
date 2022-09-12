@@ -115,9 +115,10 @@ Scalar Scalar::operator&(const Scalar &b) const
 
 Scalar Scalar::operator~() const
 {
+    // CHECK!
     // Getting complement of lower 8 bytes only since when 32-byte buffer is fully complemented,
     // mclBrFr_deserialize returns undesired result
-    int64_t n_complement_scalar = ~GetInt64();
+    auto n_complement_scalar = ~GetUint64();
     Scalar ret(n_complement_scalar);
 
     return ret;
@@ -141,8 +142,9 @@ Scalar Scalar::operator<<(unsigned int shift) const
  */
 Scalar Scalar::operator>>(unsigned int shift) const
 {
-    int64_t n = GetInt64();
-    Scalar ret(n >> shift);
+    uint64_t n = GetUint64();
+    n >>= shift;
+    Scalar ret(n);
 
     return ret;
 }
@@ -241,7 +243,7 @@ Scalar Scalar::Rand(bool exclude_zero)
     return temp;
 }
 
-int64_t Scalar::GetInt64() const
+uint64_t Scalar::GetUint64() const
 {
     int64_t ret = 0;
     std::vector<uint8_t> vch = GetVch();
@@ -278,11 +280,11 @@ void Scalar::SetPow2(int n)
     m_fr = temp.m_fr;
 }
 
-uint256 Scalar::Hash(const int& n) const
+uint256 Scalar::GetHashWithSalt(const uint64_t& salt) const
 {
     CHashWriter hasher(0,0);
     hasher << *this;
-    hasher << n;
+    hasher << salt;
     return hasher.GetHash();
 }
 

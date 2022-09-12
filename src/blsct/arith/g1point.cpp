@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/g1point.h>
+#include <blsct/arith/elements.h>
+
 #include <numeric>
 
 mclBnG1 G1Point::m_g;
@@ -59,24 +61,39 @@ G1Point G1Point::operator=(const mclBnG1& q)
     return *this;
 }
 
-G1Point G1Point::operator+(const G1Point& b) const
+G1Point G1Point::operator+(const G1Point& p) const
 {
     G1Point ret;
-    mclBnG1_add(&ret.m_p, &m_p, &b.m_p);
+    mclBnG1_add(&ret.m_p, &m_p, &p.m_p);
     return ret;
 }
 
-G1Point G1Point::operator-(const G1Point& b) const
+G1Point G1Point::operator-(const G1Point& p) const
 {
     G1Point ret;
-    mclBnG1_sub(&ret.m_p, &m_p, &b.m_p);
+    mclBnG1_sub(&ret.m_p, &m_p, &p.m_p);
     return ret;
 }
 
-G1Point G1Point::operator*(const Scalar& b) const
+G1Point G1Point::operator*(const Scalar& s) const
 {
     G1Point ret;
-    mclBnG1_mul(&ret.m_p, &m_p, &b.m_fr);
+    mclBnG1_mul(&ret.m_p, &m_p, &s.m_fr);
+    return ret;
+}
+
+std::vector<G1Point> G1Point::operator*(const std::vector<Scalar>& ss) const
+{
+    if (ss.size() == 0) {
+        throw std::runtime_error("G1Point::operator*: cannot multiply G1Point by empty Scalars");
+    }
+    std::vector<G1Point> ret;
+
+    G1Point p = *this;
+    for(size_t i = 0; i < ss.size(); ++i) {
+        G1Point q = p * ss[i];
+        ret.push_back(q);
+    }
     return ret;
 }
 
@@ -199,4 +216,13 @@ std::string G1Point::GetString(const int& radix) const
 unsigned int G1Point::GetSerializeSize() const
 {
     return ::GetSerializeSize(GetVch());
+}
+
+Scalar G1Point::GetHashWithSalt(const uint64_t salt)
+{
+    CHashWriter hasher(0,0);
+    hasher << *this;
+    hasher << salt;
+    Scalar hash(hasher.GetHash());
+    return hash;
 }

@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(test_integration_gg_ones_times_z)
     auto r1 = gg * z;
 
     Scalar one(1);
-    auto ones = Scalars::RepeatN(gg.Size(), one);
+    auto ones = Scalars::RepeatN(one, gg.Size());
     auto r2 = gg * (ones * z);
 
     BOOST_CHECK(r1 == r2);
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_66_67_excl_h_prime)
 {
     auto n = 2;
     Scalar one(1);
-    auto ones = Scalars::RepeatN(n, one);
+    auto ones = Scalars::RepeatN(one, n);
     auto z = Scalar::Rand(true);
 
     auto alpha = Scalar::Rand(true);
@@ -93,13 +93,13 @@ BOOST_AUTO_TEST_CASE(test_integration_rebasing_base_point)
     auto n = 2;
 
     Scalar one(1);
-    auto one_n = Scalars::RepeatN(n, one);
+    auto one_n = Scalars::RepeatN(one, n);
     Scalar two(n);
-    auto two_n = Scalars::FirstNPow(n, two);
+    auto two_n = Scalars::FirstNPow(two, n);
 
     auto y = Scalar::Rand(true);
     auto z = Scalar::Rand(true);
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto y_n = Scalars::FirstNPow(y, n);
     auto hh = G1Points(std::vector<G1Point> {
         G1Point::MapToG1("h1"),
         G1Point::MapToG1("h2")
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(test_integration_rebasing_base_point)
             hh[0],
             hh[1] * y.Invert()
         });
-        auto y_pows_inv = Scalars::FirstNPow(n, y.Invert());
+        auto y_pows_inv = Scalars::FirstNPow(y.Invert(), n);
         auto lhs = hhp * (y_n * z + two_n * z.Square());
         auto rhs = hh * (one_n * z + two_n * z.Square() * y_pows_inv);
         BOOST_CHECK(lhs == rhs);
@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_66_67_only_h_prime)
     auto n = 2;
 
     Scalar two(2);
-    auto two_n = Scalars::FirstNPow(n, two);
+    auto two_n = Scalars::FirstNPow(two, n);
     Scalar one(1);
-    auto one_n = Scalars::RepeatN(n, one);
+    auto one_n = Scalars::RepeatN(one, n);
 
     auto x = Scalar::Rand(true);
     auto y = Scalar::Rand(true);
     auto z = Scalar::Rand(true);
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto y_n = Scalars::FirstNPow(y, n);
 
     Scalars ar(std::vector<Scalar>{
         Scalar{1},
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_66_67_only_h_prime)
     auto a = hh * ar;
     auto s = hh * sr;
 
-    auto hhp = hh * Scalars::FirstNPow(n, y.Invert());
+    auto hhp = hh * Scalars::FirstNPow(y.Invert(), n);
 
     auto p = a + s * x + hhp * (y_n * z + two_n * z.Square());
     auto rr = y_n * (ar + zs + sr * x) + (two_n * z.Square());
@@ -194,9 +194,9 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_only_excl_ts)
 
     Scalar one(1);
     Scalar two(2);
-    auto one_n = Scalars::FirstNPow(n, one);
-    auto two_n = Scalars::FirstNPow(n, two);
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto one_n = Scalars::FirstNPow(one, n);
+    auto two_n = Scalars::FirstNPow(two, n);
+    auto y_n = Scalars::FirstNPow(y, n);
 
     Scalars al(std::vector<Scalar>{
         Scalar{0},
@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_ts_only)
 
     Scalar one(1);
     Scalar two(2);
-    auto one_n = Scalars::FirstNPow(n, one);
-    auto two_n = Scalars::FirstNPow(n, two);
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto one_n = Scalars::FirstNPow(one, n);
+    auto two_n = Scalars::FirstNPow(two, n);
+    auto y_n = Scalars::FirstNPow(y, n);
 
     Scalars al(std::vector<Scalar> {
         Scalar {0},
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_ts_only)
     auto sl = Scalars::RandVec(n);
     auto sr = Scalars::RandVec(n);
 
-    const auto &l1 = sl;
+    auto l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 
@@ -287,9 +287,9 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_only)
 
     Scalar one(1);
     Scalar two(2);
-    auto one_n = Scalars::FirstNPow(n, one);
-    auto two_n = Scalars::FirstNPow(n, two);
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto one_n = Scalars::FirstNPow(one, n);
+    auto two_n = Scalars::FirstNPow(two, n);
+    auto y_n = Scalars::FirstNPow(y, n);
 
     Scalars al(std::vector<Scalar> {
         Scalar {0},
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(test_integration_range_proof_65_g_part_only)
     auto sr = Scalars::RandVec(n);
 
     auto l0 = (al - one_n * z);
-    const auto &l1 = sl;
+    auto l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 
@@ -406,8 +406,8 @@ bool RangeProof(
     // On input upsilon and gamma, prover computes
     Scalar one(1);
     Scalar two(2);
-    auto one_n = Scalars::FirstNPow(n, one);
-    auto two_n = Scalars::FirstNPow(n, two);
+    auto one_n = Scalars::FirstNPow(one, n);
+    auto two_n = Scalars::FirstNPow(two, n);
 
     auto ar = al - one_n;
     auto alpha = Scalar::Rand();
@@ -426,9 +426,9 @@ bool RangeProof(
 
     // Define vector ploynomials l(x), r(x) and t(x)
     // t(x) = <l(x),r(x)> = <l0, r0> + (<l1, r0> + <l0, r1>) * x + <l1, r1> * x^2
-    auto y_n = Scalars::FirstNPow(n, y);
+    auto y_n = Scalars::FirstNPow(y, n);
     auto l0 = al - one_n * z;
-    const auto &l1 = sl;
+    auto l1 = sl;
     auto r0 = y_n * (ar + one_n * z) + two_n * z.Square();
     auto r1 = y_n * sr;
 
@@ -457,7 +457,7 @@ bool RangeProof(
     // Prover sends l,r,t_hat,tau_x,mu to verifier
 
     // (64)
-    auto hhp = hh * Scalars::FirstNPow(n, y.Invert());
+    auto hhp = hh * Scalars::FirstNPow(y.Invert(), n);
 
     // (65)
     auto delta_yz =

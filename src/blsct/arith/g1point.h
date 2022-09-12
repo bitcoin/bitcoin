@@ -38,9 +38,14 @@ public:
     static void Init();
 
     G1Point operator=(const mclBnG1& p);
-    G1Point operator+(const G1Point& b) const;
-    G1Point operator-(const G1Point& b) const;
-    G1Point operator*(const Scalar& b) const;
+    G1Point operator+(const G1Point& p) const;
+    G1Point operator-(const G1Point& p) const;
+    G1Point operator*(const Scalar& s) const;
+
+    /**
+     * Because  Elements cannot be used here, std::vector is used instead
+     */
+    std::vector<G1Point> operator*(const std::vector<Scalar>& ss) const;
 
     G1Point Double() const;
 
@@ -67,6 +72,7 @@ public:
     void SetVch(const std::vector<uint8_t>& b);
 
     std::string GetString(const int& radix = 16) const;
+    Scalar GetHashWithSalt(const uint64_t salt);
 
     unsigned int GetSerializeSize() const;
 

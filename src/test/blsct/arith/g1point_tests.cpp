@@ -77,6 +77,19 @@ BOOST_AUTO_TEST_CASE(test_g1point_point_mul)
     BOOST_CHECK(p == q);
 }
 
+BOOST_AUTO_TEST_CASE(test_g1point_points_mul)
+{
+    auto scalars = std::vector<Scalar>({
+        Scalar(1), Scalar(2)
+    });
+    auto g = G1Point::GetBasePoint();
+    auto p1 = g;
+    auto p2 = g + g;
+    auto qs = g * scalars;
+    BOOST_CHECK(qs[0] == p1);
+    BOOST_CHECK(qs[1] == p2);
+}
+
 BOOST_AUTO_TEST_CASE(test_g1point_point_equal_or_not_equal)
 {
     auto g = G1Point::GetBasePoint();
@@ -337,6 +350,20 @@ BOOST_AUTO_TEST_CASE(test_g1point_serialize_unserialize)
 
     q.Unserialize(st);
     BOOST_CHECK(p == q);
+}
+
+BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
+{
+    auto g = G1Point::GetBasePoint();
+    auto a = g.GetHashWithSalt(1);
+    auto b = g.GetHashWithSalt(2);
+    BOOST_CHECK(a != b);
+}
+
+BOOST_AUTO_TEST_CASE(test_g1point_operator_mul_g1point_by_scalars)
+{
+    // TODO write test for: std::vector<G1Point> G1Point::operator*(const std::vector<Scalar>& bs) const
+    BOOST_CHECK(1 == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

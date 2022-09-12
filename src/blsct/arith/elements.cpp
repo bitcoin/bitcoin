@@ -35,6 +35,14 @@ template size_t Elements<Scalar>::Size() const;
 template size_t Elements<G1Point>::Size() const;
 
 template <typename T>
+bool Elements<T>::Empty() const
+{
+    return m_vec.empty();
+}
+template bool Elements<Scalar>::Empty() const;
+template bool Elements<G1Point>::Empty() const;
+
+template <typename T>
 void Elements<T>::Add(const T x)
 {
     m_vec.push_back(x);
@@ -53,13 +61,15 @@ template void Elements<Scalar>::ConfirmSizesMatch(const size_t&) const;
 template void Elements<G1Point>::ConfirmSizesMatch(const size_t&) const;
 
 template <typename T>
-Elements<T> Elements<T>::FirstNPow(const size_t& n, const Scalar& k)
+Elements<T> Elements<T>::FirstNPow(const Scalar& k, const size_t& n, const size_t& from_index)
 {
     if constexpr (std::is_same_v<T, Scalar>) {
         Elements<Scalar> ret;
         Scalar x(1);
-        for (size_t i = 0; i < n; ++i) {
-            ret.m_vec.push_back(x);
+        for (size_t i = 0; i < n + from_index; ++i) {
+            if (i >= from_index) {
+                ret.m_vec.push_back(x);
+            }
             x = x * k;
         }
         return ret;
@@ -67,10 +77,10 @@ Elements<T> Elements<T>::FirstNPow(const size_t& n, const Scalar& k)
         throw std::runtime_error("Not implemented");
     }
 }
-template Elements<Scalar> Elements<Scalar>::FirstNPow(const size_t&, const Scalar&);
+template Elements<Scalar> Elements<Scalar>::FirstNPow(const Scalar&, const size_t&, const size_t& from_index);
 
 template <typename T>
-Elements<T> Elements<T>::RepeatN(const size_t& n, const T& k)
+Elements<T> Elements<T>::RepeatN(const T& k, const size_t& n)
 {
     Elements<T> ret;
     for (size_t i = 0; i < n; ++i) {
@@ -78,8 +88,8 @@ Elements<T> Elements<T>::RepeatN(const size_t& n, const T& k)
     }
     return ret;
 }
-template Elements<Scalar> Elements<Scalar>::RepeatN(const size_t&, const Scalar&);
-template Elements<G1Point> Elements<G1Point>::RepeatN(const size_t&, const G1Point&);
+template Elements<Scalar> Elements<Scalar>::RepeatN(const Scalar&, const size_t&);
+template Elements<G1Point> Elements<G1Point>::RepeatN(const G1Point&, const size_t&);
 
 template <typename T>
 Elements<T> Elements<T>::RandVec(const size_t& n, const bool exclude_zero)
@@ -144,7 +154,7 @@ Elements<T> Elements<T>::operator*(const Scalar& s) const
         throw std::runtime_error("Not implemented");
     }
 }
-template Elements<Scalar> Elements<Scalar>::operator*(const Scalar&) const;
+template Elements<Scalar> Elements<Scalar>::operator*(const Scalar& s) const;
 template Elements<G1Point> Elements<G1Point>::operator*(const Scalar& s) const;
 
 template <typename T>
@@ -174,6 +184,34 @@ Elements<T> Elements<T>::operator-(const Elements<T>& other) const
 }
 template Elements<Scalar> Elements<Scalar>::operator-(const Elements<Scalar>& other) const;
 template Elements<G1Point> Elements<G1Point>::operator-(const Elements<G1Point>& other) const;
+
+template <typename T>
+Elements<T> Elements<T>::operator=(const Elements<T>& other) const
+{
+    ConfirmSizesMatch(other.Size());
+
+    if constexpr (std::is_same_v<T, Scalar>) {
+        Elements<T> ret;
+        for (size_t i = 0; i < m_vec.size(); ++i) {
+            auto copy = Scalar(other.m_vec[i]);
+            ret.m_vec.push_back(copy);
+        }
+        return ret;
+
+    } else if constexpr (std::is_same_v<T, G1Point>) {
+        Elements<T> ret;
+        for (size_t i = 0; i < m_vec.size(); ++i) {
+            auto copy = G1Point(other.m_vec[i]);
+            ret.m_vec.push_back(copy);
+        }
+        return ret;
+
+    } else {
+        throw std::runtime_error("Not implemented");
+    }
+}
+template Elements<Scalar> Elements<Scalar>::operator=(const Elements<Scalar>& other) const;
+template Elements<G1Point> Elements<G1Point>::operator=(const Elements<G1Point>& other) const;
 
 template <typename T>
 bool Elements<T>::operator==(const Elements<T>& other) const

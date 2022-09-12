@@ -82,8 +82,10 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/blsct/arith/elements_tests.cpp \
   test/blsct/arith/g1point_tests.cpp \
+  test/blsct/arith/generators_tests.cpp \
   test/blsct/arith/scalar_tests.cpp \
   test/blsct/arith/bls_arith_integration_tests.cpp \
+  test/blsct/arith/range_proof_tests.cpp \
   test/blsct/keys_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \

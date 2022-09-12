@@ -28,17 +28,18 @@ template <typename T>
 class Elements
 {
 public:
-    Elements<T>() {}
-    Elements<T>(const std::vector<T>& vec) : m_vec(vec) {}
+    Elements() {}
+    Elements(const std::vector<T>& vec) : m_vec(vec) {}
 
     T Sum() const;
     T operator[](int index) const;
     size_t Size() const;
+    bool Empty() const;
     void Add(const T x);
 
     void ConfirmSizesMatch(const size_t& other_size) const;
-    static Elements<T> FirstNPow(const size_t& n, const Scalar& k);
-    static Elements<T> RepeatN(const size_t& n, const T& k);
+    static Elements<T> FirstNPow(const Scalar& k, const size_t& n, const size_t& from_index = 0);
+    static Elements<T> RepeatN(const T& k, const size_t& n);
     static Elements<T> RandVec(const size_t& n, const bool exclude_zero = false);
 
     /**
@@ -68,6 +69,8 @@ public:
      * [p1, p2] - [q1, q2] = [p1-q1, p2-q2]
      */
     Elements<T> operator-(const Elements<T>& other) const;
+
+    Elements<T> operator=(const Elements<T>& other) const;
 
     bool operator==(const Elements<T>& other) const;
 

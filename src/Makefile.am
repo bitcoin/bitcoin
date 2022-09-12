@@ -158,7 +158,9 @@ BITCOIN_CORE_H = \
   blockfilter.h \
   blsct/arith/elements.h \
   blsct/arith/g1point.h \
+  blsct/arith/generators.h \
   blsct/arith/mcl_initializer.h \
+  blsct/arith/range_proof.h \
   blsct/arith/scalar.h \
   blsct/keys.h \
   chain.h \
@@ -180,6 +182,7 @@ BITCOIN_CORE_H = \
   consensus/tx_verify.h \
   core_io.h \
   core_memusage.h \
+  ctokens/tokenid.h \
   cuckoocache.h \
   dbwrapper.h \
   deploymentinfo.h \
@@ -393,7 +396,9 @@ libbitcoin_node_a_SOURCES = \
   blockfilter.cpp \
   blsct/arith/elements.cpp \
   blsct/arith/g1point.cpp \
+  blsct/arith/generators.cpp \
   blsct/arith/mcl_initializer.cpp \
+  blsct/arith/range_proof.cpp \
   blsct/arith/scalar.cpp \
   blsct/keys.cpp \
   chain.cpp \

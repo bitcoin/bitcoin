@@ -159,19 +159,12 @@ BOOST_AUTO_TEST_CASE(test_scalar_constructors)
         BOOST_CHECK_EQUAL(a.GetString(), "0");
     }
 
-    //// int64_t
-    {
-        int64_t ui = 65535;
+    //// uint64_t
+    for(size_t shift = 0; shift < 64; ++shift) {
+        uint64_t ui = 1 << shift;
         Scalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetInt64(), ui);
+        BOOST_CHECK_EQUAL(a.GetUint64(), ui);
     }
-    {
-        int64_t ui = std::numeric_limits<int64_t>::max();
-        Scalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetInt64(), ui);
-    }
-
-    // TODO test negative input and possibly make the fixes
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_add)
@@ -349,10 +342,9 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
     Scalar base(0b1);
     int64_t exp = 1;
-    // We limit the loops to 30 counts as int64_t will just overflow
-    for(unsigned int i=0; i<31; ++i) {
+    for(unsigned int i=0; i<64; ++i) {
         Scalar a = base << i;
-        BOOST_CHECK_EQUAL(a.GetInt64(), exp);
+        BOOST_CHECK_EQUAL(a.GetUint64(), exp);
         exp <<= 1;
     }
 }
@@ -360,9 +352,9 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 BOOST_AUTO_TEST_CASE(test_scalar_assign)
 {
     {
-        int64_t n = INT64_MAX;
+        uint64_t n = UINT64_MAX;
         Scalar a = n;
-        BOOST_CHECK_EQUAL(a.GetInt64(), n);
+        BOOST_CHECK_EQUAL(a.GetUint64(), n);
     }
     {
         Scalar a(INT64_MIN);
@@ -473,21 +465,20 @@ BOOST_AUTO_TEST_CASE(test_scalar_rand)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_scalar_getint64)
+BOOST_AUTO_TEST_CASE(test_scalar_getuint64)
 {
     {
-        Scalar a(INT64_MAX);
-        int64_t b = a.GetInt64();
-        int64_t c = 9223372036854775807;
+        Scalar a(UINT64_MAX);
+        uint64_t b = a.GetUint64();
+        uint64_t c = 9223372036854775807;
         BOOST_CHECK_EQUAL(b, c);
     }
     {
         Scalar base(0b1);
         int64_t exp = 1;
-        // We limit the loops to 30 counts as int64_t will just overflow
-        for(unsigned int i=0; i<31; ++i) {
+        for (uint8_t i=0; i<64; ++i) {
             Scalar a = base << i;
-            BOOST_CHECK_EQUAL(a.GetInt64(), exp);
+            BOOST_CHECK_EQUAL(a.GetUint64(), exp);
             exp <<= 1;
         }
     }
@@ -708,7 +699,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_setpow2)
     for (size_t i = 0; i < 10; ++i) {
         Scalar a;
         a.SetPow2(i);
-        BOOST_CHECK_EQUAL(a.GetInt64(), std::pow(2, i));
+        BOOST_CHECK_EQUAL(a.GetUint64(), std::pow(2, i));
     }
 }
 
@@ -721,7 +712,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_hash)
 
     Scalar a(1);
     const int n = 42;
-    uint256 digest = a.Hash(n);
+    uint256 digest = a.GetHashWithSalt(n);
     auto act = digest.GetHex();
     std::string exp("cd3f58bb5489460619c322a3b0ec0a21432a22a03ca345e458165b0aaf1202c0");
     BOOST_CHECK(act == exp);

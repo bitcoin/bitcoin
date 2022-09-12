@@ -14,6 +14,9 @@
 #include <string>
 #include <vector>
 
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <bls/bls384_256.h> // must include this before bls/bls.h
 #include <bls/bls.h>
 #include <blsct/arith/mcl_initializer.h>
@@ -21,8 +24,6 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
-
-#define CHECK_AND_ASSERT_THROW_MES(expr, message) do {if(!(expr)) throw std::runtime_error(message);} while(0)
 
 class Scalar {
 public:
@@ -67,7 +68,7 @@ public:
 
     static Scalar Rand(bool exclude_zero = false);
 
-    int64_t GetInt64() const;
+    uint64_t GetUint64() const;
 
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& v);
@@ -77,7 +78,7 @@ public:
      */
     void SetPow2(int n);
 
-    uint256 Hash(const int& n) const;
+    uint256 GetHashWithSalt(const uint64_t& salt) const;
 
     std::string GetString(const int8_t radix = 16) const;
 
