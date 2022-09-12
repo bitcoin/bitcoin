@@ -88,12 +88,9 @@ public:
     inline static const size_t m_max_value_vec_len = m_max_value_len * m_bit_size;
 
     // values are assigned in the first constructor call
-    inline static Scalar m_one = Scalar(1);
-    inline static Scalar m_two = Scalar(2);
-
-    // inline static m_one_n = VectorDup(m_one, m_max_n);
-    inline static Scalars m_two_pow_bit_size = Scalars::FirstNPow(m_two, m_bit_size);
-    // inline static ip12 = InnerProduct(Bulletproofs::oneN, Bulletproofs::twoN);
+    static Scalar m_one;
+    static Scalar m_two;
+    static Scalars m_two_pow_bit_size;
 
 
 private:

@@ -4,6 +4,10 @@
 #include <util/strencodings.h>
 #include "tinyformat.h"
 
+Scalar RangeProof::m_one;
+Scalar RangeProof::m_two;
+Scalars RangeProof::m_two_pow_bit_size;
+
 RangeProof::RangeProof()
 {
     if (m_is_static_values_initialized) return;
@@ -12,6 +16,10 @@ RangeProof::RangeProof()
     MclInitializer::Init();
     G1Point::Init();
     Generators::Init(m_bit_size, m_max_value_vec_len);
+
+    RangeProof::m_one = Scalar(1);
+    RangeProof::m_two = Scalar(2);
+    RangeProof::m_two_pow_bit_size = Scalars::FirstNPow(m_two, m_bit_size);
 
     m_is_static_values_initialized = true;
 }

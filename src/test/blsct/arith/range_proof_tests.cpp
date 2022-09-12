@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <test/util/setup_common.h>
-#include <blsct/arith/range_proof.h>
+//#include <blsct/arith/range_proof.h>
 
 #include <boost/test/unit_test.hpp>
 

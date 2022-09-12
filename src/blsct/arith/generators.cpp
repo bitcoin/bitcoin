@@ -54,7 +54,7 @@ G1Point Generators::GetGenerator(
         salt +
         std::to_string(index) +
         token_id.token.ToString() +
-        (token_id.subid != -1 ? "nft" + std::to_string(token_id.subid) : "");
+        (token_id.subid == std::numeric_limits<uint64_t>::max() ? "" : "nft" + std::to_string(token_id.subid));
 
     CHashWriter ss(SER_GETHASH, 0);
     ss << hash_preimage;
