@@ -165,9 +165,9 @@ public:
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
     }
-    NodesStats getNodesStats() override
+    std::vector<std::pair<CNodeStats, CNodeStateStats>> getNodesStats() override
     {
-        interfaces::Node::NodesStats stats;
+        std::vector<std::pair<CNodeStats, CNodeStateStats>> stats;
         if (!m_context->connman) return stats;
 
         std::vector<CNodeStats> stats_temp;

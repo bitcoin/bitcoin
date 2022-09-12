@@ -126,8 +126,7 @@ public:
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
 
     //! Get stats for connected nodes.
-    using NodesStats = std::vector<std::pair<CNodeStats, CNodeStateStats>>;
-    virtual NodesStats getNodesStats() = 0;
+    virtual std::vector<std::pair<CNodeStats, CNodeStateStats>> getNodesStats() = 0;
 
     //! Get ban map entries.
     virtual bool getBanned(banmap_t& banmap) = 0;
