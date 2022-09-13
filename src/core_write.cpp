@@ -391,7 +391,8 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         }
         if (have_undo) {
             const Coin& prev_coin = txundo->vprevout[i];
-            const CTxOut& prev_txout = prev_coin.out;
+            // SYSCOIN
+            const CTxOutCoin& prev_txout = prev_coin.out;
 
             amt_total_in += prev_txout.nValue;
 

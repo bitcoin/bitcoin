@@ -63,8 +63,8 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
     outputs.push_back(psbtout);
     return true;
 }
-
-bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
+// SYSCOIN
+bool PartiallySignedTransaction::GetInputUTXO(CTxOutCoin& utxo, int input_index) const
 {
     const PSBTInput& input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
@@ -307,7 +307,8 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
 {
     const CMutableTransaction& tx = *psbt.tx;
     bool have_all_spent_outputs = true;
-    std::vector<CTxOut> utxos(tx.vin.size());
+    // SYSCOIN
+    std::vector<CTxOutCoin> utxos(tx.vin.size());
     for (size_t idx = 0; idx < tx.vin.size(); ++idx) {
         if (!psbt.GetInputUTXO(utxos[idx], idx)) have_all_spent_outputs = false;
     }
@@ -335,7 +336,8 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
 
     // Get UTXO
     bool require_witness_sig = false;
-    CTxOut utxo;
+    // SYSCOIN
+    CTxOutCoin utxo;
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.

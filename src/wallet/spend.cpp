@@ -884,7 +884,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
         // Include the fee cost for outputs.
         if (!coin_selection_params.m_subtract_fee_outputs) {
-            // SYSCOIN need to account for CNEVMData.nSize for PoDA fees
+            // SYSCOIN need to account for CNEVMData data size for PoDA fees
             coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION, SER_SIZE, txNew.nVersion);
         }
 
@@ -1120,8 +1120,8 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
             error = _("Unable to find UTXO for external input");
             return false;
         } else {
-            // The input was not in the wallet, but is in the UTXO set, so select as external
-            coinControl.SelectExternal(outPoint, coins[outPoint].out);
+            // SYSCOIN The input was not in the wallet, but is in the UTXO set, so select as external
+            coinControl.SelectExternal(outPoint, CTxOut(coins[outPoint].out.nValue,coins[outPoint].out.scriptPubKey));
         }
     }
 

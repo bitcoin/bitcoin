@@ -13,7 +13,7 @@ class CNEVMBlock;
 class CNEVMHeader;
 class CBlock;
 class uint256;
-class CNEVMDataPayload;
+class CNEVMData;
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
 private:
@@ -58,13 +58,13 @@ public:
 class CZMQPublishNEVMBlobNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyCheckNEVMBlobs(const std::vector<const CNEVMDataPayload*> &nevmData, BlockValidationState &state) override;
+    bool NotifyCheckNEVMBlobs(const std::vector<const CNEVMData*> &nevmData, BlockValidationState &state) override;
 };
 
 class CZMQPublishNEVMCreateBlobNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMDataPayload &nevmData, BlockValidationState &state) override;
+    bool NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) override;
 };
 
 class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier

@@ -1920,7 +1920,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     }
 
     if (!txdata.m_spent_outputs_ready) {
-        std::vector<CTxOut> spent_outputs;
+        // SYSCOIN
+        std::vector<CTxOutCoin> spent_outputs;
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {
@@ -2130,20 +2131,20 @@ bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     return true;
 }
 // optimize so KZG validations can be skipped if they are already done (version hash must exist and data must be the same as well to skip)
-bool BlobExistsInCache(const CNEVMDataPayload* nevmDataToFind, bool &bDataMismatch) {
-    auto it = mapPoDA.find(nevmDataToFind->nevmData.vchVersionHash);
+bool BlobExistsInCache(const CNEVMData* nevmDataToFind, bool &bDataMismatch) {
+    auto it = mapPoDA.find(nevmDataToFind->vchVersionHash);
     if(it != mapPoDA.end()) {
         bDataMismatch = it->second != *nevmDataToFind->vchNEVMData;
         return !bDataMismatch;
     }
     return false;
 }
-void WritePoDA(const std::vector<const CNEVMDataPayload*> &vecNEVMDataToProcess) {
+void WritePoDA(const std::vector<const CNEVMData*> &vecNEVMDataToProcess) {
     for (const auto &nevmDataPayload : vecNEVMDataToProcess) {
-        mapPoDA.try_emplace(nevmDataPayload->nevmData.vchVersionHash, *nevmDataPayload->vchNEVMData);
+        mapPoDA.try_emplace(nevmDataPayload->vchVersionHash, *nevmDataPayload->vchNEVMData);
     }
 }
-bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVMDataPayload*> &vecNevmDataPayload, const int64_t nMedianTime, const int64_t &nTimeNow, NEVMDataVec *nevmDataVecOut, bool fJustCheck) { 
+bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVMData*> &vecNevmDataPayload, const int64_t nMedianTime, const int64_t &nTimeNow, NEVMDataVec *nevmDataVecOut, bool fJustCheck) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
@@ -2154,7 +2155,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVM
         }
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
-    std::vector<const CNEVMDataPayload*> vecNEVMDataToProcess;
+    std::vector<const CNEVMData*> vecNEVMDataToProcess;
     for (auto &nevmDataPayload : vecNevmDataPayload) {
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
@@ -2171,7 +2172,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVM
             vecNEVMDataToProcess.emplace_back(nevmDataPayload);
         }
         if(bDataMismatch) {
-            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment, VH: %s, data size from network: %d\n", HexStr(nevmDataPayload->nevmData.vchVersionHash), nevmDataPayload->vchNEVMData->size());
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment, VH: %s, data size from network: %d\n", HexStr(nevmDataPayload->vchVersionHash), nevmDataPayload->vchNEVMData->size());
             return false;   
         }
     }
@@ -2194,14 +2195,14 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, std::vector<const CNEVM
     }
     if(nevmDataVecOut){
         for (const auto &nevmDataPayload : vecNevmDataPayload) {
-            nevmDataVecOut->emplace_back(nevmDataPayload->nevmData.vchVersionHash);
+            nevmDataVecOut->emplace_back(nevmDataPayload->vchVersionHash);
         }
     }
     return true;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
 bool ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec *nevmDataVecOut, bool fJustCheck) {
-    std::vector<const CNEVMDataPayload*> vecNevmDataPayload;
+    std::vector<const CNEVMData*> vecNevmDataPayload;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
@@ -2213,7 +2214,7 @@ bool ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const in
                 }
                 return false;
             }
-            const CNEVMDataPayload *nevmDataPayload = new CNEVMDataPayload(*tx);
+            const CNEVMData *nevmDataPayload = new CNEVMData(*tx);
             if(nevmDataPayload->IsNull()) {
                 delete nevmDataPayload;
                 for (auto &nevmDataPayload : vecNevmDataPayload) {
@@ -2239,11 +2240,11 @@ bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const
     if(!tx.IsNEVMData()) {
         return true;
     }
-    const CNEVMDataPayload nevmDataPayload(tx);
+    const CNEVMData nevmDataPayload(tx);
     if(nevmDataPayload.IsNull()) {
         return false;
     }
-    std::vector<const CNEVMDataPayload*> vecNevmDataPayload;
+    std::vector<const CNEVMData*> vecNevmDataPayload;
     vecNevmDataPayload.emplace_back(&nevmDataPayload);
     if(!ProcessNEVMDataHelper(blockman, vecNevmDataPayload, nMedianTime, nTimeNow, nullptr, fJustCheck)) {
         return false;

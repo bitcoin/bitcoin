@@ -999,7 +999,8 @@ static RPCHelpMan decodepsbt()
         UniValue in(UniValue::VOBJ);
         // UTXOs
         bool have_a_utxo = false;
-        CTxOut txout;
+        // SYSCOIN
+        CTxOutCoin txout;
         if (!input.witness_utxo.IsNull()) {
             txout = input.witness_utxo;
 

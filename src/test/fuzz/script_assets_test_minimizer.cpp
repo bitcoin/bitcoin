@@ -60,13 +60,13 @@ CMutableTransaction TxFromHex(const std::string& str)
     }
     return tx;
 }
-
-std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
+// SYSCOIN
+std::vector<CTxOutCoin> TxOutsFromJSON(const UniValue& univalue)
 {
     if (!univalue.isArray()) throw std::runtime_error("Prevouts must be array");
-    std::vector<CTxOut> prevouts;
+    std::vector<CTxOutCoin> prevouts;
     for (size_t i = 0; i < univalue.size(); ++i) {
-        CTxOut txout;
+        CTxOutCoin txout;
         try {
             SpanReader{SER_DISK, 0, CheckedParseHex(univalue[i].get_str())} >> txout;
         } catch (const std::ios_base::failure&) {
@@ -147,7 +147,8 @@ void Test(const std::string& str)
     if (!test.read(str) || !test.isObject()) throw std::runtime_error("Non-object test input");
 
     CMutableTransaction tx = TxFromHex(test["tx"].get_str());
-    const std::vector<CTxOut> prevouts = TxOutsFromJSON(test["prevouts"]);
+    // SYSCOIN
+    const std::vector<CTxOutCoin> prevouts = TxOutsFromJSON(test["prevouts"]);
     if (prevouts.size() != tx.vin.size()) throw std::runtime_error("Incorrect number of prevouts");
     size_t idx = test["index"].getInt<int64_t>();
     if (idx >= tx.vin.size()) throw std::runtime_error("Invalid index");
@@ -158,7 +159,8 @@ void Test(const std::string& str)
         tx.vin[idx].scriptSig = ScriptFromHex(test["success"]["scriptSig"].get_str());
         tx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
         PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        // SYSCOIN
+        txdata.Init(tx, std::vector<CTxOutCoin>(prevouts));
         MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
         for (const auto flags : ALL_FLAGS) {
             // "final": true tests are valid for all flags. Others are only valid with flags that are
@@ -173,7 +175,8 @@ void Test(const std::string& str)
         tx.vin[idx].scriptSig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
         tx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
         PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        // SYSCOIN
+        txdata.Init(tx, std::vector<CTxOutCoin>(prevouts));
         MutableTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
         for (const auto flags : ALL_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.

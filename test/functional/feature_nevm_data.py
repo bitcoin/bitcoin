@@ -35,7 +35,8 @@ class NEVMDataTest(DashTestFramework):
         vh = secrets.token_hex(32)
         print('Trying 2MB + 1 to ensure it cannot create blob...')
         blobDataMaxPlus = secrets.token_hex(MAX_NEVM_DATA_BLOB + 1)
-        assert_raises_rpc_error(-1, 'Unknown transaction nevm data', self.nodes[0].syscoincreaterawnevmblob, vh, blobDataMaxPlus)
+        txBad = self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMaxPlus)['txid']
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
         print('Trying 2MB * MAX_DATA_BLOBS per block...')
         self.blobVHs = []
         for i in range(0, 33):

@@ -19,6 +19,7 @@
 // SYSCOIN
 #include <streams.h>
 #include <pubkey.h>
+#include <logging.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-override"
@@ -70,6 +71,14 @@ CTxOut::CTxOut(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
 {
     nValue = nValueIn;
     scriptPubKey = scriptPubKeyIn;
+    assetInfo.SetNull();
+}
+// SYSCOIN
+CTxOutCoin::CTxOutCoin(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
+{
+    nValue = nValueIn;
+    scriptPubKey = scriptPubKeyIn;
+    assetInfo.SetNull();
 }
 std::string CTxOut::ToString() const
 {
@@ -78,7 +87,14 @@ std::string CTxOut::ToString() const
     else
         return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
 }
-
+// SYSCOIN
+std::string CTxOutCoin::ToString() const
+{
+    if(assetInfo.IsNull())
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
+    else
+        return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+}
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 // SYSCOIN
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), voutAssets(tx.voutAssets) {}
@@ -784,10 +800,6 @@ CNEVMData::CNEVMData(const CTransaction &tx) {
     SetNull();
     UnserializeFromTx(tx);
 }
-CNEVMDataPayload::CNEVMDataPayload(const CTransaction &tx) {
-    SetNull();
-    UnserializeFromTx(tx);
-}
 int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
     try {
 		CDataStream dsNEVMData(vchPayload, SER_NETWORK, PROTOCOL_VERSION);
@@ -795,10 +807,6 @@ int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload)
         if(vchVersionHash.size() != 32) {
             SetNull();
             return -1;
-        }
-        if(nSize > MAX_NEVM_DATA_BLOB) {
-            SetNull();
-            return -1;    
         }
         return dsNEVMData.size();
     } catch (std::exception &e) {
@@ -823,6 +831,15 @@ bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
 		SetNull();
 		return false;
 	}
+    if(!tx.vout[nOut].vchNEVMData.empty()) {
+        vchNEVMData = &tx.vout[nOut].vchNEVMData;
+        if(vchNEVMData->size() > MAX_NEVM_DATA_BLOB) {
+            // avoid from deleting in SetNull because vchNEVMData memory isn't owned by CNEVMData
+            vchNEVMData = nullptr;
+            SetNull();
+            return false;    
+        }
+    }
     return true;
 }
 bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
@@ -837,31 +854,6 @@ bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
 		SetNull();
 		return false;
 	}
-    return true;
-}
-int CNEVMDataPayload::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
-	return nevmData.UnserializeFromData(vchPayload);
-}
-bool CNEVMDataPayload::UnserializeFromTx(const CTransaction &tx) {
-	std::vector<unsigned char> vchData;
-	int nOut;
-	if (!GetSyscoinData(tx, vchData, nOut))
-	{
-		SetNull();
-		return false;
-	}
-	if(UnserializeFromData(vchData) != 0)
-	{	
-		SetNull();
-		return false;
-	}
-    if(!tx.vout[nOut].vchNEVMData.empty()) {
-        vchNEVMData = &tx.vout[nOut].vchNEVMData;
-        if(nevmData.nSize != vchNEVMData->size()) {
-            SetNull();
-            return -1;
-        }
-    }
     return true;
 }
 void CNEVMData::SerializeData(std::vector<unsigned char> &vchData) {

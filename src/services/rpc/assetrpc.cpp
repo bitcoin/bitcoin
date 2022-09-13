@@ -584,6 +584,7 @@ static RPCHelpMan getnevmblobdata()
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
     std::vector<uint8_t> vchVH;
     uint32_t nSize = 0;
+    CNEVMData nevmData;
     {
         LOCK(cs_main);
         const Coin& coin = AccessByTxid(node.chainman->ActiveChainstate().CoinsTip(), txhash);
@@ -601,13 +602,11 @@ static RPCHelpMan getnevmblobdata()
         if(pblockindex != nullptr) {
             tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);
         }
-        uint32_t nSize;
         if(!tx || hashBlock.IsNull()) {
             vchVH = ParseHex(request.params[0].get_str());
         }
         else {
-            CNEVMData nevmData(*tx);
-            nSize = nevmData.nSize;
+            nevmData = CNEVMData(*tx);
             if(nevmData.IsNull()){
                 throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse blob data from transaction");
             }
@@ -628,13 +627,19 @@ static RPCHelpMan getnevmblobdata()
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
     if(bGetData) {
-        if(!pnevmdatadb->ReadData(vchVH, vchData)) {
-            auto it = mapPoDA.find(vchVH);
-            if(it == mapPoDA.end())
-                throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
-            vchData = it->second;
+        if(nevmData.vchNEVMData && !nevmData.vchNEVMData->empty()) {
+            oNEVM.__pushKV("data", HexStr(*nevmData.vchNEVMData));
         }
-        oNEVM.__pushKV("data", HexStr(vchData));
+        else {
+            if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+                auto it = mapPoDA.find(vchVH);
+                if(it == mapPoDA.end())
+                    throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
+                oNEVM.__pushKV("data", HexStr(it->second));
+            } else {
+                oNEVM.__pushKV("data", HexStr(vchData));
+            }
+        }
     }
     return oNEVM;
 },

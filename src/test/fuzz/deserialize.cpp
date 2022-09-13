@@ -296,7 +296,8 @@ FUZZ_TARGET_DESERIALIZE(diskblockindex_deserialize, {
     DeserializeFromFuzzingInput(buffer, dbi);
 })
 FUZZ_TARGET_DESERIALIZE(txoutcompressor_deserialize, {
-    CTxOut to;
+    // SYSCOIN
+    CTxOutCoin to;
     auto toc = Using<TxOutCompression>(to);
     DeserializeFromFuzzingInput(buffer, toc);
 })

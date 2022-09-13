@@ -2026,7 +2026,8 @@ static RPCHelpMan getblockstats()
             CAmount tx_total_in = 0;
             const auto& txundo = blockUndo.vtxundo.at(i - 1);
             for (const Coin& coin: txundo.vprevout) {
-                const CTxOut& prevoutput = coin.out;
+                // SYSCOIN
+                const CTxOutCoin& prevoutput = coin.out;
 
                 tx_total_in += prevoutput.nValue;
                 utxo_size_inc -= GetSerializeSize(prevoutput, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
@@ -2287,7 +2288,8 @@ static RPCHelpMan scantxoutset()
 
         // Scan the unspent transaction output set for inputs
         UniValue unspents(UniValue::VARR);
-        std::vector<CTxOut> input_txos;
+        // SYSCOIN
+        std::vector<CTxOutCoin> input_txos;
         std::map<COutPoint, Coin> coins;
         g_should_abort_scan = false;
         int64_t count = 0;
@@ -2311,7 +2313,8 @@ static RPCHelpMan scantxoutset()
         for (const auto& it : coins) {
             const COutPoint& outpoint = it.first;
             const Coin& coin = it.second;
-            const CTxOut& txo = coin.out;
+            // SYSCOIN
+            const CTxOutCoin& txo = coin.out;
             input_txos.push_back(txo);
             total_in += txo.nValue;
 

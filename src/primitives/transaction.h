@@ -77,7 +77,7 @@ const int SYSCOIN_TX_VERSION_NEVM_DATA = 137;
 const int SYSCOIN_TX_MIN_ASSET_GUID = SYSCOIN_TX_VERSION_ALLOCATION_SEND * 10;
 const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN_LEGACY = 0x7400;
 const int MAX_MEMO = 256;
-const int MAX_NEVM_DATA_BLOB = 2097120;
+const int MAX_NEVM_DATA_BLOB = 2097168; // 32*64k field elements + 48 byte commitment
 const int MAX_DATA_BLOBS = 32;
 const int MAX_NEVM_DATA_BLOCK = MAX_NEVM_DATA_BLOB * MAX_DATA_BLOBS; // 64MB
 const int NEVM_DATA_EXPIRE_TIME = 21600; // 6 hour
@@ -437,52 +437,30 @@ bool IsSyscoinNEVMDataTx(const int &nVersion);
 class CNEVMData {
 public:
     std::vector<uint8_t> vchVersionHash;
-    uint32_t nSize;
+    const std::vector<uint8_t> *vchNEVMData{nullptr};
     CNEVMData() {
         SetNull();
     }
     explicit CNEVMData(const CScript &script);
     explicit CNEVMData(const CTransaction &tx);
-    
-    inline void ClearData() {
-        vchVersionHash.clear();
-        nSize = 0;
-    }
-    SERIALIZE_METHODS(CNEVMData, obj) {
-        READWRITE(obj.vchVersionHash, obj.nSize);
-    }
-    inline void SetNull() { ClearData(); }
-    inline bool IsNull() const { return (vchVersionHash.empty() || nSize == 0); }
-    bool UnserializeFromTx(const CTransaction &tx);
-    bool UnserializeFromTx(const CMutableTransaction &mtx);
-    bool UnserializeFromScript(const CScript& script);
-    int UnserializeFromData(const std::vector<unsigned char> &vchData);
-    void SerializeData(std::vector<unsigned char>& vchData);
-};
-class CNEVMDataPayload {
-public:
-    CNEVMData nevmData;
-    const std::vector<uint8_t> *vchNEVMData{nullptr};
-    CNEVMDataPayload() {
-        SetNull();
-    }
-    explicit CNEVMDataPayload(const CTransaction &tx);
-    explicit CNEVMDataPayload(const CNEVMData &nevmDataIn, const std::vector<uint8_t> &vchNEVMDataIn): nevmData(nevmDataIn) {
+    explicit CNEVMData(const std::vector<uint8_t> &vchVersionHashIn, const std::vector<uint8_t> &vchNEVMDataIn): vchVersionHash(vchVersionHashIn) {
         vchNEVMData = new std::vector<uint8_t>{vchNEVMDataIn};
     }
-    SERIALIZE_METHODS(CNEVMDataPayload, obj) {
-        READWRITE(obj.nevmData);
-    }
     inline void ClearData() {
-        nevmData.ClearData();
+        vchVersionHash.clear();
         if(vchNEVMData) {
             delete vchNEVMData;
         }
         vchNEVMData = nullptr;
     }
+    SERIALIZE_METHODS(CNEVMData, obj) {
+        READWRITE(obj.vchVersionHash);
+    }
     inline void SetNull() { ClearData(); }
-    inline bool IsNull() const { return (nevmData.IsNull()); }
+    inline bool IsNull() const { return (vchVersionHash.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
+    bool UnserializeFromTx(const CMutableTransaction &mtx);
+    bool UnserializeFromScript(const CScript& script);
     int UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
@@ -513,11 +491,7 @@ public:
                 READWRITE(obj.vchNEVMData);
             } else {
                 if(s.GetType() == SER_SIZE) {
-                    CNEVMData nevmData(obj.scriptPubKey);
-                    if(nevmData.IsNull()) {
-                        throw std::ios_base::failure("Unknown transaction nevm data");
-                    }
-                    s.seek(nevmData.nSize * NEVM_DATA_SCALE_FACTOR);
+                    s.seek(obj.vchNEVMData.size() * NEVM_DATA_SCALE_FACTOR);
                 }
             }
         }
@@ -551,12 +525,65 @@ public:
     }
     std::string ToString() const;
 };
+/** An output of a transaction.  It contains the public key that the next input
+ * must be able to sign with to claim it.
+ */
+class CTxOutCoin
+{
+public:
+    CAmount nValue;
+    CScript scriptPubKey;
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
+    CTxOutCoin()
+    {
+        SetNull();
+    }
+    // SYSCOIN
+    CTxOutCoin(const CTxOut& txOutIn) {
+        nValue = txOutIn.nValue;
+        scriptPubKey = txOutIn.scriptPubKey;
+        assetInfo = txOutIn.assetInfo;
+    }
+    CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
+    CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
+    SERIALIZE_METHODS(CTxOutCoin, obj)
+    {
+        READWRITE(obj.nValue, obj.scriptPubKey);
+    }
+
+
+    void SetNull()
+    {
+        assetInfo.SetNull();
+        nValue = -1;
+        scriptPubKey.clear();
+    }
+
+    bool IsNull() const
+    {
+        return (nValue == -1);
+    }
+
+    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return (a.nValue       == b.nValue &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.assetInfo    == b.assetInfo);
+    }
+
+    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
+    {
+        return !(a == b);
+    }
+    std::string ToString() const;
+};
 
 
 /** wrapper for CTxOut that provides a more compact serialization */
 struct TxOutCompression
 {
-    FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
+    FORMATTER_METHODS(CTxOutCoin, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey), Using<AssetCoinInfoCompression>(obj.assetInfo)); }
 };
 
 class CAssetOutValue {

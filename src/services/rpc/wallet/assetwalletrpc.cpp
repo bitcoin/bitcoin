@@ -196,9 +196,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
-    const std::vector<unsigned char> &vchData = ParseHex(request.params[1].get_str());
+    const std::vector<uint8_t> &vchData = ParseHex(request.params[1].get_str());
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
-    nevmData.nSize = vchData.size();
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
     UniValue output(UniValue::VARR);
@@ -222,8 +221,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
     if(fNEVMConnection) {
-        std::vector<const CNEVMDataPayload*> vecNEVMDataToProcess;
-        CNEVMDataPayload nevmDataPayload(nevmData, vchData);
+        std::vector<const CNEVMData*> vecNEVMDataToProcess;
+        CNEVMData nevmDataPayload(nevmData.vchVersionHash, vchData);
         vecNEVMDataToProcess.emplace_back(&nevmDataPayload);
         // process new vector in batch checking the blobs
         BlockValidationState state;
@@ -299,14 +298,14 @@ static RPCHelpMan syscoincreatenevmblob()
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
-    CNEVMDataPayload nevmDataPayload;
+    CNEVMData nevmDataPayload;
     // if not in DB then we need to verify it via Geth KZG blob verification
     GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmDataPayload, state);
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
     UniValue paramsSend(UniValue::VARR);
-    paramsSend.push_back(HexStr(nevmDataPayload.nevmData.vchVersionHash));
+    paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
     paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
     nevmDataPayload.ClearData();
     paramsSend.push_back(request.params[1]);
@@ -321,8 +320,8 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.__pushKV("versionhash", HexStr(nevmDataPayload.nevmData.vchVersionHash));
-            resObj.__pushKV("datasize", nevmDataPayload.nevmData.nSize);
+            resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
+            resObj.__pushKV("datasize", nevmDataPayload.vchNEVMData->size());
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   

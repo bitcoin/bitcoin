@@ -173,7 +173,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // While we're here, calculate the input amount
     std::map<COutPoint, Coin> coins;
     CAmount input_value = 0;
-    std::vector<CTxOut> spent_outputs;
+    // SYSCOIN
+    std::vector<CTxOutCoin> spent_outputs;
     for (const CTxIn& txin : wtx.tx->vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
@@ -187,7 +188,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         if (wallet.IsMine(txin.prevout)) {
             new_coin_control.Select(txin.prevout);
         } else {
-            new_coin_control.SelectExternal(txin.prevout, coin.out);
+            // SYSCOIN
+            new_coin_control.SelectExternal(txin.prevout, CTxOut(coin.out.nValue, coin.out.scriptPubKey));
         }
         input_value += coin.out.nValue;
         spent_outputs.push_back(coin.out);

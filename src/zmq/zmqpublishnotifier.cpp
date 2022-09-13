@@ -478,7 +478,7 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
     }
     return true;
 }
-bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMDataPayload*> &vecNEVMDataPayload, BlockValidationState &state)
+bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData*> &vecNEVMDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -492,7 +492,7 @@ bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const C
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     WriteCompactSize(ss, vecNEVMDataPayload.size());
     for(const auto &nevmDataPayload: vecNEVMDataPayload) {
-        ss << nevmDataPayload->nevmData.vchVersionHash << *nevmDataPayload->vchNEVMData;
+        ss << nevmDataPayload->vchVersionHash << *nevmDataPayload->vchNEVMData;
     }
 
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm check blob to %s, subscriber %s\n", this->address, this->addresssub);
@@ -564,7 +564,7 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
     }
     return true;
 }
-bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMDataPayload &nevmDataPayload, BlockValidationState &state)
+bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -591,8 +591,7 @@ bool CZMQPublishNEVMCreateBlobNotifier::NotifyCreateNEVMBlob(const std::vector<u
         CDataStream ss(evmData, SER_NETWORK, PROTOCOL_VERSION);
         std::vector<uint8_t> vchNEVMDataRead;
         try {
-            ss >> nevmDataPayload.nevmData.vchVersionHash >> vchNEVMDataRead;
-            nevmDataPayload.nevmData.nSize = vchNEVMDataRead.size();
+            ss >> nevmDataPayload.vchVersionHash >> vchNEVMDataRead;
             
         } catch (const std::exception& e) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
