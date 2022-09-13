@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
         newcoin.out.nValue = InsecureRand32();
-        // SYSCOIN account for extra coin data for assets
-        newcoin.out.scriptPubKey.assign((uint32_t)40, 1);
+        // SYSCOIN account for extra coin data for assets+poda (1 byte vector compact size)
+        newcoin.out.scriptPubKey.assign((uint32_t)39, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 
         return outp;

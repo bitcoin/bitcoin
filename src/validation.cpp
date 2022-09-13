@@ -2891,7 +2891,7 @@ bool CChainState::FlushStateToDisk(
                 UnlinkPrunedFiles(setFilesToPrune);
             }
             // SYSCOIN
-            if (!pnevmdatadb->FlushData(mapPoDA)) {
+            if (pnevmdatadb && !pnevmdatadb->FlushData(mapPoDA)) {
                 return AbortNode(state, "Failed to commit PoDA");
             }
             nLastWrite = nNow;
