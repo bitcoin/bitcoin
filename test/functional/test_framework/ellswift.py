@@ -8,6 +8,7 @@ WARNING: This code is slow and uses bad randomness.
 Do not use for anything but tests."""
 
 import random
+import unittest
 
 from test_framework.secp256k1 import FE, G, GE
 
@@ -83,3 +84,47 @@ def ellswift_ecdh_xonly(pubkey_theirs, privkey):
     t = FE(int.from_bytes(pubkey_theirs[32:], 'big'))
     d = int.from_bytes(privkey, 'big')
     return (d * GE.lift_x(xswiftec(u, t))).x.to_bytes()
+
+
+class TestFrameworkEllSwift(unittest.TestCase):
+    def test_xswiftec(self):
+        """Verify that xswiftec maps all inputs to the curve."""
+        for _ in range(32):
+            u = FE(random.randrange(0, FE.SIZE))
+            t = FE(random.randrange(0, FE.SIZE))
+            x = xswiftec(u, t)
+            self.assertTrue(GE.is_valid_x(x))
+
+        # Check that inputs which are considered undefined in the original
+        # SwiftEC paper can also be decoded successfully (by remapping)
+        undefined_inputs = [
+            (FE(0), FE(23)),  # u = 0
+            (FE(42), FE(0)),  # t = 0
+            (FE(5), FE(-132).sqrt()),  # u^3 + t^2 + 7 = 0
+        ]
+        assert undefined_inputs[-1][0]**3 + undefined_inputs[-1][1]**2 + 7 == 0
+        for u, t in undefined_inputs:
+            x = xswiftec(u, t)
+            self.assertTrue(GE.is_valid_x(x))
+
+    def test_elligator_roundtrip(self):
+        """Verify that encoding using xelligatorswift decodes back using xswiftec."""
+        for _ in range(32):
+            while True:
+                # Loop until we find a valid X coordinate on the curve.
+                x = FE(random.randrange(1, FE.SIZE))
+                if GE.is_valid_x(x):
+                    break
+            # Encoding it to (u, t), decode it back, and compare.
+            u, t = xelligatorswift(x)
+            x2 = xswiftec(u, t)
+            self.assertEqual(x2, x)
+
+    def test_ellswift_ecdh_xonly(self):
+        """Verify that shared secret computed by ellswift_ecdh_xonly match."""
+        for _ in range(32):
+            privkey1, encoding1 = ellswift_create()
+            privkey2, encoding2 = ellswift_create()
+            shared_secret1 = ellswift_ecdh_xonly(encoding1, privkey2)
+            shared_secret2 = ellswift_ecdh_xonly(encoding2, privkey1)
+            self.assertEqual(shared_secret1, shared_secret2)
