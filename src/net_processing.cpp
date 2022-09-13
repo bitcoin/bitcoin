@@ -751,7 +751,7 @@ private:
     int nSyncStarted GUARDED_BY(cs_main) = 0;
 
     /** Hash of the last block we received via INV */
-    uint256 m_last_block_inv_triggering_headers_sync{};
+    uint256 m_last_block_inv_triggering_headers_sync GUARDED_BY(g_msgproc_mutex){};
 
     /**
      * Sources of received blocks, saved to be able punish them when processing
