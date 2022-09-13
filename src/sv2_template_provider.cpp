@@ -229,7 +229,12 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
             }
 
             SetupConnection setup_conn;
-            ss >> setup_conn;
+            try {
+                ss >> setup_conn;
+            } catch(const std::exception& e) {
+                client->m_disconnect_flag = true;
+                return;
+            }
             ss.clear();
 
             if (setup_conn.m_protocol == SETUP_CONN_TP_PROTOCOL) {
@@ -271,7 +276,12 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
         case SUBMIT_SOLUTION:
         {
             SubmitSolution submit_solution;
-            ss >> submit_solution;
+            try {
+                ss >> submit_solution;
+            } catch(const std::exception& e) {
+                return;
+            }
+            ss.clear();
 
             auto cached_block = m_blocks_cache.find(submit_solution.m_template_id);
             if (cached_block != m_blocks_cache.end()) {
