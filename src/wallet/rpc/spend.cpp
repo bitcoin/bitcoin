@@ -317,7 +317,7 @@ RPCHelpMan sendmany()
                 "\nSend multiple times. Amounts are double-precision floating point numbers." +
         HELP_REQUIRING_PASSPHRASE,
                 {
-                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", "\"\""},
+                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", RPCArgOptions{.oneline_description="\"\""}},
                     {"amounts", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::NO, "The addresses and amounts",
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
@@ -775,7 +775,7 @@ RPCHelpMan fundrawtransaction()
                              },
                         },
                         FundTxDoc()),
-                        "options"},
+                        RPCArgOptions{.oneline_description="options"}},
                     {"iswitness", RPCArg::Type::BOOL, RPCArg::DefaultHint{"depends on heuristic tests"}, "Whether the transaction hex is a serialized witness transaction.\n"
                         "If iswitness is not present, heuristic tests will be used in decoding.\n"
                         "If true, only witness deserialization will be tried.\n"
@@ -969,7 +969,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
                      "\"" + FeeModes("\"\n\"") + "\""},
                 },
-                "options"},
+                RPCArgOptions{.oneline_description="options"}},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(
@@ -1174,7 +1174,7 @@ RPCHelpMan send()
                     },
                 },
                 FundTxDoc()),
-                "options"},
+                RPCArgOptions{.oneline_description="options"}},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1282,7 +1282,7 @@ RPCHelpMan sendall()
                     },
                     FundTxDoc()
                 ),
-                "options"
+                RPCArgOptions{.oneline_description="options"}
             },
         },
         RPCResult{
@@ -1603,7 +1603,7 @@ RPCHelpMan walletcreatefundedpsbt()
                             },
                         },
                         FundTxDoc()),
-                        "options"},
+                        RPCArgOptions{.oneline_description="options"}},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{

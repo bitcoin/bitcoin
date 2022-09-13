@@ -1266,15 +1266,15 @@ RPCHelpMan importmulti()
                                 {
                                     {"desc", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Descriptor to import. If using descriptor, do not also provide address/scriptPubKey, scripts, or pubkeys"},
                                     {"scriptPubKey", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of scriptPubKey (string for script, json for address). Should not be provided if using a descriptor",
-                                        /*oneline_description=*/"", {"\"<script>\" | { \"address\":\"<address>\" }", "string / json"}
+                                        RPCArgOptions{.type_str={"\"<script>\" | { \"address\":\"<address>\" }", "string / json"}}
                                     },
                                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Creation time of the key expressed in " + UNIX_EPOCH_TIME + ",\n"
-        "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
-        "                                                              key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
-        "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
-        "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
-        "                                                              creation time of all keys being imported by the importmulti call will be scanned.",
-                                        /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
+                                        "or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
+                                        "key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
+                                        "\"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
+                                        "0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
+                                        "creation time of all keys being imported by the importmulti call will be scanned.",
+                                        RPCArgOptions{.type_str={"timestamp | \"now\"", "integer / string"}}
                                     },
                                     {"redeemscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
                                     {"witnessscript", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
@@ -1296,12 +1296,12 @@ RPCHelpMan importmulti()
                                 },
                             },
                         },
-                        "\"requests\""},
+                        RPCArgOptions{.oneline_description="\"requests\""}},
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Scan the chain and mempool for wallet transactions after all imports."},
                         },
-                        "\"options\""},
+                        RPCArgOptions{.oneline_description="\"options\""}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -1598,18 +1598,18 @@ RPCHelpMan importdescriptors()
                                     {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import"},
                                     {"next_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If a ranged descriptor is set to active, this specifies the next index to generate addresses from"},
                                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time from which to start rescanning the blockchain for this descriptor, in " + UNIX_EPOCH_TIME + "\n"
-        "                                                              Use the string \"now\" to substitute the current synced blockchain time.\n"
-        "                                                              \"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
-        "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
+                                        "Use the string \"now\" to substitute the current synced blockchain time.\n"
+                                        "\"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
+                                        "0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
                                         "of all descriptors being imported will be scanned as well as the mempool.",
-                                        /*oneline_description=*/"", {"timestamp | \"now\"", "integer / string"}
+                                        RPCArgOptions{.type_str={"timestamp | \"now\"", "integer / string"}}
                                     },
                                     {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
                                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
                                 },
                             },
                         },
-                        "\"requests\""},
+                        RPCArgOptions{.oneline_description="\"requests\""}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
