@@ -3,15 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/g1point.h>
-#include <blsct/arith/generators.h>
+#include <blsct/arith/range_proof/config.h>
+#include <blsct/arith/range_proof/generators.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-Generators::Generators(const TokenId token_id)
+Generators::Generators(const TokenId& token_id)
 {
     if (!m_is_static_values_initialized) {
-        throw std::runtime_error(strprintf("%s: Generators class not initialized", __func__));
+        Generators::Init();
     }
     // if H for the token_id hasn't been created, create it and store it to the cache
     if (Generators::m_H_cache.count(token_id) == 0) {
@@ -21,12 +22,12 @@ Generators::Generators(const TokenId token_id)
     m_H = m_H_cache[token_id];
 }
 
-void Generators::Init(const size_t bit_size, const size_t max_value_vec_len)
+void Generators::Init()
 {
     if (m_is_static_values_initialized) return;
     boost::lock_guard<boost::mutex> lock(Generators::m_init_mutex);
 
-    const size_t num_generators = bit_size * max_value_vec_len;
+    const size_t num_generators = Config::m_bit_size * Config::m_max_value_vec_len;
     const TokenId default_token_id;
     const G1Point H = Generators::GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
 

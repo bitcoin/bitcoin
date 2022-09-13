@@ -2,15 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_BULLETPROOFS_H
-#define NAVCOIN_BLSCT_ARITH_BULLETPROOFS_H
+#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RANGE_PROOF_H
+#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RANGE_PROOF_H
 
 #include <optional>
 #include <vector>
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
-#include <blsct/arith/generators.h>
+#include <blsct/arith/range_proof/config.h>
+#include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
@@ -83,10 +84,6 @@ public:
     // size of input value is fixed to 64-bit
     inline static const size_t m_bit_size = 64;
 
-    inline static const size_t m_max_message_size = 54;
-    inline static const size_t m_max_value_len = 16;
-    inline static const size_t m_max_value_vec_len = m_max_value_len * m_bit_size;
-
     // values are assigned in the first constructor call
     static Scalar m_one;
     static Scalar m_two;
@@ -98,4 +95,4 @@ private:
     inline static bool m_is_static_values_initialized = false;
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_BULLETPROOFS_H
+#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RANGE_PROOF_H

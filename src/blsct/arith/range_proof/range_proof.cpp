@@ -1,5 +1,5 @@
-#include <blsct/arith/generators.h>
-#include <blsct/arith/range_proof.h>
+#include <blsct/arith/range_proof/generators.h>
+#include <blsct/arith/range_proof/range_proof.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
 #include "tinyformat.h"
