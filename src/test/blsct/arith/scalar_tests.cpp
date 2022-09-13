@@ -17,7 +17,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(scalar_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_scalar_constructors)
+BOOST_AUTO_TEST_CASE(test_scalar_ctor_vec_uint8)
 {
     // input vector modulo curve order r should be set to Scalar
 
@@ -172,12 +172,11 @@ BOOST_AUTO_TEST_CASE(test_scalar_constructors)
             }
         }
         {
-            // shift = 63 generates a negative value
-            // and that should be translated to fr order - the negative value
-            int64_t i = one << 63;  // this becomes negative zero
+            int64_t i = -1;
             Scalar a(i);
-            // -1 = 73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
-            BOOST_CHECK(a.GetString() == "73eda753299d7d483339d80809a1d80553bda402fffe5bfe7fffffff00000001");
+            // fr order: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+            //       -1: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+            BOOST_CHECK_EQUAL(a.GetString().c_str(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
         }
     }
 }
