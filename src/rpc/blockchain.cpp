@@ -310,14 +310,14 @@ static RPCHelpMan getchainlocks()
                     {
                         {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
                         {RPCResult::Type::NUM, "height", "Block Height"},
-                        {RPCResult::Type::NUM, "signers", "Signer"},
+                        {RPCResult::Type::STR, "signers", "Signer"},
                         {RPCResult::Type::STR_HEX, "signature", "Signature"},
                         {RPCResult::Type::ARR, "shares", "",
                         {
                             {RPCResult::Type::OBJ, "shares", "Shares information",
                             {
                                 {RPCResult::Type::STR_HEX, "quorumHash", "Quorum Hash"},
-                                {RPCResult::Type::NUM, "signers", "Signers"},
+                                {RPCResult::Type::STR, "signers", "Signers"},
                                 {RPCResult::Type::STR_HEX, "signature", "Signature"}
                             }}
                         }}
