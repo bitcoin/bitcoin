@@ -891,10 +891,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    {
-        LOCK(peer.cs_sendProcessing);
-        m_node.peerman->SendMessages(&peer);
-    }
+    m_node.peerman->SendMessages(&peer);
 
     BOOST_CHECK(sent);
 
