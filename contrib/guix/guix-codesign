@@ -286,7 +286,7 @@ EOF
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
         # container specified by 'contrib/guix/manifest.scm'.
         #
-        # Explanation of `guix environment` flags:
+        # Explanation of `guix shell` flags:
         #
         #   --container        run command within an isolated container
         #
@@ -343,7 +343,7 @@ EOF
         #    more information.
         #
         # shellcheck disable=SC2086,SC2031
-        time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
+        time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
                                  --pure \
                                  --no-cwd \
