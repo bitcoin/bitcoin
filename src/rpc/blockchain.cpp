@@ -299,9 +299,29 @@ static RPCHelpMan getchainlocks()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::ANY, "recent_chainlock", "Most recent chainlock share"},
-                    {RPCResult::Type::ANY, "active_chainlock", "Most active chainlock"},
-                    
+                    {RPCResult::Type::OBJ, "recent_chainlock", "Most recent chainlock information", 
+                    {
+                        {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
+                        {RPCResult::Type::NUM, "height", "Block Height"},
+                        {RPCResult::Type::STR_HEX, "signature", "Signature"},
+                        {RPCResult::Type::BOOL, "known_block", "Block Known"}
+                    }},
+                    {RPCResult::Type::OBJ, "active_chainlock", "Active chainlock information",
+                    {
+                        {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
+                        {RPCResult::Type::NUM, "height", "Block Height"},
+                        {RPCResult::Type::NUM, "signers", "Signer"},
+                        {RPCResult::Type::STR_HEX, "signature", "Signature"},
+                        {RPCResult::Type::ARR, "shares", "",
+                        {
+                            {RPCResult::Type::OBJ, "shares", "Shares information",
+                            {
+                                {RPCResult::Type::STR_HEX, "quorumHash", "Quorum Hash"},
+                                {RPCResult::Type::NUM, "signers", "Signers"},
+                                {RPCResult::Type::STR_HEX, "signature", "Signature"}
+                            }}
+                        }}
+                    }}
                 }},
             RPCExamples{
                 HelpExampleCli("getchainlocks", "")
