@@ -51,7 +51,8 @@ enum class DBErrors
     EXTERNAL_SIGNER_SUPPORT_REQUIRED,
     LOAD_FAIL,
     NEED_REWRITE,
-    NEED_RESCAN
+    NEED_RESCAN,
+    UNKNOWN_DESCRIPTOR
 };
 
 namespace DBKeys {
