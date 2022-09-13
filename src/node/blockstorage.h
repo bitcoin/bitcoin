@@ -26,7 +26,7 @@ class CBlockFileInfo;
 class CBlockUndo;
 class CChain;
 class CChainParams;
-class CChainState;
+class Chainstate;
 class ChainstateManager;
 // SYSCOIN
 class CDSNotificationInterface;
@@ -82,12 +82,12 @@ struct PruneLockInfo {
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
  *
- * This data is used mostly in `CChainState` - information about, e.g.,
+ * This data is used mostly in `Chainstate` - information about, e.g.,
  * candidate tips is not maintained here.
  */
 class BlockManager
 {
-    friend CChainState;
+    friend Chainstate;
     friend ChainstateManager;
 
 private:

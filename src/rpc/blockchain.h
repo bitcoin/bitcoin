@@ -19,7 +19,7 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
+class Chainstate;
 class UniValue;
 // SYSCOIN
 class ChainstateManager;
@@ -56,7 +56,7 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 // SYSCOIN
 UniValue CreateUTXOSnapshot(
     node::NodeContext& node,
-    CChainState& chainstate,
+    Chainstate& chainstate,
     AutoFile& afile,
     const fs::path& path,
     const fs::path& tmppath,

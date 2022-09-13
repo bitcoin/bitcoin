@@ -14,7 +14,7 @@ race:syscoin-qt
 race:GenerateBlock
 
 # deadlock (TODO fix)
-deadlock:CChainState::ConnectTip
+deadlock:Chainstate::ConnectTip
 
 # Intentional deadlock in tests
 deadlock:sync_tests::potential_deadlock_detected

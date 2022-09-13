@@ -7,7 +7,7 @@
 
 #include <validation.h>
 
-class DummyChainState final : public CChainState
+class DummyChainState final : public Chainstate
 {
 public:
     void SetMempool(CTxMemPool* mempool)

@@ -50,7 +50,7 @@ using node::FindCoins;
 using node::GetTransaction;
 using node::PSBTAnalysis;
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, ChainstateManager& chainstate)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, Chainstate& chainstate)
 {
     // Call into TxToUniv() in syscoin-common to decode the transaction hex.
     //
@@ -61,12 +61,11 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, 
 
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
-        CChainState& active_chainstate = chainstate.ActiveChainstate();
         entry.pushKV("blockhash", hashBlock.GetHex());
-        const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+        const CBlockIndex* pindex = chainstate.m_blockman.LookupBlockIndex(hashBlock);
         if (pindex) {
-            if (active_chainstate.m_chain.Contains(pindex)) {
-                entry.pushKV("confirmations", 1 + active_chainstate.m_chain.Height() - pindex->nHeight);
+            if (chainstate.m_chain.Contains(pindex)) {
+                entry.pushKV("confirmations", 1 + chainstate.m_chain.Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
             }
@@ -282,7 +281,7 @@ static RPCHelpMan getrawtransaction()
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
-    TxToJSON(*tx, hash_block, result, chainman);
+    TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
     return result;
 },
     };

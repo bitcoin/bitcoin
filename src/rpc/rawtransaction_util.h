@@ -44,6 +44,6 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf);
 // SYSCOIN
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, ChainstateManager& chainstate);
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, Chainstate& chainstate);
 
 #endif // SYSCOIN_RPC_RAWTRANSACTION_UTIL_H

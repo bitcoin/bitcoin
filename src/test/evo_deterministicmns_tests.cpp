@@ -686,7 +686,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
     BOOST_CHECK_EQUAL(block.GetHash() , m_node.chain->getBlockHash(*m_node.chain->getHeight()));
     BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
     LOCK(cs_main);
-    CChainState& active_chainstate = m_node.chainman->ActiveChainstate();
+    Chainstate& active_chainstate = m_node.chainman->ActiveChainstate();
     // Verify db consistency
     BOOST_ASSERT(CVerifyDB().VerifyDB(active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), 4, 2));
 }

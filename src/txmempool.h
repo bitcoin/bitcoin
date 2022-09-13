@@ -38,7 +38,7 @@
 class CBlockIndex;
 class CChain;
 class CBLSPublicKey;
-class CChainState;
+class Chainstate;
 extern RecursiveMutex cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */

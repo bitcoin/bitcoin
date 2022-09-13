@@ -13,11 +13,11 @@ BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, TestingSetup)
 //! Test utilities for detecting when we need to flush the coins cache based
 //! on estimated memory usage.
 //!
-//! @sa CChainState::GetCoinsCacheSizeState()
+//! @sa Chainstate::GetCoinsCacheSizeState()
 //!
 BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
-    CChainState& chainstate{m_node.chainman->ActiveChainstate()};
+    Chainstate& chainstate{m_node.chainman->ActiveChainstate()};
 
     constexpr bool is_64_bit = sizeof(void*) == 8;
 
