@@ -6,6 +6,7 @@
 #include <coins.h>
 #include <crypto/muhash.h>
 #include <index/coinstatsindex.h>
+#include <kernel/coinstats.h>
 #include <node/blockstorage.h>
 #include <serialize.h>
 #include <txdb.h>
@@ -322,13 +323,13 @@ static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockKey& block, D
     return db.Read(DBHashKey(block.hash), result);
 }
 
-std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex* block_index) const
+std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_index) const
 {
-    CCoinsStats stats{Assert(block_index)->nHeight, block_index->GetBlockHash()};
+    CCoinsStats stats{block_index.nHeight, block_index.GetBlockHash()};
     stats.index_used = true;
 
     DBVal entry;
-    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
+    if (!LookUpOne(*m_db, {block_index.GetBlockHash(), block_index.nHeight}, entry)) {
         return std::nullopt;
     }
 
