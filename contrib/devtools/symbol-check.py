@@ -41,7 +41,6 @@ import lief
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    lief.ELF.ARCH.i386:   (2,28),
     lief.ELF.ARCH.x86_64: (2,18),
     lief.ELF.ARCH.ARM:    (2,28),
     lief.ELF.ARCH.AARCH64:(2,18),
@@ -51,8 +50,6 @@ MAX_VERSIONS = {
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
-# See here for a description of _IO_stdin_used:
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
@@ -66,9 +63,6 @@ IGNORE_EXPORTS = {
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
-    lief.ELF.ARCH.i386:    {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux.so.2",
-    },
     lief.ELF.ARCH.x86_64:  {
         lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
     },
