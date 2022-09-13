@@ -41,7 +41,7 @@ be of use.
 
 Chainstate within the system goes through a number of phases when UTXO snapshots are
 used, as managed by `ChainstateManager`. At various points there can be multiple
-`CChainState` objects in existence to facilitate both maintaining the network tip and
+`Chainstate` objects in existence to facilitate both maintaining the network tip and
 performing historical validation of the assumed-valid chain.
 
 It is worth noting that though there are multiple separate chainstates, those
@@ -53,7 +53,7 @@ data.
 
 ### "Normal" operation via initial block download
 
-`ChainstateManager` manages a single CChainState object, for which
+`ChainstateManager` manages a single Chainstate object, for which
 `m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
 considered active. This is the "traditional" mode of operation for bitcoind.
 

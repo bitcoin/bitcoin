@@ -86,7 +86,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 // make sure index is not corrupted and is able to reload.
 BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
 {
-    CChainState& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
     const CChainParams& params = Params();
     {
         CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};

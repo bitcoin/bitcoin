@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     const int64_t time{0};
     const CNetMsgMaker msg_maker{PROTOCOL_VERSION};
 
-    // Force CChainState::IsInitialBlockDownload() to return false.
+    // Force Chainstate::IsInitialBlockDownload() to return false.
     // Otherwise PushAddress() isn't called by PeerManager::ProcessMessage().
     TestChainState& chainstate =
         *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
