@@ -598,7 +598,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         ;; Scripting
         python-minimal ;; (3.9)
         ;; Git
-        git
+        git-minimal
         ;; Tests
         (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
