@@ -21,7 +21,7 @@ class CBlock;
 class CBlockHeader;
 class CBlockIndex;
 class UniValue;
-class ChainstateManager;
+class Chainstate;
 namespace auxpow_tests
 {
 class CAuxPowForTest;
@@ -63,7 +63,7 @@ private:
                                     const std::vector<uint256>& vMerkleBranch,
                                     int nIndex);
 
-  friend UniValue AuxpowToJSON(const CAuxPow& auxpow, ChainstateManager& chainstate);
+  friend UniValue AuxpowToJSON(const CAuxPow& auxpow, Chainstate& chainstate);
   friend class auxpow_tests::CAuxPowForTest;
 
 public:

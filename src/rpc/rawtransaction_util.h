@@ -18,8 +18,7 @@ class Coin;
 class COutPoint;
 class SigningProvider;
 class CTransaction;
-// SYSCOIN
-class ChainstateManager;
+class Chainstate;
 /**
  * Sign a transaction with the given keystore and previous transactions
  *

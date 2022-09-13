@@ -112,7 +112,7 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
     next = nullptr;
     return blockindex == tip ? 1 : -1;
 }
-UniValue AuxpowToJSON(const CAuxPow& auxpow, ChainstateManager& chainstate)
+UniValue AuxpowToJSON(const CAuxPow& auxpow, Chainstate& chainstate)
 {
     UniValue result(UniValue::VOBJ);
 
@@ -882,7 +882,7 @@ static RPCHelpMan getblock()
         tx_verbosity = TxVerbosity::SHOW_DETAILS_AND_PREVOUT;
     }
     // SYSCOIN
-    return blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity, &chainman);
+    return blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity, &chainman.ActiveChainstate());
 },
     };
 }
