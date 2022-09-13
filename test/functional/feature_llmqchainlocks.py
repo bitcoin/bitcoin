@@ -14,6 +14,7 @@ from test_framework.blocktools import (
   create_block,
   create_coinbase,
 )
+from test_framework.util import force_finish_mnsync
 '''
 feature_llmqchainlocks.py
 
@@ -47,7 +48,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.skip_if_no_bdb()
 
     def run_test(self):
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         # Connect all nodes to node1 so that we always have the whole network connected
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
@@ -118,6 +120,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.stop_node(0)
         self.start_node(0)
         self.connect_nodes(0, 1)
+        force_finish_mnsync(self.nodes[0])
         assert(self.nodes[0].getbestblockhash() == good_tip)
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
@@ -151,6 +154,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].invalidateblock(good_fork)
         self.stop_node(0)
         self.start_node(0)
+        force_finish_mnsync(self.nodes[0])
         time.sleep(1)
         assert(self.nodes[0].getbestblockhash() == good_tip)
 
