@@ -1072,16 +1072,11 @@ std::string ArgsManager::GetChainName() const
     const bool is_chain_arg_set = IsArgSet("-chain");
 
     if ((int)is_chain_arg_set + (int)fRegTest + (int)fSigNet + (int)fTestNet > 1) {
-        throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one.");
+        throw std::runtime_error("Invalid combination of -regtest, -signet, -testnet and -chain. Can use at most one. Please check if chain is specified in config file.");
     }
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fSigNet) {
-        return CBaseChainParams::SIGNET;
-    }
-    if (fTestNet)
-        return CBaseChainParams::TESTNET;
-
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fSigNet) return CBaseChainParams::SIGNET;
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return GetArg("-chain", CBaseChainParams::MAIN);
 }
 

@@ -1264,7 +1264,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "f263493e300023b6509963887444c41386f44b63bc30047eb8402e8c1144854c");
+    BOOST_CHECK_EQUAL(out_sha_hex, "c51699f07a792994a9ac7a57ee97a290d68f3a810ceb920d69fb5a492abe5c38");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
