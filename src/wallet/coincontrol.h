@@ -65,12 +65,12 @@ public:
 
     bool HasSelected() const
     {
-        return (setSelected.size() > 0);
+        return (m_selected_inputs.size() > 0);
     }
 
     bool IsSelected(const COutPoint& output) const
     {
-        return (setSelected.count(output) > 0);
+        return (m_selected_inputs.count(output) > 0);
     }
 
     bool IsExternalSelected(const COutPoint& output) const
@@ -90,28 +90,28 @@ public:
 
     void Select(const COutPoint& output)
     {
-        setSelected.insert(output);
+        m_selected_inputs.insert(output);
     }
 
     void SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
     {
-        setSelected.insert(outpoint);
+        m_selected_inputs.insert(outpoint);
         m_external_txouts.emplace(outpoint, txout);
     }
 
     void UnSelect(const COutPoint& output)
     {
-        setSelected.erase(output);
+        m_selected_inputs.erase(output);
     }
 
     void UnSelectAll()
     {
-        setSelected.clear();
+        m_selected_inputs.clear();
     }
 
     void ListSelected(std::vector<COutPoint>& vOutpoints) const
     {
-        vOutpoints.assign(setSelected.begin(), setSelected.end());
+        vOutpoints.assign(m_selected_inputs.begin(), m_selected_inputs.end());
     }
 
     void SetInputWeight(const COutPoint& outpoint, int64_t weight)
@@ -132,7 +132,7 @@ public:
     }
 
 private:
-    std::set<COutPoint> setSelected;
+    std::set<COutPoint> m_selected_inputs;
     std::map<COutPoint, CTxOut> m_external_txouts;
     //! Map of COutPoints to the maximum weight for that input
     std::map<COutPoint, int64_t> m_input_weights;
