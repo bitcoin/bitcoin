@@ -35,7 +35,6 @@ import lief #type:ignore
 MAX_VERSIONS = {
 'GCC':       (4,8,0),
 'GLIBC': {
-    lief.ELF.ARCH.i386:   (2,18),
     lief.ELF.ARCH.x86_64: (2,18),
     lief.ELF.ARCH.ARM:    (2,18),
     lief.ELF.ARCH.AARCH64:(2,18),
@@ -57,9 +56,6 @@ IGNORE_EXPORTS = {
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
-    lief.ELF.ARCH.i386:    {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux.so.2",
-    },
     lief.ELF.ARCH.x86_64:  {
         lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
     },
