@@ -154,11 +154,6 @@ void Scalar::operator=(const int64_t& n)
     mclBnFr_setInt(&m_fr, n);
 }
 
-void Scalar::operator=(const Scalar& b)
-{
-    m_fr = b.m_fr;
-}
-
 bool Scalar::operator==(const int &b) const
 {
     Scalar temp;

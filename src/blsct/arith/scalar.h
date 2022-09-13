@@ -29,7 +29,7 @@ class Scalar {
 public:
     static constexpr int WIDTH = 256 / 8;
 
-    Scalar(const int64_t& n = 0);
+    Scalar(const int64_t& n = 0);  // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
     Scalar(const std::vector<uint8_t>& v);
     Scalar(const mclBnFr& n_fr);
     Scalar(const uint256& n);
@@ -40,8 +40,7 @@ public:
     Scalar ApplyBitwiseOp(const Scalar& a, const Scalar& b,
                           std::function<uint8_t(uint8_t, uint8_t)> op) const;
 
-    void operator=(const int64_t& n);
-    void operator=(const Scalar& b);
+    void operator=(const int64_t& n);  // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
 
     Scalar operator+(const Scalar& b) const;
     Scalar operator-(const Scalar& b) const;
