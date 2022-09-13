@@ -264,6 +264,18 @@ class SendallTest(BitcoinTestFramework):
             recipients=[self.remainder_target],
             options={"inputs": [utxo], "send_max": True})
 
+    @cleanup
+    def sendall_fails_on_high_fee(self):
+        self.log.info("Test sendall fails if the transaction fee exceeds the maxtxfee")
+        self.add_utxos([21])
+
+        assert_raises_rpc_error(
+                -4,
+                "Fee exceeds maximum configured by user",
+                self.wallet.sendall,
+                recipients=[self.remainder_target],
+                fee_rate=100000)
+
     def run_test(self):
         self.nodes[0].createwallet("activewallet")
         self.wallet = self.nodes[0].get_wallet_rpc("activewallet")
@@ -311,6 +323,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when using send_max while specifying inputs
         self.sendall_fails_on_specific_inputs_with_send_max()
+
+        # Sendall fails when providing a fee that is too high
+        self.sendall_fails_on_high_fee()
 
 if __name__ == '__main__':
     SendallTest().main()
