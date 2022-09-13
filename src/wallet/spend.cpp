@@ -880,7 +880,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     for (const auto& recipient : vecSend)
     {
         // SYSCOIN
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey, recipient.vchNEVMData);
+        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        // add poda data to opreturn output
+        if(!coin_control.m_nevmdata.empty() && recipient.scriptPubKey.IsUnspendable()) {
+            txout.vchNEVMData = coin_control.m_nevmdata;
+        }
 
         // Include the fee cost for outputs.
         if (!coin_selection_params.m_subtract_fee_outputs) {
@@ -1095,7 +1099,10 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
         // SYSCOIN
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1, txOut.vchNEVMData};
+        if(coinControl.m_nevmdata.empty() && !txOut.vchNEVMData.empty()) {
+            coinControl.m_nevmdata = txOut.vchNEVMData; 
+        }
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -1167,7 +1174,7 @@ util::Result<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wall
     scriptChange << OP_RETURN << ToByteVector(hash);
 
     std::vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, amount, false, {}});
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
     if (!outpoint.IsNull()) {

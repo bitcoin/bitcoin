@@ -585,6 +585,7 @@ static RPCHelpMan getnevmblobdata()
     std::vector<uint8_t> vchVH;
     uint32_t nSize = 0;
     CNEVMData nevmData;
+    CTransactionRef tx;
     {
         LOCK(cs_main);
         const Coin& coin = AccessByTxid(node.chainman->ActiveChainstate().CoinsTip(), txhash);
@@ -597,7 +598,6 @@ static RPCHelpMan getnevmblobdata()
                 pblockindex = node.chainman->ActiveChain()[nBlockHeight];
             }
         } 
-        CTransactionRef tx;
         hashBlock.SetNull();
         if(pblockindex != nullptr) {
             tx = GetTransaction(pblockindex, nullptr, txhash, Params().GetConsensus(), hashBlock);

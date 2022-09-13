@@ -545,6 +545,11 @@ public:
         scriptPubKey = txOutIn.scriptPubKey;
         assetInfo = txOutIn.assetInfo;
     }
+    CTxOutCoin(CTxOut&& txOutIn) {
+        nValue = std::move(txOutIn.nValue);
+        scriptPubKey = std::move(txOutIn.scriptPubKey);
+        assetInfo = std::move(txOutIn.assetInfo);
+    }
     CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
     CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn, const CAssetCoinInfo &assetInfoIn) : nValue(nValueIn), scriptPubKey(scriptPubKeyIn), assetInfo(assetInfoIn) {}
     SERIALIZE_METHODS(CTxOutCoin, obj)

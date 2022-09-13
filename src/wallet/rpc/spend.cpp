@@ -46,8 +46,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
                 subtract_fee = true;
             }
         }
-        // SYSCOIN
-        CRecipient recipient = {script_pub_key, amount, subtract_fee, {}};
+        CRecipient recipient = {script_pub_key, amount, subtract_fee};
         recipients.push_back(recipient);
     }
 }

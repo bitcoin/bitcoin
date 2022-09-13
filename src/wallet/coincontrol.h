@@ -63,6 +63,8 @@ public:
     // SYSCOIN
     //! Custom transaction version
     int m_version = CTransaction::CURRENT_VERSION;
+    //! Custom poda data
+    std::vector<uint8_t> m_nevmdata;
     CCoinControl();
 
     bool HasSelected() const

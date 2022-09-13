@@ -231,7 +231,10 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     for (const auto& output : wtx.tx->vout) {
         if (!OutputIsChange(wallet, output)) {
             // SYSCOIN
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false, output.vchNEVMData};
+            if(new_coin_control.m_nevmdata.empty() && !output.vchNEVMData.empty()) {
+                new_coin_control.m_nevmdata = output.vchNEVMData; 
+            }
+            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;
