@@ -1162,7 +1162,6 @@ CNEVMDataDB::CNEVMDataDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapp
 }
 bool CNEVMDataDB::FlushData(std::map<std::vector<uint8_t>, std::vector<uint8_t> > &mapPoDA) {
     if(mapPoDA.empty()) {
-        LogPrintf("CNEVMDataDB::FlushData empty\n");
         return true;
     }
     CDBBatch batch(*this);    
