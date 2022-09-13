@@ -364,7 +364,8 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
             {
                 {
                     strHTML += "<li>";
-                    const CTxOut &vout = prev.out;
+                    // SYSCOIN
+                    const CTxOut &vout = CTxOut(prev.out.nValue, prev.out.scriptPubKey);
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))
                     {
