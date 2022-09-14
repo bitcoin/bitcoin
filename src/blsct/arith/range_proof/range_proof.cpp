@@ -11,7 +11,7 @@ Scalars RangeProof::m_two_pow_bit_size;
 
 RangeProof::RangeProof()
 {
-    if (m_is_static_values_initialized) return;
+    if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
 
     MclInitializer::Init();
@@ -22,7 +22,7 @@ RangeProof::RangeProof()
     RangeProof::m_two = Scalar(2);
     RangeProof::m_two_pow_bit_size = Scalars::FirstNPow(m_two, Config::m_input_value_bits);
 
-    m_is_static_values_initialized = true;
+    m_is_initialized = true;
 }
 
 bool RangeProof::InnerProductArgument(

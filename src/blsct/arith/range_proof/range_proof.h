@@ -89,7 +89,7 @@ private:
     static Scalars m_two_pow_bit_size;
 
     inline static boost::mutex m_init_mutex;
-    inline static bool m_is_static_values_initialized = false;
+    inline static bool m_is_initialized = false;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_RANGE_PROOF_H
