@@ -18,6 +18,9 @@ GeneratorsFactory::GeneratorsFactory()
     G1Point::Init();
 
     m_G = G1Point::GetBasePoint();
+    G1Points Gi, Hi;
+    m_Gi = Gi;
+    m_Hi = Hi;
 
     const TokenId default_token_id;
     const G1Point H = GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
@@ -26,8 +29,8 @@ GeneratorsFactory::GeneratorsFactory()
         const size_t base_index = i * 2;
         G1Point hi = GetGenerator(H, base_index + 1, default_token_id);
         G1Point gi = GetGenerator(H, base_index + 2, default_token_id);
-        m_Hi.Add(hi);
-        m_Gi.Add(gi);
+        m_Hi.value().Add(hi);
+        m_Gi.value().Add(gi);
     }
 
     m_is_initialized = true;
@@ -65,11 +68,11 @@ Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
 {
     // if H for the token_id hasn't been created, create it and store it to the cache
     if (GeneratorsFactory::m_H_cache.count(token_id) == 0) {
-        const G1Point H = GetGenerator(GeneratorsFactory::m_G, 0, token_id);
+        const G1Point H = GetGenerator(GeneratorsFactory::m_G.value(), 0, token_id);
         GeneratorsFactory::m_H_cache.emplace(token_id, H);
     }
     G1Point H = GeneratorsFactory::m_H_cache[token_id];
 
-    Generators gens { m_G, H, m_Gi, m_Hi };
+    Generators gens { m_G.value(), H, m_Gi.value(), m_Hi.value() };
     return gens;
 }

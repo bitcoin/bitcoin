@@ -21,12 +21,6 @@ struct Generators {
     std::reference_wrapper<G1Points> Hi;
 };
 
-/**
- * shared generators are stored to an GeneratorFactory instance member
- * variables instead of the class static member variables. it is because
- * initializing G1Point(s) requires mcl library to be initilized before,
- * but that is not feasible when G1Point(s) are static.
- */
 class GeneratorsFactory
 {
 public:
@@ -41,11 +35,11 @@ private:
     );
 
     // H generator is created for each instance and cached
-    std::map<const TokenId, const G1Point> m_H_cache;
+    inline static std::map<const TokenId, const G1Point> m_H_cache;
 
-    G1Point m_G;
-    G1Points m_Gi;
-    G1Points m_Hi;
+    inline static std::optional<G1Point> m_G;
+    inline static std::optional<G1Points> m_Gi;
+    inline static std::optional<G1Points> m_Hi;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
