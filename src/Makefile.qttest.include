@@ -27,7 +27,7 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 qt_test_test_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+  $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(BOOST_CPPFLAGS)
 
 qt_test_test_syscoin_qt_SOURCES = \
   init/syscoin-qt.cpp \
