@@ -38,9 +38,9 @@ private:
     inline static std::map<const TokenId, const G1Point> m_H_cache;
 
     // G, Gi, Hi generators are shared among all instances
-    inline static G1Point m_G;
-    inline static G1Points m_Gi;
-    inline static G1Points m_Hi;
+    static G1Point m_G;
+    static G1Points m_Gi;
+    static G1Points m_Hi;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_static_values_initialized = false;

@@ -20,14 +20,14 @@ RangeProof::RangeProof()
     //RangeProof::m_gens = Generators();
     RangeProof::m_one = Scalar(1);
     RangeProof::m_two = Scalar(2);
-    RangeProof::m_two_pow_bit_size = Scalars::FirstNPow(m_two, m_bit_size);
+    RangeProof::m_two_pow_bit_size = Scalars::FirstNPow(m_two, Config::m_input_value_bits);
 
     m_is_static_values_initialized = true;
 }
 
 bool RangeProof::InnerProductArgument(
+    const size_t input_value_vec_len,
     const G1Point& H,
-    const size_t& mn,
     const Scalar& x_ip,
     const Scalars& l,
     const Scalars& r,
@@ -36,13 +36,13 @@ bool RangeProof::InnerProductArgument(
     CHashWriter& transcript
 ) {
     // build initial state
-    Scalars scale_factors = Scalars::FirstNPow(y.Invert(), mn);
+    Scalars scale_factors = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
     G1Points g_prime = m_gens.Gi();
     G1Points h_prime = m_gens.Hi();
     Scalars a_prime = l;
     Scalars b_prime = r;
 
-    size_t n_prime = mn;
+    size_t n_prime = input_value_vec_len;
     size_t round = 0;
     Scalars xs;
 
@@ -134,8 +134,7 @@ RangeProofState RangeProof::Prove(
     }
 
     // set up m, mn, log_mn
-    size_t input_value_vec_len = GetInputValueVecLen(vs.Size());  // = m in old implementation
-    const size_t values_bits = input_value_vec_len * m_bit_size;
+    const size_t input_value_vec_len = GetInputValueVecLen(vs.Size());
 
     ////////////// Proving steps
     RangeProofState st;
@@ -178,11 +177,11 @@ RangeProofState RangeProof::Prove(
             aL.Add(bit);
         }
         // fill the remaining bits if needed
-        for(size_t i = 0; i < m_bit_size - bits.size(); ++i) {
+        for(size_t i = 0; i < Config::m_input_value_bits - bits.size(); ++i) {
             aL.Add(false);
         }
     }
-    auto one_value_bits = Scalars::FirstNPow(m_one, values_bits);
+    auto one_value_bits = Scalars::FirstNPow(m_one, Config::m_input_value_bits);
 
     // aR is aL - 1
     Scalars aR = aL - one_value_bits;
@@ -205,15 +204,15 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     Scalar message_scalar(first_message);
 
     Scalar alpha = nonce.GetHashWithSalt(1);
-    alpha = alpha + (vs[0] | (message_scalar << m_bit_size));
+    alpha = alpha + (vs[0] | (message_scalar << Config::m_input_value_bits));
 
     // Using generator H for alpha following the paper
     st.A = (H * alpha) + (m_gens.Gi() * aL).Sum() + (m_gens.Hi() * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
-    auto sL = Scalars::RandVec(values_bits, true);
-    auto sR = Scalars::RandVec(values_bits, true);
+    auto sL = Scalars::RandVec(Config::m_input_value_bits, true);
+    auto sR = Scalars::RandVec(Config::m_input_value_bits, true);
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
@@ -238,7 +237,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     // l(x) = (aL - z 1^n) + sL X
     // aL is a concatination of all input value bits, so mn bits are needed
-    Scalars z_value_bits = Scalars::FirstNPow(z, values_bits);
+    Scalars z_value_bits = Scalars::FirstNPow(z, Config::m_input_value_bits);
     Scalars l0 = aL - z_value_bits;
 
     // l(1) is (aL - z 1^n) + sL, but this is reduced to sL
@@ -252,12 +251,12 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     for (size_t i = 0; i < input_value_vec_len; ++i) {
         auto base_z = z_pows[i];  // change base Scalar for each input value
 
-        for (size_t bit_idx = 0; bit_idx < m_bit_size; ++bit_idx) {
-            z_n_times_two_n[i * m_bit_size + bit_idx] = base_z * m_two_pow_bit_size[bit_idx];
+        for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
+            z_n_times_two_n[i * Config::m_input_value_bits + bit_idx] = base_z * m_two_pow_bit_size[bit_idx];
         }
     }
 
-    Scalars y_value_bits = Scalars::FirstNPow(y, values_bits);
+    Scalars y_value_bits = Scalars::FirstNPow(y, Config::m_input_value_bits);
     Scalars r0 = (y_value_bits * (aR + z_value_bits)) + z_n_times_two_n;
     Scalars r1 = y_value_bits * sR;
 
@@ -315,7 +314,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     if (x_ip == 0)
         goto try_again;
 
-    if (!InnerProductArgument(H, values_bits, x_ip, l, r, y, st, transcript)) {
+    if (!InnerProductArgument(input_value_vec_len, H, x_ip, l, r, y, st, transcript)) {
         goto try_again;
     }
     return st;

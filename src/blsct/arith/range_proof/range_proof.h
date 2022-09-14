@@ -55,8 +55,8 @@ public:
     ) const;
 
     bool InnerProductArgument(
+        const size_t input_value_vec_len,
         const G1Point& H,
-        const size_t& mn,
         const Scalar& x_ip,
         const Scalars& l,
         const Scalars& r,
@@ -81,16 +81,12 @@ public:
         const std::optional<Scalars> gammas_override = std::nullopt
     );
 
-    // size of input value is fixed to 64-bit
-    inline static const size_t m_bit_size = 64;
+private:
+    static Generators m_gens;
 
-    // values are assigned in the first constructor call
     static Scalar m_one;
     static Scalar m_two;
     static Scalars m_two_pow_bit_size;
-
-private:
-    //static Generators m_gens;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_static_values_initialized = false;

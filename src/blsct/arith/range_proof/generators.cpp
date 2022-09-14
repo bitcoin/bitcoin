@@ -9,6 +9,10 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
+G1Point Generators::m_G;
+G1Points Generators::m_Gi;
+G1Points Generators::m_Hi;
+
 void Generators::Init()
 {
     printf("INIT CALLED\n");
