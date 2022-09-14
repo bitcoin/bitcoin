@@ -15,7 +15,6 @@
 #include <key_io.h>
 #include <fs.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
