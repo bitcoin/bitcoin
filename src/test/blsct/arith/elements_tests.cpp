@@ -237,7 +237,22 @@ BOOST_AUTO_TEST_CASE(test_elements_operator_sub)
 
 BOOST_AUTO_TEST_CASE(test_elements_operator_assign)
 {
-    BOOST_CHECK(1 == 2);
+    {
+        Scalars a(std::vector<Scalar> { Scalar{2}, Scalar{3} });
+        auto b = a;
+        BOOST_CHECK(b.Size() == 2);
+        BOOST_CHECK(b[0].GetUint64() == 2);
+        BOOST_CHECK(b[1].GetUint64() == 3);
+    }
+    {
+        auto g = G1Point::GetBasePoint();
+        auto g2 = g + g;
+        G1Points gs(std::vector<G1Point> { g, g2 });
+        auto gs2 = gs;
+        BOOST_CHECK(gs2.Size() == 2);
+        BOOST_CHECK(gs2[0] == g);
+        BOOST_CHECK(gs2[1] == g2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_elements_operator_eq)
