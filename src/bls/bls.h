@@ -15,9 +15,13 @@
 #undef ERROR
 #undef DEBUG
 #include <bls-dash/src/bls.hpp>
+#undef DEBUG
 #include <bls-dash/src/privatekey.hpp>
+#undef DEBUG
 #include <bls-dash/src/elements.hpp>
+#undef DEBUG
 #include <bls-dash/src/schemes.hpp>
+#undef DEBUG
 #include <bls-dash/src/threshold.hpp>
 #undef DOUBLE
 
