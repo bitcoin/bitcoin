@@ -214,6 +214,7 @@ public:
         fChangeCached = false;
         nChangeCached = 0;
         nOrderPos = -1;
+        MarkDirty();
     }
 
     CTransactionRef tx;
