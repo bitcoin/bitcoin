@@ -858,7 +858,7 @@ public:
      * @brief Retrieves all benchmark results collected by the bench object so far.
      *
      * Each call to run() generates a Result that is stored within the Bench instance. This is mostly for advanced users who want to
-     * see all the nitty gritty detials.
+     * see all the nitty gritty details.
      *
      * @return All results collected so far.
      */
