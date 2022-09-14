@@ -1046,6 +1046,15 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     return &wtx;
 }
 
+bool CWallet::WriteTx(CWalletTx& wtx)
+{
+    WalletBatch batch(GetDatabase());
+    if (!batch.WriteTx(wtx)) {
+        return false;
+    }
+    return true;
+}
+
 bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx)
 {
     const auto& ins = mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(nullptr, TxStateInactive{}));
