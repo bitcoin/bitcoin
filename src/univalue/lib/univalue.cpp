@@ -210,7 +210,7 @@ const UniValue& UniValue::operator[](size_t index) const
 void UniValue::checkType(const VType& expected) const
 {
     if (typ != expected) {
-        throw std::runtime_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not of expected type " +
+        throw type_error{"JSON value of type " + std::string{uvTypeName(typ)} + " is not of expected type " +
                                  std::string{uvTypeName(expected)}};
     }
 }

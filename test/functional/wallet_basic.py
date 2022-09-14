@@ -415,7 +415,7 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
-        assert_raises_rpc_error(-1, "not of expected type number", self.generate, self.nodes[0], "2")
+        assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
 
         if not self.options.descriptors:
 
