@@ -360,17 +360,6 @@ inline h160 right160(h256 const& _t)
 	return ret;
 }
 
-
-inline std::string toString(h256s const& _bs)
-{
-	std::ostringstream out;
-	out << "[ ";
-	for (h256 const& i: _bs)
-		out << i.abridged() << ", ";
-	out << "]";
-	return out.str();
-}
-
 }
 
 namespace std
