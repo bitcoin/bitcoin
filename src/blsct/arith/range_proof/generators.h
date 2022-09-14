@@ -14,10 +14,9 @@
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
-struct Generators
-{
+struct Generators {
     std::reference_wrapper<G1Point> G;
-    std::reference_wrapper<G1Point> H;
+    G1Point H;
     std::reference_wrapper<G1Points> Gi;
     std::reference_wrapper<G1Points> Hi;
 };

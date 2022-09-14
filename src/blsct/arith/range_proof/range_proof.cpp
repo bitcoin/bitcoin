@@ -59,13 +59,13 @@ bool RangeProof::InnerProductArgument(
         st.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
             (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
-            (gens.H.get() * extra_scalar_cL)
+            (gens.H * extra_scalar_cL)
         );
         Scalar extra_scalar_cR = cR * x_ip;
         st.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
             (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
-            (gens.H.get() * extra_scalar_cR)
+            (gens.H * extra_scalar_cR)
         );
 
         // (25)-(27)
@@ -163,7 +163,7 @@ RangeProofState RangeProof::Prove(
     CHashWriter transcript(0, 0);
 
     // Calculate value commitments and add them to transcript
-    st.Vs = G1Points(gens.H.get() * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
+    st.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
     for (size_t i = 0; i < vs.Size(); ++i) {
         transcript << st.Vs[i];
     }
@@ -207,7 +207,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     alpha = alpha + (vs[0] | (message_scalar << Config::m_input_value_bits));
 
     // Using generator H for alpha following the paper
-    st.A = (gens.H.get() * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
+    st.A = (gens.H * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -216,7 +216,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    st.S = (gens.H.get() * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
+    st.S = (gens.H * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
 
     // (48)-(50)
     transcript << st.A;
@@ -274,8 +274,8 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     });
     tau1 = tau1 + second_message;
 
-    st.T1 = (gens.G.get() * t1) + (gens.H.get() * tau1);
-    st.T2 = (gens.G.get() * t2) + (gens.H.get() * tau2);
+    st.T1 = (gens.G.get() * t1) + (gens.H * tau1);
+    st.T2 = (gens.G.get() * t2) + (gens.H * tau2);
 
     // (54)-(56)
     transcript << st.T1;

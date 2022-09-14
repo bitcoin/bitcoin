@@ -14,8 +14,8 @@ BOOST_FIXTURE_TEST_SUITE(generators_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_generators_get_instance)
 {
-    TokenId token_id_1(uint256(51), 123ULL);
-    TokenId token_id_2(uint256(62), 234ULL);
+    TokenId token_id_1(uint256(1), 11ULL);
+    TokenId token_id_2(uint256(2), 22ULL);
     GeneratorsFactory gf;
 
     Generators gens1 = gf.GetInstance(token_id_1);
@@ -34,11 +34,11 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     BOOST_CHECK(gens1.Gi.get() == gens2.Gi.get());
 
     // H should differ if token_id differs
-    BOOST_CHECK(gens1.H.get() != gens2.H.get());
+    BOOST_CHECK(gens1.H != gens2.H);
 
     // H should be identical if Generator is created from the same token_id
     Generators gens3 = gf.GetInstance(token_id_1);
-    BOOST_CHECK(gens1.H.get() == gens3.H.get());
+    BOOST_CHECK(gens1.H == gens3.H);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

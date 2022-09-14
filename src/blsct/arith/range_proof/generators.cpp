@@ -68,8 +68,8 @@ Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
         const G1Point H = GetGenerator(GeneratorsFactory::m_G, 0, token_id);
         GeneratorsFactory::m_H_cache.emplace(token_id, H);
     }
-    G1Point H = m_H_cache[token_id];
+    G1Point H = GeneratorsFactory::m_H_cache[token_id];
 
-    auto gen = Generators { m_G, H, m_Gi, m_Hi };
-    return gen;
+    Generators gens { m_G, H, m_Gi, m_Hi };
+    return gens;
 }
