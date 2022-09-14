@@ -89,6 +89,10 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             if txids == [child_txid, txid]:
                 break
             bumped = node.bumpfee(child_txid)
+            # The scheduler queue creates a copy of the added tx after
+            # send/bumpfee and re-adds it to the wallet (undoing the next
+            # removeprunedfunds). So empty the scheduler queue:
+            node.syncwithvalidationinterfacequeue()
             node.removeprunedfunds(child_txid)
             child_txid = bumped["txid"]
         entry_time = node.getmempoolentry(child_txid)["time"]
