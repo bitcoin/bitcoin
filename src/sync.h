@@ -261,7 +261,7 @@ inline RecursiveMutex* MaybeCheckNotHeld(RecursiveMutex* cs) LOCKS_EXCLUDED(cs) 
 #define LOCK(cs) DebugLock<decltype(cs)> UNIQUE_NAME(criticalblock)(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
 #define LOCK2(cs1, cs2)                                               \
     DebugLock<decltype(cs1)> criticalblock1(MaybeCheckNotHeld(cs1), #cs1, __FILE__, __LINE__); \
-    DebugLock<decltype(cs2)> criticalblock2(MaybeCheckNotHeld(cs2), #cs2, __FILE__, __LINE__);
+    DebugLock<decltype(cs2)> criticalblock2(MaybeCheckNotHeld(cs2), #cs2, __FILE__, __LINE__)
 #define TRY_LOCK(cs, name) DebugLock<decltype(cs)> name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__, true)
 #define WAIT_LOCK(cs, name) DebugLock<decltype(cs)> name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
 
