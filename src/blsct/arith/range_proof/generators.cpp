@@ -9,15 +9,10 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-G1Point Generators::m_G;
-G1Points Generators::m_Gi;
-G1Points Generators::m_Hi;
-
-void Generators::Init()
+GeneratorsFactory::GeneratorsFactory()
 {
-    printf("INIT CALLED\n");
-    if (m_is_static_values_initialized) return;
-    boost::lock_guard<boost::mutex> lock(Generators::m_init_mutex);
+    boost::lock_guard<boost::mutex> lock(GeneratorsFactory::m_init_mutex);
+    if (GeneratorsFactory::m_is_initialized) return;
 
     MclInitializer::Init();
     G1Point::Init();
@@ -25,25 +20,20 @@ void Generators::Init()
     m_G = G1Point::GetBasePoint();
 
     const TokenId default_token_id;
-    const G1Point H = Generators::GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
+    const G1Point H = GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
 
     for (size_t i = 0; i < Config::m_max_input_value_vec_len; ++i) {
         const size_t base_index = i * 2;
-        G1Point hi = Generators::GetGenerator(H, base_index + 1, default_token_id);
-        G1Point gi = Generators::GetGenerator(H, base_index + 2, default_token_id);
+        G1Point hi = GetGenerator(H, base_index + 1, default_token_id);
+        G1Point gi = GetGenerator(H, base_index + 2, default_token_id);
         m_Hi.Add(hi);
         m_Gi.Add(gi);
     }
-    m_is_static_values_initialized = true;
+
+    m_is_initialized = true;
 }
 
-Generators::Generators()
-{
-    if (m_is_static_values_initialized) return;
-    Generators::Init();
-}
-
-G1Point Generators::GetGenerator(
+G1Point GeneratorsFactory::GetGenerator(
     const G1Point& p,
     const size_t index,
     const TokenId& token_id)
@@ -66,32 +56,20 @@ G1Point Generators::GetGenerator(
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
     auto ret = G1Point::MapToG1(vec_hash);
     if (ret.IsUnity()) {
-        throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. change index or token_id to get a valid point", __func__));
+        throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. try changing index and/or token_id to get a valid point", __func__));
     }
     return ret;
 }
 
-G1Point Generators::H(const TokenId& token_id)
+Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
 {
     // if H for the token_id hasn't been created, create it and store it to the cache
-    if (Generators::m_H_cache.count(token_id) == 0) {
-        const G1Point H = GetGenerator(Generators::m_G, 0, token_id);
-        Generators::m_H_cache.emplace(token_id, H);
+    if (GeneratorsFactory::m_H_cache.count(token_id) == 0) {
+        const G1Point H = GetGenerator(GeneratorsFactory::m_G, 0, token_id);
+        GeneratorsFactory::m_H_cache.emplace(token_id, H);
     }
-    return m_H_cache[token_id];
-}
+    G1Point H = m_H_cache[token_id];
 
-G1Point Generators::G() const
-{
-    return m_G;
-}
-
-G1Points Generators::Gi() const
-{
-    return m_Gi;
-}
-
-G1Points Generators::Hi() const
-{
-    return m_Hi;
+    auto gen = Generators { m_G, H, m_Gi, m_Hi };
+    return gen;
 }

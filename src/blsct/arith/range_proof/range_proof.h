@@ -56,7 +56,7 @@ public:
 
     bool InnerProductArgument(
         const size_t input_value_vec_len,
-        const G1Point& H,
+        const Generators& gens,
         const Scalar& x_ip,
         const Scalars& l,
         const Scalars& r,
@@ -82,7 +82,7 @@ public:
     );
 
 private:
-    static Generators m_gens;
+    static GeneratorsFactory m_gf;
 
     static Scalar m_one;
     static Scalar m_two;

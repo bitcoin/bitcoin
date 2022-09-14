@@ -27,7 +27,7 @@ RangeProof::RangeProof()
 
 bool RangeProof::InnerProductArgument(
     const size_t input_value_vec_len,
-    const G1Point& H,
+    const Generators& gens,
     const Scalar& x_ip,
     const Scalars& l,
     const Scalars& r,
@@ -37,8 +37,8 @@ bool RangeProof::InnerProductArgument(
 ) {
     // build initial state
     Scalars scale_factors = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
-    G1Points g_prime = m_gens.Gi();
-    G1Points h_prime = m_gens.Hi();
+    G1Points g_prime = gens.Gi;
+    G1Points h_prime = gens.Hi;
     Scalars a_prime = l;
     Scalars b_prime = r;
 
@@ -59,13 +59,13 @@ bool RangeProof::InnerProductArgument(
         st.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
             (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
-            (H * extra_scalar_cL)
+            (gens.H.get() * extra_scalar_cL)
         );
         Scalar extra_scalar_cR = cR * x_ip;
         st.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
             (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
-            (H * extra_scalar_cR)
+            (gens.H.get() * extra_scalar_cR)
         );
 
         // (25)-(27)
@@ -156,14 +156,14 @@ RangeProofState RangeProof::Prove(
         }
     }
 
-    // Get H for the token_id
-    G1Point H = m_gens.H(token_id);
+    // Get Generators for the token_id
+    Generators gens = m_gf.GetInstance(token_id);
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript(0, 0);
 
     // Calculate value commitments and add them to transcript
-    st.Vs = G1Points(H * gammas.m_vec) + G1Points(m_gens.G() * vs.m_vec);
+    st.Vs = G1Points(gens.H.get() * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
     for (size_t i = 0; i < vs.Size(); ++i) {
         transcript << st.Vs[i];
     }
@@ -207,7 +207,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     alpha = alpha + (vs[0] | (message_scalar << Config::m_input_value_bits));
 
     // Using generator H for alpha following the paper
-    st.A = (H * alpha) + (m_gens.Gi() * aL).Sum() + (m_gens.Hi() * aR).Sum();
+    st.A = (gens.H.get() * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -216,7 +216,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    st.S = (H * rho) + (m_gens.Gi() * sL).Sum() + (m_gens.Hi() * sR).Sum();
+    st.S = (gens.H.get() * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
 
     // (48)-(50)
     transcript << st.A;
@@ -274,8 +274,8 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     });
     tau1 = tau1 + second_message;
 
-    st.T1 = (m_gens.G() * t1) + (H * tau1);
-    st.T2 = (m_gens.G() * t2) + (H * tau2);
+    st.T1 = (gens.G.get() * t1) + (gens.H.get() * tau1);
+    st.T2 = (gens.G.get() * t2) + (gens.H.get() * tau2);
 
     // (54)-(56)
     transcript << st.T1;
@@ -314,7 +314,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     if (x_ip == 0)
         goto try_again;
 
-    if (!InnerProductArgument(input_value_vec_len, H, x_ip, l, r, y, st, transcript)) {
+    if (!InnerProductArgument(input_value_vec_len, gens, x_ip, l, r, y, st, transcript)) {
         goto try_again;
     }
     return st;
