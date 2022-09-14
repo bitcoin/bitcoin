@@ -9,7 +9,10 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
 )
-from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
+from test_framework.messages import (
+    DEFAULT_MEMPOOL_EXPIRY_HOURS,
+    tx_from_hex,
+)
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -81,16 +84,36 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         #
         # So we will create the child transaction, use listreceivedbyaddress to see what the
         # ordering of mapWallet is, if the child is not before the parent, we will create a new
-        # child (via bumpfee) and remove the old child (via removeprunedfunds) until we get the
+        # child (via nSequence-=1 and fee_delta+=200) and remove the old child (via removeprunedfunds) until we get the
         # ordering of child before parent.
-        child_txid = node.send(outputs=[{addr: 0.5}], options={"inputs": [{"txid":txid, "vout":0}]})["txid"]
+        # It is not possible to use bumpfee, as in very unlikely cases
+        # repeatedly calling it will overflow the maximum allowed -maxtxfee or
+        # run the wallet out of funds.
+        child_tx_hex = node.send(
+            outputs=[{
+                addr: 0.5,
+            }],
+            options={
+                "inputs": [{
+                    "txid": txid,
+                    "vout": 0,
+                }],
+                "add_to_wallet": False,
+            },
+        )["hex"]
+        child_txid = node.sendrawtransaction(child_tx_hex)
+        child_tx = tx_from_hex(child_tx_hex)
+        fee_delta = 0
         while True:
             txids = node.listreceivedbyaddress(minconf=0, address_filter=addr)[0]["txids"]
             if txids == [child_txid, txid]:
                 break
-            bumped = node.bumpfee(child_txid)
+            child_tx.vin[0].nSequence -= 1
+            fee_delta += 200
+            node.prioritisetransaction(txid=child_tx.rehash(), fee_delta=fee_delta)
+            bumped = node.signrawtransactionwithwallet(child_tx.serialize().hex())
             node.removeprunedfunds(child_txid)
-            child_txid = bumped["txid"]
+            child_txid = node.sendrawtransaction(bumped["hex"])
         entry_time = node.getmempoolentry(child_txid)["time"]
 
         block_time = entry_time + 6 * 60
