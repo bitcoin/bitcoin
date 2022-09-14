@@ -37,6 +37,7 @@ private:
     // H generator is created for each instance and cached
     inline static std::map<const TokenId, const G1Point> m_H_cache;
 
+    // made optional to initialize values lazily after mcl initialization
     inline static std::optional<G1Point> m_G;
     inline static std::optional<G1Points> m_Gi;
     inline static std::optional<G1Points> m_Hi;
