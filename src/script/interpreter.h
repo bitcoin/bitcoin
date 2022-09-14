@@ -371,4 +371,8 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 
 int FindAndDelete(CScript& script, const CScript& b);
 
+extern const std::map<std::string, uint32_t> g_verify_flag_names;
+
+std::vector<std::string> GetScriptFlagNames(uint32_t flags);
+
 #endif // BITCOIN_SCRIPT_INTERPRETER_H

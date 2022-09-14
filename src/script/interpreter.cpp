@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <tinyformat.h>
 #include <uint256.h>
 
 typedef std::vector<unsigned char> valtype;
@@ -2160,4 +2161,49 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
     }
 
     return 0;
+}
+
+#define FLAG_NAME(flag) {std::string(#flag), SCRIPT_VERIFY_##flag}
+const std::map<std::string, uint32_t> g_verify_flag_names{
+    FLAG_NAME(P2SH),
+    FLAG_NAME(STRICTENC),
+    FLAG_NAME(DERSIG),
+    FLAG_NAME(LOW_S),
+    FLAG_NAME(SIGPUSHONLY),
+    FLAG_NAME(MINIMALDATA),
+    FLAG_NAME(NULLDUMMY),
+    FLAG_NAME(DISCOURAGE_UPGRADABLE_NOPS),
+    FLAG_NAME(CLEANSTACK),
+    FLAG_NAME(MINIMALIF),
+    FLAG_NAME(NULLFAIL),
+    FLAG_NAME(CHECKLOCKTIMEVERIFY),
+    FLAG_NAME(CHECKSEQUENCEVERIFY),
+    FLAG_NAME(WITNESS),
+    FLAG_NAME(DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM),
+    FLAG_NAME(WITNESS_PUBKEYTYPE),
+    FLAG_NAME(CONST_SCRIPTCODE),
+    FLAG_NAME(TAPROOT),
+    FLAG_NAME(DISCOURAGE_UPGRADABLE_PUBKEYTYPE),
+    FLAG_NAME(DISCOURAGE_OP_SUCCESS),
+    FLAG_NAME(DISCOURAGE_UPGRADABLE_TAPROOT_VERSION),
+};
+#undef FLAG_NAME
+
+std::vector<std::string> GetScriptFlagNames(uint32_t flags)
+{
+    std::vector<std::string> res;
+    if (flags == SCRIPT_VERIFY_NONE) {
+        return res;
+    }
+    uint32_t leftover = flags;
+    for (const auto& [name, flag] : g_verify_flag_names) {
+        if ((flags & flag) != 0) {
+            res.push_back(name);
+            leftover &= ~flag;
+        }
+    }
+    if (leftover != 0) {
+        res.push_back(strprintf("0x%08x", leftover));
+    }
+    return res;
 }
