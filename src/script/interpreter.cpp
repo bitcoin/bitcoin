@@ -343,10 +343,8 @@ static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPu
     return true;
 }
 
-static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, V1SigVersion sigversion, ScriptError* serror, bool& success)
+static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool& success)
 {
-    assert(sigversion == V1SigVersion::TAPSCRIPT);
-
     /*
      *  The following validation sequence is consensus critical. Please note how --
      *    upgradable public key versions precede other rules;
@@ -366,7 +364,7 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
     if (pubkey.size() == 0) {
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     } else if (pubkey.size() == 32) {
-        if (success && !checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror)) {
+        if (success && !checker.CheckSchnorrSignature(sig, pubkey, V1SigVersion::TAPSCRIPT, execdata, serror)) {
             return false; // serror is set
         }
     } else {
@@ -395,7 +393,7 @@ static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::con
     case SigVersion::WITNESS_V0:
         return EvalChecksigPreTapscript(sig, pubkey, pbegincodehash, pend, flags, checker, sigversion, serror, success);
     case SigVersion::TAPSCRIPT:
-        return EvalChecksigTapscript(sig, pubkey, execdata, flags, checker, V1SigVersion::TAPSCRIPT, serror, success);
+        return EvalChecksigTapscript(sig, pubkey, execdata, flags, checker, serror, success);
     case SigVersion::TAPROOT:
         // Key path spending in Taproot has no script, so this is unreachable.
         break;
