@@ -319,26 +319,26 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << commMessage;
     if(!SendZmqMessageNEVM(MSG_NEVMCOMMS, &(*ss.begin()), ss.size())) {
-        LogPrintf("NotifyNEVMComms: nevm-connect-not-sent: %s\n", commMessage);
+        LogPrint(BCLog::SYS, "NotifyNEVMComms: nevm-connect-not-sent: %s\n", commMessage);
         return false;
     }
     if(commMessage != "disconnect") {
         if(ReceiveZmqMessage(parts)) {
             if(parts.size() != 2) {
-                LogPrintf("NotifyNEVMComms: nevm-response-invalid-parts\n");
+                LogPrint(BCLog::SYS, "NotifyNEVMComms: nevm-response-invalid-parts\n");
                 return false;  
             }
             if(parts[0] != MSG_NEVMCOMMS) {
-                LogPrintf("NotifyNEVMComms: nevm-response-wrong-command\n");
+                LogPrint(BCLog::SYS, "NotifyNEVMComms: nevm-response-wrong-command\n");
                 return false;
             }
             if(parts[1] != "ack") {
-                LogPrintf("NotifyNEVMComms: nevm-comms-response-invalid-data\n");
+                LogPrint(BCLog::SYS, "NotifyNEVMComms: nevm-comms-response-invalid-data\n");
                 return false;
             }
             bResponse = true;
         } else {
-            LogPrintf("NotifyNEVMComms: nevm-response-not-found: %s\n", commMessage);
+            LogPrint(BCLog::SYS, "NotifyNEVMComms: nevm-response-not-found: %s\n", commMessage);
             return false;
         }
     } else {
@@ -384,7 +384,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
         }
         if(parts[1] != "connected") {
-            LogPrintf("NotifyNEVMBlockConnect: %s\n", parts[1]);
+            LogPrint(BCLog::SYS, "NotifyNEVMBlockConnect: %s\n", parts[1]);
             // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
             const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
             if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
