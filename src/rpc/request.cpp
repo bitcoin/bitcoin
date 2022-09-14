@@ -78,7 +78,20 @@ static fs::path GetAuthCookieFile(bool temp=false)
     return AbsPathForConfigVal(arg);
 }
 
-bool GenerateAuthCookie(std::string *cookie_out)
+static std::string perms_to_str(fs::perms p)
+{
+    return std::string((p & fs::perms::owner_read) != fs::perms::none ? "r" : "-") +
+           std::string((p & fs::perms::owner_write) != fs::perms::none ? "w" : "-") +
+           std::string((p & fs::perms::owner_exec) != fs::perms::none ? "x" : "-") +
+           std::string((p & fs::perms::group_read) != fs::perms::none ? "r" : "-") +
+           std::string((p & fs::perms::group_write) != fs::perms::none ? "w" : "-") +
+           std::string((p & fs::perms::group_exec) != fs::perms::none ? "x" : "-") +
+           std::string((p & fs::perms::others_read) != fs::perms::none ? "r" : "-") +
+           std::string((p & fs::perms::others_write) != fs::perms::none ? "w" : "-") +
+           std::string((p & fs::perms::others_exec) != fs::perms::none ? "x" : "-");
+}
+
+bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie_perms)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
@@ -98,12 +111,22 @@ bool GenerateAuthCookie(std::string *cookie_out)
     file << cookie;
     file.close();
 
+    if (cookie_perms) {
+        std::error_code code;
+        std::filesystem::permissions(filepath_tmp, *cookie_perms, std::filesystem::perm_options::replace, code);
+        if (code) {
+            LogPrintf("Unable to set permissions on cookie authentication file %s\n", fs::PathToString(filepath_tmp));
+            return false;
+        }
+    }
+
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
         LogPrintf("Unable to rename cookie authentication file %s to %s\n", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
         return false;
     }
     LogPrintf("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
+    LogPrintf("Permissions used for cookie: %s\n", perms_to_str(fs::status(filepath).permissions()));
 
     if (cookie_out)
         *cookie_out = cookie;

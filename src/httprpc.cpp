@@ -238,12 +238,35 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     return true;
 }
 
+static std::optional<unsigned> StringToOctal(const std::string& str)
+{
+    unsigned ret = 0;
+    for (char c : str) {
+        if (c < '0' || c > '7') return std::nullopt;
+        ret = (ret << 3) | (c - '0');
+    }
+    return ret;
+}
+
 static bool InitRPCAuthentication()
 {
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
         LogPrintf("Using random cookie authentication.\n");
-        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+
+        std::optional<fs::perms> cookie_perms;
+        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        if (cookie_perms_arg) {
+            auto perms{StringToOctal(*cookie_perms_arg)};
+            if (!perms) {
+                LogPrintf("Invalid -rpccookieperms=%s; must be octal number (like 0600).\n", *cookie_perms_arg);
+                return false;
+            }
+
+            cookie_perms = static_cast<fs::perms>(*perms);
+        }
+
+        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
             return false;
         }
     } else {
