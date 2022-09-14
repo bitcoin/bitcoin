@@ -879,6 +879,12 @@ case $host in
    *arm*)
      TARGET_ARCH=arm
      ;;
+   *i686*)
+     TARGET_ARCH=x86_32
+     ;;
+   *x86_32*)
+     TARGET_ARCH=x86_32
+     ;;
    *) AC_MSG_ERROR([Could not determine target arch, or it is unsupported]) ;;
 esac
 
