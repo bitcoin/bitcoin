@@ -55,9 +55,9 @@ public:
     ) const;
 
     bool InnerProductArgument(
+        const G1Point& H,
         const size_t& mn,
         const Scalar& x_ip,
-        const Generators& gens,
         const Scalars& l,
         const Scalars& r,
         const Scalar& y,
@@ -89,8 +89,9 @@ public:
     static Scalar m_two;
     static Scalars m_two_pow_bit_size;
 
-
 private:
+    //static Generators m_gens;
+
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_static_values_initialized = false;
 };

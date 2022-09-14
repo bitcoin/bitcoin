@@ -14,13 +14,13 @@ public:
     inline static const size_t max_prove_func_retries = 100;
 
     // size of each input value in bits
-    inline static const size_t m_bit_size = 64;
+    inline static const size_t m_input_value_bits = 64;  // ex m_bit_size
 
     // maximum # of input values
-    inline static const size_t m_max_value_len = 16;
+    inline static const size_t m_max_num_values = 16;  // ex max_value_len
 
     inline static const size_t m_max_message_size = 54;
-    inline static const size_t m_max_value_vec_len = m_max_value_len * m_bit_size;
+    inline static const size_t m_max_input_value_vec_len = m_max_num_values * m_input_value_bits;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H

@@ -9,29 +9,21 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-Generators::Generators(const TokenId& token_id)
-{
-    if (!m_is_static_values_initialized) {
-        Generators::Init();
-    }
-    // if H for the token_id hasn't been created, create it and store it to the cache
-    if (Generators::m_H_cache.count(token_id) == 0) {
-        const G1Point h_for_token_id = GetGenerator(Generators::m_G, 0, token_id);
-        Generators::m_H_cache.emplace(token_id, h_for_token_id);
-    }
-    m_H = m_H_cache[token_id];
-}
-
 void Generators::Init()
 {
+    printf("INIT CALLED\n");
     if (m_is_static_values_initialized) return;
     boost::lock_guard<boost::mutex> lock(Generators::m_init_mutex);
 
-    const size_t num_generators = Config::m_bit_size * Config::m_max_value_vec_len;
+    MclInitializer::Init();
+    G1Point::Init();
+
+    m_G = G1Point::GetBasePoint();
+
     const TokenId default_token_id;
     const G1Point H = Generators::GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
 
-    for (size_t i = 0; i < num_generators; ++i) {
+    for (size_t i = 0; i < Config::m_max_input_value_vec_len; ++i) {
         const size_t base_index = i * 2;
         G1Point hi = Generators::GetGenerator(H, base_index + 1, default_token_id);
         G1Point gi = Generators::GetGenerator(H, base_index + 2, default_token_id);
@@ -39,6 +31,12 @@ void Generators::Init()
         m_Gi.Add(gi);
     }
     m_is_static_values_initialized = true;
+}
+
+Generators::Generators()
+{
+    if (m_is_static_values_initialized) return;
+    Generators::Init();
 }
 
 G1Point Generators::GetGenerator(
@@ -64,19 +62,24 @@ G1Point Generators::GetGenerator(
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
     auto ret = G1Point::MapToG1(vec_hash);
     if (ret.IsUnity()) {
-        throw std::runtime_error(strprintf("%s: generated G1Point is point at infinity", __func__));
+        throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. change index or token_id to get a valid point", __func__));
     }
     return ret;
+}
+
+G1Point Generators::H(const TokenId& token_id)
+{
+    // if H for the token_id hasn't been created, create it and store it to the cache
+    if (Generators::m_H_cache.count(token_id) == 0) {
+        const G1Point H = GetGenerator(Generators::m_G, 0, token_id);
+        Generators::m_H_cache.emplace(token_id, H);
+    }
+    return m_H_cache[token_id];
 }
 
 G1Point Generators::G() const
 {
     return m_G;
-}
-
-G1Point Generators::H() const
-{
-    return m_H;
 }
 
 G1Points Generators::Gi() const

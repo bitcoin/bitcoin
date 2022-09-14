@@ -17,8 +17,16 @@
 class Generators
 {
 public:
-    Generators(const TokenId& token_id);
-    Generators GetInstance(const TokenId& token_id);
+    Generators();
+
+    G1Point H(const TokenId& token_id);
+
+    G1Point G() const;
+    G1Points Gi() const;
+    G1Points Hi() const;
+
+private:
+    static void Init();
 
     static G1Point GetGenerator(
         const G1Point& p,
@@ -26,21 +34,11 @@ public:
         const TokenId& token_id
     );
 
-    G1Point G() const;
-    G1Point H() const;
-    G1Points Gi() const;
-    G1Points Hi() const;
-
-private:
-    static void Init();
-
-    G1Point m_H;  // H generator is created for each instance
-
-    // cache of generated H generators
+    // H generator is created for each instance and cached
     inline static std::map<const TokenId, const G1Point> m_H_cache;
 
     // G, Gi, Hi generators are shared among all instances
-    const inline static G1Point m_G = G1Point::GetBasePoint();
+    inline static G1Point m_G;
     inline static G1Points m_Gi;
     inline static G1Points m_Hi;
 

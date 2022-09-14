@@ -1,3 +1,4 @@
+#include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/range_proof.h>
 #include <ctokens/tokenid.h>
@@ -15,8 +16,8 @@ RangeProof::RangeProof()
 
     MclInitializer::Init();
     G1Point::Init();
-    Generators::Init(m_bit_size, m_max_value_vec_len);
 
+    //RangeProof::m_gens = Generators();
     RangeProof::m_one = Scalar(1);
     RangeProof::m_two = Scalar(2);
     RangeProof::m_two_pow_bit_size = Scalars::FirstNPow(m_two, m_bit_size);
@@ -25,9 +26,9 @@ RangeProof::RangeProof()
 }
 
 bool RangeProof::InnerProductArgument(
+    const G1Point& H,
     const size_t& mn,
     const Scalar& x_ip,
-    const Generators& gens,
     const Scalars& l,
     const Scalars& r,
     const Scalar& y,
@@ -36,8 +37,8 @@ bool RangeProof::InnerProductArgument(
 ) {
     // build initial state
     Scalars scale_factors = Scalars::FirstNPow(y.Invert(), mn);
-    G1Points g_prime = gens.Gi();
-    G1Points h_prime = gens.Hi();
+    G1Points g_prime = m_gens.Gi();
+    G1Points h_prime = m_gens.Hi();
     Scalars a_prime = l;
     Scalars b_prime = r;
 
@@ -58,13 +59,13 @@ bool RangeProof::InnerProductArgument(
         st.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
             (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
-            (gens.H() * extra_scalar_cL)
+            (H * extra_scalar_cL)
         );
         Scalar extra_scalar_cR = cR * x_ip;
         st.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
             (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
-            (gens.H() * extra_scalar_cR)
+            (H * extra_scalar_cR)
         );
 
         // (25)-(27)
@@ -100,14 +101,14 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-size_t RangeProof::GetInputValueVecLen(size_t input_value_len)
+size_t RangeProof::GetInputValueVecLen(size_t input_value_vec_len)
 {
     size_t i = 1;
-    while (i < input_value_len) {
+    while (i < input_value_vec_len) {
         i *= 2;
-        if (i > m_max_value_len) {
+        if (i > Config::m_max_input_value_vec_len) {
             throw std::runtime_error(strprintf(
-                "%s: input value len %d is too large", __func__, input_value_len));
+                "%s: input value vector length %d is too large", __func__, input_value_vec_len));
         }
     }
     return i;
@@ -121,7 +122,7 @@ RangeProofState RangeProof::Prove(
     const size_t max_tries,
     const std::optional<Scalars> gammas_override)
 {
-    if (message.size() > m_max_message_size) {
+    if (message.size() > Config::m_max_message_size) {
         throw std::runtime_error(strprintf("%s: message size is too large", __func__));
     }
     if (vs.Empty()) {
@@ -156,14 +157,14 @@ RangeProofState RangeProof::Prove(
         }
     }
 
-    // Get generators for the calculation
-    const Generators gens(token_id);
+    // Get H for the token_id
+    G1Point H = m_gens.H(token_id);
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript(0, 0);
 
     // Calculate value commitments and add them to transcript
-    st.Vs = G1Points(gens.H() * gammas.m_vec) + G1Points(gens.G() * vs.m_vec);
+    st.Vs = G1Points(H * gammas.m_vec) + G1Points(m_gens.G() * vs.m_vec);
     for (size_t i = 0; i < vs.Size(); ++i) {
         transcript << st.Vs[i];
     }
@@ -207,7 +208,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     alpha = alpha + (vs[0] | (message_scalar << m_bit_size));
 
     // Using generator H for alpha following the paper
-    st.A = (gens.H() * alpha) + (gens.Gi() * aL).Sum() + (gens.Hi() * aR).Sum();
+    st.A = (H * alpha) + (m_gens.Gi() * aL).Sum() + (m_gens.Hi() * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -216,7 +217,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    st.S = (gens.H() * rho) + (gens.Gi() * sL).Sum() + (gens.Hi() * sR).Sum();
+    st.S = (H * rho) + (m_gens.Gi() * sL).Sum() + (m_gens.Hi() * sR).Sum();
 
     // (48)-(50)
     transcript << st.A;
@@ -274,8 +275,8 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     });
     tau1 = tau1 + second_message;
 
-    st.T1 = (gens.G() * t1) + (gens.H() * tau1);
-    st.T2 = (gens.G() * t2) + (gens.H() * tau2);
+    st.T1 = (m_gens.G() * t1) + (H * tau1);
+    st.T2 = (m_gens.G() * t2) + (H * tau2);
 
     // (54)-(56)
     transcript << st.T1;
@@ -314,7 +315,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     if (x_ip == 0)
         goto try_again;
 
-    if (!InnerProductArgument(values_bits, x_ip, gens, l, r, y, st, transcript)) {
+    if (!InnerProductArgument(H, values_bits, x_ip, l, r, y, st, transcript)) {
         goto try_again;
     }
     return st;
