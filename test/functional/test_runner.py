@@ -378,6 +378,7 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
+    parser.add_argument('--priority', '-p', default='', help='list of tests to run first')
 
     args, unknown_args = parser.parse_known_args()
     if not args.ansi:
@@ -445,6 +446,17 @@ def main():
     else:
         # Run base tests only
         test_list += BASE_SCRIPTS
+
+    if args.priority:
+        priority_tests = args.priority.split(",")[::-1]
+        for priority_test in priority_tests:
+            priority_test = priority_test.strip()
+            if priority_test == "":
+                continue
+            for test in test_list:
+                if priority_test in test:
+                    test_list.remove(test)
+                    test_list.insert(0, test)
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
