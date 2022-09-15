@@ -1061,10 +1061,10 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
             return;
         }
     }
-    // SYSCOIN don't accept incoming connections until fully synced
+    // SYSCOIN don't accept incoming connections until blockchain is synce
     if(!fRegTest && !fSigNet) {
-        if(fMasternodeMode && !masternodeSync.IsSynced()) {
-            LogPrintf("AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
+        if(fMasternodeMode && !masternodeSync.IsBlockchainSynced()) {
+            LogPrintf("AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
             return;
         }
     }
