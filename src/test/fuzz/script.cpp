@@ -55,7 +55,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     CTxDestination address;
     (void)ExtractDestination(script, address);
 
-    txnouttype type_ret;
+    TxoutType type_ret;
     std::vector<CTxDestination> addresses;
     int required_ret;
     (void)ExtractDestinations(script, type_ret, addresses, required_ret);
@@ -65,7 +65,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     (void)IsSolvable(signing_provider, script);
 
-    txnouttype which_type;
+    TxoutType which_type;
     (void)IsStandard(script, which_type);
 
     (void)RecursiveDynamicUsage(script);

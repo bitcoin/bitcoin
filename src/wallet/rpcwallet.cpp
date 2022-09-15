@@ -3561,7 +3561,7 @@ public:
         CScript subscript;
         if (provider && provider->GetCScript(scriptID, subscript)) {
             std::vector<CTxDestination> addresses;
-            txnouttype whichType;
+            TxoutType whichType;
             int nRequired;
             ExtractDestinations(subscript, whichType, addresses, nRequired);
             obj.pushKV("script", GetTxnOutputType(whichType));
@@ -3571,7 +3571,7 @@ public:
                 a.push_back(EncodeDestination(addr));
             }
             obj.pushKV("addresses", a);
-            if (whichType == TX_MULTISIG)
+            if (whichType == TxoutType::MULTISIG)
                 obj.pushKV("sigsrequired", nRequired);
         }
         return obj;

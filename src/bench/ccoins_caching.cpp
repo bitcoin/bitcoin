@@ -13,8 +13,8 @@
 //
 // Helper: create two dummy transactions, each with
 // two outputs.  The first has 11 and 50 COIN outputs
-// paid to a TX_PUBKEY, the second 21 and 22 COIN outputs
-// paid to a TX_PUBKEYHASH.
+// paid to a TxoutType::PUBKEY, the second 21 and 22 COIN outputs
+// paid to a TxoutType::PUBKEYHASH.
 //
 static std::vector<CMutableTransaction>
 SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet)
