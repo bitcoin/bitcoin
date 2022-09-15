@@ -187,7 +187,6 @@ public:
 
     inline std::string ToString() const
     {
-        std::vector<uint8_t> buf = ToByteVector();
         return HexStr(buf);
     }
 };
@@ -238,7 +237,7 @@ public:
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
-#ifndef BUILD_BITCOIN_INTERNAL
+#ifndef BUILD_SYSCOIN_INTERNAL
     void MakeNewKey();
 #endif
     bool SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const CBLSId& id);
@@ -295,7 +294,7 @@ public:
     bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
 };
 
-#ifndef BUILD_BITCOIN_INTERNAL
+#ifndef BUILD_SYSCOIN_INTERNAL
 template<typename BLSObject>
 class CBLSLazyWrapper
 {
