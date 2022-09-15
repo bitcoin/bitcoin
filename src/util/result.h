@@ -39,6 +39,13 @@ private:
 
     std::variant<bilingual_str, T> m_variant;
 
+    //! Disallow operator= and require explicit Result::Set() calls to avoid
+    //! confusion in the future when the Result class gains support for richer
+    //! error reporting, and callers should have ability to set a new result
+    //! value without clearing existing error messages.
+    Result& operator=(const Result&) = default;
+    Result& operator=(Result&&) = default;
+
     template <typename FT>
     friend bilingual_str ErrorString(const Result<FT>& result);
 
@@ -46,6 +53,9 @@ public:
     Result() : m_variant{std::in_place_index_t<1>{}, std::monostate{}} {}  // constructor for void
     Result(T obj) : m_variant{std::in_place_index_t<1>{}, std::move(obj)} {}
     Result(Error error) : m_variant{std::in_place_index_t<0>{}, std::move(error.message)} {}
+    Result(const Result&) = default;
+    Result(Result&&) = default;
+    ~Result() = default;
 
     //! std::optional methods, so functions returning optional<T> can change to
     //! return Result<T> with minimal changes to existing code, and vice versa.
@@ -75,6 +85,9 @@ public:
     const T& operator*() const LIFETIMEBOUND { return value(); }
     T* operator->() LIFETIMEBOUND { return &value(); }
     T& operator*() LIFETIMEBOUND { return value(); }
+
+    //! Assign success or failure value from another result object.
+    Result& Set(Result&& other) LIFETIMEBOUND { return *this = std::move(other); }
 };
 
 template <typename T>

@@ -83,6 +83,26 @@ BOOST_AUTO_TEST_CASE(check_returned)
     ExpectFail(StrFn(Untranslated("S"), false), Untranslated("str S error."));
 }
 
+BOOST_AUTO_TEST_CASE(check_set)
+{
+    // Test using Set method to change a result value from success -> failure,
+    // and failure->success.
+    util::Result<int> result{0};
+    ExpectSuccess(result, {}, 0);
+    result.Set({util::Error{Untranslated("error")}});
+    ExpectFail(result, Untranslated("error"));
+    result.Set(2);
+    ExpectSuccess(result, Untranslated(""), 2);
+
+    // Test the same thing but with non-copyable success and failure types.
+    util::Result<NoCopy> result2{0};
+    ExpectSuccess(result2, {}, 0);
+    result2.Set({util::Error{Untranslated("error")}});
+    ExpectFail(result2, Untranslated("error"));
+    result2.Set(util::Result<NoCopy>{4});
+    ExpectSuccess(result2, Untranslated(""), 4);
+}
+
 BOOST_AUTO_TEST_CASE(check_value_or)
 {
     BOOST_CHECK_EQUAL(IntFn(10, true).value_or(20), 10);
