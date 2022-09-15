@@ -164,8 +164,7 @@ namespace bls {
     BLSType Poly::Evaluate(const std::vector<BLSType>& vecIn, const Bytes& id) {
         typedef PolyOps<BLSType> Ops;
         Ops ops;
-        const std::vector<BLSType> &vec = vecIn;
-        if (vec.size() < 2) {
+        if (vecIn.size() < 2) {
             throw std::length_error("At least 2 coefficients required");
         }
 
@@ -174,9 +173,8 @@ namespace bls {
         bn_read_bin(x, id.begin(), Poly::nIdSize);
         ops.ModOrder(x);
 
-        BLSType y = vecIn[vec.size() - 1];
-
-        for (int i = (int) vec.size() - 2; i >= 0; i--) {
+        BLSType y = vecIn.back();
+        for (int i = (int) vecIn.size() - 2; i >= 0; i--) {
             y = ops.Mul(y, x);
             y = ops.Add(y, vecIn[i]);
         }
