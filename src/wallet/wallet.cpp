@@ -882,7 +882,7 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
     wtx.mapValue["replaced_by_txid"] = newHash.ToString();
 
-    // Refresh mempool status without waiting for transactionRemovedFromMempool
+    // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
 
     WalletBatch batch(GetDatabase());
@@ -1920,7 +1920,7 @@ std::set<uint256> CWallet::GetTxConflicts(const CWalletTx& wtx) const
 // The `force` option results in all unconfirmed transactions being submitted to
 // the mempool. This does not necessarily result in those transactions being relayed,
 // that depends on the `relay` option. Periodic rebroadcast uses the pattern
-// relay=true force=false (also the default values), while loading into the mempool
+// relay=true force=false, while loading into the mempool
 // (on start, or after import) uses relay=false force=true.
 void CWallet::ResubmitWalletTransactions(bool relay, bool force)
 {

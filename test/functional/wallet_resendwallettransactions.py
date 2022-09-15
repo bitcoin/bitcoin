@@ -89,6 +89,10 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             if txids == [child_txid, txid]:
                 break
             bumped = node.bumpfee(child_txid)
+            # The scheduler queue creates a copy of the added tx after
+            # send/bumpfee and re-adds it to the wallet (undoing the next
+            # removeprunedfunds). So empty the scheduler queue:
+            node.syncwithvalidationinterfacequeue()
             node.removeprunedfunds(child_txid)
             child_txid = bumped["txid"]
         entry_time = node.getmempoolentry(child_txid)["time"]
@@ -98,13 +102,13 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
         block.solve()
         node.submitblock(block.serialize().hex())
+        # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
         node.syncwithvalidationinterfacequeue()
 
         # Evict these txs from the mempool
         evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
         node.setmocktime(evict_time)
         indep_send = node.send(outputs=[{node.getnewaddress(): 1}], options={"inputs": [indep_utxo]})
-        node.syncwithvalidationinterfacequeue()
         node.getmempoolentry(indep_send["txid"])
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
