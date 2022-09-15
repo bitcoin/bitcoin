@@ -26,6 +26,7 @@ class NEVMDataTest(DashTestFramework):
         self.sync_mempools()
         print('Generating block...')
         self.generate(self.nodes[0], 1)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         print('Testing nodes to see if blob exists...')
         assert_equal(self.nodes[0].getnevmblobdata(vh, True)['data'], blobDataMax)
         assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], blobDataMax)
@@ -46,6 +47,7 @@ class NEVMDataTest(DashTestFramework):
         self.sync_mempools()
         print('Generating block...')
         tip = self.generate(self.nodes[0], 1)[-1]
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         rpc_details = self.nodes[0].getblock(tip, True)
         print('Ensure fees will be properly calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
         assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
@@ -65,6 +67,7 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(foundCount, MAX_DATA_BLOBS)
         print('Generating next block...')
         tip = self.generate(self.nodes[0], 1)[-1]
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         rpc_details = self.nodes[0].getblock(tip, True)
         foundCount = 0
         print('Testing nodes to see if MAX_DATA_BLOBS+1 blobs exist...')
