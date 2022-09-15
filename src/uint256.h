@@ -130,6 +130,7 @@ public:
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
     static const uint256 ZEROV;
     static const uint256 ONEV;
+    static const uint256 TWOV;
 };
 
 /* uint256 from const char *.

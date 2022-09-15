@@ -82,3 +82,4 @@ template void base_blob<256>::SetHex(const std::string&);
 // SYSCOIN
 const uint256 uint256::ZEROV(0);
 const uint256 uint256::ONEV(1);
+const uint256 uint256::TWOV(2);
