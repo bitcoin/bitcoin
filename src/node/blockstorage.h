@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <chain.h>
 #include <fs.h>
+#include <kernel/cs_main.h>
 #include <protocol.h>
 #include <sync.h>
 #include <txdb.h>
@@ -16,8 +17,6 @@
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
-
-extern RecursiveMutex cs_main;
 
 class ArgsManager;
 class BlockValidationState;

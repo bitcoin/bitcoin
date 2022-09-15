@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
 
     CTxMemPool& testPool = *Assert(m_node.mempool);
-    LOCK2(cs_main, testPool.cs);
+    LOCK2(::cs_main, testPool.cs);
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();
