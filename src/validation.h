@@ -1358,4 +1358,7 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 /** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
 bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
 
+// Returns the script flags which should be checked for a given block
+unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
+
 #endif // BITCOIN_VALIDATION_H

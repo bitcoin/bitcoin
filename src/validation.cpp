@@ -262,9 +262,6 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
     return EvaluateSequenceLocks(index, {lock_points.height, lock_points.time});
 }
 
-// Returns the script flags which should be checked for a given block
-static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
-
 static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
 {
@@ -2328,7 +2325,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
+unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
     const Consensus::Params& consensusparams = chainman.GetConsensus();
 
