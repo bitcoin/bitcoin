@@ -352,7 +352,16 @@ void Shutdown(NodeContext& node)
             }
         }
         UninterruptibleSleep(std::chrono::milliseconds{200});
+
+        passetdb.reset();
+        passetnftdb.reset();
+        pnevmtxrootsdb.reset();
+        pnevmtxmintdb.reset();
+        pblockindexdb.reset();
+        pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
+        deterministicMNManager.reset();
+        evoDb.reset();
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
