@@ -9,14 +9,14 @@
 
 CMasternodeMetaMan mmetaman;
 
-const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-2";
+const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
 
 UniValue CMasternodeMetaInfo::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
 
     auto now = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
-
+    ret.pushKV("outboundAttemptCount", outboundAttemptCount);
     ret.pushKV("lastOutboundAttempt", lastOutboundAttempt.load());
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
     ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
