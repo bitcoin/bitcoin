@@ -202,9 +202,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx7.vout[1].nValue = 1 * COIN;
 
-    auto ancestors_calculated{pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), CTxMemPool::Limits::NoLimits())};
-    BOOST_REQUIRE(ancestors_calculated.has_value());
-    BOOST_CHECK(*ancestors_calculated == setAncestors);
+    {
+        auto ancestors_calculated{pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), CTxMemPool::Limits::NoLimits())};
+        BOOST_REQUIRE(ancestors_calculated.has_value());
+        BOOST_CHECK(*ancestors_calculated == setAncestors);
+    }
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
     BOOST_CHECK_EQUAL(pool.size(), 7U);
@@ -260,9 +262,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx10.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx10.vout[0].nValue = 10 * COIN;
 
-    ancestors_calculated = pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits());
-    BOOST_REQUIRE(ancestors_calculated);
-    BOOST_CHECK(*ancestors_calculated == setAncestors);
+    {
+        auto ancestors_calculated{pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits())};
+        BOOST_REQUIRE(ancestors_calculated);
+        BOOST_CHECK(*ancestors_calculated == setAncestors);
+    }
 
     pool.addUnchecked(entry.FromTx(tx10), setAncestors);
 

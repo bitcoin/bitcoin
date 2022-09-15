@@ -106,13 +106,11 @@ struct FuzzedWallet {
     CTxDestination GetDestination(FuzzedDataProvider& fuzzed_data_provider)
     {
         auto type{fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)};
-        util::Result<CTxDestination> op_dest{util::Error{}};
         if (fuzzed_data_provider.ConsumeBool()) {
-            op_dest = wallet->GetNewDestination(type, "");
+            return *Assert(wallet->GetNewDestination(type, ""));
         } else {
-            op_dest = wallet->GetNewChangeDestination(type);
+            return *Assert(wallet->GetNewChangeDestination(type));
         }
-        return *Assert(op_dest);
     }
     CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider) { return GetScriptForDestination(GetDestination(fuzzed_data_provider)); }
     void FundTx(FuzzedDataProvider& fuzzed_data_provider, CMutableTransaction tx)
