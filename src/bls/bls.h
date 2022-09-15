@@ -166,7 +166,7 @@ public:
     inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
-        s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
+        s.read(MakeWritableByteSpan(vecBytes));
         SetByteVector(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
@@ -366,7 +366,7 @@ public:
     inline void Unserialize(Stream& s)
     {
         std::unique_lock<std::mutex> l(mutex);
-        s.read(MakeWritableByteSpan(vecBytes));
+        s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
         bufValid = true;
         objInitialized = false;
         hash.SetNull();
