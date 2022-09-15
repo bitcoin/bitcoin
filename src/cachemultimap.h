@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -193,18 +192,10 @@ public:
         return *this;
     }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const
+    SERIALIZE_METHODS(CacheMultiMap, obj)
     {
-        s << nMaxSize;
-        s << listItems;
-    }
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        s >> nMaxSize;
-        s >> listItems;
-        RebuildIndex();
+        READWRITE(obj.nMaxSize, obj.listItems);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:

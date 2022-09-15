@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,19 +11,16 @@
 #include <util/strencodings.h>
 #include <util/ranges.h>
 
-// chiabls uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
+// bls-dash uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
 #undef DEBUG
-#include <bls-dash/src/bls.hpp>
-#undef DEBUG
-#include <bls-dash/src/privatekey.hpp>
-#undef DEBUG
-#include <bls-dash/src/elements.hpp>
-#undef DEBUG
-#include <bls-dash/src/schemes.hpp>
-#undef DEBUG
-#include <bls-dash/src/threshold.hpp>
+#include <bls-dash/bls.hpp>
+#include <bls-dash/privatekey.hpp>
+#include <bls-dash/elements.hpp>
+#include <bls-dash/schemes.hpp>
+#include <bls-dash/threshold.hpp>
 #undef DOUBLE
+#undef SEED
 
 #include <array>
 #include <mutex>
@@ -54,8 +51,6 @@ protected:
     bool fValid{false};
     mutable uint256 cachedHash;
 
-    inline constexpr size_t GetSerSize() const { return SerSize; }
-
 public:
     static constexpr size_t SerSize = _SerSize;
 
@@ -74,14 +69,14 @@ public:
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        fLegacy = ref.fLegacy;
+        std::swap(fLegacy, ref.fLegacy);
     }
     CBLSWrapper& operator=(CBLSWrapper&& ref) noexcept
     {
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        fLegacy = ref.fLegacy;
+        std::swap(fLegacy, ref.fLegacy);
         return *this;
     }
 
@@ -157,7 +152,6 @@ public:
         return IsValid();
     }
 
-public:
     inline void Serialize(CSizeComputer& s) const
     {
         s.seek(SerSize);
@@ -166,13 +160,13 @@ public:
     template <typename Stream>
     inline void Serialize(Stream& s) const
     {
-        s.write(MakeByteSpan(ToByteVector()));
+        s.write(reinterpret_cast<const char*>(ToByteVector().data()), SerSize);
     }
     template <typename Stream>
     inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
-        s.read(MakeWritableByteSpan(vecBytes));
+        s.read(reinterpret_cast<char*>(vecBytes.data()), SerSize);
         SetByteVector(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
@@ -193,7 +187,8 @@ public:
 
     inline std::string ToString() const
     {
-        return HexStr(ToByteVector());
+        std::vector<uint8_t> buf = ToByteVector();
+        return HexStr(buf);
     }
 };
 
@@ -210,7 +205,7 @@ struct CBLSIdImplicit : public uint256
         memcpy(instance.begin(), buffer, sizeof(CBLSIdImplicit));
         return instance;
     }
-    std::vector<uint8_t> Serialize(const bool fLegacy = false) const
+    [[nodiscard]] std::vector<uint8_t> Serialize(const bool fLegacy = false) const
     {
         return {begin(), end()};
     }
@@ -243,13 +238,13 @@ public:
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
-#ifndef BUILD_SYSCOIN_INTERNAL
+#ifndef BUILD_BITCOIN_INTERNAL
     void MakeNewKey();
 #endif
     bool SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const CBLSId& id);
 
-    CBLSPublicKey GetPublicKey() const;
-    CBLSSignature Sign(const uint256& hash) const;
+    [[nodiscard]] CBLSPublicKey GetPublicKey() const;
+    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
 };
 
 class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
@@ -292,15 +287,15 @@ public:
 
     void SubInsecure(const CBLSSignature& o);
 
-    bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
-    bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
+    [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
+    [[nodiscard]] bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
 
-    bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
+    [[nodiscard]] bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
 
     bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
 };
 
-#ifndef BUILD_SYSCOIN_INTERNAL
+#ifndef BUILD_BITCOIN_INTERNAL
 template<typename BLSObject>
 class CBLSLazyWrapper
 {
@@ -365,14 +360,14 @@ public:
             bufValid = true;
             hash.SetNull();
         }
-        s.write(MakeByteSpan(vecBytes));
+        s.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
     }
 
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
         std::unique_lock<std::mutex> l(mutex);
-        s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
+        s.read(reinterpret_cast<char*>(vecBytes.data()), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
         hash.SetNull();
@@ -432,7 +427,7 @@ public:
         }
         if (hash.IsNull()) {
             CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-            ss << vecBytes;
+            ss.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
             hash = ss.GetHash();
         }
         return hash;
@@ -440,7 +435,6 @@ public:
 };
 using CBLSLazySignature = CBLSLazyWrapper<CBLSSignature>;
 using CBLSLazyPublicKey = CBLSLazyWrapper<CBLSPublicKey>;
-using CBLSLazySecretKey = CBLSLazyWrapper<CBLSSecretKey>;
 #endif
 
 using BLSIdVector = std::vector<CBLSId>;
@@ -449,11 +443,7 @@ using BLSPublicKeyVector = std::vector<CBLSPublicKey>;
 using BLSSecretKeyVector = std::vector<CBLSSecretKey>;
 using BLSSignatureVector = std::vector<CBLSSignature>;
 
-using BLSIdVectorPtr = std::shared_ptr<BLSIdVector>;
 using BLSVerificationVectorPtr = std::shared_ptr<BLSVerificationVector>;
-using BLSPublicKeyVectorPtr = std::shared_ptr<BLSPublicKeyVector>;
-using BLSSecretKeyVectorPtr = std::shared_ptr<BLSSecretKeyVector>;
-using BLSSignatureVectorPtr = std::shared_ptr<BLSSignatureVector>;
 
 bool BLSInit();
 
