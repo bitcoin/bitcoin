@@ -287,7 +287,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4
+    cpu: 6
     memory: 24G  # The default memory is sometimes just a bit too small, so double everything
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
