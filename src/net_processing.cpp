@@ -3575,7 +3575,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     // SYSCOIN
     if (pfrom.nTimeFirstMessageReceived == 0 && msg_type != NetMsgType::WTXIDRELAY && msg_type != NetMsgType::SENDADDRV2) {
         // First message after VERSION/VERACK it can be sendaddrv2 or wtxidrelay as well which happen in parallel
-        pfrom.nTimeFirstMessageReceived = GetTime<std::chrono::microseconds>().count();
+        pfrom.nTimeFirstMessageReceived = GetTime<std::chrono::seconds>().count();
         pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
