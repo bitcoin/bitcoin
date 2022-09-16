@@ -4319,7 +4319,7 @@ void Chainstate::LoadExternalBlockFile(
     // Either both should be specified (-reindex), or neither (-loadblock).
     assert(!dbp == !blocks_with_unknown_parent);
 
-    int64_t nStart = GetTimeMillis();
+    const auto start{SteadyClock::now()};
 
     int nLoaded = 0;
     try {
@@ -4433,7 +4433,7 @@ void Chainstate::LoadExternalBlockFile(
     } catch (const std::runtime_error& e) {
         AbortNode(std::string("System error: ") + e.what());
     }
-    LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, GetTimeMillis() - nStart);
+    LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
 void Chainstate::CheckBlockIndex()
