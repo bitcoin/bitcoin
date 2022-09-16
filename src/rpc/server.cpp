@@ -21,8 +21,6 @@
 #include <mutex>
 #include <unordered_map>
 
-using SteadyClock = std::chrono::steady_clock;
-
 static GlobalMutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;
