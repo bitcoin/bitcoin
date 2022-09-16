@@ -146,7 +146,7 @@ static RPCHelpMan getpeerinfo()
                     {
                         {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
                     }},
-                    {RPCResult::Type::NUM, "minfeefilter", /*optional=*/true, "The minimum fee rate for transactions this peer accepts"},
+                    {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
                     {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                     {
                         {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
@@ -247,9 +247,7 @@ static RPCHelpMan getpeerinfo()
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);
-        if (fStateStats) {
-            obj.pushKV("minfeefilter", ValueFromAmount(statestats.m_fee_filter_received));
-        }
+        obj.pushKV("minfeefilter", fStateStats ? ValueFromAmount(statestats.m_fee_filter_received) : 0);
 
         UniValue sendPerMsgType(UniValue::VOBJ);
         for (const auto& i : stats.mapSendBytesPerMsgType) {
