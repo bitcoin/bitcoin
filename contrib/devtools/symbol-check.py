@@ -44,8 +44,6 @@ MAX_VERSIONS = {
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
-# See here for a description of _IO_stdin_used:
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
