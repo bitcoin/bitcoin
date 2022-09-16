@@ -48,8 +48,8 @@ class LLMQSigningTest(DashTestFramework):
         if self.options.spork21:
             assert self.mninfo[0].node.getconnectioncount() == 5
         id = "0000000000000000000000000000000000000000000000000000000000000001"
-        msgHash = "0000000000000000000000000000000000000000000000000000000000000002"
-        msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
+        msgHash = self.generate(self.nodes[0], 1)[-1]
+        msgHashConflict = self.generate(self.nodes[0], 1)[-1]
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
             for mn in self.mninfo:

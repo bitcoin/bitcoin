@@ -14,7 +14,7 @@ from test_framework.blocktools import (
   create_block,
   create_coinbase,
 )
-from test_framework.util import force_finish_mnsync
+from test_framework.util import force_finish_mnsync, assert_equal
 '''
 feature_llmqchainlocks.py
 
@@ -185,39 +185,22 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 0:
                 self.connect_nodes(i, 0)
-        SIGN_HEIGHT_OFFSET = 8
         p2p_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         p2p_node.wait_for_verack()
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
-        self.log.info("Should accept fake clsig but other quorums should sign the actual block on the same height and override the malicious one")
-        fake_clsig1, fake_block_hash1 = self.create_fake_clsig(1)
-        p2p_node.send_clsig(fake_clsig1)
+        tip = self.nodes[0].getbestblockhash()
+        self.log.info("Shouldn't accept fake clsig when block isn't valid")
+        self.create_fake_clsig(1)
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(5)
-        for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=15)
-        tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
-        self.sync_blocks()
-        self.bump_mocktime(5, nodes=self.nodes)
-        self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
-        self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
-        fake_clsig2, fake_block_hash2 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET + 1)
-        p2p_node.send_clsig(fake_clsig2)
-        self.bump_mocktime(7, nodes=self.nodes)
-        time.sleep(5)
+        # no locks formed
         for node in self.nodes:
             assert(self.nodes[0].getchainlocks()["recent_chainlock"]["blockhash"] == tip)
             assert(self.nodes[0].getchainlocks()["active_chainlock"]["blockhash"] == tip)
-        self.log.info("Should accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET' but new clsigs should still be formed")
-        fake_clsig3, fake_block_hash3 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET)
-        p2p_node.send_clsig(fake_clsig3)
-        self.bump_mocktime(7, nodes=self.nodes)
-        time.sleep(5)
-        for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, fake_block_hash3, timeout=15)
+        # lock as normal on new block
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
-        self.bump_mocktime(7, nodes=self.nodes)
-        self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
+        self.bump_mocktime(5, nodes=self.nodes)
+        self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
         self.log.info("Avoid signing on competing chains")
         prev_lock = self.nodes[0].getbestblockhash()
         # mine short chain and wait until some sigs, first-come-first-serve should win
@@ -245,8 +228,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for mn in self.mninfo:
             mn.node.quorum_sign(100, request_id, fake_block.hash, quorum_hash)
         rec_sig = self.get_recovered_sig(request_id, fake_block.hash)
-        fake_clsig = msg_clsig(height, fake_block.sha256, bytes.fromhex(rec_sig['sig']), [1,0,0,0])
-        return fake_clsig, fake_block.hash
+        assert_equal(rec_sig, False)
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)

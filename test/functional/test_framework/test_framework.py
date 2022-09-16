@@ -1274,9 +1274,11 @@ class DashTestFramework(SyscoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=60):
-        self.sync_blocks(self.nodes)
+        beforeTime = int(time.time())
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
+        afterTime = int(time.time())
+        self.log.info("Chainlock found in {} seconds across {} nodes".format(int(afterTime - beforeTime), len(self.nodes)))
 
     def wait_for_most_recent_chainlock(self, node, block_hash, timeout=30):
         def check_cl():
@@ -1398,7 +1400,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
 
-    def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=15):
+    def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=30):
         def check_dkg_comitments():
             time.sleep(2)
             all_ok = True
@@ -1424,23 +1426,11 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2, llmq_type_name="llmq_test"):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=30, sleep=2, llmq_type_name="llmq_test"):
         def wait_func():
             self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
             if quorum_hash in self.nodes[0].quorum_list()[llmq_type_name]:
                 return True
-            self.bump_mocktime(sleep, nodes=nodes)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            self.sync_blocks(nodes)
-            return False
-        wait_until_helper(wait_func, timeout=timeout, sleep=sleep)
-
-    def wait_for_quorums_list(self, quorum_hash_0, quorum_hash_1, nodes, llmq_type_name="llmq_test",  timeout=15, sleep=2):
-        def wait_func():
-            self.log.info("h("+str(self.nodes[0].getblockcount())+") quorums: " + str(self.nodes[0].quorum_list()))
-            if quorum_hash_0 in self.nodes[0].quorum_list()[llmq_type_name]:
-                if quorum_hash_1 in self.nodes[0].quorum_list()[llmq_type_name]:
-                    return True
             self.bump_mocktime(sleep, nodes=nodes)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_blocks(nodes)
@@ -1475,8 +1465,10 @@ class DashTestFramework(SyscoinTestFramework):
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+
         def timeout_func():
             self.bump_mocktime(1, nodes=nodes)
+
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
@@ -1553,7 +1545,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return node.quorum_getrecsig(llmq_type, rec_sig_id, rec_sig_msg_hash)
             except JSONRPCException:
                 time.sleep(0.1)
-        assert False
+        return False
 
     def get_quorum_masternodes(self, q):
         qi = self.nodes[0].quorum_info(100, q)

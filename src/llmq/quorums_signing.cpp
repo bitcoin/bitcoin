@@ -808,6 +808,12 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
     {
         LOCK(cs_main);
         peerman.ReceivedResponse(nodeId, hash);
+        // make sure block or header exists before accepting recovered sig
+        if (chainman.m_blockman.LookupBlockIndex(recoveredSig->msgHash) == nullptr) {
+            LogPrintf("CSigningManager::%s -- block of recovered signature (%s) does not exist\n",
+                    __func__, recoveredSig->id.ToString());
+            return;
+        }
     }
 
     if (db.HasRecoveredSigForHash(hash)) {
@@ -828,7 +834,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
         auto signHash = CLLMQUtils::BuildSignHash(*recoveredSig);
 
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s\n", __func__,
-                signHash.ToString(), recoveredSig->id   .ToString(), recoveredSig->msgHash.ToString());
+                signHash.ToString(), recoveredSig->id.ToString(), recoveredSig->msgHash.ToString());
         if (db.HasRecoveredSigForId(llmqType, recoveredSig->id)) {
             CRecoveredSig otherRecoveredSig;
             if (db.GetRecoveredSigById(llmqType, recoveredSig->id, otherRecoveredSig)) {
@@ -983,10 +989,10 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
         }
     }
     
-    if (allowReSign) {
+    //if (allowReSign) {
         // make us re-announce all known shares (other nodes might have run into a timeout)
         quorumSigSharesManager->ForceReAnnouncement(quorum, llmqType, id, msgHash);
-    }
+    //}
     quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
 
     return true;

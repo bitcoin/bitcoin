@@ -192,6 +192,11 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 std::transform(clsigAgg.signers.begin(), clsigAgg.signers.end(), pair.second->signers.begin(), clsigAgg.signers.begin(), std::logical_or<bool>());
             }
             if (sigs.size() >= threshold) {
+                // ensure when signing MN checks that the index is actually part of the chainstate not just headerchain
+                if(!chainman.ActiveChainstate().m_chain.Contains(pindex)) {
+                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated but active chain state does not contain the locked index yet (%s)\n", __func__, pindex->GetBlockHash().GetHex());
+                    return false;
+                }
                 // all sigs should be validated already
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
@@ -346,7 +351,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     if(bReturn) {
         return;
     }
-    CBlockIndex* pindexSig{nullptr};
     CBlockIndex* pindexScan{nullptr};
     {
         LOCK(cs_main);
@@ -355,21 +359,17 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             return;
         }
-        pindexSig = pindexScan = chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
-         if (pindexScan == nullptr) {
-            // we don't know the block/header for this CLSIG yet
-            if (clsig.nHeight <= chainman.ActiveHeight()) {
-                // could be a parallel fork at the same height, try scanning quorums at the same height
-                pindexScan = chainman.ActiveTip()->GetAncestor(clsig.nHeight);
-            } else {
-                // no idea what kind of block it is, try scanning quorums at chain tip
-                pindexScan = chainman.ActiveTip();
-            }
+        pindexScan = chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
+        // make sure block or header exists before accepting CLSIG
+        if (pindexScan == nullptr) {
+            LogPrintf("CChainLocksHandler::%s -- block of CLSIG (%s) does not exist\n",
+                    __func__, clsig.ToString());
+            return;
         }
-        if (pindexSig != nullptr && pindexSig->nHeight != clsig.nHeight) {
+        if (pindexScan != nullptr && pindexScan->nHeight != clsig.nHeight) {
             // Should not happen
             LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the expected block's height (%d)\n",
-                    __func__, clsig.ToString(), pindexSig->nHeight);
+                    __func__, clsig.ToString(), pindexScan->nHeight);
             if (from != -1) {
                 if(peer)
                     peerman.Misbehaving(*peer, 10, "invalid CLSIG");
@@ -416,7 +416,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 it->second.emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
             }
             mostRecentChainLockShare = clsig;
-            if (TryUpdateBestChainLock(pindexSig)) {
+            if (TryUpdateBestChainLock(pindexScan)) {
                 clsigAggInv = CInv(MSG_CLSIG, ::SerializeHash(bestChainLockWithKnownBlock));
             }
         }
@@ -459,19 +459,14 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             LOCK(cs);
             bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
             mostRecentChainLockShare = clsig;
-            TryUpdateBestChainLock(pindexSig);
+            TryUpdateBestChainLock(pindexScan);
         }
         // Note: do not hold cs while calling RelayInv
         AssertLockNotHeld(cs);
         peerman.RelayTransactionOther(clsigInv);
     }
     
-    if (pindexSig == nullptr) {
-        // we don't know the block/header for this CLSIG yet, so bail out for now
-        // when the block or the header later comes in, we will enforce the correct chain
-        return;
-    }
-    bool bChainLockMatchSigIndex = WITH_LOCK(cs, return bestChainLockBlockIndex == pindexSig);
+    bool bChainLockMatchSigIndex = WITH_LOCK(cs, return bestChainLockBlockIndex == pindexScan);
     if (bChainLockMatchSigIndex) {
         CheckActiveState();
         const CBlockIndex* pindex;
