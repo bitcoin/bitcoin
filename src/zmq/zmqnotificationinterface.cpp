@@ -8,7 +8,7 @@
 
 #include <zmq.h>
 
-#include <validation.h>
+#include <primitives/block.h>
 #include <util/system.h>
 // SYSCOIN
 #include <governance/governancevote.h>
