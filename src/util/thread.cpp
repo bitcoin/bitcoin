@@ -10,8 +10,10 @@
 
 #include <exception>
 #include <functional>
+#include <string>
+#include <utility>
 
-void util::TraceThread(const char* thread_name, std::function<void()> thread_func)
+void util::TraceThread(std::string_view thread_name, std::function<void()> thread_func)
 {
     // SYSCOIN keep copy to work with dynamic thread names in LLMQ code
     std::string strName = std::string(thread_name);
