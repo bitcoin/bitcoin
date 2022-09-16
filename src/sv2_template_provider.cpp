@@ -182,7 +182,8 @@ void Sv2TemplateProvider::UpdateTemplate(bool future)
 
     std::unique_ptr<node::CBlockTemplate> blocktemplate = node::BlockAssembler(m_chainman.ActiveChainstate(), &m_mempool, options).CreateNewBlock(CScript());
 
-    NewTemplate new_template{blocktemplate->block, m_template_id.Next(), future};
+    uint64_t id = m_template_id.Next();
+    NewTemplate new_template{blocktemplate->block, id, future};
     m_blocks_cache.insert({new_template.m_template_id, std::move(blocktemplate)});
     m_new_template = new_template;
 }
