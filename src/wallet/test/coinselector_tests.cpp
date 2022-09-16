@@ -299,9 +299,23 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
-    coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
-    coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
-    coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
+
+    // This is the fee to create a change output which is 68 bytes.
+    // fee = (change_spend_size * effective_feerate) / 1000
+    // fee = (68 * 3000) / 1000
+    CAmount fee = coin_selection_params_bnb.m_effective_feerate.GetFee(
+                coin_selection_params_bnb.change_spend_size);
+    BOOST_CHECK_EQUAL(CAmount(204), fee);
+
+    // cost_of_change = current fee to create the output + future fee to spend the output.
+    // cost of change = (change_spend_size * effective feerate) + (change_output_size * discard_feerate)
+    // 204 = fee + (0 * 3000) / 1000
+    coin_selection_params_bnb.m_cost_of_change = fee + coin_selection_params_bnb.m_change_fee;
+
+    BOOST_CHECK_EQUAL(CAmount(0), coin_selection_params_bnb.m_change_fee);
+    BOOST_CHECK_EQUAL(CAmount(204), coin_selection_params_bnb.m_cost_of_change);
+
+    coin_selection_params_bnb.min_viable_change = fee;
     coin_selection_params_bnb.m_subtract_fee_outputs = true;
 
     {
