@@ -412,10 +412,17 @@ CNode* CConnman::FindNode(const CService& addr)
     return nullptr;
 }
 
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
+bool CConnman::AlreadyConnectedToAddress(const CAddress& addr, bool masternode_probe_connection)
 {
-    // SYSCOIN if not regtest search for IP-only match otherwise search for IP:PORT match
-    return (!fRegTest && FindNode(static_cast<CNetAddr>(addr))) || FindNode(addr.ToStringIPPort());
+    // Search for IP:PORT match:
+    //  - if multiple ports for the same IP are allowed,
+    //  - for probe connections
+    // Search for IP-only match otherwise
+    bool searchIPPort = fRegTest || masternode_probe_connection;
+    bool skip = searchIPPort ?
+            FindNode(addr.ToStringIPPort()) :
+            FindNode(static_cast<CNetAddr>(addr));
+    return skip;
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -2224,7 +2231,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect, m_masternode_probe_connection)) {
             return;
         }
     } else if (FindNode(std::string(pszDest))) {
