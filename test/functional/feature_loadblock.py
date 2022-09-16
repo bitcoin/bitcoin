@@ -16,10 +16,8 @@ import sys
 import tempfile
 import urllib
 
-from test_framework.test_framework import (
-    BitcoinTestFramework,
-)
-from test_framework.util import assert_equal, wait_until
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class LoadblockTest(BitcoinTestFramework):
@@ -38,7 +36,7 @@ class LoadblockTest(BitcoinTestFramework):
         cfg_file = os.path.join(data_dir, "linearize.cfg")
         bootstrap_file = os.path.join(self.options.tmpdir, "bootstrap.dat")
         genesis_block = self.nodes[0].getblockhash(0)
-        blocks_dir = os.path.join(data_dir, "regtest", "blocks")
+        blocks_dir = os.path.join(data_dir, self.chain, "blocks")
         hash_list = tempfile.NamedTemporaryFile(dir=data_dir,
                                                 mode='w',
                                                 delete=False,
@@ -75,7 +73,7 @@ class LoadblockTest(BitcoinTestFramework):
         self.log.info("Restart second, unsynced node with bootstrap file")
         self.stop_node(1)
         self.start_node(1, ["-loadblock=" + bootstrap_file])
-        wait_until(lambda: self.nodes[1].getblockcount() == 100)
+        assert_equal(self.nodes[1].getblockcount(), 100)  # start_node is blocking on all block files being imported
 
         assert_equal(self.nodes[1].getblockchaininfo()['blocks'], 100)
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())

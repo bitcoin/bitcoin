@@ -18,7 +18,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
     connect_nodes,
-    sync_blocks,
     wait_until,
 )
 
@@ -126,7 +125,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         mninfos_online = self.mninfo.copy()
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-        sync_blocks(nodes)
+        self.sync_blocks(nodes)
         quorum_list = self.nodes[0].quorum("list", llmq_type)
         quorum_blockhash = self.nodes[0].getbestblockhash()
         fallback_blockhash = self.nodes[0].generate(1)[0]

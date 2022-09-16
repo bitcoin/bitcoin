@@ -223,7 +223,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
 
     def run_test(self):
-        self.wallet_path = os.path.join(self.nodes[0].datadir, 'regtest', 'wallets', 'wallet.dat')
+        self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', 'wallet.dat')
         self.test_invalid_tool_commands_and_args()
         # Warning: The following tests are order-dependent.
         self.test_tool_wallet_info()
