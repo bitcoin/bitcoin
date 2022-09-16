@@ -367,44 +367,60 @@ bool IsLocal(const CService& addr, bool bOverrideNetwork)
     LOCK(g_maplocalhost_mutex);
     return mapLocalHost.count(addr) > 0;
 }
-
-CNode* CConnman::FindNode(const CNetAddr& ip)
+// SYSCOIN
+CNode* CConnman::FindNode(const CNetAddr& ip, bool fExcludeDisconnecting)
 {
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
+        // SYSCOIN
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
+        if (static_cast<CNetAddr>(pnode->addr) == ip) {
             return pnode;
         }
     }
     return nullptr;
 }
-
-CNode* CConnman::FindNode(const CSubNet& subNet)
+// SYSCOIN
+CNode* CConnman::FindNode(const CSubNet& subNet, bool fExcludeDisconnecting)
 {
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
+        // SYSCOIN
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (subNet.Match(static_cast<CNetAddr>(pnode->addr))) {
             return pnode;
         }
     }
     return nullptr;
 }
-
-CNode* CConnman::FindNode(const std::string& addrName)
+// SYSCOIN
+CNode* CConnman::FindNode(const std::string& addrName, bool fExcludeDisconnecting)
 {
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
+        // SYSCOIN
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (pnode->m_addr_name == addrName) {
             return pnode;
         }
     }
     return nullptr;
 }
-
-CNode* CConnman::FindNode(const CService& addr)
+// SYSCOIN
+CNode* CConnman::FindNode(const CService& addr, bool fExcludeDisconnecting)
 {
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
+        // SYSCOIN
+        if (fExcludeDisconnecting && pnode->fDisconnect) {
+            continue;
+        }
         if (static_cast<CService>(pnode->addr) == addr) {
             return pnode;
         }
@@ -993,7 +1009,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 {
     int nInbound = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
-   // SYSCOIN
+    // SYSCOIN
     int nVerifiedInboundMasternodes = 0;
     AddWhitelistPermissionFlags(permission_flags, addr);
     if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
@@ -1049,7 +1065,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
     bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
     // SYSCOIN
-    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && ((nInbound-nVerifiedInboundMasternodes) + 1) >= nMaxInbound && discouraged)
+    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
         return;
@@ -1924,10 +1940,15 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             // if we selected an invalid or local address, restart
-            if (!addr.IsValid() || IsLocal(addr)) {
+            if (!addr.IsValid()) {
                 break;
             }
-
+            // SYSCOIN if we selected a local address, restart (local addresses are allowed in regtest and devnet)
+            bool fAllowLocal = fRegTest && addr.GetPort() != GetListenPort();
+            if (!fAllowLocal && IsLocal(addr)) {
+                break;
+            }
+            
             if (!IsReachable(addr))
                 continue;
 
@@ -1946,9 +1967,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     continue;
                 }
             }
-
+ 
             // SYSCOIN Do not connect to bad ports, unless 50 invalid addresses have been selected already.
-            if ((!isMasternode || !fRegTest) && (addr.IsIPv4() || addr.IsIPv6()) && IsBadPort(addr.GetPort()) && addr.GetPort() != GetListenPort()) {
+            if ((!isMasternode || !fRegTest) && addr.GetPort() != Params().GetDefaultPort() && (addr.IsIPv4() || addr.IsIPv6()) && IsBadPort(addr.GetPort()) && addr.GetPort() != GetListenPort()) {
                 continue;
             }
 
@@ -2013,6 +2034,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         bool isProbe = false;
         { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
             LOCK2(m_nodes_mutex, cs_vPendingMasternodes);
+
             if (!vPendingMasternodes.empty()) {
                 auto dmn = mnList.GetValidMN(vPendingMasternodes.front());
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
@@ -2031,6 +2053,19 @@ void CConnman::ThreadOpenMasternodeConnections()
                             continue;
                         }
                         const auto& addr2 = dmn->pdmnState->addr;
+                        if (connectedNodes.count(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                            // we probably connected to it before it became a masternode
+                            // or maybe we are still waiting for mnauth
+                            CNode* pnode2 = FindNode(addr2);
+                            if(pnode2 && pnode2->nTimeFirstMessageReceived != 0 && GetTime<std::chrono::seconds>().count() - pnode2->nTimeFirstMessageReceived > 5) {
+                                // clearly not expecting mnauth to take that long even if it wasn't the first message
+                                // we received (as it should normally), disconnect
+                                LogPrint(BCLog::NET, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", __func__, proRegTxHash.ToString(), addr2.ToString());
+                                pnode2->fDisconnect = true;
+                            }
+                            // either way - it's not ready, skip it for now
+                            continue;
+                        }
                         if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
                             int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                             // back off trying connecting to an address if we already tried recently
@@ -2097,23 +2132,11 @@ void CConnman::ThreadOpenMasternodeConnections()
             LOCK(m_nodes_mutex);
             // should be in the list now if connection was opened
             CNode* pnode = FindNode(connectToDmn->pdmnState->addr);
-            if(!pnode) {
-                pnode = FindNode(connectToDmn->pdmnState->addr.ToStringIPPort());
-                if (!pnode) {
-                    LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(1) %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
-                }
-                else if(pnode->fDisconnect) { 
-                    LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(1) %s, service=%s disconnected\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
-                }
-                // reset last outbound success
-                mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
-            } else if(pnode->fDisconnect) {
-                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(0) %s, service=%s disconnected\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
-                // reset last outbound success
+            if(!pnode || !pnode->fDisconnect) {
+                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
                 // Will take a few consequent failed attempts to PoSe-punish a MN.
                 if (mmetaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
-                    LogPrint(BCLog::NET, "CConnman::%s -- failed to connect to masternode %s too many times, resetting outbound success time\n", __func__, connectToDmn->proTxHash.ToString());
-                    mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
+                    LogPrint(BCLog::NET, "CConnman::%s -- failed to connect to masternode %s too many times\n", __func__, connectToDmn->proTxHash.ToString());
                 }
             }
         }
@@ -2230,10 +2253,13 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return;
     }
     if (!pszDest) {
-        bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect, m_masternode_probe_connection)) {
+        // SYSCOIN banned, discouraged or exact match?
+        if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect))) || FindNode(addrConnect.ToStringIPPort()))
             return;
-        }
+        // local and not a connection to itself?
+        bool fAllowLocal = fRegTest && addrConnect.GetPort() != GetListenPort();
+        if (!fAllowLocal && IsLocal(addrConnect))
+            return;
     } else if (FindNode(std::string(pszDest))) {
         return;
     }
@@ -3011,6 +3037,10 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
 
     int nNum = 0;
     for (const auto& pnode : m_nodes) {
+        // SYSCOIN
+        if (pnode->fDisconnect) {
+            continue;
+        }
         if (flags & (pnode->IsInboundConn() ? ConnectionDirection::In : ConnectionDirection::Out)) {
             nNum++;
         }
@@ -3306,9 +3336,6 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     LOCK(m_nodes_mutex);
     CNode* pnode = FindNode(addr);
-    if(!pnode) {
-        pnode = FindNode(addr.ToStringIPPort());
-    }
     if(pnode) {
         return pnode->IsMasternodeConnection() || pnode->fDisconnect;
     }

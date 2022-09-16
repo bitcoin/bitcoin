@@ -845,7 +845,7 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     // SYSCOIN
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-    CNode* FindNode(const CService& addr);
+    CNode* FindNode(const CService& addr, bool fExcludeDisconnecting = true);
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
@@ -1110,9 +1110,9 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const CSubNet& subNet);
-    CNode* FindNode(const std::string& addrName);
+    CNode* FindNode(const CNetAddr& ip, bool fExcludeDisconnecting = true);
+    CNode* FindNode(const CSubNet& subNet, bool fExcludeDisconnecting = true);
+    CNode* FindNode(const std::string& addrName, bool fExcludeDisconnecting = true);
 
     /**
      * Determine whether we're already connected to a given address, in order to

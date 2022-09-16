@@ -116,16 +116,19 @@ UniValue CDKGDebugStatus::ToJson(ChainstateManager &chainman, int detailLevel) c
     ret.pushKV("time", nTime);
     ret.pushKV("timeStr", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime));
 
-    UniValue sessionsJson(UniValue::VOBJ);
+    UniValue sessionsArrJson(UniValue::VARR);
     for (const auto& p : sessions) {
         if (!Params().GetConsensus().llmqs.count(p.first)) {
             continue;
         }
         const auto& params = Params().GetConsensus().llmqs.at(p.first);
-        sessionsJson.pushKV(params.name, p.second.ToJson(chainman,  detailLevel));
+        UniValue s(UniValue::VOBJ);
+        s.pushKV("llmqType", params.name);
+        s.pushKV("status", p.second.ToJson(chainman,  detailLevel));
+        sessionsArrJson.push_back(s);
     }
 
-    ret.pushKV("session", sessionsJson);
+    ret.pushKV("session", sessionsArrJson);
 
     return ret;
 }

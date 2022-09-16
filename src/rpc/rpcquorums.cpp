@@ -171,18 +171,23 @@ static RPCHelpMan quorum_dkgstatus()
     int tipHeight = pindexTip->nHeight;
 
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
-    UniValue minableCommitments(UniValue::VOBJ);
-    UniValue quorumConnections(UniValue::VOBJ);
+    UniValue minableCommitments(UniValue::VARR);
+    UniValue quorumArrConnections(UniValue::VARR);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     for (const auto& p : Params().GetConsensus().llmqs) {
         auto& params = p.second;
-
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("llmqType", std::string(params.name));
         if (fMasternodeMode) {
             const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
             if(!pQuorumBaseBlockIndex)
                 continue;
+            obj.pushKV("pQuorumBaseBlockIndex", pQuorumBaseBlockIndex->nHeight);
+            obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
+            obj.pushKV("pindexTip", pindexTip->nHeight);
+
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
@@ -194,7 +199,6 @@ static RPCHelpMan quorum_dkgstatus()
             });
             UniValue arr(UniValue::VARR);
             for (auto& ec : allConnections) {
-                UniValue obj(UniValue::VOBJ);
                 obj.pushKV("proTxHash", ec.ToString());
                 if (foundConnections.count(ec)) {
                     obj.pushKV("connected", true);
@@ -205,21 +209,22 @@ static RPCHelpMan quorum_dkgstatus()
                 obj.pushKV("outbound", outboundConnections.count(ec) != 0);
                 arr.push_back(obj);
             }
-            quorumConnections.pushKV(params.name, arr);
+            obj.pushKV("quorumConnections", arr);
         }
+        quorumArrConnections.push_back(obj);
         LOCK(cs_main);
         llmq::CFinalCommitment fqc;
         if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
             if(!fqc.IsNull()) {
                 UniValue obj(UniValue::VOBJ);
                 fqc.ToJson(obj);
-                minableCommitments.pushKV(params.name, obj);
+                minableCommitments.push_back(obj);
             }
         }
     }
 
     ret.pushKV("minableCommitments", minableCommitments);
-    ret.pushKV("quorumConnections", quorumConnections);
+    ret.pushKV("quorumConnections", quorumArrConnections);
 
     return ret;
 },

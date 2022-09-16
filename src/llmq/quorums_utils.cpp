@@ -262,9 +262,9 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
             continue;
         }
         auto lastOutbound = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundSuccess();
-        // re-probe after 50 minutes so that the "good connection" check in the DKG doesn't fail just because we're on
+        // re-probe after 10 minutes so that the "good connection" check in the DKG doesn't fail just because we're on
         // the brink of timeout
-        if (curTime - lastOutbound > 50 * 60) {
+        if (curTime - lastOutbound > 10 * 60) {
             probeConnections.emplace(dmn->proTxHash);
         }
     }

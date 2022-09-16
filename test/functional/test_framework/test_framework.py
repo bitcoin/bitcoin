@@ -1294,51 +1294,57 @@ class DashTestFramework(SyscoinTestFramework):
             return all(node.spork('show') == sporks for node in self.nodes)
         wait_until_helper(check_sporks_same, timeout=timeout, sleep=0.5)
 
-    def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None, done_proc=None):
+    def wait_for_quorum_connections(self, quorum_hash, expected_connections, nodes, llmq_type_name="llmq_test", timeout = 60, wait_proc=None):
         def check_quorum_connections():
             all_ok = True
             for node in nodes:
                 s = node.quorum_dkgstatus()
-                if 'llmq_test' not in s["session"]:
-                    continue
-                if "quorumConnections" not in s:
-                    all_ok = False
+                mn_ok = True
+                for qs in s:
+                    if "llmqType" not in qs:
+                        continue
+                    if qs["llmqType"] != llmq_type_name:
+                        continue
+                    if "quorumConnections" not in qs:
+                        continue
+                    qconnections = qs["quorumConnections"]
+                    if qconnections["quorumHash"] != quorum_hash:
+                        mn_ok = False
+                        continue
+                    cnt = 0
+                    for c in qconnections["quorumConnections"]:
+                        if c["connected"]:
+                            cnt += 1
+                    if cnt < expected_connections:
+                        mn_ok = False
+                        break
                     break
-                s = s["quorumConnections"]
-                if "llmq_test" not in s:
-                    all_ok = False
-                    break
-                cnt = 0
-                for c in s["llmq_test"]:
-                    if c["connected"]:
-                        cnt += 1
-                if cnt < expected_connections:
+                if not mn_ok:
                     all_ok = False
                     break
             if not all_ok and wait_proc is not None:
                 wait_proc()
-            if all_ok is True and done_proc is not None:
-                done_proc()
             return all_ok
         wait_until_helper(check_quorum_connections, timeout=timeout, sleep=1)
 
-    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
+    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None, llmq_type_name="llmq_test"):
         def check_probes():
             def ret():
                 if wait_proc is not None:
                     wait_proc()
                 return False
+
             for mn in mninfos:
                 s = mn.node.quorum_dkgstatus()
-                if 'llmq_test' not in s["session"]:
+                if llmq_type_name not in s["session"]:
                     continue
                 if "quorumConnections" not in s:
                     return ret()
                 s = s["quorumConnections"]
-                if "llmq_test" not in s:
+                if llmq_type_name not in s:
                     return ret()
 
-                for c in s["llmq_test"]:
+                for c in s[llmq_type_name]:
                     if c["proTxHash"] == mn.proTxHash:
                         continue
                     if not c["outbound"]:
@@ -1357,7 +1363,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         wait_until_helper(check_probes, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, done_proc=None, timeout=60, sleep=0.5):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=30, sleep=1):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -1365,32 +1371,36 @@ class DashTestFramework(SyscoinTestFramework):
                 wait_proc()
             for mn in mninfos:
                 s = mn.node.quorum_dkgstatus()["session"]
-                if "llmq_test" not in s:
-                    continue
-                member_count += 1
-                s = s["llmq_test"]
-                if s["quorumHash"] != quorum_hash:
-                    all_ok = False
-                    break
-                if "phase" not in s:
-                    all_ok = False
-                    break
-                if s["phase"] != phase:
-                    all_ok = False
-                    break
-                if check_received_messages is not None:
-                    if s[check_received_messages] < check_received_messages_count:
-                        all_ok = False
+                mn_ok = True
+                for qs in s:
+                    if qs["llmqType"] != llmq_type_name:
+                        continue
+                    qstatus = qs["status"]
+                    if qstatus["quorumHash"] != quorum_hash:
+                        continue
+                    member_count += 1
+                    if "phase" not in qstatus:
+                        mn_ok = False
                         break
+                    if qstatus["phase"] != phase:
+                        mn_ok = False
+                        break
+                    if check_received_messages is not None:
+                        if qstatus[check_received_messages] < check_received_messages_count:
+                            mn_ok = False
+                            break
+                    break
+                if not mn_ok:
+                    all_ok = False
+                    break
             if all_ok and member_count != expected_member_count:
                 return False
-            if all_ok is True and done_proc is not None:
-                done_proc()
             return all_ok
         wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
 
-    def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 60, wait_proc=None, done_proc=None):
+    def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=15):
         def check_dkg_comitments():
+            time.sleep(2)
             all_ok = True
             if wait_proc is not None:
                 wait_proc()
@@ -1399,30 +1409,51 @@ class DashTestFramework(SyscoinTestFramework):
                 if "minableCommitments" not in s:
                     all_ok = False
                     break
-                s = s["minableCommitments"]
-                if "llmq_test" not in s:
+                commits = s["minableCommitments"]
+                c_ok = False
+                for c in commits:
+                    if c["llmqType"] != llmq_type:
+                        continue
+                    if c["quorumHash"] != quorum_hash:
+                        continue
+                    c_ok = True
+                    break
+                if not c_ok:
                     all_ok = False
                     break
-                s = s["llmq_test"]
-                if s["quorumHash"] != quorum_hash:
-                    all_ok = False
-                    break
-            if all_ok is True and done_proc is not None:
-                done_proc()
             return all_ok
-        wait_until_helper(check_dkg_comitments, timeout=timeout)
+        wait_until_helper(check_dkg_comitments, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2, llmq_type_name="llmq_test"):
         def wait_func():
-            if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
+            self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
+            if quorum_hash in self.nodes[0].quorum_list()[llmq_type_name]:
                 return True
+            self.bump_mocktime(sleep, nodes=nodes)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            self.bump_mocktime(1, nodes=nodes)
             self.sync_blocks(nodes)
             return False
-        wait_until_helper(wait_func, timeout=timeout)
+        wait_until_helper(wait_func, timeout=timeout, sleep=sleep)
 
-    def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, bumptime=1):
+    def wait_for_quorums_list(self, quorum_hash_0, quorum_hash_1, nodes, llmq_type_name="llmq_test",  timeout=15, sleep=2):
+        def wait_func():
+            self.log.info("h("+str(self.nodes[0].getblockcount())+") quorums: " + str(self.nodes[0].quorum_list()))
+            if quorum_hash_0 in self.nodes[0].quorum_list()[llmq_type_name]:
+                if quorum_hash_1 in self.nodes[0].quorum_list()[llmq_type_name]:
+                    return True
+            self.bump_mocktime(sleep, nodes=nodes)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            self.sync_blocks(nodes)
+            return False
+        wait_until_helper(wait_func, timeout=timeout, sleep=sleep)
+
+    def move_blocks(self, nodes, num_blocks):
+        time.sleep(1)
+        self.bump_mocktime(1, nodes=nodes)
+        self.generate(self.nodes[0], num_blocks, sync_fun=self.no_op)
+        self.sync_blocks(nodes)
+
+    def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
@@ -1439,68 +1470,55 @@ class DashTestFramework(SyscoinTestFramework):
         if mninfos_valid is None:
             mninfos_valid = self.mninfo.copy()
 
-        self.log.info("Mining quorum: expected_members=%d, expected_connections=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
-                      "expected_commitments=%d" % (expected_members, expected_connections, expected_contributions, expected_complaints,
+        self.log.info("Mining quorum: llmq_type_name=%s, llmq_type=%d, expected_members=%d, expected_connections=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
+                      "expected_commitments=%d" % (llmq_type_name, llmq_type, expected_members, expected_connections, expected_contributions, expected_complaints,
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-
         def timeout_func():
-            self.bump_mocktime(bumptime, nodes=nodes)
-
-        def timeout_func1():
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            self.bump_mocktime(bumptime, nodes=nodes)
-            self.sync_blocks(nodes)
-
+            self.bump_mocktime(1, nodes=nodes)
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
-        self.log.info("skip_count {}".format(skip_count))
         if skip_count != 0:
-            timeout_func()
+            self.bump_mocktime(1, nodes=nodes)
             self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
         self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
+        self.log.info("Expected quorum_hash:"+str(q))
         self.log.info("Waiting for phase 1 (init)")
-        timeout_func()
-        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
-        self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 1 (init)"))
+        self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
+        self.wait_for_quorum_connections(q, expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
         if spork23_active:
-            self.wait_for_masternode_probes(mninfos_valid, wait_proc=timeout_func)
-        self.bump_mocktime(1, nodes=nodes)
-        self.generate(self.nodes[0], 2, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+
+        self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 2 (contribute)")
-        self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 2 (contribute)"))
-        self.bump_mocktime(1, nodes=nodes)
-        self.generate(self.nodes[0], 2, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+        self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
+
+        self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 3 (complain)")
-        self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 3 (complain)"))
-        self.bump_mocktime(1, nodes=nodes)
-        self.generate(self.nodes[0], 2, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+        self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
+
+        self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 4 (justify)")
-        self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 4 (justify)"))
-        self.bump_mocktime(1, nodes=nodes)
-        self.generate(self.nodes[0], 2, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+        self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
+
+        self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 5 (commit)")
-        self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 5 (commit)"))
-        self.bump_mocktime(1, nodes=nodes)
-        self.generate(self.nodes[0], 2, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+        self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
+
+        self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 6 (mining)")
-        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func1, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
+        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func, llmq_type_name=llmq_type_name)
 
         self.log.info("Waiting final commitment")
-        self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done final commitment"))
+        self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, llmq_type=llmq_type)
 
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
@@ -1509,14 +1527,15 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
-        self.wait_for_quorum_list(q, nodes)
-        new_quorum = self.nodes[0].quorum_list(1)["llmq_test"][0]
+        self.wait_for_quorum_list(q, nodes, llmq_type_name=llmq_type_name)
+
+        new_quorum = self.nodes[0].quorum_list(1)[llmq_type_name][0]
         assert_equal(q, new_quorum)
-        quorum_info = self.nodes[0].quorum_info(100, new_quorum)
+        quorum_info = self.nodes[0].quorum_info(llmq_type, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.generate(self.nodes[0], 8, sync_fun=self.no_op)
-        self.bump_mocktime(5, nodes=nodes)
+
         self.sync_blocks(nodes)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
