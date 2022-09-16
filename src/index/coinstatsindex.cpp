@@ -105,7 +105,7 @@ struct DBHashKey {
 std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
 
 CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain))
+    : BaseIndex(std::move(chain), "coinstatsindex")
 {
     fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstats"};
     fs::create_directories(path);
