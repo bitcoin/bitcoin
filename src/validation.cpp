@@ -1827,11 +1827,11 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
 {
     // because chainlock is the last thing we check in CheckBlock() if we get any other error
     // it means the block was actually invalid before we got to the chainlock check which means it will
-    // never be accepted if it was locked, so unlock this block to allow another chain through
+    // never be accepted if it was locked (and any other chain will be rejected), so unlock this block to allow another chain through
     // this is possible because chainlocks will lock once a block index (header) exists rather than full valid block requirement
     if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
         // if its any other error other than chainlock and we have a conflict then clear the chainlock
-        if (llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             llmq::chainLocksHandler->ClearChainLock(); 
         }
     }
