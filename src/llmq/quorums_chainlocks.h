@@ -94,7 +94,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256());
-    void AcceptedBlockHeader(const CBlockIndex* pindexNew);
+    void NotifyHeaderTip(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
     void TrySignChainTip();

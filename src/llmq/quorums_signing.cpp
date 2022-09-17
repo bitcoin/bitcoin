@@ -989,10 +989,10 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
         }
     }
     
-    //if (allowReSign) {
+    if (allowReSign) {
         // make us re-announce all known shares (other nodes might have run into a timeout)
         quorumSigSharesManager->ForceReAnnouncement(quorum, llmqType, id, msgHash);
-    //}
+    }
     quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
 
     return true;

@@ -319,22 +319,12 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
     
 }
 
-void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
-{
-    LogPrint(BCLog::MNSYNC, "CMasternodeSync::AcceptedBlockHeader -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
-
-    if (!IsBlockchainSynced()) {
-        // Postpone timeout each time new block header arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
-    }
-}
-
-void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
+void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew)
 {
     if (pindexNew == nullptr) {
         return;
     }
-    LogPrint(BCLog::MNSYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
+    LogPrint(BCLog::MNSYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d\n", pindexNew->nHeight);
 
     if (IsSynced())
         return;

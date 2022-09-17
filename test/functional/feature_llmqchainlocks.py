@@ -6,7 +6,7 @@
 import time
 import struct
 from test_framework.test_framework import DashTestFramework
-from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, uint256_from_str
+from test_framework.messages import CInv, hash256, msg_inv, ser_string, uint256_from_str
 from test_framework.p2p import (
   P2PInterface,
 )
@@ -101,6 +101,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.generatetoaddress(self.nodes[1], 1, node0_mining_addr, sync_fun=self.no_op)
+        # since shorter chain was chainlocked and its a valid chain, node with longer chain should switch to it
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
@@ -109,6 +110,7 @@ class LLMQChainLocksTest(DashTestFramework):
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == bad_tip:
+                self.log.info('status {}'.format(tip["status"]))
                 assert(tip["status"] == "conflicting")
                 found = True
                 break

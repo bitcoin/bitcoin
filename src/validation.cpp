@@ -3462,7 +3462,7 @@ static bool NotifyHeaderTip(Chainstate& chainstate) LOCKS_EXCLUDED(cs_main) {
     if (fNotify) {
         uiInterface.NotifyHeaderTip(GetSynchronizationState(fInitialBlockDownload), pindexHeader->nHeight, pindexHeader->nTime, false);
         // SYSCOIN
-        GetMainSignals().NotifyHeaderTip(pindexHeader, pindexHeader->nHeight);
+        GetMainSignals().NotifyHeaderTip(pindexHeader);
     }
     return fNotify;
 }
@@ -4441,9 +4441,6 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
     if (ppindex)
         *ppindex = pindex;
 
-    // SYSCOIN Notify external listeners about accepted block header
-    GetMainSignals().AcceptedBlockHeader(pindex);
-    
     return true;
 }
 
@@ -4590,7 +4587,6 @@ bool Chainstate::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockV
 
     return true;
 }
-
 bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
     AssertLockNotHeld(cs_main);

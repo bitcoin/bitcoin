@@ -23,16 +23,12 @@ void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chai
     UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.ActiveChainstate().IsInitialBlockDownload());
 }
 
-void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
+
+void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew)
 {
     if(llmq::chainLocksHandler)
-        llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
-    masternodeSync.AcceptedBlockHeader(pindexNew);
-}
-
-void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
-{
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+        llmq::chainLocksHandler->NotifyHeaderTip(pindexNew);
+    masternodeSync.NotifyHeaderTip(pindexNew);
 }
 
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)

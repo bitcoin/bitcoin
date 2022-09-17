@@ -192,11 +192,6 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 std::transform(clsigAgg.signers.begin(), clsigAgg.signers.end(), pair.second->signers.begin(), clsigAgg.signers.begin(), std::logical_or<bool>());
             }
             if (sigs.size() >= threshold) {
-                // ensure when signing MN checks that the index is actually part of the chainstate not just headerchain
-                if(!chainman.ActiveChainstate().m_chain.Contains(pindex)) {
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated but active chain state does not contain the locked index yet (%s)\n", __func__, pindex->GetBlockHash().GetHex());
-                    return false;
-                }
                 // all sigs should be validated already
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
@@ -484,7 +479,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     }
 }
 
-void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
+void CChainLocksHandler::NotifyHeaderTip(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
 

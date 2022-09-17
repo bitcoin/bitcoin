@@ -14,7 +14,6 @@ class CConnman;
 class CNode;
 class CDataStream;
 class ChainstateManager;
-
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
 static constexpr int MASTERNODE_SYNC_GOVOBJ          = 10;
@@ -74,8 +73,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;
     void ProcessTick(CConnman& connman, const PeerManager& peerman);
-    void AcceptedBlockHeader(const CBlockIndex *pindexNew);
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
+    void NotifyHeaderTip(const CBlockIndex *pindexNew);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateManager& chainman, bool fInitialDownload);
 
     void DoMaintenance(CConnman &connman, const PeerManager& peerman);
