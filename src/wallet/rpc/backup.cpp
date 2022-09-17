@@ -1363,7 +1363,18 @@ RPCHelpMan importmulti()
     UniValue response(UniValue::VARR);
     {
         LOCK(pwallet->cs_wallet);
-        EnsureWalletIsUnlocked(*pwallet);
+
+        // Check all requests are watchonly
+        bool is_watchonly{true};
+        for (size_t i = 0; i < requests.size(); ++i) {
+            const UniValue& request = requests[i];
+            if (!request.exists("watchonly") || !request["watchonly"].get_bool()) {
+                is_watchonly = false;
+                break;
+            }
+        }
+        // Wallet does not need to be unlocked if all requests are watchonly
+        if (!is_watchonly) EnsureWalletIsUnlocked(wallet);
 
         // Verify all timestamps are present before importing any keys.
         CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(nLowestTimestamp).mtpTime(now)));
