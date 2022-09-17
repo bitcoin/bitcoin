@@ -293,3 +293,19 @@ G1Point Elements<T>::MulVec(const Elements<Scalar>& scalars) const
     }
 }
 template G1Point Elements<G1Point>::MulVec(const Elements<Scalar>&) const;
+
+template <typename T>
+Elements<T> Elements<T>::Invert() const
+{
+    if constexpr (std::is_same_v<T, Scalar>) {
+        Scalars ret;
+        for(auto& x: m_vec) {
+            ret.Add(x.Invert());
+        }
+        return ret;
+
+    } else {
+        throw std::runtime_error("Not implemented");
+    }
+}
+template Elements<Scalar> Elements<Scalar>::Invert() const;

@@ -8,6 +8,7 @@
 #include <optional>
 #include <vector>
 
+#include <amount.h>
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
@@ -15,12 +16,19 @@
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
-struct proof_data_t
-{
+struct proof_data_t {
     Scalar x, y, z, x_ip;
     Scalars ws;   // originally w
     G1Points Vs;  // originally V
     size_t log_m, inv_offset;
+};
+
+struct RangeproofEncodedData {
+    CAmount amount;
+    Scalar gamma;
+    std::string message;
+    int index;
+    bool valid = false;
 };
 
 struct RangeProofState {
@@ -81,12 +89,22 @@ public:
         const std::optional<Scalars> gammas_override = std::nullopt
     );
 
+    bool Verify(
+        const std::vector<std::pair<int, RangeProofState>>& proofs,
+        std::vector<RangeproofEncodedData>& v_data,
+        const G1Points& nonces,
+        const bool &f_only_recover,
+        const TokenId& token_id
+    );
+    bool VerifyLoop1();
+    void VerifyLoop2();
+
 private:
     static GeneratorsFactory m_gf;
 
     static Scalar m_one;
     static Scalar m_two;
-    static Scalars m_two_pow_bit_size;
+    static Scalars m_two_pows;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;

@@ -459,4 +459,14 @@ BOOST_AUTO_TEST_CASE(test_elements_mulvec_elements)
     BOOST_CHECK(p == q);
 }
 
+BOOST_AUTO_TEST_CASE(test_elements_invert)
+{
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        auto ss_inv = ss.Invert();
+        BOOST_CHECK(ss_inv[0] == ss[0].Invert());
+        BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

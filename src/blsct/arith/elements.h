@@ -92,6 +92,11 @@ public:
      */
     Elements<T> To(const size_t to_index) const;
 
+    /**
+     * Invert each contained elements
+     */
+    Elements<T> Invert() const;
+
     std::vector<T> m_vec;
 };
 
