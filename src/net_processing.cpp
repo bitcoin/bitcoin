@@ -1555,7 +1555,8 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_INVALID_PREV:
         if (peer) Misbehaving(*peer, 100, message);
         return true;
-    // Conflicting (but not necessarily invalid) data or different policy:
+    // SYSCOIN Conflicting (but not necessarily invalid) data or different policy:
+    case BlockValidationResult::BLOCK_CHAINLOCK:
     case BlockValidationResult::BLOCK_MISSING_PREV:
         // TODO: Handle this much more gracefully (10 DoS points is super arbitrary)
         if (peer) Misbehaving(*peer, 10, message);

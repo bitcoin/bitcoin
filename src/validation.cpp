@@ -1822,8 +1822,19 @@ void Chainstate::ConflictingChainFound(CBlockIndex* pindexNew)
 }
 // Same as InvalidChainFound, above, except not called directly from InvalidateBlock,
 // which does its own setBlockIndexCandidates management.
+// SYSCOIN
 void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
+    // because chainlock is the last thing we check in CheckBlock() if we get any other error
+    // it means the block was actually invalid before we got to the chainlock check which means it will
+    // never be accepted if it was locked, so unlock this block to allow another chain through
+    // this is possible because chainlocks will lock once a block index (header) exists rather than full valid block requirement
+    if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
+        // if its any other error other than chainlock and we have a conflict then clear the chainlock
+        if (llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            llmq::chainLocksHandler->ClearChainLock(); 
+        }
+    }
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
         m_chainman.m_failed_blocks.insert(pindex);
@@ -2485,10 +2496,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     }
-    // SYSCOIN
-    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-        return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
-    }
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
@@ -2718,7 +2725,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
     }
 
-
     // END SYSCOIN
 
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
@@ -2729,7 +2735,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (!m_blockman.WriteUndoDataForBlock(blockundo, state, pindex, m_params)) {
         return false;
     }
-
+    // SYSCOIN
+    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+    }
     int64_t nTime5 = GetTimeMicros(); nTimeUndo += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeUndo * MICRO, nTimeUndo * MILLI / nBlocksTotal);
 
@@ -4429,7 +4438,7 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             if (pindex == nullptr) {
                 m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
             }
-            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
+            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
         }
     }
     if (!min_pow_checked) {
@@ -4654,7 +4663,7 @@ bool TestBlockValidity(BlockValidationState& state,
     // SYSCOIN
     uint256 block_hash(block.GetHash());
     if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, block_hash)) {
-        return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-chainlock");
+        return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
     }
     
     CBlockIndex indexDummy(block);

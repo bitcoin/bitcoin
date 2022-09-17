@@ -811,6 +811,16 @@ bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blo
     return InternalHasConflictingChainLock(nHeight, blockHash);
 }
 
+void CChainLocksHandler::ClearChainLock()
+{
+    LOCK(cs);
+    mostRecentChainLockShare = bestChainLockWithKnownBlock = CChainLockSig();
+    bestChainLockBlockIndex = nullptr;
+    bestChainLockCandidates.clear();
+    bestChainLockShares.clear();
+    mapAttemptSignedRequestIds.clear();
+}
+
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const
 {
     AssertLockHeld(cs);

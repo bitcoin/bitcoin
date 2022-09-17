@@ -252,6 +252,10 @@ int main(int argc, char* argv[])
         case BlockValidationResult::BLOCK_CHECKPOINT:
             std::cerr << "the block failed to meet one of our checkpoints" << std::endl;
             break;
+        // SYSCOIN
+        case BlockValidationResult::BLOCK_CHAINLOCK:
+            std::cerr << "the block conflicted with a chainlock" << std::endl;
+            break;
         }
     }
 

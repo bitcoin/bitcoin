@@ -102,6 +102,7 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const;
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
+    void ClearChainLock();
 
 private:
     // these require locks to be held already
