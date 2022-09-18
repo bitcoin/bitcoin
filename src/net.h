@@ -97,8 +97,8 @@ static constexpr bool DEFAULT_FORCEDNSSEED{false};
 static constexpr bool DEFAULT_DNSSEED{true};
 static constexpr bool DEFAULT_FIXEDSEEDS{true};
 // SYSCOIN
-static const size_t DEFAULT_MAXRECEIVEBUFFER = 25 * 1000;
-static const size_t DEFAULT_MAXSENDBUFFER    = 5 * 1000;
+static const size_t DEFAULT_MAXSENDBUFFER    = 25 * 1000;
+static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * DEFAULT_MAXSENDBUFFER;
 
 typedef int64_t NodeId;
 
