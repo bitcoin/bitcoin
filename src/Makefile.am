@@ -303,6 +303,7 @@ BITCOIN_CORE_H = \
   util/getuniquepath.h \
   util/macros.h \
   util/memory.h \
+  util/message.h \
   util/moneystr.h \
   util/ranges.h \
   util/ref.h \
@@ -702,13 +703,14 @@ libbitcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  util/asmap.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/error.cpp \
   util/fees.cpp \
   util/getuniquepath.cpp \
   util/system.cpp \
-  util/asmap.cpp \
+  util/message.cpp \
   util/moneystr.cpp \
   util/settings.cpp \
   util/spanparsing.cpp \

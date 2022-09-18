@@ -13,6 +13,4 @@ class CValidationState;
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
 
-extern const std::string strMessageMagic;
-
 #endif // BITCOIN_UTIL_VALIDATION_H

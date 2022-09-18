@@ -16,5 +16,3 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
         state.GetRejectCode());
 }
-
-const std::string strMessageMagic = "DarkCoin Signed Message:\n";
