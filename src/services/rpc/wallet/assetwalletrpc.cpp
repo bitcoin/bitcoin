@@ -295,6 +295,7 @@ static RPCHelpMan syscoincreatenevmblob()
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
     paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
+    std::vector<uint8_t> vchVersionHash = nevmDataPayload.vchVersionHash;
     size_t nSizeData = nevmDataPayload.vchNEVMData->size();
     nevmDataPayload.ClearData();
     paramsSend.push_back(request.params[1]);
@@ -309,7 +310,7 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
+            resObj.__pushKV("versionhash", HexStr(vchVersionHashh));
             resObj.__pushKV("datasize", nSizeData);
             return resObj;
         } else {
