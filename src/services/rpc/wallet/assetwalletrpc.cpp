@@ -218,7 +218,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
     scriptData << OP_RETURN << data;
     CCoinControl coin_control;
     coin_control.m_version = SYSCOIN_TX_VERSION_NEVM_DATA;
-    coin_control.m_nevmdata = std::move(vchData);
+    coin_control.m_nevmdata = vchData;
     std::vector<CRecipient> recipient{CRecipient{scriptData, 0, false}};
     mapValue_t mapValue;
     return SendMoney(*pwallet, coin_control, recipient, mapValue, true);
