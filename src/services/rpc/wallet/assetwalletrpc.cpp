@@ -310,7 +310,7 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.__pushKV("versionhash", HexStr(vchVersionHashh));
+            resObj.__pushKV("versionhash", HexStr(vchVersionHash));
             resObj.__pushKV("datasize", nSizeData);
             return resObj;
         } else {
