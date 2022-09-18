@@ -1251,7 +1251,7 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">No apague su computadora hasta que esta ventana desaparesca.</translation>
+        <translation type="unfinished">No apague su computadora hasta que esta ventana desaparezca.</translation>
     </message>
 </context>
 <context>
