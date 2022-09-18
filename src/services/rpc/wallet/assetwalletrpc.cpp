@@ -15,6 +15,7 @@
 #include <rpc/auxpow_miner.h>
 #include <wallet/rpc/spend.h>
 #include <rpc/server.h>
+#include <wallet/coincontrol.h>
 using namespace wallet;
 static RPCHelpMan convertaddresswallet()
 {
@@ -200,26 +201,6 @@ static RPCHelpMan syscoincreaterawnevmblob()
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
-    UniValue output(UniValue::VARR);
-    UniValue outputObj(UniValue::VOBJ);
-    UniValue outputObjNEVM(UniValue::VOBJ);
-    UniValue optionsObj(UniValue::VOBJ);
-    // should fill in VH and Size and fill in data through GETDATA net protocol by putting vchData into DB which it will read from
-    outputObj.__pushKV("data", HexStr(data));
-    outputObjNEVM.__pushKV("datanevm", HexStr(vchData));
-    optionsObj.__pushKV("version", SYSCOIN_TX_VERSION_NEVM_DATA);
-    output.push_back(outputObj);
-    output.push_back(outputObjNEVM);
-    UniValue paramsSend(UniValue::VARR);
-    paramsSend.push_back(output);
-    paramsSend.push_back(request.params[2]);
-    paramsSend.push_back(request.params[3]);
-    paramsSend.push_back(request.params[4]);
-    paramsSend.push_back(optionsObj);
-    node::JSONRPCRequest requestSend;
-    requestSend.context = request.context;
-    requestSend.params = paramsSend;
-    requestSend.URI = request.URI;
     if(fNEVMConnection) {
         std::vector<const CNEVMData*> vecNEVMDataToProcess;
         CNEVMData nevmDataPayload(nevmData.vchVersionHash, vchData);
@@ -233,7 +214,14 @@ static RPCHelpMan syscoincreaterawnevmblob()
         }
         nevmDataPayload.ClearData();
     }
-    return send().HandleRequest(requestSend);
+    CScript scriptData;
+    scriptData << OP_RETURN << data;
+    CCoinControl coin_control;
+    coin_control.m_version = SYSCOIN_TX_VERSION_NEVM_DATA;
+    coin_control.m_nevmdata = std::move(vchData);
+    std::vector<CRecipient> recipient{CRecipient{scriptData, 0, false}};
+    mapValue_t mapValue;
+    return SendMoney(*pwallet, coin_control, recipient, mapValue, true);
 },
     };
 }
@@ -307,6 +295,7 @@ static RPCHelpMan syscoincreatenevmblob()
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
     paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
+    size_t nSizeData = nevmDataPayload.vchNEVMData->size();
     nevmDataPayload.ClearData();
     paramsSend.push_back(request.params[1]);
     paramsSend.push_back(request.params[2]);
@@ -321,7 +310,7 @@ static RPCHelpMan syscoincreatenevmblob()
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
-            resObj.__pushKV("datasize", nevmDataPayload.vchNEVMData->size());
+            resObj.__pushKV("datasize", nSizeData);
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   
