@@ -4341,6 +4341,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf{m_blockman.m_block_index.find(hash)};
     // SYSCOIN
+    BlockStatus nStatus = BLOCK_VALID_TREE;
     CBlockIndex *pindex = nullptr;
     if (hash != GetConsensus().hashGenesisBlock) {
         if (miSelf != m_blockman.m_block_index.end()) {
@@ -4430,24 +4431,22 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         }
         // SYSCOIN
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
-            if (pindex == nullptr) {
-                m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
-            }
             // if processing block or if min_pow_checked is true (otherwise we want to reject block as semantically invalid so lock is removed)
             // for block it will check in ConnectBlock() for a conflicting chainlock and return state back to ActivateBestChainStep which will call InvalidBlockFound
-            // there if the block is semantically invalid (anything other than BLOCK_CHAINLOCK) we will remove a lock if it exists on the block
+            // there if the block is semantically invalid (anything other than BLOCK_CHAINLOCK) we will remove the lock if it exists on the block
             // the nuance here is that we want to check the header here but we want to check for the rest of the block consensus including transactions to know if its semantically valid
-            // before deciding to enforce a chainlock conflict
-            if(min_pow_checked && !bForBlock) {
+            // before deciding to enforce a chainlock in a conflict
+            nStatus = BLOCK_CONFLICT_CHAINLOCK;
+            if(min_pow_checked && !bForBlock)
                 return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
-            }
         }
     }
     if (!min_pow_checked) {
         LogPrint(BCLog::VALIDATION, "%s: not adding new block header %s, missing anti-dos proof-of-work validation\n", __func__, hash.ToString());
         return state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
     }
-    pindex = m_blockman.AddToBlockIndex(block, m_best_header);
+    if(pindex == nullptr)
+        pindex = m_blockman.AddToBlockIndex(block, m_best_header, nStatus);
 
     if (ppindex)
         *ppindex = pindex;
