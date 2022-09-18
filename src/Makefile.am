@@ -662,8 +662,8 @@ libbitcoin_common_a_SOURCES = \
   net_permissions.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
-  psbt.cpp \
   protocol.cpp \
+  psbt.cpp \
   rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
   saltedhasher.cpp \
