@@ -4437,8 +4437,14 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             // the nuance here is that we want to check the header here but we want to check for the rest of the block consensus including transactions to know if its semantically valid
             // before deciding to enforce a chainlock in a conflict
             nStatus = BLOCK_CONFLICT_CHAINLOCK;
-            if(min_pow_checked && !bForBlock)
+            if(min_pow_checked && !bForBlock) {
+                if(pindex == nullptr)
+                    pindex = m_blockman.AddToBlockIndex(block, m_best_header, nStatus);
+
+                if (ppindex)
+                    *ppindex = pindex;
                 return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+            }
         }
     }
     if (!min_pow_checked) {
