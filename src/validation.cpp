@@ -4429,11 +4429,18 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             }
         }
         // SYSCOIN
-        if (min_pow_checked && !bForBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
+        if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
             if (pindex == nullptr) {
                 m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
             }
-            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+            // if processing block or if min_pow_checked is true (otherwise we want to reject block as semantically invalid so lock is removed)
+            // for block it will check in ConnectBlock() for a conflicting chainlock and return state back to ActivateBestChainStep which will call InvalidBlockFound
+            // there if the block is semantically invalid (anything other than BLOCK_CHAINLOCK) we will remove a lock if it exists on the block
+            // the nuance here is that we want to check the header here but we want to check for the rest of the block consensus including transactions to know if its semantically valid
+            // before deciding to enforce a chainlock conflict
+            if(min_pow_checked && !bForBlock) {
+                return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+            }
         }
     }
     if (!min_pow_checked) {
