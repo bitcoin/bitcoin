@@ -124,13 +124,34 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                     if(pcursor->GetValue(nMedianTime)) {
                         oBlob.__pushKV("versionhash",  HexStr(key.first));
                         oBlob.__pushKV("mpt", nMedianTime);
-                        uint32_t nSize;
-                        pnevmdatadb.ReadDataSize(key.first, nSize);
+                        uint32_t nSize = 0;
+                        CNEVMData nevmData;
+                        if(!pnevmdatadb.ReadDataSize(key.first, nSize)) {
+                            LOCK(cs_main);
+                            auto it = mapPoDA.find(key.first);
+                            if(it != mapPoDA.end()) {
+                                nevmData.vchNEVMData = &it->second;
+                                nSize = nevmData.vchNEVMData->size();
+                            }
+                        }
                         oBlob.__pushKV("datasize", nSize);
                         if(getdata) {
-                            std::vector<uint8_t> vchData;
-                            pnevmdatadb.ReadData(key.first, vchData);
-                            oBlob.__pushKV("data", HexStr(vchData));
+                            if(nevmData.vchNEVMData && !nevmData.vchNEVMData->empty()) {
+                                oBlob.__pushKV("data", HexStr(*nevmData.vchNEVMData));
+                            }
+                            else {
+                                std::vector<uint8_t> vchData;
+                                if(!pnevmdatadb.ReadData(key.first, vchData)) {
+                                    LOCK(cs_main);
+                                    auto it = mapPoDA.find(key.first);
+                                    if(it == mapPoDA.end())
+                                        oBlob.__pushKV("data", "");
+                                    else
+                                        oBlob.__pushKV("data", HexStr(it->second));
+                                } else {
+                                    oBlob.__pushKV("data", HexStr(vchData));
+                                }
+                            }
                         }    
                     }
                 } else {
@@ -621,8 +642,14 @@ static RPCHelpMan getnevmblobdata()
     if(!pnevmdatadb->ReadMPT(vchVH, mpt)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
     }
-    if(nSize == 0)
-        pnevmdatadb->ReadDataSize(vchVH, nSize);
+    if(!pnevmdatadb->ReadDataSize(vchVH, nSize)) {
+        LOCK(cs_main);
+        auto it = mapPoDA.find(vchVH);
+        if(it != mapPoDA.end()) {
+            nevmData.vchNEVMData = &it->second;
+            nSize = nevmData.vchNEVMData->size();
+        }
+    }
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
@@ -632,6 +659,7 @@ static RPCHelpMan getnevmblobdata()
         }
         else {
             if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+                LOCK(cs_main);
                 auto it = mapPoDA.find(vchVH);
                 if(it == mapPoDA.end())
                     throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
