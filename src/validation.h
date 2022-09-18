@@ -863,7 +863,6 @@ private:
         AutoFile& coins_file,
         const node::SnapshotMetadata& metadata);
 
-    // SYSCOIN
     /**
      * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
      * that it doesn't descend from an invalid block, and then add it to m_block_index.
@@ -871,12 +870,14 @@ private:
      * block index (permanent memory storage), indicating that the header is
      * known to be part of a sufficiently high-work chain (anti-dos check).
      */
+    // SYSCOIN
     bool AcceptBlockHeader(
-        const bool ibd,
         const CBlockHeader& block,
         BlockValidationState& state,
         CBlockIndex** ppindex,
-        bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        bool min_pow_checked,
+        bool bForBlock = true,
+        CBlockIndex** pprevindex = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */

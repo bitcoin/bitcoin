@@ -1826,9 +1826,8 @@ void Chainstate::ConflictingChainFound(CBlockIndex* pindexNew)
 void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
     // because chainlock is the last thing we check in CheckBlock() if we get any other error
-    // it means the block was actually invalid before we got to the chainlock check which means it will
-    // never be accepted if it was locked (and any other chain will be rejected), so unlock this block to allow another chain through
-    // this is possible because chainlocks will lock once a block index (header) exists rather than full valid block requirement
+    // prevent situation where an invalid header or block can be locked and force clients to be stuck on that chain
+    // which will never be accepted
     if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
         // if its any other error other than chainlock and we have a conflict then clear the chainlock
         if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
@@ -2515,8 +2514,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (block_hash == m_params.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck) {
             view.SetBestBlock(pindex->GetBlockHash());
-            // SYSCOIN
-            evoDb->WriteBestBlock(pindex->GetBlockHash());
         }
         return true;
     }
@@ -2725,8 +2722,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
     }
 
+    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
+    }
     // END SYSCOIN
-
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCHMARK, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
     if (fJustCheck)
@@ -2734,10 +2733,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     if (!m_blockman.WriteUndoDataForBlock(blockundo, state, pindex, m_params)) {
         return false;
-    }
-    // SYSCOIN
-    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-        return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
     }
     int64_t nTime5 = GetTimeMicros(); nTimeUndo += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeUndo * MICRO, nTimeUndo * MILLI / nBlocksTotal);
@@ -4102,8 +4097,6 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
-
-
     return true;
 }
 
@@ -4175,7 +4168,7 @@ arith_uint256 CalculateHeadersWork(const std::vector<CBlockHeader>& headers)
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
@@ -4340,8 +4333,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
     return true;
 }
-// SYSCOIN
-bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked)
+bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked, bool bForBlock, CBlockIndex** pprevindex)
 {
     AssertLockHeld(cs_main);
 
@@ -4363,7 +4355,7 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             // SYSCOIN
             if (pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
                 LogPrintf("ERROR: %s: block %s is marked conflicting\n", __func__, hash.ToString());
-                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate");
+                return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "duplicate");
             }
             return true;
         }
@@ -4381,6 +4373,9 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
+        if(pprevindex) {
+            *pprevindex = pindexPrev;
+        }
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
             LogPrint(BCLog::VALIDATION, "%s: %s prev block invalid\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
@@ -4390,7 +4385,7 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "bad-prevblk-chainlock");
         }
-        if (!ContextualCheckBlockHeader(ibd, block, state, m_blockman, *this, pindexPrev, m_options.adjusted_time_callback())) {
+        if (!ContextualCheckBlockHeader(block, state, m_blockman, *this, pindexPrev, m_options.adjusted_time_callback())) {
             LogPrint(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4434,7 +4429,7 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
             }
         }
         // SYSCOIN
-        if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
+        if (min_pow_checked && !bForBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
             if (pindex == nullptr) {
                 m_blockman.AddToBlockIndex(block, m_best_header, BLOCK_CONFLICT_CHAINLOCK);
             }
@@ -4457,16 +4452,33 @@ bool ChainstateManager::AcceptBlockHeader(const bool ibd, const CBlockHeader& bl
 bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
-    const bool ibd = ActiveChainstate().IsInitialBlockDownload();
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             // SYSCOIN
-            bool accepted{AcceptBlockHeader(ibd, header, state, &pindex, min_pow_checked)};
+            CBlockIndex *pprevindex = nullptr;
+            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked, false, &pprevindex)};
             ActiveChainstate().CheckBlockIndex();
-
             if (!accepted) {
+                // if the error is anything but chainlock error the header is invalid semantically
+                if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
+                    int nHeight = 0;
+                    // incase the index already exists
+                    if(pindex) {
+                        nHeight = pindex->nHeight;
+                    // incase this is a new block index that doesn't exist but header isn't valid
+                    } else if(pprevindex) {
+                        nHeight = pprevindex->nHeight+1;
+                    // incase prev block hash is invalid
+                    } else if(m_best_header) {
+                        nHeight = m_best_header->nHeight+1;
+                    }
+                    // block wasn't valid which means any locks on this block should be cleared
+                    if (nHeight > 0 && llmq::chainLocksHandler->HasChainLock(nHeight, header.GetHash())) {
+                        llmq::chainLocksHandler->ClearChainLock(); 
+                    }
+                }
                 return false;
             }
             if (ppindex) {
@@ -4475,7 +4487,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         }
     }
     if (NotifyHeaderTip(ActiveChainstate())) {
-        if (ibd && ppindex && *ppindex) {
+        if (ActiveChainstate().IsInitialBlockDownload() && ppindex && *ppindex) {
             const CBlockIndex& last_accepted{**ppindex};
             const int64_t blocks_left{(GetTime() - last_accepted.GetBlockTime()) / GetConsensus().nPowTargetSpacing};
             const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
@@ -4522,9 +4534,7 @@ bool Chainstate::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockV
 
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
-    // SYSCOIN
-    bool ibd = IsInitialBlockDownload();
-    bool accepted_header{m_chainman.AcceptBlockHeader(ibd || !fNewBlock, block, state, &pindex, min_pow_checked)};
+    bool accepted_header{m_chainman.AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
     CheckBlockIndex();
 
     if (!accepted_header)
@@ -4574,7 +4584,7 @@ bool Chainstate::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockV
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
-    if (!ibd && m_chain.Tip() == pindex->pprev)
+    if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
 
     // Write block to history file
@@ -4675,8 +4685,7 @@ bool TestBlockValidity(BlockValidationState& state,
     auto dbTx = evoDb->BeginTransaction();
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    // SYSCOIN
-    if (!ContextualCheckBlockHeader(false, block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev, adjusted_time_callback()))
+    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev, adjusted_time_callback()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
