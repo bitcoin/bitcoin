@@ -276,6 +276,8 @@ struct StackSize {
     StackSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
 };
 
+struct NoDupCheck {};
+
 } // namespace internal
 
 //! A node in a miniscript expression.
@@ -301,8 +303,13 @@ private:
     const Type typ;
     //! Cached script length (computed by CalcScriptLen).
     const size_t scriptlen;
-    //! Whether a public key appears more than once in this node.
-    const bool duplicate_key;
+    //! Whether a public key appears more than once in this node. This value is initialized
+    //! by all constructors except the NoDupCheck ones. The NoDupCheck ones skip the
+    //! computation, requiring it to be done manually by invoking DuplicateKeyCheck().
+    //! DuplicateKeyCheck(), or a non-NoDupCheck constructor, will compute has_duplicate_keys
+    //! for all subnodes as well.
+    mutable std::optional<bool> has_duplicate_keys;
+
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const {
@@ -654,6 +661,7 @@ public:
         return TreeEvalMaybe<std::string>(false, downfn, upfn);
     }
 
+private:
     internal::Ops CalcOps() const {
         switch (fragment) {
             case Fragment::JUST_1: return {0, 0, {}};
@@ -777,11 +785,14 @@ public:
         assert(false);
     }
 
-    /** Check whether any key is repeated.
+public:
+    /** Update duplicate key information in this Node.
+     *
      * This uses a custom key comparator provided by the context in order to still detect duplicates
      * for more complicated types.
      */
-    template<typename Ctx> bool ContainsDuplicateKey(const Ctx& ctx) const {
+    template<typename Ctx> void DuplicateKeyCheck(const Ctx& ctx) const
+    {
         // We cannot use a lambda here, as lambdas are non assignable, and the set operations
         // below require moving the comparators around.
         struct Comp {
@@ -789,31 +800,55 @@ public:
             Comp(const Ctx& ctx) : ctx_ptr(&ctx) {}
             bool operator()(const Key& a, const Key& b) const { return ctx_ptr->KeyCompare(a, b); }
         };
-        using set = std::set<Key, Comp>;
 
-        auto upfn = [this, &ctx](const Node& node, Span<set> subs) -> std::optional<set> {
-            if (&node != this && node.duplicate_key) return {};
+        // state in the recursive computation:
+        // - std::nullopt means "this node has duplicates"
+        // - an std::set means "this node has no duplicate keys, and they are: ...".
+        using keyset = std::set<Key, Comp>;
+        using state = std::optional<keyset>;
 
-            size_t keys_count = node.keys.size();
-            set key_set{node.keys.begin(), node.keys.end(), Comp(ctx)};
-            if (key_set.size() != keys_count) return {};
+        auto upfn = [&ctx](const Node& node, Span<state> subs) -> state {
+            // If this node is already known to have duplicates, nothing left to do.
+            if (node.has_duplicate_keys.has_value() && *node.has_duplicate_keys) return {};
 
-            for (auto& sub: subs) {
-                keys_count += sub.size();
-                // Small optimization: std::set::merge is linear in the size of the second arg but
-                // logarithmic in the size of the first.
-                if (key_set.size() < sub.size()) std::swap(key_set, sub);
-                key_set.merge(sub);
-                if (key_set.size() != keys_count) return {};
+            // Check if one of the children is already known to have duplicates.
+            for (auto& sub : subs) {
+                if (!sub.has_value()) {
+                    node.has_duplicate_keys = true;
+                    return {};
+                }
             }
 
+            // Start building the set of keys involved in this node and children.
+            // Start by keys in this node directly.
+            size_t keys_count = node.keys.size();
+            keyset key_set{node.keys.begin(), node.keys.end(), Comp(ctx)};
+            if (key_set.size() != keys_count) {
+                // It already has duplicates; bail out.
+                node.has_duplicate_keys = true;
+                return {};
+            }
+
+            // Merge the keys from the children into this set.
+            for (auto& sub : subs) {
+                keys_count += sub->size();
+                // Small optimization: std::set::merge is linear in the size of the second arg but
+                // logarithmic in the size of the first.
+                if (key_set.size() < sub->size()) std::swap(key_set, *sub);
+                key_set.merge(*sub);
+                if (key_set.size() != keys_count) {
+                    node.has_duplicate_keys = true;
+                    return {};
+                }
+            }
+
+            node.has_duplicate_keys = false;
             return key_set;
         };
 
-        return !TreeEvalMaybe<set>(upfn);
+        TreeEval<state>(upfn);
     }
 
-public:
     //! Return the size of the script for this expression (faster than ToScript().size()).
     size_t ScriptSize() const { return scriptlen; }
 
@@ -858,7 +893,7 @@ public:
     bool CheckTimeLocksMix() const { return GetType() << "k"_mst; }
 
     //! Check whether there is no duplicate key across this fragment and all its sub-fragments.
-    bool CheckDuplicateKey() const { return !duplicate_key; }
+    bool CheckDuplicateKey() const { return has_duplicate_keys && !*has_duplicate_keys; }
 
     //! Whether successful non-malleable satisfactions are guaranteed to be valid.
     bool ValidSatisfactions() const { return IsValid() && CheckOpsLimit() && CheckStackSize(); }
@@ -872,13 +907,21 @@ public:
     //! Equality testing.
     bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
 
-    // Constructors with various argument combinations.
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : fragment(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
-    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0) : fragment(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()), duplicate_key(ContainsDuplicateKey(ctx)) {}
+    // Constructors with various argument combinations, which bypass the duplicate key check.
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : fragment(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, uint32_t val = 0) : fragment(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+
+    // Constructors with various argument combinations, which do perform the duplicate key check.
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(sub), std::move(arg), val) { DuplicateKeyCheck(ctx); }
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(arg), val) { DuplicateKeyCheck(ctx);}
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(sub), std::move(key), val) { DuplicateKeyCheck(ctx); }
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<Key> key, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(key), val) { DuplicateKeyCheck(ctx); }
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(sub), val) { DuplicateKeyCheck(ctx); }
+    template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, val) { DuplicateKeyCheck(ctx); }
 };
 
 namespace internal {
@@ -965,15 +1008,15 @@ std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(Span<co
 }
 
 /** BuildBack pops the last two elements off `constructed` and wraps them in the specified Fragment */
-template<typename Key, typename Ctx>
-void BuildBack(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>>& constructed, const bool reverse = false)
+template<typename Key>
+void BuildBack(Fragment nt, std::vector<NodeRef<Key>>& constructed, const bool reverse = false)
 {
     NodeRef<Key> child = std::move(constructed.back());
     constructed.pop_back();
     if (reverse) {
-        constructed.back() = MakeNodeRef<Key>(ctx, nt, Vector(std::move(child), std::move(constructed.back())));
+        constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, nt, Vector(std::move(child), std::move(constructed.back())));
     } else {
-        constructed.back() = MakeNodeRef<Key>(ctx, nt, Vector(std::move(constructed.back()), std::move(child)));
+        constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, nt, Vector(std::move(constructed.back()), std::move(child)));
     }
 }
 
@@ -987,6 +1030,18 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 {
     using namespace spanparsing;
 
+    // Account for the minimum script size for all parsed fragments so far. It "borrows" 1
+    // script byte from all leaf nodes, counting it instead whenever a space for a recursive
+    // expression is added (through andor, and_*, or_*, thresh). This guarantees that all fragments
+    // increment the script_size by at least one, except for:
+    // - "0", "1": these leafs are only a single byte, so their subtracted-from increment is 0.
+    //   This is not an issue however, as "space" for them has to be created by combinators,
+    //   which do increment script_size.
+    // - "v:": the v wrapper adds nothing as in some cases it results in no opcode being added
+    //   (instead transforming another opcode into its VERIFY form). However, the v: wrapper has
+    //   to be interleaved with other fragments to be valid, so this is not a concern.
+    size_t script_size{1};
+
     // The two integers are used to hold state for thresh()
     std::vector<std::tuple<ParseContext, int64_t, int64_t>> to_parse;
     std::vector<NodeRef<Key>> constructed;
@@ -994,14 +1049,16 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
 
     while (!to_parse.empty()) {
+        if (script_size > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
+
         // Get the current context we are decoding within
         auto [cur_context, n, k] = to_parse.back();
         to_parse.pop_back();
 
         switch (cur_context) {
         case ParseContext::WRAPPED_EXPR: {
-            int colon_index = -1;
-            for (int i = 1; i < (int)in.size(); ++i) {
+            std::optional<size_t> colon_index{};
+            for (size_t i = 1; i < in.size(); ++i) {
                 if (in[i] == ':') {
                     colon_index = i;
                     break;
@@ -1009,106 +1066,131 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 if (in[i] < 'a' || in[i] > 'z') break;
             }
             // If there is no colon, this loop won't execute
-            for (int j = 0; j < colon_index; ++j) {
+            bool last_was_v{false};
+            for (size_t j = 0; colon_index && j < *colon_index; ++j) {
+                if (script_size > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
                 if (in[j] == 'a') {
+                    script_size += 2;
                     to_parse.emplace_back(ParseContext::ALT, -1, -1);
                 } else if (in[j] == 's') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::SWAP, -1, -1);
                 } else if (in[j] == 'c') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::CHECK, -1, -1);
                 } else if (in[j] == 'd') {
+                    script_size += 3;
                     to_parse.emplace_back(ParseContext::DUP_IF, -1, -1);
                 } else if (in[j] == 'j') {
+                    script_size += 4;
                     to_parse.emplace_back(ParseContext::NON_ZERO, -1, -1);
                 } else if (in[j] == 'n') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::ZERO_NOTEQUAL, -1, -1);
                 } else if (in[j] == 'v') {
+                    // do not permit "...vv...:"; it's not valid, and also doesn't trigger early
+                    // failure as script_size isn't incremented.
+                    if (last_was_v) return {};
                     to_parse.emplace_back(ParseContext::VERIFY, -1, -1);
                 } else if (in[j] == 'u') {
+                    script_size += 4;
                     to_parse.emplace_back(ParseContext::WRAP_U, -1, -1);
                 } else if (in[j] == 't') {
+                    script_size += 1;
                     to_parse.emplace_back(ParseContext::WRAP_T, -1, -1);
                 } else if (in[j] == 'l') {
                     // The l: wrapper is equivalent to or_i(0,X)
-                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
+                    script_size += 4;
+                    constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0));
                     to_parse.emplace_back(ParseContext::OR_I, -1, -1);
                 } else {
                     return {};
                 }
+                last_was_v = (in[j] == 'v');
             }
             to_parse.emplace_back(ParseContext::EXPR, -1, -1);
-            in = in.subspan(colon_index + 1);
+            if (colon_index) in = in.subspan(*colon_index + 1);
             break;
         }
         case ParseContext::EXPR: {
             if (Const("0", in)) {
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0));
             } else if (Const("1", in)) {
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_1));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_1));
             } else if (Const("pk(", in)) {
                 auto res = ParseKeyEnd<Key, Ctx>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(key))))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_K, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
+                script_size += 34;
             } else if (Const("pkh(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(key))))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_H, Vector(std::move(key))))));
                 in = in.subspan(key_size + 1);
+                script_size += 24;
             } else if (Const("pk_k(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_K, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
+                script_size += 33;
             } else if (Const("pk_h(", in)) {
                 auto res = ParseKeyEnd<Key>(in, ctx);
                 if (!res) return {};
                 auto& [key, key_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(key))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_H, Vector(std::move(key))));
                 in = in.subspan(key_size + 1);
+                script_size += 23;
             } else if (Const("sha256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::SHA256, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::SHA256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 38;
             } else if (Const("ripemd160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::RIPEMD160, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::RIPEMD160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 26;
             } else if (Const("hash256(", in)) {
                 auto res = ParseHexStrEnd(in, 32, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH256, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH256, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 38;
             } else if (Const("hash160(", in)) {
                 auto res = ParseHexStrEnd(in, 20, ctx);
                 if (!res) return {};
                 auto& [hash, hash_size] = *res;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH160, std::move(hash)));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH160, std::move(hash)));
                 in = in.subspan(hash_size + 1);
+                script_size += 26;
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
                 int64_t num;
                 if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
                 if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::AFTER, num));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::AFTER, num));
                 in = in.subspan(arg_size + 1);
+                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
                 int64_t num;
                 if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
                 if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::OLDER, num));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::OLDER, num));
                 in = in.subspan(arg_size + 1);
+                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
             } else if (Const("multi(", in)) {
                 // Get threshold
                 int next_comma = FindNextChar(in, ',');
@@ -1128,7 +1210,8 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 }
                 if (keys.size() < 1 || keys.size() > 20) return {};
                 if (k < 1 || k > (int64_t)keys.size()) return {};
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::MULTI, std::move(keys), k));
+                script_size += 2 + (keys.size() > 16) + (k > 16) + 34 * keys.size();
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::MULTI, std::move(keys), k));
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
@@ -1138,6 +1221,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
                 to_parse.emplace_back(ParseContext::THRESH, 1, k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 2 + (k > 16);
             } else if (Const("andor(", in)) {
                 to_parse.emplace_back(ParseContext::ANDOR, -1, -1);
                 to_parse.emplace_back(ParseContext::CLOSE_BRACKET, -1, -1);
@@ -1146,21 +1230,29 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
                 to_parse.emplace_back(ParseContext::COMMA, -1, -1);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 5;
             } else {
                 if (Const("and_n(", in)) {
                     to_parse.emplace_back(ParseContext::AND_N, -1, -1);
+                    script_size += 5;
                 } else if (Const("and_b(", in)) {
                     to_parse.emplace_back(ParseContext::AND_B, -1, -1);
+                    script_size += 2;
                 } else if (Const("and_v(", in)) {
                     to_parse.emplace_back(ParseContext::AND_V, -1, -1);
+                    script_size += 1;
                 } else if (Const("or_b(", in)) {
                     to_parse.emplace_back(ParseContext::OR_B, -1, -1);
+                    script_size += 2;
                 } else if (Const("or_c(", in)) {
                     to_parse.emplace_back(ParseContext::OR_C, -1, -1);
+                    script_size += 3;
                 } else if (Const("or_d(", in)) {
                     to_parse.emplace_back(ParseContext::OR_D, -1, -1);
+                    script_size += 4;
                 } else if (Const("or_i(", in)) {
                     to_parse.emplace_back(ParseContext::OR_I, -1, -1);
+                    script_size += 4;
                 } else {
                     return {};
                 }
@@ -1172,69 +1264,70 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             break;
         }
         case ParseContext::ALT: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_A, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_A, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::SWAP: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_S, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_S, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::CHECK: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::DUP_IF: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_D, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_D, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::NON_ZERO: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_J, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_J, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::ZERO_NOTEQUAL: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_N, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_N, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::VERIFY: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_V, Vector(std::move(constructed.back())));
+            script_size += (constructed.back()->GetType() << "x"_mst);
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_V, Vector(std::move(constructed.back())));
             break;
         }
         case ParseContext::WRAP_U: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::OR_I, Vector(std::move(constructed.back()), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::OR_I, Vector(std::move(constructed.back()), MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0)));
             break;
         }
         case ParseContext::WRAP_T: {
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::AND_V, Vector(std::move(constructed.back()), MakeNodeRef<Key>(ctx, Fragment::JUST_1)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::AND_V, Vector(std::move(constructed.back()), MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_1)));
             break;
         }
         case ParseContext::AND_B: {
-            BuildBack(ctx, Fragment::AND_B, constructed);
+            BuildBack(Fragment::AND_B, constructed);
             break;
         }
         case ParseContext::AND_N: {
             auto mid = std::move(constructed.back());
             constructed.pop_back();
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
             break;
         }
         case ParseContext::AND_V: {
-            BuildBack(ctx, Fragment::AND_V, constructed);
+            BuildBack(Fragment::AND_V, constructed);
             break;
         }
         case ParseContext::OR_B: {
-            BuildBack(ctx, Fragment::OR_B, constructed);
+            BuildBack(Fragment::OR_B, constructed);
             break;
         }
         case ParseContext::OR_C: {
-            BuildBack(ctx, Fragment::OR_C, constructed);
+            BuildBack(Fragment::OR_C, constructed);
             break;
         }
         case ParseContext::OR_D: {
-            BuildBack(ctx, Fragment::OR_D, constructed);
+            BuildBack(Fragment::OR_D, constructed);
             break;
         }
         case ParseContext::OR_I: {
-            BuildBack(ctx, Fragment::OR_I, constructed);
+            BuildBack(Fragment::OR_I, constructed);
             break;
         }
         case ParseContext::ANDOR: {
@@ -1242,7 +1335,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             constructed.pop_back();
             auto mid = std::move(constructed.back());
             constructed.pop_back();
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), std::move(right)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), std::move(right)));
             break;
         }
         case ParseContext::THRESH: {
@@ -1251,6 +1344,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 in = in.subspan(1);
                 to_parse.emplace_back(ParseContext::THRESH, n+1, k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
+                script_size += 2;
             } else if (in[0] == ')') {
                 if (k > n) return {};
                 in = in.subspan(1);
@@ -1261,7 +1355,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                     constructed.pop_back();
                 }
                 std::reverse(subs.begin(), subs.end());
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::THRESH, std::move(subs), k));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::THRESH, std::move(subs), k));
             } else {
                 return {};
             }
@@ -1282,8 +1376,11 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 
     // Sanity checks on the produced miniscript
     assert(constructed.size() == 1);
+    assert(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
-    return std::move(constructed.front());
+    const NodeRef<Key> tl_node = std::move(constructed.front());
+    tl_node->DuplicateKeyCheck(ctx);
+    return tl_node;
 }
 
 /** Decode a script into opcode/push pairs.
@@ -1394,12 +1491,12 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             // Constants
             if (in[0].first == OP_1) {
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_1));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_1));
                 break;
             }
             if (in[0].first == OP_0) {
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::JUST_0));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0));
                 break;
             }
             // Public keys
@@ -1407,14 +1504,14 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 auto key = ctx.FromPKBytes(in[0].second.begin(), in[0].second.end());
                 if (!key) return {};
                 ++in;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_K, Vector(std::move(*key))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_K, Vector(std::move(*key))));
                 break;
             }
             if (last - in >= 5 && in[0].first == OP_VERIFY && in[1].first == OP_EQUAL && in[3].first == OP_HASH160 && in[4].first == OP_DUP && in[2].second.size() == 20) {
                 auto key = ctx.FromPKHBytes(in[2].second.begin(), in[2].second.end());
                 if (!key) return {};
                 in += 5;
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::PK_H, Vector(std::move(*key))));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::PK_H, Vector(std::move(*key))));
                 break;
             }
             // Time locks
@@ -1422,31 +1519,31 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             if (last - in >= 2 && in[0].first == OP_CHECKSEQUENCEVERIFY && (num = ParseScriptNumber(in[1]))) {
                 in += 2;
                 if (*num < 1 || *num > 0x7FFFFFFFL) return {};
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::OLDER, *num));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::OLDER, *num));
                 break;
             }
             if (last - in >= 2 && in[0].first == OP_CHECKLOCKTIMEVERIFY && (num = ParseScriptNumber(in[1]))) {
                 in += 2;
                 if (num < 1 || num > 0x7FFFFFFFL) return {};
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::AFTER, *num));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::AFTER, *num));
                 break;
             }
             // Hashes
             if (last - in >= 7 && in[0].first == OP_EQUAL && in[3].first == OP_VERIFY && in[4].first == OP_EQUAL && (num = ParseScriptNumber(in[5])) && num == 32 && in[6].first == OP_SIZE) {
                 if (in[2].first == OP_SHA256 && in[1].second.size() == 32) {
-                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::SHA256, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::SHA256, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_RIPEMD160 && in[1].second.size() == 20) {
-                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::RIPEMD160, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::RIPEMD160, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_HASH256 && in[1].second.size() == 32) {
-                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH256, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH256, in[1].second));
                     in += 7;
                     break;
                 } else if (in[2].first == OP_HASH160 && in[1].second.size() == 20) {
-                    constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::HASH160, in[1].second));
+                    constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::HASH160, in[1].second));
                     in += 7;
                     break;
                 }
@@ -1467,7 +1564,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 if (!k || *k < 1 || *k > *n) return {};
                 in += 3 + *n;
                 std::reverse(keys.begin(), keys.end());
-                constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::MULTI, std::move(keys), *k));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::MULTI, std::move(keys), *k));
                 break;
             }
             /** In the following wrappers, we only need to push SINGLE_BKV_EXPR rather
@@ -1562,63 +1659,63 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
         case DecodeContext::SWAP: {
             if (in >= last || in[0].first != OP_SWAP || constructed.empty()) return {};
             ++in;
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_S, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_S, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::ALT: {
             if (in >= last || in[0].first != OP_TOALTSTACK || constructed.empty()) return {};
             ++in;
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_A, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_A, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::CHECK: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_C, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_C, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::DUP_IF: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_D, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_D, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::VERIFY: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_V, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_V, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::NON_ZERO: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_J, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_J, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::ZERO_NOTEQUAL: {
             if (constructed.empty()) return {};
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::WRAP_N, Vector(std::move(constructed.back())));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::WRAP_N, Vector(std::move(constructed.back())));
             break;
         }
         case DecodeContext::AND_V: {
             if (constructed.size() < 2) return {};
-            BuildBack(ctx, Fragment::AND_V, constructed, /*reverse=*/true);
+            BuildBack(Fragment::AND_V, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::AND_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(ctx, Fragment::AND_B, constructed, /*reverse=*/true);
+            BuildBack(Fragment::AND_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_B: {
             if (constructed.size() < 2) return {};
-            BuildBack(ctx, Fragment::OR_B, constructed, /*reverse=*/true);
+            BuildBack(Fragment::OR_B, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_C: {
             if (constructed.size() < 2) return {};
-            BuildBack(ctx, Fragment::OR_C, constructed, /*reverse=*/true);
+            BuildBack(Fragment::OR_C, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::OR_D: {
             if (constructed.size() < 2) return {};
-            BuildBack(ctx, Fragment::OR_D, constructed, /*reverse=*/true);
+            BuildBack(Fragment::OR_D, constructed, /*reverse=*/true);
             break;
         }
         case DecodeContext::ANDOR: {
@@ -1628,7 +1725,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             NodeRef<Key> right = std::move(constructed.back());
             constructed.pop_back();
             NodeRef<Key> mid = std::move(constructed.back());
-            constructed.back() = MakeNodeRef<Key>(ctx, Fragment::ANDOR, Vector(std::move(left), std::move(mid), std::move(right)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::ANDOR, Vector(std::move(left), std::move(mid), std::move(right)));
             break;
         }
         case DecodeContext::THRESH_W: {
@@ -1652,7 +1749,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 constructed.pop_back();
                 subs.push_back(std::move(sub));
             }
-            constructed.push_back(MakeNodeRef<Key>(ctx, Fragment::THRESH, std::move(subs), k));
+            constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::THRESH, std::move(subs), k));
             break;
         }
         case DecodeContext::ENDIF: {
@@ -1702,7 +1799,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             if (in >= last) return {};
             if (in[0].first == OP_IF) {
                 ++in;
-                BuildBack(ctx, Fragment::OR_I, constructed, /*reverse=*/true);
+                BuildBack(Fragment::OR_I, constructed, /*reverse=*/true);
             } else if (in[0].first == OP_NOTIF) {
                 ++in;
                 to_parse.emplace_back(DecodeContext::ANDOR, -1, -1);
@@ -1717,6 +1814,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
     }
     if (constructed.size() != 1) return {};
     const NodeRef<Key> tl_node = std::move(constructed.front());
+    tl_node->DuplicateKeyCheck(ctx);
     // Note that due to how ComputeType works (only assign the type to the node if the
     // subs' types are valid) this would fail if any node of tree is badly typed.
     if (!tl_node->IsValidTopLevel()) return {};
@@ -1733,6 +1831,8 @@ inline NodeRef<typename Ctx::Key> FromString(const std::string& str, const Ctx& 
 template<typename Ctx>
 inline NodeRef<typename Ctx::Key> FromScript(const CScript& script, const Ctx& ctx) {
     using namespace internal;
+    // A too large Script is necessarily invalid, don't bother parsing it.
+    if (script.size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE) return {};
     auto decomposed = DecomposeScript(script);
     if (!decomposed) return {};
     auto it = decomposed->begin();
