@@ -16,19 +16,23 @@
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
-struct proof_data_t {
-    Scalar x, y, z, x_ip;
+struct ProofData {
+    Scalar x;
+    Scalar y;
+    Scalar z;
+    Scalar x_ip;
     Scalars ws;   // originally w
     G1Points Vs;  // originally V
-    size_t log_m, inv_offset;
+    size_t log_m;
+    size_t inv_offset;
 };
 
-struct RangeproofEncodedData {
+struct RangeProofInputValue {
+    size_t index;
     CAmount amount;
     Scalar gamma;
-    std::string message;
-    int index;
     bool valid = false;
+    std::string message;
 };
 
 struct RangeProofState {
@@ -90,13 +94,21 @@ public:
     );
 
     bool Verify(
-        const std::vector<std::pair<int, RangeProofState>>& proofs,
-        std::vector<RangeproofEncodedData>& v_data,
+        const std::vector<std::pair<size_t, RangeProofState>>& indexed_proofs,
+        std::vector<RangeProofInputValue>& input_values,
         const G1Points& nonces,
         const bool &f_only_recover,
         const TokenId& token_id
     );
-    bool VerifyLoop1();
+    bool VerifyLoop1(
+        const std::vector<std::pair<size_t, RangeProofState>>& indexed_proofs,
+        const Generators& gens,
+        const G1Points& nonces,
+        const bool f_recover,
+        std::vector<ProofData>& proof_data_vec,
+        std::vector<RangeProofInputValue>& input_values,
+        Scalars to_invert
+    );
     void VerifyLoop2();
 
 private:
