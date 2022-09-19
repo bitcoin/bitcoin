@@ -146,6 +146,34 @@ class SendTxRcnclTest(BitcoinTestFramework):
             peer.send_message(msg_verack())
         peer.peer_disconnect()
 
+        self.log.info('SENDTXRCNCL sent to an outbound')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=1, connection_type="outbound-full-relay")
+        assert peer.sendtxrcncl_msg_received
+        assert peer.sendtxrcncl_msg_received.initiator
+        assert not peer.sendtxrcncl_msg_received.responder
+        assert_equal(peer.sendtxrcncl_msg_received.version, 1)
+        peer.peer_disconnect()
+
+        self.log.info('SENDTXRCNCL should not be sent if block-relay-only')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=2, connection_type="block-relay-only")
+        assert not peer.sendtxrcncl_msg_received
+        peer.peer_disconnect()
+
+        self.log.info('SENDTXRCNCL if block-relay-only triggers a disconnect')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            PeerNoVerack(), wait_for_verack=False, p2p_idx=3, connection_type="block-relay-only")
+        peer.send_message(create_sendtxrcncl_msg(initiator=False))
+        peer.wait_for_disconnect()
+
+        self.log.info('SENDTXRCNCL with initiator=1 and responder=0 from outbound triggers a disconnect')
+        sendtxrcncl_wrong_role = create_sendtxrcncl_msg(initiator=True)
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            P2PInterface(), wait_for_verack=False, p2p_idx=4, connection_type="outbound-full-relay")
+        peer.send_message(sendtxrcncl_wrong_role)
+        peer.wait_for_disconnect()
+
         self.log.info('SENDTXRCNCL not sent if -txreconciliation flag is not set')
         self.restart_node(0, [])
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
