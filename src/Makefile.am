@@ -150,7 +150,6 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   addrman_impl.h \
-  amount.h \
   attributes.h \
   banman.h \
   base58.h \
@@ -395,7 +394,6 @@ libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
-  amount.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \

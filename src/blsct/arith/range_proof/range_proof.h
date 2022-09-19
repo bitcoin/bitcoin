@@ -8,21 +8,20 @@
 #include <optional>
 #include <vector>
 
-#include <amount.h>
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/proof_data.h>
 #include <blsct/arith/scalar.h>
+#include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
-struct RangeProofInputValue
+struct ExtractedTxInput
 {
     size_t index;
     CAmount amount;
     Scalar gamma;
-    bool valid = false;
     std::string message;
 };
 
@@ -30,8 +29,10 @@ struct VerifyLoop1Result
 {
     std::vector<ProofData> proof_data_vec;
     Scalars to_invert;
-    std::vector<RangeProofInputValue> input_values;
+    std::vector<ExtractedTxInput> tx_ins;
     size_t max_LR_len;
+    size_t Vs_size_sum;
+    size_t to_invert_idx_offset;
 };
 
 // implementation of range proof described in Bulletproofs
@@ -83,9 +84,7 @@ public:
 
     bool Verify(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-        std::vector<RangeProofInputValue>& input_values,
         const G1Points& nonces,
-        const bool &recovery_only,
         const TokenId& token_id
     );
 
@@ -95,7 +94,15 @@ public:
         const G1Points& nonces
     );
 
-    void VerifyLoop2();
+    void VerifyLoop2(
+        const std::vector<std::pair<size_t, Proof>>& indexed_proofs
+    );
+
+    std::vector<ExtractedTxInput> RecoverTxIns(
+        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const G1Points& nonces,
+        const TokenId& token_id
+    );
 
 private:
     static GeneratorsFactory m_gf;

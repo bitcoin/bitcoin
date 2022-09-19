@@ -342,22 +342,13 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
     const Generators& gens,
     const G1Points& nonces
 ) {
-    size_t to_invert_idx_offset = 0;
-    size_t nonce_idx = 0;
-    size_t Vs_size_sum = 0;
-
     const size_t M = GetInputValueVecLen(m_Vs.Size());
     // round = log2(input value bits) + log2(M)
     const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
 
-    // trigger recovery and populate input_values if below holds
-    const bool should_recover = nonces.Size() == indexed_proofs.size();
-
     VerifyLoop1Result res;
 
     for (const std::pair<size_t, Proof>& p: indexed_proofs) {
-
-        const size_t proof_index = p.first;
         const Proof proof = p.second;
 
         // check validity of proof in terms of component sizes
@@ -378,56 +369,147 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
         }
         res.to_invert.Add(pd.y);
 
-        // advance the inv_offset
-        to_invert_idx_offset += rounds + 1;
-
-        if (should_recover) {
-            Scalar alpha = nonces[nonce_idx].GetHashWithSalt(1);
-            Scalar rho = nonces[nonce_idx].GetHashWithSalt(2);
-            Scalar excess = (proof.mu - rho * pd.x) - alpha;
-            Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
-            Scalar gamma = nonces[nonce_idx].GetHashWithSalt(100);
-
-            // add below to input_values only if gamma and amount are the parameters used for pedersen commitment pd.Vs[0]
-            G1Point input_value_pt = (gens.G.get() * gamma) + (gens.H * amount);
-            if (input_value_pt != pd.Vs[0]) continue;
-
-            RangeProofInputValue data;
-            data.index = proof_index;
-            data.amount = amount.GetUint64();
-            data.gamma = gamma;
-            data.valid = true;
-
-            // generate message and set to data
-            std::vector<uint8_t> msg = GetTrimmedVch(excess >> 64);
-
-            Scalar tau1 = nonces[nonce_idx].GetHashWithSalt(3);
-            Scalar tau2 = nonces[nonce_idx].GetHashWithSalt(4);
-            Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * pd.x * pd.x) - (pd.z * pd.z * gamma)) * pd.x.Invert()) - tau1;
-            std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
-
-            data.message =
-                std::string(msg.begin(), msg.end()) +
-                std::string(excess_msg.begin(), excess_msg.end());
-
-            res.input_values.push_back(data);
-
-            // update nonce_idx if recovering
-            ++nonce_idx;
-        }
+        // advance the to_invert index offset
+        res.to_invert_idx_offset += (rounds + 1);
     }
     return res;
 }
 
+void RangeProof::VerifyLoop2(
+    const std::vector<std::pair<size_t, Proof>>& indexed_proofs
+) {
+    for (const std::pair<size_t, Proof>& p: indexed_proofs) {
+
+        const size_t proof_index = p.first;
+        const Proof proof = p.second;
+
+        const proof_data_t &pd = proof_data[proof_data_index++];
+
+        if (proof.Ls.Size() != std::log2(Config::m_input_value_bits) + pd.logM)
+            return false;
+
+        const size_t M = 1 << pd.logM;
+        const size_t MN = M*N;
+
+        Scalar weight_y = Scalar::Rand();
+        Scalar weight_z = Scalar::Rand();
+
+        y0 = y0 - (proof.tau_x * weight_y);
+
+        Scalars z_pow = Scalars::FirstNPow(pd.z, M, 3); // VectorPowers(pd.z, M+3);
+
+        Scalar ip1y = VectorPowerSum(pd.y, MN);
+
+        Scalar k = (z_pow[2] * ip1y).Negate();
+
+        for (size_t j = 1; j <= M; ++j) {
+            k = k - (z_pow[j+2] * BulletproofsRangeproof::ip12);
+        }
+
+        tmp = k + (pd.z*ip1y);
+        tmp = (proof.t - tmp);
+        y1 = y1 + (tmp * weight_y);
+
+        for (size_t j = 0; j < pd.Vs.Size(); ++j) {
+            tmp = z_pow[j+2] * weight_y;
+            multi_exp_data.push_back({pd.Vs[j], tmp});
+        }
+
+        tmp = pd.x * weight_y;
+
+        multi_exp_data.push_back({proof.T1, tmp});
+
+        tmp = pd.x * pd.x * weight_y;
+
+        multi_exp_data.push_back({proof.T2, tmp});
+        multi_exp_data.push_back({proof.A, weight_z});
+
+        tmp = pd.x * weight_z;
+__
+        multi_exp_data.push_back({proof.S, tmp});
+
+        const size_t rounds = pd.logM + std::log2(Config::m_input_value_bits);
+
+        Scalar y_inv_pow = 1;
+        Scalar y_pow = 1;
+
+        const Scalar *w_inv = &inverses[pd.inv_offset];
+        const Scalar y_inv = inverses[pd.inv_offset + rounds];
+
+        std::vector<Scalar> w_cache(1<<rounds, 1);
+        w_cache[0] = w_inv[0];
+        w_cache[1] = pd.w[0];
+
+        for (size_t j = 1; j < rounds; ++j) {
+            const size_t sl = 1<<(j+1);
+
+            for (size_t s = sl; s-- > 0; --s) {
+                w_cache[s] = w_cache[s/2] * pd.w[j];
+                w_cache[s-1] = w_cache[s/2] * w_inv[j];
+            }
+        }
+
+        for (size_t i = 0; i < MN; ++i) {
+            Scalar g_scalar = proof.a;
+            Scalar h_scalar;
+
+            if (i == 0) {
+                h_scalar = proof.b;
+            } else {
+                h_scalar = proof.b * y_inv_pow;
+            }
+
+            g_scalar = g_scalar * w_cache[i];
+            h_scalar = h_scalar * w_cache[(~i) & (MN-1)];
+
+            g_scalar = g_scalar + pd.z;
+
+            tmp = z_pow[2+i/N] * m_two_pows[i % N];
+
+            if (i == 0) {
+                tmp = tmp + pd.z;
+                h_scalar = h_scalar - tmp;
+            } else {
+                tmp = tmp + (pd.z * y_pow);
+                h_scalar = h_scalar - (tmp * y_inv_pow);
+            }
+
+            z4[i] = z4[i] - (g_scalar * weight_z);
+            z5[i] = z5[i] - (h_scalar * weight_z);
+
+            if (i == 0) {
+                y_inv_pow = y_inv;
+                y_pow = pd.y;
+            } else if (i != MN - 1) {
+                y_inv_pow = y_inv_pow * y_inv;
+                y_pow = y_pow * pd.y;
+            }
+        }
+
+        z1 = z1 + (proof.mu * weight_z);
+
+        for (size_t i = 0; i < rounds; ++i) {
+            tmp = pd.w[i] * pd.w[i] * weight_z;
+
+            multi_exp_data.push_back({proof.Ls[i], tmp});
+
+            tmp = w_inv[i] * w_inv[i] * weight_z;
+
+            multi_exp_data.push_back({proof.Rs[i], tmp});
+        }
+
+        tmp = proof.t - (proof.a * proof.b);
+        tmp = tmp * pd.x_ip;
+        z3 = z3 + (tmp * weight_z);
+    }
+}
+
 bool RangeProof::Verify(
     const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-    std::vector<RangeProofInputValue>& input_values,
     const G1Points& nonces,
-    const bool recovery_only,
     const TokenId& token_id
 ) {
     const Generators gens = m_gf.GetInstance(token_id);
-    const auto N = Config::m_input_value_bits;
 
     VerifyLoop1Result loop1_res = VerifyLoop1(
         indexed_proofs,
@@ -439,170 +521,99 @@ bool RangeProof::Verify(
     if (loop1_res == std::nullopt) return false;
     if (recovery_only) return true;
 
+
+
     size_t maxMN = 1u << max_LR_len;
-
     Scalars inverses = loop1_res.to_invert.Invert();
-
     Scalar z1 = 0;
     Scalar z3 = 0;
-
     std::vector<Scalar> z4(maxMN, 0);
     std::vector<Scalar> z5(maxMN, 0);
-
     Scalar y0 = 0;
     Scalar y1 = 0;
-
     Scalar tmp;
-
     int proof_data_index = 0;
-
     std::vector<MultiexpData> multi_exp_data;
-
     multi_exp_data.reserve(nV + (2 * (10/*logM*/ + std::log2(Config::m_input_value_bits) + 4) * proofs.size() + 2 * maxMN);
     multi_exp_data.resize(2 * maxMN);
 
+
+
     VerifyLoop2()
 
+
+
     tmp = y0 - z1;
-
     multi_exp_data.push_back({gens.G, tmp});
-
     tmp = z3 - y1;
-
     multi_exp_data.push_back({gens.H, tmp});
-
     for (size_t i = 0; i < maxMN; ++i) {
         multi_exp_data[i * 2] = {gens.Gi[i], z4[i]};
         multi_exp_data[i * 2 + 1] = {gens.Hi[i], z5[i]};
     }
-
     G1Point m_exp = MultiExp(multi_exp_data);
 
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
-// void RangeProof::VerifyLoop2()
-// {
-//     for (auto& p: proofs) {
-//         RangeProofState proof = p.second;
+std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
+    const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+    const G1Points& nonces,
+    const TokenId& token_id
+) {
+    const Generators gens = m_gf.GetInstance(token_id);
 
-//         const proof_data_t &pd = proof_data[proof_data_index++];
+    if (nonces.Size() != indexed_proofs.size() {
+        throw std::runtime_error(strprintf("%s: unable to recover tx inputs since # of nonces and # of proofs differ", __func__));
+    }
 
-//         if (proof.Ls.Size() != std::log2(Config::m_input_value_bits) + pd.logM)
-//             return false;
+    size_t nonce_idx = 0;
+    std::vector<ExtractedTxInput> tx_ins;
 
-//         const size_t M = 1 << pd.logM;
-//         const size_t MN = M*N;
+    // do for each nonce + proof combination
+    for (size_t i = 0; i < nonces.Size(); ++i) {
+        const p& = indexed_proofs[i];
+        const size_t& tx_in_index = p.first;
+        const Proof& proof = p.second;
+        const G1Point& nonce = nonces[i];
 
-//         Scalar weight_y = Scalar::Rand();
-//         Scalar weight_z = Scalar::Rand();
+        // TODO move this common validation somewhere
 
-//         y0 = y0 - (proof.tau_x * weight_y);
+        // check validity of proof in terms of component sizes
+        auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
+        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) return std::nullopt;
 
-//         Scalars z_pow = Scalars::FirstNPow(pd.z, M, 3); // VectorPowers(pd.z, M+3);
+        Scalar alpha = nonce.GetHashWithSalt(1);
+        Scalar rho = nonce.GetHashWithSalt(2);
+        Scalar excess = (proof.mu - rho * pd.x) - alpha;
+        Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
+        Scalar gamma = nonce.GetHashWithSalt(100);
 
-//         Scalar ip1y = VectorPowerSum(pd.y, MN);
+        // recovered input is valid only if gamma and amount are the parameters used for pedersen commitment pd.Vs[0]
+        // such invalid inputs are excluded from the result vector
+        G1Point input_value_pt = (gens.G.get() * gamma) + (gens.H * amount);
+        if (input_value_pt != pd.Vs[0]) {
+            continue;
+        }
 
-//         Scalar k = (z_pow[2] * ip1y).Negate();
+        ExtractedTxInput tx_in;
+        tx_in.index = tx_in_index;
+        tx_in.amount = amount.GetUint64();
+        tx_in.gamma = gamma;
 
-//         for (size_t j = 1; j <= M; ++j) {
-//             k = k - (z_pow[j+2] * BulletproofsRangeproof::ip12);
-//         }
+        // generate message and set to data
+        std::vector<uint8_t> msg = GetTrimmedVch(excess >> 64);
 
-//         tmp = k + (pd.z*ip1y);
-//         tmp = (proof.t - tmp);
-//         y1 = y1 + (tmp * weight_y);
+        Scalar tau1 = nonces[nonce_idx].GetHashWithSalt(3);
+        Scalar tau2 = nonces[nonce_idx].GetHashWithSalt(4);
+        Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * pd.x * pd.x) - (pd.z * pd.z * gamma)) * pd.x.Invert()) - tau1;
+        std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
 
-//         for (size_t j = 0; j < pd.Vs.Size(); ++j) {
-//             tmp = z_pow[j+2] * weight_y;
-//             multi_exp_data.push_back({pd.Vs[j], tmp});
-//         }
+        tx_in.message =
+            std::string(msg.begin(), msg.end()) +
+            std::string(excess_msg.begin(), excess_msg.end());
 
-//         tmp = pd.x * weight_y;
-
-//         multi_exp_data.push_back({proof.T1, tmp});
-
-//         tmp = pd.x * pd.x * weight_y;
-
-//         multi_exp_data.push_back({proof.T2, tmp});
-//         multi_exp_data.push_back({proof.A, weight_z});
-
-//         tmp = pd.x * weight_z;
-// __
-//         multi_exp_data.push_back({proof.S, tmp});
-
-//         const size_t rounds = pd.logM + std::log2(Config::m_input_value_bits);
-
-//         Scalar y_inv_pow = 1;
-//         Scalar y_pow = 1;
-
-//         const Scalar *w_inv = &inverses[pd.inv_offset];
-//         const Scalar y_inv = inverses[pd.inv_offset + rounds];
-
-//         std::vector<Scalar> w_cache(1<<rounds, 1);
-//         w_cache[0] = w_inv[0];
-//         w_cache[1] = pd.w[0];
-
-//         for (size_t j = 1; j < rounds; ++j) {
-//             const size_t sl = 1<<(j+1);
-
-//             for (size_t s = sl; s-- > 0; --s) {
-//                 w_cache[s] = w_cache[s/2] * pd.w[j];
-//                 w_cache[s-1] = w_cache[s/2] * w_inv[j];
-//             }
-//         }
-
-//         for (size_t i = 0; i < MN; ++i) {
-//             Scalar g_scalar = proof.a;
-//             Scalar h_scalar;
-
-//             if (i == 0) {
-//                 h_scalar = proof.b;
-//             } else {
-//                 h_scalar = proof.b * y_inv_pow;
-//             }
-
-//             g_scalar = g_scalar * w_cache[i];
-//             h_scalar = h_scalar * w_cache[(~i) & (MN-1)];
-
-//             g_scalar = g_scalar + pd.z;
-
-//             tmp = z_pow[2+i/N] * m_two_pows[i % N];
-
-//             if (i == 0) {
-//                 tmp = tmp + pd.z;
-//                 h_scalar = h_scalar - tmp;
-//             } else {
-//                 tmp = tmp + (pd.z * y_pow);
-//                 h_scalar = h_scalar - (tmp * y_inv_pow);
-//             }
-
-//             z4[i] = z4[i] - (g_scalar * weight_z);
-//             z5[i] = z5[i] - (h_scalar * weight_z);
-
-//             if (i == 0) {
-//                 y_inv_pow = y_inv;
-//                 y_pow = pd.y;
-//             } else if (i != MN - 1) {
-//                 y_inv_pow = y_inv_pow * y_inv;
-//                 y_pow = y_pow * pd.y;
-//             }
-//         }
-
-//         z1 = z1 + (proof.mu * weight_z);
-
-//         for (size_t i = 0; i < rounds; ++i) {
-//             tmp = pd.w[i] * pd.w[i] * weight_z;
-
-//             multi_exp_data.push_back({proof.Ls[i], tmp});
-
-//             tmp = w_inv[i] * w_inv[i] * weight_z;
-
-//             multi_exp_data.push_back({proof.Rs[i], tmp});
-//         }
-
-//         tmp = proof.t - (proof.a * proof.b);
-//         tmp = tmp * pd.x_ip;
-//         z3 = z3 + (tmp * weight_z);
-//     }
-// }
+        tx_ins.push_back(tx_in);
+    }
+    return tx_ins;
+}
