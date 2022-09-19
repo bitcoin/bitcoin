@@ -150,6 +150,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   addrman_impl.h \
+  amount.h \
   attributes.h \
   banman.h \
   base58.h \
@@ -161,6 +162,8 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl_initializer.h \
   blsct/arith/range_proof/config.h \
   blsct/arith/range_proof/generators.h \
+  blsct/arith/range_proof/proof.h \
+  blsct/arith/range_proof/proof_data.h \
   blsct/arith/range_proof/range_proof.h \
   blsct/arith/scalar.h \
   blsct/keys.h \
@@ -392,6 +395,7 @@ libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  amount.cpp \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
@@ -399,6 +403,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/g1point.cpp \
   blsct/arith/mcl_initializer.cpp \
   blsct/arith/range_proof/generators.cpp \
+  blsct/arith/range_proof/proof_data.cpp \
   blsct/arith/range_proof/range_proof.cpp \
   blsct/arith/scalar.cpp \
   blsct/keys.cpp \

@@ -13,21 +13,12 @@
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
+#include <blsct/arith/range_proof/proof_data.h>
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
-struct ProofData {
-    Scalar x;
-    Scalar y;
-    Scalar z;
-    Scalar x_ip;
-    Scalars ws;   // originally w
-    G1Points Vs;  // originally V
-    size_t log_m;
-    size_t inv_offset;
-};
-
-struct RangeProofInputValue {
+struct RangeProofInputValue
+{
     size_t index;
     CAmount amount;
     Scalar gamma;
@@ -35,20 +26,12 @@ struct RangeProofInputValue {
     std::string message;
 };
 
-struct RangeProofState {
-    G1Points Vs;
-    G1Point A;
-    G1Point S;
-    G1Point T1;
-    G1Point T2;
-    Scalar t_hat;
-    Scalar a;
-    Scalar b;
-    G1Points Ls;
-    G1Points Rs;
-    Scalar mu;
-    Scalar tau_x;
-    Scalar t;
+struct VerifyLoop1Result
+{
+    std::vector<ProofData> proof_data_vec;
+    Scalars to_invert;
+    std::vector<RangeProofInputValue> input_values;
+    size_t max_LR_len;
 };
 
 // implementation of range proof described in Bulletproofs
@@ -73,7 +56,7 @@ public:
         const Scalars& l,
         const Scalars& r,
         const Scalar& y,
-        RangeProofState& st,
+        Proof& st,
         CHashWriter& transcript
     );
 
@@ -82,9 +65,9 @@ public:
      * the vector size needs o be a power of 2 that is equal to or larger than 2
      * throws exception if the number exceeds the maximum
      */
-    size_t GetInputValueVecLen(size_t input_value_len);
+    static size_t GetInputValueVecLen(size_t& input_value_len);
 
-    RangeProofState Prove(
+    Proof Prove(
         Scalars vs,
         G1Point nonce,
         const std::vector<uint8_t>& message,
@@ -93,22 +76,25 @@ public:
         const std::optional<Scalars> gammas_override = std::nullopt
     );
 
+    /**
+     * returns serialization of Scalar w/ preceeding 0's trimmed
+     */
+    static std::vector<uint8_t> GetTrimmedVch(Scalar& s);
+
     bool Verify(
-        const std::vector<std::pair<size_t, RangeProofState>>& indexed_proofs,
+        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
         std::vector<RangeProofInputValue>& input_values,
         const G1Points& nonces,
-        const bool &f_only_recover,
+        const bool &recovery_only,
         const TokenId& token_id
     );
-    bool VerifyLoop1(
-        const std::vector<std::pair<size_t, RangeProofState>>& indexed_proofs,
+
+    std::optional<VerifyLoop1Result> VerifyLoop1(
+        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
         const Generators& gens,
-        const G1Points& nonces,
-        const bool f_recover,
-        std::vector<ProofData>& proof_data_vec,
-        std::vector<RangeProofInputValue>& input_values,
-        Scalars to_invert
+        const G1Points& nonces
     );
+
     void VerifyLoop2();
 
 private:

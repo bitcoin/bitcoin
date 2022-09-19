@@ -1,3 +1,7 @@
+// Copyright (c) 2022 The Navcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/range_proof.h>
@@ -101,7 +105,7 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-size_t RangeProof::GetInputValueVecLen(size_t input_value_vec_len)
+size_t RangeProof::GetInputValueVecLen(size_t& input_value_vec_len)
 {
     size_t i = 1;
     while (i < input_value_vec_len) {
@@ -252,7 +256,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
         auto base_z = z_pows[i];  // change base Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
-            z_n_times_two_n.Add(base_z * m_two_pow_bit_size[bit_idx]);
+            z_n_times_two_n.Add(base_z * m_two_pows[bit_idx]);
         }
     }
 
@@ -320,92 +324,73 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     return st;
 }
 
-bool RangeProof::VerifyLoop1(
-    const std::vector<std::pair<size_t,RangeProofState>>& indexed_proofs,
-    const Generators& gens,
-    const G1Points& nonces,
-    const bool f_recover,
-    std::vector<ProofData>& proof_data_vec,
-    std::vector<RangeProofInputValue>& input_values,
-    Scalars to_invert
-) {
-    //size_t j = 0;
-    size_t inv_offset = 0;
-    size_t nV = 0;   // accumulated # of input values?
-    size_t max_LR_len = 0;
+std::vector<uint8_t> RangeProof::GetTrimmedVch(Scalar& s)
+{
+    auto vch = s.GetVch();
+    std::vector<uint8_t> vch_trimmed;
 
-    for (const std::pair<size_t, RangeProofState>& p: indexed_proofs) {
+    bool take_char = false;
+    for (auto c: vch) {
+        if (!take_char && c != '\0') take_char = true;
+        if (take_char) vch_trimmed.push_back(c);
+    }
+    return vch_trimmed;
+}
+
+std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
+    const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+    const Generators& gens,
+    const G1Points& nonces
+) {
+    size_t to_invert_idx_offset = 0;
+    size_t nonce_idx = 0;
+    size_t Vs_size_sum = 0;
+
+    const size_t M = GetInputValueVecLen(m_Vs.Size());
+    // round = log2(input value bits) + log2(M)
+    const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
+
+    // trigger recovery and populate input_values if below holds
+    const bool should_recover = nonces.Size() == indexed_proofs.size();
+
+    VerifyLoop1Result res;
+
+    for (const std::pair<size_t, Proof>& p: indexed_proofs) {
 
         const size_t proof_index = p.first;
-        const RangeProofState proof = p.second;
+        const Proof proof = p.second;
 
-        // size of L and R must be the same. V, L and R must not be empty
-        if (!(proof.Vs.Size() > 0 && proof.Ls.Size() > 0) && proof.Ls.Size() == proof.Rs.Size())
-            return false;
+        // check validity of proof in terms of component sizes
+        auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
+        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) return std::nullopt;
 
-        max_LR_len = std::max(max_LR_len, proof.Ls.Size());
-        nV += proof.Vs.Size();
+        // keep track of max size of L/R and sum of Vs sizes
+        res.max_LR_len = std::max(res.max_LR_len, proof.Ls.Size());
+        Vs_size_sum += proof.Vs.Size();
 
-        proof_data_vec.resize(proof_data_vec.size() + 1);  // add one more slot in vector
-        ProofData &pd = proof_data_vec.back();      // get the reference to the last elem
-        pd.Vs = proof.Vs;   // copy proof's input values to the last elem
+        // create ProofData from proof
+        ProofData pd(proof, inv_offset, rounds);
+        res.proof_data_vec.push_back(pd);
 
-        CHashWriter transcript(0,0);
-
-        // why doing this separately?
-        transcript << pd.Vs[0];
-        for (size_t i = 1; i < pd.Vs.Size(); ++i) {
-            transcript << pd.Vs[i];
-        }
-
-        transcript << proof.A;
-        transcript << proof.S;
-
-        pd.y = transcript.GetHash();
-        transcript << pd.y;
-
-        pd.z = transcript.GetHash();
-        transcript << pd.z;
-
-        transcript << proof.T1;
-        transcript << proof.T2;
-
-        pd.x = transcript.GetHash();
-        transcript << pd.x;
-        transcript << proof.tau_x;
-        transcript << proof.mu;
-        transcript << proof.t;
-
-        pd.x_ip = transcript.GetHash();
-
-        const size_t M = GetInputValueVecLen(pd.Vs.Size());
-
-        // round = log2(input value bits) + log2(M)
-        const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
-
-        pd.ws.resize(rounds);
+        // add w's and y to to_invert list
         for (size_t i = 0; i < rounds; ++i) {
-            transcript << proof.Ls[i];
-            transcript << proof.Rs[i];
-
-            pd.ws[i] = transcript.GetHash();
+            to_invert.Add(pd.ws()[i]);
         }
+        res.to_invert.Add(pd.y);
 
-        pd.inv_offset = inv_offset;
-        for (size_t i = 0; i < rounds; ++i) {
-            to_invert.Add(pd.ws[i]);
-        }
-        to_invert.Add(pd.y);
-        inv_offset += rounds + 1;
+        // advance the inv_offset
+        to_invert_idx_offset += rounds + 1;
 
-        if (f_recover) {
-            Scalar alpha = nonces[j].GetHashWithSalt(1);
-            Scalar rho =   nonces[j].GetHashWithSalt(2);
-            Scalar tau1 =  nonces[j].GetHashWithSalt(3);
-            Scalar tau2 =  nonces[j].GetHashWithSalt(4);
-            Scalar gamma = nonces[j].GetHashWithSalt(100);
+        if (should_recover) {
+            Scalar alpha = nonces[nonce_idx].GetHashWithSalt(1);
+            Scalar rho = nonces[nonce_idx].GetHashWithSalt(2);
             Scalar excess = (proof.mu - rho * pd.x) - alpha;
             Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
+            Scalar gamma = nonces[nonce_idx].GetHashWithSalt(100);
+
+            // add below to input_values only if gamma and amount are the parameters used for pedersen commitment pd.Vs[0]
+            G1Point input_value_pt = (gens.G.get() * gamma) + (gens.H * amount);
+            if (input_value_pt != pd.Vs[0]) continue;
 
             RangeProofInputValue data;
             data.index = proof_index;
@@ -413,72 +398,50 @@ bool RangeProof::VerifyLoop1(
             data.gamma = gamma;
             data.valid = true;
 
-            // trim preceeding 0s of v_msg and store them to v_msg_trimmed
-            std::vector<uint8_t> v_msg = (excess >> 64).GetVch();
-            std::vector<uint8_t> v_msg_trimmed;
-            bool f_found_non_zero = false;
-            for (auto& it: v_msg) {
-                if (it != '\0') f_found_non_zero = true;
-                if (f_found_non_zero) v_msg_trimmed.push_back(it);
-            }
+            // generate message and set to data
+            std::vector<uint8_t> msg = GetTrimmedVch(excess >> 64);
 
-            Scalar excess_msg2 = ((proof.tau_x - (tau2 * pd.x * pd.x) - (pd.z * pd.z * gamma)) * pd.x.Invert()) - tau1;
-            // trim preceeding 0s of excess_msg2 and store them to v_msg_trimmed
-            std::vector<unsigned char> v_msg2 = excess_msg2.GetVch();
-            std::vector<unsigned char> v_msg2_trimmed(0);
-            bool f_found_non_zero = false;
-            for (auto& it: v_msg2) {
-                if (it != '\0') f_found_non_zero = true;
-                if (f_found_non_zero) v_msg2_trimmed.push_back(it);
-            }
+            Scalar tau1 = nonces[nonce_idx].GetHashWithSalt(3);
+            Scalar tau2 = nonces[nonce_idx].GetHashWithSalt(4);
+            Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * pd.x * pd.x) - (pd.z * pd.z * gamma)) * pd.x.Invert()) - tau1;
+            std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
 
             data.message =
-                std::string(v_msg_trimmed.begin(), v_msg_trimmed.end()) +
-                std::string(v_msg2_trimmed.begin(), v_msg2_trimmed.end());
+                std::string(msg.begin(), msg.end()) +
+                std::string(excess_msg.begin(), excess_msg.end());
 
-            // if gamma and amount match with pd.Vs[0], add to input_values
-            G1Point gamma_elem = gens.G.get() * gamma;
-            G1Point value_elem = gens.H * amount;
-            bool is_mine = (gamma_elem + value_elem) == pd.Vs[0];
-            if (is_mine) input_values.push_back(data);
+            res.input_values.push_back(data);
+
+            // update nonce_idx if recovering
+            ++nonce_idx;
         }
     }
-    return true;
+    return res;
 }
 
 bool RangeProof::Verify(
-    const std::vector<std::pair<size_t, RangeProofState>>& indexed_proofs,
+    const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
     std::vector<RangeProofInputValue>& input_values,
     const G1Points& nonces,
-    const bool &f_only_recover,
+    const bool recovery_only,
     const TokenId& token_id
 ) {
-    const bool f_recover = nonces.Size() == indexed_proofs.size();
     const Generators gens = m_gf.GetInstance(token_id);
     const auto N = Config::m_input_value_bits;
 
-    std::vector<ProofData> proof_data_vec;
-    Scalars to_invert;
-
-    // populates:
-    // - to_invert
-    // - proof_data_vec
-    bool verify_loop1_succeeded = VerifyLoop1(
+    VerifyLoop1Result loop1_res = VerifyLoop1(
         indexed_proofs,
         gens,
-        nonces,
-        f_recover,
-        proof_data_vec,  // will be populated
-        input_values,
-        to_invert    // will be populated
+        nonces
     );
-    if (!verify_loop1_succeeded) return false;
 
-    if (f_only_recover) return true;
+    // exit if loop1 fails or recovery_only is true
+    if (loop1_res == std::nullopt) return false;
+    if (recovery_only) return true;
 
     size_t maxMN = 1u << max_LR_len;
 
-    Scalars inverses = to_invert.Invert();  // size is equal to `to_invert.size()`
+    Scalars inverses = loop1_res.to_invert.Invert();
 
     Scalar z1 = 0;
     Scalar z3 = 0;
@@ -498,7 +461,8 @@ bool RangeProof::Verify(
     multi_exp_data.reserve(nV + (2 * (10/*logM*/ + std::log2(Config::m_input_value_bits) + 4) * proofs.size() + 2 * maxMN);
     multi_exp_data.resize(2 * maxMN);
 
-    VerifyLoop2();
+    VerifyLoop2()
+
     tmp = y0 - z1;
 
     multi_exp_data.push_back({gens.G, tmp});
