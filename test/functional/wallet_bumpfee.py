@@ -93,6 +93,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
         test_rebumping_not_replaceable(self, rbf_node, dest_address)
+        test_bumpfee_already_spent(self, rbf_node, dest_address)
         test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address)
         test_bumpfee_metadata(self, rbf_node, dest_address)
         test_locked_wallet_fails(self, rbf_node, dest_address)
@@ -229,7 +230,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
 def test_nonrbf_bumpfee_fails(self, peer_node, dest_address):
     self.log.info('Test that we cannot replace a non RBF transaction')
     not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_rpc_error(-4, "not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
+    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
     self.clear_mempool()
 
 
@@ -499,7 +500,8 @@ def test_rebumping(self, rbf_node, dest_address):
     self.log.info('Test that re-bumping the original tx fails, but bumping successor works')
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"fee_rate": ECONOMICAL})
-    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"fee_rate": NORMAL})
+    assert_raises_rpc_error(-4, f"Cannot bump transaction {rbfid} which was already bumped by transaction {bumped['txid']}",
+                            rbf_node.bumpfee, rbfid, {"fee_rate": NORMAL})
     rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
     self.clear_mempool()
 
@@ -511,6 +513,15 @@ def test_rebumping_not_replaceable(self, rbf_node, dest_address):
     assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
                             {"fee_rate": NORMAL})
     self.clear_mempool()
+
+
+def test_bumpfee_already_spent(self, rbf_node, dest_address):
+    self.log.info('Test that bumping tx with already spent coin fails')
+    txid = spend_one_input(rbf_node, dest_address)
+    self.generate(rbf_node, 1)  # spend coin simply by mining block with tx
+    spent_input = rbf_node.gettransaction(txid=txid, verbose=True)['decoded']['vin'][0]
+    assert_raises_rpc_error(-1, f"{spent_input['txid']}:{spent_input['vout']} is already spent",
+                            rbf_node.bumpfee, txid, {"fee_rate": NORMAL})
 
 
 def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
