@@ -12,6 +12,7 @@
 #include <script/descriptor.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <streams.h>
@@ -21,6 +22,8 @@
 #include <univalue.h>
 #include <util/memory.h>
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -104,5 +107,24 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             CScript script_mut{script};
             (void)FindAndDelete(script_mut, *other_script);
         }
+    }
+
+    (void)GetOpName(ConsumeOpcodeType(fuzzed_data_provider));
+    (void)ScriptErrorString(static_cast<ScriptError>(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, SCRIPT_ERR_ERROR_COUNT)));
+
+    {
+        const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+        CScript append_script{bytes.begin(), bytes.end()};
+        append_script << fuzzed_data_provider.ConsumeIntegral<int64_t>();
+        append_script << ConsumeOpcodeType(fuzzed_data_provider);
+        append_script << CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
+        append_script << ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    }
+
+    {
+        const CTxDestination tx_destination_1 = ConsumeTxDestination(fuzzed_data_provider);
+        const CTxDestination tx_destination_2 = ConsumeTxDestination(fuzzed_data_provider);
+        (void)(tx_destination_1 == tx_destination_2);
+        (void)(tx_destination_1 < tx_destination_2);
     }
 }

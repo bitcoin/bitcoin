@@ -51,17 +51,13 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-    const SigVersion sig_version = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
     const std::string script_string_1 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
     const std::vector<uint8_t> script_bytes_1{script_string_1.begin(), script_string_1.end()};
     const std::string script_string_2 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
     const std::vector<uint8_t> script_bytes_2{script_string_2.begin(), script_string_2.end()};
     std::vector<std::vector<unsigned char>> stack;
-    (void)EvalScript(stack, {script_bytes_1.begin(), script_bytes_1.end()}, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version, nullptr);
-    if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0 && ((flags & SCRIPT_VERIFY_P2SH) == 0 || (flags & SCRIPT_VERIFY_WITNESS) == 0)) {
-        return;
-    }
-    if ((flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
+    (void)EvalScript(stack, {script_bytes_1.begin(), script_bytes_1.end()}, flags, FuzzedSignatureChecker(fuzzed_data_provider), SigVersion::BASE, nullptr);
+    if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0 && ((flags & SCRIPT_VERIFY_P2SH) == 0)) {
         return;
     }
     (void)VerifyScript({script_bytes_1.begin(), script_bytes_1.end()}, {script_bytes_2.begin(), script_bytes_2.end()}, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);

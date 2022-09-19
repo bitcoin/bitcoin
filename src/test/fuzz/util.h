@@ -17,6 +17,7 @@
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -27,6 +28,7 @@
 #include <util/time.h>
 #include <version.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <optional>
@@ -112,11 +114,19 @@ template <typename T>
     return CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
 }
 
+[[ nodiscard ]] inline uint160 ConsumeUInt160(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    const std::vector<uint8_t> v160 = fuzzed_data_provider.ConsumeBytes<uint8_t>(160 / 8);
+    if (v160.size() != 160 / 8) {
+        return {};
+    }
+    return uint160{v160};
+}
 
 [[ nodiscard ]] inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    const std::vector<unsigned char> v256 = fuzzed_data_provider.ConsumeBytes<unsigned char>(sizeof(uint256));
-    if (v256.size() != sizeof(uint256)) {
+    const std::vector<uint8_t> v256 = fuzzed_data_provider.ConsumeBytes<uint8_t>(256 / 8);
+    if (v256.size() != 256 / 8) {
         return {};
     }
     return uint256{v256};
@@ -141,6 +151,26 @@ template <typename T>
     const bool dip1_status = fuzzed_data_provider.ConsumeBool();
     const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MaxBlockSigOps(dip1_status));
     return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
+}
+
+[[ nodiscard ]] inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    CTxDestination tx_destination;
+    switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 2)) {
+    case 0: {
+        tx_destination = CNoDestination{};
+        break;
+    }
+    case 1: {
+        tx_destination = CKeyID{ConsumeUInt160(fuzzed_data_provider)};
+        break;
+    }
+    case 2: {
+        tx_destination = CScriptID{ConsumeUInt160(fuzzed_data_provider)};
+        break;
+    }
+    }
+    return tx_destination;
 }
 
 template <typename T>
