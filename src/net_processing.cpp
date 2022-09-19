@@ -4190,14 +4190,6 @@ bool PeerLogicValidation::MaybeDiscourageAndDisconnect(CNode* pnode, bool enable
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
     const CChainParams& chainparams = Params();
-    //
-    // Message format
-    //  (4) message start
-    //  (12) command
-    //  (4) size
-    //  (4) checksum
-    //  (x) data
-    //
     bool fMoreWork = false;
 
     if (!pfrom->vRecvGetData.empty())
@@ -4234,38 +4226,16 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     CNetMessage& msg(msgs.front());
 
     msg.SetVersion(pfrom->GetRecvVersion());
-    // Check network magic
-    if (!msg.m_valid_netmagic) {
-        LogPrint(BCLog::NET, "PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.m_command), pfrom->GetId());
-        pfrom->fDisconnect = true;
-        return false;
-    }
-
-    // Check header
-    if (!msg.m_valid_header)
-    {
-        LogPrint(BCLog::NET, "PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(msg.m_command), pfrom->GetId());
-        return fMoreWork;
-    }
     const std::string& msg_type = msg.m_command;
 
     // Message size
     unsigned int nMessageSize = msg.m_message_size;
 
-    // Checksum
-    CDataStream& vRecv = msg.m_recv;
-    if (!msg.m_valid_checksum)
-    {
-        LogPrint(BCLog::NET, "%s(%s, %u bytes): CHECKSUM ERROR peer=%d\n", __func__,
-           SanitizeString(msg_type), nMessageSize, pfrom->GetId());
-        return fMoreWork;
-    }
-
     // Process message
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, msg_type, vRecv, msg.m_time, chainparams, m_chainman, m_mempool, *m_quorum_block_processor, *m_qdkgsman, *m_qman, *m_shareman, *m_sigman, *m_clhandler, *m_isman, connman, m_banman, interruptMsgProc, m_enable_bip61);
+        fRet = ProcessMessage(pfrom, msg_type, msg.m_recv, msg.m_time, chainparams, m_chainman, m_mempool, *m_quorum_block_processor, *m_qdkgsman, *m_qman, *m_shareman, *m_sigman, *m_clhandler, *m_isman, connman, m_banman, interruptMsgProc, m_enable_bip61);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
