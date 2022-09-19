@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <tinyformat.h>
 #include <util/time.h>
 
 std::string CBlockFileInfo::ToString() const
@@ -11,11 +12,15 @@ std::string CBlockFileInfo::ToString() const
     return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
 }
 
-void CChain::SetTip(CBlockIndex *pindex) {
-    if (pindex == nullptr) {
-        vChain.clear();
-        return;
-    }
+std::string CBlockIndex::ToString() const
+{
+    return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+                     pprev, nHeight, hashMerkleRoot.ToString(), GetBlockHash().ToString());
+}
+
+void CChain::SetTip(CBlockIndex& block)
+{
+    CBlockIndex* pindex = &block;
     vChain.resize(pindex->nHeight + 1);
     while (pindex && vChain[pindex->nHeight] != pindex) {
         vChain[pindex->nHeight] = pindex;
@@ -23,32 +28,33 @@ void CChain::SetTip(CBlockIndex *pindex) {
     }
 }
 
-CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
-    int nStep = 1;
-    std::vector<uint256> vHave;
-    vHave.reserve(32);
+std::vector<uint256> LocatorEntries(const CBlockIndex* index)
+{
+    int step = 1;
+    std::vector<uint256> have;
+    if (index == nullptr) return have;
 
-    if (!pindex)
-        pindex = Tip();
-    while (pindex) {
-        vHave.push_back(pindex->GetBlockHash());
-        // Stop when we have added the genesis block.
-        if (pindex->nHeight == 0)
-            break;
+    have.reserve(32);
+    while (index) {
+        have.emplace_back(index->GetBlockHash());
+        if (index->nHeight == 0) break;
         // Exponentially larger steps back, plus the genesis block.
-        int nHeight = std::max(pindex->nHeight - nStep, 0);
-        if (Contains(pindex)) {
-            // Use O(1) CChain index if possible.
-            pindex = (*this)[nHeight];
-        } else {
-            // Otherwise, use O(log n) skiplist.
-            pindex = pindex->GetAncestor(nHeight);
-        }
-        if (vHave.size() > 10)
-            nStep *= 2;
+        int height = std::max(index->nHeight - step, 0);
+        // Use skiplist.
+        index = index->GetAncestor(height);
+        if (have.size() > 10) step *= 2;
     }
+    return have;
+}
 
-    return CBlockLocator(vHave);
+CBlockLocator GetLocator(const CBlockIndex* index)
+{
+    return CBlockLocator{LocatorEntries(index)};
+}
+
+CBlockLocator CChain::GetLocator() const
+{
+    return ::GetLocator(Tip());
 }
 
 const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {

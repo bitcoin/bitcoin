@@ -3,7 +3,7 @@
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <univalue.h>
-#include "univalue_utffilter.h"
+#include <univalue_utffilter.h>
 
 #include <cstdio>
 #include <cstdint>

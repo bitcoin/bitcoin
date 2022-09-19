@@ -4,9 +4,11 @@
 
 #include <util/string.h>
 
-#include <boost/algorithm/string/replace.hpp>
+#include <regex>
+#include <string>
 
-void ReplaceAll(std::string& in_out, std::string_view search, std::string_view substitute)
+void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute)
 {
-    boost::replace_all(in_out, search, substitute);
+    if (search.empty()) return;
+    in_out = std::regex_replace(in_out, std::regex(search), substitute);
 }

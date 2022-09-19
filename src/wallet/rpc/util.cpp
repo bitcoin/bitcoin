@@ -64,12 +64,11 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
         return pwallet;
     }
 
-    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets(context);
-    if (wallets.size() == 1) {
-        return wallets[0];
-    }
+    size_t count{0};
+    auto wallet = GetDefaultWallet(context, count);
+    if (wallet) return wallet;
 
-    if (wallets.empty()) {
+    if (count == 0) {
         throw JSONRPCError(
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
@@ -121,6 +120,15 @@ std::string LabelFromValue(const UniValue& value)
     if (label == "*")
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name");
     return label;
+}
+
+void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry)
+{
+    UniValue parent_descs(UniValue::VARR);
+    for (const auto& desc: wallet.GetWalletDescriptors(script_pubkey)) {
+        parent_descs.push_back(desc.descriptor->ToString());
+    }
+    entry.pushKV("parent_descs", parent_descs);
 }
 
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)

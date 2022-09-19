@@ -34,6 +34,8 @@ struct CNodeStateStats {
     uint64_t m_addr_processed = 0;
     uint64_t m_addr_rate_limited = 0;
     bool m_addr_relay_enabled{false};
+    ServiceFlags their_services;
+    int64_t presync_height{-1};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -71,12 +73,8 @@ public:
     /** Set the best height */
     virtual void SetBestHeight(int height) = 0;
 
-    /**
-     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
-     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
-     * Public for unit testing.
-     */
-    virtual void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) = 0;
+    /* Public for unit testing. */
+    virtual void UnitTestMisbehaving(NodeId peer_id, int howmuch) = 0;
 
     /**
      * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.

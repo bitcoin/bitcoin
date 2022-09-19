@@ -12,7 +12,7 @@ Note: Will exit successfully regardless of spelling errors.
 from subprocess import check_output, STDOUT, CalledProcessError
 
 IGNORE_WORDS_FILE = 'test/lint/spelling.ignore-words.txt'
-FILES_ARGS = ['git', 'ls-files', '--', ":(exclude)build-aux/m4/", ":(exclude)contrib/seeds/*.txt", ":(exclude)depends/", ":(exclude)doc/release-notes/", ":(exclude)src/leveldb/", ":(exclude)src/crc32c/", ":(exclude)src/qt/locale/", ":(exclude)src/qt/*.qrc", ":(exclude)src/secp256k1/", ":(exclude)src/minisketch/", ":(exclude)src/univalue/", ":(exclude)contrib/builder-keys/keys.txt", ":(exclude)contrib/guix/patches"]
+FILES_ARGS = ['git', 'ls-files', '--', ":(exclude)build-aux/m4/", ":(exclude)contrib/seeds/*.txt", ":(exclude)depends/", ":(exclude)doc/release-notes/", ":(exclude)src/leveldb/", ":(exclude)src/crc32c/", ":(exclude)src/qt/locale/", ":(exclude)src/qt/*.qrc", ":(exclude)src/secp256k1/", ":(exclude)src/minisketch/", ":(exclude)contrib/builder-keys/keys.txt", ":(exclude)contrib/guix/patches"]
 
 
 def check_codespell_install():

@@ -6,12 +6,13 @@
 #define BITCOIN_UTIL_THREAD_H
 
 #include <functional>
+#include <string>
 
 namespace util {
 /**
  * A wrapper for do-something-once thread functions.
  */
-void TraceThread(const char* thread_name, std::function<void()> thread_func);
+void TraceThread(std::string_view thread_name, std::function<void()> thread_func);
 
 } // namespace util
 

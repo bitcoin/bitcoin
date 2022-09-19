@@ -6,6 +6,7 @@
 
 #include <key_io.h>
 #include <pubkey.h>
+#include <script/miniscript.h>
 #include <script/script.h>
 #include <script/standard.h>
 
@@ -161,6 +162,20 @@ public:
 
     virtual ~PubkeyProvider() = default;
 
+    /** Compare two public keys represented by this provider.
+     * Used by the Miniscript descriptors to check for duplicate keys in the script.
+     */
+    bool operator<(PubkeyProvider& other) const {
+        CPubKey a, b;
+        SigningProvider dummy;
+        KeyOriginInfo dummy_info;
+
+        GetPubKey(0, dummy, a, dummy_info);
+        other.GetPubKey(0, dummy, b, dummy_info);
+
+        return a < b;
+    }
+
     /** Derive a public key.
      *  read_cache is the cache to read keys from (if not nullptr)
      *  write_cache is the cache to write keys to (if not nullptr)
@@ -313,7 +328,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     {
         if (!GetExtKey(arg, xprv)) return false;
         for (auto entry : m_path) {
-            xprv.Derive(xprv, entry);
+            if (!xprv.Derive(xprv, entry)) return false;
             if (entry >> 31) {
                 last_hardened = xprv;
             }
@@ -373,14 +388,13 @@ public:
             }
         } else {
             for (auto entry : m_path) {
-                der = parent_extkey.Derive(parent_extkey, entry);
-                assert(der);
+                if (!parent_extkey.Derive(parent_extkey, entry)) return false;
             }
             final_extkey = parent_extkey;
             if (m_derive == DeriveType::UNHARDENED) der = parent_extkey.Derive(final_extkey, pos);
             assert(m_derive != DeriveType::HARDENED);
         }
-        assert(der);
+        if (!der) return false;
 
         final_info_out = final_info_out_tmp;
         key_out = final_extkey.pubkey;
@@ -483,8 +497,8 @@ public:
         CExtKey extkey;
         CExtKey dummy;
         if (!GetDerivedExtKey(arg, extkey, dummy)) return false;
-        if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-        if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
+        if (m_derive == DeriveType::UNHARDENED && !extkey.Derive(extkey, pos)) return false;
+        if (m_derive == DeriveType::HARDENED && !extkey.Derive(extkey, pos | 0x80000000UL)) return false;
         key = extkey.key;
         return true;
     }
@@ -493,12 +507,12 @@ public:
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for Multisig).
+protected:
+    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for WSH and Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
 
-protected:
     //! The sub-descriptor arguments (empty for everything but SH and WSH).
     //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
@@ -558,12 +572,12 @@ public:
             if (pos++) ret += ",";
             std::string tmp;
             if (!scriptarg->ToStringHelper(arg, tmp, type, cache)) return false;
-            ret += std::move(tmp);
+            ret += tmp;
         }
         return true;
     }
 
-    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type, const DescriptorCache* cache = nullptr) const
+    virtual bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         std::string extra = ToStringExtra();
         size_t pos = extra.size() > 0 ? 1 : 0;
@@ -582,7 +596,7 @@ public:
                     tmp = pubkey->ToString();
                     break;
             }
-            ret += std::move(tmp);
+            ret += tmp;
         }
         std::string subscript;
         if (!ToStringSubScriptHelper(arg, subscript, type, cache)) return false;
@@ -598,7 +612,7 @@ public:
         return AddChecksum(ret);
     }
 
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
         bool ret = ToStringHelper(&arg, out, StringType::PRIVATE);
         out = AddChecksum(out);
@@ -630,7 +644,7 @@ public:
             assert(outscripts.size() == 1);
             subscripts.emplace_back(std::move(outscripts[0]));
         }
-        out = Merge(std::move(out), std::move(subprovider));
+        out.Merge(std::move(subprovider));
 
         std::vector<CPubKey> pubkeys;
         pubkeys.reserve(entries.size());
@@ -684,6 +698,7 @@ public:
         return OutputTypeFromDestination(m_destination);
     }
     bool IsSingleType() const final { return true; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 };
 
 /** A parsed raw(H) descriptor. */
@@ -704,6 +719,7 @@ public:
         return OutputTypeFromDestination(dest);
     }
     bool IsSingleType() const final { return true; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 };
 
 /** A parsed pk(P) descriptor. */
@@ -882,7 +898,7 @@ protected:
         if (!xpk.IsFullyValid()) return {};
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
-        out.tr_spenddata[output].Merge(builder.GetSpendData());
+        out.tr_trees[output] = builder;
         out.pubkeys.emplace(keys[0].GetID(), keys[0]);
         return Vector(GetScriptForDestination(output));
     }
@@ -898,7 +914,7 @@ protected:
             }
             std::string tmp;
             if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
-            ret += std::move(tmp);
+            ret += tmp;
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';
                 path.pop_back();
@@ -913,6 +929,107 @@ public:
     {
         assert(m_subdescriptor_args.size() == m_depths.size());
     }
+    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
+    bool IsSingleType() const final { return true; }
+};
+
+/* We instantiate Miniscript here with a simple integer as key type.
+ * The value of these key integers are an index in the
+ * DescriptorImpl::m_pubkey_args vector.
+ */
+
+/**
+ * The context for converting a Miniscript descriptor into a Script.
+ */
+class ScriptMaker {
+    //! Keys contained in the Miniscript (the evaluation of DescriptorImpl::m_pubkey_args).
+    const std::vector<CPubKey>& m_keys;
+
+public:
+    ScriptMaker(const std::vector<CPubKey>& keys LIFETIMEBOUND) : m_keys(keys) {}
+
+    std::vector<unsigned char> ToPKBytes(uint32_t key) const {
+        return {m_keys[key].begin(), m_keys[key].end()};
+    }
+
+    std::vector<unsigned char> ToPKHBytes(uint32_t key) const {
+        auto id = m_keys[key].GetID();
+        return {id.begin(), id.end()};
+    }
+};
+
+/**
+ * The context for converting a Miniscript descriptor to its textual form.
+ */
+class StringMaker {
+    //! To convert private keys for private descriptors.
+    const SigningProvider* m_arg;
+    //! Keys contained in the Miniscript (a reference to DescriptorImpl::m_pubkey_args).
+    const std::vector<std::unique_ptr<PubkeyProvider>>& m_pubkeys;
+    //! Whether to serialize keys as private or public.
+    bool m_private;
+
+public:
+    StringMaker(const SigningProvider* arg LIFETIMEBOUND, const std::vector<std::unique_ptr<PubkeyProvider>>& pubkeys LIFETIMEBOUND, bool priv)
+        : m_arg(arg), m_pubkeys(pubkeys), m_private(priv) {}
+
+    std::optional<std::string> ToString(uint32_t key) const
+    {
+        std::string ret;
+        if (m_private) {
+            if (!m_pubkeys[key]->ToPrivateString(*m_arg, ret)) return {};
+        } else {
+            ret = m_pubkeys[key]->ToString();
+        }
+        return ret;
+    }
+};
+
+class MiniscriptDescriptor final : public DescriptorImpl
+{
+private:
+    miniscript::NodeRef<uint32_t> m_node;
+
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts,
+                                     FlatSigningProvider& provider) const override
+    {
+        for (const auto& key : keys) provider.pubkeys.emplace(key.GetID(), key);
+        return Vector(m_node->ToScript(ScriptMaker(keys)));
+    }
+
+public:
+    MiniscriptDescriptor(std::vector<std::unique_ptr<PubkeyProvider>> providers, miniscript::NodeRef<uint32_t> node)
+        : DescriptorImpl(std::move(providers), "?"), m_node(std::move(node)) {}
+
+    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type,
+                        const DescriptorCache* cache = nullptr) const override
+    {
+        if (const auto res = m_node->ToString(StringMaker(arg, m_pubkey_args, type == StringType::PRIVATE))) {
+            out = *res;
+            return true;
+        }
+        return false;
+    }
+
+    bool IsSolvable() const override { return false; } // For now, mark these descriptors as non-solvable (as we don't have signing logic for them).
+    bool IsSingleType() const final { return true; }
+};
+
+/** A parsed rawtr(...) descriptor. */
+class RawTRDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override
+    {
+        assert(keys.size() == 1);
+        XOnlyPubKey xpk(keys[0]);
+        if (!xpk.IsFullyValid()) return {};
+        WitnessV1Taproot output{xpk};
+        return Vector(GetScriptForDestination(output));
+    }
+public:
+    RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
 };
@@ -1057,6 +1174,94 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
     if (!provider) return nullptr;
     return std::make_unique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider));
 }
+
+std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
+{
+    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, false);
+    KeyOriginInfo info;
+    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
+        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
+    }
+    return key_provider;
+}
+
+std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
+{
+    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
+    std::copy(xkey.begin(), xkey.end(), full_key + 1);
+    CPubKey pubkey(full_key);
+    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
+    KeyOriginInfo info;
+    if (provider.GetKeyOriginByXOnly(xkey, info)) {
+        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
+    }
+    return key_provider;
+}
+
+/**
+ * The context for parsing a Miniscript descriptor (either from Script or from its textual representation).
+ */
+struct KeyParser {
+    //! The Key type is an index in DescriptorImpl::m_pubkey_args
+    using Key = uint32_t;
+    //! Must not be nullptr if parsing from string.
+    FlatSigningProvider* m_out;
+    //! Must not be nullptr if parsing from Script.
+    const SigningProvider* m_in;
+    //! List of keys contained in the Miniscript.
+    mutable std::vector<std::unique_ptr<PubkeyProvider>> m_keys;
+    //! Used to detect key parsing errors within a Miniscript.
+    mutable std::string m_key_parsing_error;
+
+    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND) : m_out(out), m_in(in) {}
+
+    bool KeyCompare(const Key& a, const Key& b) const {
+        return *m_keys.at(a) < *m_keys.at(b);
+    }
+
+    template<typename I> std::optional<Key> FromString(I begin, I end) const
+    {
+        assert(m_out);
+        Key key = m_keys.size();
+        auto pk = ParsePubkey(key, {&*begin, &*end}, ParseScriptContext::P2WSH, *m_out, m_key_parsing_error);
+        if (!pk) return {};
+        m_keys.push_back(std::move(pk));
+        return key;
+    }
+
+    std::optional<std::string> ToString(const Key& key) const
+    {
+        return m_keys.at(key)->ToString();
+    }
+
+    template<typename I> std::optional<Key> FromPKBytes(I begin, I end) const
+    {
+        assert(m_in);
+        CPubKey pubkey(begin, end);
+        if (pubkey.IsValid()) {
+            Key key = m_keys.size();
+            m_keys.push_back(InferPubkey(pubkey, ParseScriptContext::P2WSH, *m_in));
+            return key;
+        }
+        return {};
+    }
+
+    template<typename I> std::optional<Key> FromPKHBytes(I begin, I end) const
+    {
+        assert(end - begin == 20);
+        assert(m_in);
+        uint160 hash;
+        std::copy(begin, end, hash.begin());
+        CKeyID keyid(hash);
+        CPubKey pubkey;
+        if (m_in->GetPubKey(keyid, pubkey)) {
+            Key key = m_keys.size();
+            m_keys.push_back(InferPubkey(pubkey, ParseScriptContext::P2WSH, *m_in));
+            return key;
+        }
+        return {};
+    }
+};
 
 /** Parse a script in a particular context. */
 std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
@@ -1267,6 +1472,20 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have tr at top level";
         return nullptr;
     }
+    if (ctx == ParseScriptContext::TOP && Func("rawtr", expr)) {
+        auto arg = Expr(expr);
+        if (expr.size()) {
+            error = strprintf("rawtr(): only one key expected.");
+            return nullptr;
+        }
+        auto output_key = ParsePubkey(key_exp_index, arg, ParseScriptContext::P2TR, out, error);
+        if (!output_key) return nullptr;
+        ++key_exp_index;
+        return std::make_unique<RawTRDescriptor>(std::move(output_key));
+    } else if (Func("rawtr", expr)) {
+        error = "Can only have rawtr at top level";
+        return nullptr;
+    }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
         if (!IsHex(str)) {
@@ -1279,6 +1498,45 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         error = "Can only have raw() at top level";
         return nullptr;
     }
+    // Process miniscript expressions.
+    {
+        KeyParser parser(&out, nullptr);
+        auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
+        if (node) {
+            if (ctx != ParseScriptContext::P2WSH) {
+                error = "Miniscript expressions can only be used in wsh";
+                return nullptr;
+            }
+            if (parser.m_key_parsing_error != "") {
+                error = std::move(parser.m_key_parsing_error);
+                return nullptr;
+            }
+            if (!node->IsSane()) {
+                // Try to find the first insane sub for better error reporting.
+                auto insane_node = node.get();
+                if (const auto sub = node->FindInsaneSub()) insane_node = sub;
+                if (const auto str = insane_node->ToString(parser)) error = *str;
+                if (!insane_node->IsValid()) {
+                    error += " is invalid";
+                } else {
+                    error += " is not sane";
+                    if (!insane_node->IsNonMalleable()) {
+                        error += ": malleable witnesses exist";
+                    } else if (insane_node == node.get() && !insane_node->NeedsSignature()) {
+                        error += ": witnesses without signature exist";
+                    } else if (!insane_node->CheckTimeLocksMix()) {
+                        error += ": contains mixes of timelocks expressed in blocks and seconds";
+                    } else if (!insane_node->CheckDuplicateKey()) {
+                        error += ": contains duplicate public keys";
+                    } else if (!insane_node->ValidSatisfactions()) {
+                        error += ": needs witnesses that may exceed resource limits";
+                    }
+                }
+                return nullptr;
+            }
+            return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
+        }
+    }
     if (ctx == ParseScriptContext::P2SH) {
         error = "A function is needed within P2SH";
         return nullptr;
@@ -1288,29 +1546,6 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
     return nullptr;
-}
-
-std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
-{
-    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, false);
-    KeyOriginInfo info;
-    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-    }
-    return key_provider;
-}
-
-std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
-{
-    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
-    std::copy(xkey.begin(), xkey.end(), full_key + 1);
-    CPubKey pubkey(full_key);
-    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
-    KeyOriginInfo info;
-    if (provider.GetKeyOriginByXOnly(xkey, info)) {
-        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
-    }
-    return key_provider;
 }
 
 std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
@@ -1423,6 +1658,21 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                     return std::make_unique<TRDescriptor>(std::move(key), std::move(subscripts), std::move(depths));
                 }
             }
+        }
+        // If the above doesn't work, construct a rawtr() descriptor with just the encoded x-only pubkey.
+        if (pubkey.IsFullyValid()) {
+            auto key = InferXOnlyPubkey(pubkey, ParseScriptContext::P2TR, provider);
+            if (key) {
+                return std::make_unique<RawTRDescriptor>(std::move(key));
+            }
+        }
+    }
+
+    if (ctx == ParseScriptContext::P2WSH) {
+        KeyParser parser(nullptr, &provider);
+        auto node = miniscript::FromScript(script, parser);
+        if (node && node->IsSane()) {
+            return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
 

@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_FEES_H
 
 #include <consensus/amount.h>
+#include <fs.h>
 #include <policy/feerate.h>
 #include <random.h>
 #include <sync.h>
@@ -19,7 +20,7 @@
 #include <string>
 #include <vector>
 
-class CAutoFile;
+class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
 
@@ -179,9 +180,10 @@ private:
      */
     static constexpr double FEE_SPACING = 1.05;
 
+    const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator();
+    CBlockPolicyEstimator(const fs::path& estimation_filepath);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
@@ -218,11 +220,11 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Write estimation data to a file */
-    bool Write(CAutoFile& fileout) const
+    bool Write(AutoFile& fileout) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Read estimation data from a file */
-    bool Read(CAutoFile& filein)
+    bool Read(AutoFile& filein)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */

@@ -68,10 +68,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Create spend_2_1 and spend_3_1")
-        spend_2_utxo = wallet.get_utxo(txid=spend_2['txid'])
-        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2_utxo)
-        spend_3_utxo = wallet.get_utxo(txid=spend_3['txid'])
-        spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3_utxo)
+        spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"])
+        spend_3_1 = wallet.create_self_transfer(utxo_to_spend=spend_3["new_utxo"])
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])

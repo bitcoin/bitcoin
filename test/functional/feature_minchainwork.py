@@ -82,7 +82,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         msg.hashstop = 0
         peer.send_and_ping(msg)
         time.sleep(5)
-        assert "headers" not in peer.last_message
+        assert "headers" not in peer.last_message or len(peer.last_message["headers"].headers) == 0
 
         self.log.info("Generating one more block")
         self.generate(self.nodes[0], 1)

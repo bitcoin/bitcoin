@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
 
     // Build a CChain for the main branch.
     CChain chain;
-    chain.SetTip(&vBlocksMain.back());
+    chain.SetTip(vBlocksMain.back());
 
     // Test 100 random starting points for locators.
     for (int n=0; n<100; n++) {
         int r = InsecureRandRange(150000);
         CBlockIndex* tip = (r < 100000) ? &vBlocksMain[r] : &vBlocksSide[r - 100000];
-        CBlockLocator locator = chain.GetLocator(tip);
+        CBlockLocator locator = GetLocator(tip);
 
         // The first result must be the block itself, the last one must be genesis.
         BOOST_CHECK(locator.vHave.front() == tip->GetBlockHash());
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_test)
 
     // Build a CChain for the main branch.
     CChain chain;
-    chain.SetTip(&vBlocksMain.back());
+    chain.SetTip(vBlocksMain.back());
 
     // Verify that FindEarliestAtLeast is correct.
     for (unsigned int i=0; i<10000; ++i) {
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     }
 
     CChain chain;
-    chain.SetTip(&blocks.back());
+    chain.SetTip(blocks.back());
 
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(50, 0)->nHeight, 0);
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(100, 0)->nHeight, 0);
