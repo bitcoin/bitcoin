@@ -357,7 +357,7 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
 
         // keep track of max size of L/R and sum of Vs sizes
         res.max_LR_len = std::max(res.max_LR_len, proof.Ls.Size());
-        Vs_size_sum += proof.Vs.Size();
+        res.Vs_size_sum += proof.Vs.Size();
 
         // create ProofData from proof
         ProofData pd(proof, inv_offset, rounds);
