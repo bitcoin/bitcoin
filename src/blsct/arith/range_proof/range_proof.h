@@ -17,7 +17,7 @@
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
-struct ExtractedTxInput
+struct RecoveredTxInput
 {
     size_t index;
     CAmount amount;
@@ -29,7 +29,6 @@ struct VerifyLoop1Result
 {
     std::vector<ProofData> proof_data_vec;
     Scalars to_invert;
-    std::vector<ExtractedTxInput> tx_ins;
     size_t max_LR_len;
     size_t Vs_size_sum;
     size_t to_invert_idx_offset;
@@ -98,7 +97,7 @@ public:
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs
     );
 
-    std::vector<ExtractedTxInput> RecoverTxIns(
+    std::vector<RecoveredTxInput> RecoverTxIns(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
         const G1Points& nonces,
         const TokenId& token_id

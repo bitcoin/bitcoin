@@ -553,7 +553,7 @@ bool RangeProof::Verify(
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
-std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
+std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
     const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
     const G1Points& nonces,
     const TokenId& token_id
@@ -561,11 +561,11 @@ std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
     const Generators gens = m_gf.GetInstance(token_id);
 
     if (nonces.Size() != indexed_proofs.size() {
-        throw std::runtime_error(strprintf("%s: unable to recover tx inputs since # of nonces and # of proofs differ", __func__));
+        throw std::runtime_error(strprintf("%s: unable to recover tx inputs since # of nonces and proofs differ", __func__));
     }
 
     size_t nonce_idx = 0;
-    std::vector<ExtractedTxInput> tx_ins;
+    std::vector<RecoveredTxInput> tx_ins;
 
     // do for each nonce + proof combination
     for (size_t i = 0; i < nonces.Size(); ++i) {
@@ -576,9 +576,11 @@ std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
 
         // TODO move this common validation somewhere
 
-        // check validity of proof in terms of component sizes
+        // cannot recover if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
-        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) return std::nullopt;
+        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) {
+            continue;
+        }
 
         Scalar alpha = nonce.GetHashWithSalt(1);
         Scalar rho = nonce.GetHashWithSalt(2);
@@ -593,7 +595,7 @@ std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
             continue;
         }
 
-        ExtractedTxInput tx_in;
+        RecoveredTxInput tx_in;
         tx_in.index = tx_in_index;
         tx_in.amount = amount.GetUint64();
         tx_in.gamma = gamma;
