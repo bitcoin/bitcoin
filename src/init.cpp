@@ -1764,6 +1764,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     nHeightLocalGeth = 0;
                 }
             }
+            LogPrintf("Geth nHeightFromGeth %d nHeightLocalGeth %d\n", nHeightFromGeth, nHeightLocalGeth);
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
                 if((int64_t)nHeightFromGeth < nHeightLocalGeth) {

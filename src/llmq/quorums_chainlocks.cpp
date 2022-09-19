@@ -500,7 +500,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 {
     if(fInitialDownload)
         return;
-
+    bInvalidate = false;
     CheckActiveState();
     bool enforced;
     const CBlockIndex* pindex;

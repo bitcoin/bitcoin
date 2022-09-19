@@ -104,6 +104,7 @@ extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
+extern std::atomic_bool bInvalidate;
 extern std::map<std::vector<uint8_t>, std::vector<uint8_t> > mapPoDA;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 /** Whether there are dedicated script-checking threads running.

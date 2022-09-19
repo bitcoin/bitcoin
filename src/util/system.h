@@ -44,7 +44,7 @@ extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
 extern bool fNEVMConnection;
 extern bool fGethSynced;
-extern bool fLoaded;
+extern std::atomic_bool fLoaded;
 extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;

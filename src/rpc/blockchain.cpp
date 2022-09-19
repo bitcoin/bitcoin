@@ -1695,12 +1695,12 @@ static RPCHelpMan invalidateblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
+    bInvalidate = true;
     chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {
         chainman.ActiveChainstate().ActivateBestChain(state);
     }
-
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
     }

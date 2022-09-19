@@ -152,6 +152,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
+std::atomic_bool bInvalidate{false};
 std::map<std::vector<uint8_t>, std::vector<uint8_t> > mapPoDA;
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -1822,7 +1823,6 @@ void Chainstate::ConflictingChainFound(CBlockIndex* pindexNew)
 }
 // Same as InvalidChainFound, above, except not called directly from InvalidateBlock,
 // which does its own setBlockIndexCandidates management.
-// SYSCOIN
 void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
     // because chainlock is the last thing we check in CheckBlock() if we get any other error
@@ -3614,7 +3614,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 void Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
-    if (!bestChainLockBlockIndex) {
+    if (!bestChainLockBlockIndex || bInvalidate ||!fLoaded) {
         // we don't have the header/block, so we can't do anything right now
         return;
     }
