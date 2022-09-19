@@ -132,6 +132,7 @@ FUZZ_TARGETS = \
   test/fuzz/secp256k1_ec_seckey_import_export_der \
   test/fuzz/secp256k1_ecdsa_signature_parse_der_lax \
   test/fuzz/service_deserialize \
+  test/fuzz/signature_checker \
   test/fuzz/span \
   test/fuzz/spanparsing \
   test/fuzz/string \
@@ -1110,6 +1111,12 @@ test_fuzz_service_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_service_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_service_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_service_deserialize_SOURCES = test/fuzz/deserialize.cpp
+
+test_fuzz_signature_checker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_signature_checker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_signature_checker_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_signature_checker_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
+test_fuzz_signature_checker_SOURCES = test/fuzz/signature_checker.cpp
 
 test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_span_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
