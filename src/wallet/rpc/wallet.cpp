@@ -458,71 +458,140 @@ static RPCHelpMan unloadwallet()
 static RPCHelpMan sethdseed()
 {
     return RPCHelpMan{"sethdseed",
-                "\nSet or generate a new HD wallet seed. Non-HD wallets will not be upgraded to being a HD wallet. Wallets that are already\n"
-                "HD will have a new HD seed set so that new keys added to the keypool will be derived from this new seed.\n"
-                "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed." +
+        "Set or generate a new HD wallet seed or key.\n"
+        "\nLegacy wallets can only have a seed set. Non-HD Legacy wallets will not be upgraded to being a HD wallet."
+        "Legacy wallets that are already HD will have a new HD seed set so that new keys added to the keypool will be derived from this new seed.\n"
+        "\nDescriptor wallets can have either a HD seed or a HD key set. The seed or key will only be used for new automatically generated descriptors that are created when newkeypool is true, and with `createwalletdescriptors`.\n"
+        "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed." +
         HELP_REQUIRING_PASSPHRASE,
-                {
-                    {"newkeypool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it.\n"
-                                         "If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
-                                         "If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
-                                         "keypool will be used until it has been depleted."},
-                    {"seed", RPCArg::Type::STR, RPCArg::DefaultHint{"random seed"}, "The WIF private key to use as the new HD seed.\n"
-                                         "The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
-                },
-                RPCResult{RPCResult::Type::NONE, "", ""},
-                RPCExamples{
-                    HelpExampleCli("sethdseed", "")
+        {
+            {"newkeypool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it. For descriptor wallets, this will generate completely new receiving and change descriptors for all address types.\n"
+                                 "If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
+                                 "If false, addresses (including change addresses if the wallet already had HD Chain Split enabled) from the existing\n"
+                                 "keypool will be used until it has been depleted (for Legacy wallets), or until the active descriptors are replaced (for Descriptor wallets)."},
+            {"seed", RPCArg::Type::STR, RPCArg::DefaultHint{"random seed"}, "The BIP 32 HD seed encoded as a WIF private key or hex string. Descriptor wallets can also accept a BIP 32 extended private key (xprv) to set as the wallet's HD key.\n"
+                                 "For Legacy wallets, the seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            HelpExampleCli("sethdseed", "")
             + HelpExampleCli("sethdseed", "false")
             + HelpExampleCli("sethdseed", "true \"wifkey\"")
             + HelpExampleRpc("sethdseed", "true, \"wifkey\"")
-                },
+        },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+        {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+            if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed to a wallet with private keys disabled");
+            }
 
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed to a wallet with private keys disabled");
-    }
+            LOCK(pwallet->cs_wallet);
 
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+            // Do not do anything to non-HD wallets
+            if (!pwallet->CanSupportFeature(FEATURE_HD)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set an HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
+            }
 
-    // Do not do anything to non-HD wallets
-    if (!pwallet->CanSupportFeature(FEATURE_HD)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set an HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
-    }
+            EnsureWalletIsUnlocked(*pwallet);
 
-    EnsureWalletIsUnlocked(*pwallet);
+            bool flush_key_pool = true;
+            if (!request.params[0].isNull()) {
+                flush_key_pool = request.params[0].get_bool();
+            }
 
-    bool flush_key_pool = true;
-    if (!request.params[0].isNull()) {
-        flush_key_pool = request.params[0].get_bool();
-    }
+            std::string seed_str;
+            std::optional<std::vector<unsigned char>> seed_bytes;
+            if (!request.params[1].isNull()) {
+                seed_str = request.params[1].get_str();
+                seed_bytes.emplace();
+                // First try decoding as WIF
+                CKey seed = DecodeSecret(seed_str);
+                if (seed.IsValid()) {
+                    seed_bytes->assign(seed.begin(), seed.end());
+                } else {
+                    // Next try decoding as hex
+                    if (IsHex(seed_str)) {
+                        seed_bytes = ParseHex(seed_str);
+                    }
+                }
+            }
 
-    CPubKey master_pub_key;
-    if (request.params[1].isNull()) {
-        master_pub_key = spk_man.GenerateNewSeed();
-    } else {
-        CKey key = DecodeSecret(request.params[1].get_str());
-        if (!key.IsValid()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-        }
+            if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                KeyManager& keyman = pwallet->GetKeyManager();
+                if (seed_bytes.has_value()) {
+                    CExtKey master_key;
+                    if (!seed_bytes->empty()) {
+                        master_key.SetSeed(MakeByteSpan(seed_bytes.value()));
+                    } else {
+                        // Try decoding as xprv
+                        master_key = DecodeExtKey(seed_str);
+                        if (!master_key.key.IsValid()) {
+                            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Key must be a BIP 32 extended private key, or the BIP 32 seed as a WIF private key or a hex string.");
+                        }
+                    }
 
-        if (HaveKey(spk_man, key)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
-        }
+                    CExtPubKey master_xpub = master_key.Neuter();
 
-        master_pub_key = spk_man.DeriveNewSeed(key);
-    }
+                    // Write the key
+                    WalletBatch batch(pwallet->GetDatabase());
+                    bool ok = keyman.AddHDKey(batch, master_key, master_xpub);
+                    CHECK_NONFATAL(ok);
+                    keyman.SetActiveHDKey(master_xpub);
+                } else {
+                    // Generate a new key if none was specified
+                    keyman.GenerateAndSetHDKey();
+                }
 
-    spk_man.SetHDSeed(master_pub_key);
-    if (flush_key_pool) spk_man.NewKeyPool();
+                if (flush_key_pool) {
+                    std::optional<CExtKey> active_hd_key;
+                    {
+                        LOCK(keyman.cs_keyman);
+                        active_hd_key = keyman.GetActiveHDKey();
+                        CHECK_NONFATAL(active_hd_key.has_value());
+                    }
 
-    return UniValue::VNULL;
-},
+                    // Generate new descriptors
+                    for (bool internal : {false, true}) {
+                        for (OutputType t : OUTPUT_TYPES) {
+                            WalletDescriptor w_desc = DescriptorScriptPubKeyMan::GenerateWalletDescriptor(active_hd_key.value(), t, internal);
+                            uint256 w_id = w_desc.GetID();
+                            if (pwallet->GetScriptPubKeyMan(w_id)) {
+                                // Skip this descriptor as it already exists, don't try generating a new DescSPKM
+                                continue;
+                            }
+                            pwallet->SetupDescriptorScriptPubKeyMan(t, internal);
+                        }
+                    }
+                }
+            } else {
+                LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+
+                LOCK(spk_man.cs_KeyStore);
+
+                CPubKey master_pub_key;
+                if (seed_bytes.has_value()) {
+                    CKey seed;
+                    seed.Set(seed_bytes->begin(), seed_bytes->end(), true);
+                    if (!seed.IsValid()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key, seed must either be a WIF private key or hex string representing 32 bytes");
+                    }
+                    if (HaveKey(spk_man, seed)) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
+                    }
+                    master_pub_key = spk_man.DeriveNewSeed(seed);
+                } else {
+                    master_pub_key = spk_man.GenerateNewSeed();
+                }
+
+                spk_man.SetHDSeed(master_pub_key);
+                if (flush_key_pool) spk_man.NewKeyPool();
+            }
+
+            return UniValue::VNULL;
+        },
     };
 }
 
