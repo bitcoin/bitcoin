@@ -8,7 +8,7 @@
 
 #include <string>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(parse_numbers)
 {
     const std::string random_string(buffer.begin(), buffer.end());
 
