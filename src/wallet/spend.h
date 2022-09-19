@@ -195,15 +195,22 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
-struct CreatedTransactionResult
+struct FundedTransactionResult
 {
-    CTransactionRef tx;
     CAmount fee;
-    FeeCalculation fee_calc;
     int change_pos;
 
+    FundedTransactionResult(CAmount _fee, int _change_pos)
+        : fee(_fee), change_pos(_change_pos) {}
+};
+
+struct CreatedTransactionResult : FundedTransactionResult
+{
+    CTransactionRef tx;
+    FeeCalculation fee_calc;
+
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, int _change_pos, const FeeCalculation& _fee_calc)
-        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+        : FundedTransactionResult(_fee, _change_pos), tx(_tx), fee_calc(_fee_calc) {}
 };
 
 /**
@@ -217,7 +224,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const 
  * Insert additional inputs into the transaction by
  * calling CreateTransaction();
  */
-bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+util::Result<FundedTransactionResult> FundTransaction(CWallet& wallet, CMutableTransaction& tx, int change_pos, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H

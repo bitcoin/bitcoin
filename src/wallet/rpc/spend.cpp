@@ -717,11 +717,11 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         setSubtractFeeFromOutputs.insert(pos);
     }
 
-    bilingual_str error;
+    auto res = FundTransaction(wallet, tx, change_position, lockUnspents, setSubtractFeeFromOutputs, coinControl);
+    if (!res) throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
 
-    if (!FundTransaction(wallet, tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
+    fee_out = res->fee;
+    change_position = res->change_pos;
 }
 
 static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)

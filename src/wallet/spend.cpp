@@ -1106,7 +1106,13 @@ util::Result<CreatedTransactionResult> CreateTransaction(
     return res;
 }
 
-bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+util::Result<FundedTransactionResult> FundTransaction(
+        CWallet& wallet,
+        CMutableTransaction& tx,
+        int change_pos,
+        bool lockUnspents,
+        const std::set<int>& setSubtractFeeFromOutputs,
+        CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
 
@@ -1135,26 +1141,21 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
             // The input was found in the wallet, so select as internal
             coinControl.Select(outPoint);
         } else if (coins[outPoint].out.IsNull()) {
-            error = _("Unable to find UTXO for external input");
-            return false;
+            return util::Error{_("Unable to find UTXO for external input")};
         } else {
             // The input was not in the wallet, but is in the UTXO set, so select as external
             coinControl.SelectExternal(outPoint, coins[outPoint].out);
         }
     }
 
-    auto res = CreateTransaction(wallet, vecSend, nChangePosInOut, coinControl, false);
-    if (!res) {
-        error = util::ErrorString(res);
-        return false;
-    }
+    auto res = CreateTransaction(wallet, vecSend, change_pos, coinControl, false);
+    if (!res) return util::Error{util::ErrorString(res)};
+
     const auto& txr = *res;
     CTransactionRef tx_new = txr.tx;
-    nFeeRet = txr.fee;
-    nChangePosInOut = txr.change_pos;
 
-    if (nChangePosInOut != -1) {
-        tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
+    if (txr.change_pos != -1) {
+        tx.vout.insert(tx.vout.begin() + txr.change_pos, tx_new->vout[txr.change_pos]);
     }
 
     // Copy output sizes from new transaction; they may have had the fee
@@ -1167,7 +1168,6 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     for (const CTxIn& txin : tx_new->vin) {
         if (!coinControl.IsSelected(txin.prevout)) {
             tx.vin.push_back(txin);
-
         }
         if (lockUnspents) {
             wallet.LockCoin(txin.prevout);
@@ -1175,6 +1175,6 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     }
 
-    return true;
+    return FundedTransactionResult(txr.fee, txr.change_pos);
 }
 } // namespace wallet
