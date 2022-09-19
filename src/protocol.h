@@ -258,6 +258,14 @@ extern const char* CFCHECKPT;
  * @since protocol version 70016 as described by BIP 339.
  */
 extern const char* WTXIDRELAY;
+/**
+ * Contains 2 1-byte bools, a 4-byte version number and an 8-byte salt.
+ * The 2 booleans indicate that a node is willing to participate in transaction
+ * reconciliation, respectively as an initiator or as a receiver.
+ * The salt is used to compute short txids needed for efficient
+ * txreconciliation, as described by BIP 330.
+ */
+extern const char* SENDTXRCNCL;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
