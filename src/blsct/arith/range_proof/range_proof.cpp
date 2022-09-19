@@ -516,10 +516,7 @@ bool RangeProof::Verify(
         gens,
         nonces
     );
-
-    // exit if loop1 fails or recovery_only is true
-    if (loop1_res == std::nullopt) return false;
-    if (recovery_only) return true;
+    if (loop1_res == std::nullopt) return false; // return false if loop1 fails
 
 
 
@@ -589,10 +586,10 @@ std::vector<ExtractedTxInput> RangeProof::RecoverTxIns(
         Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
         Scalar gamma = nonce.GetHashWithSalt(100);
 
-        // recovered input is valid only if gamma and amount are the parameters used for pedersen commitment pd.Vs[0]
-        // such invalid inputs are excluded from the result vector
-        G1Point input_value_pt = (gens.G.get() * gamma) + (gens.H * amount);
-        if (input_value_pt != pd.Vs[0]) {
+        // recovered input is valid only when gamma and amount match with Pedersen commitment pd.Vs[0]
+        // only valid inputs will be included in the result vector
+        G1Point value_commitment = (gens.G.get() * gamma) + (gens.H * amount);
+        if (value_commitment != pd.Vs[0]) {
             continue;
         }
 
