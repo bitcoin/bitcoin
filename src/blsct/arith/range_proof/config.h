@@ -13,8 +13,8 @@ public:
     // maximum # of retries allowed for RangeProof::Prove function
     inline static const size_t max_prove_func_retries = 100;
 
-    // size of each input value in bits
-    inline static const size_t m_input_value_bits = 64;  // ex m_bit_size
+    // size of each input value in bits. N in old code
+    inline static const size_t m_input_value_bits = 64;
 
     // maximum # of input values
     inline static const size_t m_max_num_values = 16;  // ex max_value_len

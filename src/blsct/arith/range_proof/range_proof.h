@@ -10,9 +10,10 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
+#include <blsct/arith/range_proof/base_exps.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
-#include <blsct/arith/range_proof/proof_data.h>
+#include <blsct/arith/range_proof/enriched_proof.h>
 #include <blsct/arith/scalar.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -27,11 +28,22 @@ struct RecoveredTxInput
 
 struct VerifyLoop1Result
 {
-    std::vector<ProofData> proof_data_vec;
+    std::vector<EnrichedProof> proofs;
     Scalars to_invert;
-    size_t max_LR_len;
-    size_t Vs_size_sum;
-    size_t to_invert_idx_offset;
+    size_t max_LR_len = 0;
+    size_t Vs_size_sum = 0;
+    size_t to_invert_idx_offset = 0;
+};
+
+struct VerifyLoop2Result
+{
+    G1Points points;   // TODO give a better name
+    Scalar y0 = 0;
+    Scalar y1 = 0;
+    Scalar z1 = 0;
+    Scalar z3 = 0;
+    Scalars z4;
+    Scalars z5;
 };
 
 // implementation of range proof described in Bulletproofs
@@ -65,7 +77,7 @@ public:
      * the vector size needs o be a power of 2 that is equal to or larger than 2
      * throws exception if the number exceeds the maximum
      */
-    static size_t GetInputValueVecLen(size_t& input_value_len);
+    static size_t GetInputValueVecLen(const size_t& input_value_len);
 
     Proof Prove(
         Scalars vs,
@@ -93,8 +105,8 @@ public:
         const G1Points& nonces
     );
 
-    void VerifyLoop2(
-        const std::vector<std::pair<size_t, Proof>>& indexed_proofs
+    std::optional<VerifyLoop2Result> VerifyLoop2(
+        const std::vector<EnrichedProof>& proofs
     );
 
     std::vector<RecoveredTxInput> RecoverTxIns(

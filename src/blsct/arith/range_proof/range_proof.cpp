@@ -105,7 +105,7 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-size_t RangeProof::GetInputValueVecLen(size_t& input_value_vec_len)
+size_t RangeProof::GetInputValueVecLen(const size_t& input_value_vec_len)
 {
     size_t i = 1;
     while (i < input_value_vec_len) {
@@ -342,14 +342,13 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
     const Generators& gens,
     const G1Points& nonces
 ) {
-    const size_t M = GetInputValueVecLen(m_Vs.Size());
-    // round = log2(input value bits) + log2(M)
-    const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
-
     VerifyLoop1Result res;
 
     for (const std::pair<size_t, Proof>& p: indexed_proofs) {
         const Proof proof = p.second;
+
+        const size_t M = GetInputValueVecLen(proof.Vs.Size());
+        const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
 
         // check validity of proof in terms of component sizes
         auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
@@ -360,14 +359,14 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
         res.Vs_size_sum += proof.Vs.Size();
 
         // create ProofData from proof
-        ProofData pd(proof, inv_offset, rounds);
-        res.proof_data_vec.push_back(pd);
+        auto enriched_proof = EnrichedProof::Build(proof, res.to_invert_idx_offset, rounds, std::log2(M));
+        res.proofs.push_back(enriched_proof);
 
         // add w's and y to to_invert list
         for (size_t i = 0; i < rounds; ++i) {
-            to_invert.Add(pd.ws()[i]);
+            res.to_invert.Add(enriched_proof.ws[i]);
         }
-        res.to_invert.Add(pd.y);
+        res.to_invert.Add(enriched_proof.y);
 
         // advance the to_invert index offset
         res.to_invert_idx_offset += (rounds + 1);
@@ -375,132 +374,110 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
     return res;
 }
 
-void RangeProof::VerifyLoop2(
-    const std::vector<std::pair<size_t, Proof>>& indexed_proofs
+std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
+    const std::vector<EnrichedProof>& proofs
 ) {
-    for (const std::pair<size_t, Proof>& p: indexed_proofs) {
+    VerifyLoop2Result res;
 
-        const size_t proof_index = p.first;
-        const Proof proof = p.second;
+    for (const EnrichedProof& p: proofs) {
 
-        const proof_data_t &pd = proof_data[proof_data_index++];
+        if (p.proof.Ls.Size() != std::log2(Config::m_input_value_bits) + p.log_m)
+            return std::nullopt;
 
-        if (proof.Ls.Size() != std::log2(Config::m_input_value_bits) + pd.logM)
-            return false;
-
-        const size_t M = 1 << pd.logM;
-        const size_t MN = M*N;
+        const size_t M = 1 << p.log_m;
+        const size_t MN = M * Config::m_input_value_bits;
 
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-        y0 = y0 - (proof.tau_x * weight_y);
+        res.y0 = res.y0 - (p.proof.tau_x * weight_y);
 
-        Scalars z_pow = Scalars::FirstNPow(pd.z, M, 3); // VectorPowers(pd.z, M+3);
+        Scalars z_pow = Scalars::FirstNPow(p.z, M, 3); // VectorPowers(pd.z, M+3);
 
-        Scalar ip1y = VectorPowerSum(pd.y, MN);
+        Scalar ip1y = VectorPowerSum(p.y, MN);
 
         Scalar k = (z_pow[2] * ip1y).Negate();
 
         for (size_t j = 1; j <= M; ++j) {
-            k = k - (z_pow[j+2] * BulletproofsRangeproof::ip12);
+            k = k - (z_pow[j + 2] * BulletproofsRangeproof::ip12);
         }
 
-        tmp = k + (pd.z*ip1y);
-        tmp = (proof.t - tmp);
-        y1 = y1 + (tmp * weight_y);
+        res.y1 = res.y1 + ((p.proof.t - (k + (p.z * ip1y))) * weight_y);
 
-        for (size_t j = 0; j < pd.Vs.Size(); ++j) {
-            tmp = z_pow[j+2] * weight_y;
-            multi_exp_data.push_back({pd.Vs[j], tmp});
+        for (size_t j = 0; j < p.proof.Vs.Size(); ++j) {
+            res.points.Add(p.proof.Vs[j] * (z_pow[j+2] * weight_y));
         }
 
-        tmp = pd.x * weight_y;
+        res.points.Add(p.proof.T1 * (p.x * weight_y));
+        res.points.Add(p.proof.T2 * (p.x.Square() * weight_y));
+        res.points.Add(p.proof.A * weight_z);
+        res.points.Add(p.proof.S * (p.x * weight_z));
 
-        multi_exp_data.push_back({proof.T1, tmp});
-
-        tmp = pd.x * pd.x * weight_y;
-
-        multi_exp_data.push_back({proof.T2, tmp});
-        multi_exp_data.push_back({proof.A, weight_z});
-
-        tmp = pd.x * weight_z;
-__
-        multi_exp_data.push_back({proof.S, tmp});
-
-        const size_t rounds = pd.logM + std::log2(Config::m_input_value_bits);
+        const size_t rounds = p.log_m + std::log2(Config::m_input_value_bits);
 
         Scalar y_inv_pow = 1;
         Scalar y_pow = 1;
 
-        const Scalar *w_inv = &inverses[pd.inv_offset];
-        const Scalar y_inv = inverses[pd.inv_offset + rounds];
+        const Scalars w_invs = &inverses[p.inv_offset]; // should return Scalars
+        const Scalar y_inv = inverses[p.inv_offset + rounds];
 
         std::vector<Scalar> w_cache(1<<rounds, 1);
-        w_cache[0] = w_inv[0];
-        w_cache[1] = pd.w[0];
+        w_cache[0] = w_invs[0];
+        w_cache[1] = p.ws[0];
 
         for (size_t j = 1; j < rounds; ++j) {
             const size_t sl = 1<<(j+1);
 
             for (size_t s = sl; s-- > 0; --s) {
-                w_cache[s] = w_cache[s/2] * pd.w[j];
-                w_cache[s-1] = w_cache[s/2] * w_inv[j];
+                w_cache[s] = w_cache[s/2] * p.ws[j];
+                w_cache[s-1] = w_cache[s/2] * w_invs[j];
             }
         }
 
         for (size_t i = 0; i < MN; ++i) {
-            Scalar g_scalar = proof.a;
+            Scalar g_scalar = p.proof.a;
             Scalar h_scalar;
 
             if (i == 0) {
-                h_scalar = proof.b;
+                h_scalar = p.proof.b;
             } else {
-                h_scalar = proof.b * y_inv_pow;
+                h_scalar = p.proof.b * y_inv_pow;
             }
 
             g_scalar = g_scalar * w_cache[i];
             h_scalar = h_scalar * w_cache[(~i) & (MN-1)];
 
-            g_scalar = g_scalar + pd.z;
+            g_scalar = g_scalar + p.z;
 
-            tmp = z_pow[2+i/N] * m_two_pows[i % N];
-
+            Scalar tmp =
+                z_pow[2 + i / Config::m_input_value_bits] *
+                m_two_pows[i % Config::m_input_value_bits];
             if (i == 0) {
-                tmp = tmp + pd.z;
-                h_scalar = h_scalar - tmp;
+                h_scalar = h_scalar - (tmp + p.z);
             } else {
-                tmp = tmp + (pd.z * y_pow);
-                h_scalar = h_scalar - (tmp * y_inv_pow);
+                h_scalar = h_scalar - ((tmp + (p.z * y_pow)) * y_inv_pow);
             }
 
-            z4[i] = z4[i] - (g_scalar * weight_z);
-            z5[i] = z5[i] - (h_scalar * weight_z);
+            res.z4[i] = res.z4[i] - (g_scalar * weight_z);
+            res.z5[i] = res.z5[i] - (h_scalar * weight_z);
 
             if (i == 0) {
                 y_inv_pow = y_inv;
-                y_pow = pd.y;
+                y_pow = p.y;
             } else if (i != MN - 1) {
                 y_inv_pow = y_inv_pow * y_inv;
-                y_pow = y_pow * pd.y;
+                y_pow = y_pow * p.y;
             }
         }
 
-        z1 = z1 + (proof.mu * weight_z);
+        res.z1 = res.z1 + (p.proof.mu * weight_z);
 
         for (size_t i = 0; i < rounds; ++i) {
-            tmp = pd.w[i] * pd.w[i] * weight_z;
-
-            multi_exp_data.push_back({proof.Ls[i], tmp});
-
-            tmp = w_inv[i] * w_inv[i] * weight_z;
-
-            multi_exp_data.push_back({proof.Rs[i], tmp});
+            res.points.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
+            res.points.Add(p.proof.Rs[i] * (w_invs[i].Square() * weight_z));
         }
 
-        tmp = proof.t - (proof.a * proof.b);
-        tmp = tmp * pd.x_ip;
-        z3 = z3 + (tmp * weight_z);
+        res.z3 = res.z3 + (((p.proof.t - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
     }
 }
 
@@ -511,44 +488,38 @@ bool RangeProof::Verify(
 ) {
     const Generators gens = m_gf.GetInstance(token_id);
 
-    VerifyLoop1Result loop1_res = VerifyLoop1(
+    const std::optional<VerifyLoop1Result> loop1_res = VerifyLoop1(
         indexed_proofs,
         gens,
         nonces
     );
     if (loop1_res == std::nullopt) return false; // return false if loop1 fails
 
+    Scalars inverses = loop1_res.value().to_invert.Invert();
+    size_t maxMN = 1u << loop1_res.value().max_LR_len;
 
+    // loop2_res.base_exps will be further enriched, so not making it const
+    std::optional<VerifyLoop2Result> loop2_res = VerifyLoop2(
+        loop1_res.value().proofs
+    );
 
-    size_t maxMN = 1u << max_LR_len;
-    Scalars inverses = loop1_res.to_invert.Invert();
-    Scalar z1 = 0;
-    Scalar z3 = 0;
-    std::vector<Scalar> z4(maxMN, 0);
-    std::vector<Scalar> z5(maxMN, 0);
-    Scalar y0 = 0;
-    Scalar y1 = 0;
-    Scalar tmp;
-    int proof_data_index = 0;
-    std::vector<MultiexpData> multi_exp_data;
-    multi_exp_data.reserve(nV + (2 * (10/*logM*/ + std::log2(Config::m_input_value_bits) + 4) * proofs.size() + 2 * maxMN);
-    multi_exp_data.resize(2 * maxMN);
+    const Scalar y0 = loop2_res.value().y0;
+    const Scalar y1 = loop2_res.value().y1;
+    const Scalar z1 = loop2_res.value().z1;
+    const Scalar z3 = loop2_res.value().z3;
+    const Scalars z4 = loop2_res.value().z4;
+    const Scalars z5 = loop2_res.value().z5;
 
+    loop2_res.value().points.Add(gens.G.get() * (y0 - z1));
+    loop2_res.value().points.Add(gens.H * (z3 - y1));
 
-
-    VerifyLoop2()
-
-
-
-    tmp = y0 - z1;
-    multi_exp_data.push_back({gens.G, tmp});
-    tmp = z3 - y1;
-    multi_exp_data.push_back({gens.H, tmp});
+    // place Gi and Hi side by side
+    // multi_exp_data needs to be maxMN * 2 long. z4 and z5 needs to be maxMN long.
     for (size_t i = 0; i < maxMN; ++i) {
-        multi_exp_data[i * 2] = {gens.Gi[i], z4[i]};
-        multi_exp_data[i * 2 + 1] = {gens.Hi[i], z5[i]};
+        loop2_res.value().points.Add(gens.Gi.get()[i] * z4[i]);
+        loop2_res.value().points.Add(gens.Hi.get()[i] * z5[i]);
     }
-    G1Point m_exp = MultiExp(multi_exp_data);
+    G1Point m_exp = loop2_res.value().points.Sum();
 
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
