@@ -27,9 +27,9 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <cstdio>
 #include <functional>
 #include <memory>
-#include <stdio.h>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
