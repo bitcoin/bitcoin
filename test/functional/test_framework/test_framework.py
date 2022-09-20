@@ -1329,7 +1329,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_quorum_connections, timeout=timeout, sleep=1)
 
-    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None, llmq_type_name="llmq_test"):
+    def wait_for_masternode_probes(self, mninfos, timeout = 60, wait_proc=None, llmq_type_name="llmq_test"):
         def check_probes():
             def ret():
                 if wait_proc is not None:
@@ -1365,7 +1365,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         wait_until_helper(check_probes, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=30, sleep=1):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=60, sleep=1):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -1400,7 +1400,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
 
-    def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=30):
+    def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=60):
         def check_dkg_comitments():
             time.sleep(2)
             all_ok = True
@@ -1426,7 +1426,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=30, sleep=2, llmq_type_name="llmq_test"):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60, sleep=2, llmq_type_name="llmq_test"):
         def wait_func():
             self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
             if quorum_hash in self.nodes[0].quorum_list()[llmq_type_name]:
