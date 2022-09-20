@@ -109,10 +109,26 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
 			getdata = getdataObj.get_bool();
 		}
 	}
+    uint32_t index = 0;
+    for (auto const& [key, val] : pnevmdatadb.GetMapCache()) {
+        UniValue oBlob(UniValue::VOBJ);
+        oBlob.__pushKV("versionhash",  HexStr(key));
+        oBlob.__pushKV("mpt", val.second);
+        oBlob.__pushKV("datasize", (uint32_t)val.first.size());
+        if(getdata) {
+            oBlob.__pushKV("data", HexStr(val.first));
+        }
+        index += 1;
+        if (index <= from) {
+            continue;
+        }
+        oRes.push_back(oBlob);
+        if (index >= count + from)
+            return true;
+    }
 	std::unique_ptr<CDBIterator> pcursor(pnevmdatadb.NewIterator());
 	pcursor->SeekToFirst();
 	std::pair<std::vector<uint8_t>, bool> key;
-	uint32_t index = 0;
 	while (pcursor->Valid()) {
 		try {
             key.first.clear();
