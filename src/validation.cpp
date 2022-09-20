@@ -2160,7 +2160,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<const
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
     std::vector<const CNEVMData> vecNEVMDataToProcess;
-    for (auto &nevmDataPayload : vecNevmDataPayload) {
+    for (const auto &nevmDataPayload : vecNevmDataPayload) {
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         const bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
@@ -2230,7 +2230,8 @@ bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const
     if(nevmDataPayload.IsNull()) {
         return false;
     }
-    std::vector<const CNEVMData> vecPayload{nevmDataPayload};
+    std::vector<const CNEVMData> vecPayload;
+    vecPayload.emplace_back(nevmDataPayload);
     if(!ProcessNEVMDataHelper(blockman, vecPayload, nMedianTime, nTimeNow, mapPoDA)) {
         return false;
     }
