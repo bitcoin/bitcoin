@@ -26,8 +26,9 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 
 - `-maxconnections=<n>` - the maximum number of connections, which defaults to 125. Each active connection takes up some
   memory. This option applies only if inbound connections are enabled; otherwise, the number of connections will not
-  be more than 11. Of the 11 outbound peers, there can be 8 full-relay connections, 2 block-relay-only ones,
-  and occasionally 1 short-lived feeler or extra outbound block-relay-only connection.
+  be more than 11 or 15 if `mempoolfullrbf=1`. Of the 11 outbound peers, there can be 8 full-relay connections, 2 block-relay-only ones,
+  and occasionally 1 short-lived feeler or extra outbound block-relay-only connection. Of the 15 outbound peers, the 4 additional
+  connections are 4 full-rbf peers.
 
 - These limits do not apply to connections added manually with the `-addnode` configuration option or
   the `addnode` RPC, which have a separate limit of 8 connections.
