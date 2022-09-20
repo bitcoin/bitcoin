@@ -7,8 +7,14 @@ import asyncio
 import struct
 import sys
 
-from test_framework import messages
-from test_framework.mininode import P2PDataStore, NetworkThread
+from test_framework.messages import (
+    msg_ping,
+    ser_string,
+)
+from test_framework.mininode import (
+    NetworkThread,
+    P2PDataStore,
+)
 from test_framework.test_framework import BitcoinTestFramework
 
 
@@ -21,7 +27,7 @@ class msg_unrecognized:
         self.str_data = str_data.encode() if not isinstance(str_data, bytes) else str_data
 
     def serialize(self):
-        return messages.ser_string(self.str_data)
+        return ser_string(self.str_data)
 
     def __repr__(self):
         return "{}(data={})".format(self.command, self.str_data)
@@ -130,7 +136,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             # For some reason unknown to me, we sometimes have to push additional data to the
             # peer in order for it to realize a disconnect.
             try:
-                node.p2p.send_message(messages.msg_ping(nonce=123123))
+                node.p2p.send_message(msg_ping(nonce=123123))
             except IOError:
                 pass
 
@@ -153,7 +159,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         asyncio.run_coroutine_threadsafe(swap_magic_bytes(), NetworkThread.network_event_loop).result()
 
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
-            conn.send_message(messages.msg_ping(nonce=0xff))
+            conn.send_message(msg_ping(nonce=0xff))
             conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()
 

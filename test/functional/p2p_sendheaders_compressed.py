@@ -25,6 +25,7 @@ from test_framework.mininode import (
     msg_headers2,
     msg_inv,
     msg_sendheaders2,
+    MSG_BLOCK,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -47,7 +48,7 @@ class BaseNode(P2PInterface):
         """Request data for a list of block hashes."""
         msg = msg_getdata()
         for block_hash in block_hashes:
-            msg.inv.append(CInv(2, block_hash))
+            msg.inv.append(CInv(MSG_BLOCK, block_hash))
         self.send_message(msg)
 
     def send_get_headers(self, locator, hashstop):
@@ -58,7 +59,7 @@ class BaseNode(P2PInterface):
 
     def send_block_inv(self, blockhash):
         msg = msg_inv()
-        msg.inv = [CInv(2, blockhash)]
+        msg.inv = [CInv(MSG_BLOCK, blockhash)]
         self.send_message(msg)
 
     def send_header_for_blocks(self, new_blocks):
