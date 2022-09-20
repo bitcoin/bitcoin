@@ -2878,6 +2878,9 @@ bool Chainstate::FlushStateToDisk(
             if (pblockindexdb && !pblockindexdb->FlushCacheToDisk(m_chainman.ActiveHeight())) {
                 return AbortNode(state, "Failed to commit to block index db");
             }
+            if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
+                return AbortNode(state, "Failed to commit to nevm tx roots db");
+            }
             nLastWrite = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3217,7 +3220,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots)) {
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys)) {
             return error("Error flushing to Syscoin DBs: %s", pindexNew->GetBlockHash().ToString());
         }
     }
@@ -3225,6 +3228,8 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
     if(pblockindexdb)
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
+    if(pnevmtxrootsdb)
+        pnevmtxrootsdb->FlushDataToCache(mapNEVMTxRoots);
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCHMARK, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
@@ -5009,7 +5014,7 @@ bool Chainstate::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect)){
             return error("RollbackBlock(): Error flushing to Syscoin dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
@@ -5017,6 +5022,8 @@ bool Chainstate::ReplayBlocks()
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, pindexNew->GetMedianTimePast());
     if(pblockindexdb)
         pblockindexdb->FlushDataToCache(vecTXIDPairs);
+    if(pnevmtxrootsdb)
+        pnevmtxrootsdb->FlushDataToCache(mapNEVMTxRoots);
     dbTx->Commit();
     uiInterface.ShowProgress("", 100, false);
     return true;
@@ -5970,10 +5977,7 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
     if(vecTXIDPairs.empty())	
         return true;
     CDBBatch batch(*this);
-    for (const auto &pair : vecTXIDPairs) {	
-        batch.Erase(pair.first);
-    }
-    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
+    FlushErase(vecTXIDPairs, batch);
     return WriteBatch(batch, true);
 }	
 bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch) {	
@@ -5981,6 +5985,10 @@ bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &
         return true;
     for (const auto &pair : vecTXIDPairs) {	
         batch.Erase(pair.first);
+        auto it = mapCache.find(pair.first);
+        if(it != mapCache.end()){
+            mapCache.erase(it);
+        }
     }
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
     return true;
@@ -6006,7 +6014,7 @@ bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight) {
     batch.Write(LAST_KNOWN_HEIGHT_TAG, nHeight);
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", mapCache.size());	
     mapCache.clear();
-    return batch.SizeEstimate() > 0? WriteBatch(batch, true): true;
+    return WriteBatch(batch, true);
 }
 bool CBlockIndexDB::Prune(const uint32_t &nHeight, CDBBatch &batch) {
     if(MAX_BLOCK_INDEX > nHeight) {

@@ -15,17 +15,13 @@ class BlockValidationState;
 class CBlockIndexDB;
 class CNEVMData;
 class CNEVMTxRootsDB : public CDBWrapper {
+    NEVMTxRootMap mapCache;
 public:
     explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot) {
-        return Read(nBlockHash, txRoot);
-    } 
-    bool ExistsTxRoot(const uint256& nBlockHash) {
-        return Exists(nBlockHash);
-    } 
-    bool Clear();
     bool FlushErase(const std::vector<uint256> &vecBlockHashes);
-    bool FlushWrite(NEVMTxRootMap &mapNEVMTxRoots);
+    bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot);
+    bool FlushCacheToDisk();
+    void FlushDataToCache(const NEVMTxRootMap &mapNEVMTxRoots);
 };
 
 class CNEVMMintedTxDB : public CDBWrapper {

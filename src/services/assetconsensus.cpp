@@ -1003,49 +1003,51 @@ bool CheckAssetInputs(const Consensus::Params& params, const CTransaction &tx, c
     } 
     return true;
 }
-
-bool CNEVMTxRootsDB::Clear() {
-    LOCK(cs_setethstatus);
-    std::vector<uint256> vecBlockHashes;
-    uint256 nEthBlock;
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    while (pcursor->Valid()) {
-        try {
-            if(pcursor->GetKey(nEthBlock)) {
-                vecBlockHashes.emplace_back(nEthBlock);
-            }
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
+void CNEVMTxRootsDB::FlushDataToCache(const NEVMTxRootMap &mapNEVMTxRoots) {
+    if(mapNEVMTxRoots.empty()) {
+        return;
     }
-    fGethCurrentHeight = 0;   
-    return FlushErase(vecBlockHashes);
+    for (auto const& [key, val] : mapNEVMTxRoots) {
+        mapCache.try_emplace(key, val);
+    }
+    LogPrint(BCLog::SYS, "Flushing to cache, storing %d nevm tx roots\n", mapNEVMTxRoots.size());
 }
+bool CNEVMTxRootsDB::FlushCacheToDisk() {
+    if(mapCache.empty()) {
+        return true;
+    }
+    CDBBatch batch(*this);    
+    for (auto const& [key, val] : mapCache) {
+        batch.Write(key, val);
+    }
+    LogPrint(BCLog::SYS, "Flushing cache to disk, storing %d nevm tx roots\n", mapCache.size());
+    auto res = WriteBatch(batch, true);
+    mapCache.clear();
+    return res;
+}
+bool CNEVMTxRootsDB::ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot) {
+    auto it = mapCache.find(nBlockHash);
+    if(it != mapCache.end()){
+        txRoot = it->second;
+        return true;
+    } else {
+        return Read(nBlockHash, txRoot);
+    }
+    return false;
+} 
 bool CNEVMTxRootsDB::FlushErase(const std::vector<uint256> &vecBlockHashes) {
     if(vecBlockHashes.empty())
         return true;
     CDBBatch batch(*this);
     for (const auto &key : vecBlockHashes) {
         batch.Erase(key);
+        auto it = mapCache.find(key);
+        if(it != mapCache.end()){
+            mapCache.erase(it);
+        }
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d nevm tx roots\n", vecBlockHashes.size());
-    return WriteBatch(batch);
-}
-
-bool CNEVMTxRootsDB::FlushWrite(NEVMTxRootMap &mapNEVMTxRoots) {
-    if(mapNEVMTxRoots.empty())
-        return true;
-    CDBBatch batch(*this);
-    for (const auto &key : mapNEVMTxRoots) {
-        batch.Write(key.first, key.second);
-    }
-    LogPrint(BCLog::SYS, "Flushing, writing %d nevm tx roots\n", mapNEVMTxRoots.size());
-    const bool res = WriteBatch(batch);
-    mapNEVMTxRoots.clear();
-    return res;
+    return WriteBatch(batch, true);
 }
 
 // called on connect
@@ -1243,7 +1245,7 @@ bool CNEVMDataDB::FlushEraseMTPs(const NEVMDataVec &vecDataKeys) {
         }
     }
     LogPrint(BCLog::SYS, "Flushing, resetting %d nevm MTPs\n", vecDataKeys.size());
-    return batch.SizeEstimate() > 0? WriteBatch(batch, true): true;
+    return WriteBatch(batch, true);
 }
 bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     if(vecDataKeys.empty())
@@ -1266,7 +1268,7 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
             mapCache.erase(it);
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
-    return batch.SizeEstimate() > 0? WriteBatch(batch, true): true;
+    return WriteBatch(batch, true);
 }
 bool CNEVMDataDB::BlobExists(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
     std::vector<uint8_t> emptyVec{};
@@ -1320,5 +1322,5 @@ bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-    return batch.SizeEstimate() > 0? WriteBatch(batch, true): true;
+    return WriteBatch(batch, true);
 }
