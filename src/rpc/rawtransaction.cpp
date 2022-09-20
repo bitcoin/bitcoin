@@ -1575,6 +1575,197 @@ UniValue joinpsbts(const JSONRPCRequest& request)
     return EncodeBase64(ssTx.str());
 }
 
+UniValue analyzepsbt(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"analyzepsbt",
+    "\nAnalyzes and provides information about the current status of a PSBT and its inputs\n",
+    {
+        {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"}
+    },
+    RPCResult {
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::ARR, "inputs", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::BOOL, "has_utxo", "Whether a UTXO is provided"},
+                    {RPCResult::Type::BOOL, "is_final", "Whether the input is finalized"},
+                    {RPCResult::Type::OBJ, "missing", /* optional */ true, "Things that are missing that are required to complete this input",
+                    {
+                        {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "",
+                        {
+                            {RPCResult::Type::STR_HEX, "keyid", "Public key ID, hash160 of the public key, of a public key whose BIP 32 derivation path is missing"},
+                        }},
+                        {RPCResult::Type::ARR, "signatures", /* optional */ true, "",
+                        {
+                            {RPCResult::Type::STR_HEX, "keyid", "Public key ID, hash160 of the public key, of a public key whose signature is missing"},
+                        }},
+                        {RPCResult::Type::STR_HEX, "redeemscript", /* optional */ true, "Hash160 of the redeemScript that is missing"},
+                    }},
+                    {RPCResult::Type::STR, "next", /* optional */ true, "Role of the next person that this input needs to go to"},
+                }},
+            }},
+            {RPCResult::Type::NUM, "estimated_vsize", /* optional */ true, "Estimated vsize of the final signed transaction"},
+            {RPCResult::Type::STR_AMOUNT, "estimated_feerate", /* optional */ true, "Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kB. Shown only if all UTXO slots in the PSBT have been filled"},
+            {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled"},
+            {RPCResult::Type::STR, "next", "Role of the next person that this psbt needs to go to"},
+            {RPCResult::Type::STR, "error", "Error message if there is one"},
+        }
+    },
+    RPCExamples {
+        HelpExampleCli("analyzepsbt", "\"psbt\"")
+    }}.Check(request);
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    // Unserialize the transaction
+    PartiallySignedTransaction psbtx;
+    std::string error;
+    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
+    }
+
+    // Go through each input and build status
+    UniValue result(UniValue::VOBJ);
+    UniValue inputs_result(UniValue::VARR);
+    bool calc_fee = true;
+    bool all_final = true;
+    bool only_missing_sigs = true;
+    bool only_missing_final = false;
+    CAmount in_amt = 0;
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        PSBTInput& input = psbtx.inputs[i];
+        UniValue input_univ(UniValue::VOBJ);
+        UniValue missing(UniValue::VOBJ);
+
+        // Check for a UTXO
+        CTxOut utxo;
+        if (psbtx.GetInputUTXO(utxo, i)) {
+            in_amt += utxo.nValue;
+            input_univ.pushKV("has_utxo", true);
+        } else {
+            input_univ.pushKV("has_utxo", false);
+            input_univ.pushKV("is_final", false);
+            input_univ.pushKV("next", "updater");
+            calc_fee = false;
+        }
+
+        // Check if it is final
+        if (!utxo.IsNull() && !PSBTInputSigned(input)) {
+            input_univ.pushKV("is_final", false);
+            all_final = false;
+
+            // Figure out what is missing
+            SignatureData outdata;
+            bool complete = SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, 1, &outdata);
+
+            // Things are missing
+            if (!complete) {
+                if (!outdata.missing_pubkeys.empty()) {
+                    // Missing pubkeys
+                    UniValue missing_pubkeys_univ(UniValue::VARR);
+                    for (const CKeyID& pubkey : outdata.missing_pubkeys) {
+                        missing_pubkeys_univ.push_back(HexStr(pubkey));
+                    }
+                    missing.pushKV("pubkeys", missing_pubkeys_univ);
+                }
+                if (!outdata.missing_redeem_script.IsNull()) {
+                    // Missing redeemScript
+                    missing.pushKV("redeemscript", HexStr(outdata.missing_redeem_script));
+                }
+                if (!outdata.missing_sigs.empty()) {
+                    // Missing sigs
+                    UniValue missing_sigs_univ(UniValue::VARR);
+                    for (const CKeyID& pubkey : outdata.missing_sigs) {
+                        missing_sigs_univ.push_back(HexStr(pubkey));
+                    }
+                    missing.pushKV("signatures", missing_sigs_univ);
+                }
+                input_univ.pushKV("missing", missing);
+
+                // If we are only missing signatures and nothing else, then next is signer
+                if (outdata.missing_pubkeys.empty() && outdata.missing_redeem_script.IsNull() && !outdata.missing_sigs.empty()) {
+                    input_univ.pushKV("next", "signer");
+                } else {
+                    only_missing_sigs = false;
+                    input_univ.pushKV("next", "updater");
+                }
+            } else {
+                only_missing_final = true;
+                input_univ.pushKV("next", "finalizer");
+            }
+        } else if (!utxo.IsNull()){
+            input_univ.pushKV("is_final", true);
+        }
+        inputs_result.push_back(input_univ);
+    }
+    result.pushKV("inputs", inputs_result);
+
+    if (all_final) {
+        only_missing_sigs = false;
+        result.pushKV("next", "extractor");
+    }
+    if (calc_fee) {
+        // Get the output amount
+        CAmount out_amt = std::accumulate(psbtx.tx->vout.begin(), psbtx.tx->vout.end(), 0,
+            [](int a, const CTxOut& b) {
+                return a += b.nValue;
+            }
+        );
+
+        // Get the fee
+        CAmount fee = in_amt - out_amt;
+
+        // Estimate the size
+        CMutableTransaction mtx(*psbtx.tx);
+        CCoinsView view_dummy;
+        CCoinsViewCache view(&view_dummy);
+        bool success = true;
+
+        for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+            PSBTInput& input = psbtx.inputs[i];
+            if (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, 1, nullptr, true)) {
+                mtx.vin[i].scriptSig = input.final_script_sig;
+
+                Coin newcoin;
+                if (!psbtx.GetInputUTXO(newcoin.out, i)) {
+                    success = false;
+                    break;
+                }
+                newcoin.nHeight = 1;
+                view.AddCoin(psbtx.tx->vin[i].prevout, std::move(newcoin), true);
+            } else {
+                success = false;
+                break;
+            }
+        }
+
+        if (success) {
+            CTransaction ctx = CTransaction(mtx);
+            size_t size = GetVirtualTransactionSize(ctx, GetTransactionSigOpCost(ctx, view, STANDARD_SCRIPT_VERIFY_FLAGS));
+            result.pushKV("estimated_vsize", (int)size);
+            // Estimate fee rate
+            CFeeRate feerate(fee, size);
+            result.pushKV("estimated_feerate", feerate.ToString());
+        }
+        result.pushKV("fee", ValueFromAmount(fee));
+
+        if (only_missing_sigs) {
+            result.pushKV("next", "signer");
+        } else if (only_missing_final) {
+            result.pushKV("next", "finalizer");
+        } else if (all_final) {
+            result.pushKV("next", "extractor");
+        } else {
+            result.pushKV("next", "updater");
+        }
+    } else {
+        result.pushKV("next", "updater");
+    }
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
@@ -1594,6 +1785,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata"} },
     { "rawtransactions",    "utxoupdatepsbt",               &utxoupdatepsbt,            {"psbt"} },
     { "rawtransactions",    "joinpsbts",                    &joinpsbts,                 {"txs"} },
+    { "rawtransactions",    "analyzepsbt",                  &analyzepsbt,               {"psbt"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
