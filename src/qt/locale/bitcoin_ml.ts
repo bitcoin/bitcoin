@@ -317,10 +317,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">ചെയിൻസ്റ്റേറ്റ് ഡാറ്റാബേസ് അപ്ഗ്രേഡ് ചെയ്യുന്നതിൽ തടസം നേരിട്ടു</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
     </message>
@@ -622,6 +618,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">വാലറ്റ് ഒന്നും ലഭ്യം അല്ല </translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പേര്</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -986,6 +987,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബിറ്റ്കോയിൻ</translation>
     </message>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -1234,10 +1256,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">പെയ്മെന്റിനുള്ള അഭ്യർത്ഥന  കാലഹരണപ്പെട്ടു പോയിരിക്കുന്നു. </translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -1272,6 +1290,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDesc</name>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 സ്ഥിരീകരണങ്ങൾ</translation>
     </message>
     <message>

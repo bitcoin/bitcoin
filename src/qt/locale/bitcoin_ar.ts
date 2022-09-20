@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">غلق</translation>
+        <translation type="unfinished">أغلق</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">إختر العنوان الرقمي اللذي سيحصل على العملات</translation>
+        <translation type="unfinished">اختر العنوان الذي تود إرسال العملات إليه</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -540,6 +540,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">لايمكن الكتابة على دليل البيانات '%s'؛ تحقق من السماحيات. </translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s طلب الاستماع على منفذ %u. يعتبر منفذه "سيئًا" وبالتالي فمن غير المحتمل أن يتصل به أي من أقران Bitcoin Core. انظر الى doc / p2p-bad-ports.md للحصول على التفاصيل والقائمة الكاملة.</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">فشل في إعادة تسمية ملف peers.dat غير صالح. يرجى نقلها أو حذفها وحاول مرة أخرى.</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">حقوق الطبع والنشر (C) %i-%i</translation>
     </message>
@@ -598,10 +606,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error reading next record from wallet database</source>
         <translation type="unfinished">خطأ قراءة السجل التالي من قاعدة بيانات المحفظة</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">خطأ في ترقية قاعدة بيانات chainstate</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -812,10 +816,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation type="unfinished">شبكة مجهولة عرفت حددت في -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">ترقية قاعدة بيانات UTXO</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
@@ -1105,6 +1105,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">اغلق المحفظة</translation>
     </message>
     <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">استعادة محفظة من ملف النسخ الاحتياطي</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">إغلاق جميع المحافظ ...</translation>
     </message>
@@ -1127,6 +1132,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">المحفظة الرقمية غير متوفرة</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">بيانات المحفظة</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">استعادة المحفظة</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">إسم المحفظة</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1436,7 +1456,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">لا يمكن سرد الموقعين</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1462,6 +1482,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">جاري فتح المحفظة&lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">استعادة المحفظة</translation>
+    </message>
+    </context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1637,13 +1665,38 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Bitcoin</source>
         <translation type="unfinished">بتكوين</translation>
     </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation type="unfinished">(من %1 الجيجابايت المطلوبة)</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation type="unfinished">(%1 مطلوب غيغابايت للسلسلة الكاملة)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1692,10 +1745,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">بما انه هذه اول مرة لانطلاق هذا البرنامج, فيمكنك ان تختار اين سيخزن %1 بياناته</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">عند النقر على "موافق" ، سيبدأ %1 في تنزيل ومعالجة سلسلة الكتل %4 الكاملة (%2 جيجابايت) بدءًا من المعاملات الأقدم في %3 عند تشغيل %4 في البداية.</translation>
     </message>
     <message>
         <source>Limit block chain storage to</source>
@@ -1806,7 +1855,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">مجهول.  مزامنة الرؤوس (%1،%2٪) ...</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2054,10 +2103,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">المضمنة "%1"</translation>
     </message>
     <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">يتم تجاوز الخيارات المعينة في مربع الحوار هذا بواسطة سطر الأوامر أو في ملف التكوين:</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">تم</translation>
     </message>
@@ -2080,14 +2125,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">تأكيد استعادة الخيارات</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">يتطلب إعادة تشغيل العميل لتفعيل التغييرات.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">سوف يتم إيقاف العميل تماماً. هل تريد الإستمرار؟</translation>
     </message>
     <message>
@@ -3288,10 +3336,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">تعتبر الرسوم الأعلى من %1 رسوماً باهظة.</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">انتهاء صلاحية طلب الدفع.</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -3375,28 +3419,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">الرسائل</translation>
     </message>
     <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">هذا طلب دفع لم يتم مصادقته.</translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">هذا طلب دفع تمت مصادقته.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation type="unfinished">أدخل تسمية لهذا العنوان لإضافته إلى قائمة العناوين المستخدمة</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation type="unfinished">الرسالة التي تم إرفاقها مع البتكوين: العنوان الذي سيتم تخزينه مع المعاملة للرجوع إليه. ملاحظة: لن يتم إرسال هذه الرسالة عبر شبكة البتكوين.</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">ادفع &amp;الى :</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">مذكرة:</translation>
     </message>
 </context>
 <context>
@@ -3564,26 +3592,22 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished">تعارضت مع معاملة لديها %1 تأكيدات</translation>
     </message>
     <message>
-        <source>in memory pool</source>
-        <translation type="unfinished">في تجمع الذاكرة</translation>
-    </message>
-    <message>
-        <source>not in memory pool</source>
-        <translation type="unfinished">ليس في تجمع الذاكرة</translation>
-    </message>
-    <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">مهجور</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">غير مؤكدة/%1</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">تأكيد %1</translation>
     </message>
     <message>

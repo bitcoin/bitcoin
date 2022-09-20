@@ -14,12 +14,24 @@
         <translation type="unfinished">&amp;Yangi</translation>
     </message>
     <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">Tanlangan manzilni tizim buferiga nusxalash</translation>
+    </message>
+    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Nusxalash</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
         <translation type="unfinished">Yo&amp;pish</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation type="unfinished">Ro'yxatdan hozir tanlangan manzilni o'chiring</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">Qidirish uchun manzil yoki yorliqni kiriting</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -106,6 +118,27 @@
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>

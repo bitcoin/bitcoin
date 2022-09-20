@@ -1,36 +1,59 @@
-<TS version="2.1" language="gd">
+<TS version="2.1" language="ha">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Dèan briogadh deas airson seòladh no bileag a dheasachadh</translation>
+        <translation type="unfinished">Danna dama don gyara adireshi ko labil</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Cruthaich seòladh ùr</translation>
+        <translation type="unfinished">Ƙirƙiri sabon adireshi</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">Sabontawa</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Dèan lethbhreac den t-seòladh a chaidh a thaghadh an-dràsta gu cairt-bhòrd an t-siostaim</translation>
+        <translation type="unfinished">Kwafi adireshin da aka zaɓa a halin yanzu domin yin amfani dashi</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Thoir às an seòladh a chaidh a thaghadh an-dràsta bhon liosta</translation>
+        <translation type="unfinished">Share adireshin da aka zaɓa a halin yanzu daga jerin </translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Tagh an seòladh airson buinn a chuir thuige</translation>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">Shigar da adireshi ko lakabi don bincika</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">A ’cur sheòlaidhean</translation>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Fitar da bayanan da ke cikin shafin na yanzu zuwa fayil</translation>
     </message>
-    </context>
-<context>
-    <name>AddressTableModel</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp; Fitarwa</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;Sharewa</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Zaɓi adireshin don karɓar kuɗi internet da shi</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation type="unfinished">Adireshi da za a karba dashi</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Waɗannan adiresoshin Bitcoin ne don tura kuɗi bitcoin . ka tabbatar da cewa adreshin daidai ne kamin ka tura abua a ciki</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Waɗannan adiresoshin Bitcoin ne don karɓar kuɗi. Yi amfani da maɓallin 'Ƙirƙiri sabon adireshin karɓa' a cikin shafin karɓa don ƙirƙirar sababbin adireshi.
+zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     </context>
 <context>
@@ -40,15 +63,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -58,15 +77,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -76,15 +91,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -97,26 +108,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation type="unfinished">Rabhadh</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">Fiosrachadh</translation>
-    </message>
-    <message>
-        <source>Wallet Name</source>
-        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
-        <translation type="unfinished">Ainm Wallet</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -124,23 +116,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>CreateWalletDialog</name>
-    <message>
-        <source>Wallet Name</source>
-        <translation type="unfinished">Ainm Wallet</translation>
-    </message>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    <message>
-        <source>name</source>
-        <translation type="unfinished">ainm</translation>
     </message>
     </context>
 <context>
@@ -150,8 +126,6 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
@@ -159,15 +133,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -178,42 +148,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    </context>
-<context>
-    <name>ModalOverlay</name>
-    <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
-    </message>
-    </context>
-<context>
-    <name>OptionsDialog</name>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
-    </message>
-    </context>
-<context>
-    <name>PeerTableModel</name>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Seòladh</translation>
     </message>
     </context>
 <context>
@@ -221,8 +156,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -235,23 +168,18 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     </context>
 <context>
-    <name>TransactionView</name>
+    <name>WalletView</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp; Fitarwa</translation>
     </message>
-    </context>
-<context>
-    <name>WalletFrame</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Fitar da bayanan da ke cikin shafin na yanzu zuwa fayil</translation>
     </message>
     </context>
 </TS>
