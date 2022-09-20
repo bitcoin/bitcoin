@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_UINT256_H
 #define SYSCOIN_UINT256_H
 
-#include <crypto/common.h>
 #include <span.h>
 
 #include <assert.h>

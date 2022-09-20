@@ -4452,13 +4452,13 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
                 // if the error is anything but chainlock error the header is invalid semantically
                 if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
                     int nHeight = 0;
-                    // incase the index already exists
+                    // in case the index already exists
                     if(pindex) {
                         nHeight = pindex->nHeight;
-                    // incase this is a new block index that doesn't exist but header isn't valid
+                    // in case this is a new block index that doesn't exist but header isn't valid
                     } else if(pprevindex) {
                         nHeight = pprevindex->nHeight+1;
-                    // incase prev block hash is invalid
+                    // in case prev block hash is invalid
                     } else if(m_best_header) {
                         nHeight = m_best_header->nHeight+1;
                     }
