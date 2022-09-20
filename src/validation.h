@@ -42,7 +42,8 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
+// SYSCOIN
+#include <saltedhasher.h>
 class Chainstate;
 class CBlockTreeDB;
 class CTxMemPool;
@@ -1082,20 +1083,20 @@ static const uint32_t MAX_BLOCK_INDEX = 43800*12; // 2.5 year of blocks
 // SYSCOIN
 class CBlockIndexDB : public CDBWrapper {
     const uint8_t LAST_KNOWN_HEIGHT_TAG = 'L';
+    std::unordered_map<uint256, uint32_t, StaticSaltedHasher> mapCache;
 public:
-    explicit CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
-        return Read(txid, nHeight);
-    }  
+    explicit CBlockIndexDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);  
+    bool ReadBlockHeight(const uint256& txid, uint32_t& nHeight);
     bool ReadLastKnownHeight(uint32_t& nHeight) {
         return Read(LAST_KNOWN_HEIGHT_TAG, nHeight);
     } 
-    bool PruneIndex(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, bool bDisconnect = true);
-    bool FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool ibd);
+    bool Prune(const uint32_t &nHeight, CDBBatch &batch);
+    bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs);
+    bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch);
+    void FlushDataToCache(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs);
+    bool FlushCacheToDisk(const uint32_t &nHeight);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-bool PruneSyscoinDBs(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
 bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);

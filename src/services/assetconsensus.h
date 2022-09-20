@@ -48,6 +48,7 @@ public:
     bool ReadMTP(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime);
     bool Prune(int64_t nMedianTime);
     bool BlobExists(const CNEVMData& nevmDataToFind, bool &bDataMismatch);
+    const PoDAMAP& GetMapCache() const { return mapCache;}
 };
 class CAssetDB : public CDBWrapper {
 public:

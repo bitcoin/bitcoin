@@ -342,8 +342,6 @@ void Shutdown(NodeContext& node)
     {
         LOCK(cs_main);
         if (node.chainman) {
-            // SYSCOIN
-            PruneSyscoinDBs(*node.chainman);
             for (Chainstate* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
                     chainstate->ForceFlushStateToDisk();

@@ -1172,7 +1172,8 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     m_pool.addUnchecked(*entry, ws.m_ancestors, validForFeeEstimation);
 
     // SYSCOIN
-    pnevmdatadb->FlushDataToCache(ws.mapPoDA, 0);
+    if(pnevmdatadb)
+        pnevmdatadb->FlushDataToCache(ws.mapPoDA, 0);
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
     // in the package. LimitMempoolSize() should be called at the very end to make sure the mempool
@@ -2874,6 +2875,9 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmdatadb && !pnevmdatadb->FlushCacheToDisk()) {
                 return AbortNode(state, "Failed to commit PoDA");
             }
+            if (pblockindexdb && !pblockindexdb->FlushCacheToDisk(m_chainman.ActiveHeight())) {
+                return AbortNode(state, "Failed to commit to block index db");
+            }
             nLastWrite = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3190,7 +3194,6 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     NEVMMintTxMap mapMintKeys;
     NEVMTxRootMap mapNEVMTxRoots;
     PoDAMAPMemory mapPoDA;
-    const bool ibd = IsInitialBlockDownload();
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     {
         // SYSCOIN
@@ -3214,11 +3217,14 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // SYSCOIN
     if(passetdb){
-        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd)) {
+        if(!passetdb->Flush(mapAssets) || !passetnftdb->Flush(mapAssets) || !pnevmtxmintdb->FlushWrite(mapMintKeys) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots)) {
             return error("Error flushing to Syscoin DBs: %s", pindexNew->GetBlockHash().ToString());
         }
-    } 
-    pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
+    }
+    if(pnevmdatadb)
+        pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
+    if(pblockindexdb)
+        pblockindexdb->FlushDataToCache(vecTXIDPairs);
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCHMARK, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
     // Write the chain state to disk, if necessary.
@@ -4960,7 +4966,6 @@ bool Chainstate::ReplayBlocks()
     }
     // SYSCOIN
     auto dbTx = evoDb->BeginTransaction();
-    const bool ibd = IsInitialBlockDownload();
     // Rollback along the old branch.
     while (pindexOld != pindexFork) {
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
@@ -5004,11 +5009,14 @@ bool Chainstate::ReplayBlocks()
     evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(passetdb != nullptr){
-        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots) || !pblockindexdb->FlushWrite(vecTXIDPairs, ibd)){
+        if(!passetdb->Flush(mapAssetsConnect) || !passetnftdb->Flush(mapAssetsConnect) || !pnevmtxmintdb->FlushWrite(mapMintKeysConnect) || !pnevmtxrootsdb->FlushWrite(mapNEVMTxRoots)){
             return error("RollbackBlock(): Error flushing to Syscoin dbs on roll forward %s", pindexOld->GetBlockHash().ToString());
         }
     }
-    pnevmdatadb->FlushDataToCache(mapPoDAConnect, pindexNew->GetMedianTimePast());
+    if(pnevmdatadb)
+        pnevmdatadb->FlushDataToCache(mapPoDAConnect, pindexNew->GetMedianTimePast());
+    if(pblockindexdb)
+        pblockindexdb->FlushDataToCache(vecTXIDPairs);
     dbTx->Commit();
     uiInterface.ShowProgress("", 100, false);
     return true;
@@ -5946,49 +5954,69 @@ bool ChainstateManager::IsSnapshotActive() const
 
 
 // SYSCOIN
-bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, bool bDisconnect) {	
+bool CBlockIndexDB::ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
+    auto it = mapCache.find(txid);
+    if(it != mapCache.end()){
+        LogPrintf("finding block height for txid %s from cache height %d\n", txid.GetHex(), it->second);
+        nHeight = it->second;
+        return true;
+    } else {
+        LogPrintf("finding block height for txid %s from db\n", txid.GetHex());
+        return Read(txid, nHeight);
+    }
+    return false;
+}
+bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs) {	
     if(vecTXIDPairs.empty())	
         return true;
-    uint32_t nLastHeight = std::numeric_limits<uint32_t>::max();
     CDBBatch batch(*this);
     for (const auto &pair : vecTXIDPairs) {	
         batch.Erase(pair.first);
-        if(pair.second < nLastHeight)	
-            nLastHeight = pair.second;
-    }
-    if(bDisconnect) {
-        batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight-1);
-        nLastKnownHeightOnStart = nLastHeight - 1;
     }
     LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
     return WriteBatch(batch, true);
 }	
-bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint32_t> > &blockIndex, bool ibd){	
-    if(blockIndex.empty())	
+bool CBlockIndexDB::FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch) {	
+    if(vecTXIDPairs.empty())	
         return true;
-    CDBBatch batch(*this);	
-    uint32_t nLastHeight = 0;
-    for (const auto &pair : blockIndex) {	
-        batch.Write(pair.first, pair.second);
-        if(pair.second > nLastHeight)	
-            nLastHeight = pair.second;	
+    for (const auto &pair : vecTXIDPairs) {	
+        batch.Erase(pair.first);
     }
-
-    batch.Write(LAST_KNOWN_HEIGHT_TAG, nLastHeight);
-    
-    LogPrint(BCLog::SYS, "Flush writing %d block indexes, flush to disk: %d\n", blockIndex.size(), !ibd? 1: 0);	
-    return WriteBatch(batch, !ibd);
+    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDPairs.size());	
+    return true;
 }
-bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
-    AssertLockHeld(cs_main);
-    if(MAX_BLOCK_INDEX > (uint32_t)chainman.ActiveHeight()) {
+void CBlockIndexDB::FlushDataToCache(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs) {
+    if(vecTXIDPairs.empty()) {
+        return;
+    }
+    for (auto const& [key, val] : vecTXIDPairs) {
+        mapCache.try_emplace(key, val);
+    }
+    LogPrint(BCLog::SYS, "Flushing to cache, storing %d block indexes\n", vecTXIDPairs.size());
+}
+bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight) {	
+    if(mapCache.empty()) {
+        return true;
+    }
+    CDBBatch batch(*this);  
+    Prune(nHeight, batch);
+    for (auto const& [key, val] : mapCache) {
+        batch.Write(key, val);
+    }
+    batch.Write(LAST_KNOWN_HEIGHT_TAG, nHeight);
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", mapCache.size());	
+    mapCache.clear();
+    return batch.SizeEstimate() > 0? WriteBatch(batch, true): true;
+}
+bool CBlockIndexDB::Prune(const uint32_t &nHeight, CDBBatch &batch) {
+    if(MAX_BLOCK_INDEX > nHeight) {
         LogPrintf("PruneIndex not enough blocks, not pruning\n");
         return true;
     }
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     uint32_t nValue = 0;
-    uint32_t cutoffHeight = chainman.ActiveHeight() - MAX_BLOCK_INDEX;
+    uint32_t cutoffHeight = nHeight - MAX_BLOCK_INDEX;
     std::vector<std::pair<uint256,uint32_t> > vecTXIDPairs;
     uint256 nKey;
     int index = 0;
@@ -6004,19 +6032,7 @@ bool CBlockIndexDB::PruneIndex(ChainstateManager& chainman) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-    return FlushErase(vecTXIDPairs, false);
-}
-bool PruneSyscoinDBs(ChainstateManager& chainman) {
-    bool ret = true;
-    if (pblockindexdb != nullptr)
-     {
-        if(!pblockindexdb->PruneIndex(chainman))
-        {
-            LogPrintf("Failed to write to prune block index database!\n");
-            ret = false;
-        }
-     }
-	return ret;
+    return FlushErase(vecTXIDPairs, batch);
 }
 
 
