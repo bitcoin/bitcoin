@@ -613,8 +613,7 @@ libsyscoin_zmq_a_SOURCES = \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp \
   zmq/zmqrpc.cpp \
-  zmq/zmqutil.cpp\
-  rpc/server.cpp
+  zmq/zmqutil.cpp
 endif
 
 
