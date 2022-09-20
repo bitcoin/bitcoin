@@ -314,7 +314,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
 //! Test LoadBlockIndex behavior when multiple chainstates are in use.
 //!
-//! - First, verfiy that setBlockIndexCandidates is as expected when using a single,
+//! - First, verify that setBlockIndexCandidates is as expected when using a single,
 //!   fully-validating chainstate.
 //!
 //! - Then mark a region of the chain BLOCK_ASSUMED_VALID and introduce a second chainstate
