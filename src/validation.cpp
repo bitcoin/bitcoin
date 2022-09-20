@@ -2875,7 +2875,7 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmdatadb && !pnevmdatadb->FlushCacheToDisk()) {
                 return AbortNode(state, "Failed to commit PoDA");
             }
-            if (pblockindexdb && !pblockindexdb->FlushCacheToDisk(m_chainman.ActiveHeight())) {
+            if (pblockindexdb && !pblockindexdb->FlushCacheToDisk((uint32_t)m_chainman.ActiveHeight())) {
                 return AbortNode(state, "Failed to commit to block index db");
             }
             if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
@@ -5964,11 +5964,9 @@ bool ChainstateManager::IsSnapshotActive() const
 bool CBlockIndexDB::ReadBlockHeight(const uint256& txid, uint32_t& nHeight) {
     auto it = mapCache.find(txid);
     if(it != mapCache.end()){
-        LogPrintf("finding block height for txid %s from cache height %d\n", txid.GetHex(), it->second);
         nHeight = it->second;
         return true;
     } else {
-        LogPrintf("finding block height for txid %s from db\n", txid.GetHex());
         return Read(txid, nHeight);
     }
     return false;
