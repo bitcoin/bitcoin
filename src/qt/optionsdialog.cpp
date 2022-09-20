@@ -91,7 +91,9 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
         ui->thirdPartyTxUrls->setVisible(false);
     }
 
-#ifndef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_EXTERNAL_SIGNER
+    ui->externalSignerPath->setToolTip(ui->externalSignerPath->toolTip().arg(PACKAGE_NAME));
+#else
     //: "External signing" means using devices such as hardware wallets.
     ui->externalSignerPath->setToolTip(tr("Compiled without external signing support (required for external signing)"));
     ui->externalSignerPath->setEnabled(false);
