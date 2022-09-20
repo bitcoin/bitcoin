@@ -1948,10 +1948,10 @@ void CWallet::ResendWalletTransactions()
 
     // Do this infrequently and randomly to avoid giving away
     // that these are our transactions.
-    if (GetTime() < nNextResend || !fBroadcastTransactions) return;
-    bool fFirst = (nNextResend == 0);
+    if (GetTime() < m_next_resend || !fBroadcastTransactions) return;
+    bool fFirst = (m_next_resend == 0);
     // resend 1-3 hours from now, ~2 hours on average.
-    nNextResend = GetTime() + (1 * 60 * 60) + GetRand(2 * 60 * 60);
+    m_next_resend = GetTime() + (1 * 60 * 60) + GetRand(2 * 60 * 60);
     if (fFirst) return;
 
     int submitted_tx_count = 0;
