@@ -36,7 +36,7 @@ versions = []
 for relpath in BINARIES:
     abspath = os.path.join(builddir, relpath)
     try:
-        r = subprocess.run([abspath, '--version'], stdout=subprocess.PIPE, universal_newlines=True)
+        r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, universal_newlines=True)
     except IOError:
         print(f'{abspath} not found or not an executable', file=sys.stderr)
         sys.exit(1)

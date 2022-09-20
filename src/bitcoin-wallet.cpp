@@ -50,15 +50,16 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
 }
 
-static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
+static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[])
 {
     SetupWalletToolArgs(args);
     std::string error_message;
     if (!args.ParseParameters(argc, argv, error_message)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
-        return false;
+        return EXIT_FAILURE;
     }
-    if (argc < 2 || HelpRequested(args) || args.IsArgSet("-version")) {
+    const bool missing_args{argc < 2};
+    if (missing_args || HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
 
         if (args.IsArgSet("-version")) {
@@ -73,7 +74,11 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
             strUsage += "\n" + args.GetHelpMessage();
         }
         tfm::format(std::cout, "%s", strUsage);
-        return false;
+        if (missing_args) {
+            tfm::format(std::cerr, "Error: too few parameters\n");
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
     }
 
     // check for printtoconsole, allow -debug
@@ -81,12 +86,12 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
 
     if (!CheckDataDirOption()) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
-        return false;
+        return EXIT_FAILURE;
     }
     // Check for chain settings (Params() calls are only valid after this clause)
     SelectParams(args.GetChainName());
 
-    return true;
+    return std::nullopt;
 }
 
 MAIN_FUNCTION
@@ -106,7 +111,7 @@ MAIN_FUNCTION
     SetupEnvironment();
     RandomInit();
     try {
-        if (!WalletAppInit(args, argc, argv)) return EXIT_FAILURE;
+        if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "WalletAppInit()");
         return EXIT_FAILURE;
