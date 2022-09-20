@@ -2290,10 +2290,13 @@ void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, bool probe)
     OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, true, probe);
 }
 
+Mutex NetEventsInterface::g_msgproc_mutex;
+
 void CConnman::ThreadMessageHandler()
 {
     // SYSCOIN
     int64_t nLastSendMessagesTimeMasternodes = 0;
+    LOCK(NetEventsInterface::g_msgproc_mutex);
 
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::MESSAGE_HANDLER);
     while (!flagInterruptMsgProc)
@@ -2323,7 +2326,6 @@ void CConnman::ThreadMessageHandler()
                     return;
                 // SYSCOIN Send messages
                 if (!fSkipSendMessagesForMasternodes || !pnode->IsMasternodeConnection()) {
-                    LOCK(pnode->cs_sendProcessing);
                     m_msgproc->SendMessages(pnode);
                 }
 

@@ -109,10 +109,10 @@ struct Peer {
     /** The feerate in the most recent BIP133 `feefilter` message sent to the peer.
      *  It is *not* a p2p protocol violation for the peer to send us
      *  transactions with a lower fee rate than this. See BIP133. */
-    CAmount m_fee_filter_sent{0};
+    CAmount m_fee_filter_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
     /** Timestamp after which we will send the next BIP133 `feefilter` message
       * to the peer. */
-    std::chrono::microseconds m_next_send_feefilter{0};
+    std::chrono::microseconds m_next_send_feefilter GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
 
     struct TxRelay {
         mutable RecursiveMutex m_bloom_filter_mutex;
@@ -143,7 +143,7 @@ struct Peer {
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
         /** The next time after which we will send an `inv` message containing
          *  transaction announcements to this peer. */
-        std::chrono::microseconds m_next_inv_send_time{0};
+        std::chrono::microseconds m_next_inv_send_time GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
@@ -166,7 +166,7 @@ struct Peer {
     };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
-    std::vector<CAddress> m_addrs_to_send;
+    std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Probabilistic filter to track recent addr messages relayed with this
      *  peer. Used to avoid relaying redundant addresses to this peer.
      *
@@ -176,7 +176,7 @@ struct Peer {
      *
      *  Presence of this filter must correlate with m_addr_relay_enabled.
      **/
-    std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    std::unique_ptr<CRollingBloomFilter> m_addr_known GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Whether we are participating in address relay with this connection.
      *
      *  We set this bool to true for outbound peers (other than
@@ -193,7 +193,7 @@ struct Peer {
      *  initialized.*/
     std::atomic_bool m_addr_relay_enabled{false};
     /** Whether a getaddr request to this peer is outstanding. */
-    bool m_getaddr_sent{false};
+    bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
     mutable Mutex m_addr_send_times_mutex;
     /** Time point to send the next ADDR message to this peer. */
@@ -204,12 +204,12 @@ struct Peer {
      *  messages, indicating a preference to receive ADDRv2 instead of ADDR ones. */
     std::atomic_bool m_wants_addrv2{false};
     /** Whether this peer has already sent us a getaddr message. */
-    bool m_getaddr_recvd{false};
+    bool m_getaddr_recvd GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Number of addresses that can be processed from this peer. Start at 1 to
      *  permit self-announcement. */
-    double m_addr_token_bucket{1.0};
+    double m_addr_token_bucket GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1.0};
     /** When m_addr_token_bucket was last updated */
-    std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
+    std::chrono::microseconds m_addr_token_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){GetTime<std::chrono::microseconds>()};
     /** Total number of addresses that were dropped due to rate limiting. */
     std::atomic<uint64_t> m_addr_rate_limited{0};
     /** Total number of addresses that were processed (excludes rate-limited ones). */
@@ -219,7 +219,7 @@ struct Peer {
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
     /** Whether we've sent this peer a getheaders in response to an inv prior to initial-headers-sync completing */
-    bool m_inv_triggered_getheaders_before_sync{false};
+    bool m_inv_triggered_getheaders_before_sync GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
@@ -227,7 +227,7 @@ struct Peer {
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
     /** Time of the last getheaders message to this peer */
-    NodeClock::time_point m_last_getheaders_timestamp{};
+    NodeClock::time_point m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){};
     /** Protects m_headers_sync **/
     Mutex m_headers_sync_mutex;
     /** Headers-sync state for this peer (eg for initial sync, or syncing large
@@ -315,7 +315,7 @@ public:
 
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
+                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
     virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
