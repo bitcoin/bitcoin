@@ -2230,7 +2230,7 @@ bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const
     if(nevmDataPayload.IsNull()) {
         return false;
     }
-    const std::vector<const CNEVMData> vecPayload{nevmDataPayload};
+    std::vector<const CNEVMData> vecPayload{nevmDataPayload};
     if(!ProcessNEVMDataHelper(blockman, vecPayload, nMedianTime, nTimeNow, mapPoDA)) {
         return false;
     }

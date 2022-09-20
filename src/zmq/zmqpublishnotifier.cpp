@@ -28,6 +28,7 @@
 #include <core_io.h>
 #include <validationinterface.h>
 #include <shutdown.h>
+#include <validation.h>
 
 using node::ReadBlockFromDisk;
 
