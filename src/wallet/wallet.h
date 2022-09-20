@@ -730,6 +730,14 @@ private:
 
     std::atomic<uint64_t> m_wallet_flags{0};
 
+    bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
+
+    //! Unsets a wallet flag and saves it to disk
+    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
+
+    //! Unset the blank wallet flag and saves it to disk
+    void UnsetBlankWalletFlag(WalletBatch& batch) override;
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -1096,16 +1104,11 @@ public:
     void AutoLockMasternodeCollaterals();
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
 
-    unsigned int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
-    {
-        AssertLockHeld(cs_wallet);
-        return setInternalKeyPool.size() + setExternalKeyPool.size();
-    }
+    unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr, bool fExplicit = false) override;
@@ -1229,11 +1232,10 @@ public:
     void BlockUntilSyncedToCurrentChain() LOCKS_EXCLUDED(cs_main, cs_wallet);
 
     /** set a single wallet flag */
-    void SetWalletFlag(uint64_t flags) override;
+    void SetWalletFlag(uint64_t flags);
 
     /** Unsets a single wallet flag */
     void UnsetWalletFlag(uint64_t flag);
-    void UnsetWalletFlag(WalletBatch& batch, uint64_t flag);
 
     /** check if a certain wallet flag is set */
     bool IsWalletFlagSet(uint64_t flag) const override;
@@ -1284,12 +1286,6 @@ public:
     LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
     LegacyScriptPubKeyMan::HDPubKeyMap& mapHdPubKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapHdPubKeys;
     WalletBatch*& encrypted_batch GUARDED_BY(cs_wallet) = m_spk_man->encrypted_batch;
-    std::set<int64_t>& setInternalKeyPool GUARDED_BY(cs_wallet) = m_spk_man->setInternalKeyPool;
-    std::set<int64_t>& setExternalKeyPool GUARDED_BY(cs_wallet) = m_spk_man->setExternalKeyPool;
-    int64_t& nTimeFirstKey GUARDED_BY(cs_wallet) = m_spk_man->nTimeFirstKey;
-    std::map<CKeyID, CKeyMetadata>& mapKeyMetadata GUARDED_BY(cs_wallet) = m_spk_man->mapKeyMetadata;
-    std::map<CScriptID, CKeyMetadata>& m_script_metadata GUARDED_BY(cs_wallet) = m_spk_man->m_script_metadata;
-    void MarkReserveKeysAsUsed(int64_t keypool_id) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(m_spk_man->cs_wallet); m_spk_man->MarkReserveKeysAsUsed(keypool_id); }
     using CryptedKeyMap = LegacyScriptPubKeyMan::CryptedKeyMap;
 };
 

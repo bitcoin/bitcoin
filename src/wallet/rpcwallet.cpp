@@ -3617,34 +3617,31 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
-    const CKeyMetadata* meta = nullptr;
-    const CKeyID *key_id = boost::get<CKeyID>(&dest);
-    if (key_id != nullptr && !key_id->IsNull()) {
-        auto it = pwallet->mapKeyMetadata.find(*key_id);
-        if (it != pwallet->mapKeyMetadata.end()) {
-            meta = &it->second;
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
+    if (spk_man) {
+        const CKeyID *key_id = boost::get<CKeyID>(&dest);
+        const CKeyMetadata* meta = nullptr;
+        if (key_id != nullptr && !key_id->IsNull()) {
+            meta = spk_man->GetMetadata(*key_id);
         }
-    }
-    if (!meta) {
-        auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
-        if (it != pwallet->m_script_metadata.end()) {
-            meta = &it->second;
+        if (!meta) {
+            meta = spk_man->GetMetadata(CScriptID(scriptPubKey));
         }
-    }
-    if (meta) {
-        ret.pushKV("timestamp", meta->nCreateTime);
-        CHDChain hdChainCurrent;
-        LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-        if (spk_man != nullptr) {
-            LOCK(pwallet->cs_KeyStore);
-            AssertLockHeld(spk_man->cs_KeyStore);
-            if (key_id && pwallet->mapHdPubKeys.count(*key_id) && spk_man->GetHDChain(hdChainCurrent)) {
-                ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
+        if (meta) {
+            ret.pushKV("timestamp", meta->nCreateTime);
+            CHDChain hdChainCurrent;
+            LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+            if (spk_man != nullptr) {
+                LOCK(pwallet->cs_KeyStore);
+                AssertLockHeld(spk_man->cs_KeyStore);
+                if (key_id && pwallet->mapHdPubKeys.count(*key_id) && spk_man->GetHDChain(hdChainCurrent)) {
+                    ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
+                }
             }
-        }
-        if (meta->has_key_origin) {
-            ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
-            ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
+            if (meta->has_key_origin) {
+                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
+            }
         }
     }
 
