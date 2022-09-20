@@ -13,6 +13,7 @@ class CTxUndo;
 class CBlock;
 class BlockValidationState;
 class CBlockIndexDB;
+class CNEVMData;
 class CNEVMTxRootsDB : public CDBWrapper {
 public:
     explicit CNEVMTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
@@ -34,39 +35,19 @@ public:
     bool FlushWrite(const NEVMMintTxMap &mapMintKeys);
 };
 class CNEVMDataDB : public CDBWrapper {
+private:
+    PoDAMAP mapCache;
 public:
     explicit CNEVMDataDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool FlushErase(const NEVMDataVec &vecDataKeys);
-    bool FlushResetMPTs(const NEVMDataVec &vecDataKeys);
-    bool FlushData(std::map<std::vector<uint8_t>, std::vector<uint8_t> > &mapPoDA);
-    bool FlushSetMPTs(const NEVMDataVec &vecDataKeys, const int64_t &nMedianTime, const bool ibd);
-    bool ExistsData(const std::vector<uint8_t>& nVersionHash) {
-        const auto& pair = std::make_pair(nVersionHash, true);
-        return Exists(pair);
-    } 
-    bool ExistsMPT(const std::vector<uint8_t>& nVersionHash) {
-        const auto& pair = std::make_pair(nVersionHash, false);
-        return Exists(pair);
-    } 
-    bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& vchData) {
-        const auto& pair = std::make_pair(nVersionHash, true);
-        return Read(pair, vchData);
-    } 
-    bool ReadMPT(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime) {
-        const auto& pair = std::make_pair(nVersionHash, false);
-        return Read(pair, nMedianTime);
-    }
-    bool ReadDataSize(const std::vector<uint8_t>& nVersionHash, uint32_t &nSize) {
-        return Read(nVersionHash, nSize);
-    }
-    bool WriteDataSize(const std::vector<uint8_t>& nVersionHash, const uint32_t &nSize) {
-        return Write(nVersionHash, nSize);
-    }
-    bool WriteData(const std::vector<uint8_t>& nVersionHash, const std::vector<uint8_t>& vchData) {
-        const auto& pair = std::make_pair(nVersionHash, true);
-        return Write(pair, vchData);
-    }
+    bool FlushEraseMTPs(const NEVMDataVec &vecDataKeys);
+    bool FlushCacheToDisk();
+    void FlushDataToCache(const PoDAMAPMemory &mapPoDA, const int64_t &nMedianTime);
+    bool ReadData(const std::vector<uint8_t>& nVersionHash, std::vector<uint8_t>& vchData);
+    bool ReadDataSize(const std::vector<uint8_t>& nVersionHash, uint32_t &nSize);
+    bool ReadMTP(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime);
     bool Prune(int64_t nMedianTime);
+    bool BlobExists(const CNEVMData& nevmDataToFind, bool &bDataMismatch);
 };
 class CAssetDB : public CDBWrapper {
 public:

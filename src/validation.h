@@ -105,7 +105,6 @@ extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
 extern std::atomic_bool bInvalidate;
-extern std::map<std::vector<uint8_t>, std::vector<uint8_t> > mapPoDA;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 /** Whether there are dedicated script-checking threads running.
  * False indicates all script checking is done on the main threadMessageHandler thread.
@@ -668,7 +667,7 @@ public:
                     CCoinsViewCache& view, bool fJustCheck = false, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                    CCoinsViewCache& view, bool fJustCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, NEVMDataVec &NEVMDataVecOut, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                    CCoinsViewCache& view, bool fJustCheck, AssetMap &mapAssets, NEVMMintTxMap &mapMintKeys, NEVMTxRootMap &mapNEVMTxRoots, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // SYSCOIN Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool, bool bReverify = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
@@ -747,7 +746,7 @@ private:
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, AssetMap &mapAssets, NEVMTxRootMap &mapNEVMTxRoots, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, AssetMap &mapAssets, NEVMTxRootMap &mapNEVMTxRoots, NEVMMintTxMap &mapMintKeys, PoDAMAPMemory &mapPoDA, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ConflictingChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -780,7 +779,7 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     // SYSCOIN
-    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, NEVMDataVec &NEVMDataVecOut) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend ChainstateManager;
 };
 /**
@@ -1105,8 +1104,8 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
 bool FillNEVMData(const CTransactionRef &tx);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
-bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, NEVMDataVec *nevmDataVecOut, bool fJustCheck);
-bool ProcessNEVMData(const node::BlockManager& blockman, const CTransaction &tx, const int64_t &nMedianTime, const int64_t& nTimeNow, bool fJustCheck);
+bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);
+bool ProcessNEVMData(const node::BlockManager& blockman, const CTransaction &tx, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

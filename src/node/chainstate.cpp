@@ -204,8 +204,8 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         deterministicMNManager.reset();
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         llmq::InitLLMQSystem(*evoDb, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, coinsViewEmpty);
-        passetdb.reset(new CAssetDB(cache_sizes.coins_db*16, options.block_tree_db_in_memory, coinsViewEmpty));
-        passetnftdb.reset(new CAssetNFTDB(cache_sizes.coins_db*16, options.block_tree_db_in_memory, coinsViewEmpty));
+        passetdb.reset(new CAssetDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
+        passetnftdb.reset(new CAssetNFTDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
         pnevmtxrootsdb.reset(new CNEVMTxRootsDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
         pnevmtxmintdb.reset(new CNEVMMintedTxDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));
         pblockindexdb.reset(new CBlockIndexDB(cache_sizes.coins_db, options.block_tree_db_in_memory, coinsViewEmpty));

@@ -1168,9 +1168,11 @@ bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData,
 bool GetSyscoinData(const CMutableTransaction &mtx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint256, uint256> NEVMMintTxMap;
-typedef std::vector<std::vector<uint8_t > > NEVMDataVec;
+typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
 typedef std::unordered_map<uint256, NEVMTxRoot> NEVMTxRootMap;
 typedef std::unordered_map<uint32_t, std::pair<std::vector<uint64_t>, CAsset > > AssetMap;
+typedef std::map<std::vector<uint8_t>, std::pair<std::vector<uint8_t>, int64_t> > PoDAMAP;
+typedef std::map<std::vector<uint8_t>, const std::vector<uint8_t>* > PoDAMAPMemory;
 /** A generic txid reference (txid or wtxid). */
 // SYSCOIN
 class GenTxid

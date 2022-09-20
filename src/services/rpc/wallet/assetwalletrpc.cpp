@@ -202,13 +202,12 @@ static RPCHelpMan syscoincreaterawnevmblob()
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
     if(fNEVMConnection) {
-        std::vector<const CNEVMData*> vecNEVMDataToProcess;
         CNEVMData nevmDataPayload(nevmData.vchVersionHash, vchData);
-        vecNEVMDataToProcess.emplace_back(&nevmDataPayload);
         // process new vector in batch checking the blobs
         BlockValidationState state;
         // if not in DB then we need to verify it via Geth KZG blob verification
-        GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
+        const std::vector<const CNEVMData> vecPayload{nevmDataPayload};
+        GetMainSignals().NotifyCheckNEVMBlobs(vecPayload, state);
         if(state.IsInvalid()) {
             throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
         }

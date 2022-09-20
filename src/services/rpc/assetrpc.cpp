@@ -118,40 +118,23 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
             key.first.clear();
 			if (pcursor->GetKey(key)) {
                 UniValue oBlob(UniValue::VOBJ);
-                // MPT
+                // MTP
                 if(key.second == false) {
                     uint64_t nMedianTime;
                     if(pcursor->GetValue(nMedianTime)) {
                         oBlob.__pushKV("versionhash",  HexStr(key.first));
                         oBlob.__pushKV("mpt", nMedianTime);
                         uint32_t nSize = 0;
-                        CNEVMData nevmData;
+                        std::vector<uint8_t> vchData;
                         if(!pnevmdatadb.ReadDataSize(key.first, nSize)) {
-                            LOCK(cs_main);
-                            auto it = mapPoDA.find(key.first);
-                            if(it != mapPoDA.end()) {
-                                nevmData.vchNEVMData = &it->second;
-                                nSize = nevmData.vchNEVMData->size();
-                            }
+                           pnevmdatadb.ReadData(key.first, vchData);
                         }
                         oBlob.__pushKV("datasize", nSize);
                         if(getdata) {
-                            if(nevmData.vchNEVMData && !nevmData.vchNEVMData->empty()) {
-                                oBlob.__pushKV("data", HexStr(*nevmData.vchNEVMData));
+                            if(vchData.empty()) {
+                                pnevmdatadb.ReadData(key.first, vchData);
                             }
-                            else {
-                                std::vector<uint8_t> vchData;
-                                if(!pnevmdatadb.ReadData(key.first, vchData)) {
-                                    LOCK(cs_main);
-                                    auto it = mapPoDA.find(key.first);
-                                    if(it == mapPoDA.end())
-                                        oBlob.__pushKV("data", "");
-                                    else
-                                        oBlob.__pushKV("data", HexStr(it->second));
-                                } else {
-                                    oBlob.__pushKV("data", HexStr(vchData));
-                                }
-                            }
+                            oBlob.__pushKV("data", HexStr(vchData));
                         }    
                     }
                 } else {
@@ -639,35 +622,20 @@ static RPCHelpMan getnevmblobdata()
     BlockValidationState state;
     std::vector<uint8_t> vchData;
     int64_t mpt = -1;
-    if(!pnevmdatadb->ReadMPT(vchVH, mpt)) {
-        throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
+    if(!pnevmdatadb->ReadMTP(vchVH, mpt)) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find MTP for versionhash %s", HexStr(vchVH)));
     }
     if(!pnevmdatadb->ReadDataSize(vchVH, nSize)) {
-        LOCK(cs_main);
-        auto it = mapPoDA.find(vchVH);
-        if(it != mapPoDA.end()) {
-            nevmData.vchNEVMData = &it->second;
-            nSize = nevmData.vchNEVMData->size();
-        }
+        throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data size for versionhash %s", HexStr(vchVH)));
     }
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
     if(bGetData) {
-        if(nevmData.vchNEVMData && !nevmData.vchNEVMData->empty()) {
-            oNEVM.__pushKV("data", HexStr(*nevmData.vchNEVMData));
+        if(!pnevmdatadb->ReadData(vchVH, vchData)) {
+            throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find payload for versionhash %s", HexStr(vchVH)));
         }
-        else {
-            if(!pnevmdatadb->ReadData(vchVH, vchData)) {
-                LOCK(cs_main);
-                auto it = mapPoDA.find(vchVH);
-                if(it == mapPoDA.end())
-                    throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find data for versionhash %s", HexStr(vchVH)));
-                oNEVM.__pushKV("data", HexStr(it->second));
-            } else {
-                oNEVM.__pushKV("data", HexStr(vchData));
-            }
-        }
+        oNEVM.__pushKV("data", HexStr(vchData));
     }
     return oNEVM;
 },

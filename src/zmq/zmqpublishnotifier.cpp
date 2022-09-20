@@ -478,7 +478,7 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
     }
     return true;
 }
-bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData*> &vecNEVMDataPayload, BlockValidationState &state)
+bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &vecNEVMDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
@@ -491,8 +491,9 @@ bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const C
     }
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     WriteCompactSize(ss, vecNEVMDataPayload.size());
+    std::vector<uint8_t> emptyVec{};
     for(const auto &nevmDataPayload: vecNEVMDataPayload) {
-        ss << nevmDataPayload->vchVersionHash << *nevmDataPayload->vchNEVMData;
+        ss << nevmDataPayload.vchVersionHash << (nevmDataPayload.vchNEVMData? *nevmDataPayload.vchNEVMData: emptyVec);
     }
 
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm check blob to %s, subscriber %s\n", this->address, this->addresssub);
