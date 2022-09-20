@@ -477,7 +477,6 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
             }
-            LogPrintf("nNumNEVMDataTxs over limit\n");
             continue;
         }
 
