@@ -431,7 +431,7 @@ struct CNodeState {
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload{false};
     //! Whether this peer wants invs or headers (when possible) for block announcements.
-    bool fPreferHeaders{false};
+    bool fPreferHeaders GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Whether this peer wants invs or cmpctblocks (when possible) for block announcements. */
     bool m_requested_hb_cmpctblocks{false};
     /** Whether this peer will send us cmpctblocks if we request them. */
