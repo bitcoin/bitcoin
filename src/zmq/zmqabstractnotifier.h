@@ -73,7 +73,7 @@ public:
     virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight);
     virtual bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
     virtual bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
-    virtual bool NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &nevmData, BlockValidationState &state);
+    virtual bool NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &nevmData, BlockValidationState &state);
     virtual bool NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
     virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);

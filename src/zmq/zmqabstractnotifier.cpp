@@ -40,7 +40,7 @@ bool CZMQAbstractNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValida
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &nevmData, BlockValidationState &state)
+bool CZMQAbstractNotifier::NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &nevmData, BlockValidationState &state)
 {
     return true;
 }

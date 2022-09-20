@@ -2148,7 +2148,7 @@ bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
 bool BlobExistsInCache(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
     return pnevmdatadb->BlobExists(nevmDataToFind, bDataMismatch);
 }
-bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<const CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
+bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
@@ -2159,7 +2159,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<const
         }
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
-    std::vector<const CNEVMData> vecNEVMDataToProcess;
+    std::vector<CNEVMData> vecNEVMDataToProcess;
     for (const auto &nevmDataPayload : vecNevmDataPayload) {
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
@@ -2201,7 +2201,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<const
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
 bool ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA) {
-    std::vector<const CNEVMData> vecNevmDataPayload;
+    std::vector<CNEVMData> vecNevmDataPayload;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
         if(tx->IsNEVMData()) {
@@ -2230,8 +2230,7 @@ bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const
     if(nevmDataPayload.IsNull()) {
         return false;
     }
-    std::vector<const CNEVMData> vecPayload;
-    vecPayload.emplace_back(nevmDataPayload);
+    std::vector<CNEVMData> vecPayload{nevmDataPayload};
     if(!ProcessNEVMDataHelper(blockman, vecPayload, nMedianTime, nTimeNow, mapPoDA)) {
         return false;
     }

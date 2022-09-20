@@ -478,7 +478,7 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
     }
     return true;
 }
-bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &vecNEVMDataPayload, BlockValidationState &state)
+bool CZMQPublishNEVMBlobNotifier::NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &vecNEVMDataPayload, BlockValidationState &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {

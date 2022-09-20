@@ -58,7 +58,7 @@ public:
 class CZMQPublishNEVMBlobNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &nevmData, BlockValidationState &state) override;
+    bool NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &nevmData, BlockValidationState &state) override;
 };
 
 class CZMQPublishNEVMCreateBlobNotifier : public CZMQAbstractPublishNotifier

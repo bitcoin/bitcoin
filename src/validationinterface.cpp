@@ -287,7 +287,7 @@ void CMainSignals::NotifyNEVMBlockDisconnect(BlockValidationState &state, const 
 void CMainSignals::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGetNEVMBlockInfo(nHeight, state);});
 }
-void CMainSignals::NotifyCheckNEVMBlobs(const std::vector<const CNEVMData> &nevmData, BlockValidationState &state) {
+void CMainSignals::NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &nevmData, BlockValidationState &state) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyCheckNEVMBlobs(nevmData, state);});
 }
 void CMainSignals::NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) {
