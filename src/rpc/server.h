@@ -15,7 +15,6 @@
 #include <string>
 #include <univalue.h>
 
-static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 
 class CRPCCommand;
 
@@ -173,7 +172,7 @@ void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const node::JSONRPCRequest& jreq, const UniValue& vReq);
 
-// Retrieves any serialization flags requested in command line argument
-int RPCSerializationFlags();
+// SYSCOIN Retrieves any serialization flags requested in command line argument
+// int RPCSerializationFlags();
 
 #endif // SYSCOIN_RPC_SERVER_H

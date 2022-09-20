@@ -1100,6 +1100,8 @@ void DoGethMaintenance();
 bool StartGethNode();
 bool StopGethNode(bool bOnStart = false);
 // SYSCOIN
+static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
+int RPCSerializationFlags();
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
 bool FillNEVMData(const CTransactionRef &tx);

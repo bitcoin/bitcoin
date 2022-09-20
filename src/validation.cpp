@@ -6462,3 +6462,11 @@ ChainstateManager::~ChainstateManager()
         i.clear();
     }
 }
+// SYSCOIN
+int RPCSerializationFlags()
+{
+    int flag = 0;
+    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
+        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
+    return flag;
+}

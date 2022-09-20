@@ -533,13 +533,13 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
     LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
-
-int RPCSerializationFlags()
-{
-    int flag = 0;
-    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
-        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
-    return flag;
-}
+// SYSCOIN
+// int RPCSerializationFlags()
+// {
+//     int flag = 0;
+//     if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
+//         flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
+//     return flag;
+// }
 
 CRPCTable tableRPC;
