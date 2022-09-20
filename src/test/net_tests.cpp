@@ -805,6 +805,8 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 {
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
     // Tests the following scenario:
     // * -bind=3.4.5.6:20001 is specified
     // * we make an outbound connection to a peer
@@ -889,10 +891,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    {
-        LOCK(peer.cs_sendProcessing);
-        m_node.peerman->SendMessages(&peer);
-    }
+    m_node.peerman->SendMessages(&peer);
 
     BOOST_CHECK(sent);
 
