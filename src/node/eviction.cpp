@@ -255,11 +255,20 @@ void EvictionManagerImpl::AddCandidate(NodeId id, std::chrono::seconds connected
     NodeEvictionCandidate candidate{
         .id = id,
         .m_connected = connected,
+        // Initial value corresponds to "the peer has never sent a pong
+        // response".
         .m_min_ping_time = std::chrono::microseconds::max(),
+        // Initial values correspond to "the peer has never sent us a block or
+        // transaction".
         .m_last_block_time = 0s,
         .m_last_tx_time = 0s,
+        // We only learn if the peer advertises relevant services during the
+        // version handshake.
         .fRelevantServices = false,
+        // Whether we relay transactions to this peer is determined later
+        // (during or after the version handshake).
         .m_relay_txs = false,
+        // At this point the peer has not sent us a bloom filter.
         .fBloomFilter = false,
         .nKeyedNetGroup = keyed_net_group,
         .prefer_evict = prefer_evict,
