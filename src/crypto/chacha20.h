@@ -15,7 +15,7 @@
 class ChaCha20Aligned
 {
 private:
-    uint32_t input[16];
+    uint32_t input[12];
 
 public:
     ChaCha20Aligned();

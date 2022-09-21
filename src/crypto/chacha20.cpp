@@ -21,26 +21,20 @@ constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (
 
 #define REPEAT10(a) do { {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; } while(0)
 
-static const unsigned char sigma[] = "expand 32-byte k";
-
 void ChaCha20Aligned::SetKey32(const unsigned char* k)
 {
-    input[0] = ReadLE32(sigma + 0);
-    input[1] = ReadLE32(sigma + 4);
-    input[2] = ReadLE32(sigma + 8);
-    input[3] = ReadLE32(sigma + 12);
-    input[4] = ReadLE32(k + 0);
-    input[5] = ReadLE32(k + 4);
-    input[6] = ReadLE32(k + 8);
-    input[7] = ReadLE32(k + 12);
-    input[8] = ReadLE32(k + 16);
-    input[9] = ReadLE32(k + 20);
-    input[10] = ReadLE32(k + 24);
-    input[11] = ReadLE32(k + 28);
-    input[12] = 0;
-    input[13] = 0;
-    input[14] = 0;
-    input[15] = 0;
+    input[0] = ReadLE32(k + 0);
+    input[1] = ReadLE32(k + 4);
+    input[2] = ReadLE32(k + 8);
+    input[3] = ReadLE32(k + 12);
+    input[4] = ReadLE32(k + 16);
+    input[5] = ReadLE32(k + 20);
+    input[6] = ReadLE32(k + 24);
+    input[7] = ReadLE32(k + 28);
+    input[8] = 0;
+    input[9] = 0;
+    input[10] = 0;
+    input[11] = 0;
 }
 
 ChaCha20Aligned::ChaCha20Aligned()
@@ -55,45 +49,41 @@ ChaCha20Aligned::ChaCha20Aligned(const unsigned char* key32)
 
 void ChaCha20Aligned::SetIV(uint64_t iv)
 {
-    input[14] = iv;
-    input[15] = iv >> 32;
+    input[10] = iv;
+    input[11] = iv >> 32;
 }
 
 void ChaCha20Aligned::Seek64(uint64_t pos)
 {
-    input[12] = pos;
-    input[13] = pos >> 32;
+    input[8] = pos;
+    input[9] = pos >> 32;
 }
 
 inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
 {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
-    uint32_t j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
+    uint32_t j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
 
     if (!blocks) return;
 
-    j0 = input[0];
-    j1 = input[1];
-    j2 = input[2];
-    j3 = input[3];
-    j4 = input[4];
-    j5 = input[5];
-    j6 = input[6];
-    j7 = input[7];
-    j8 = input[8];
-    j9 = input[9];
-    j10 = input[10];
-    j11 = input[11];
-    j12 = input[12];
-    j13 = input[13];
-    j14 = input[14];
-    j15 = input[15];
+    j4 = input[0];
+    j5 = input[1];
+    j6 = input[2];
+    j7 = input[3];
+    j8 = input[4];
+    j9 = input[5];
+    j10 = input[6];
+    j11 = input[7];
+    j12 = input[8];
+    j13 = input[9];
+    j14 = input[10];
+    j15 = input[11];
 
     for (;;) {
-        x0 = j0;
-        x1 = j1;
-        x2 = j2;
-        x3 = j3;
+        x0 = 0x61707865;
+        x1 = 0x3320646e;
+        x2 = 0x79622d32;
+        x3 = 0x6b206574;
         x4 = j4;
         x5 = j5;
         x6 = j6;
@@ -119,10 +109,10 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
             QUARTERROUND( x3, x4, x9,x14);
         );
 
-        x0 += j0;
-        x1 += j1;
-        x2 += j2;
-        x3 += j3;
+        x0 += 0x61707865;
+        x1 += 0x3320646e;
+        x2 += 0x79622d32;
+        x3 += 0x6b206574;
         x4 += j4;
         x5 += j5;
         x6 += j6;
@@ -157,8 +147,8 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
         WriteLE32(c + 60, x15);
 
         if (blocks == 1) {
-            input[12] = j12;
-            input[13] = j13;
+            input[8] = j12;
+            input[9] = j13;
             return;
         }
         blocks -= 1;
@@ -169,32 +159,28 @@ inline void ChaCha20Aligned::Keystream64(unsigned char* c, size_t blocks)
 inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, size_t blocks)
 {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
-    uint32_t j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
+    uint32_t j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
 
     if (!blocks) return;
 
-    j0 = input[0];
-    j1 = input[1];
-    j2 = input[2];
-    j3 = input[3];
-    j4 = input[4];
-    j5 = input[5];
-    j6 = input[6];
-    j7 = input[7];
-    j8 = input[8];
-    j9 = input[9];
-    j10 = input[10];
-    j11 = input[11];
-    j12 = input[12];
-    j13 = input[13];
-    j14 = input[14];
-    j15 = input[15];
+    j4 = input[0];
+    j5 = input[1];
+    j6 = input[2];
+    j7 = input[3];
+    j8 = input[4];
+    j9 = input[5];
+    j10 = input[6];
+    j11 = input[7];
+    j12 = input[8];
+    j13 = input[9];
+    j14 = input[10];
+    j15 = input[11];
 
     for (;;) {
-        x0 = j0;
-        x1 = j1;
-        x2 = j2;
-        x3 = j3;
+        x0 = 0x61707865;
+        x1 = 0x3320646e;
+        x2 = 0x79622d32;
+        x3 = 0x6b206574;
         x4 = j4;
         x5 = j5;
         x6 = j6;
@@ -220,10 +206,10 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
             QUARTERROUND( x3, x4, x9,x14);
         );
 
-        x0 += j0;
-        x1 += j1;
-        x2 += j2;
-        x3 += j3;
+        x0 += 0x61707865;
+        x1 += 0x3320646e;
+        x2 += 0x79622d32;
+        x3 += 0x6b206574;
         x4 += j4;
         x5 += j5;
         x6 += j6;
@@ -275,8 +261,8 @@ inline void ChaCha20Aligned::Crypt64(const unsigned char* m, unsigned char* c, s
         WriteLE32(c + 60, x15);
 
         if (blocks == 1) {
-            input[12] = j12;
-            input[13] = j13;
+            input[8] = j12;
+            input[9] = j13;
             return;
         }
         blocks -= 1;

@@ -267,23 +267,24 @@ void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
 
 FUZZ_TARGET(crypto_diff_fuzz_chacha20)
 {
+    static const unsigned char ZEROKEY[32] = {0};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     ChaCha20 chacha20;
     ECRYPT_ctx ctx;
-    // D. J. Bernstein doesn't initialise ctx to 0 while Bitcoin Core initialises chacha20 to 0 in the constructor
-    for (int i = 0; i < 16; i++) {
-        ctx.input[i] = 0;
-    }
 
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
         chacha20 = ChaCha20{key.data()};
         ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-        // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
-        uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-        ECRYPT_ivsetup(&ctx, iv);
+    } else {
+        // The default ChaCha20 constructor is equivalent to using the all-0 key.
+        ECRYPT_keysetup(&ctx, ZEROKEY, 256, 0);
     }
+
+    // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
+    static const uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    ECRYPT_ivsetup(&ctx, iv);
 
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 3000) {
         CallOneOf(
