@@ -188,6 +188,7 @@ bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr, bool bOverrideNetwork = false);
 bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
 CService GetLocalAddress(const CNetAddr& addrPeer);
+CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 
 extern bool fDiscover;
