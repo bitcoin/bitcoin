@@ -64,7 +64,6 @@
 #include <numeric>
 #include <optional>
 #include <string>
-
 // SYSCOIN
 #include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
@@ -88,6 +87,7 @@ NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
+bool fTestSetting{false};
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
@@ -2690,7 +2690,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     std::string strError;
     // add seniority to reward when checking for limit
-    if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= m_params.GetConsensus().DIP0003EnforcementHeight)) {
+    if (!fTestSetting && !IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet, strError) && (fRegTest || pindex->nHeight >= m_params.GetConsensus().DIP0003EnforcementHeight)) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet+nMNFloorDiffRet);
         // hack for feature_signet.py to pass which uses bitcoin blocks signed by the signet witness
         if(!fSigNet || pindex->nHeight > 100) {
@@ -3601,7 +3601,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 void Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
-    if (!bestChainLockBlockIndex || bInvalidate ||!fLoaded) {
+    if (!bestChainLockBlockIndex || bInvalidate || !fLoaded) {
         // we don't have the header/block, so we can't do anything right now
         return;
     }
@@ -4248,7 +4248,6 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final transaction");
         }
     }
-
     // Enforce rule that the coinbase starts with serialized block height
     if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
     {

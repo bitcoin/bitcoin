@@ -1132,7 +1132,7 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
 {
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
-
+extern bool fTestSetting;
 /**
  * Return the expected assumeutxo value for a given height, if one exists.
  *

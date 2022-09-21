@@ -177,7 +177,9 @@ void FillBlockPayments(CChain& activeChain, CMutableTransaction& txNew, int nBlo
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
     // superblock governance amount is added as extra
     txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
-
+    if(fTestSetting) {
+        txNew.vout[0].nValue += 1*COIN;
+    }
     std::string voutMasternodeStr;
     for (const auto& txout : voutMasternodePaymentsRet) {
         if (!voutMasternodeStr.empty())

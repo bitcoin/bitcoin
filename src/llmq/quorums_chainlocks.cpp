@@ -819,6 +819,9 @@ void CChainLocksHandler::ClearChainLock()
     bestChainLockCandidates.clear();
     bestChainLockShares.clear();
     mapAttemptSignedRequestIds.clear();
+    signingState.SetLastSignedHeight(0);
+    // clear recovered sig db and cl vote db
+    quorumSigningManager->Clear();
 }
 
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const

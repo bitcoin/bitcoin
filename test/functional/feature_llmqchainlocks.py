@@ -14,7 +14,7 @@ from test_framework.blocktools import (
   create_block,
   create_coinbase,
 )
-from test_framework.util import force_finish_mnsync, assert_equal
+from test_framework.util import force_finish_mnsync, assert_equal, assert_raises_rpc_error
 '''
 feature_llmqchainlocks.py
 
@@ -112,6 +112,38 @@ class LLMQChainLocksTest(DashTestFramework):
             if tip["hash"] == bad_tip:
                 self.log.info('status {}'.format(tip["status"]))
                 assert(tip["status"] == "conflicting")
+                found = True
+                break
+        assert(found)
+        self.log.info("Isolate node, mine invalid longer chain(locked) + shorter good chain, and reconnect")
+        # set flag create and accept invalid blocks
+        for i in range(len(self.nodes)):
+            self.nodes[i].settestparams("1")
+        self.generate(self.nodes[0], 2)
+        bad_tip = self.nodes[0].getbestblockhash()
+        self.log.info("bad_tip {}".format(bad_tip))
+        self.wait_for_chainlocked_block_all_nodes(bad_tip, timeout=30)
+        # clear the invalid flag
+        for i in range(len(self.nodes)):
+            self.nodes[i].settestparams("0")
+        # should clear chainlock due to invalid block getting locked
+        for i in range(len(self.nodes)):
+            self.nodes[i].invalidateblock(bad_tip)
+            self.nodes[i].reconsiderblock(bad_tip)
+            assert_raises_rpc_error(-32603, 'Unable to find any chainlock', self.nodes[0].getchainlocks)
+            assert(not self.nodes[i].getblock(bad_tip)["chainlock"])
+        
+        self.generate(self.nodes[0], 1)
+        tip = self.nodes[0].getbestblockhash()
+        self.log.info("tip {}".format(tip))
+        self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
+
+        self.log.info("bad tip mined while being locked should be invalid now")
+        found = False
+        for tip in self.nodes[0].getchaintips():
+            if tip["hash"] == bad_tip:
+                self.log.info('status {}'.format(tip["status"]))
+                assert(tip["status"] == "invalid")
                 found = True
                 break
         assert(found)

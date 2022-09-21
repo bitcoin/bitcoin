@@ -809,6 +809,30 @@ static RPCHelpMan listassets()
 },
     };
 }
+
+static RPCHelpMan settestparams() 
+{
+    return RPCHelpMan{"settestparams",
+        "\nSet test setting. Used in testing only.\n",
+        {
+            {"setting", RPCArg::Type::STR, RPCArg::Optional::NO, "DIP3 setting"}
+        },
+        RPCResult{RPCResult::Type::ANY, "", ""},
+        RPCExamples{
+            HelpExampleCli("settestparams", "\"1\"")
+            + HelpExampleRpc("settestparams", "\"1\"")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{ 
+        fTestSetting = false;
+        if(request.params[0].get_str() == "1") {
+            fTestSetting = true;
+        }
+        return "success";
+},
+    };
+}
+
 static RPCHelpMan listnevmblobdata()
 {
     return RPCHelpMan{"listnevmblobdata",
@@ -1120,6 +1144,7 @@ void RegisterAssetRPCCommands(CRPCTable &t)
         {"syscoin", &getnotarysighash},
         {"syscoin", &getnevmblockchaininfo},
         {"syscoin", &getnevmblobdata},
+        {"syscoin", &settestparams},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

@@ -905,7 +905,12 @@ void CSigningManager::TruncateRecoveredSig(uint8_t llmqType, const uint256& id)
 {
     db.TruncateRecoveredSig(llmqType, id);
 }
-
+void CSigningManager::Clear()
+{
+    int64_t maxAge = 0;
+    db.CleanupOldRecoveredSigs(maxAge);
+    db.CleanupOldVotes(maxAge);  
+}
 void CSigningManager::Cleanup()
 {
     int64_t now = GetTimeMillis();

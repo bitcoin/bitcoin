@@ -188,7 +188,7 @@ public:
 
     bool HasVotedOnId(uint8_t llmqType, const uint256& id) const;
     bool GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const;
-
+    void Clear();
     static std::vector<CQuorumCPtr> GetActiveQuorumSet(uint8_t llmqType, int signHeight);
     static CQuorumCPtr SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
     // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
