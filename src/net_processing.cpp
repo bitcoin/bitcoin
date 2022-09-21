@@ -703,7 +703,7 @@ private:
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
-    TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
+    TxRequestTracker m_txrequest;
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
 
     /** The height of the best chain */
@@ -1395,7 +1395,8 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
 void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
 {
-    AssertLockHeld(::cs_main); // For m_txrequest
+    AssertLockHeld(::cs_main);
+
     NodeId nodeid = node.GetId();
     if (!node.HasPermission(NetPermissionFlags::Relay) && m_txrequest.Count(nodeid) >= MAX_PEER_TX_ANNOUNCEMENTS) {
         // Too many queued announcements from this peer
@@ -1819,12 +1820,10 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
             }
         }
     }
-    {
-        LOCK(cs_main);
-        for (const auto& ptx : pblock->vtx) {
-            m_txrequest.ForgetTxHash(ptx->GetHash());
-            m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
-        }
+
+    for (const auto& ptx : pblock->vtx) {
+        m_txrequest.ForgetTxHash(ptx->GetHash());
+        m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
     }
 }
 
@@ -3986,10 +3985,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             AddKnownTx(*peer, txid);
         }
 
-        LOCK2(cs_main, g_cs_orphans);
-
         m_txrequest.ReceivedResponse(pfrom.GetId(), txid);
         if (tx.HasWitness()) m_txrequest.ReceivedResponse(pfrom.GetId(), wtxid);
+
+        LOCK2(cs_main, g_cs_orphans);
 
         // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
         // absence of witness malleation, this is strictly better, because the
@@ -4778,7 +4777,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<CInv> vInv;
         vRecv >> vInv;
         if (vInv.size() <= MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-            LOCK(::cs_main);
             for (CInv &inv : vInv) {
                 if (inv.IsGenTxMsg()) {
                     // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
