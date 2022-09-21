@@ -20,11 +20,11 @@ private:
 public:
     ChaCha20Aligned();
 
-    /** Initialize a cipher with specified key (see SetKey for arguments). */
-    ChaCha20Aligned(const unsigned char* key, size_t keylen);
+    /** Initialize a cipher with specified 32-byte key. */
+    ChaCha20Aligned(const unsigned char* key32);
 
-    /** set key with flexible keylength (16 or 32 bytes; 32 recommended). */
-    void SetKey(const unsigned char* key, size_t keylen);
+    /** set 32-byte key. */
+    void SetKey32(const unsigned char* key32);
 
     /** set the 64-bit nonce. */
     void SetIV(uint64_t iv);
@@ -52,13 +52,13 @@ private:
 public:
     ChaCha20() = default;
 
-    /** Initialize a cipher with specified key (see SetKey for arguments). */
-    ChaCha20(const unsigned char* key, size_t keylen) : m_aligned(key, keylen) {}
+    /** Initialize a cipher with specified 32-byte key. */
+    ChaCha20(const unsigned char* key32) : m_aligned(key32) {}
 
-    /** set key with flexible keylength (16 or 32 bytes; 32 recommended). */
-    void SetKey(const unsigned char* key, size_t keylen)
+    /** set 32-byte key. */
+    void SetKey32(const unsigned char* key32)
     {
-        m_aligned.SetKey(key, keylen);
+        m_aligned.SetKey32(key32);
         m_bufleft = 0;
     }
 

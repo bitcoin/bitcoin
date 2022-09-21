@@ -17,15 +17,15 @@ FUZZ_TARGET(crypto_chacha20)
 
     ChaCha20 chacha20;
     if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
-        chacha20 = ChaCha20{key.data(), key.size()};
+        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+        chacha20 = ChaCha20{key.data()};
     }
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
-                chacha20.SetKey(key.data(), key.size());
+                std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+                chacha20.SetKey32(key.data());
             },
             [&] {
                 chacha20.SetIV(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
@@ -68,8 +68,8 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
     uint64_t seek = provider.ConsumeIntegralInRange<uint64_t>(0, ~(total_bytes >> 6));
 
     // Initialize two ChaCha20 ciphers, with the same key/iv/position.
-    ChaCha20 crypt1(key, 32);
-    ChaCha20 crypt2(key, 32);
+    ChaCha20 crypt1(key);
+    ChaCha20 crypt2(key);
     crypt1.SetIV(iv);
     crypt1.Seek64(seek);
     crypt2.SetIV(iv);

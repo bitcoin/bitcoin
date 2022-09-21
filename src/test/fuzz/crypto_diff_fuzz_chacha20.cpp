@@ -277,10 +277,10 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
     }
 
     if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
-        chacha20 = ChaCha20{key.data(), key.size()};
+        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+        chacha20 = ChaCha20{key.data()};
         ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-        // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
+        // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
         uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
         ECRYPT_ivsetup(&ctx, iv);
     }
@@ -289,10 +289,10 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(16, 32));
-                chacha20.SetKey(key.data(), key.size());
+                const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+                chacha20.SetKey32(key.data());
                 ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-                // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
+                // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
                 uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                 ECRYPT_ivsetup(&ctx, iv);
             },

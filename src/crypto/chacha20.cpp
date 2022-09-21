@@ -22,30 +22,21 @@ constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (
 #define REPEAT10(a) do { {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; } while(0)
 
 static const unsigned char sigma[] = "expand 32-byte k";
-static const unsigned char tau[] = "expand 16-byte k";
 
-void ChaCha20Aligned::SetKey(const unsigned char* k, size_t keylen)
+void ChaCha20Aligned::SetKey32(const unsigned char* k)
 {
-    const unsigned char *constants;
-
+    input[0] = ReadLE32(sigma + 0);
+    input[1] = ReadLE32(sigma + 4);
+    input[2] = ReadLE32(sigma + 8);
+    input[3] = ReadLE32(sigma + 12);
     input[4] = ReadLE32(k + 0);
     input[5] = ReadLE32(k + 4);
     input[6] = ReadLE32(k + 8);
     input[7] = ReadLE32(k + 12);
-    if (keylen == 32) { /* recommended */
-        k += 16;
-        constants = sigma;
-    } else { /* keylen == 16 */
-        constants = tau;
-    }
-    input[8] = ReadLE32(k + 0);
-    input[9] = ReadLE32(k + 4);
-    input[10] = ReadLE32(k + 8);
-    input[11] = ReadLE32(k + 12);
-    input[0] = ReadLE32(constants + 0);
-    input[1] = ReadLE32(constants + 4);
-    input[2] = ReadLE32(constants + 8);
-    input[3] = ReadLE32(constants + 12);
+    input[8] = ReadLE32(k + 16);
+    input[9] = ReadLE32(k + 20);
+    input[10] = ReadLE32(k + 24);
+    input[11] = ReadLE32(k + 28);
     input[12] = 0;
     input[13] = 0;
     input[14] = 0;
@@ -57,9 +48,9 @@ ChaCha20Aligned::ChaCha20Aligned()
     memset(input, 0, sizeof(input));
 }
 
-ChaCha20Aligned::ChaCha20Aligned(const unsigned char* k, size_t keylen)
+ChaCha20Aligned::ChaCha20Aligned(const unsigned char* key32)
 {
-    SetKey(k, keylen);
+    SetKey32(key32);
 }
 
 void ChaCha20Aligned::SetIV(uint64_t iv)

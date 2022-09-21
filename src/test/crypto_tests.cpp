@@ -133,8 +133,9 @@ static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, b
 static void TestChaCha20(const std::string &hex_message, const std::string &hexkey, uint64_t nonce, uint64_t seek, const std::string& hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
+    assert(key.size() == 32);
     std::vector<unsigned char> m = ParseHex(hex_message);
-    ChaCha20 rng(key.data(), key.size());
+    ChaCha20 rng(key.data());
     rng.SetIV(nonce);
     rng.Seek64(seek);
     std::vector<unsigned char> out = ParseHex(hexout);
@@ -460,7 +461,7 @@ BOOST_AUTO_TEST_CASE(aes_cbc_testvectors) {
 
 BOOST_AUTO_TEST_CASE(chacha20_testvector)
 {
-    // Test vector from RFC 7539
+    // Test vectors from RFC 7539
 
     // test encryption
     TestChaCha20("4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756"
@@ -503,12 +504,12 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
 {
     auto key = ParseHex("0000000000000000000000000000000000000000000000000000000000000000");
-    ChaCha20 c20{key.data(), 32};
+    ChaCha20 c20{key.data()};
     // get one block of keystream
     unsigned char block[64];
     c20.Keystream(block, CHACHA20_ROUND_OUTPUT);
     unsigned char b1[5], b2[7], b3[52];
-    c20 = ChaCha20{key.data(), 32};
+    c20 = ChaCha20{key.data()};
     c20.Keystream(b1, 5);
     c20.Keystream(b2, 7);
     c20.Keystream(b3, 52);
@@ -635,7 +636,7 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
     ChaCha20Poly1305AEAD aead(aead_K_1.data(), aead_K_1.size(), aead_K_2.data(), aead_K_2.size());
 
     // create a chacha20 instance to compare against
-    ChaCha20 cmp_ctx(aead_K_1.data(), 32);
+    ChaCha20 cmp_ctx(aead_K_1.data());
 
     // encipher
     bool res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, ciphertext_buf.data(), ciphertext_buf.size(), plaintext_buf.data(), plaintext_buf.size(), true);
