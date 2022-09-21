@@ -310,20 +310,26 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
             },
             [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
+                uint64_t pos = ctx.input[12] + (((uint64_t)ctx.input[13]) << 32) + ((integralInRange + 63) >> 6);
                 std::vector<uint8_t> output(integralInRange);
                 chacha20.Keystream(output.data(), output.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_keystream_bytes(&ctx, djb_output.data(), djb_output.size());
                 assert(output == djb_output);
+                chacha20.Seek64(pos);
             },
             [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+                // DJB's version seeks forward to a multiple of 64 bytes after every operation. Correct for that.
+                uint64_t pos = ctx.input[12] + (((uint64_t)ctx.input[13]) << 32) + ((integralInRange + 63) >> 6);
                 std::vector<uint8_t> output(integralInRange);
                 const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
                 chacha20.Crypt(input.data(), output.data(), input.size());
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_encrypt_bytes(&ctx, input.data(), djb_output.data(), input.size());
                 assert(output == djb_output);
+                chacha20.Seek64(pos);
             });
     }
 }

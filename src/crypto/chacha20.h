@@ -41,11 +41,13 @@ public:
     void Crypt64(const unsigned char* input, unsigned char* output, size_t blocks);
 };
 
-/** Unrestricted ChaCha20 cipher. Seeks forward to a multiple of 64 bytes after every operation. */
+/** Unrestricted ChaCha20 cipher. */
 class ChaCha20
 {
 private:
     ChaCha20Aligned m_aligned;
+    unsigned char m_buffer[64] = {0};
+    unsigned m_bufleft{0};
 
 public:
     ChaCha20() = default;
@@ -54,13 +56,21 @@ public:
     ChaCha20(const unsigned char* key, size_t keylen) : m_aligned(key, keylen) {}
 
     /** set key with flexible keylength (16 or 32 bytes; 32 recommended). */
-    void SetKey(const unsigned char* key, size_t keylen) { m_aligned.SetKey(key, keylen); }
+    void SetKey(const unsigned char* key, size_t keylen)
+    {
+        m_aligned.SetKey(key, keylen);
+        m_bufleft = 0;
+    }
 
     /** set the 64-bit nonce. */
     void SetIV(uint64_t iv) { m_aligned.SetIV(iv); }
 
     /** set the 64bit block counter (pos seeks to byte position 64*pos). */
-    void Seek64(uint64_t pos) { m_aligned.Seek64(pos); }
+    void Seek64(uint64_t pos)
+    {
+        m_aligned.Seek64(pos);
+        m_bufleft = 0;
+    }
 
     /** outputs the keystream of size <bytes> into <c> */
     void Keystream(unsigned char* c, size_t bytes);
