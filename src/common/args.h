@@ -570,6 +570,9 @@ private:
     std::optional<unsigned int> GetArgFlags_(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
     fs::path GetPathArg_(std::string arg, const fs::path& default_value = {}) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
+    bool CheckArgFlags(const std::string& name, uint32_t require, uint32_t forbid, const char* context) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+
+
     /**
      * Get data directory path
      *
