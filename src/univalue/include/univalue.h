@@ -19,6 +19,11 @@ class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
 
+    class type_error : public std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     UniValue() { typ = VNULL; }
     UniValue(UniValue::VType initialType, const std::string& initialStr = "") {
         typ = initialType;
