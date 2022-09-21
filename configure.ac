@@ -1479,6 +1479,9 @@ if test "$use_boost" = "yes"; then
     AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
   fi
 
+  dnl avoid the use of std::auto_ptr (removed in C++17)
+  BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_AUTO_PTR"
+
   dnl avoid the use of std::bind1st (removed in C++17)
   BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_BINDERS"
 
