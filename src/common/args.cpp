@@ -185,6 +185,41 @@ std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const st
     return std::nullopt;
 }
 
+//! Return string if setting is a nonempty string or number (-setting=abc,
+//! -setting=123), "" if setting is false (-nosetting), otherwise return
+//! nullopt. For legacy untyped args, coerce bool settings to strings as well.
+static inline std::optional<std::string> ConvertToString(const common::SettingsValue& value, bool typed_arg)
+{
+    if (value.isStr() && !value.get_str().empty()) return value.get_str();
+    if (value.isNum()) return value.getValStr();
+    if (typed_arg && value.isFalse()) return "";
+    if (!typed_arg && !value.isNull()) {
+        if (value.isBool()) return value.get_bool() ? "1" : "0";
+        return value.get_str();
+    }
+    return {};
+}
+
+//! Return int64 if setting is a number or bool, otherwise return nullopt. For
+//! legacy untyped args, coerce string settings as well.
+template <std::integral Int>
+static inline std::optional<Int> ConvertToInt(const common::SettingsValue& value, bool typed_arg)
+{
+    if (value.isNum()) return value.getInt<Int>();
+    if (value.isBool()) return value.get_bool();
+    if (!typed_arg && !value.isNull()) return LocaleIndependentAtoi<Int>(value.get_str());
+    return {};
+}
+
+//! Return bool if setting is a bool, otherwise return nullopt. For legacy
+//! untyped args, coerce string settings as well.
+static inline std::optional<bool> ConvertToBool(const common::SettingsValue& value, bool typed_arg)
+{
+    if (value.isBool()) return value.get_bool();
+    if (!typed_arg && !value.isNull()) return InterpretBool(value.get_str());
+    return {};
+}
+
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
@@ -339,6 +374,29 @@ void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
     m_default_flags = flags;
 }
 
+/**
+ * Check that arg has the right flags for use in a given context. Raises
+ * logic_error if this isn't the case, indicating the argument was registered
+ * with bad AddArg flags.
+ *
+ * Returns true if the arg is registered and has type checking enabled. Returns
+ * false if the arg was never registered or is untyped.
+ */
+bool ArgsManager::CheckArgFlags(const std::string& name,
+    uint32_t require,
+    uint32_t forbid,
+    const char* context) const
+{
+    std::optional<unsigned int> flags = GetArgFlags(name);
+    if (!flags || !IsTypedArg(*flags)) return false;
+    if ((*flags & require) != require || (*flags & forbid) != 0) {
+        throw std::logic_error(
+            strprintf("Bug: Can't call %s on arg %s registered with flags 0x%08x (requires 0x%x, disallows 0x%x)",
+                context, name, *flags, require, forbid));
+    }
+    return true;
+}
+
 fs::path ArgsManager::GetPathArg_(std::string arg, const fs::path& default_value) const
 {
     AssertLockHeld(cs_args);
@@ -449,9 +507,10 @@ std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
+    bool typed_arg = CheckArgFlags(strArg, /*require=*/ ALLOW_STRING | ALLOW_LIST, /*forbid=*/ 0, __func__);
     std::vector<std::string> result;
     for (const common::SettingsValue& value : GetSettingsList(strArg)) {
-        result.push_back(value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
+        result.push_back(ConvertToString(value, typed_arg).value_or(""));
     }
     return result;
 }
@@ -549,22 +608,13 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 
 std::optional<std::string> ArgsManager::GetArg(const std::string& strArg) const
 {
-    const common::SettingsValue value = GetSetting(strArg);
-    return SettingToString(value);
-}
-
-std::optional<std::string> SettingToString(const common::SettingsValue& value)
-{
-    if (value.isNull()) return std::nullopt;
-    if (value.isFalse()) return "0";
-    if (value.isTrue()) return "1";
-    if (value.isNum()) return value.getValStr();
-    return value.get_str();
+    bool typed_arg = CheckArgFlags(strArg, /*require=*/ ALLOW_STRING, /*forbid=*/ ALLOW_LIST, __func__);
+    return ConvertToString(GetSetting(strArg), typed_arg);
 }
 
 std::string SettingToString(const common::SettingsValue& value, const std::string& strDefault)
 {
-    return SettingToString(value).value_or(strDefault);
+    return ConvertToString(value, /*typed_arg=*/false).value_or(strDefault);
 }
 
 template <std::integral Int>
@@ -576,24 +626,14 @@ Int ArgsManager::GetArg(const std::string& strArg, Int nDefault) const
 template <std::integral Int>
 std::optional<Int> ArgsManager::GetArg(const std::string& strArg) const
 {
-    const common::SettingsValue value = GetSetting(strArg);
-    return SettingTo<Int>(value);
-}
-
-template <std::integral Int>
-std::optional<Int> SettingTo(const common::SettingsValue& value)
-{
-    if (value.isNull()) return std::nullopt;
-    if (value.isFalse()) return 0;
-    if (value.isTrue()) return 1;
-    if (value.isNum()) return value.getInt<Int>();
-    return LocaleIndependentAtoi<Int>(value.get_str());
+    bool typed_arg = CheckArgFlags(strArg, /*require=*/ ALLOW_INT, /*forbid=*/ ALLOW_LIST, "GetIntArg");
+    return ConvertToInt<Int>(GetSetting(strArg), typed_arg);
 }
 
 template <std::integral Int>
 Int SettingTo(const common::SettingsValue& value, Int nDefault)
 {
-    return SettingTo<Int>(value).value_or(nDefault);
+    return ConvertToInt<Int>(value, /*typed_arg=*/false).value_or(nDefault);
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
@@ -603,27 +643,19 @@ bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 
 std::optional<bool> ArgsManager::GetBoolArg(const std::string& strArg) const
 {
-    const common::SettingsValue value = GetSetting(strArg);
-    return SettingToBool(value);
-}
-
-std::optional<bool> SettingToBool(const common::SettingsValue& value)
-{
-    if (value.isNull()) return std::nullopt;
-    if (value.isBool()) return value.get_bool();
-    return InterpretBool(value.get_str());
+    bool typed_arg = CheckArgFlags(strArg, /*require=*/ ALLOW_BOOL, /*forbid=*/ ALLOW_LIST, __func__);
+    return ConvertToBool(GetSetting(strArg), typed_arg);
 }
 
 bool SettingToBool(const common::SettingsValue& value, bool fDefault)
 {
-    return SettingToBool(value).value_or(fDefault);
+    return ConvertToBool(value, /*typed_arg=*/false).value_or(fDefault);
 }
 
 #define INSTANTIATE_INT_TYPE(Type)                                                    \
     template Type ArgsManager::GetArg<Type>(const std::string&, Type) const;          \
     template std::optional<Type> ArgsManager::GetArg<Type>(const std::string&) const; \
-    template Type SettingTo<Type>(const common::SettingsValue&, Type);                \
-    template std::optional<Type> SettingTo<Type>(const common::SettingsValue&)
+    template Type SettingTo<Type>(const common::SettingsValue&, Type);
 
 INSTANTIATE_INT_TYPE(int8_t);
 INSTANTIATE_INT_TYPE(uint8_t);
@@ -646,6 +678,7 @@ bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strVa
 
 bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
+    CheckArgFlags(strArg, /*require=*/ ALLOW_BOOL, /*forbid=*/ ALLOW_LIST, __func__);
     LOCK(cs_args);
     if (!GetSetting_(strArg).isNull()) return false;
     m_settings.forced_settings[SettingName(strArg)] = fValue;
@@ -654,6 +687,7 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
+    CheckArgFlags(strArg, /*require=*/ ALLOW_STRING, /*forbid=*/ 0, __func__);
     LOCK(cs_args);
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
@@ -930,7 +964,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
             /* ignore_default_section_config= */ false,
             /*ignore_nonpersistent=*/false,
             /* get_chain_type= */ true);
-        return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
+        return ConvertToBool(value, /*typed_arg=*/false).value_or(false);
     };
 
     const bool fRegTest = get_net("-regtest");
