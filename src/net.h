@@ -164,6 +164,7 @@ bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
 bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
 CService GetLocalAddress(const CNetAddr& addrPeer);
+CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 
 extern bool fDiscover;
