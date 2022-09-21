@@ -30,7 +30,7 @@ extern bool fAllowPrivateNet;
  * should be serialized in (unserialized from) v2 format (BIP155).
  * Make sure that this does not collide with any of the values in `version.h`
  */
-static const int ADDRV2_FORMAT = 0x20000000;
+static constexpr int ADDRV2_FORMAT = 0x20000000;
 
 /**
  * A network type.
