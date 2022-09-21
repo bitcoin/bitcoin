@@ -1221,7 +1221,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
                 to_parse.emplace_back(ParseContext::THRESH, 1, k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
-                script_size += 2 + (k > 16);
+                script_size += 2 + (k > 16) + (k > 0x7f) + (k > 0x7fff) + (k > 0x7fffff);
             } else if (Const("andor(", in)) {
                 to_parse.emplace_back(ParseContext::ANDOR, -1, -1);
                 to_parse.emplace_back(ParseContext::CLOSE_BRACKET, -1, -1);
