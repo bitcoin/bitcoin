@@ -306,23 +306,28 @@ GenTxid ToGenTxid(const Announcement& ann)
 }  // namespace
 
 /** Actual implementation for TxRequestTracker's data structure. */
-class TxRequestTracker::Impl {
+class TxRequestTracker::Impl
+{
+private:
+    mutable Mutex m_mutex;
+
     //! The current sequence number. Increases for every announcement. This is used to sort txhashes returned by
     //! GetRequestable in announcement order.
-    SequenceNumber m_current_sequence{0};
+    SequenceNumber m_current_sequence GUARDED_BY(m_mutex){0};
 
     //! This tracker's priority computer.
-    const PriorityComputer m_computer;
+    const PriorityComputer m_computer GUARDED_BY(m_mutex);
 
     //! This tracker's main data structure. See SanityCheck() for the invariants that apply to it.
-    Index m_index;
+    Index m_index GUARDED_BY(m_mutex);
 
     //! Map with this tracker's per-peer statistics.
-    std::unordered_map<NodeId, PeerInfo> m_peerinfo;
+    std::unordered_map<NodeId, PeerInfo> m_peerinfo GUARDED_BY(m_mutex);
 
 public:
-    void SanityCheck() const
+    void SanityCheck() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         // Recompute m_peerdata from m_index. This verifies the data in it as it should just be caching statistics
         // on m_index. It also verifies the invariant that no PeerInfo announcements with m_total==0 exist.
         assert(m_peerinfo == RecomputePeerInfo(m_index));
@@ -355,8 +360,9 @@ public:
         }
     }
 
-    void PostGetRequestableSanityCheck(std::chrono::microseconds now) const
+    void PostGetRequestableSanityCheck(std::chrono::microseconds now) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         for (const Announcement& ann : m_index) {
             if (ann.IsWaiting()) {
                 // REQUESTED and CANDIDATE_DELAYED must have a time in the future (they should have been converted
@@ -373,7 +379,7 @@ public:
 private:
     //! Wrapper around Index::...::erase that keeps m_peerinfo up to date.
     template<typename Tag>
-    Iter<Tag> Erase(Iter<Tag> it)
+    Iter<Tag> Erase(Iter<Tag> it) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         auto peerit = m_peerinfo.find(it->m_peer);
         peerit->second.m_completed -= it->GetState() == State::COMPLETED;
@@ -384,7 +390,7 @@ private:
 
     //! Wrapper around Index::...::modify that keeps m_peerinfo up to date.
     template<typename Tag, typename Modifier>
-    void Modify(Iter<Tag> it, Modifier modifier)
+    void Modify(Iter<Tag> it, Modifier modifier) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         auto peerit = m_peerinfo.find(it->m_peer);
         peerit->second.m_completed -= it->GetState() == State::COMPLETED;
@@ -397,7 +403,7 @@ private:
     //! Convert a CANDIDATE_DELAYED announcement into a CANDIDATE_READY. If this makes it the new best
     //! CANDIDATE_READY (and no REQUESTED exists) and better than the CANDIDATE_BEST (if any), it becomes the new
     //! CANDIDATE_BEST.
-    void PromoteCandidateReady(Iter<ByTxHash> it)
+    void PromoteCandidateReady(Iter<ByTxHash> it) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         assert(it != m_index.get<ByTxHash>().end());
         assert(it->GetState() == State::CANDIDATE_DELAYED);
@@ -426,7 +432,7 @@ private:
 
     //! Change the state of an announcement to something non-IsSelected(). If it was IsSelected(), the next best
     //! announcement will be marked CANDIDATE_BEST.
-    void ChangeAndReselect(Iter<ByTxHash> it, State new_state)
+    void ChangeAndReselect(Iter<ByTxHash> it, State new_state) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         assert(new_state == State::COMPLETED || new_state == State::CANDIDATE_DELAYED);
         assert(it != m_index.get<ByTxHash>().end());
@@ -443,7 +449,7 @@ private:
     }
 
     //! Check if 'it' is the only announcement for a given txhash that isn't COMPLETED.
-    bool IsOnlyNonCompleted(Iter<ByTxHash> it)
+    bool IsOnlyNonCompleted(Iter<ByTxHash> it) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         assert(it != m_index.get<ByTxHash>().end());
         assert(it->GetState() != State::COMPLETED); // Not allowed to call this on COMPLETED announcements.
@@ -462,7 +468,7 @@ private:
     /** Convert any announcement to a COMPLETED one. If there are no non-COMPLETED announcements left for this
      *  txhash, they are deleted. If this was a REQUESTED announcement, and there are other CANDIDATEs left, the
      *  best one is made CANDIDATE_BEST. Returns whether the announcement still exists. */
-    bool MakeCompleted(Iter<ByTxHash> it)
+    bool MakeCompleted(Iter<ByTxHash> it) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         assert(it != m_index.get<ByTxHash>().end());
 
@@ -489,7 +495,7 @@ private:
     //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
-    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
+    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
     {
         if (expired) expired->clear();
 
@@ -534,8 +540,10 @@ public:
     Impl(const Impl&) = delete;
     Impl& operator=(const Impl&) = delete;
 
-    void DisconnectedPeer(NodeId peer)
+    void DisconnectedPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
+
         auto& index = m_index.get<ByPeer>();
         auto it = index.lower_bound(ByPeerView{peer, false, uint256::ZERO});
         while (it != index.end() && it->m_peer == peer) {
@@ -565,8 +573,9 @@ public:
         }
     }
 
-    void ForgetTxHash(const uint256& txhash)
+    void ForgetTxHash(const uint256& txhash) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
         while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) {
             it = Erase<ByTxHash>(it);
@@ -574,8 +583,9 @@ public:
     }
 
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-        std::chrono::microseconds reqtime)
+        std::chrono::microseconds reqtime) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         // Bail out if we already have a CANDIDATE_BEST announcement for this (txhash, peer) combination. The case
         // where there is a non-CANDIDATE_BEST announcement already will be caught by the uniqueness property of the
         // ByPeer index when we try to emplace the new object below.
@@ -594,8 +604,9 @@ public:
 
     //! Find the GenTxids to request now from peer.
     std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
-        std::vector<std::pair<NodeId, GenTxid>>* expired)
+        std::vector<std::pair<NodeId, GenTxid>>* expired) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         // Move time.
         SetTimePoint(now, expired);
 
@@ -622,8 +633,9 @@ public:
         return ret;
     }
 
-    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry)
+    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         auto it = m_index.get<ByPeer>().find(ByPeerView{peer, true, txhash});
         if (it == m_index.get<ByPeer>().end()) {
             // There is no CANDIDATE_BEST announcement, look for a _READY or _DELAYED instead. If the caller only
@@ -667,8 +679,9 @@ public:
         });
     }
 
-    void ReceivedResponse(NodeId peer, const uint256& txhash)
+    void ReceivedResponse(NodeId peer, const uint256& txhash) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         // We need to search the ByPeer index for both (peer, false, txhash) and (peer, true, txhash).
         auto it = m_index.get<ByPeer>().find(ByPeerView{peer, false, txhash});
         if (it == m_index.get<ByPeer>().end()) {
@@ -677,36 +690,43 @@ public:
         if (it != m_index.get<ByPeer>().end()) MakeCompleted(m_index.project<ByTxHash>(it));
     }
 
-    size_t CountInFlight(NodeId peer) const
+    size_t CountInFlight(NodeId peer) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         auto it = m_peerinfo.find(peer);
         if (it != m_peerinfo.end()) return it->second.m_requested;
         return 0;
     }
 
-    size_t CountCandidates(NodeId peer) const
+    size_t CountCandidates(NodeId peer) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         auto it = m_peerinfo.find(peer);
         if (it != m_peerinfo.end()) return it->second.m_total - it->second.m_requested - it->second.m_completed;
         return 0;
     }
 
-    size_t Count(NodeId peer) const
+    size_t Count(NodeId peer) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         auto it = m_peerinfo.find(peer);
         if (it != m_peerinfo.end()) return it->second.m_total;
         return 0;
     }
 
     //! Count how many announcements are being tracked in total across all peers and transactions.
-    size_t Size() const { return m_index.size(); }
-
-    uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const
+    size_t Size() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
+        return m_index.size();
+    }
+
+    uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
         // Return Priority as a uint64_t as Priority is internal.
         return uint64_t{m_computer(txhash, peer, preferred)};
     }
-
 };
 
 TxRequestTracker::TxRequestTracker(bool deterministic) :
