@@ -1479,6 +1479,9 @@ if test "$use_boost" = "yes"; then
     AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
   fi
 
+  dnl Boost says to define BOOST_NO_CONFIG for "for autoconf generated setups"
+  BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CONFIG -DBOOST_NO_USER_CONFIG"
+
   dnl avoid the use of std::auto_ptr (removed in C++17)
   BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_AUTO_PTR"
 
