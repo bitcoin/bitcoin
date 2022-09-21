@@ -184,8 +184,8 @@ class WalletHDTest(BitcoinTestFramework):
             # Sethdseed parameter validity
             assert_raises_rpc_error(-1, 'sethdseed', self.nodes[0].sethdseed, False, new_seed, 0)
             assert_raises_rpc_error(-5, "Invalid private key", wallet_no_seed.sethdseed, False, "not_wif")
-            assert_raises_rpc_error(-1, "JSON value of type string is not of expected type bool", wallet_no_seed.sethdseed, "Not_bool")
-            assert_raises_rpc_error(-1, "JSON value of type bool is not of expected type string", wallet_no_seed.sethdseed, False, True)
+            assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", wallet_no_seed.sethdseed, "Not_bool")
+            assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type string", wallet_no_seed.sethdseed, False, True)
             assert_raises_rpc_error(-5, "Already have this key", wallet_no_seed.sethdseed, False, non_hd_key)
 
             self.log.info('Test sethdseed restoring with keys outside of the initial keypool')
