@@ -87,13 +87,8 @@ struct SectionInfo {
 };
 
 std::string SettingToString(const common::SettingsValue&, const std::string&);
-std::optional<std::string> SettingToString(const common::SettingsValue&);
-
 int64_t SettingToInt(const common::SettingsValue&, int64_t);
-std::optional<int64_t> SettingToInt(const common::SettingsValue&);
-
 bool SettingToBool(const common::SettingsValue&, bool);
-std::optional<bool> SettingToBool(const common::SettingsValue&);
 
 class ArgsManager
 {
@@ -543,6 +538,8 @@ protected:
     void LogArgs() const;
 
 private:
+    bool CheckArgFlags(const std::string& name, uint32_t require, uint32_t forbid, const char* context) const;
+
     /**
      * Get data directory path
      *
