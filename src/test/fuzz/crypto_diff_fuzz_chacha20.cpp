@@ -304,7 +304,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
             },
             [&] {
                 uint64_t counter = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
-                chacha20.Seek(counter);
+                chacha20.Seek64(counter);
                 ctx.input[12] = counter;
                 ctx.input[13] = counter >> 32;
             },

@@ -30,7 +30,7 @@ FUZZ_TARGET(crypto_chacha20)
                 chacha20.SetIV(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             },
             [&] {
-                chacha20.Seek(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+                chacha20.Seek64(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             },
             [&] {
                 std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));

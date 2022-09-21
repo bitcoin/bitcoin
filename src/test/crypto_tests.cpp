@@ -136,7 +136,7 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
     std::vector<unsigned char> m = ParseHex(hex_message);
     ChaCha20 rng(key.data(), key.size());
     rng.SetIV(nonce);
-    rng.Seek(seek);
+    rng.Seek64(seek);
     std::vector<unsigned char> out = ParseHex(hexout);
     std::vector<unsigned char> outres;
     outres.resize(out.size());
@@ -152,7 +152,7 @@ static void TestChaCha20(const std::string &hex_message, const std::string &hexk
     if (!hex_message.empty()) {
         // Manually XOR with the keystream and compare the output
         rng.SetIV(nonce);
-        rng.Seek(seek);
+        rng.Seek64(seek);
         std::vector<unsigned char> only_keystream(outres.size());
         rng.Keystream(only_keystream.data(), only_keystream.size());
         for (size_t i = 0; i != m.size(); i++) {
@@ -631,7 +631,7 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
 
     // manually construct the AAD keystream
     cmp_ctx.SetIV(seqnr_aad);
-    cmp_ctx.Seek(0);
+    cmp_ctx.Seek64(0);
     cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
     BOOST_CHECK(memcmp(expected_aad_keystream.data(), cmp_ctx_buffer.data(), expected_aad_keystream.size()) == 0);
     // crypt the 3 length bytes and compare the length
@@ -659,7 +659,7 @@ static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aa
         }
         // set nonce and block counter, output the keystream
         cmp_ctx.SetIV(seqnr_aad);
-        cmp_ctx.Seek(0);
+        cmp_ctx.Seek64(0);
         cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
 
         // crypt the 3 length bytes and compare the length

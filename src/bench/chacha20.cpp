@@ -16,7 +16,7 @@ static void CHACHA20(benchmark::Bench& bench, size_t buffersize)
     std::vector<uint8_t> key(32,0);
     ChaCha20 ctx(key.data(), key.size());
     ctx.SetIV(0);
-    ctx.Seek(0);
+    ctx.Seek64(0);
     std::vector<uint8_t> in(buffersize,0);
     std::vector<uint8_t> out(buffersize,0);
     bench.batch(in.size()).unit("byte").run([&] {
