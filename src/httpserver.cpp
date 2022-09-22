@@ -21,10 +21,10 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
+#include <cstdio>
 #include <deque>
 #include <memory>
 #include <optional>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string>
 
