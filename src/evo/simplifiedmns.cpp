@@ -130,10 +130,11 @@ CSimplifiedMNListDiff::CSimplifiedMNListDiff() = default;
 
 CSimplifiedMNListDiff::~CSimplifiedMNListDiff() = default;
 
-bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex)
+bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex,
+                                             const llmq::CQuorumBlockProcessor& quorum_block_processor)
 {
-    auto baseQuorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
-    auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
+    auto baseQuorums = quorum_block_processor.GetMinedAndActiveCommitmentsUntilBlock(baseBlockIndex);
+    auto quorums = quorum_block_processor.GetMinedAndActiveCommitmentsUntilBlock(blockIndex);
 
     std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
     std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
@@ -156,7 +157,7 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     for (auto& p : quorumHashes) {
         if (!baseQuorumHashes.count(p)) {
             uint256 minedBlockHash;
-            llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, minedBlockHash);
+            llmq::CFinalCommitmentPtr qc = quorum_block_processor.GetMinedCommitment(p.first, p.second, minedBlockHash);
             if (qc == nullptr) {
                 return false;
             }
@@ -219,7 +220,8 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
     }
 }
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet, bool extended)
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
+                               const llmq::CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet, bool extended)
 {
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
@@ -259,7 +261,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     // null block hash was provided to get the diff from the genesis block.
     mnListDiffRet.baseBlockHash = baseBlockHash;
 
-    if (!mnListDiffRet.BuildQuorumsDiff(baseBlockIndex, blockIndex)) {
+    if (!mnListDiffRet.BuildQuorumsDiff(baseBlockIndex, blockIndex, quorum_block_processor)) {
         errorRet = strprintf("failed to build quorums diff");
         return false;
     }

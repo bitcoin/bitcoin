@@ -436,13 +436,13 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             fSubmit = ParseBoolV(request.params[4], "submit");
         }
         if (fSubmit) {
-            return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+            return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, *llmq::quorumSigSharesManager, id, msgHash, quorumHash);
         } else {
 
             llmq::CQuorumCPtr pQuorum;
 
             if (quorumHash.IsNull()) {
-                pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id);
+                pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, *llmq::quorumManager, id);
             } else {
                 pQuorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
             }
@@ -481,8 +481,8 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             }
             // First check against the current active set, if it fails check against the last active set
             int signOffset{llmq::GetLLMQParams(llmqType).dkgInterval};
-            return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, 0) ||
-                   llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, signOffset);
+            return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, *llmq::quorumManager, signHeight, id, msgHash, sig, 0) ||
+                   llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, *llmq::quorumManager, signHeight, id, msgHash, sig, signOffset);
         } else {
             uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
             llmq::CQuorumCPtr quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
@@ -539,7 +539,7 @@ static UniValue quorum_selectquorum(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
 
-    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id);
+    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, *llmq::quorumManager, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
@@ -670,7 +670,7 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request)
         ++idx;
     }
     LOCK(cs_main);
-    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, strError)) {
+    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *llmq::quorumManager, *llmq::quorumBlockProcessor, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
@@ -776,7 +776,7 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 
     const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
     const uint256 nRequestId = ::SerializeHash(std::make_pair(llmq::CLSIG_REQUESTID_PREFIX, nBlockHeight));
-    return llmq::CSigningManager::VerifyRecoveredSig(llmqType, nBlockHeight, nRequestId, nBlockHash, chainLockSig);
+    return llmq::CSigningManager::VerifyRecoveredSig(llmqType, *llmq::quorumManager, nBlockHeight, nRequestId, nBlockHash, chainLockSig);
 }
 
 static void verifyislock_help(const JSONRPCRequest& request)
@@ -841,11 +841,11 @@ static UniValue verifyislock(const JSONRPCRequest& request)
             pBlockIndex = ::ChainActive()[signHeight];
         }
     }
-    auto llmqType = llmq::utils::GetInstantSendLLMQType(pBlockIndex);
+    auto llmqType = llmq::utils::GetInstantSendLLMQType(*llmq::quorumManager, pBlockIndex);
     // First check against the current active set, if it fails check against the last active set
     int signOffset{llmq::GetLLMQParams(llmqType).dkgInterval};
-    return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, txid, sig, 0) ||
-           llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, txid, sig, signOffset);
+    return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, *llmq::quorumManager, signHeight, id, txid, sig, 0) ||
+           llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, *llmq::quorumManager, signHeight, id, txid, sig, signOffset);
 }
 // clang-format off
 static const CRPCCommand commands[] =

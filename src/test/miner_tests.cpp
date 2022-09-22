@@ -8,6 +8,9 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <governance/governance.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -46,7 +49,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler(*sporkManager, *governance, *m_node.mempool, params, options);
+    return BlockAssembler(*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler,  *llmq::quorumInstantSendManager, *m_node.mempool, params, options);
 }
 
 constexpr static struct {

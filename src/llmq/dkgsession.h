@@ -23,6 +23,7 @@ namespace llmq
 {
 
 class CFinalCommitment;
+class CDKGDebugManager;
 class CDKGSession;
 class CDKGSessionManager;
 class CDKGPendingMessages;
@@ -260,6 +261,7 @@ private:
     CBLSWorker& blsWorker;
     CBLSWorkerCache cache;
     CDKGSessionManager& dkgManager;
+    CDKGDebugManager& dkgDebugManager;
 
     const CBlockIndex* m_quorum_base_block_index{nullptr};
     int quorumIndex{0};
@@ -300,8 +302,8 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager), connman(_connman) {}
+    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager, CConnman& _connman) :
+        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager), dkgDebugManager(_dkgDebugManager), connman(_connman) {}
 
     bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash, int _quorumIndex);
 

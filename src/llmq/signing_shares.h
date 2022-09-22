@@ -28,6 +28,8 @@ using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
+class CSigningManager;
+
 // <signHash, quorumMember>
 using SigShareKey = std::pair<uint256, uint16_t>;
 
@@ -395,11 +397,13 @@ private:
     FastRandomContext rnd GUARDED_BY(cs);
 
     CConnman& connman;
+    const CQuorumManager& qman;
+    CSigningManager& sigman;
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    explicit CSigSharesManager(CConnman& _connman) : connman(_connman)
+    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman) : connman(_connman), qman(_qman), sigman(_sigman)
     {
         workInterrupt.reset();
     };
@@ -431,7 +435,7 @@ private:
     void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare);
 
     static bool VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv);
-    static bool PreVerifyBatchedSigShares(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
+    static bool PreVerifyBatchedSigShares(const CQuorumManager& quorum_manager, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,

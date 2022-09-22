@@ -48,7 +48,7 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers GUARDED_BY(cs_members);
     static CCriticalSection cs_indexed_members;
     static std::map<Consensus::LLMQType, unordered_lru_cache<std::pair<uint256, int>, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapIndexedQuorumMembers GUARDED_BY(cs_indexed_members);
-    if (!IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
+    if (!IsQuorumTypeEnabled(llmqType, *llmq::quorumManager, pQuorumBaseBlockIndex->pprev)) {
         return {};
     }
     std::vector<CDeterministicMNCPtr> quorumMembers;
@@ -577,9 +577,9 @@ bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pi
     return IsDIP0024Active(pindex->GetAncestor(cycleQuorumBaseHeight - 1));
 }
 
-Consensus::LLMQType GetInstantSendLLMQType(const CBlockIndex* pindex)
+Consensus::LLMQType GetInstantSendLLMQType(const CQuorumManager& qman, const CBlockIndex* pindex)
 {
-    if (IsDIP0024Active(pindex) && !quorumManager->ScanQuorums(Params().GetConsensus().llmqTypeDIP0024InstantSend, pindex, 1).empty()) {
+    if (IsDIP0024Active(pindex) && !qman.ScanQuorums(Params().GetConsensus().llmqTypeDIP0024InstantSend, pindex, 1).empty()) {
         return Params().GetConsensus().llmqTypeDIP0024InstantSend;
     }
     return Params().GetConsensus().llmqTypeInstantSend;
@@ -827,22 +827,22 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CB
     }
 }
 
-bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
+bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash)
 {
     // sig shares and recovered sigs are only accepted from recent/active quorums
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
-    auto quorums = quorumManager->ScanQuorums(llmqType, GetLLMQParams(llmqType).keepOldConnections);
+    auto quorums = qman.ScanQuorums(llmqType, GetLLMQParams(llmqType).keepOldConnections);
     return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
 }
 
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, const CBlockIndex* pindex)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, pindex, std::nullopt, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, qman, pindex, std::nullopt, std::nullopt);
 }
 
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CBlockIndex* pindex,
-                                             std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, const CBlockIndex* pindex,
+                                std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
@@ -857,7 +857,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CBlockIndex
             bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : IsDIP0024Active(pindex);
             if (fDIP0024IsActive) {
                 bool fHaveDIP0024Quorums = optHaveDIP0024Quorums.has_value() ? *optHaveDIP0024Quorums
-                                                                             : !quorumManager->ScanQuorums(
+                                                                             : !qman.ScanQuorums(
                                 consensusParams.llmqTypeDIP0024InstantSend, pindex, 1).empty();
                 if (fHaveDIP0024Quorums) {
                     return false;
@@ -896,7 +896,7 @@ std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex
     std::vector<Consensus::LLMQType> ret;
     ret.reserve(Params().GetConsensus().llmqs.size());
     for (const auto& params : Params().GetConsensus().llmqs) {
-        if (IsQuorumTypeEnabled(params.type, pindex)) {
+        if (IsQuorumTypeEnabled(params.type, *llmq::quorumManager, pindex)) {
             ret.push_back(params.type);
         }
     }
@@ -909,7 +909,7 @@ std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuoru
     ret.reserve(Params().GetConsensus().llmqs.size());
 
     std::copy_if(Params().GetConsensus().llmqs.begin(), Params().GetConsensus().llmqs.end(), std::back_inserter(ret),
-                 [&pindex](const auto& params){return IsQuorumTypeEnabled(params.type, pindex);});
+                 [&pindex](const auto& params){return IsQuorumTypeEnabled(params.type, *llmq::quorumManager, pindex);});
 
     return ret;
 }

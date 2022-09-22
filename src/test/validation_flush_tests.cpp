@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -19,7 +22,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
     BlockManager blockman{};
-    CChainState chainstate{blockman};
+    CChainState chainstate(blockman, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
     chainstate.InitCoinsDB(/*cache_size_bytes*/ 1 << 10, /*in_memory*/ true, /*should_wipe*/ false);
     WITH_LOCK(::cs_main, chainstate.InitCoinsCache(1 << 10));
     CTxMemPool tx_pool{};

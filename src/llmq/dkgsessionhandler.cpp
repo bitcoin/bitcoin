@@ -141,7 +141,7 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager, connman);
+    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager, dkgDebugManager, connman);
 
     if (!deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
         return false;
@@ -198,9 +198,9 @@ void CDKGSessionHandler::WaitForNextPhase(std::optional<QuorumPhase> curPhase,
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - done, curPhase=%d, nextPhase=%d\n", __func__, params.name, quorumIndex, curPhase.has_value() ? int(*curPhase) : -1, int(nextPhase));
 
     if (nextPhase == QuorumPhase::Initialized) {
-        quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumIndex);
+        dkgDebugManager.ResetLocalSessionStatus(params.type, quorumIndex);
     } else {
-        quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
+        dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
             bool changed = status.phase != (uint8_t) nextPhase;
             status.phase = (uint8_t) nextPhase;
             return changed;
@@ -481,7 +481,7 @@ void CDKGSessionHandler::HandleDKGRound()
         throw AbortPhaseException();
     }
 
-    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
+    dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
         bool changed = status.phase != (uint8_t) QuorumPhase::Initialized;
         status.phase = (uint8_t) QuorumPhase::Initialized;
         return changed;
@@ -532,7 +532,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
-        quorumBlockProcessor->AddMineableCommitment(fqc);
+        quorumBlockProcessor.AddMineableCommitment(fqc);
     }
 }
 
@@ -543,7 +543,7 @@ void CDKGSessionHandler::PhaseHandlerThread()
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] - starting HandleDKGRound\n", __func__, params.name, quorumIndex);
             HandleDKGRound();
         } catch (AbortPhaseException& e) {
-            quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
+            dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
                 status.aborted = true;
                 return true;
             });

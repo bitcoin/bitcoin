@@ -22,6 +22,10 @@ class CSporkManager;
 
 namespace llmq
 {
+class CChainLocksHandler;
+class CQuorumManager;
+class CSigningManager;
+class CSigSharesManager;
 
 struct CInstantSendLock
 {
@@ -199,6 +203,10 @@ private:
     CConnman& connman;
     CTxMemPool& mempool;
     CSporkManager& spork_manager;
+    CQuorumManager& qman;
+    CSigningManager& sigman;
+    CSigSharesManager& shareman;
+    CChainLocksHandler& clhandler;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -246,7 +254,13 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
 public:
-    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, bool unitTests, bool fWipe) : db(unitTests, fWipe), mempool(_mempool), connman(_connman), spork_manager(sporkManager) { workInterrupt.reset(); }
+    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CQuorumManager& _qman,
+                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CChainLocksHandler& _clhandler, bool unitTests, bool fWipe) :
+        db(unitTests, fWipe), mempool(_mempool), connman(_connman), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
+        clhandler(_clhandler)
+    {
+        workInterrupt.reset();
+    }
     ~CInstantSendManager() = default;
 
     void Start();

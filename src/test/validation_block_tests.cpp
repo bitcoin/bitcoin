@@ -9,6 +9,9 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <governance/governance.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
@@ -70,7 +73,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     CScript pubKey;
     pubKey << i++ << OP_TRUE;
 
-    auto ptemplate = BlockAssembler(*sporkManager, *governance, *m_node.mempool, Params()).CreateNewBlock(pubKey);
+    auto ptemplate = BlockAssembler(*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler,  *llmq::quorumInstantSendManager, *m_node.mempool, Params()).CreateNewBlock(pubKey);
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;

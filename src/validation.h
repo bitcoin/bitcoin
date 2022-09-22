@@ -34,6 +34,12 @@
 #include <utility>
 #include <vector>
 
+namespace llmq {
+class CChainLocksHandler;
+class CInstantSendManager;
+class CQuorumBlockProcessor;
+} // namespace llmq
+
 class CChainState;
 class CBlockIndex;
 class CBlockTreeDB;
@@ -329,7 +335,7 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
-bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool TestBlockValidity(CValidationState& state, llmq::CChainLocksHandler& clhandler, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
@@ -530,8 +536,17 @@ private:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! Dash
+    std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
+    std::unique_ptr<llmq::CInstantSendManager>& m_isman;
+    std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
+
 public:
-    explicit CChainState(BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
+    explicit CChainState(BlockManager& blockman,
+                         std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                         std::unique_ptr<llmq::CInstantSendManager>& isman,
+                         std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                         uint256 from_snapshot_blockhash = uint256());
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -843,8 +858,10 @@ public:
     //!
     //! @param[in] snapshot_blockhash   If given, signify that this chainstate
     //!                                 is based on a snapshot.
-    CChainState& InitializeChainstate(const uint256& snapshot_blockhash = uint256())
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    CChainState& InitializeChainstate(std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                                      std::unique_ptr<llmq::CInstantSendManager>& isman,
+                                      std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
+                                      const uint256& snapshot_blockhash = uint256()) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
     std::vector<CChainState*> GetAll();

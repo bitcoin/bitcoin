@@ -82,12 +82,15 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
 #include <llmq/init.h>
+#include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/signing.h>
 #include <llmq/snapshot.h>
 #include <llmq/utils.h>
+#include <llmq/signing_shares.h>
 
 #include <statsd_client.h>
 
@@ -1777,7 +1780,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, chainman, *node.mempool, args.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    node.peer_logic.reset(new PeerLogicValidation(
+        node.connman.get(), node.banman.get(), *node.scheduler, chainman, *node.mempool, llmq::quorumBlockProcessor,
+        llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
+        llmq::chainLocksHandler, llmq::quorumInstantSendManager, args.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61))
+    );
     RegisterValidationInterface(node.peer_logic.get());
 
     ::governance = std::make_unique<CGovernanceManager>();
@@ -1933,7 +1940,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 #endif
 
-    pdsNotificationInterface = new CDSNotificationInterface(*node.connman);
+    pdsNotificationInterface = new CDSNotificationInterface(
+        *node.connman, ::masternodeSync, ::deterministicMNManager, ::governance, llmq::chainLocksHandler,
+        llmq::quorumInstantSendManager, llmq::quorumManager, llmq::quorumDKGSessionManager
+    );
     RegisterValidationInterface(pdsNotificationInterface);
 
     if (fMasternodeMode) {
@@ -2012,7 +2022,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
             try {
                 LOCK(cs_main);
-                chainman.InitializeChainstate();
+                chainman.InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 

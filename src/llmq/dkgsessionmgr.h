@@ -12,10 +12,12 @@
 
 class UniValue;
 class CBlockIndex;
+class CDKGDebugManager;
 class CSporkManager;
 
 namespace llmq
 {
+class CQuorumManager;
 
 class CDKGSessionManager
 {
@@ -26,6 +28,8 @@ private:
     CBLSWorker& blsWorker;
     CConnman& connman;
     CSporkManager& spork_manager;
+    CDKGDebugManager& dkgDebugManager;
+    CQuorumBlockProcessor& quorumBlockProcessor;
 
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
@@ -50,7 +54,7 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CSporkManager& sporkManager, bool unitTests, bool fWipe);
+    CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();
@@ -58,7 +62,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, const CQuorumManager& quorum_manager, const std::string& msg_type, CDataStream& vRecv);
     bool AlreadyHave(const CInv& inv) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;

@@ -23,6 +23,10 @@ class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
 
+namespace llmq {
+class CChainLocksHandler;
+} // namespace llmq
+
 // timeouts
 static constexpr int COINJOIN_AUTO_TIMEOUT_MIN = 5;
 static constexpr int COINJOIN_AUTO_TIMEOUT_MAX = 15;
@@ -298,7 +302,7 @@ public:
     bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
-    bool IsExpired(const CBlockIndex* pindex) const;
+    bool IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const;
     bool IsValidStructure() const;
 };
 
@@ -374,7 +378,7 @@ private:
     static Mutex cs_mapdstx;
     static std::map<uint256, CCoinJoinBroadcastTx> mapDSTX GUARDED_BY(cs_mapdstx);
 
-    static void CheckDSTXes(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_mapdstx);
+    static void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) LOCKS_EXCLUDED(cs_mapdstx);
 
 public:
     static constexpr std::array<CAmount, 5> GetStandardDenominations() { return vecStandardDenominations; }
@@ -477,8 +481,8 @@ public:
     static void AddDSTX(const CCoinJoinBroadcastTx& dstx) LOCKS_EXCLUDED(cs_mapdstx);
     static CCoinJoinBroadcastTx GetDSTX(const uint256& hash) LOCKS_EXCLUDED(cs_mapdstx);
 
-    static void UpdatedBlockTip(const CBlockIndex* pindex);
-    static void NotifyChainLock(const CBlockIndex* pindex);
+    static void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler);
+    static void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler);
 
     static void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight);
     static void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_mapdstx);

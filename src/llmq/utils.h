@@ -25,6 +25,7 @@ class CBLSPublicKey;
 namespace llmq
 {
 
+class CQuorumManager;
 class CQuorumSnapshot;
 
 // Use a separate cache instance instead of versionbitscache to avoid locking cs_main
@@ -80,15 +81,15 @@ std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
 bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, CConnman& connman, const uint256& myProTxHash);
 void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, CConnman& connman, const uint256& myProTxHash);
 
-bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CBlockIndex* pindex, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
+bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, const CBlockIndex* pindex);
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, const CBlockIndex* pindex, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
 
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(const CBlockIndex* pindex);
 
 bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
-Consensus::LLMQType GetInstantSendLLMQType(const CBlockIndex* pindex);
+Consensus::LLMQType GetInstantSendLLMQType(const CQuorumManager& qman, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(bool deterministic);
 bool IsDIP0024Active(const CBlockIndex* pindex);
 static bool IsInstantSendLLMQTypeShared();

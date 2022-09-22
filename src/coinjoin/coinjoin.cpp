@@ -117,12 +117,12 @@ bool CCoinJoinBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
     return true;
 }
 
-bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex) const
+bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const
 {
     // expire confirmed DSTXes after ~1h since confirmation or chainlocked confirmation
     if (nConfirmedHeight == -1 || pindex->nHeight < nConfirmedHeight) return false; // not mined yet
     if (pindex->nHeight - nConfirmedHeight > 24) return true; // mined more than an hour ago
-    return llmq::chainLocksHandler->HasChainLock(pindex->nHeight, *pindex->phashBlock);
+    return clhandler.HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
 bool CCoinJoinBroadcastTx::IsValidStructure() const
@@ -440,13 +440,13 @@ CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
 }
 
-void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex)
+void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.begin();
     while (it != mapDSTX.end()) {
-        if (it->second.IsExpired(pindex)) {
+        if (it->second.IsExpired(pindex, clhandler)) {
             mapDSTX.erase(it++);
         } else {
             ++it;
@@ -455,17 +455,17 @@ void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex)
     LogPrint(BCLog::COINJOIN, "CCoinJoin::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
-void CCoinJoin::UpdatedBlockTip(const CBlockIndex* pindex)
+void CCoinJoin::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
 {
     if (pindex && masternodeSync->IsBlockchainSynced()) {
-        CheckDSTXes(pindex);
+        CheckDSTXes(pindex, clhandler);
     }
 }
 
-void CCoinJoin::NotifyChainLock(const CBlockIndex* pindex)
+void CCoinJoin::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
 {
     if (pindex && masternodeSync->IsBlockchainSynced()) {
-        CheckDSTXes(pindex);
+        CheckDSTXes(pindex, clhandler);
     }
 }
 

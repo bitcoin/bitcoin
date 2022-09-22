@@ -22,6 +22,9 @@ class CDeterministicMN;
 class CDeterministicMNList;
 
 namespace llmq {
+class CQuorumBlockProcessor;
+class CQuorumManager;
+
 //TODO use enum class (probably)
 enum SnapshotSkipMode : int {
     MODE_NO_SKIPPING = 0,
@@ -204,7 +207,8 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& quorumRotationInfoRet, std::string& errorRet);
+bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,
+                             const CQuorumManager& qman, const CQuorumBlockProcessor& quorumBlockProcessor, std::string& errorRet);
 uint256 GetLastBaseBlockHash(const std::vector<const CBlockIndex*>& baseBlockIndexes, const CBlockIndex* blockIndex);
 
 class CQuorumSnapshotManager

@@ -29,12 +29,12 @@ void InitLLMQSystem(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, CSpor
 
     quorumDKGDebugManager = std::make_unique<CDKGDebugManager>();
     quorumBlockProcessor = std::make_unique<CQuorumBlockProcessor>(evoDb, connman);
-    quorumDKGSessionManager = std::make_unique<CDKGSessionManager>(connman, *blsWorker, sporkManager, unitTests, fWipe);
-    quorumManager = std::make_unique<CQuorumManager>(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = std::make_unique<CSigSharesManager>(connman);
-    quorumSigningManager = std::make_unique<CSigningManager>(connman, unitTests, fWipe);
-    chainLocksHandler = std::make_unique<CChainLocksHandler>(mempool, connman, sporkManager);
-    quorumInstantSendManager = std::make_unique<CInstantSendManager>(mempool, connman, sporkManager, unitTests, fWipe);
+    quorumDKGSessionManager = std::make_unique<CDKGSessionManager>(connman, *blsWorker, *quorumDKGDebugManager, *quorumBlockProcessor, sporkManager, unitTests, fWipe);
+    quorumManager = std::make_unique<CQuorumManager>(evoDb, connman, *blsWorker, *quorumBlockProcessor, *quorumDKGSessionManager);
+    quorumSigningManager = std::make_unique<CSigningManager>(connman, *quorumManager, unitTests, fWipe);
+    quorumSigSharesManager = std::make_unique<CSigSharesManager>(connman, *quorumManager, *quorumSigningManager);
+    chainLocksHandler = std::make_unique<CChainLocksHandler>(mempool, connman, sporkManager, *quorumSigningManager, *quorumSigSharesManager);
+    quorumInstantSendManager = std::make_unique<CInstantSendManager>(mempool, connman, sporkManager, *quorumManager, *quorumSigningManager, *quorumSigSharesManager, *chainLocksHandler, unitTests, fWipe);
 
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version
@@ -45,8 +45,8 @@ void DestroyLLMQSystem()
 {
     quorumInstantSendManager.reset();
     chainLocksHandler.reset();
-    quorumSigningManager.reset();
     quorumSigSharesManager.reset();
+    quorumSigningManager.reset();
     quorumManager.reset();
     quorumDKGSessionManager.reset();
     quorumBlockProcessor.reset();
