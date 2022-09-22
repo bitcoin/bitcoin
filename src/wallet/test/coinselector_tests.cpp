@@ -357,6 +357,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         wallet->SetupDescriptorScriptPubKeyMans();
 
         CoinsResult available_coins;
+        CCoinControl coin_control;
 
         // single coin should be selected when effective fee > long term fee
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
@@ -368,7 +369,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         expected_result.Clear();
         add_coin(10 * CENT, 2, expected_result);
-        CCoinControl coin_control;
         const auto result11 = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result11));
         available_coins.Clear();
