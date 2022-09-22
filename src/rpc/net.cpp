@@ -132,6 +132,7 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::NUM, "startingheight", /*optional=*/true, "The starting height (block) of the peer"},
+                    {RPCResult::Type::NUM, "presynced_headers", /*optional=*/true, "The current height of header pre-synchronization with this peer, or -1 if no low-work sync is in progress"},
                     {RPCResult::Type::NUM, "synced_headers", /*optional=*/true, "The last header we have in common with this peer"},
                     {RPCResult::Type::NUM, "synced_blocks", /*optional=*/true, "The last block we have in common with this peer"},
                     {RPCResult::Type::ARR, "inflight", /*optional=*/true, "",
@@ -226,6 +227,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
         if (fStateStats) {
             obj.pushKV("startingheight", statestats.m_starting_height);
+            obj.pushKV("presynced_headers", statestats.presync_height);
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
@@ -240,7 +242,7 @@ static RPCHelpMan getpeerinfo()
             obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
         UniValue permissions(UniValue::VARR);
-        for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {
+        for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);
@@ -945,7 +947,8 @@ static RPCHelpMan addpeeraddress()
     bool success{false};
 
     if (LookupHost(addr_string, net_addr, false)) {
-        CAddress address{{net_addr, port}, ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
+        CService service{net_addr, port};
+        CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
         address.nTime = Now<NodeSeconds>();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.

@@ -43,11 +43,11 @@ struct ConnmanTestMsg : public CConnman {
                    bool successfully_connected,
                    ServiceFlags remote_services,
                    ServiceFlags local_services,
-                   NetPermissionFlags permission_flags,
                    int32_t version,
-                   bool relay_txs);
+                   bool relay_txs)
+        EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 
-    void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
+    void ProcessMessagesOnce(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 

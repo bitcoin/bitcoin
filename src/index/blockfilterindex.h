@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_BLOCKFILTERINDEX_H
 #define BITCOIN_INDEX_BLOCKFILTERINDEX_H
 
+#include <attributes.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <flatfile.h>
@@ -25,7 +26,6 @@ class BlockFilterIndex final : public BaseIndex
 {
 private:
     BlockFilterType m_filter_type;
-    std::string m_name;
     std::unique_ptr<BaseIndex::DB> m_db;
 
     FlatFilePos m_next_filter_pos;
@@ -49,9 +49,7 @@ protected:
 
     bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
 
-    BaseIndex::DB& GetDB() const override { return *m_db; }
-
-    const char* GetName() const override { return m_name.c_str(); }
+    BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
 
 public:
     /** Constructs the index, which becomes available to be queried. */

@@ -6,7 +6,6 @@
 #include <span.h>
 #include <util/strencodings.h>
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstring>

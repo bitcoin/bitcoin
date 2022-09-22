@@ -21,7 +21,6 @@
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
-             (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages python-crypto)
@@ -78,6 +77,11 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
+(define building-on (string-append (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
+
+(define (explicit-cross-configure package)
+  (package-with-extra-configure-variable package "--build" building-on))
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
@@ -87,9 +91,9 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
   (let* ((xbinutils (cross-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (cross-gcc target
-                                    #:xgcc base-gcc-for-libc
-                                    #:xbinutils xbinutils))
+         (xgcc-sans-libc (explicit-cross-configure (cross-gcc target
+                                                              #:xgcc base-gcc-for-libc
+                                                              #:xbinutils xbinutils)))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
@@ -98,17 +102,17 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
                                         xbinutils))
          ;; 3. Build a cross-compiled libc with XGCC-SANS-LIBC and XKERNEL,
          ;; derived from BASE-LIBC
-         (xlibc (cross-libc target
-                            base-libc
-                            xgcc-sans-libc
-                            xbinutils
-                            xkernel))
+         (xlibc (explicit-cross-configure (cross-libc target
+                                                      base-libc
+                                                      xgcc-sans-libc
+                                                      xbinutils
+                                                      xkernel)))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
-         (xgcc (cross-gcc target
-                          #:xgcc base-gcc
-                          #:xbinutils xbinutils
-                          #:libc xlibc)))
+         (xgcc (explicit-cross-configure (cross-gcc target
+                                                    #:xgcc base-gcc
+                                                    #:xbinutils xbinutils
+                                                    #:libc xlibc))))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
     ;; XGCC
     (package
@@ -610,10 +614,9 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
         ;; Scripting
-        perl
         python-3
         ;; Git
-        git
+        git-minimal
         ;; Tests
         (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))

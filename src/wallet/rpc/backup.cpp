@@ -295,7 +295,7 @@ RPCHelpMan importaddress()
         RescanWallet(*pwallet, reserver);
         {
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions();
+            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
         }
     }
 
@@ -476,7 +476,7 @@ RPCHelpMan importpubkey()
         RescanWallet(*pwallet, reserver);
         {
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions();
+            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
         }
     }
 
@@ -1363,7 +1363,18 @@ RPCHelpMan importmulti()
     UniValue response(UniValue::VARR);
     {
         LOCK(pwallet->cs_wallet);
-        EnsureWalletIsUnlocked(*pwallet);
+
+        // Check all requests are watchonly
+        bool is_watchonly{true};
+        for (size_t i = 0; i < requests.size(); ++i) {
+            const UniValue& request = requests[i];
+            if (!request.exists("watchonly") || !request["watchonly"].get_bool()) {
+                is_watchonly = false;
+                break;
+            }
+        }
+        // Wallet does not need to be unlocked if all requests are watchonly
+        if (!is_watchonly) EnsureWalletIsUnlocked(wallet);
 
         // Verify all timestamps are present before importing any keys.
         CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(nLowestTimestamp).mtpTime(now)));
@@ -1397,7 +1408,7 @@ RPCHelpMan importmulti()
         int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
         {
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions();
+            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
         }
 
         if (pwallet->IsAbortingRescan()) {
@@ -1691,7 +1702,7 @@ RPCHelpMan importdescriptors()
         int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, true /* update */);
         {
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions();
+            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
         }
 
         if (pwallet->IsAbortingRescan()) {
@@ -1784,34 +1795,59 @@ RPCHelpMan listdescriptors()
 
     LOCK(wallet->cs_wallet);
 
-    UniValue descriptors(UniValue::VARR);
     const auto active_spk_mans = wallet->GetActiveScriptPubKeyMans();
+
+    struct WalletDescInfo {
+        std::string descriptor;
+        uint64_t creation_time;
+        bool active;
+        std::optional<bool> internal;
+        std::optional<std::pair<int64_t,int64_t>> range;
+        int64_t next_index;
+    };
+
+    std::vector<WalletDescInfo> wallet_descriptors;
     for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
         if (!desc_spk_man) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
         }
-        UniValue spk(UniValue::VOBJ);
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
-
         if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
         }
-        spk.pushKV("desc", descriptor);
-        spk.pushKV("timestamp", wallet_descriptor.creation_time);
-        spk.pushKV("active", active_spk_mans.count(desc_spk_man) != 0);
-        const auto internal = wallet->IsInternalScriptPubKeyMan(desc_spk_man);
-        if (internal.has_value()) {
-            spk.pushKV("internal", *internal);
+        const bool is_range = wallet_descriptor.descriptor->IsRange();
+        wallet_descriptors.push_back({
+            descriptor,
+            wallet_descriptor.creation_time,
+            active_spk_mans.count(desc_spk_man) != 0,
+            wallet->IsInternalScriptPubKeyMan(desc_spk_man),
+            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
+            wallet_descriptor.next_index
+        });
+    }
+
+    std::sort(wallet_descriptors.begin(), wallet_descriptors.end(), [](const auto& a, const auto& b) {
+        return a.descriptor < b.descriptor;
+    });
+
+    UniValue descriptors(UniValue::VARR);
+    for (const WalletDescInfo& info : wallet_descriptors) {
+        UniValue spk(UniValue::VOBJ);
+        spk.pushKV("desc", info.descriptor);
+        spk.pushKV("timestamp", info.creation_time);
+        spk.pushKV("active", info.active);
+        if (info.internal.has_value()) {
+            spk.pushKV("internal", info.internal.value());
         }
-        if (wallet_descriptor.descriptor->IsRange()) {
+        if (info.range.has_value()) {
             UniValue range(UniValue::VARR);
-            range.push_back(wallet_descriptor.range_start);
-            range.push_back(wallet_descriptor.range_end - 1);
+            range.push_back(info.range->first);
+            range.push_back(info.range->second - 1);
             spk.pushKV("range", range);
-            spk.pushKV("next", wallet_descriptor.next_index);
+            spk.pushKV("next", info.next_index);
         }
         descriptors.push_back(spk);
     }
