@@ -724,7 +724,6 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblocki
     if (blockman.IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
     }
-
     if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
         // Block not found on disk. This could be because we have the block
         // header in our index but not yet have the block or did not accept the
@@ -887,7 +886,8 @@ static RPCHelpMan getblock()
     }
     if (verbosity <= 0)
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        // SYSCOIN
+        CDataStream ssBlock(SER_DISK, PROTOCOL_VERSION | RPCSerializationFlags());
         ssBlock << block;
         std::string strHex = HexStr(ssBlock);
         return strHex;
