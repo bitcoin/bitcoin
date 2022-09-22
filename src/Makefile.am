@@ -547,10 +547,10 @@ crypto_libbitcoin_crypto_base_la_LDFLAGS = $(AM_LDFLAGS) -static
 crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
-  crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20.h \
+  crypto/chacha_poly_aead.cpp \
+  crypto/chacha_poly_aead.h \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
@@ -558,10 +558,12 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
-  crypto/poly1305.h \
-  crypto/poly1305.cpp \
-  crypto/muhash.h \
   crypto/muhash.cpp \
+  crypto/muhash.h \
+  crypto/pkcs5_pbkdf2.cpp \
+  crypto/pkcs5_pbkdf2.h \
+  crypto/poly1305.cpp \
+  crypto/poly1305.h \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
