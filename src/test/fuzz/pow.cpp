@@ -114,7 +114,7 @@ FUZZ_TARGET_INIT(pow_transition, initialize_pow)
         auto current_block{std::make_unique<CBlockIndex>(header)};
         current_block->pprev = blocks.empty() ? nullptr : blocks.back().get();
         current_block->nHeight = height;
-        blocks.emplace_back(std::move(current_block)).get();
+        blocks.emplace_back(std::move(current_block));
     }
     auto last_block{blocks.back().get()};
     unsigned int new_nbits{GetNextWorkRequired(last_block, nullptr, consensus_params)};
