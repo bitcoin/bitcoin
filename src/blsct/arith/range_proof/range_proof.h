@@ -10,7 +10,6 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
-#include <blsct/arith/range_proof/base_exps.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/enriched_proof.h>
@@ -37,7 +36,7 @@ struct VerifyLoop1Result
 
 struct VerifyLoop2Result
 {
-    G1Points points;   // TODO give a better name
+    G1Points multi_exp;   // TODO give a better name
     Scalar y0 = 0;
     Scalar y1 = 0;
     Scalar z1 = 0;

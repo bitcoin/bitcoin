@@ -405,13 +405,13 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
         res.y1 = res.y1 + ((p.proof.t - (k + (p.z * ip1y))) * weight_y);
 
         for (size_t j = 0; j < p.proof.Vs.Size(); ++j) {
-            res.points.Add(p.proof.Vs[j] * (z_pow[j+2] * weight_y));
+            res.multi_exp.Add(p.proof.Vs[j] * (z_pow[j+2] * weight_y));
         }
 
-        res.points.Add(p.proof.T1 * (p.x * weight_y));
-        res.points.Add(p.proof.T2 * (p.x.Square() * weight_y));
-        res.points.Add(p.proof.A * weight_z);
-        res.points.Add(p.proof.S * (p.x * weight_z));
+        res.multi_exp.Add(p.proof.T1 * (p.x * weight_y));
+        res.multi_exp.Add(p.proof.T2 * (p.x.Square() * weight_y));
+        res.multi_exp.Add(p.proof.A * weight_z);
+        res.multi_exp.Add(p.proof.S * (p.x * weight_z));
 
         const size_t rounds = p.log_m + std::log2(Config::m_input_value_bits);
 
@@ -473,8 +473,8 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
         res.z1 = res.z1 + (p.proof.mu * weight_z);
 
         for (size_t i = 0; i < rounds; ++i) {
-            res.points.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
-            res.points.Add(p.proof.Rs[i] * (w_invs[i].Square() * weight_z));
+            res.multi_exp.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
+            res.multi_exp.Add(p.proof.Rs[i] * (w_invs[i].Square() * weight_z));
         }
 
         res.z3 = res.z3 + (((p.proof.t - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
@@ -510,16 +510,16 @@ bool RangeProof::Verify(
     const Scalars z4 = loop2_res.value().z4;
     const Scalars z5 = loop2_res.value().z5;
 
-    loop2_res.value().points.Add(gens.G.get() * (y0 - z1));
-    loop2_res.value().points.Add(gens.H * (z3 - y1));
+    loop2_res.value().multi_exp.Add(gens.G.get() * (y0 - z1));
+    loop2_res.value().multi_exp.Add(gens.H * (z3 - y1));
 
     // place Gi and Hi side by side
     // multi_exp_data needs to be maxMN * 2 long. z4 and z5 needs to be maxMN long.
     for (size_t i = 0; i < maxMN; ++i) {
-        loop2_res.value().points.Add(gens.Gi.get()[i] * z4[i]);
-        loop2_res.value().points.Add(gens.Hi.get()[i] * z5[i]);
+        loop2_res.value().multi_exp.Add(gens.Gi.get()[i] * z4[i]);
+        loop2_res.value().multi_exp.Add(gens.Hi.get()[i] * z5[i]);
     }
-    G1Point m_exp = loop2_res.value().points.Sum();
+    G1Point m_exp = loop2_res.value().multi_exp.Sum();
 
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
