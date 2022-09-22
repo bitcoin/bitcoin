@@ -472,9 +472,9 @@ RPCHelpMan listtransactions()
             "\nList the most recent 10 transactions in the systems\n"
             + HelpExampleCli("listtransactions", "") +
             "\nList transactions 100 to 120\n"
-            + HelpExampleCli("listtransactions", "\"*\" 20 100") +
+            + HelpExampleCli("listtransactions", "\"*\" 100 20") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
+            + HelpExampleRpc("listtransactions", "\"*\", 100, 20")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
