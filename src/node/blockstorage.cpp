@@ -88,16 +88,8 @@ const CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
     BlockMap::const_iterator it = m_block_index.find(hash);
     return it == m_block_index.end() ? nullptr : &it->second;
 }
-// SYSCOIN
-std::pair<PrevBlockMap::iterator,PrevBlockMap::iterator> BlockManager::LookupBlockIndexPrev(const uint256& hash)
+CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header)
 {
-    AssertLockHeld(cs_main);
-    return m_prev_block_index.equal_range(hash);
-}
-CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header, enum BlockStatus nStatus)
-{
-    // SYSCOIN
-    assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
     AssertLockHeld(cs_main);
 
     auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
@@ -120,22 +112,13 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockInde
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
-    // SYSCOIN
-    if (nStatus & BLOCK_VALID_MASK) {
-        pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-        if (best_header == nullptr || best_header->nChainWork < pindexNew->nChainWork) {
-            best_header = pindexNew;
-        }
-    } else {
-        pindexNew->RaiseValidity(BLOCK_VALID_TREE); // required validity level
-        pindexNew->nStatus |= nStatus;
+    pindexNew->RaiseValidity(BLOCK_VALID_TREE);
+    if (best_header == nullptr || best_header->nChainWork < pindexNew->nChainWork) {
+        best_header = pindexNew;
     }
 
     m_dirty_blockindex.insert(pindexNew);
-    // SYSCOIN track prevBlockHash -> pindex (multimap)
-    if (pindexNew->pprev) {
-        m_prev_block_index.emplace(pindexNew->pprev->GetBlockHash(), pindexNew);
-    }
+
     return pindexNew;
 }
 
@@ -313,8 +296,6 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
             m_dirty_blockindex.insert(pindex);
         }
         if (pindex->pprev) {
-            // SYSCOIN build mapPrevBlockIndex
-            m_prev_block_index.emplace(pindex->pprev->GetBlockHash(), pindex);
             pindex->BuildSkip();
         }
     }

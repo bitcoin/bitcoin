@@ -114,11 +114,11 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(3)
         assert(self.nodes[0].getbestblockhash() == good_tip)
         assert(self.nodes[1].getbestblockhash() == good_tip)
-        self.log.info("The tip mined while this node was isolated should be marked conflicting now")
+        self.log.info("The tip mined while this node was isolated should be marked invalid now")
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == bad_tip:
-                assert(tip["status"] == "conflicting")
+                assert(tip["status"] == "invalid")
                 found = True
                 break
         assert(found)
@@ -192,7 +192,7 @@ class LLMQChainLocksTest(DashTestFramework):
                 activeChain = tip["hash"]
                 activeLength = tip["height"] + tip["branchlen"]
                 found = True
-            if tip["status"] == "conflicting":
+            if tip["status"] == "invalid":
                 foundConflict = True
                 conflictLength = tip["height"] + tip["branchlen"]
 

@@ -687,7 +687,7 @@ public:
         LOCKS_EXCLUDED(::cs_main);
     // SYSCOIN
     bool RestartGethNode();
-    void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) 
+    bool EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) 
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -987,11 +987,6 @@ public:
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         return m_blockman.m_block_index;
-    }
-    // SYSCOIN
-    node::PrevBlockMap& PrevBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        return m_blockman.m_prev_block_index;
     }
 
     /**
