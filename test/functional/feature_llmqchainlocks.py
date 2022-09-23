@@ -190,11 +190,11 @@ class LLMQChainLocksTest(DashTestFramework):
             if tip["hash"] == good_tip:
                 assert(tip["status"] == "active")
                 activeChain = tip["hash"]
-                activeLength = tip["height"] + tip["branchlen"] 
+                activeLength = tip["height"] + tip["branchlen"]
                 found = True
             if tip["status"] == "conflicting":
                 foundConflict = True
-                conflictLength = tip["height"] + tip["branchlen"] 
+                conflictLength = tip["height"] + tip["branchlen"]
 
         assert(found and foundConflict)
         self.log.info("Should switch to the locked tip on restart because flags are reset on start")
