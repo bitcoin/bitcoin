@@ -205,7 +205,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.stop_node(0)
         self.start_node(0)
         force_finish_mnsync(self.nodes[0])
-        time.sleep(1)
+        self.bump_mocktime(5, nodes=self.nodes)
+        time.sleep(3)
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["status"] == "active" and tip["hash"] == activeChain:
