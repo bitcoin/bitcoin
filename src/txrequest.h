@@ -143,6 +143,7 @@ public:
      * for the same txhash will not trigger new ReceivedInv calls, at least in the short term after this call.
      */
     void ForgetTxHash(const uint256& txhash);
+    void ForgetTxs(Span<const CTransactionRef> txs);
 
     /** Find the txids to request now from peer.
      *

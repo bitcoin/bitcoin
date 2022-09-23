@@ -526,6 +526,14 @@ private:
         }
     }
 
+    void ForgetTxHashInternal(const uint256& txhash) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+    {
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) {
+            it = Erase<ByTxHash>(it);
+        }
+    }
+
 public:
     explicit Impl(bool deterministic) :
         m_computer(deterministic),
@@ -576,9 +584,15 @@ public:
     void ForgetTxHash(const uint256& txhash) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         LOCK(m_mutex);
-        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
-        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) {
-            it = Erase<ByTxHash>(it);
+        ForgetTxHashInternal(txhash);
+    }
+
+    void ForgetTxs(Span<const CTransactionRef> txs) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        for (const CTransactionRef& tx : txs) {
+            ForgetTxHashInternal(tx->GetHash());
+            ForgetTxHashInternal(tx->GetWitnessHash());
         }
     }
 
@@ -735,6 +749,7 @@ TxRequestTracker::TxRequestTracker(bool deterministic) :
 TxRequestTracker::~TxRequestTracker() = default;
 
 void TxRequestTracker::ForgetTxHash(const uint256& txhash) { m_impl->ForgetTxHash(txhash); }
+void TxRequestTracker::ForgetTxs(Span<const CTransactionRef> txs) { m_impl->ForgetTxs(txs); }
 void TxRequestTracker::DisconnectedPeer(NodeId peer) { m_impl->DisconnectedPeer(peer); }
 size_t TxRequestTracker::CountInFlight(NodeId peer) const { return m_impl->CountInFlight(peer); }
 size_t TxRequestTracker::CountCandidates(NodeId peer) const { return m_impl->CountCandidates(peer); }
