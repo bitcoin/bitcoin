@@ -41,17 +41,11 @@
 /* Define to 1 to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
-/* define if the Boost library is available */
-#define HAVE_BOOST /**/
-
 /* define if external signer support is enabled (requires Boost::Process) */
 #define ENABLE_EXTERNAL_SIGNER /**/
 
 /* Define this symbol if the consensus lib has been built */
 #define HAVE_CONSENSUS_LIB 1
-
-/* define if the compiler supports basic C++20 syntax */
-#define HAVE_CXX20 1
 
 /* Define to 1 if you have the declaration of `be16toh', and to 0 if you
    don't. */
@@ -121,42 +115,8 @@
    */
 #define HAVE_DECL_SETSID 0
 
-/* Define to 1 if you have the declaration of `strerror_r', and to 0 if you
-   don't. */
-#define HAVE_DECL_STRERROR_R 0
-
 /* Define if the dllexport attribute is supported. */
 #define HAVE_DLLEXPORT_ATTRIBUTE 1
-
-/* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
-
-/* Define to 1 if you have the <miniupnpc/miniupnpc.h> header file. */
-#define HAVE_MINIUPNPC_MINIUPNPC_H 1
-
-/* Define to 1 if you have the <miniupnpc/upnpcommands.h> header file. */
-#define HAVE_MINIUPNPC_UPNPCOMMANDS_H 1
-
-/* Define to 1 if you have the <miniupnpc/upnperrors.h> header file. */
-#define HAVE_MINIUPNPC_UPNPERRORS_H 1
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
-
-/* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H 1
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
