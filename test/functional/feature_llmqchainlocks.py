@@ -271,7 +271,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(not self.nodes[0].getblock(proposed_lock)["chainlock"])
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
         # after 20 blocks the ancestry consistency check ends and it can create chainlocks again on the longer chain
-        new_cl = self.generate(self.nodes[2], 30)[-6]
+        new_cl = self.generate(self.nodes[2], 25)[-6]
         self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=30)
         self.nodes[0].disconnect_p2ps()
 
