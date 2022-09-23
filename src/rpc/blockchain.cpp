@@ -1120,6 +1120,19 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "buried");
+
+    UniValue exceptions(UniValue::VARR);
+    for (const auto& [block, flags] : chainman.GetConsensus().script_flag_exceptions) {
+        if (BuriedException(dep, flags)) {
+            exceptions.push_back(block.ToString());
+        }
+    }
+    if (!exceptions.empty()) {
+        UniValue buried(UniValue::VOBJ);
+        buried.pushKV("exceptions", exceptions);
+        rv.pushKV("buried", buried);
+    }
+
     // getdeploymentinfo reports the softfork as active from when the chain height is
     // one below the activation height
     rv.pushKV("active", DeploymentActiveAfter(blockindex, chainman, dep));
@@ -1272,6 +1285,13 @@ const std::vector<RPCResult> RPCHelpForDeployment{
     {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
     {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
     {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
+    {RPCResult::Type::OBJ, "buried", /*optional=*/true, "status of buried softforks (only for \"buried\" type)",
+    {
+        {RPCResult::Type::ARR, "exceptions", /*optional=*/true, "blocks exempted from this rule",
+        {
+            {RPCResult::Type::STR_HEX, "hash", "block hash"},
+        }},
+    }},
     {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "status of bip9 softforks (only for \"bip9\" type)",
     {
         {RPCResult::Type::NUM, "bit", /*optional=*/true, "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
@@ -1340,7 +1360,6 @@ static RPCHelpMan getdeploymentinfo()
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
                 }
             }
-
             UniValue deploymentinfo(UniValue::VOBJ);
             deploymentinfo.pushKV("hash", blockindex->GetBlockHash().ToString());
             deploymentinfo.pushKV("height", blockindex->nHeight);

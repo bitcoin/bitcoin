@@ -20,6 +20,8 @@ extern const VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
 
 std::string DeploymentName(Consensus::BuriedDeployment dep);
 
+bool BuriedException(Consensus::BuriedDeployment dep, uint32_t flags);
+
 inline std::string DeploymentName(Consensus::DeploymentPos pos)
 {
     assert(Consensus::ValidDeployment(pos));
