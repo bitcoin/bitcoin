@@ -61,11 +61,11 @@ private:
     mutable RecursiveMutex cs;
     bool isEnabled GUARDED_BY(cs) {false};
     bool isEnforced GUARDED_BY(cs) {false};
-    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
+    std::atomic_bool tryLockChainTipScheduled {false};
 
     CChainLockSig mostRecentChainLockShare GUARDED_BY(cs);
     CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
-    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
+    const CBlockIndex* bestChainLockBlockIndex {nullptr};
     // Keep best chainlock shares and candidates, sorted by height (highest heght first).
     std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares GUARDED_BY(cs);
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);

@@ -809,9 +809,26 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
         LOCK(cs_main);
         peerman.ReceivedResponse(nodeId, hash);
         // make sure block or header exists before accepting recovered sig
-        if (chainman.m_blockman.LookupBlockIndex(recoveredSig->msgHash) == nullptr) {
+        auto* pindex = chainman.m_blockman.LookupBlockIndex(recoveredSig->msgHash);
+        if (pindex == nullptr) {
             LogPrintf("CSigningManager::%s -- block of recovered signature (%s) does not exist\n",
                     __func__, recoveredSig->id.ToString());
+            peerman.ForgetTxHash(nodeId, hash);
+            return;
+        }
+        if((pindex->nHeight%SIGN_HEIGHT_LOOKBACK) != 0) {
+            LogPrintf("CSigningManager::%s -- block height(%d) of recovered signature (%s) is not a factor of 5\n",
+                    __func__, pindex->nHeight, recoveredSig->id.ToString());
+            PeerRef peer = peerman.GetPeerRef(nodeId);
+            if(peer)
+                peerman.Misbehaving(*peer, 10, "invalid CLSIG");
+            return;
+        }
+        if (pindex->nHeight > chainman.ActiveHeight() + (SIGN_HEIGHT_OFFSET - SIGN_HEIGHT_LOOKBACK)) {
+            // too far into the future
+            LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the future\n",
+                    __func__, recoveredSig->id.ToString());
+            peerman.ForgetTxHash(nodeId, hash);
             return;
         }
     }

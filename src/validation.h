@@ -105,7 +105,6 @@ extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
-extern std::atomic_bool bInvalidate;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 /** Whether there are dedicated script-checking threads running.
  * False indicates all script checking is done on the main threadMessageHandler thread.
@@ -688,7 +687,9 @@ public:
         LOCKS_EXCLUDED(::cs_main);
     // SYSCOIN
     bool RestartGethNode();
-    void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
+    void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex) 
+        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
+        LOCKS_EXCLUDED(cs_main);
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)

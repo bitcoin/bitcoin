@@ -1285,6 +1285,15 @@ class DashTestFramework(SyscoinTestFramework):
                 return False
         wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
 
+    def wait_for_most_active_chainlock(self, node, block_hash, timeout=30):
+        def check_cl():
+            try:
+                self.bump_mocktime(1)
+                return node.getchainlocks()["active_chainlock"]["blockhash"] == block_hash
+            except:
+                return False
+        wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
+
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
             self.bump_mocktime(1)
@@ -1523,7 +1532,11 @@ class DashTestFramework(SyscoinTestFramework):
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.generate(self.nodes[0], 8, sync_fun=self.no_op)
-
+        # Make sure we are mod of 5 block count before we start tests
+        skip_count = 5 - (self.nodes[0].getblockcount() % 5)
+        if skip_count != 0:
+            self.bump_mocktime(1, nodes=nodes)
+            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
         self.sync_blocks(nodes)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))

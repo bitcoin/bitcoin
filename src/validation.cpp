@@ -152,7 +152,6 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
-std::atomic_bool bInvalidate{false};
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
@@ -2697,7 +2696,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
         }
     }
-
     if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
         return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
     }
@@ -3460,7 +3458,6 @@ static bool NotifyHeaderTip(Chainstate& chainstate) LOCKS_EXCLUDED(cs_main) {
 
 static void LimitValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main) {
     AssertLockNotHeld(cs_main);
-
     if (GetMainSignals().CallbacksPending() > 10) {
         SyncWithValidationInterfaceQueue();
     }
@@ -3475,13 +3472,11 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
     AssertLockNotHeld(cs_main);
-
     // ABC maintains a fair degree of expensive-to-calculate internal state
     // because this function periodically releases cs_main so that it does not lock up other threads for too long
     // during large connects - and to allow for e.g. the callback queue to drain
     // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
     LOCK(m_chainstate_mutex);
-
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
     int nStopAtHeight = gArgs.GetIntArg("-stopatheight", DEFAULT_STOPATHEIGHT);
@@ -3493,7 +3488,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         // ActivateBestChain this may lead to a deadlock! We should
         // probably have a DEBUG_LOCKORDER test for this in the future.
         LimitValidationInterfaceQueue();
-
         {
             LOCK(cs_main);
             // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
@@ -3535,7 +3529,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
-
             const CBlockIndex* pindexFork = m_chain.FindFork(starting_tip);
             bool fInitialDownload = IsInitialBlockDownload();
 
@@ -3544,7 +3537,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             if (pindexFork != pindexNewTip) {
                 // Notify ValidationInterface subscribers
                 // SYSCOIN
-                GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+                GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork);
                 GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, m_chainman, fInitialDownload);
                 // Always notify the UI if a new block tip was connected
                 uiInterface.NotifyBlockTip(GetSynchronizationState(fInitialDownload), pindexNewTip);
@@ -3565,7 +3558,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
         return false;
     }
-
     return true;
 }
 
@@ -3601,17 +3593,17 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 void Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
-    if (!bestChainLockBlockIndex || bInvalidate || !fLoaded) {
+    AssertLockNotHeld(cs_main);
+    if (!bestChainLockBlockIndex) {
         // we don't have the header/block, so we can't do anything right now
         return;
     }
-    const CBlockIndex* pindex = bestChainLockBlockIndex;
     BlockValidationState state;
     // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
     // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
     // and mark all of them as conflicting.
     LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
-    EnforceBlock(state, pindex);
+    EnforceBlock(state, bestChainLockBlockIndex);
     // no cs_main allowed
     bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
     if (activateNeeded) {
@@ -3622,7 +3614,12 @@ void Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex
 }
 void Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pindex)
 {
+    AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(cs_main);
+    // We do not allow ActivateBestChain() to run while InvalidateBlock()/MarkConflictingBlock() is
+    // running, as that could cause the tip to change while we disconnect
+    // blocks.
+    LOCK(m_chainstate_mutex);
     LOCK(cs_main);
     const CBlockIndex* pindex_walk = pindex;
 
@@ -3787,7 +3784,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
         // SYSCOIN for MN list to update
-        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr, IsInitialBlockDownload());
+        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr);
         uiInterface.NotifyBlockTip(GetSynchronizationState(IsInitialBlockDownload()), to_mark_failed->pprev);
     }
     return true;
@@ -3797,8 +3794,6 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
 {
     AssertLockHeld(cs_main);
     AssertLockNotHeld(m_mempool->cs);
-    // We first disconnect backwards and then mark the blocks as conflicting.
-
     bool pindex_was_in_chain = false;
     int disconnected = 0;
     CBlockIndex *conflicting_walk_tip = m_chain.Tip();
@@ -3864,8 +3859,8 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     }
 
     ConflictingChainFound(pindex);
-    GetMainSignals().SynchronousUpdatedBlockTip(m_chain.Tip(), nullptr, IsInitialBlockDownload());
-    GetMainSignals().UpdatedBlockTip(m_chain.Tip(), nullptr, m_chainman, IsInitialBlockDownload());
+    GetMainSignals().SynchronousUpdatedBlockTip(m_chain.Tip(), nullptr);
+    GetMainSignals().UpdatedBlockTip(m_chain.Tip(), nullptr, m_chainman, false);
 
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {

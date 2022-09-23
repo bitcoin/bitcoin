@@ -84,7 +84,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         #############################
         # Now start testing quorum commitment merkle roots
 
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 5)
         oldhash = self.nodes[0].getbestblockhash()
         # Have to disable ChainLocks here because they won't let you to invalidate already locked blocks
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
@@ -261,7 +261,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 2)
 
-        self.generatetoaddress(self.nodes[0], nblocks=1, address=self.nodes[0].getnewaddress(label='coinbase'))
+        self.generatetoaddress(self.nodes[0], nblocks=5, address=self.nodes[0].getnewaddress(label='coinbase'))
         # NOTE: set slow_mode=True if you are activating dip8 after a huge reorg
         # or nodes might fail to catch up otherwise due to a large
         # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.

@@ -61,6 +61,10 @@ void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
     scheduler->scheduleEvery([&]() {
+        if(tryLockChainTipScheduled) {
+            return;
+        }
+        tryLockChainTipScheduled = true;
         CheckActiveState();
         bool enforced = false;
         const CBlockIndex* pindex;
@@ -74,6 +78,7 @@ void CChainLocksHandler::Start()
             chainman.ActiveChainstate().EnforceBestChainLock(pindex);
         }
         TrySignChainTip();
+        tryLockChainTipScheduled = false;
     }, std::chrono::seconds{5});
 }
 
@@ -319,7 +324,6 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLockSig& clsig, const uint256&hash, const uint256& idIn )
 {
     assert((from == -1) ^ idIn.IsNull());
-    bool enforced = false;
     if (from != -1) {
         LOCK(cs_main);
         peerman.ReceivedResponse(from, hash);
@@ -349,7 +353,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     CBlockIndex* pindexScan{nullptr};
     {
         LOCK(cs_main);
-        if (clsig.nHeight > chainman.ActiveHeight() + CSigningManager::SIGN_HEIGHT_OFFSET) {
+        if (clsig.nHeight > chainman.ActiveHeight() + (CSigningManager::SIGN_HEIGHT_OFFSET - CSigningManager::SIGN_HEIGHT_LOOKBACK)) {
             // too far into the future
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             return;
@@ -365,6 +369,16 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             // Should not happen
             LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the expected block's height (%d)\n",
                     __func__, clsig.ToString(), pindexScan->nHeight);
+            if (from != -1) {
+                if(peer)
+                    peerman.Misbehaving(*peer, 10, "invalid CLSIG");
+            }
+            return;
+        }
+        if ((clsig.nHeight%CSigningManager::SIGN_HEIGHT_LOOKBACK) != 0) {
+            // Should not happen
+            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) is not a factor of 5\n",
+                    __func__, clsig.ToString());
             if (from != -1) {
                 if(peer)
                     peerman.Misbehaving(*peer, 10, "invalid CLSIG");
@@ -464,6 +478,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     bool bChainLockMatchSigIndex = WITH_LOCK(cs, return bestChainLockBlockIndex == pindexScan);
     if (bChainLockMatchSigIndex) {
         CheckActiveState();
+        bool enforced = false;
         const CBlockIndex* pindex;
         {       
             LOCK(cs);
@@ -500,28 +515,28 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 {
     if(fInitialDownload)
         return;
-    bInvalidate = false;
-    CheckActiveState();
-    bool enforced;
-    const CBlockIndex* pindex;
-    {       
-        LOCK(cs);
-        if (tryLockChainTipScheduled) {
-            return;
-        }
+    // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
+    // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
+    // EnforceBestChainLock switching chains.
+    // atomic[If tryLockChainTipScheduled is false, do (set it to true] and schedule signing).
+    if (!tryLockChainTipScheduled) {
         tryLockChainTipScheduled = true;
-        pindex = bestChainLockBlockIndex;
-        enforced = isEnforced;
-    }
-    
-    if(enforced) {
-        AssertLockNotHeld(cs);
-        chainman.ActiveChainstate().EnforceBestChainLock(pindex);
-    }
-    TrySignChainTip();
-    {       
-        LOCK(cs);
-        tryLockChainTipScheduled = false;
+        scheduler->scheduleFromNow([&]() {
+            CheckActiveState();
+            bool enforced = false;
+            const CBlockIndex* pindex;
+            {       
+                LOCK(cs);
+                pindex = bestChainLockBlockIndex;
+                enforced = isEnforced;
+            }
+            if(enforced) {
+                AssertLockNotHeld(cs);
+                chainman.ActiveChainstate().EnforceBestChainLock(pindex);
+            }
+            TrySignChainTip();
+            tryLockChainTipScheduled = false;
+        }, std::chrono::seconds{0});
     }
 }
 
@@ -583,7 +598,6 @@ public:
 void CChainLocksHandler::TrySignChainTip()
 {
     Cleanup();
-
     if (!fMasternodeMode) {
         return;
     }
@@ -592,8 +606,8 @@ void CChainLocksHandler::TrySignChainTip()
         return;
     }
 
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveTip());
-    CBlockIndex* pindexWalkback = WITH_LOCK(cs_main, return chainman.ActiveTip());
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveChain()[chainman.ActiveHeight()-CSigningManager::SIGN_HEIGHT_LOOKBACK]);
+    CBlockIndex* pindexWalkback = WITH_LOCK(cs_main, return chainman.ActiveChain()[chainman.ActiveHeight()-CSigningManager::SIGN_HEIGHT_LOOKBACK]);
     if (!pindex || !pindex->pprev || !pindexWalkback) {
         return;
     }
@@ -612,7 +626,10 @@ void CChainLocksHandler::TrySignChainTip()
         if (!isEnabled) {
             return;
         }
-
+        // only sign every fifth block
+        if ((nHeight%CSigningManager::SIGN_HEIGHT_LOOKBACK) != 0) {
+            return;
+        }
         if (nHeight == signingState.GetLastSignedHeight()) {
             // already signed this one
             return;
@@ -788,15 +805,12 @@ bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockH
     if (!isEnforced) {
         return false;
     }
-
     if (!bestChainLockBlockIndex) {
         return false;
     }
-
     if (nHeight > bestChainLockBlockIndex->nHeight) {
         return false;
     }
-
     if (nHeight == bestChainLockBlockIndex->nHeight) {
         return blockHash == bestChainLockBlockIndex->GetBlockHash();
     }

@@ -25,8 +25,9 @@ class NEVMDataTest(DashTestFramework):
         self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
         self.sync_mempools()
         print('Generating block...')
-        self.generate(self.nodes[0], 1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        cl = self.nodes[0].getbestblockhash()
+        self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(cl)
         print('Testing nodes to see if blob exists...')
         assert_equal(self.nodes[0].getnevmblobdata(vh, True)['data'], blobDataMax)
         assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], blobDataMax)
@@ -46,8 +47,8 @@ class NEVMDataTest(DashTestFramework):
             self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
         self.sync_mempools()
         print('Generating block...')
+        cl = self.nodes[0].getbestblockhash()
         tip = self.generate(self.nodes[0], 1)[-1]
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         rpc_details = self.nodes[0].getblock(tip, True)
         print('Ensure fees will be properly calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
         assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
@@ -67,7 +68,6 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(foundCount, MAX_DATA_BLOBS)
         print('Generating next block...')
         tip = self.generate(self.nodes[0], 1)[-1]
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         rpc_details = self.nodes[0].getblock(tip, True)
         foundCount = 0
         print('Testing nodes to see if MAX_DATA_BLOBS+1 blobs exist...')
@@ -82,6 +82,8 @@ class NEVMDataTest(DashTestFramework):
                 pass
 
         assert_equal(foundCount, MAX_DATA_BLOBS+1)
+        self.generate(self.nodes[0], 3)
+        self.wait_for_chainlocked_block_all_nodes(cl)
 
     def nevm_data_block_max_blobs(self):
         print('Testing for max number of blobs in a block (32)')
@@ -93,6 +95,7 @@ class NEVMDataTest(DashTestFramework):
             self.nodes[0].syscoincreaterawnevmblob(vh,  secrets.token_hex(55))
         self.sync_mempools()
         print('Generating block...')
+        cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 1)
         foundCount = 0
         print('Testing nodes to see if only MAX_DATA_BLOBS blobs exist...')
@@ -123,6 +126,8 @@ class NEVMDataTest(DashTestFramework):
                 pass
 
         assert_equal(foundCount, MAX_DATA_BLOBS*2)
+        self.generate(self.nodes[0], 3)
+        self.wait_for_chainlocked_block_all_nodes(cl)
 
     def basic_nevm_data(self):
         print('Testing relay in mempool and compact blocks around blobs')
@@ -183,7 +188,7 @@ class NEVMDataTest(DashTestFramework):
         self.connect_nodes(0, 1)
         self.bump_mocktime(5, nodes=self.nodes[0:3])
         time.sleep(1)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:3])
         assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
@@ -207,20 +212,21 @@ class NEVMDataTest(DashTestFramework):
         self.mocktime = self.starttime
         self.bump_mocktime(NEVM_DATA_EXPIRE_TIME-1) # right before expiry
         time.sleep(1)
-        self.generate(self.nodes[0], 1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        cl = self.nodes[0].getbestblockhash()
+        self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(cl)
         assert_equal(self.nodes[3].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
         assert_equal(self.nodes[2].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
         assert_equal(self.nodes[3].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
         self.bump_mocktime(3) # push median time over expiry
         time.sleep(1)
-        self.generate(self.nodes[0], 10)
+        cl = self.generate(self.nodes[0], 10)[-6]
         time.sleep(1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.wait_for_chainlocked_block_all_nodes(cl)
         self.bump_mocktime(2) # push median time over expiry
-        self.generate(self.nodes[0], 10)
+        cl = self.generate(self.nodes[0], 10)[-6]
         time.sleep(1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.wait_for_chainlocked_block_all_nodes(cl)
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
@@ -238,8 +244,9 @@ class NEVMDataTest(DashTestFramework):
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
-        self.generate(self.nodes[0], 1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        cl = self.nodes[0].getbestblockhash()
+        self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(cl)
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
@@ -250,10 +257,12 @@ class NEVMDataTest(DashTestFramework):
         txBad = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aab')['txid']
         # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different size
         assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txBad)
-        tip = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[-1]
+        tip = self.generatetoaddress(self.nodes[1], 1, self.nodes[1].getnewaddress(), sync_fun=self.no_op)[-1]
         self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
+        self.generate(self.nodes[0], 4)
         # different data (but same size)
         txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabd')['txid']
+        self.generate(self.nodes[0], 5)
         # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different data
         assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
 
@@ -278,15 +287,16 @@ class NEVMDataTest(DashTestFramework):
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.log.info("Mine single block, wait for chainlock")
-        self.generate(self.nodes[0], 1)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        cl = self.nodes[0].getbestblockhash()
+        self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(cl)
         self.generate(self.nodes[1], 10)
         self.sync_blocks()
-        self.generate(self.nodes[3], 102)
+        self.generate(self.nodes[3], 100)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1)
         self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), 1)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 5)
         self.sync_blocks()
         self.nevm_data_max_size_blob()
         self.nevm_data_block_max_blobs()
