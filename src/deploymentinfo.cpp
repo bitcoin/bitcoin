@@ -20,6 +20,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
     switch (dep) {
     case Consensus::DEPLOYMENT_HEIGHTINCB:
         return "bip34";
+    case Consensus::DEPLOYMENT_P2SH:
+        return "bip16";
     case Consensus::DEPLOYMENT_CLTV:
         return "bip65";
     case Consensus::DEPLOYMENT_DERSIG:
@@ -45,6 +47,7 @@ bool BuriedException(Consensus::BuriedDeployment dep, uint32_t flags)
         // technically all the above soft forks have this exception block. But
         // for the purpose of the getdeploymentinfo RPC this is omitted.
         break;
+    case Consensus::DEPLOYMENT_P2SH:
     case Consensus::DEPLOYMENT_SEGWIT:
         return (flags & SCRIPT_VERIFY_P2SH) == 0;
     case Consensus::DEPLOYMENT_TAPROOT:

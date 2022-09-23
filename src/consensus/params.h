@@ -21,6 +21,7 @@ namespace Consensus {
 enum BuriedDeployment : int16_t {
     // buried deployments get negative values to avoid overlap with DeploymentPos
     DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
+    DEPLOYMENT_P2SH,
     DEPLOYMENT_CLTV,
     DEPLOYMENT_DERSIG,
     DEPLOYMENT_CSV,
@@ -80,6 +81,9 @@ struct Params {
      * - fail if the default script verify flags are applied.
      */
     std::map<uint256, uint32_t> script_flag_exceptions;
+    /** Block height at which BIP16 becomes active. Note that P2SH rules are
+    * enforced on all blocks except the BIP 16 exception block. */
+    int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
@@ -136,6 +140,8 @@ struct Params {
         switch (dep) {
         case DEPLOYMENT_HEIGHTINCB:
             return BIP34Height;
+        case DEPLOYMENT_P2SH:
+            return BIP16Height;
         case DEPLOYMENT_CLTV:
             return BIP65Height;
         case DEPLOYMENT_DERSIG:
