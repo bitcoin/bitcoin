@@ -531,9 +531,15 @@ bool RangeProof::Verify(
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
+/*
+For the proof ralted data, this function needs the following:
+    - tx index
+    - en_proof.{x, z}
+    - proof.{Vs, Ls, Rs, mu, tau_x}
+*/
 std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
-    const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,
-    const G1Points& nonces,
+    const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,  // TODO merge this and below to a new struct
+    const G1Points& nonces,  // thee size and order correspond to proofs
     const TokenId& token_id
 ) {
     const Generators gens = m_gf.GetInstance(token_id);
