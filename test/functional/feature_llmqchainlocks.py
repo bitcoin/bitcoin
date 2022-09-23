@@ -204,7 +204,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].invalidateblock(activeChain)
         self.stop_node(0)
         self.start_node(0)
-        force_finish_mnsync(self.nodes[0])
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(3)
         found = False
