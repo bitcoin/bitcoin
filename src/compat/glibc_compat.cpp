@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #endif
-#include <stdio.h>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #define likely(x)      __builtin_expect(!!(x), 1)
