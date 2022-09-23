@@ -3634,11 +3634,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         if (meta) {
             ret.pushKV("timestamp", meta->nCreateTime);
             CHDChain hdChainCurrent;
-            LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-            if (spk_man != nullptr) {
+            LegacyScriptPubKeyMan* legacy_spk_man = pwallet->GetLegacyScriptPubKeyMan();
+            if (legacy_spk_man != nullptr) {
                 LOCK(pwallet->cs_KeyStore);
-                AssertLockHeld(spk_man->cs_KeyStore);
-                if (key_id && pwallet->mapHdPubKeys.count(*key_id) && spk_man->GetHDChain(hdChainCurrent)) {
+                AssertLockHeld(legacy_spk_man->cs_KeyStore);
+                if (key_id && pwallet->mapHdPubKeys.count(*key_id) && legacy_spk_man->GetHDChain(hdChainCurrent)) {
                     ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
                 }
             }
