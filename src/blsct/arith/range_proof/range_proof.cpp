@@ -26,6 +26,8 @@ RangeProof::RangeProof()
     RangeProof::m_one = Scalar(1);
     RangeProof::m_two = Scalar(2);
     RangeProof::m_two_pows = Scalars::FirstNPow(m_two, Config::m_input_value_bits);
+    auto ones = Scalars::RepeatN(RangeProof::m_one, Config::m_input_value_bits);
+    RangeProof::m_inner_prod_ones_and_two_pows = (ones * RangeProof::m_two_pows).Sum();
 
     m_is_initialized = true;
 }
@@ -325,7 +327,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     return proof;
 }
 
-std::vector<uint8_t> RangeProof::GetTrimmedVch(Scalar& s)
+std::vector<uint8_t> RangeProof::GetTrimmedVch(const Scalar& s)
 {
     auto vch = s.GetVch();
     std::vector<uint8_t> vch_trimmed;
@@ -376,7 +378,8 @@ std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
 }
 
 std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
-    const std::vector<EnrichedProof>& proofs
+    const std::vector<EnrichedProof>& proofs,
+    const Scalars& inverses
 ) {
     VerifyLoop2Result res;
 
@@ -395,12 +398,14 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
 
         Scalars z_pow = Scalars::FirstNPow(p.z, M, 3); // VectorPowers(pd.z, M+3);
 
-        Scalar ip1y = VectorPowerSum(p.y, MN);
+        // VectorPower returns {} for MN=0, FirstNPow returns {1} for MN=0
+        // VectorPower returns {1} for MN=1, FirstNPow returns {1, p.y} for MN=1
+        Scalar ip1y = Scalars::FirstNPow(p.y, MN - 1).Sum(); // VectorPowerSum(p.y, MN);
 
         Scalar k = (z_pow[2] * ip1y).Negate();
 
         for (size_t j = 1; j <= M; ++j) {
-            k = k - (z_pow[j + 2] * BulletproofsRangeproof::ip12);
+            k = k - (z_pow[j + 2] * RangeProof::m_inner_prod_ones_and_two_pows);
         }
 
         res.y1 = res.y1 + ((p.proof.t - (k + (p.z * ip1y))) * weight_y);
@@ -419,7 +424,7 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
         Scalar y_inv_pow = 1;
         Scalar y_pow = 1;
 
-        const Scalars w_invs = &inverses[p.inv_offset]; // should return Scalars
+        const Scalars w_invs = inverses.From(p.inv_offset);  // &inverses[p.inv_offset]; // should return Scalars
         const Scalar y_inv = inverses[p.inv_offset + rounds];
 
         std::vector<Scalar> w_cache(1<<rounds, 1);
@@ -501,7 +506,8 @@ bool RangeProof::Verify(
 
     // loop2_res.base_exps will be further enriched, so not making it const
     std::optional<VerifyLoop2Result> loop2_res = VerifyLoop2(
-        loop1_res.value().proofs
+        loop1_res.value().proofs,
+        inverses
     );
 
     const Scalar y0 = loop2_res.value().y0;
@@ -526,13 +532,13 @@ bool RangeProof::Verify(
 }
 
 std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
-    const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+    const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,
     const G1Points& nonces,
     const TokenId& token_id
 ) {
     const Generators gens = m_gf.GetInstance(token_id);
 
-    if (nonces.Size() != indexed_proofs.size() {
+    if (nonces.Size() != indexed_proofs.size()) {
         throw std::runtime_error(strprintf("%s: unable to recover tx inputs since # of nonces and proofs differ", __func__));
     }
 
@@ -541,9 +547,10 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
 
     // do for each nonce + proof combination
     for (size_t i = 0; i < nonces.Size(); ++i) {
-        const p& = indexed_proofs[i];
+        auto p = indexed_proofs[i];
         const size_t& tx_in_index = p.first;
-        const Proof& proof = p.second;
+        const EnrichedProof& en_proof = p.second;
+        const Proof& proof = en_proof.proof;
         const G1Point& nonce = nonces[i];
 
         // TODO move this common validation somewhere
@@ -554,16 +561,17 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
             continue;
         }
 
-        Scalar alpha = nonce.GetHashWithSalt(1);
-        Scalar rho = nonce.GetHashWithSalt(2);
-        Scalar excess = (proof.mu - rho * pd.x) - alpha;
-        Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
-        Scalar gamma = nonce.GetHashWithSalt(100);
+        const G1Point& nonce = nonces[i];
+        const Scalar alpha = nonce.GetHashWithSalt(1);
+        const Scalar rho = nonce.GetHashWithSalt(2);
+        const Scalar excess = (proof.mu - rho * en_proof.x) - alpha;
+        const Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
+        const Scalar gamma = nonce.GetHashWithSalt(100);
 
         // recovered input is valid only when gamma and amount match with Pedersen commitment pd.Vs[0]
         // only valid inputs will be included in the result vector
         G1Point value_commitment = (gens.G.get() * gamma) + (gens.H * amount);
-        if (value_commitment != pd.Vs[0]) {
+        if (value_commitment != proof.Vs[0]) {
             continue;
         }
 
@@ -577,7 +585,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
 
         Scalar tau1 = nonces[nonce_idx].GetHashWithSalt(3);
         Scalar tau2 = nonces[nonce_idx].GetHashWithSalt(4);
-        Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * pd.x * pd.x) - (pd.z * pd.z * gamma)) * pd.x.Invert()) - tau1;
+        Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * en_proof.x.Square()) - (en_proof.z.Square() * gamma)) * en_proof.x.Invert()) - tau1;
         std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
 
         tx_in.message =

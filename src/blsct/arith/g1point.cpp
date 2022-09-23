@@ -218,7 +218,7 @@ unsigned int G1Point::GetSerializeSize() const
     return ::GetSerializeSize(GetVch());
 }
 
-Scalar G1Point::GetHashWithSalt(const uint64_t salt)
+Scalar G1Point::GetHashWithSalt(const uint64_t salt) const
 {
     CHashWriter hasher(0,0);
     hasher << *this;

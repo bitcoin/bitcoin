@@ -90,7 +90,7 @@ public:
     /**
      * returns serialization of Scalar w/ preceeding 0's trimmed
      */
-    static std::vector<uint8_t> GetTrimmedVch(Scalar& s);
+    static std::vector<uint8_t> GetTrimmedVch(const Scalar& s);
 
     bool Verify(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
@@ -105,11 +105,12 @@ public:
     );
 
     std::optional<VerifyLoop2Result> VerifyLoop2(
-        const std::vector<EnrichedProof>& proofs
+        const std::vector<EnrichedProof>& proofs,
+        const Scalars& inverses
     );
 
     std::vector<RecoveredTxInput> RecoverTxIns(
-        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,
         const G1Points& nonces,
         const TokenId& token_id
     );
@@ -120,6 +121,7 @@ private:
     static Scalar m_one;
     static Scalar m_two;
     static Scalars m_two_pows;
+    static Scalar m_inner_prod_ones_and_two_pows;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;

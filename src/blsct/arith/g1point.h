@@ -72,7 +72,7 @@ public:
     void SetVch(const std::vector<uint8_t>& b);
 
     std::string GetString(const int& radix = 16) const;
-    Scalar GetHashWithSalt(const uint64_t salt);
+    Scalar GetHashWithSalt(const uint64_t salt) const;
 
     unsigned int GetSerializeSize() const;
 
