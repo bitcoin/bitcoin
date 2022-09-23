@@ -5,8 +5,8 @@
 #ifndef SYSCOIN_CRYPTO_SHA1_H
 #define SYSCOIN_CRYPTO_SHA1_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A hasher class for SHA1. */
 class CSHA1

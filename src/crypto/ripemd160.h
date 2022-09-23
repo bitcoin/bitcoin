@@ -5,8 +5,8 @@
 #ifndef SYSCOIN_CRYPTO_RIPEMD160_H
 #define SYSCOIN_CRYPTO_RIPEMD160_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A hasher class for RIPEMD-160. */
 class CRIPEMD160

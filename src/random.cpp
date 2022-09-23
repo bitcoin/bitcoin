@@ -21,7 +21,7 @@
 #include <util/time.h> // for GetTimeMicros()
 
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <thread>
 
 #ifndef WIN32

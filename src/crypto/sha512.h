@@ -5,8 +5,8 @@
 #ifndef SYSCOIN_CRYPTO_SHA512_H
 #define SYSCOIN_CRYPTO_SHA512_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A hasher class for SHA-512. */
 class CSHA512

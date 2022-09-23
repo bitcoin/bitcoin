@@ -6,7 +6,7 @@
 #ifndef SYSCOIN_CONSENSUS_CONSENSUS_H
 #define SYSCOIN_CONSENSUS_CONSENSUS_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdint.h>
 // SYSCOIN 32MB max NEVM payload
 static const int MAX_NEVM_BLOCK_SIZE = 32 << 20;

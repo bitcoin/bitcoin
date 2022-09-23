@@ -6,7 +6,7 @@
 #ifndef SYSCOIN_SUPPORT_CLEANSE_H
 #define SYSCOIN_SUPPORT_CLEANSE_H
 
-#include <stdlib.h>
+#include <cstdlib>
 
 /** Secure overwrite a buffer (possibly containing secret data) with zero-bytes. The write
  * operation will not be optimized out by the compiler. */

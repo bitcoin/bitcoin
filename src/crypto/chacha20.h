@@ -5,8 +5,8 @@
 #ifndef SYSCOIN_CRYPTO_CHACHA20_H
 #define SYSCOIN_CRYPTO_CHACHA20_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 // classes for ChaCha20 256-bit stream cipher developed by Daniel J. Bernstein
 // https://cr.yp.to/chacha/chacha-20080128.pdf */
