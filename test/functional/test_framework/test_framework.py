@@ -1448,7 +1448,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.generate(self.nodes[0], num_blocks, sync_fun=self.no_op)
         self.sync_blocks(nodes)
 
-    def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
+    def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, mod5=False):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
@@ -1534,7 +1534,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.generate(self.nodes[0], 8, sync_fun=self.no_op)
         # Make sure we are mod of 5 block count before we start tests
         skip_count = 5 - (self.nodes[0].getblockcount() % 5)
-        if skip_count != 0:
+        if skip_count != 0 and mod5 is True:
             self.bump_mocktime(1, nodes=nodes)
             self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
         self.sync_blocks(nodes)
