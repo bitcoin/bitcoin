@@ -44,7 +44,7 @@ class LLMQSigningTest(DashTestFramework):
             self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
-        self.mine_quorum()
+        self.mine_quorum(mod5=True)
         if self.options.spork21:
             assert self.mninfo[0].node.getconnectioncount() == 5
         id = "0000000000000000000000000000000000000000000000000000000000000001"
