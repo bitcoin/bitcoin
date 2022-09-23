@@ -17,6 +17,19 @@
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
+struct TxInToRecover
+{
+    size_t index;
+    Scalar x;
+    Scalar z;
+    G1Points Vs;
+    G1Points Ls;
+    G1Points Rs;
+    Scalar mu;
+    Scalar tau_x;
+    G1Point nonce;
+};
+
 struct RecoveredTxInput
 {
     size_t index;
@@ -110,8 +123,7 @@ public:
     );
 
     std::vector<RecoveredTxInput> RecoverTxIns(
-        const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,
-        const G1Points& nonces,
+        const std::vector<TxInToRecover>& tx_ins,
         const TokenId& token_id
     );
 

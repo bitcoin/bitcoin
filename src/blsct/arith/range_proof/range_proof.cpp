@@ -531,74 +531,52 @@ bool RangeProof::Verify(
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
-/*
-For the proof ralted data, this function needs the following:
-    - tx index
-    - en_proof.{x, z}
-    - proof.{Vs, Ls, Rs, mu, tau_x}
-*/
 std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
-    const std::vector<std::pair<size_t, EnrichedProof>>& indexed_proofs,  // TODO merge this and below to a new struct
-    const G1Points& nonces,  // thee size and order correspond to proofs
+    const std::vector<TxInToRecover>& tx_ins,
     const TokenId& token_id
 ) {
     const Generators gens = m_gf.GetInstance(token_id);
-
-    if (nonces.Size() != indexed_proofs.size()) {
-        throw std::runtime_error(strprintf("%s: unable to recover tx inputs since # of nonces and proofs differ", __func__));
-    }
-
-    size_t nonce_idx = 0;
-    std::vector<RecoveredTxInput> tx_ins;
+    std::vector<RecoveredTxInput> recovered_tx_ins;
 
     // do for each nonce + proof combination
-    for (size_t i = 0; i < nonces.Size(); ++i) {
-        auto p = indexed_proofs[i];
-        const size_t& tx_in_index = p.first;
-        const EnrichedProof& en_proof = p.second;
-        const Proof& proof = en_proof.proof;
-        const G1Point& nonce = nonces[i];
-
-        // TODO move this common validation somewhere
-
+    for (const TxInToRecover& tx_in: tx_ins) {
         // cannot recover if sizes of Ls and Rs differ or Vs is empty
-        auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
-        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) {
+        auto Ls_Rs_valid = tx_in.Ls.Size() > 0 && tx_in.Ls.Size() == tx_in.Rs.Size();
+        if (tx_in.Vs.Size() == 0 || !Ls_Rs_valid) {
             continue;
         }
 
-        const G1Point& nonce = nonces[i];
-        const Scalar alpha = nonce.GetHashWithSalt(1);
-        const Scalar rho = nonce.GetHashWithSalt(2);
-        const Scalar excess = (proof.mu - rho * en_proof.x) - alpha;
+        const Scalar alpha = tx_in.nonce.GetHashWithSalt(1);
+        const Scalar rho = tx_in.nonce.GetHashWithSalt(2);
+        const Scalar excess = (tx_in.mu - rho * tx_in.x) - alpha;
         const Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
-        const Scalar gamma = nonce.GetHashWithSalt(100);
+        const Scalar gamma = tx_in.nonce.GetHashWithSalt(100);
 
         // recovered input is valid only when gamma and amount match with Pedersen commitment pd.Vs[0]
         // only valid inputs will be included in the result vector
         G1Point value_commitment = (gens.G.get() * gamma) + (gens.H * amount);
-        if (value_commitment != proof.Vs[0]) {
+        if (value_commitment != tx_in.Vs[0]) {
             continue;
         }
 
-        RecoveredTxInput tx_in;
-        tx_in.index = tx_in_index;
-        tx_in.amount = amount.GetUint64();
-        tx_in.gamma = gamma;
+        RecoveredTxInput recovered_tx_in;
+        recovered_tx_in.index = tx_in.index;
+        recovered_tx_in.amount = amount.GetUint64();
+        recovered_tx_in.gamma = gamma;
 
         // generate message and set to data
         std::vector<uint8_t> msg = GetTrimmedVch(excess >> 64);
 
-        Scalar tau1 = nonces[nonce_idx].GetHashWithSalt(3);
-        Scalar tau2 = nonces[nonce_idx].GetHashWithSalt(4);
-        Scalar excess_msg_scalar = ((proof.tau_x - (tau2 * en_proof.x.Square()) - (en_proof.z.Square() * gamma)) * en_proof.x.Invert()) - tau1;
+        Scalar tau1 = tx_in.nonce.GetHashWithSalt(3);
+        Scalar tau2 = tx_in.nonce.GetHashWithSalt(4);
+        Scalar excess_msg_scalar = ((tx_in.tau_x - (tau2 * tx_in.x.Square()) - (tx_in.z.Square() * gamma)) * tx_in.x.Invert()) - tau1;
         std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
 
-        tx_in.message =
+        recovered_tx_in.message =
             std::string(msg.begin(), msg.end()) +
             std::string(excess_msg.begin(), excess_msg.end());
 
-        tx_ins.push_back(tx_in);
+        recovered_tx_ins.push_back(recovered_tx_in);
     }
-    return tx_ins;
+    return recovered_tx_ins;
 }
