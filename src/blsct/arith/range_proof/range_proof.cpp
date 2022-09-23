@@ -4,6 +4,7 @@
 
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
+#include <blsct/arith/range_proof/proof.h>
 #include <blsct/arith/range_proof/range_proof.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
@@ -36,7 +37,7 @@ bool RangeProof::InnerProductArgument(
     const Scalars& l,
     const Scalars& r,
     const Scalar& y,
-    RangeProofState& st,
+    Proof& proof,
     CHashWriter& transcript
 ) {
     // build initial state
@@ -60,21 +61,21 @@ bool RangeProof::InnerProductArgument(
 
         // (23)-(24)
         Scalar extra_scalar_cL = cL * x_ip;
-        st.Ls.Add(
+        proof.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
             (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
             (gens.H * extra_scalar_cL)
         );
         Scalar extra_scalar_cR = cR * x_ip;
-        st.Rs.Add(
+        proof.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
             (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
             (gens.H * extra_scalar_cR)
         );
 
         // (25)-(27)
-        transcript << st.Ls[round];
-        transcript << st.Rs[round];
+        transcript << proof.Ls[round];
+        transcript << proof.Rs[round];
 
         Scalar x = transcript.GetHash();
         if (x == 0)
@@ -99,8 +100,8 @@ bool RangeProof::InnerProductArgument(
         ++round;
     }
 
-    st.a = a_prime[0];
-    st.b = b_prime[0];
+    proof.a = a_prime[0];
+    proof.b = b_prime[0];
 
     return true;
 }
@@ -118,7 +119,7 @@ size_t RangeProof::GetInputValueVecLen(const size_t& input_value_vec_len)
     return i;
 }
 
-RangeProofState RangeProof::Prove(
+Proof RangeProof::Prove(
     Scalars vs,
     G1Point nonce,
     const std::vector<uint8_t>& message,
@@ -141,7 +142,7 @@ RangeProofState RangeProof::Prove(
     const size_t input_value_total_bits = input_value_vec_len * Config::m_input_value_bits;
 
     ////////////// Proving steps
-    RangeProofState st;
+    Proof proof;
 
     // Initialize gammas
     Scalars gammas;
@@ -167,9 +168,9 @@ RangeProofState RangeProof::Prove(
     CHashWriter transcript(0, 0);
 
     // Calculate value commitments and add them to transcript
-    st.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
+    proof.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
     for (size_t i = 0; i < vs.Size(); ++i) {
-        transcript << st.Vs[i];
+        transcript << proof.Vs[i];
     }
 
     // (41)-(42)
@@ -211,7 +212,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     alpha = alpha + (vs[0] | (message_scalar << Config::m_input_value_bits));
 
     // Using generator H for alpha following the paper
-    st.A = (gens.H * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
+    proof.A = (gens.H * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -220,11 +221,11 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    st.S = (gens.H * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
+    proof.S = (gens.H * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
 
     // (48)-(50)
-    transcript << st.A;
-    transcript << st.S;
+    transcript << proof.A;
+    transcript << proof.S;
 
     Scalar y = transcript.GetHash();
     if (y == 0)
@@ -278,12 +279,12 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     });
     tau1 = tau1 + second_message;
 
-    st.T1 = (gens.G.get() * t1) + (gens.H * tau1);
-    st.T2 = (gens.G.get() * t2) + (gens.H * tau2);
+    proof.T1 = (gens.G.get() * t1) + (gens.H * tau1);
+    proof.T2 = (gens.G.get() * t2) + (gens.H * tau2);
 
     // (54)-(56)
-    transcript << st.T1;
-    transcript << st.T2;
+    transcript << proof.T1;
+    transcript << proof.T2;
 
     Scalar x = transcript.GetHash();
     if (x == 0)
@@ -295,33 +296,33 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     Scalars r = r0 + (r1 * x);  // r0 = RHS of (58) - r1; r1 = y_mn o (sR * x)
 
     // LHS of (60)
-    st.t_hat = (l * r).Sum();
+    proof.t_hat = (l * r).Sum();
 
     // RHS of (60)
     Scalar t0 = (l0 * r0).Sum();
     Scalar t_of_x = t0 + t1 * x + t2 * x.Square();
 
     // (60)
-    if (st.t_hat != t_of_x)
+    if (proof.t_hat != t_of_x)
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
-    st.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows * gammas).Sum();  // (61)
-    st.mu = alpha + (rho * x);  // (62)
+    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows * gammas).Sum();  // (61)
+    proof.mu = alpha + (rho * x);  // (62)
 
     // (63)
     transcript << x;
-    transcript << st.tau_x;
-    transcript << st.mu;
-    transcript << st.t;
+    transcript << proof.tau_x;
+    transcript << proof.mu;
+    transcript << proof.t;
 
     Scalar x_ip = transcript.GetHash();
     if (x_ip == 0)
         goto try_again;
 
-    if (!InnerProductArgument(input_value_vec_len, gens, x_ip, l, r, y, st, transcript)) {
+    if (!InnerProductArgument(input_value_vec_len, gens, x_ip, l, r, y, proof, transcript)) {
         goto try_again;
     }
-    return st;
+    return proof;
 }
 
 std::vector<uint8_t> RangeProof::GetTrimmedVch(Scalar& s)
