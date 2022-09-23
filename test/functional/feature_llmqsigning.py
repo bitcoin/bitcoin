@@ -48,8 +48,8 @@ class LLMQSigningTest(DashTestFramework):
         if self.options.spork21:
             assert self.mninfo[0].node.getconnectioncount() == 5
         id = "0000000000000000000000000000000000000000000000000000000000000001"
-        msgHash = self.generate(self.nodes[0], 1)[-1]
-        msgHashConflict = self.generate(self.nodes[0], 1)[-1]
+        msgHash = self.generate(self.nodes[0], 5)[-1]
+        msgHashConflict = self.generate(self.nodes[0], 5)[-1]
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
             for mn in self.mninfo:
@@ -184,7 +184,7 @@ class LLMQSigningTest(DashTestFramework):
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 5)
         self.sync_blocks()
         self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
@@ -193,7 +193,7 @@ class LLMQSigningTest(DashTestFramework):
         self.bump_mocktime(int(60 * 60 * 24 * 1))
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 5)
         self.sync_blocks()
         self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
@@ -204,7 +204,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 5)
         self.sync_blocks()
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
@@ -229,7 +229,7 @@ class LLMQSigningTest(DashTestFramework):
             wait_until_helper(lambda: mn.node.getconnectioncount() == 5, timeout=10, sleep=2)
             mn.node.ping()
             self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 5)
             self.sync_blocks()
             self.bump_mocktime(5)
             wait_for_sigs(True, False, True, 15)
