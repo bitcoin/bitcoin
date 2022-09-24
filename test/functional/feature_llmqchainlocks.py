@@ -232,7 +232,6 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(1)
         node0_cl_block = self.nodes[0].getblock(node0_cl)
         assert(not node0_cl_block["chainlock"])
-        assert(node0_cl_block["hash"] == good_tip)
         node0_cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.log.info("Assert that TXs got included now")
