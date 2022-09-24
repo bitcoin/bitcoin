@@ -638,9 +638,10 @@ RPCHelpMan getaddressinfo()
 RPCHelpMan getaddressesbylabel()
 {
     return RPCHelpMan{"getaddressesbylabel",
-                "\nReturns the list of addresses assigned the specified label.\n",
+                "If a label is specified, returns the list of addresses assigned to it.\n"
+                "Otherwise, returns all addresses contained in the address book.\n",
                 {
-                    {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label."},
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "The label."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ_DYN, "", "json object with addresses as keys",
@@ -648,6 +649,7 @@ RPCHelpMan getaddressesbylabel()
                         {RPCResult::Type::OBJ, "address", "json object with information about address",
                         {
                             {RPCResult::Type::STR, "purpose", "Purpose of address (\"send\" for sending address, \"receive\" for receiving address)"},
+                            {RPCResult::Type::STR, "label", /*optional=*/true, "Label of address"},
                         }},
                     }
                 },
@@ -662,14 +664,17 @@ RPCHelpMan getaddressesbylabel()
 
     LOCK(pwallet->cs_wallet);
 
-    std::string label = LabelFromValue(request.params[0]);
+    std::optional<std::string> label = request.params[0].isNull() ?
+        std::nullopt :
+        std::optional<std::string>(LabelFromValue(request.params[0]));
 
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
     pwallet->ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label, const std::string& _purpose, bool _is_change) {
         if (_is_change) return;
-        if (_label == label) {
+
+        if (!label.has_value() || label.value() == _label) {
             std::string address = EncodeDestination(_dest);
             // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
@@ -681,13 +686,16 @@ RPCHelpMan getaddressesbylabel()
             // std::set in O(log(N))), UniValue::__pushKV is used instead,
             // which currently is O(1).
             UniValue value(UniValue::VOBJ);
+            if (!label.has_value()) {
+                value.pushKV("label", _label);
+            }
             value.pushKV("purpose", _purpose);
             ret.__pushKV(address, value);
         }
     });
 
-    if (ret.empty()) {
-        throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label));
+    if (label.has_value() && ret.empty()) {
+        throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label.value()));
     }
 
     return ret;
