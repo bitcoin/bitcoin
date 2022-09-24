@@ -3794,7 +3794,7 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
     // SYSCOIN
     if ( !pindex) {
-        if (m_chainman.m_best_invalid && m_chainman.m_best_invalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
+        if (llmq::AreChainLocksEnabled() && m_chainman.m_best_invalid && m_chainman.m_best_invalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
             LogPrintf("%s: the best known invalid block (%s) is ahead of our tip, reconsidering\n",
                     __func__, m_chainman.m_best_invalid->GetBlockHash().ToString());
             pindex = m_chainman.m_best_invalid;
