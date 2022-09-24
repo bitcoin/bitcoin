@@ -196,6 +196,8 @@ class LLMQChainLocksTest(DashTestFramework):
             if tip["status"] == "invalid":
                 foundConflict = True
                 conflictLength = tip["height"] + tip["branchlen"]
+            if tip["status"] == "valid-fork":
+                forkChain = tip["hash"]
 
         assert(found and foundConflict)
         self.log.info("Should switch to the locked tip on restart because flags are reset on start")
@@ -203,20 +205,18 @@ class LLMQChainLocksTest(DashTestFramework):
         self.stop_node(0)
         time.sleep(0.5)
         self.start_node(0)
+        # ensure activeChain or forkChain get activated in LCR (because invalidate on a CL will remove it)
         self.nodes[0].invalidateblock(activeChain)
         self.stop_node(0)
         self.start_node(0)
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(3)
         found = False
-        self.log.info('after tips {}'.format(self.nodes[0].getchaintips()))
-        self.log.info('activeChain {}'.format(activeChain))
-        self.log.info('good_tip {}'.format(good_tip))
-        self.log.info('good_cl {}'.format(good_cl))
-        self.log.info('tip {}'.format(self.nodes[0].getbestblockhash()))
         for tip in self.nodes[0].getchaintips():
             if tip["status"] == "active" and tip["hash"] == activeChain:
                 found = True
+            if tip["status"] == "active" and tip["hash"] == forkChain:
+                found = True     
         assert(found)
 
         txs = []
