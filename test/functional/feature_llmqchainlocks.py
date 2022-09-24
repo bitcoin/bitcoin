@@ -186,6 +186,7 @@ class LLMQChainLocksTest(DashTestFramework):
         conflictLength = 0
         activeChain = ""
         activeLength = 0
+        self.log.info('before tips {}'.format(self.nodes[0].getchaintips()))
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == good_tip:
                 assert(tip["status"] == "active")
@@ -203,13 +204,16 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(0.5)
         self.start_node(0)
         self.nodes[0].invalidateblock(activeChain)
-        time.sleep(1)
         self.stop_node(0)
-        time.sleep(0.5)
         self.start_node(0)
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(3)
         found = False
+        self.log.info('after tips {}'.format(self.nodes[0].getchaintips()))
+        self.log.info('activeChain {}'.format(activeChain))
+        self.log.info('good_tip {}'.format(good_tip))
+        self.log.info('good_cl {}'.format(good_cl))
+        self.log.info('tip {}'.format(self.nodes[0].getbestblockhash()))
         for tip in self.nodes[0].getchaintips():
             if tip["status"] == "active" and tip["hash"] == activeChain:
                 found = True
@@ -274,7 +278,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(not self.nodes[0].getblock(proposed_lock)["chainlock"])
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
         # after 20 blocks the ancestry consistency check ends and it can create chainlocks again on the longer chain
-        new_cl = self.generate(self.nodes[2], 25)[-6]
+        new_cl = self.generate(self.nodes[0], 25)[-6]
         self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=30)
         self.nodes[0].disconnect_p2ps()
 
