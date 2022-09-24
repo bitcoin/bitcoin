@@ -443,59 +443,6 @@ def set_node_times(nodes, t):
         node.mocktime = t
         node.setmocktime(t)
 
-def disconnect_nodes(from_connection, node_num):
-    def get_peer_ids():
-        result = []
-        for peer in from_connection.getpeerinfo():
-            if "testnode{}".format(node_num) in peer['subver']:
-                result.append(peer['id'])
-        return result
-
-    peer_ids = get_peer_ids()
-    if not peer_ids:
-        logger.warning("disconnect_nodes: {} and {} were not connected".format(
-            from_connection.index,
-            node_num
-        ))
-        return
-    for peer_id in peer_ids:
-        try:
-            from_connection.disconnectnode(nodeid=peer_id)
-        except JSONRPCException as e:
-            # If this node is disconnected between calculating the peer id
-            # and issuing the disconnect, don't worry about it.
-            # This avoids a race condition if we're mass-disconnecting peers.
-            if e.error['code'] != -29: # RPC_CLIENT_NODE_NOT_CONNECTED
-                raise
-
-    # wait to disconnect
-    wait_until(lambda: not get_peer_ids(), timeout=5)
-
-def connect_nodes(from_connection, node_num):
-    ip_port = "127.0.0.1:" + str(p2p_port(node_num))
-    from_connection.addnode(ip_port, "onetry")
-    # poll until version handshake complete to avoid race conditions
-    # with transaction relaying
-    # See comments in net_processing:
-    # * Must have a version message before anything else
-    # * Must have a verack message before anything else
-    wait_until(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
-    wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
-
-def isolate_node(node, timeout=5):
-    node.setnetworkactive(False)
-    timeout *= Options.timeout_scale
-    stop_time = time.time() + timeout
-    while time.time() < stop_time:
-        if node.getconnectioncount() == 0:
-            return
-        time.sleep(0.5)
-    raise AssertionError("disconnect_node timed out")
-
-def reconnect_isolated_node(node, node_num):
-    node.setnetworkactive(True)
-    connect_nodes(node, node_num)
-
 def force_finish_mnsync(node):
     """
     Masternodes won't accept incoming connections while IsSynced is false.

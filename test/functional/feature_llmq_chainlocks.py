@@ -13,7 +13,7 @@ Checks LLMQs based ChainLocks
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import connect_nodes, force_finish_mnsync, isolate_node, reconnect_isolated_node
+from test_framework.util import force_finish_mnsync
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -27,7 +27,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
         for i in range(len(self.nodes)):
             if i != 1:
-                connect_nodes(self.nodes[i], 1)
+                self.connect_nodes(i, 1)
 
         self.activate_dip8()
 
@@ -53,24 +53,24 @@ class LLMQChainLocksTest(DashTestFramework):
             assert block['chainlock']
 
         self.log.info("Isolate node, mine on another, and reconnect")
-        isolate_node(self.nodes[0])
+        self.isolate_node(0)
         node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
         self.nodes[1].generatetoaddress(5, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         assert self.nodes[0].getbestblockhash() == node0_tip
-        reconnect_isolated_node(self.nodes[0], 1)
+        self.reconnect_isolated_node(0, 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
-        isolate_node(self.nodes[0])
+        self.isolate_node(0)
         bad_tip = self.nodes[0].generate(5)[-1]
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[1], good_tip)
         assert not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"]
-        reconnect_isolated_node(self.nodes[0], 1)
+        self.reconnect_isolated_node(0, 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
         assert self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip
@@ -90,7 +90,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
         self.start_node(0)
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         assert self.nodes[0].getbestblockhash() == good_tip
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
@@ -129,7 +129,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
         force_finish_mnsync(self.nodes[0])
-        isolate_node(self.nodes[0])
+        self.isolate_node(0)
         txs = []
         for i in range(3):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
@@ -155,7 +155,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
         # for the mined TXs, which will then allow the network to create a CLSIG
         self.log.info("Re-enable network on first node and wait for chainlock")
-        reconnect_isolated_node(self.nodes[0], 1)
+        self.reconnect_isolated_node(0, 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
 
     def create_chained_txs(self, node, amount):

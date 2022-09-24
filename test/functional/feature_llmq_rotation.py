@@ -17,7 +17,6 @@ from test_framework.mininode import P2PInterface
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    connect_nodes,
     wait_until,
 )
 
@@ -67,7 +66,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         for i in range(len(self.nodes)):
             if i != 1:
-                connect_nodes(self.nodes[i], 0)
+                self.connect_nodes(i, 0)
 
         self.activate_dip8()
 

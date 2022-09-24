@@ -13,7 +13,7 @@ Checks simple PoSe system based on LLMQ commitments
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, connect_nodes, force_finish_mnsync, p2p_port, wait_until
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, wait_until
 
 
 class LLMQSimplePoSeTest(DashTestFramework):
@@ -71,18 +71,18 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def close_mn_port(self, mn):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, ["-listen=0", "-nobind"])
-        connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node.index, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
             if mn2 is not mn:
-                connect_nodes(mn.node, mn2.node.index)
+                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False, False
 
     def force_old_mn_proto(self, mn):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, ["-pushversion=70216"])
-        connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node.index, 0)
         self.reset_probe_timeouts()
         return False, True
 
@@ -199,7 +199,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn)
                 else:
                     mn.node.setnetworkactive(True)
-            connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
         self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
@@ -208,7 +208,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
-            connect_nodes(mn.node, 0)
+            self.connect_nodes(mn.node.index, 0)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

@@ -16,8 +16,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
-    disconnect_nodes,
 )
 
 
@@ -50,7 +48,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         balance = newbalance
 
         # Disconnect nodes so node0's transactions don't get into node1's mempool
-        disconnect_nodes(self.nodes[0], 1)
+        self.disconnect_nodes(0, 1)
 
         # Identify the 10btc outputs
         nA = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txA)["details"] if tx_out["amount"] == Decimal("10"))
@@ -173,7 +171,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(signed["hex"])
         self.nodes[1].generate(1)
 
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_blocks()
 
         tx_list = self.nodes[0].listtransactions()

@@ -11,7 +11,6 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
-    connect_nodes,
     count_bytes,
     wait_until,
 )
@@ -34,9 +33,9 @@ class WalletTest(BitcoinTestFramework):
         self.setup_nodes()
         # Only need nodes 0-2 running at start of test
         self.stop_node(3)
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_all(self.nodes[0:3])
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
@@ -216,7 +215,7 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('100'), fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
 
         self.start_node(3)
-        connect_nodes(self.nodes[0], 3)
+        self.connect_nodes(0, 3)
         self.sync_all()
 
         # check if we can list zero value tx as available coins
@@ -251,9 +250,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0, ["-walletbroadcast=0"])
         self.start_node(1, ["-walletbroadcast=0"])
         self.start_node(2, ["-walletbroadcast=0"])
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_all(self.nodes[0:3])
 
         txid_not_broadcast = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
@@ -278,9 +277,9 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(0)
         self.start_node(1)
         self.start_node(2)
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
         self.sync_blocks(self.nodes[0:3])
 
         self.nodes[0].generate(1)

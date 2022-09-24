@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, connect_nodes
+from test_framework.util import assert_equal, assert_greater_than
 
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
@@ -22,10 +22,10 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def setup_network(self):
         super().setup_network()
-        connect_nodes(self.nodes[0],1)
-        connect_nodes(self.nodes[1],2)
-        connect_nodes(self.nodes[0],2)
-        connect_nodes(self.nodes[0],3)
+        self.connect_nodes(0,1)
+        self.connect_nodes(1,2)
+        self.connect_nodes(0,2)
+        self.connect_nodes(0,3)
 
     def run_test(self):
         self.log.info("Mining blocks...")
@@ -451,10 +451,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         for node in self.nodes:
             node.settxfee(min_relay_tx_fee)
 
-        connect_nodes(self.nodes[0],1)
-        connect_nodes(self.nodes[1],2)
-        connect_nodes(self.nodes[0],2)
-        connect_nodes(self.nodes[0],3)
+        self.connect_nodes(0,1)
+        self.connect_nodes(1,2)
+        self.connect_nodes(0,2)
+        self.connect_nodes(0,3)
         self.sync_all()
 
         # drain the keypool

@@ -12,7 +12,7 @@ import binascii
 from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_CHECKSIG, OP_DUP, OP_EQUALVERIFY, OP_HASH160
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, connect_nodes
+from test_framework.util import assert_equal
 
 
 class TxIndexTest(BitcoinTestFramework):
@@ -32,9 +32,9 @@ class TxIndexTest(BitcoinTestFramework):
         # Nodes 2/3 are used for testing
         self.start_node(2, ["-txindex"])
         self.start_node(3, ["-txindex"])
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
         self.sync_all()
         self.import_deterministic_coinbase_privkeys()
 

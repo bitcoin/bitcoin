@@ -16,7 +16,7 @@ and by having a higher relay fee on nodes 4 and 5.
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
+from test_framework.util import set_node_times
 
 
 class LLMQ_IS_RetroactiveSigning(DashTestFramework):
@@ -69,13 +69,13 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(block)
 
         self.log.info("testing normal signing with partially known TX")
-        isolate_node(self.nodes[3])
+        self.isolate_node(3)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
-        reconnect_isolated_node(self.nodes[3], 0)
+        self.reconnect_isolated_node(3, 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
@@ -88,7 +88,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_instantlock(txid, self.nodes[0])
 
         self.log.info("testing retroactive signing with unknown TX")
-        isolate_node(self.nodes[3])
+        self.isolate_node(3)
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
@@ -96,18 +96,18 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make node 3 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
         block = self.nodes[3].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
-        reconnect_isolated_node(self.nodes[3], 0)
+        self.reconnect_isolated_node(3, 0)
         self.wait_for_chainlocked_block_all_nodes(block)
         self.nodes[0].setmocktime(self.mocktime)
 
         self.log.info("testing retroactive signing with partially known TX")
-        isolate_node(self.nodes[3])
+        self.isolate_node(3)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
-        reconnect_isolated_node(self.nodes[3], 0)
+        self.reconnect_isolated_node(3, 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
@@ -136,7 +136,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
     def test_all_nodes_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
-        isolate_node(self.nodes[3])
+        self.isolate_node(3)
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
@@ -150,7 +150,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make the signing session for the IS lock timeout on nodes 1-3
         self.bump_mocktime(61)
         time.sleep(2) # make sure Cleanup() is called
-        reconnect_isolated_node(self.nodes[3], 0)
+        self.reconnect_isolated_node(3, 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
@@ -167,7 +167,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
     def test_single_node_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
-        isolate_node(self.nodes[3])
+        self.isolate_node(3)
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
@@ -176,7 +176,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make the signing session for the IS lock timeout on node 3
         self.bump_mocktime(61)
         time.sleep(2) # make sure Cleanup() is called
-        reconnect_isolated_node(self.nodes[3], 0)
+        self.reconnect_isolated_node(3, 0)
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)

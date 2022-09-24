@@ -38,9 +38,7 @@ from .util import (
     MAX_NODES,
     assert_equal,
     check_json_precision,
-    connect_nodes,
     copy_datadir,
-    disconnect_nodes,
     force_finish_mnsync,
     get_datadir_path,
     hex_str_to_bytes,
@@ -517,10 +515,57 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes[i].process.wait(timeout)
 
     def connect_nodes(self, a, b):
-        connect_nodes(self.nodes[a], b)
+        def connect_nodes_helper(from_connection, node_num):
+            ip_port = "127.0.0.1:" + str(p2p_port(node_num))
+            from_connection.addnode(ip_port, "onetry")
+            # poll until version handshake complete to avoid race conditions
+            # with transaction relaying
+            # See comments in net_processing:
+            # * Must have a version message before anything else
+            # * Must have a verack message before anything else
+            wait_until(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
+            wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
+
+        connect_nodes_helper(self.nodes[a], b)
 
     def disconnect_nodes(self, a, b):
-        disconnect_nodes(self.nodes[a], b)
+        def disconnect_nodes_helper(from_connection, node_num):
+            def get_peer_ids():
+                result = []
+                for peer in from_connection.getpeerinfo():
+                    if "testnode{}".format(node_num) in peer['subver']:
+                        result.append(peer['id'])
+                return result
+
+            peer_ids = get_peer_ids()
+            if not peer_ids:
+                self.log.warning("disconnect_nodes: {} and {} were not connected".format(
+                    from_connection.index,
+                    node_num,
+                ))
+                return
+            for peer_id in peer_ids:
+                try:
+                    from_connection.disconnectnode(nodeid=peer_id)
+                except JSONRPCException as e:
+                    # If this node is disconnected between calculating the peer id
+                    # and issuing the disconnect, don't worry about it.
+                    # This avoids a race condition if we're mass-disconnecting peers.
+                    if e.error['code'] != -29: # RPC_CLIENT_NODE_NOT_CONNECTED
+                        raise
+
+            # wait to disconnect
+            wait_until(lambda: not get_peer_ids(), timeout=5)
+
+        disconnect_nodes_helper(self.nodes[a], b)
+
+    def isolate_node(self, node_num, timeout=5):
+        self.nodes[node_num].setnetworkactive(False)
+        wait_until(lambda: self.nodes[node_num].getconnectioncount() == 0, timeout=timeout)
+
+    def reconnect_isolated_node(self, a, b):
+        self.nodes[a].setnetworkactive(True)
+        self.connect_nodes(a, b)
 
     def split_network(self):
         """
@@ -888,7 +933,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.start_node(idx)
         self.nodes[idx].createwallet(self.default_wallet_name)
         for i in range(0, idx):
-            connect_nodes(self.nodes[i], idx)
+            self.connect_nodes(i, idx)
 
     def prepare_masternodes(self):
         self.log.info("Preparing %d masternodes" % self.mn_count)
@@ -988,7 +1033,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         def do_connect(idx):
             # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
-            connect_nodes(self.mninfo[idx].node, 0)
+            self.connect_nodes(self.mninfo[idx].nodeIdx, 0)
 
         jobs = []
 
@@ -1050,7 +1095,7 @@ class DashTestFramework(BitcoinTestFramework):
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
         for i in range(0, num_simple_nodes):
-            connect_nodes(self.nodes[i+1], 0)
+            self.connect_nodes(i+1, 0)
 
         self.bump_mocktime(1)
         self.nodes[0].generate(1)

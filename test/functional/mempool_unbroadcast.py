@@ -11,9 +11,7 @@ from test_framework.mininode import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes,
     create_confirmed_utxos,
-    disconnect_nodes,
 )
 
 
@@ -35,7 +33,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         min_relay_fee = node.getnetworkinfo()["relayfee"]
         utxos = create_confirmed_utxos(min_relay_fee, node, 10)
 
-        disconnect_nodes(node, 1)
+        self.disconnect_nodes(0, 1)
 
         self.log.info("Generate transactions that only node 0 knows about")
 
@@ -62,7 +60,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         self.restart_node(0)
 
         self.log.info("Reconnect nodes & check if they are sent to node 1")
-        connect_nodes(node, 1)
+        self.connect_nodes(0, 1)
 
         # fast forward into the future & ensure that the second node has the txns
         node.mockscheduler(15 * 60)  # 15 min in seconds
@@ -81,8 +79,8 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
     def test_txn_removal(self):
         self.log.info("Test that transactions removed from mempool are removed from unbroadcast set")
         node = self.nodes[0]
-        disconnect_nodes(node, 1)
-        node.disconnect_p2ps
+        self.disconnect_nodes(0, 1)
+        node.disconnect_p2ps()
 
         # since the node doesn't have any connections, it will not receive
         # any GETDATAs & thus the transaction will remain in the unbroadcast set.

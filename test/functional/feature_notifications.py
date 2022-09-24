@@ -10,7 +10,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
-    connect_nodes,
 )
 
 # Linux allow all characters other than \x00
@@ -75,7 +74,7 @@ class NotificationsTest(BitcoinTestFramework):
             self.log.info("test -walletnotify after rescan")
             # restart node to rescan to force wallet notifications
             self.start_node(1)
-            connect_nodes(self.nodes[0], 1)
+            self.connect_nodes(0, 1)
 
             wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 

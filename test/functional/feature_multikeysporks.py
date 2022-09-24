@@ -5,7 +5,7 @@
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import connect_nodes, wait_until
+from test_framework.util import wait_until
 
 '''
 feature_multikeysporks.py
@@ -66,7 +66,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
         # connect nodes at start
         for i in range(0, 5):
             for j in range(i, 5):
-                connect_nodes(self.nodes[i], j)
+                self.connect_nodes(i, j)
 
     def get_test_spork_value(self, node, spork_name):
         self.bump_mocktime(5)  # advance ProcessTick
@@ -95,7 +95,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
         # restart again with corect_params, should resync spork parts from other nodes
         self.restart_node(0, self.node0_extra_args)
         for i in range(1, 5):
-            connect_nodes(self.nodes[0], i)
+            self.connect_nodes(0, i)
 
         # third signer set spork value
         self.nodes[2].sporkupdate(spork_name, 1)
@@ -110,7 +110,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
         # restart again with corect_params, should resync sporks from other nodes
         self.restart_node(0, self.node0_extra_args)
         for i in range(1, 5):
-            connect_nodes(self.nodes[0], i)
+            self.connect_nodes(0, i)
 
         wait_until(lambda: self.get_test_spork_value(self.nodes[0], spork_name) == 1, sleep=0.1, timeout=10)
 
