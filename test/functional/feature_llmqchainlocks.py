@@ -216,7 +216,7 @@ class LLMQChainLocksTest(DashTestFramework):
             if tip["status"] == "active" and tip["hash"] == activeChain:
                 found = True
             if tip["status"] == "active" and tip["hash"] == forkChain:
-                found = True     
+                found = True
         assert(found)
 
         txs = []
