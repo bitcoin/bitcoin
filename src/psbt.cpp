@@ -6,6 +6,12 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 
+PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
+{
+    inputs.resize(tx.vin.size());
+    outputs.resize(tx.vout.size());
+}
+
 bool PartiallySignedTransaction::IsNull() const
 {
     return !tx && inputs.empty() && outputs.empty() && unknown.empty();
@@ -184,10 +190,17 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
     psbt_out.FromSignatureData(sigdata);
 }
 
-bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash)
+bool PSBTInputSigned(PSBTInput& input)
 {
-    // if this input has a final scriptsig, don't do anything with it
-    if (!input.final_script_sig.empty()) {
+    return !input.final_script_sig.empty();
+}
+
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash)
+{
+    PSBTInput& input = psbt.inputs.at(index);
+    const CMutableTransaction& tx = *psbt.tx;
+
+    if (PSBTInputSigned(input)) {
         return true;
     }
 
@@ -197,10 +210,19 @@ bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& t
 
     // Get UTXO
     CTxOut utxo;
+
+    // Verify input sanity, which checks that at most one of witness or non-witness utxos is provided.
+    if (!input.IsSane()) {
+        return false;
+    }
+
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
-        if (input.non_witness_utxo->GetHash() != tx.vin[index].prevout.hash) return false;
-        utxo = input.non_witness_utxo->vout[tx.vin[index].prevout.n];
+        COutPoint prevout = tx.vin[index].prevout;
+        if (input.non_witness_utxo->GetHash() != prevout.hash) {
+            return false;
+        }
+        utxo = input.non_witness_utxo->vout[prevout.n];
     } else {
         return false;
     }
@@ -219,8 +241,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     //   script.
     bool complete = true;
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        PSBTInput& input = psbtx.inputs.at(i);
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, *psbtx.tx, input, i, 1);
+        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, SIGHASH_ALL);
     }
 
     return complete;

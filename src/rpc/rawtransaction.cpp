@@ -1491,7 +1491,7 @@ UniValue utxoupdatepsbt(const JSONRPCRequest& request)
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, *psbtx.tx, input, i, /* sighash_type */ 1);
+        SignPSBTInput(public_provider, psbtx, i, /* sighash_type */ SIGHASH_ALL);
     }
 
     // Update script/keypath information using descriptor data.

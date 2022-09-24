@@ -13,6 +13,15 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
         const CTxIn& txin = psbtx.tx->vin[i];
         PSBTInput& input = psbtx.inputs.at(i);
 
+        if (PSBTInputSigned(input)) {
+            continue;
+        }
+
+        // Verify input looks sane. This will check that we have at most one uxto.
+        if (!input.IsSane()) {
+            return TransactionError::INVALID_PSBT;
+        }
+
         const uint256& txhash = txin.prevout.hash;
         const auto it = pwallet->mapWallet.find(txhash);
         if (it != pwallet->mapWallet.end()) {
@@ -27,7 +36,7 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet->GetSigningProvider(), !sign, !bip32derivs), *psbtx.tx, input, i, sighash_type);
+        complete &= SignPSBTInput(HidingSigningProvider(pwallet->GetSigningProvider(), !sign, !bip32derivs), psbtx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
