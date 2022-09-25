@@ -168,6 +168,7 @@ Proof RangeProof::Prove(
         }
     }
     // TODO fill bits if aL.size < concat_input_values_in_bits
+    assert(false);
 
     auto one_value_concat_bits = Scalars::FirstNPow(m_one, concat_input_values_in_bits);
 
