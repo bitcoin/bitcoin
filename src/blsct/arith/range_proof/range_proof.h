@@ -12,7 +12,7 @@
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
-#include <blsct/arith/range_proof/enriched_proof.h>
+#include <blsct/arith/range_proof/proof_with_derived_values.h>
 #include <blsct/arith/scalar.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -40,11 +40,9 @@ struct RecoveredTxInput
 
 struct VerifyLoop1Result
 {
-    std::vector<EnrichedProof> proofs;
-    Scalars to_invert;
-    size_t max_LR_len = 0;
+    std::vector<ProofWithDerivedValues> proof_derivs;
+    size_t max_num_rounds = 0;
     size_t Vs_size_sum = 0;
-    size_t to_invert_idx_offset = 0;
 };
 
 struct VerifyLoop2Result
@@ -85,11 +83,17 @@ public:
     );
 
     /**
-     * Calculates the size of the vector that holds input values
-     * the vector size needs o be a power of 2 that is equal to or larger than 2
-     * throws exception if the number exceeds the maximum
+     * Returns power of 2 that is greater or equal to input_value_len
+     * throws exception if such a number exceeds the maximum
      */
-    static size_t GetInputValueVecLen(const size_t& input_value_len);
+    size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_len) const;
+
+    /**
+     * Take a log2 of the size of concatinated input values in bits
+     * to get to the number of rounds required to get a single element
+     * by halving the size in each round
+     */
+    size_t GetInnerProdArgRounds(const size_t& num_input_values) const;
 
     Proof Prove(
         Scalars vs,
@@ -107,25 +111,32 @@ public:
 
     bool Verify(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-        const G1Points& nonces,
         const TokenId& token_id
-    );
+    ) const;
 
-    std::optional<VerifyLoop1Result> VerifyLoop1(
+    bool RangeProof::ValidateProofsBySizes(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-        const Generators& gens,
-        const G1Points& nonces
-    );
+        const size_t& num_rounds
+    ) const;
 
-    std::optional<VerifyLoop2Result> VerifyLoop2(
-        const std::vector<EnrichedProof>& proofs,
-        const Scalars& inverses
-    );
+    /**
+     * Recover derived scalars used in Prove() from proof
+     * while calculating total number of bits in cocatinated input value
+     * and maximum size of L,R
+     */
+    VerifyLoop1Result VerifyLoop1(
+        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const size_t& num_rounds
+    ) const;
+
+    VerifyLoop2Result VerifyLoop2(
+        const std::vector<ProofWithDerivedValues>& proof_derivs
+    ) const;
 
     std::vector<RecoveredTxInput> RecoverTxIns(
         const std::vector<TxInToRecover>& tx_ins,
         const TokenId& token_id
-    );
+    ) const;
 
 private:
     static GeneratorsFactory m_gf;

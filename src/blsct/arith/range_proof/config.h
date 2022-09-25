@@ -10,6 +10,8 @@
 class Config
 {
 public:
+    static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
+
     // maximum # of retries allowed for RangeProof::Prove function
     inline static const size_t max_prove_func_retries = 100;
 
@@ -17,10 +19,10 @@ public:
     inline static const size_t m_input_value_bits = 64;
 
     // maximum # of input values
-    inline static const size_t m_max_num_values = 16;  // ex max_value_len
+    inline static const size_t m_max_input_values = 16;
 
     inline static const size_t m_max_message_size = 54;
-    inline static const size_t m_max_input_value_vec_len = m_max_num_values * m_input_value_bits;
+    inline static const size_t m_max_input_value_vec_len = m_max_input_values * m_input_value_bits;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H

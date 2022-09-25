@@ -2,13 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/arith/range_proof/config.h>
-#include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/proof.h>
 #include <blsct/arith/range_proof/range_proof.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
-#include "tinyformat.h"
+#include <tinyformat.h>
 
 Scalar RangeProof::m_one;
 Scalar RangeProof::m_two;
@@ -49,7 +47,7 @@ bool RangeProof::InnerProductArgument(
     Scalars a_prime = l;
     Scalars b_prime = r;
 
-    size_t n_prime = input_value_vec_len;
+    size_t n_prime = input_value_vec_len;  // # of rounds is log2 n_prime
     size_t round = 0;
     Scalars xs;
 
@@ -108,17 +106,11 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-size_t RangeProof::GetInputValueVecLen(const size_t& input_value_vec_len)
+size_t RangeProof::GetInnerProdArgRounds(const size_t& num_input_values) const
 {
-    size_t i = 1;
-    while (i < input_value_vec_len) {
-        i *= 2;
-        if (i > Config::m_max_input_value_vec_len) {
-            throw std::runtime_error(strprintf(
-                "%s: input value vector length %d is too large", __func__, input_value_vec_len));
-        }
-    }
-    return i;
+    const size_t num_input_values_power_of_2 = GetFirstPowerOf2GreaterOrEqTo(num_input_values);
+    const size_t rounds = std::log2(num_input_values_power_of_2) + std::log2(Config::m_input_value_bits);
+    return rounds;
 }
 
 Proof RangeProof::Prove(
@@ -135,13 +127,16 @@ Proof RangeProof::Prove(
     if (vs.Empty()) {
         throw std::runtime_error(strprintf("%s: value vector is empty", __func__));
     }
+    if (vs.Size() > Config::m_max_input_values) {
+        throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
+    }
     if (gammas_override.has_value() && gammas_override.value().Size() != vs.Size()) {
         throw std::runtime_error(strprintf("%s: expected %d gammas in gammas_override, but got %d",
         __func__, vs.Size(), gammas_override.value().Size()));
     }
 
-    const size_t input_value_vec_len = GetInputValueVecLen(vs.Size());
-    const size_t input_value_total_bits = input_value_vec_len * Config::m_input_value_bits;
+    const size_t num_input_values_power_2 = GetFirstPowerOf2GreaterOrEqTo(vs.Size());
+    const size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
     ////////////// Proving steps
     Proof proof;
@@ -177,7 +172,7 @@ Proof RangeProof::Prove(
 
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
-    Scalars aL;
+    Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
     for(Scalar& v: vs.m_vec) {  // for each input value
         auto bits = v.GetBits();  // gets the value in binary
         for(bool bit: bits) {
@@ -188,10 +183,12 @@ Proof RangeProof::Prove(
             aL.Add(false);
         }
     }
-    auto one_value_total_bits = Scalars::FirstNPow(m_one, input_value_total_bits);
+    // TODO fill bits if aL.size < concat_input_values_in_bits
+
+    auto one_value_concat_bits = Scalars::FirstNPow(m_one, concat_input_values_in_bits);
 
     // aR is aL - 1
-    Scalars aR = aL - one_value_total_bits;
+    Scalars aR = aL - one_value_concat_bits;
 
     size_t num_tries = 0;
 
@@ -244,7 +241,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     // l(x) = (aL - z 1^n) + sL X
     // aL is a concatination of all input value bits, so mn bits (= input_value_total_bits) are needed
-    Scalars z_value_total_bits = Scalars::FirstNPow(z, input_value_total_bits);
+    Scalars z_value_total_bits = Scalars::FirstNPow(z, concat_input_values_in_bits);
     Scalars l0 = aL - z_value_total_bits;
 
     // l(1) is (aL - z 1^n) + sL, but this is reduced to sL
@@ -252,10 +249,10 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
 
     // Calculation of r(0) and r(1) on page 19
     Scalars z_n_times_two_n;
-    Scalars z_pows = Scalars::FirstNPow(z, input_value_total_bits, 2);  // z_pows excludes 1 and z
+    Scalars z_pows = Scalars::FirstNPow(z, concat_input_values_in_bits, 2);  // z_pows excludes 1 and z
 
     // The last term of r(X) on page 19
-    for (size_t i = 0; i < input_value_vec_len; ++i) {
+    for (size_t i = 0; i < concat_input_values_in_bits; ++i) {
         auto base_z = z_pows[i];  // change base Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
@@ -263,7 +260,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
         }
     }
 
-    Scalars y_value_total_bits = Scalars::FirstNPow(y, input_value_total_bits);
+    Scalars y_value_total_bits = Scalars::FirstNPow(y, concat_input_values_in_bits);
     Scalars r0 = (y_value_total_bits * (aR + z_value_total_bits)) + z_n_times_two_n;
     Scalars r1 = y_value_total_bits * sR;
 
@@ -321,7 +318,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     if (x_ip == 0)
         goto try_again;
 
-    if (!InnerProductArgument(input_value_vec_len, gens, x_ip, l, r, y, proof, transcript)) {
+    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_ip, l, r, y, proof, transcript)) {
         goto try_again;
     }
     return proof;
@@ -340,56 +337,58 @@ std::vector<uint8_t> RangeProof::GetTrimmedVch(const Scalar& s)
     return vch_trimmed;
 }
 
-std::optional<VerifyLoop1Result> RangeProof::VerifyLoop1(
+bool RangeProof::ValidateProofsBySizes(
     const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-    const Generators& gens,
-    const G1Points& nonces
-) {
+    const size_t& num_rounds
+) const {
+    for (const std::pair<size_t, Proof>& p: indexed_proofs) {
+        const Proof proof = p.second;
+
+        // proof must contain input values
+        if (proof.Vs.Size() == 0) return false;
+
+        // invalid if # of input values are lager than maximum
+        if (proof.Vs.Size() > Config::m_max_input_values) return false;
+
+        // L,R keep track of aggregation history and the size should equal to # of rounds
+        if (proof.Ls.Size() != num_rounds)
+            return false;
+
+        // if Ls and Rs should have the same size
+        if (proof.Ls.Size() != proof.Rs.Size()) return false;
+    }
+    return true;
+}
+
+VerifyLoop1Result RangeProof::VerifyLoop1(
+    const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+    const size_t& num_rounds
+) const {
     VerifyLoop1Result res;
 
     for (const std::pair<size_t, Proof>& p: indexed_proofs) {
         const Proof proof = p.second;
 
-        const size_t M = GetInputValueVecLen(proof.Vs.Size());
-        const size_t rounds = std::log2(M) + std::log2(Config::m_input_value_bits);  // pd.logM + logN;
-
-        // check validity of proof in terms of component sizes
-        auto Ls_Rs_valid = proof.Ls.Size() > 0 && proof.Ls.Size() == proof.Rs.Size();
-        if (proof.Vs.Size() == 0 || !Ls_Rs_valid) return std::nullopt;
-
-        // keep track of max size of L/R and sum of Vs sizes
-        res.max_LR_len = std::max(res.max_LR_len, proof.Ls.Size());
+        // update max # of rounds and sum of all V bits
+        res.max_num_rounds = std::max(res.max_num_rounds, proof.Ls.Size());
         res.Vs_size_sum += proof.Vs.Size();
 
-        // create ProofData from proof
-        auto enriched_proof = EnrichedProof::Build(proof, res.to_invert_idx_offset, rounds, std::log2(M));
-        res.proofs.push_back(enriched_proof);
-
-        // add w's and y to to_invert list
-        for (size_t i = 0; i < rounds; ++i) {
-            res.to_invert.Add(enriched_proof.ws[i]);
-        }
-        res.to_invert.Add(enriched_proof.y);
-
-        // advance the to_invert index offset
-        res.to_invert_idx_offset += (rounds + 1);
+        // derive required Scalars from proof
+        auto proof_deriv = ProofWithDerivedValues::Build(proof, num_rounds);
+        res.proof_derivs.push_back(proof_deriv);
     }
     return res;
 }
 
-std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
-    const std::vector<EnrichedProof>& proofs,
-    const Scalars& inverses
-) {
+VerifyLoop2Result RangeProof::VerifyLoop2(
+    const std::vector<ProofWithDerivedValues>& proof_derivs
+) const {
     VerifyLoop2Result res;
 
-    for (const EnrichedProof& p: proofs) {
+    for (const ProofWithDerivedValues& p: proof_derivs) {
 
-        if (p.proof.Ls.Size() != std::log2(Config::m_input_value_bits) + p.log_m)
-            return std::nullopt;
-
-        const size_t M = 1 << p.log_m;
-        const size_t MN = M * Config::m_input_value_bits;
+        const size_t M = p.num_input_values_power_2;
+        const size_t MN = p.concat_input_values_in_bits;
 
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
@@ -402,16 +401,16 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
         // VectorPower returns {1} for MN=1, FirstNPow returns {1, p.y} for MN=1
         Scalar ip1y = Scalars::FirstNPow(p.y, MN - 1).Sum(); // VectorPowerSum(p.y, MN);
 
-        Scalar k = (z_pow[2] * ip1y).Negate();
-
-        for (size_t j = 1; j <= M; ++j) {
-            k = k - (z_pow[j + 2] * RangeProof::m_inner_prod_ones_and_two_pows);
+        // processing z_pow[2], z_pow[3] ... originally
+        Scalar k = (z_pow[0] * ip1y).Negate();  // was z_pow[2]
+        for (size_t i = 1; i <= M; ++i) {
+            k = k - (z_pow[i] * RangeProof::m_inner_prod_ones_and_two_pows);  // was i + 2
         }
 
         res.y1 = res.y1 + ((p.proof.t - (k + (p.z * ip1y))) * weight_y);
 
-        for (size_t j = 0; j < p.proof.Vs.Size(); ++j) {
-            res.multi_exp.Add(p.proof.Vs[j] * (z_pow[j+2] * weight_y));
+        for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
+            res.multi_exp.Add(p.proof.Vs[i] * (z_pow[i] * weight_y));  // was i + 2
         }
 
         res.multi_exp.Add(p.proof.T1 * (p.x * weight_y));
@@ -419,24 +418,19 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
         res.multi_exp.Add(p.proof.A * weight_z);
         res.multi_exp.Add(p.proof.S * (p.x * weight_z));
 
-        const size_t rounds = p.log_m + std::log2(Config::m_input_value_bits);
-
         Scalar y_inv_pow = 1;
         Scalar y_pow = 1;
 
-        const Scalars w_invs = inverses.From(p.inv_offset);  // &inverses[p.inv_offset]; // should return Scalars
-        const Scalar y_inv = inverses[p.inv_offset + rounds];
-
-        std::vector<Scalar> w_cache(1<<rounds, 1);
-        w_cache[0] = w_invs[0];
+        std::vector<Scalar> w_cache(1 << p.num_rounds, 1);
+        w_cache[0] = p.inv_ws[0];
         w_cache[1] = p.ws[0];
 
-        for (size_t j = 1; j < rounds; ++j) {
+        for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1<<(j+1);
 
             for (size_t s = sl; s-- > 0; --s) {
                 w_cache[s] = w_cache[s/2] * p.ws[j];
-                w_cache[s-1] = w_cache[s/2] * w_invs[j];
+                w_cache[s-1] = w_cache[s/2] * p.inv_ws[j];
             }
         }
 
@@ -468,19 +462,19 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
             res.z5[i] = res.z5[i] - (h_scalar * weight_z);
 
             if (i == 0) {
-                y_inv_pow = y_inv;
+                y_inv_pow = p.inv_y;
                 y_pow = p.y;
             } else if (i != MN - 1) {
-                y_inv_pow = y_inv_pow * y_inv;
+                y_inv_pow = y_inv_pow * p.inv_y;
                 y_pow = y_pow * p.y;
             }
         }
 
         res.z1 = res.z1 + (p.proof.mu * weight_z);
 
-        for (size_t i = 0; i < rounds; ++i) {
+        for (size_t i = 0; i < p.num_rounds; ++i) {
             res.multi_exp.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
-            res.multi_exp.Add(p.proof.Rs[i] * (w_invs[i].Square() * weight_z));
+            res.multi_exp.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
         }
 
         res.z3 = res.z3 + (((p.proof.t - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
@@ -489,44 +483,42 @@ std::optional<VerifyLoop2Result> RangeProof::VerifyLoop2(
 
 bool RangeProof::Verify(
     const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
-    const G1Points& nonces,
     const TokenId& token_id
-) {
-    const Generators gens = m_gf.GetInstance(token_id);
+) const {
+    const size_t num_rounds = GetInnerProdArgRounds(Config::m_input_value_bits);
+    if (!ValidateProofsBySizes(indexed_proofs, num_rounds)) return false;
 
-    const std::optional<VerifyLoop1Result> loop1_res = VerifyLoop1(
+    const VerifyLoop1Result loop1_res = VerifyLoop1(
         indexed_proofs,
-        gens,
-        nonces
+        num_rounds
     );
-    if (loop1_res == std::nullopt) return false; // return false if loop1 fails
 
-    Scalars inverses = loop1_res.value().to_invert.Invert();
-    size_t maxMN = 1u << loop1_res.value().max_LR_len;
+    size_t maxMN = 1u << loop1_res.max_num_rounds;
 
     // loop2_res.base_exps will be further enriched, so not making it const
-    std::optional<VerifyLoop2Result> loop2_res = VerifyLoop2(
-        loop1_res.value().proofs,
-        inverses
+    VerifyLoop2Result loop2_res = VerifyLoop2(
+        loop1_res.proof_derivs
     );
 
-    const Scalar y0 = loop2_res.value().y0;
-    const Scalar y1 = loop2_res.value().y1;
-    const Scalar z1 = loop2_res.value().z1;
-    const Scalar z3 = loop2_res.value().z3;
-    const Scalars z4 = loop2_res.value().z4;
-    const Scalars z5 = loop2_res.value().z5;
+    const Scalar y0 = loop2_res.y0;
+    const Scalar y1 = loop2_res.y1;
+    const Scalar z1 = loop2_res.z1;
+    const Scalar z3 = loop2_res.z3;
+    const Scalars z4 = loop2_res.z4;
+    const Scalars z5 = loop2_res.z5;
 
-    loop2_res.value().multi_exp.Add(gens.G.get() * (y0 - z1));
-    loop2_res.value().multi_exp.Add(gens.H * (z3 - y1));
+    const Generators gens = m_gf.GetInstance(token_id);
+
+    loop2_res.multi_exp.Add(gens.G.get() * (y0 - z1));
+    loop2_res.multi_exp.Add(gens.H * (z3 - y1));
 
     // place Gi and Hi side by side
     // multi_exp_data needs to be maxMN * 2 long. z4 and z5 needs to be maxMN long.
     for (size_t i = 0; i < maxMN; ++i) {
-        loop2_res.value().multi_exp.Add(gens.Gi.get()[i] * z4[i]);
-        loop2_res.value().multi_exp.Add(gens.Hi.get()[i] * z5[i]);
+        loop2_res.multi_exp.Add(gens.Gi.get()[i] * z4[i]);
+        loop2_res.multi_exp.Add(gens.Hi.get()[i] * z5[i]);
     }
-    G1Point m_exp = loop2_res.value().multi_exp.Sum();
+    G1Point m_exp = loop2_res.multi_exp.Sum();
 
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
@@ -534,7 +526,7 @@ bool RangeProof::Verify(
 std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
     const std::vector<TxInToRecover>& tx_ins,
     const TokenId& token_id
-) {
+) const {
     const Generators gens = m_gf.GetInstance(token_id);
     std::vector<RecoveredTxInput> recovered_tx_ins;
 

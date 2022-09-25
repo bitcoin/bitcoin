@@ -2,67 +2,67 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/proof.h>
-#include <blsct/arith/range_proof/enriched_proof.h>
+#include <blsct/arith/range_proof/proof_with_derived_values.h>
 
-EnrichedProof EnrichedProof::Build(
+ProofWithDerivedValues ProofWithDerivedValues::Build(
   const Proof& proof,
-  const size_t& inv_offset,
-  const size_t& rounds,
-  const size_t& log_m
+  const size_t& num_rounds
 ) {
+    // create x, y, z and x_ip through transcript from proof
+    // in the same they were created in Prove function
     CHashWriter transcript(0,0);
 
-    // add Vs to transcript
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
         transcript << proof.Vs[i];
     }
-    // A and S are not a part of ProofData and only added to transcript
     transcript << proof.A;
     transcript << proof.S;
 
-    // y is created from transcript and transcript is updated with the y
     Scalar y = transcript.GetHash();
     transcript << y;
 
-    // z is created from transcript and transcript is updated with the z
     Scalar z = transcript.GetHash();
     transcript << z;
 
-    // T1 and T2 are not a part of ProofData and only added to transcript
     transcript << proof.T1;
     transcript << proof.T2;
 
-    // x is created from transcript and transcript is updated with the x
     Scalar x = transcript.GetHash();
     transcript << x;
 
-    // tau_x, mu and t are not a part of ProofData and only added to transcript
     transcript << proof.tau_x;
     transcript << proof.mu;
     transcript << proof.t;
 
-    // x_ip is created from transcript
     Scalar x_ip = transcript.GetHash();
 
-    // for each L and R, they are added to transcript and then w is created from transcript at that point
-    // ws is the vectors of such w's
+    // for each proof, generate w from Ls and Rs and store the inverse
     Scalars ws;
-    for (size_t i = 0; i < rounds; ++i) {
+    Scalars inv_ws;
+    for (size_t i = 0; i < num_rounds; ++i) {
         transcript << proof.Ls[i];
         transcript << proof.Rs[i];
         Scalar w(transcript.GetHash());
         ws.Add(w);
+        inv_ws.Add(w.Invert());
     }
 
-    return EnrichedProof(
+    size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
+    size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
+
+    return ProofWithDerivedValues(
+        // Scalars derived from proof through transcript
         proof,
         x,
         y,
         z,
         x_ip,
         ws,
-        log_m,
-        inv_offset
+        inv_ws,
+        num_input_values_power_2,
+        concat_input_values_in_bits,
+        num_rounds
     );
 }

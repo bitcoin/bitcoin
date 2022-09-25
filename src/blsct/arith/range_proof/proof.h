@@ -11,19 +11,22 @@
 
 struct Proof
 {
+    // intermediate values used to derive random values later
     G1Points Vs;
     G1Point A;
     G1Point S;
     G1Point T1;
     G1Point T2;
-    Scalar t_hat;
-    Scalar a;
-    Scalar b;
-    G1Points Ls;
-    G1Points Rs;
     Scalar mu;
     Scalar tau_x;
     Scalar t;
+    G1Points Ls;
+    G1Points Rs;
+
+    // proof results
+    Scalar t_hat;   // inner product of l and r
+    Scalar a;       // result of inner product argument
+    Scalar b;       // result of inner product argument
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_H
