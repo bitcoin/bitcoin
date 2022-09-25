@@ -538,8 +538,17 @@ BOOST_AUTO_TEST_CASE(test_scalar_getvch)
         31,
     };
     Scalar a(vec);
-    auto a_vec = a.GetVch();
-    BOOST_CHECK(vec == a_vec);
+    {
+        auto a_vec = a.GetVch();
+        BOOST_CHECK(vec == a_vec);
+    }
+    {
+        // the first 0 of vec should have been removed in act
+        auto act = a.GetVch(true);
+        std::vector<uint8_t> exp(vec.size() - 1);
+        std::copy(vec.begin() + 1, vec.end(), exp.begin());
+        BOOST_CHECK(act == exp);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_setvch)

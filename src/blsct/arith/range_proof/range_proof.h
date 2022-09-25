@@ -111,11 +111,6 @@ public:
         const TokenId& token_id
     );
 
-    /**
-     * returns serialization of Scalar w/ preceeding 0's trimmed
-     */
-    static std::vector<uint8_t> GetTrimmedVch(const Scalar& s);
-
     bool Verify(
         const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
         const TokenId& token_id

@@ -309,20 +309,6 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     return proof;
 }
 
-// Serialize given Scalar, drop preceeding 0s and return
-std::vector<uint8_t> RangeProof::GetTrimmedVch(const Scalar& s)
-{
-    auto vch = s.GetVch();
-    std::vector<uint8_t> vch_trimmed;
-
-    bool take_char = false;
-    for (auto c: vch) {
-        if (!take_char && c != '\0') take_char = true;
-        if (take_char) vch_trimmed.push_back(c);
-    }
-    return vch_trimmed;
-}
-
 bool RangeProof::ValidateProofsBySizes(
     const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
     const size_t& num_rounds
@@ -548,7 +534,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         // generate message and set to data
         // extract the message part from (up-to-23-byte message || 64-byte v[0])
         // by 64 bytes tot the right
-        std::vector<uint8_t> msg1 = GetTrimmedVch(message_v0 >> 64);
+        std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
 
         auto tau_x = tx_in.tau_x;
         auto x = tx_in.x;
@@ -564,7 +550,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         // since tau1 in (61) is tau1 (C) + msg2, by subtracting tau1 (C) from RHS of (D)
         // you can extract msg2
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
-        std::vector<uint8_t> msg2 = RangeProof::GetTrimmedVch(msg2_scalar);
+        std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
         RecoveredTxInput recovered_tx_in(
             tx_in.index,

@@ -253,13 +253,22 @@ uint64_t Scalar::GetUint64() const
     return ret;
 }
 
-std::vector<uint8_t> Scalar::GetVch() const
+std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
 {
-    std::vector<uint8_t> b(WIDTH);
-    if (mclBnFr_serialize(&b[0], WIDTH, &m_fr) == 0) {
-        throw std::runtime_error(std::string("Failed to serialize mclBnFr"));
+    std::vector<uint8_t> vec(Scalar::SERIALIZATION_SIZE_IN_BYTES);
+    if (mclBnFr_serialize(&vec[0], Scalar::SERIALIZATION_SIZE_IN_BYTES, &m_fr) == 0) {
+        throw std::runtime_error(std::string("Serialization failed"));
     }
-    return b;
+    if (!trim_preceeding_zeros) return vec;
+
+    std::vector<uint8_t> trimmed_vec;
+
+    bool take_char = false;
+    for (auto c: trimmed_vec) {
+        if (!take_char && c != '\0') take_char = true;
+        if (take_char) trimmed_vec.push_back(c);
+    }
+    return trimmed_vec;
 }
 
 void Scalar::SetVch(const std::vector<uint8_t> &v)

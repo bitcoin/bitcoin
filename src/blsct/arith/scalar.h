@@ -27,7 +27,7 @@
 
 class Scalar {
 public:
-    static constexpr int WIDTH = 256 / 8;
+    static constexpr int SERIALIZATION_SIZE_IN_BYTES = 32;
 
     Scalar(const int64_t& n = 0);  // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
     Scalar(const std::vector<uint8_t>& v);
@@ -70,7 +70,7 @@ public:
 
     uint64_t GetUint64() const;
 
-    std::vector<uint8_t> GetVch() const;
+    std::vector<uint8_t> GetVch(const bool trim_preceeding_zeros = false) const;
     void SetVch(const std::vector<uint8_t>& v);
 
     /**
