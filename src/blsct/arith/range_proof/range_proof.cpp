@@ -503,7 +503,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
     std::vector<RecoveredTxInput> recovered_tx_ins;  // will contain only recovered txins
 
     for (const TxInToRecover& tx_in: tx_ins) {
-        // unable to recover if sizes of Ls and Rs differ or Vs is empty
+        // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = tx_in.Ls.Size() > 0 && tx_in.Ls.Size() == tx_in.Rs.Size();
         if (tx_in.Vs.Size() == 0 || !Ls_Rs_valid) {
             continue;
@@ -525,7 +525,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         const Scalar message_v0 = (tx_in.mu - rho * tx_in.x) - alpha;
         const Scalar input_value0 = message_v0 & Scalar(0xFFFFFFFFFFFFFFFF);
 
-        // recovery fails if reproduced input value 0 commitment doesn't match with Vs[0]
+        // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (gens.G.get() * input_value0_gamma) + (gens.H * input_value0);
         if (input_value0_commitment != tx_in.Vs[0]) {
             continue;
