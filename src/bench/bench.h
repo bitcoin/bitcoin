@@ -76,7 +76,7 @@ public:
 } // namespace benchmark
 
 // BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo, priority_level);
-#define BENCHMARK(n) \
-    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n, benchmark::PriorityLevel::HIGH);
+#define BENCHMARK(n, priority_level) \
+    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n, priority_level);
 
 #endif // BITCOIN_BENCH_BENCH_H

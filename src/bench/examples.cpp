@@ -18,4 +18,4 @@ static void Trig(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(Trig);
+BENCHMARK(Trig, benchmark::PriorityLevel::HIGH);

@@ -141,15 +141,15 @@ static void EvictionProtection3Networks250Candidates(benchmark::Bench& bench)
 // - 250 candidates is the number of peers reported by operators of busy nodes
 
 // No disadvantaged networks, with 250 eviction candidates.
-BENCHMARK(EvictionProtection0Networks250Candidates);
+BENCHMARK(EvictionProtection0Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 1 disadvantaged network (Tor) with 250 eviction candidates.
-BENCHMARK(EvictionProtection1Networks250Candidates);
+BENCHMARK(EvictionProtection1Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 2 disadvantaged networks (I2P, Tor) with 250 eviction candidates.
-BENCHMARK(EvictionProtection2Networks250Candidates);
+BENCHMARK(EvictionProtection2Networks250Candidates, benchmark::PriorityLevel::HIGH);
 
 // 3 disadvantaged networks (I2P/localhost/Tor) with 50/100/250 eviction candidates.
-BENCHMARK(EvictionProtection3Networks050Candidates);
-BENCHMARK(EvictionProtection3Networks100Candidates);
-BENCHMARK(EvictionProtection3Networks250Candidates);
+BENCHMARK(EvictionProtection3Networks050Candidates, benchmark::PriorityLevel::HIGH);
+BENCHMARK(EvictionProtection3Networks100Candidates, benchmark::PriorityLevel::HIGH);
+BENCHMARK(EvictionProtection3Networks250Candidates, benchmark::PriorityLevel::HIGH);

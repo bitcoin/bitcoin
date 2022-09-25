@@ -39,4 +39,4 @@ static void BenchLockedPool(benchmark::Bench& bench)
     addr.clear();
 }
 
-BENCHMARK(BenchLockedPool);
+BENCHMARK(BenchLockedPool, benchmark::PriorityLevel::HIGH);

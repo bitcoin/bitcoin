@@ -150,19 +150,19 @@ static void MuHashPrecompute(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RIPEMD160);
-BENCHMARK(SHA1);
-BENCHMARK(SHA256);
-BENCHMARK(SHA512);
-BENCHMARK(SHA3_256_1M);
+BENCHMARK(RIPEMD160, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA1, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA3_256_1M, benchmark::PriorityLevel::HIGH);
 
-BENCHMARK(SHA256_32b);
-BENCHMARK(SipHash_32b);
-BENCHMARK(SHA256D64_1024);
-BENCHMARK(FastRandom_32bit);
-BENCHMARK(FastRandom_1bit);
+BENCHMARK(SHA256_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256D64_1024, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FastRandom_32bit, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FastRandom_1bit, benchmark::PriorityLevel::HIGH);
 
-BENCHMARK(MuHash);
-BENCHMARK(MuHashMul);
-BENCHMARK(MuHashDiv);
-BENCHMARK(MuHashPrecompute);
+BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashDiv, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHashPrecompute, benchmark::PriorityLevel::HIGH);
