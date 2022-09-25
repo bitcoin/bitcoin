@@ -176,7 +176,7 @@ Proof RangeProof::Prove(
 
     size_t num_tries = 0;
 
-try_again:  // hasher is not cleared so that different hash will be obtained upon retry
+retry:  // hasher is not cleared so that different hash will be obtained upon retry
 
     if (++num_tries > Config::m_max_prove_tries) {
         throw std::runtime_error(strprintf("%s: exceeded maxinum number of tries", __func__));
@@ -214,13 +214,11 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     transcript << proof.S;
 
     Scalar y = transcript.GetHash();
-    if (y == 0)
-        goto try_again;
+    if (y == 0) goto retry;
     transcript << y;
 
     Scalar z = transcript.GetHash();
-    if (z == 0)
-        goto try_again;
+    if (z == 0) goto retry;
     transcript << z;
 
     // Polynomial construction by coefficients
@@ -275,8 +273,8 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     transcript << proof.T2;
 
     Scalar x = transcript.GetHash();
-    if (x == 0)
-        goto try_again;
+    if (x == 0) goto retry;
+
     // x will be added to transcript later
 
     // (58)-(59)
@@ -304,11 +302,10 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     transcript << proof.t;
 
     Scalar x_ip = transcript.GetHash();
-    if (x_ip == 0)
-        goto try_again;
+    if (x_ip == 0) goto retry;
 
     if (!InnerProductArgument(concat_input_values_in_bits, gens, x_ip, l, r, y, proof, transcript)) {
-        goto try_again;
+        goto retry;
     }
     return proof;
 }
