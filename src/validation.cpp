@@ -4199,6 +4199,9 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
+        if(pprevindex) {
+            *pprevindex = pindexPrev;
+        }
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
             LogPrint(BCLog::VALIDATION, "%s: %s prev block invalid\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
@@ -4272,6 +4275,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
+            // SYSCOIN
+            CBlockIndex *pprevindex = nullptr;
             bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
             ActiveChainstate().CheckBlockIndex();
             if (!accepted) {
