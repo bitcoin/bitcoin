@@ -23,6 +23,9 @@ public:
 
     inline static const size_t m_max_message_size = 54;
     inline static const size_t m_max_input_value_vec_len = m_max_input_values * m_input_value_bits;
+
+    // maximum number of tries in Prove() function
+    inline static const size_t m_max_prove_tries = 100;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H

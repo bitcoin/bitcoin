@@ -32,9 +32,18 @@ struct TxInToRecover
 
 struct RecoveredTxInput
 {
+    RecoveredTxInput(
+        const size_t& index,
+        const CAmount& input_value0,
+        const Scalar& input_value0_gamma,
+        const std::string& message
+    ): index{index}, input_value0{input_value0},
+        input_value0_gamma{input_value0_gamma},
+        message{message} {}
+
     size_t index;
-    CAmount amount;
-    Scalar gamma;
+    CAmount input_value0;
+    Scalar input_value0_gamma;
     std::string message;
 };
 
@@ -99,9 +108,7 @@ public:
         Scalars vs,
         G1Point nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id,
-        const size_t max_num_of_tries = 100,
-        const std::optional<Scalars> gammas_override = std::nullopt
+        const TokenId& token_id
     );
 
     /**

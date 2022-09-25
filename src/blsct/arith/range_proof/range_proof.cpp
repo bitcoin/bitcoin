@@ -117,10 +117,8 @@ Proof RangeProof::Prove(
     Scalars vs,
     G1Point nonce,
     const std::vector<uint8_t>& message,
-    const TokenId& token_id,
-    const size_t max_tries,
-    const std::optional<Scalars> gammas_override)
-{
+    const TokenId& token_id
+) {
     if (message.size() > Config::m_max_message_size) {
         throw std::runtime_error(strprintf("%s: message size is too large", __func__));
     }
@@ -129,10 +127,6 @@ Proof RangeProof::Prove(
     }
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
-    }
-    if (gammas_override.has_value() && gammas_override.value().Size() != vs.Size()) {
-        throw std::runtime_error(strprintf("%s: expected %d gammas in gammas_override, but got %d",
-        __func__, vs.Size(), gammas_override.value().Size()));
     }
 
     const size_t num_input_values_power_2 = GetFirstPowerOf2GreaterOrEqTo(vs.Size());
@@ -143,19 +137,9 @@ Proof RangeProof::Prove(
 
     // Initialize gammas
     Scalars gammas;
-    if (gammas_override.has_value()) {
-        if (gammas_override.value().Size() != vs.Size()) {
-            throw std::runtime_error(strprintf(
-                "%s: gammas_override size %d differs to the size of input values %d",
-                __func__, gammas_override.value().Size(), vs.Size()));
-
-        }
-        gammas = gammas_override.value();
-    } else {
-        for (size_t i = 0; i < vs.Size(); ++i) {
-            auto hash = nonce.GetHashWithSalt(100 + i);
-            gammas.Add(hash);
-        }
+    for (size_t i = 0; i < vs.Size(); ++i) {
+        auto hash = nonce.GetHashWithSalt(100 + i);
+        gammas.Add(hash);
     }
 
     // Get Generators for the token_id
@@ -194,21 +178,24 @@ Proof RangeProof::Prove(
 
 try_again:  // hasher is not cleared so that different hash will be obtained upon retry
 
-    if (++num_tries > max_tries) {
+    if (++num_tries > Config::m_max_prove_tries) {
         throw std::runtime_error(strprintf("%s: exceeded maxinum number of tries", __func__));
     }
 
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
-    std::vector<uint8_t> first_message {
+
+    // trim message to first 23 bytes if needed
+    Scalar msg1_scalar(
         message.size() > 23 ?
             std::vector<uint8_t>(message.begin(), message.begin() + 23) :
             message
-    };
-    Scalar message_scalar(first_message);
+    );
+    // first part of message + 64-byte vs[0]
+    Scalar msg1_v0 = (msg1_scalar << Config::m_input_value_bits) | vs[0];
 
     Scalar alpha = nonce.GetHashWithSalt(1);
-    alpha = alpha + (vs[0] | (message_scalar << Config::m_input_value_bits));
+    alpha = alpha + msg1_v0;
 
     // Using generator H for alpha following the paper
     proof.A = (gens.H * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
@@ -271,12 +258,14 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     // (52)-(53)
     Scalar tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
-    Scalar second_message = Scalar({
+
+    // if message size is 24-byte or bigger, treat that part as msg2
+    Scalar msg2_scalar = Scalar({
         message.size() > 23 ?
             std::vector<uint8_t>(message.begin() + 23, message.end()) :
             std::vector<uint8_t>()
     });
-    tau1 = tau1 + second_message;
+    tau1 = tau1 + msg2_scalar;
 
     proof.T1 = (gens.G.get() * t1) + (gens.H * tau1);
     proof.T2 = (gens.G.get() * t2) + (gens.H * tau2);
@@ -324,6 +313,7 @@ try_again:  // hasher is not cleared so that different hash will be obtained upo
     return proof;
 }
 
+// Serialize given Scalar, drop preceeding 0s and return
 std::vector<uint8_t> RangeProof::GetTrimmedVch(const Scalar& s)
 {
     auto vch = s.GetVch();
@@ -537,35 +527,55 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
             continue;
         }
 
-        const Scalar alpha = tx_in.nonce.GetHashWithSalt(1);
+        // derive random Scalar values from nonce
+        const Scalar alpha = tx_in.nonce.GetHashWithSalt(1);  // (A)
         const Scalar rho = tx_in.nonce.GetHashWithSalt(2);
-        const Scalar excess = (tx_in.mu - rho * tx_in.x) - alpha;
-        const Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
-        const Scalar gamma = tx_in.nonce.GetHashWithSalt(100);
+        const Scalar tau1 = tx_in.nonce.GetHashWithSalt(3);  // (C)
+        const Scalar tau2 = tx_in.nonce.GetHashWithSalt(4);
+        const Scalar input_value0_gamma = tx_in.nonce.GetHashWithSalt(100);  // gamma for vs[0]
 
-        // unable to recover if gamma and amount match don't match with Pedersen commitment pd.Vs[0]
-        G1Point value_commitment = (gens.G.get() * gamma) + (gens.H * amount);
-        if (value_commitment != tx_in.Vs[0]) {
+        // mu = alpha + rho * x ... (62)
+        // alpha = mu - rho * x ... (B)
+        //
+        // alpha (B) equals to alpha (A) + (message || 64-byte v[0])
+        // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
+        // then applying 64-byte mask fuether extracts 64-byte v[0]
+        const Scalar message_v0 = (tx_in.mu - rho * tx_in.x) - alpha;
+        const Scalar input_value0 = message_v0 & Scalar(0xFFFFFFFFFFFFFFFF);
+
+        // recovery fails if reproduced input value 0 commitment doesn't match with Vs[0]
+        G1Point input_value0_commitment = (gens.G.get() * input_value0_gamma) + (gens.H * input_value0);
+        if (input_value0_commitment != tx_in.Vs[0]) {
             continue;
         }
 
-        RecoveredTxInput recovered_tx_in;
-        recovered_tx_in.index = tx_in.index;
-        recovered_tx_in.amount = amount.GetUint64();
-        recovered_tx_in.gamma = gamma;
-
         // generate message and set to data
-        std::vector<uint8_t> msg = GetTrimmedVch(excess >> 64);
+        // extract the message part from (up-to-23-byte message || 64-byte v[0])
+        // by 64 bytes tot the right
+        std::vector<uint8_t> msg1 = GetTrimmedVch(message_v0 >> 64);
 
-        Scalar tau1 = tx_in.nonce.GetHashWithSalt(3);
-        Scalar tau2 = tx_in.nonce.GetHashWithSalt(4);
-        Scalar excess_msg_scalar = ((tx_in.tau_x - (tau2 * tx_in.x.Square()) - (tx_in.z.Square() * gamma)) * tx_in.x.Invert()) - tau1;
-        std::vector<uint8_t> excess_msg = RangeProof::GetTrimmedVch(excess_msg_scalar);
+        auto tau_x = tx_in.tau_x;
+        auto x = tx_in.x;
+        auto z = tx_in.z;
 
-        recovered_tx_in.message =
-            std::string(msg.begin(), msg.end()) +
-            std::string(excess_msg.begin(), excess_msg.end());
+        // tau_x = tau2 * x^2 + tau1 * x + z^2 * gamma ... (61)
+        //
+        // solving this equation for tau1, you get:
+        //
+        // tau_x - tau2 * x^2 - z^2 * gamma = tau1 * x
+        // tau1 = (tau_x - tau2 * x^2 - z^2 * gamma) * x^-1 ... (D)
+        //
+        // since tau1 in (61) is tau1 (C) + msg2, by subtracting tau1 (C) from RHS of (D)
+        // you can extract msg2
+        Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
+        std::vector<uint8_t> msg2 = RangeProof::GetTrimmedVch(msg2_scalar);
 
+        RecoveredTxInput recovered_tx_in(
+            tx_in.index,
+            input_value0.GetUint64(),
+            input_value0_gamma,
+            std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
+        );
         recovered_tx_ins.push_back(recovered_tx_in);
     }
     return recovered_tx_ins;
