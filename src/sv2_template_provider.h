@@ -585,7 +585,7 @@ private:
      * The current best known SetNewPrevHash that references the current best known
      * block hash as the previous hash.
      */
-    SetNewPrevHash m_prev_hash;
+    SetNewPrevHash m_best_prev_hash;
 
     /**
      * Builds a new block, caches it and builds the most recent and best NewTemplate from the new block.

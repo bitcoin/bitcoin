@@ -80,7 +80,7 @@ void Sv2TemplateProvider::ThreadSv2Handler()
                 auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
                 if (g_best_block_cv.wait_until(lock, checktime) == std::cv_status::timeout)
                 {
-                    if (m_prev_hash.m_prev_hash != g_best_block) {
+                    if (m_best_prev_hash.m_prev_hash != g_best_block) {
                         UpdateTemplate(true);
                         UpdatePrevHash();
                         OnNewBlock();
@@ -163,7 +163,7 @@ void Sv2TemplateProvider::UpdatePrevHash()
 
     if (cached_block != m_blocks_cache.end()) {
         const CBlock block = cached_block->second->block;
-        m_prev_hash = SetNewPrevHash{block, m_new_template.m_template_id};
+        m_best_prev_hash = SetNewPrevHash{block, m_new_template.m_template_id};
     }
 }
 
@@ -203,10 +203,10 @@ void Sv2TemplateProvider::OnNewBlock() {
         ss.clear();
 
         try {
-            ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_prev_hash.GetMsgLen()}
-               << m_prev_hash;
+            ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash.GetMsgLen()}
+               << m_best_prev_hash;
         } catch(const std::exception &e) {
-            LogPrintf("Error writing m_prev_hash\n");
+            LogPrintf("Error writing m_best_prev_hash\n");
         }
 
         write(client->m_sock->Get(), ss.data(), ss.size());
@@ -259,8 +259,8 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                ss.clear();
 
                try {
-                   ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_prev_hash.GetMsgLen()}
-                      << m_prev_hash;
+                   ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash.GetMsgLen()}
+                      << m_best_prev_hash;
                } catch(const std::exception &e) {
                    LogPrintf("Error writing prev_hash\n");
                }
