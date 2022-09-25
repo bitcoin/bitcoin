@@ -831,14 +831,6 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
             peerman.ForgetTxHash(nodeId, hash);
             return;
         }
-        if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-            LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- full block of recovered signature (%s) is not a available\n",
-                    __func__, recoveredSig->id.ToString());
-            PeerRef peer = peerman.GetPeerRef(nodeId);
-            if(peer)
-                peerman.Misbehaving(*peer, 10, "invalid CLSIG");
-            return;
-        }
     }
 
     if (db.HasRecoveredSigForHash(hash)) {
