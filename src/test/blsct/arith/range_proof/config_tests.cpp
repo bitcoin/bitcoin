@@ -11,7 +11,7 @@ BOOST_FIXTURE_TEST_SUITE(config_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_config_get_first_power_of_2_greater_or_eq_to)
 {
-    BOOST_CHECK(1 == 1);
+    BOOST_CHECK(1 != 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

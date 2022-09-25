@@ -11,7 +11,7 @@ ProofWithDerivedValues ProofWithDerivedValues::Build(
   const size_t& num_rounds
 ) {
     // create x, y, z and x_ip through transcript from proof
-    // in the same they were created in Prove function
+    // in the same way they were created in Prove function
     CHashWriter transcript(0,0);
 
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {

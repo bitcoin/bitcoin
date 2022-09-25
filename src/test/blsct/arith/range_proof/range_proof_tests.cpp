@@ -11,12 +11,17 @@ BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_get_trimmed_vch)
 {
-    BOOST_CHECK(1 == 1);
+    BOOST_CHECK(1 != 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_range_proof_get_inner_prod_arg_rounds)
 {
-    BOOST_CHECK(1 == 1);
+    BOOST_CHECK(1 != 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_test_recover_tx_ins)
+{
+    BOOST_CHECK(1 != 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
