@@ -528,11 +528,10 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
     const TokenId& token_id
 ) const {
     const Generators gens = m_gf.GetInstance(token_id);
-    std::vector<RecoveredTxInput> recovered_tx_ins;
+    std::vector<RecoveredTxInput> recovered_tx_ins;  // will contain only recovered txins
 
-    // do for each nonce + proof combination
     for (const TxInToRecover& tx_in: tx_ins) {
-        // cannot recover if sizes of Ls and Rs differ or Vs is empty
+        // unable to recover if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = tx_in.Ls.Size() > 0 && tx_in.Ls.Size() == tx_in.Rs.Size();
         if (tx_in.Vs.Size() == 0 || !Ls_Rs_valid) {
             continue;
@@ -544,8 +543,7 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         const Scalar amount = excess & Scalar(0xFFFFFFFFFFFFFFFF);
         const Scalar gamma = tx_in.nonce.GetHashWithSalt(100);
 
-        // recovered input is valid only when gamma and amount match with Pedersen commitment pd.Vs[0]
-        // only valid inputs will be included in the result vector
+        // unable to recover if gamma and amount match don't match with Pedersen commitment pd.Vs[0]
         G1Point value_commitment = (gens.G.get() * gamma) + (gens.H * amount);
         if (value_commitment != tx_in.Vs[0]) {
             continue;
