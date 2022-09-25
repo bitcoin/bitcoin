@@ -245,8 +245,6 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                     options.check_blocks)) {
                 return {ChainstateLoadStatus::FAILURE, _("Corrupted block database detected")};
             }
-            // SYSCOIN
-            chainstate->ResetBlockFailureFlags(nullptr);
         }
     }
 

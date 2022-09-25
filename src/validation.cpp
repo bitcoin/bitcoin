@@ -3582,33 +3582,22 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 
     return ActivateBestChain(state, std::shared_ptr<const CBlock>());
 }
-void Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
+bool Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(cs_main);
     if (!bestChainLockBlockIndex) {
         // we don't have the header/block, so we can't do anything right now
-        return;
+        return true;
     }
     BlockValidationState state;
-    // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
-    // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
-    // and mark all of them as conflicting.
+    // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain and invalidate the fork block (next block in main chain).
     LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
-    ;
-    // no cs_main allowed
-    if (EnforceBlock(state, bestChainLockBlockIndex)) {
-        if(!ActivateBestChain(state, nullptr)) {
-            LogPrintf("Chainstate::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
-        }
-    }
+    return EnforceBlock(state, bestChainLockBlockIndex);
 }
 bool Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pindex)
 {
-    if(pindex == nullptr) {
-        return true;
-    }
-    bool bInvalidated = false;
+    assert(pindex);
     // forkpoint should be the common index between pindex and chain tip (we need NEXT one from chain tip to invalidate)
     const CBlockIndex* pindex_forkpoint = m_chain.FindFork(pindex);
     // if fork point exists (different than pindex) and its not at the tip (if its tip then nothing to do)
@@ -3621,17 +3610,9 @@ bool Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pi
             }
             LogPrintf("Chainstate::%s -- marked block %s as conflicting\n",
                         __func__, pindex_conflict->ToString());
-            bInvalidated = true;
         }
     }
-    {
-        LOCK(cs_main);
-        // In case blocks from the enforced chain are invalid at the moment, reconsider them.
-        if (!pindex->IsValid()) {
-            ResetBlockFailureFlags(m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
-        }
-    }
-    return bInvalidated;
+    return true;
 }
 // SYSCOIN
 bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex, bool bReverify)
@@ -3776,6 +3757,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
     }
     return true;
 }
+// SYSCOIN
 bool Chainstate::ResetLastBlock() {
     AssertLockHeld(cs_main);
     if(m_chainman.m_best_invalid && m_chainman.m_best_invalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
@@ -3792,16 +3774,7 @@ bool Chainstate::ResetLastBlock() {
 }
 void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
-    // SYSCOIN
-    if ( !pindex) {
-        if (llmq::AreChainLocksEnabled() && m_chainman.m_best_invalid && m_chainman.m_best_invalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
-            LogPrintf("%s: the best known invalid block (%s) is ahead of our tip, reconsidering\n",
-                    __func__, m_chainman.m_best_invalid->GetBlockHash().ToString());
-            pindex = m_chainman.m_best_invalid;
-        } else {
-            return;
-        }
-    }
+
     int nHeight = pindex->nHeight;
 
     // Remove the invalidity flag from this block and all its descendants.
@@ -3830,6 +3803,7 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
         pindex = pindex->pprev;
     }
 }
+
 
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
 void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos)

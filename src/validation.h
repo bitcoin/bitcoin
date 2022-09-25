@@ -691,7 +691,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);
     bool MarkConflictingBlock(BlockValidationState& state, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
+    bool EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);
     /** Remove invalidity status from a block and its descendants. */

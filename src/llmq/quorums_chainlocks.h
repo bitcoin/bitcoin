@@ -51,8 +51,6 @@ class CChainLocksHandler : public CRecoveredSigsListener
 {
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
-    // walk back up to this many blocks (less if any chainlock exists) to ensure signing attempts and block index attempting to be signed match ancestry
-    static const int64_t MAX_WALKBACK_ANCESTRY_CONSISTENCY_BLOCKS = 20;
 
 
 private:
@@ -71,7 +69,6 @@ private:
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);
 
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
-    std::map<int, uint256> mapAttemptSignedRequestIds GUARDED_BY(cs);
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
     int64_t lastCleanupTime GUARDED_BY(cs) {0};

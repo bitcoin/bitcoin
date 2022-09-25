@@ -73,11 +73,13 @@ void CChainLocksHandler::Start()
             pindex = bestChainLockBlockIndex;
             enforced = isEnforced;
         }
+        bool bEnforce = false;
         if(enforced) {
             AssertLockNotHeld(cs);
-            chainman.ActiveChainstate().EnforceBestChainLock(pindex);
+            bEnforce = chainman.ActiveChainstate().EnforceBestChainLock(pindex);
         }
-        TrySignChainTip();
+        if(bEnforce)
+            TrySignChainTip();
         tryLockChainTipScheduled = false;
     }, std::chrono::seconds{5});
 }
@@ -165,7 +167,6 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
     if (it1 != bestChainLockCandidates.end()) {
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
-        mapAttemptSignedRequestIds.clear();
         // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
         // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
         if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
@@ -201,7 +202,6 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
-                mapAttemptSignedRequestIds.clear();
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
                 // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
@@ -386,6 +386,22 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             return;
         }
     }
+    bool bConflict{false};
+    {
+        LOCK(cs);
+        bConflict = InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash);
+    }
+    if (bConflict) {
+        // don't allow CLSIG if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
+        // the correct chain.
+        LogPrintf("CChainLocksHandler::%s -- conflicting CLSIG (%s)\n",
+                    __func__, clsig.ToString());
+        if (from != -1) {
+            if(peer)
+                peerman.Misbehaving(*peer, 10, "invalid CLSIG");
+        }
+        return;
+    }
     const auto& consensus = Params().GetConsensus();
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(llmqType);
@@ -530,11 +546,13 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
                 pindex = bestChainLockBlockIndex;
                 enforced = isEnforced;
             }
+            bool bEnforce = false;
             if(enforced) {
                 AssertLockNotHeld(cs);
-                chainman.ActiveChainstate().EnforceBestChainLock(pindex);
+                bEnforce = chainman.ActiveChainstate().EnforceBestChainLock(pindex);
             }
-            TrySignChainTip();
+            if(bEnforce)
+                TrySignChainTip();
             tryLockChainTipScheduled = false;
         }, std::chrono::seconds{0});
     }
@@ -557,7 +575,6 @@ void CChainLocksHandler::CheckActiveState()
             bestChainLockBlockIndex = nullptr;
             bestChainLockCandidates.clear();
             bestChainLockShares.clear();
-            mapAttemptSignedRequestIds.clear();
         }
     }
 }
@@ -607,8 +624,7 @@ void CChainLocksHandler::TrySignChainTip()
     }
 
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveChain()[chainman.ActiveHeight()-CSigningManager::SIGN_HEIGHT_LOOKBACK]);
-    CBlockIndex* pindexWalkback = WITH_LOCK(cs_main, return chainman.ActiveChain()[chainman.ActiveHeight()-CSigningManager::SIGN_HEIGHT_LOOKBACK]);
-    if (!pindex || !pindex->pprev || !pindexWalkback) {
+    if (!pindex || !pindex->pprev) {
         return;
     }
     const uint256 msgHash = pindex->GetBlockHash();
@@ -619,7 +635,6 @@ void CChainLocksHandler::TrySignChainTip()
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
-    int LookbackBlock{0};
     {
         LOCK(cs);
 
@@ -647,30 +662,10 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
         mapSignedRequestIds.clear();
-        for(int i =0; i<MAX_WALKBACK_ANCESTRY_CONSISTENCY_BLOCKS;i++) {
-            if(!pindexWalkback){
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Invalid index!%s\n", __func__, msgHash.ToString());
-                return;
-            }
-            const int nIndexHeight = pindexWalkback->nHeight;
-            const uint256 nIndexHash = pindexWalkback->GetBlockHash();
-            auto it = mapAttemptSignedRequestIds.find(nIndexHeight);
-            // check to make sure we haven't signed any conflicting blocks at this height, first-come-first-serve
-            if (it != mapAttemptSignedRequestIds.end() && nIndexHash != it->second) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- already signed at height=%d with block hash %s but got a different block request %s\n", __func__, nHeight, it->second.ToString(), msgHash.ToString());
-                return;
-            }
-            // if we are chainlocked here we can stop and not look back any further
-            if(InternalHasChainLock(nIndexHeight, nIndexHash)) {
-                LookbackBlock = nIndexHeight;
-                break;
-            }
-            pindexWalkback = pindexWalkback->pprev;
-        }
 
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d, LookbackBlock=%d\n", __func__, msgHash.ToString(), nHeight, LookbackBlock);
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
     const auto& consensus = Params().GetConsensus();
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
@@ -750,12 +745,9 @@ void CChainLocksHandler::TrySignChainTip()
                 // might have happened while we didn't hold cs
                 return;
             }
-            mapSignedRequestIds[requestId] = heightHashKP;
+            mapSignedRequestIds.emplace(requestId, heightHashKP);
         }
-        if(quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash)) {
-            LOCK(cs);
-            mapAttemptSignedRequestIds[nHeight] = msgHash;
-        }
+        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do
@@ -832,7 +824,6 @@ void CChainLocksHandler::ClearChainLock()
     bestChainLockBlockIndex = nullptr;
     bestChainLockCandidates.clear();
     bestChainLockShares.clear();
-    mapAttemptSignedRequestIds.clear();
     signingState.SetLastSignedHeight(0);
     // clear recovered sig db and cl vote db
     quorumSigningManager->Clear();
