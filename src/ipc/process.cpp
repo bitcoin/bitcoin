@@ -10,10 +10,10 @@
 #include <util/strencodings.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <stdlib.h>
 #include <string.h>
 #include <system_error>
 #include <unistd.h>

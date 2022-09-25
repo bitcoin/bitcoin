@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include <stdlib.h>
 #include <assert.h>
+#include <cstdlib>
 
 #include <policy/policy.h>
 #include <primitives/transaction.h>
