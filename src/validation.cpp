@@ -1828,15 +1828,6 @@ void Chainstate::ConflictingChainFound(CBlockIndex* pindexNew)
 // which does its own setBlockIndexCandidates management.
 void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
-    // because chainlock is the last thing we check in CheckBlock() if we get any other error
-    // prevent situation where an invalid header or block can be locked and force clients to be stuck on that chain
-    // which will never be accepted
-    if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
-        // if its any other error other than chainlock and we have a conflict then clear the chainlock
-        if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            llmq::chainLocksHandler->ClearChainLock(); 
-        }
-    }
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
         m_chainman.m_failed_blocks.insert(pindex);
@@ -4173,7 +4164,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
     return true;
 }
-bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked, bool bForBlock, CBlockIndex** pprevindex)
+bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked)
 {
     AssertLockHeld(cs_main);
 
@@ -4260,14 +4251,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         }
         // SYSCOIN
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
-            // if processing block or if min_pow_checked is true (otherwise we want to reject block as semantically invalid so lock is removed)
-            // for block it will check in ConnectBlock() for a conflicting chainlock and return state back to ActivateBestChainStep which will call InvalidBlockFound
-            // there if the block is semantically invalid (anything other than BLOCK_CHAINLOCK) we will remove the lock if it exists on the block
-            // the nuance here is that we want to check the header here but we want to check for the rest of the block consensus including transactions to know if its semantically valid
-            // before deciding to enforce a chainlock in a conflict
-            if(min_pow_checked && !bForBlock) {
-                return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
-            }
+            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
         }
     }
     if (!min_pow_checked) {
@@ -4293,27 +4277,9 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             // SYSCOIN
             CBlockIndex *pprevindex = nullptr;
-            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked, false, &pprevindex)};
+            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
             ActiveChainstate().CheckBlockIndex();
             if (!accepted) {
-                // if the error is anything but chainlock error the header is invalid semantically
-                if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
-                    int nHeight = 0;
-                    // in case the index already exists
-                    if(pindex) {
-                        nHeight = pindex->nHeight;
-                    // in case this is a new block index that doesn't exist but header isn't valid
-                    } else if(pprevindex) {
-                        nHeight = pprevindex->nHeight+1;
-                    // in case prev block hash is invalid
-                    } else if(m_best_header) {
-                        nHeight = m_best_header->nHeight+1;
-                    }
-                    // block wasn't valid which means any locks on this block should be cleared
-                    if (nHeight > 0 && llmq::chainLocksHandler->HasChainLock(nHeight, header.GetHash())) {
-                        llmq::chainLocksHandler->ClearChainLock(); 
-                    }
-                }
                 return false;
             }
             if (ppindex) {

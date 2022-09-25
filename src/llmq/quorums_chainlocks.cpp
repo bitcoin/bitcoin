@@ -385,6 +385,13 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             return;
         }
+        // if full block isn't available it's probably in the middle of downloading, likely a fork exists so wait for it to resolve
+        // one with lock will become longest chain which will force downloading the blocks
+        if (!pindexScan->IsValid(BLOCK_VALID_SCRIPTS)) {
+            LogPrintf("CChainLocksHandler::%s -- full block of CLSIG (%s) is not a available\n",
+                    __func__, clsig.ToString());
+            return;
+        }
     }
     bool bConflict{false};
     {
