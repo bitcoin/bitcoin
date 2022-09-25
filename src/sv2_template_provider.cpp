@@ -67,8 +67,6 @@ void Sv2TemplateProvider::Start()
 
 void Sv2TemplateProvider::ThreadSv2Handler()
 {
-    m_best_block_hash = m_chainman.ActiveChainstate().m_chain.Tip()->GetBlockHash();
-
     while (!m_flag_interrupt_sv2) {
         if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
             m_interrupt_sv2.sleep_for(std::chrono::milliseconds(100));
@@ -82,12 +80,10 @@ void Sv2TemplateProvider::ThreadSv2Handler()
                 auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
                 if (g_best_block_cv.wait_until(lock, checktime) == std::cv_status::timeout)
                 {
-                    if (m_best_block_hash != g_best_block) {
+                    if (m_prev_hash.m_prev_hash != g_best_block) {
                         UpdateTemplate(true);
                         UpdatePrevHash();
                         OnNewBlock();
-
-                        m_best_block_hash = g_best_block;
                     }
                 }
             }
@@ -309,7 +305,7 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                     UpdatePrevHash();
                 }
 
-                 OnNewBlock();
+                OnNewBlock();
             }
             break;
         }

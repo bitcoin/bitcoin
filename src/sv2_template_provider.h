@@ -582,15 +582,10 @@ private:
     TemplateId m_template_id;
 
     /**
-     * The current best known SetNewPrevHash.
+     * The current best known SetNewPrevHash that references the current best known
+     * block hash as the previous hash.
      */
     SetNewPrevHash m_prev_hash;
-
-    /**
-     * The best known block hash of the Bitcoin node. If the best known hash changes,
-     * then the template provider must provide new templates to all clients.
-     */
-    uint256 m_best_block_hash;
 
     /**
      * Builds a new block, caches it and builds the most recent and best NewTemplate from the new block.
