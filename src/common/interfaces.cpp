@@ -23,11 +23,11 @@ public:
 class SignalHandler : public interfaces::Handler
 {
 public:
-    explicit SignalHandler(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
+    explicit SignalHandler(btcsignals::connection connection) : m_connection(std::move(connection)) {}
 
     void disconnect() override { m_connection.disconnect(); }
 
-    boost::signals2::scoped_connection m_connection;
+    btcsignals::scoped_connection m_connection;
 };
 
 class EchoImpl : public interfaces::Echo
@@ -44,7 +44,7 @@ std::unique_ptr<Handler> MakeCleanupHandler(std::function<void()> cleanup)
     return std::make_unique<common::CleanupHandler>(std::move(cleanup));
 }
 
-std::unique_ptr<Handler> MakeSignalHandler(boost::signals2::connection connection)
+std::unique_ptr<Handler> MakeSignalHandler(btcsignals::connection connection)
 {
     return std::make_unique<common::SignalHandler>(std::move(connection));
 }

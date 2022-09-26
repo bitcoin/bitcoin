@@ -9,4 +9,6 @@
 #include <boost/signals2/optional_last_value.hpp>
 #include <boost/signals2/signal.hpp>
 
+namespace btcsignals = boost::signals2;
+
 #endif // BITCOIN_BTCSIGNALS_H

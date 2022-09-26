@@ -13,22 +13,22 @@ using util::MakeUnorderedList;
 CClientUIInterface uiInterface;
 
 struct UISignals {
-    boost::signals2::signal<CClientUIInterface::ThreadSafeMessageBoxSig, boost::signals2::optional_last_value<bool>> ThreadSafeMessageBox;
-    boost::signals2::signal<CClientUIInterface::ThreadSafeQuestionSig, boost::signals2::optional_last_value<bool>> ThreadSafeQuestion;
-    boost::signals2::signal<CClientUIInterface::InitMessageSig> InitMessage;
-    boost::signals2::signal<CClientUIInterface::InitWalletSig> InitWallet;
-    boost::signals2::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
-    boost::signals2::signal<CClientUIInterface::NotifyNetworkActiveChangedSig> NotifyNetworkActiveChanged;
-    boost::signals2::signal<CClientUIInterface::NotifyAlertChangedSig> NotifyAlertChanged;
-    boost::signals2::signal<CClientUIInterface::ShowProgressSig> ShowProgress;
-    boost::signals2::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
-    boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
-    boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
+    btcsignals::signal<CClientUIInterface::ThreadSafeMessageBoxSig, btcsignals::optional_last_value<bool>> ThreadSafeMessageBox;
+    btcsignals::signal<CClientUIInterface::ThreadSafeQuestionSig, btcsignals::optional_last_value<bool>> ThreadSafeQuestion;
+    btcsignals::signal<CClientUIInterface::InitMessageSig> InitMessage;
+    btcsignals::signal<CClientUIInterface::InitWalletSig> InitWallet;
+    btcsignals::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
+    btcsignals::signal<CClientUIInterface::NotifyNetworkActiveChangedSig> NotifyNetworkActiveChanged;
+    btcsignals::signal<CClientUIInterface::NotifyAlertChangedSig> NotifyAlertChanged;
+    btcsignals::signal<CClientUIInterface::ShowProgressSig> ShowProgress;
+    btcsignals::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
+    btcsignals::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
+    btcsignals::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
 };
 static UISignals g_ui_signals;
 
 #define ADD_SIGNALS_IMPL_WRAPPER(signal_name)                                                                 \
-    boost::signals2::connection CClientUIInterface::signal_name##_connect(std::function<signal_name##Sig> fn) \
+    btcsignals::connection CClientUIInterface::signal_name##_connect(std::function<signal_name##Sig> fn) \
     {                                                                                                         \
         return g_ui_signals.signal_name.connect(fn);                                                          \
     }
