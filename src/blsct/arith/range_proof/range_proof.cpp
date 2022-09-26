@@ -496,14 +496,14 @@ bool RangeProof::Verify(
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
-std::vector<RecoveredTxIn> RangeProof::RecoverTxIns(
-    const std::vector<TxInRecoveryReq>& reqs,
+std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
+    const std::vector<AmountRecoveryReq>& reqs,
     const TokenId& token_id
 ) const {
     const Generators gens = m_gf.GetInstance(token_id);
-    std::vector<RecoveredTxIn> ret;  // will contain result of successful requests only
+    std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
 
-    for (const TxInRecoveryReq& req: reqs) {
+    for (const AmountRecoveryReq& req: reqs) {
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
@@ -553,13 +553,13 @@ std::vector<RecoveredTxIn> RangeProof::RecoverTxIns(
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
-        RecoveredTxIn recovered_tx_in(
+        RecoveredAmount recovered_amount(
             req.index,
             input_value0.GetUint64(),
             input_value0_gamma,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
         );
-        ret.push_back(recovered_tx_in);
+        ret.push_back(recovered_amount);
     }
     return ret;
 }
