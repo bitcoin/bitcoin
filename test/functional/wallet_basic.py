@@ -415,7 +415,7 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
-        assert_raises_rpc_error(-1, "not of expected type number", self.generate, self.nodes[0], "2")
+        assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
 
         if not self.options.descriptors:
 
@@ -585,15 +585,9 @@ class WalletTest(BitcoinTestFramework):
 
         # ==Check that wallet prefers to use coins that don't exceed mempool limits =====
 
-        # Get all non-zero utxos together
+        # Get all non-zero utxos together and split into two chains
         chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
-        singletxid = self.nodes[0].sendtoaddress(chain_addrs[0], self.nodes[0].getbalance(), "", "", True)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        node0_balance = self.nodes[0].getbalance()
-        # Split into two chains
-        rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
-        signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
+        self.nodes[0].sendall(recipients=chain_addrs)
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Make a long chain of unconfirmed payments without hitting mempool limit
@@ -701,37 +695,38 @@ class WalletTest(BitcoinTestFramework):
         txid_feeReason_four = self.nodes[2].sendmany(dummy='', amounts={address: 5}, verbose=False)
         assert_equal(self.nodes[2].gettransaction(txid_feeReason_four)['txid'], txid_feeReason_four)
 
-        self.log.info("Testing 'listunspent' outputs the parent descriptor(s) of coins")
-        # Create two multisig descriptors, and send a UTxO each.
-        multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
-        multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
-        addr_a = self.nodes[0].deriveaddresses(multi_a, 0)[0]
-        addr_b = self.nodes[0].deriveaddresses(multi_b, 0)[0]
-        txid_a = self.nodes[0].sendtoaddress(addr_a, 0.01)
-        txid_b = self.nodes[0].sendtoaddress(addr_b, 0.01)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
-        self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
-        wo_wallet = self.nodes[0].get_wallet_rpc("wo")
-        wo_wallet.importdescriptors([
-            {
-                "desc": multi_a,
-                "active": False,
-                "timestamp": "now",
-            },
-            {
-                "desc": multi_b,
-                "active": False,
-                "timestamp": "now",
-            },
-        ])
-        coins = wo_wallet.listunspent(minconf=0)
-        assert_equal(len(coins), 2)
-        coin_a = next(c for c in coins if c["txid"] == txid_a)
-        assert_equal(coin_a["parent_descs"][0], multi_a)
-        coin_b = next(c for c in coins if c["txid"] == txid_b)
-        assert_equal(coin_b["parent_descs"][0], multi_b)
-        self.nodes[0].unloadwallet("wo")
+        if self.options.descriptors:
+            self.log.info("Testing 'listunspent' outputs the parent descriptor(s) of coins")
+            # Create two multisig descriptors, and send a UTxO each.
+            multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
+            multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
+            addr_a = self.nodes[0].deriveaddresses(multi_a, 0)[0]
+            addr_b = self.nodes[0].deriveaddresses(multi_b, 0)[0]
+            txid_a = self.nodes[0].sendtoaddress(addr_a, 0.01)
+            txid_b = self.nodes[0].sendtoaddress(addr_b, 0.01)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
+            self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
+            wo_wallet = self.nodes[0].get_wallet_rpc("wo")
+            wo_wallet.importdescriptors([
+                {
+                    "desc": multi_a,
+                    "active": False,
+                    "timestamp": "now",
+                },
+                {
+                    "desc": multi_b,
+                    "active": False,
+                    "timestamp": "now",
+                },
+            ])
+            coins = wo_wallet.listunspent(minconf=0)
+            assert_equal(len(coins), 2)
+            coin_a = next(c for c in coins if c["txid"] == txid_a)
+            assert_equal(coin_a["parent_descs"][0], multi_a)
+            coin_b = next(c for c in coins if c["txid"] == txid_b)
+            assert_equal(coin_b["parent_descs"][0], multi_b)
+            self.nodes[0].unloadwallet("wo")
 
 
 if __name__ == '__main__':

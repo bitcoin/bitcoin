@@ -27,8 +27,6 @@ protected:
 
     BaseIndex::DB& GetDB() const override;
 
-    const char* GetName() const override { return "txindex"; }
-
 public:
     /// Constructs the index, which becomes available to be queried.
     explicit TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);

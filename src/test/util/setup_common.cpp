@@ -108,6 +108,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "-logsourcelocations",
             "-logtimemicros",
             "-logthreadnames",
+            "-loglevel=trace",
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
@@ -295,7 +296,7 @@ void TestChain100Setup::mineBlocks(int num_blocks)
 CBlock TestChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey,
-    CChainState& chainstate)
+    Chainstate& chainstate)
 {
     CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBlock(scriptPubKey)->block;
 
@@ -313,7 +314,7 @@ CBlock TestChain100Setup::CreateBlock(
 CBlock TestChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
     const CScript& scriptPubKey,
-    CChainState* chainstate)
+    Chainstate* chainstate)
 {
     if (!chainstate) {
         chainstate = &Assert(m_node.chainman)->ActiveChainstate();
@@ -321,7 +322,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 
     const CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, nullptr);
+    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 
     return block;
 }
