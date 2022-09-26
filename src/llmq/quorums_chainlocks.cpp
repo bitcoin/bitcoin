@@ -838,6 +838,8 @@ void CChainLocksHandler::SetToPreviousChainLock()
     bestChainLockShares.clear();
     signingState.SetLastSignedHeight(bestChainLockWithKnownBlock.nHeight);
     mostRecentChainLockShare = CChainLockSig();
+    // clear recovered sig db and cl vote db
+    quorumSigningManager->Clear();
 }
 
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const

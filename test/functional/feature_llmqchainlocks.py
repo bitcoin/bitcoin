@@ -153,9 +153,8 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(found)
 
         self.log.info("Keep node connected and let it try to reorg the chain")
-        # need two transitions instead of 1 because of above invalidation happening at the same block (CL an invalid block moving CL back to previous)
-        good_cl = self.generate(self.nodes[0], 10)[-6]
-        good_tip = self.nodes[0].getbestblockhash()
+        good_cl = self.nodes[0].getbestblockhash()
+        good_tip = self.generate(self.nodes[0], 5)[-1]
         self.wait_for_chainlocked_block_all_nodes(good_cl, timeout=30)
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
