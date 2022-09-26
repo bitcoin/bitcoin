@@ -121,7 +121,6 @@ enum BlockStatus : uint32_t {
     //! Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
     BLOCK_VALID_SCRIPTS      =    5,
 
-
     //! All validity bits.
     BLOCK_VALID_MASK         =   BLOCK_VALID_RESERVED | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
@@ -142,6 +141,8 @@ enum BlockStatus : uint32_t {
      * on a background chainstate. See `doc/design/assumeutxo.md`.
      */
     BLOCK_ASSUMED_VALID      =   256,
+    // SYSCOIN
+    BLOCK_CONFLICT_CHAINLOCK =   512, //!< conflicts with chainlock system
 };
 
 /** The block chain is a tree shaped structure starting with the
