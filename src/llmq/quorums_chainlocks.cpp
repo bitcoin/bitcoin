@@ -656,6 +656,13 @@ void CChainLocksHandler::TrySignChainTip()
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
     {
+        LOCK(cs_main);
+        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
+        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
+            return;
+        }
+    }
+    {
         LOCK(cs);
 
         if (!isEnabled) {
@@ -679,10 +686,6 @@ void CChainLocksHandler::TrySignChainTip()
         if (InternalHasConflictingChainLock(nHeight, msgHash)) {
             // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
             // the correct chain.
-            return;
-        }
-        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
-        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
             return;
         }
         mapSignedRequestIds.clear();
