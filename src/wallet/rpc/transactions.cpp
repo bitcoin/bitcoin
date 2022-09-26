@@ -316,7 +316,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  */
 template <class Vec>
 static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
-                             Vec& ret, const isminefilter& filter_ismine, const std::string* filter_label,
+                             Vec& ret, const isminefilter& filter_ismine, const std::optional<std::string>& filter_label,
                              bool include_change = false)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
@@ -329,7 +329,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
 
     // Sent
-    if (!filter_label)
+    if (!filter_label.has_value())
     {
         for (const COutputEntry& s : listSent)
         {
@@ -362,7 +362,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             if (address_book_entry) {
                 label = address_book_entry->GetLabel();
             }
-            if (filter_label && label != *filter_label) {
+            if (filter_label.has_value() && label != filter_label.value()) {
                 continue;
             }
             UniValue entry(UniValue::VOBJ);
@@ -485,10 +485,10 @@ RPCHelpMan listtransactions()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    const std::string* filter_label = nullptr;
+    std::optional<std::string> filter_label;
     if (!request.params[0].isNull() && request.params[0].get_str() != "*") {
-        filter_label = &request.params[0].get_str();
-        if (filter_label->empty()) {
+        filter_label = request.params[0].get_str();
+        if (filter_label.value().empty()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
         }
     }
@@ -642,7 +642,7 @@ RPCHelpMan listsinceblock()
         const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, /*filter_label=*/nullptr, /*include_change=*/include_change);
+            ListTransactions(wallet, tx, 0, true, transactions, filter, std::nullopt/* filter_label */, /*include_change=*/include_change);
         }
     }
 
@@ -659,7 +659,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, /*filter_label=*/nullptr, /*include_change=*/include_change);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter, std::nullopt/* filter_label */, /*include_change=*/include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -777,7 +777,7 @@ RPCHelpMan gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/nullptr);
+    ListTransactions(*pwallet, wtx, 0, false, details, filter, std::nullopt /* filter_label */);
     entry.pushKV("details", details);
 
     std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
