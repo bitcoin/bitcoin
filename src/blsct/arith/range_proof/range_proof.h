@@ -17,7 +17,7 @@
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
-struct TxInToRecover
+struct TxInRecoveryReq
 {
     size_t index;
     Scalar x;
@@ -30,20 +30,18 @@ struct TxInToRecover
     G1Point nonce;
 };
 
-struct RecoveredTxInput
+struct RecoveredTxIn
 {
-    RecoveredTxInput(
+    RecoveredTxIn(
         const size_t& index,
-        const CAmount& input_value0,
-        const Scalar& input_value0_gamma,
+        const CAmount& amount,
+        const Scalar& gamma,
         const std::string& message
-    ): index{index}, input_value0{input_value0},
-        input_value0_gamma{input_value0_gamma},
-        message{message} {}
+    ): index{index}, amount{amount}, gamma{gamma}, message{message} {}
 
     size_t index;
-    CAmount input_value0;
-    Scalar input_value0_gamma;
+    CAmount amount;
+    Scalar gamma;
     std::string message;
 };
 
@@ -135,8 +133,8 @@ public:
         const std::vector<ProofWithDerivedValues>& proof_derivs
     ) const;
 
-    std::vector<RecoveredTxInput> RecoverTxIns(
-        const std::vector<TxInToRecover>& tx_ins,
+    std::vector<RecoveredTxIn> RecoverTxIns(
+        const std::vector<TxInRecoveryReq>& reqs,
         const TokenId& token_id
     ) const;
 

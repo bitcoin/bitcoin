@@ -496,26 +496,26 @@ bool RangeProof::Verify(
     return m_exp.IsUnity(); // m_exp == bls::G1Element::Infinity();
 }
 
-std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
-    const std::vector<TxInToRecover>& tx_ins,
+std::vector<RecoveredTxIn> RangeProof::RecoverTxIns(
+    const std::vector<TxInRecoveryReq>& reqs,
     const TokenId& token_id
 ) const {
     const Generators gens = m_gf.GetInstance(token_id);
-    std::vector<RecoveredTxInput> recovered_tx_ins;  // will contain only recovered txins
+    std::vector<RecoveredTxIn> ret;  // will contain result of successful requests only
 
-    for (const TxInToRecover& tx_in: tx_ins) {
+    for (const TxInRecoveryReq& req: reqs) {
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
-        auto Ls_Rs_valid = tx_in.Ls.Size() > 0 && tx_in.Ls.Size() == tx_in.Rs.Size();
-        if (tx_in.Vs.Size() == 0 || !Ls_Rs_valid) {
+        auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
+        if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
             continue;
         }
 
         // derive random Scalar values from nonce
-        const Scalar alpha = tx_in.nonce.GetHashWithSalt(1);  // (A)
-        const Scalar rho = tx_in.nonce.GetHashWithSalt(2);
-        const Scalar tau1 = tx_in.nonce.GetHashWithSalt(3);  // (C)
-        const Scalar tau2 = tx_in.nonce.GetHashWithSalt(4);
-        const Scalar input_value0_gamma = tx_in.nonce.GetHashWithSalt(100);  // gamma for vs[0]
+        const Scalar alpha = req.nonce.GetHashWithSalt(1);  // (A)
+        const Scalar rho = req.nonce.GetHashWithSalt(2);
+        const Scalar tau1 = req.nonce.GetHashWithSalt(3);  // (C)
+        const Scalar tau2 = req.nonce.GetHashWithSalt(4);
+        const Scalar input_value0_gamma = req.nonce.GetHashWithSalt(100);  // gamma for vs[0]
 
         // mu = alpha + rho * x ... (62)
         // alpha = mu - rho * x ... (B)
@@ -523,12 +523,12 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         // alpha (B) equals to alpha (A) + (message || 64-byte v[0])
         // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
         // then applying 64-byte mask fuether extracts 64-byte v[0]
-        const Scalar message_v0 = (tx_in.mu - rho * tx_in.x) - alpha;
+        const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
         const Scalar input_value0 = message_v0 & Scalar(0xFFFFFFFFFFFFFFFF);
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (gens.G.get() * input_value0_gamma) + (gens.H * input_value0);
-        if (input_value0_commitment != tx_in.Vs[0]) {
+        if (input_value0_commitment != req.Vs[0]) {
             continue;
         }
 
@@ -537,9 +537,9 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         // by 64 bytes tot the right
         std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
 
-        auto tau_x = tx_in.tau_x;
-        auto x = tx_in.x;
-        auto z = tx_in.z;
+        auto tau_x = req.tau_x;
+        auto x = req.x;
+        auto z = req.z;
 
         // tau_x = tau2 * x^2 + tau1 * x + z^2 * gamma ... (61)
         //
@@ -553,13 +553,13 @@ std::vector<RecoveredTxInput> RangeProof::RecoverTxIns(
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
-        RecoveredTxInput recovered_tx_in(
-            tx_in.index,
+        RecoveredTxIn recovered_tx_in(
+            req.index,
             input_value0.GetUint64(),
             input_value0_gamma,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
         );
-        recovered_tx_ins.push_back(recovered_tx_in);
+        ret.push_back(recovered_tx_in);
     }
-    return recovered_tx_ins;
+    return ret;
 }
