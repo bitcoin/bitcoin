@@ -394,6 +394,17 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             return;
         }
+        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
+        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
+            // Should not happen
+            LogPrintf("CChainLocksHandler::%s -- current chainlock not confirmed. CLSIG (%s) rejected\n",
+                    __func__, clsig.ToString());
+            if (from != -1) {
+                if(peer)
+                    peerman.Misbehaving(*peer, 10, "invalid CLSIG");
+            }
+            return;
+        }
     }
     bool bConflict{false};
     {
@@ -668,6 +679,10 @@ void CChainLocksHandler::TrySignChainTip()
         if (InternalHasConflictingChainLock(nHeight, msgHash)) {
             // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
             // the correct chain.
+            return;
+        }
+        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
+        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
             return;
         }
         mapSignedRequestIds.clear();
