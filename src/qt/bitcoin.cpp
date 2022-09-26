@@ -6,6 +6,7 @@
 
 #include <qt/bitcoin.h>
 
+#include <btcsignals.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/init.h>
@@ -44,7 +45,6 @@
 #include <wallet/types.h>
 #endif // ENABLE_WALLET
 
-#include <boost/signals2/connection.hpp>
 #include <chrono>
 #include <memory>
 

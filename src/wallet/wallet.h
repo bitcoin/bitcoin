@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <addresstype.h>
+#include <btcsignals.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -50,8 +51,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/signals2/signal.hpp>
 
 class CKey;
 class CKeyID;

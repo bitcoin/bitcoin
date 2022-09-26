@@ -5,6 +5,7 @@
 #include <addrdb.h>
 #include <banman.h>
 #include <blockfilter.h>
+#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <common/args.h>
@@ -68,8 +69,6 @@
 #include <memory>
 #include <optional>
 #include <utility>
-
-#include <boost/signals2/signal.hpp>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;
