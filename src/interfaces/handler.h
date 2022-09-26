@@ -5,14 +5,10 @@
 #ifndef BITCOIN_INTERFACES_HANDLER_H
 #define BITCOIN_INTERFACES_HANDLER_H
 
+#include <btcsignals.h>
+
 #include <functional>
 #include <memory>
-
-namespace boost {
-namespace signals2 {
-class connection;
-} // namespace signals2
-} // namespace boost
 
 namespace interfaces {
 

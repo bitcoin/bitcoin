@@ -6,6 +6,8 @@
 #ifndef BITCOIN_NODE_INTERFACE_UI_H
 #define BITCOIN_NODE_INTERFACE_UI_H
 
+#include <btcsignals.h>
+
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -14,12 +16,6 @@
 class CBlockIndex;
 enum class SynchronizationState;
 struct bilingual_str;
-
-namespace boost {
-namespace signals2 {
-class connection;
-}
-} // namespace boost
 
 /** Signals for UI communication. */
 class CClientUIInterface
