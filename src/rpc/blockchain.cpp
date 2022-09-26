@@ -335,32 +335,31 @@ static RPCHelpMan getchainlocks()
     UniValue activeChainlock(UniValue::VOBJ);
     UniValue activeChainlockShares(UniValue::VARR);
 
-    llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetMostRecentChainLock();
-    if (clsig.IsNull()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
-    }
-    recentChainlock.pushKV("blockhash", clsig.blockHash.GetHex());
-    recentChainlock.pushKV("height", clsig.nHeight);
-    recentChainlock.pushKV("signature", clsig.sig.ToString());
+    llmq::CChainLockSig clsigRecent = llmq::chainLocksHandler->GetMostRecentChainLock();
+    recentChainlock.pushKV("blockhash", clsigRecent.blockHash.GetHex());
+    recentChainlock.pushKV("height", clsigRecent.nHeight);
+    recentChainlock.pushKV("signature", clsigRecent.sig.ToString());
 
     {
         LOCK(cs_main);
-        recentChainlock.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+        recentChainlock.pushKV("known_block", chainman.BlockIndex().count(clsigRecent.blockHash) > 0);
     }
     result.pushKV("recent_chainlock", recentChainlock);
 
-    clsig = llmq::chainLocksHandler->GetBestChainLock();
-
-    if (clsig.IsNull()) {
+    llmq::CChainLockSig clsigActive = llmq::chainLocksHandler->GetBestChainLock();
+    if (clsigRecent.IsNull() && clsigActive.IsNull()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
+    }
+    if (clsigActive.IsNull()) {
         activeChainlock.pushKV("shares", activeChainlockShares);
         result.pushKV("active_chainlock", activeChainlock);
         return result;
     }
 
-    activeChainlock.pushKV("blockhash", clsig.blockHash.GetHex());
-    activeChainlock.pushKV("height", clsig.nHeight);
-    activeChainlock.pushKV("signers", llmq::CLLMQUtils::ToHexStr(clsig.signers));
-    activeChainlock.pushKV("signature", clsig.sig.ToString());
+    activeChainlock.pushKV("blockhash", clsigActive.blockHash.GetHex());
+    activeChainlock.pushKV("height", clsigActive.nHeight);
+    activeChainlock.pushKV("signers", llmq::CLLMQUtils::ToHexStr(clsigActive.signers));
+    activeChainlock.pushKV("signature", clsigActive.sig.ToString());
 
     const auto& clsigsShares = llmq::chainLocksHandler->GetBestChainLockShares();
     if (clsigsShares.empty()) {

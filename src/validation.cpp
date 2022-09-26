@@ -1832,9 +1832,9 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
     // prevent situation where an invalid header or block can be locked and force clients to be stuck on that chain
     // which will never be accepted
     if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
-        // if its any other error other than chainlock and we have a conflict then clear the chainlock
+        // if its any other error other than chainlock and we have a conflict then move back to previous known good chainlock
         if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            llmq::chainLocksHandler->ClearChainLock(); 
+            llmq::chainLocksHandler->SetToPreviousChainLock(); 
         }
     }
     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -2151,7 +2151,8 @@ bool BlobExistsInCache(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
 bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
-        const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
+        // use previous chainlock because pruning involves previous as well
+        const auto& clsig = llmq::chainLocksHandler->GetPreviousChainLock();
         if (!clsig.IsNull()) {
             const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
             if(blockIndex)
@@ -3607,8 +3608,10 @@ bool Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex
     if (activateNeeded) {
         if(!ActivateBestChain(state, nullptr)) {
             LogPrintf("Chainstate::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+            return false;
         }
     }
+    return true;
 }
 void Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pindex)
 {
@@ -3640,6 +3643,7 @@ void Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pi
     }
     // In case blocks from the enforced chain are invalid at the moment, reconsider them.
     if (!pindex->IsValid()) {
+        LogPrintf("Chainstate::%s -- ResetBlockFailureFlags: %s\n", __func__, pindex->GetBlockHash().ToString());
         ResetBlockFailureFlags(m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
     }
 }
@@ -4446,7 +4450,6 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             // SYSCOIN
-            CBlockIndex *pprevindex = nullptr;
             bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked, false)};
             ActiveChainstate().CheckBlockIndex();
             if (!accepted) {

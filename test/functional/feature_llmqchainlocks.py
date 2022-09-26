@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+import time
 import struct
 from test_framework.test_framework import DashTestFramework
 from test_framework.messages import CInv, hash256, msg_inv, ser_string, uint256_from_str
@@ -121,6 +121,7 @@ class LLMQChainLocksTest(DashTestFramework):
                 break
         assert(found)
         self.log.info("Isolate node, mine invalid longer chain(locked) + shorter good chain, and reconnect")
+        prevActiveChainlock = self.nodes[0].getchainlocks()["active_chainlock"]["blockhash"]
         # set flag create and accept invalid blocks
         for i in range(len(self.nodes)):
             self.nodes[i].settestparams("1")
@@ -130,17 +131,17 @@ class LLMQChainLocksTest(DashTestFramework):
         # clear the invalid flag
         for i in range(len(self.nodes)):
             self.nodes[i].settestparams("0")
-        # should clear chainlock due to invalid block getting locked
+        # should set chainlock to previous one due to invalid block getting locked
         for i in range(len(self.nodes)):
-            self.nodes[i].invalidateblock(cl)
-            self.nodes[i].reconsiderblock(cl)
-            assert_raises_rpc_error(-32603, 'Unable to find any chainlock', self.nodes[0].getchainlocks)
+            self.nodes[i].invalidateblock(good_tip)
+            self.nodes[i].reconsiderblock(good_tip)
+            assert(self.nodes[i].getchainlocks()["active_chainlock"]["blockhash"] == prevActiveChainlock)
             assert(not self.nodes[i].getblock(cl)["chainlock"])
+            assert(self.nodes[i].getbestblockhash() == good_tip)
 
         cl = self.nodes[0].getbestblockhash()
-        self.generate(self.nodes[0], 6)
-        tip = cl
-        self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
+        self.generate(self.nodes[0], 5)
+        self.wait_for_chainlocked_block_all_nodes(cl, timeout=30)
 
         self.log.info("bad tip mined while being locked should be invalid now")
         found = False
@@ -152,8 +153,9 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(found)
 
         self.log.info("Keep node connected and let it try to reorg the chain")
-        good_cl = self.nodes[0].getbestblockhash()
-        good_tip = self.generate(self.nodes[0], 5)[-1]
+        # need two transitions instead of 1 because of above invalidation happening at the same block (CL an invalid block moving CL back to previous)
+        good_cl = self.generate(self.nodes[0], 10)[-6]
+        good_tip = self.nodes[0].getbestblockhash()
         self.wait_for_chainlocked_block_all_nodes(good_cl, timeout=30)
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
@@ -257,16 +259,16 @@ class LLMQChainLocksTest(DashTestFramework):
         self.bump_mocktime(5, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=30)
         self.log.info("Allow signing on competing chains")
-        prev_lock = self.nodes[2].getbestblockhash()
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
-        proposed_lock = self.nodes[1].getbestblockhash()
         # create a fork
         self.generate(self.nodes[1], 5, sync_fun=self.no_op)
-        # one of the competing chains should get signed and locked
-        self.wait_until(lambda: (self.nodes[2].getblock(prev_lock)["chainlock"] or self.nodes[1].getblock(proposed_lock)["chainlock"]))
-        new_cl = self.nodes[0].getbestblockhash()
+        time.sleep(5)
         # this just ensures all nodes are on the same tip and continue on getting locked
-        self.generate(self.nodes[0], 5)
+        # Make sure we are mod of 5 block count before checking for CL
+        skip_count = 5 - (self.nodes[0].getblockcount() % 5)
+        if skip_count != 0:
+            self.generate(self.nodes[0], skip_count)
+        new_cl = self.nodes[0].getblockhash(self.nodes[0].getblockcount() - 5)
         self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=30)
         self.nodes[0].disconnect_p2ps()
 

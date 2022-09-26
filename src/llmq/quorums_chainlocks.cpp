@@ -143,6 +143,11 @@ const CChainLockSig CChainLocksHandler::GetBestChainLock() const
     LOCK(cs);
     return bestChainLockWithKnownBlock;
 }
+const CChainLockSig CChainLocksHandler::GetPreviousChainLock() const
+{
+    LOCK(cs);
+    return bestChainLockWithKnownBlockPrev;
+}
 const std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares() const
 {
 
@@ -165,13 +170,15 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
 
     auto it1 = bestChainLockCandidates.find(pindex->nHeight);
     if (it1 != bestChainLockCandidates.end()) {
-        bestChainLockWithKnownBlock = *it1->second;
-        bestChainLockBlockIndex = pindex;
         // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
         // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
-        if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
+        // use previous CL instead of this one due to the 2 stage CL finality
+        if(bestChainLockBlockIndex && !pnevmdatadb->Prune(bestChainLockBlockIndex->GetMedianTimePast())) {
             LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
         }
+        bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
+        bestChainLockWithKnownBlock = *it1->second;
+        bestChainLockBlockIndex = pindex;
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
         return true;
     }
@@ -198,17 +205,19 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 std::transform(clsigAgg.signers.begin(), clsigAgg.signers.end(), pair.second->signers.begin(), clsigAgg.signers.begin(), std::logical_or<bool>());
             }
             if (sigs.size() >= threshold) {
+                // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
+                // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
+                // use previous CL instead of this one due to the 2 stage CL finality
+                if(bestChainLockBlockIndex && !pnevmdatadb->Prune(bestChainLockBlockIndex->GetMedianTimePast())) {
+                    LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
+                }
                 // all sigs should be validated already
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
+                bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG aggregated (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
-                // only prune blob data upon chainlock so we cannot rollback on pruned blob transactions. If we rolled back on pruned blob data then upon new inclusion there could be situation
-                // where new block would fall within 2-hour time window of enforcement and include the pruned blob tx
-                if(!pnevmdatadb->Prune(pindex->GetMedianTimePast())) {
-                    LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
-                }
                 return true;
             }
         }
@@ -571,7 +580,7 @@ void CChainLocksHandler::CheckActiveState()
             // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
             // us with some stale values which we should not try to enforce anymore (there probably was a good reason
             // to disable spork19)
-            mostRecentChainLockShare = bestChainLockWithKnownBlock = CChainLockSig();
+            mostRecentChainLockShare = bestChainLockWithKnownBlock = bestChainLockWithKnownBlockPrev = CChainLockSig();
             bestChainLockBlockIndex = nullptr;
             bestChainLockCandidates.clear();
             bestChainLockShares.clear();
@@ -817,16 +826,18 @@ bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blo
     return InternalHasConflictingChainLock(nHeight, blockHash);
 }
 
-void CChainLocksHandler::ClearChainLock()
+void CChainLocksHandler::SetToPreviousChainLock()
 {
     LOCK(cs);
-    mostRecentChainLockShare = bestChainLockWithKnownBlock = CChainLockSig();
-    bestChainLockBlockIndex = nullptr;
+    bestChainLockShares.erase(bestChainLockBlockIndex->nHeight);
+    bestChainLockWithKnownBlock = bestChainLockWithKnownBlockPrev;
+    // move index back to previous lock position so chain cannot reorg farther than 2 chainlocks no matter what
+    bestChainLockBlockIndex = bestChainLockBlockIndex->GetAncestor(bestChainLockWithKnownBlock.nHeight);
     bestChainLockCandidates.clear();
+    bestChainLockCandidates[bestChainLockWithKnownBlock.nHeight] = std::make_shared<const CChainLockSig>(bestChainLockWithKnownBlock);
     bestChainLockShares.clear();
-    signingState.SetLastSignedHeight(0);
-    // clear recovered sig db and cl vote db
-    quorumSigningManager->Clear();
+    signingState.SetLastSignedHeight(bestChainLockWithKnownBlock.nHeight);
+    mostRecentChainLockShare = CChainLockSig();
 }
 
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const
