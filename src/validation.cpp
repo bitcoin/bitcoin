@@ -3593,7 +3593,12 @@ bool Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex
     BlockValidationState state;
     // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain and invalidate the fork block (next block in main chain).
     LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
-    return EnforceBlock(state, bestChainLockBlockIndex);
+    // no cs_main allowed
+    if (EnforceBlock(state, bestChainLockBlockIndex)) {
+        if(!ActivateBestChain(state, nullptr)) {
+            LogPrintf("Chainstate::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+        }
+    }
 }
 bool Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pindex)
 {
@@ -3610,6 +3615,13 @@ bool Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pi
             }
             LogPrintf("Chainstate::%s -- marked block %s as conflicting\n",
                         __func__, pindex_conflict->ToString());
+        }
+    }
+    {
+        LOCK(cs_main);
+        // In case blocks from the enforced chain are invalid at the moment, reconsider them.
+        if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+            ResetBlockFailureFlags(m_blockman.LookupBlockIndex(pindex->GetBlockHash()));
         }
     }
     return true;
@@ -4173,7 +4185,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
     return true;
 }
-bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked, bool bForBlock, CBlockIndex** pprevindex)
+bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked, bool bForBlock)
 {
     AssertLockHeld(cs_main);
 
@@ -4208,9 +4220,6 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
-        if(pprevindex) {
-            *pprevindex = pindexPrev;
-        }
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
             LogPrint(BCLog::VALIDATION, "%s: %s prev block invalid\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
@@ -4293,27 +4302,9 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             // SYSCOIN
             CBlockIndex *pprevindex = nullptr;
-            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked, false, &pprevindex)};
+            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked, false)};
             ActiveChainstate().CheckBlockIndex();
             if (!accepted) {
-                // if the error is anything but chainlock error the header is invalid semantically
-                if (state.GetResult() != BlockValidationResult::BLOCK_CHAINLOCK) {
-                    int nHeight = 0;
-                    // in case the index already exists
-                    if(pindex) {
-                        nHeight = pindex->nHeight;
-                    // in case this is a new block index that doesn't exist but header isn't valid
-                    } else if(pprevindex) {
-                        nHeight = pprevindex->nHeight+1;
-                    // in case prev block hash is invalid
-                    } else if(m_best_header) {
-                        nHeight = m_best_header->nHeight+1;
-                    }
-                    // block wasn't valid which means any locks on this block should be cleared
-                    if (nHeight > 0 && llmq::chainLocksHandler->HasChainLock(nHeight, header.GetHash())) {
-                        llmq::chainLocksHandler->ClearChainLock(); 
-                    }
-                }
                 return false;
             }
             if (ppindex) {

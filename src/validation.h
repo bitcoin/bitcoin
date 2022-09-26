@@ -878,8 +878,7 @@ private:
         BlockValidationState& state,
         CBlockIndex** ppindex,
         bool min_pow_checked,
-        bool bForBlock = true,
-        CBlockIndex** pprevindex = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        bool bForBlock = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */
