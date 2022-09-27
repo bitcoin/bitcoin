@@ -69,10 +69,13 @@
 #include <evo/specialtx.h>
 #include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
-#include <signal.h>
 #include <fstream>
 #include <cachemultimap.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <signal.h>
+#endif
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
