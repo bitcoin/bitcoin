@@ -72,6 +72,7 @@
 #include <signal.h>
 #include <fstream>
 #include <cachemultimap.h>
+#include <sys/wait.h>
 // SYSCOIN
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
