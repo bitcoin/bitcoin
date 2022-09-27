@@ -6076,7 +6076,7 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
             return 0;
         }
         pid_t pid = (pid_t)pi.dwProcessId;
-        CloseHandle(pi.hProcess);
+        hProcessGeth = pi.hProcess;
         CloseHandle(pi.hThread);
         return pid;
     }
@@ -6191,6 +6191,10 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
     #endif
     return fpathDefault;
 }
+pid_t gethpid = -1;
+#ifdef WIN32
+HANDLE hProcessGeth = NULL;
+#endif
 bool StartGethNode()
 {
     LOCK(cs_geth);
@@ -6263,14 +6267,14 @@ bool StartGethNode()
         
     // Duplicate ("fork") the process. Will return zero in the child
     // process, and the child's PID in the parent (or negative on error).
-    pid_t pid = fork() ;
-    if( pid < 0 ) {
-        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
+    gethpid = fork() ;
+    if( gethpid < 0 ) {
+        LogPrintf("Could not start Geth, pid < 0 %d\n", gethpid);
         return false;
     }  
     // TODO: sanitize environment variables as per
     // https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-    if( pid == 0 ) {  
+    if( gethpid == 0 ) {  
         std::vector<char*> commandVector;
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
@@ -6298,14 +6302,14 @@ bool StartGethNode()
         for(const std::string &cmdStr: vecCmdLineStr) {
             commandStr += cmdStr + " ";
         }
-        pid_t pid = fork(binaryURL, commandStr);
-        if( pid <= 0 ) {
+        gethpid = fork(binaryURL, commandStr);
+        if( gethpid <= 0 ) {
             LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
             return false;
         }
     #endif
-    if(pid > 0)
-        LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    if(gethpid > 0)
+        LogPrintf("%s: Geth Started with pid %d\n", __func__, gethpid);
     return true;
 }
 bool StopGethNode(bool bOnStart)
@@ -6315,8 +6319,19 @@ bool StopGethNode(bool bOnStart)
     }
     if(!bOnStart) {
         bool bResponse = false;
+        // returns without waiting, signals sysgeth to shutdown
         GetMainSignals().NotifyNEVMComms("disconnect", bResponse);
         if(bResponse) {
+            LogPrintf("Waiting for sysgeth to shutdown...\n");
+            #ifdef WIN32
+            if(hProcessGeth) {
+                WaitForSingleObject(hProcessGeth, INFINITE);
+                CloseHandle(hProcessGeth);
+            }
+            #else
+            int status;
+            waitpid(gethpid, &status, 0);
+            #endif
             return true;
         }
     }
