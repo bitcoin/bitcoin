@@ -86,6 +86,10 @@
     #include <mach-o/dyld.h>
     #include <limits.h>
 #endif
+pid_t gethpid = -1;
+#ifdef WIN32
+HANDLE hProcessGeth = NULL;
+#endif
 RecursiveMutex cs_geth;
 NEVMMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
@@ -6195,10 +6199,6 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
     #endif
     return fpathDefault;
 }
-pid_t gethpid = -1;
-#ifdef WIN32
-HANDLE hProcessGeth = NULL;
-#endif
 bool StartGethNode()
 {
     LOCK(cs_geth);
