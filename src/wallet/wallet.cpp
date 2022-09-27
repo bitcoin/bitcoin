@@ -1957,7 +1957,7 @@ void CWallet::ResubmitWalletTransactions(bool relay, bool force)
             // Only rebroadcast unconfirmed txs
             if (!wtx.isUnconfirmed()) continue;
 
-            // attempt to rebroadcast all txes more than 5 minutes older than
+            // Attempt to rebroadcast all txes more than 5 minutes older than
             // the last block, or all txs if forcing.
             if (!force && wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
             to_submit.insert(&wtx);
