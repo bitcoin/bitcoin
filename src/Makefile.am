@@ -284,6 +284,7 @@ BITCOIN_CORE_H = \
   util/rbf.h \
   util/readwritefile.h \
   util/result.h \
+  util/run_command.h \
   util/serfloat.h \
   util/settings.h \
   util/sock.h \
@@ -680,6 +681,7 @@ libbitcoin_util_a_SOURCES = \
   util/fees.cpp \
   util/getuniquepath.cpp \
   util/hasher.cpp \
+  util/run_command.cpp \
   util/sock.cpp \
   util/syserror.cpp \
   util/system.cpp \

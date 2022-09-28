@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <test/util/setup_common.h>
-#include <util/system.h>
+#include <util/run_command.h>
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
