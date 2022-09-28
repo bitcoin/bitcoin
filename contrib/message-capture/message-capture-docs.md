@@ -9,7 +9,7 @@ This feature allows for message capture on a per-peer basis.  It answers the sim
 * Run `bitcoind` with the `-capturemessages` option.
 * Look in the `message_capture` folder in your datadir.
   * Typically this will be `~/.bitcoin/message_capture`.
-  * See that there are many folders inside, one for each peer names with its IP address and port.
+  * See that there are many folders inside, one for each peer name with its IP address and port.
   * Inside each peer's folder there are two `.dat` files: one is for received messages (`msgs_recv.dat`) and the other is for sent messages (`msgs_sent.dat`).
 * Run `contrib/message-capture/message-capture-parser.py` with the proper arguments.
   * See the `-h` option for help.
