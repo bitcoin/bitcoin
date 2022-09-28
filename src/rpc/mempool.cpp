@@ -785,7 +785,6 @@ static RPCHelpMan submitpackage()
                         }},
                     }}
                 }},
-                {RPCResult::Type::STR_AMOUNT, "package-feerate", /*optional=*/true, "package feerate used for feerate checks in " + CURRENCY_UNIT + " per KvB. Excludes transactions which were deduplicated or accepted individually."},
                 {RPCResult::Type::ARR, "replaced-transactions", /*optional=*/true, "List of txids of replaced transactions",
                 {
                     {RPCResult::Type::STR_HEX, "", "The transaction id"},
@@ -900,9 +899,6 @@ static RPCHelpMan submitpackage()
                 tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), result_inner);
             }
             rpc_result.pushKV("tx-results", tx_result_map);
-            if (package_result.m_package_feerate.has_value()) {
-                rpc_result.pushKV("package-feerate", ValueFromAmount(package_result.m_package_feerate.value().GetFeePerK()));
-            }
             UniValue replaced_list(UniValue::VARR);
             for (const uint256& hash : replaced_txids) replaced_list.push_back(hash.ToString());
             rpc_result.pushKV("replaced-transactions", replaced_list);

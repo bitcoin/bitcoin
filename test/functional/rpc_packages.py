@@ -321,12 +321,6 @@ class RPCPackagesTest(BitcoinTestFramework):
         # submitpackage result should be consistent with testmempoolaccept and getmempoolentry
         self.assert_equal_package_results(node, testmempoolaccept_result, submitpackage_result)
 
-        # Package feerate is calculated for the remaining transactions after deduplication and
-        # individual submission. If only 0 or 1 transaction is left, e.g. because all transactions
-        # had high-feerates or were already in the mempool, no package feerate is provided.
-        # In this case, since all of the parents have high fees, each is accepted individually.
-        assert "package-feerate" not in submitpackage_result
-
         # The node should announce each transaction. No guarantees for propagation.
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
         self.generate(node, 1)
@@ -362,12 +356,6 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), child_result["fees"]["effective-feerate"])
         assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
         assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
-
-        # Package feerate is calculated for the remaining transactions after deduplication and
-        # individual submission. Since this package had a 0-fee parent, package feerate must have
-        # been used and returned.
-        assert "package-feerate" in submitpackage_result
-        assert_fee_amount(DEFAULT_FEE, rich_parent_result["vsize"] + child_result["vsize"], submitpackage_result["package-feerate"])
 
         # The node will broadcast each transaction, still abiding by its peer's fee filter
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
