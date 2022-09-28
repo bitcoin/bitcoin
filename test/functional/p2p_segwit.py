@@ -624,6 +624,7 @@ class SegWitTest(BitcoinTestFramework):
             # in blocks and the tx is impossible to mine right now.
             testres3 = self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()])
             testres3[0]["fees"].pop("effective-feerate")
+            testres3[0]["fees"].pop("effective-includes")
             assert_equal(testres3,
                 [{
                     'txid': tx3.hash,
@@ -642,6 +643,7 @@ class SegWitTest(BitcoinTestFramework):
             tx3.rehash()
             testres3_replaced = self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()])
             testres3_replaced[0]["fees"].pop("effective-feerate")
+            testres3_replaced[0]["fees"].pop("effective-includes")
             assert_equal(testres3_replaced,
                 [{
                     'txid': tx3.hash,

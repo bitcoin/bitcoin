@@ -247,6 +247,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_replaceable["vsize"], replaceable_tx["tx"].get_vsize())
         assert_equal(testres_replaceable["fees"]["base"], fee)
         assert_fee_amount(fee, replaceable_tx["tx"].get_vsize(), testres_replaceable["fees"]["effective-feerate"])
+        assert_equal(testres_replaceable["fees"]["effective-includes"], [replaceable_tx["wtxid"]])
 
         # Replacement transaction is identical except has double the fee
         replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=coin, sequence=MAX_BIP125_RBF_SEQUENCE, fee = 2 * fee)
@@ -315,6 +316,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
                 assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective-feerate"])
+                assert_equal(tx_result["fees"]["effective-includes"], [wtxid])
 
         # submitpackage result should be consistent with testmempoolaccept and getmempoolentry
         self.assert_equal_package_results(node, testmempoolaccept_result, submitpackage_result)
@@ -353,10 +355,13 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(child_result["fees"]["base"], DEFAULT_FEE)
         # The "rich" parent does not require CPFP so its effective feerate.
         assert_fee_amount(DEFAULT_FEE, tx_rich["tx"].get_vsize(), rich_parent_result["fees"]["effective-feerate"])
+        assert_equal(rich_parent_result["fees"]["effective-includes"], [tx_rich["wtxid"]])
         # The "poor" parent and child's effective feerates are the same, composed of the child's fee
         # divided by their combined vsize.
         assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), poor_parent_result["fees"]["effective-feerate"])
         assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), child_result["fees"]["effective-feerate"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
 
         # Package feerate is calculated for the remaining transactions after deduplication and
         # individual submission. Since this package had a 0-fee parent, package feerate must have
