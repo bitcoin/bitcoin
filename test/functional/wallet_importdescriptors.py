@@ -88,7 +88,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              error_code=-8,
                              error_message='Descriptor not found.')
 
-        # # Test importing of a P2PKH descriptor
+        # Test importing of a P2PKH descriptor
         key = get_generate_key()
         self.log.info("Should import a p2pkh descriptor")
         import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
@@ -430,6 +430,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         acc_xpub3 = 'tpubDCsWoW1kuQB9kG5MXewHqkbjPtqPueRnXju7uM2NK7y3JYb2ajAZ9EiuZXNNuE4661RAfriBWhL8UsnAPpk8zrKKnZw1Ug7X4oHgMdZiU4E'
         chg_xpub3 = 'tpubDC6UGqnsQStngYuGD4MKsMy7eD1Yg9NTJfPdvjdG2JE5oZ7EsSL3WHg4Gsw2pR5K39ZwJ46M1wZayhedVdQtMGaUhq5S23PH6fnENK3V1sb'
 
+        # Based on BIP32 test vector 1:
+        acc_xpub4 = 'tpubDDXRVY4eRY4p4iqLUQNQokx89YLZEpTyA8UdLVYRMV8HacVdwHRi1TWKMSY3kh8WpNBA4kB4Xet3hCxxVvSw83DZ5fhqiSysSsYCWJ7k79E' # /86'/1'/0'
+
         self.test_importdesc({"desc":"wsh(multi(2," + xprv1 + "/84h/0h/0h/*," + xprv2 + "/84h/0h/0h/*," + xprv3 + "/84h/0h/0h/*))#m2sr93jn",
                             "active": True,
                             "range": 1000,
@@ -526,6 +529,40 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[0]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
         assert_equal(res[1]['success'], True)
         assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
+
+        self.log.info("Infer private keys when importing an xpub for which we have the seed")
+        self.nodes[1].createwallet(wallet_name="wmulti_infer", descriptors=True, blank=True)
+        wmulti_infer = self.nodes[1].get_wallet_rpc("wmulti_infer")
+        wmulti_infer.sethdseed(newkeypool=False,seed="000102030405060708090a0b0c0d0e0f")
+
+        res = wmulti_infer.importdescriptors([
+        {
+            "desc": descsum_create("tr([3442193e/86h/1h/0h]" + acc_xpub4 + "/0/*)"),
+            "active": True,
+            "internal": False,
+            "range": 10,
+            "next_index": 0,
+            "timestamp": "now"
+        },
+        {
+            "desc": descsum_create("tr([3442193e/86h/1h/0h]" + acc_xpub4 + "/1/*)"),
+            "active": True,
+            "internal": True,
+            "range": 10,
+            "next_index": 0,
+            "timestamp": "now"
+        }
+        ])
+
+        assert_equal(res[0]['success'], True)
+        assert not 'warnings' in res[0]
+        assert_equal(res[1]['success'], True)
+        assert not 'warnings' in res[1]
+
+        addr4 = wmulti_infer.getnewaddress(address_type="bech32m")
+        info = wmulti_infer.getaddressinfo(addr4)
+        assert_equal(info["ismine"], True)
+        assert_equal(info["iswatchonly"], False)
 
         self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True, descriptors=True)
         wmulti_priv2 = self.nodes[1].get_wallet_rpc('wmulti_priv2')

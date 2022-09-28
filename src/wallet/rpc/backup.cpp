@@ -1518,6 +1518,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Need to ExpandPrivate to check if private keys are available for all pubkeys
+        // Keys we find in the descriptor (xpriv)
         FlatSigningProvider expand_keys;
         std::vector<CScript> scripts;
         if (!parsed_desc->Expand(0, keys, scripts, expand_keys)) {
@@ -1525,20 +1526,49 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
         parsed_desc->ExpandPrivate(0, keys, expand_keys);
 
-        // Check if all private keys are provided
-        bool have_all_privkeys = !expand_keys.keys.empty();
+        KeyManager& keyman = wallet.GetKeyManager();
+        LOCK(keyman.cs_keyman);
+        std::optional<CExtKey> active_hd_key = keyman.GetActiveHDKey();
+        // Check if all private keys are provided by the descriptor or if they
+        // can be derived from the hd seed (based on origin info).
+        bool have_all_privkeys = !expand_keys.keys.empty() || active_hd_key.has_value();
         for (const auto& entry : expand_keys.origins) {
             const CKeyID& key_id = entry.first;
+            const KeyOriginInfo& key_origin = entry.second.second;
+            if (key_origin.path.empty()) continue;
             CKey key;
             if (!expand_keys.GetKey(key_id, key)) {
-                have_all_privkeys = false;
-                break;
+                // Derive extended public key from seed to see if it matches the descriptor xpub
+                std::optional<std::pair<CExtPubKey, KeyOriginInfo>> expected = keyman.GetExtPubKey(key_origin.path);
+                if (!expected.has_value() || expected->first.pubkey != entry.second.first) {
+                    have_all_privkeys = false;
+                    break;
+                }
+
+                // Derive master xpub and inject into descriptor
+                std::string master_xpub = EncodeExtPubKey(active_hd_key->Neuter());
+                std::string tweaked_descriptor = descriptor;
+                // TODO: make less brittle (e.g. this doesn't work with multisig)
+                tweaked_descriptor.erase(tweaked_descriptor.length()-9);
+                size_t index = tweaked_descriptor.find("[" + HexStr(entry.second.second.fingerprint));
+                assert(index != std::string::npos);
+                tweaked_descriptor.replace(index, 9, master_xpub);
+                index = tweaked_descriptor.find("]");
+                assert(index != std::string::npos);
+                size_t index2 = tweaked_descriptor.find("/", index);
+                assert(index2 != std::string::npos);
+                tweaked_descriptor.replace(index, index2 - index, "");
+
+                parsed_desc = Parse(tweaked_descriptor, keys, error, /*require_checksum=*/false);
+                if (!parsed_desc) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+                }
             }
         }
 
         // If private keys are enabled, check some things.
         if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-           if (keys.keys.empty()) {
+           if (keys.keys.empty() && !have_all_privkeys) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import descriptor without private keys to a wallet with private keys enabled");
            }
            if (!have_all_privkeys) {
