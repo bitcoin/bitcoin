@@ -370,9 +370,6 @@ VerifyLoop2Result RangeProof::VerifyLoop2(
         y0 = y0 - (p.proof.tau_x * weight_y);
 
         Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 3); // VectorPowers(pd.z, M+3);
-
-        // VectorPower returns {} for MN=0, FirstNPow returns {1} for MN=0
-        // VectorPower returns {1} for MN=1, FirstNPow returns {1, p.y} for MN=1
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits - 1).Sum(); // VectorPowerSum(p.y, MN);
 
         // processing z_pow[2], z_pow[3] ... originally
@@ -384,7 +381,7 @@ VerifyLoop2Result RangeProof::VerifyLoop2(
         y1 = y1 + ((p.proof.t_hat - (k + (p.z * y_pows_sum))) * weight_y);
 
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-            res.multi_exp.Add(p.proof.Vs[i] * (z_pow[i] * weight_y));  // was i + 2
+            res.multi_exp.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // was i + 2
         }
 
         res.multi_exp.Add(p.proof.T1 * (p.x * weight_y));  // (65)?
