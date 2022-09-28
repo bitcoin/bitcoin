@@ -58,7 +58,10 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         """Wrapper to check result of testmempoolaccept on node_0's mempool"""
         result_test = self.nodes[0].testmempoolaccept(*args, **kwargs)
         for r in result_test:
-            r.pop('wtxid')  # Skip check for now
+            # Skip these checks for now
+            r.pop('wtxid')
+            if "fees" in r:
+                r["fees"].pop("effective-feerate")
         assert_equal(result_expected, result_test)
         assert_equal(self.nodes[0].getmempoolinfo()['size'], self.mempool_size)  # Must not change mempool state
 

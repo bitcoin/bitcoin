@@ -126,6 +126,7 @@ static RPCHelpMan testmempoolaccept()
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                        {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/false, "the effective feerate in " + CURRENCY_UNIT + " per KvB. May differ from the base feerate if, for example, there are modified fees from prioritisetransaction or a package feerate was used."},
                     }},
                     {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
                 }},
@@ -217,6 +218,7 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("vsize", virtual_size);
                         UniValue fees(UniValue::VOBJ);
                         fees.pushKV("base", ValueFromAmount(fee));
+                        fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
                         result_inner.pushKV("fees", fees);
                     }
                 } else {
@@ -768,6 +770,7 @@ static RPCHelpMan submitpackage()
                         {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141."},
                         {RPCResult::Type::OBJ, "fees", "Transaction fees", {
                             {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
+                            {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/true, "if the transaction was not already in the mempool, the effective feerate in " + CURRENCY_UNIT + " per KvB. For example, the package feerate and/or feerate with modified fees from prioritisetransaction."},
                         }},
                     }}
                 }},
@@ -856,6 +859,7 @@ static RPCHelpMan submitpackage()
                 CHECK_NONFATAL(it != package_result.m_tx_results.end());
                 UniValue result_inner{UniValue::VOBJ};
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
+                const auto& tx_result = it->second;
                 if (it->second.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS) {
                     result_inner.pushKV("other-wtxid", it->second.m_other_wtxid.value().GetHex());
                 }
@@ -864,6 +868,12 @@ static RPCHelpMan submitpackage()
                     result_inner.pushKV("vsize", int64_t{it->second.m_vsize.value()});
                     UniValue fees(UniValue::VOBJ);
                     fees.pushKV("base", ValueFromAmount(it->second.m_base_fees.value()));
+                    if (tx_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                        // Effective feerate is not provided for MEMPOOL_ENTRY transactions even
+                        // though modified fees is known, because it is unknown whether package
+                        // feerate was used when it was originally submitted.
+                        fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
+                    }
                     result_inner.pushKV("fees", fees);
                     if (it->second.m_replaced_transactions.has_value()) {
                         for (const auto& ptx : it->second.m_replaced_transactions.value()) {
