@@ -41,18 +41,20 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
 
 } // namespace
 
-benchmark::BenchRunner::BenchmarkMap& benchmark::BenchRunner::benchmarks()
+namespace benchmark {
+
+BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
 {
     static std::map<std::string, BenchFunction> benchmarks_map;
     return benchmarks_map;
 }
 
-benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func)
+BenchRunner::BenchRunner(std::string name, BenchFunction func)
 {
     benchmarks().insert(std::make_pair(name, func));
 }
 
-void benchmark::BenchRunner::RunAll(const Args& args)
+void BenchRunner::RunAll(const Args& args)
 {
     std::regex reFilter(args.regex_filter);
     std::smatch baseMatch;
@@ -103,3 +105,5 @@ void benchmark::BenchRunner::RunAll(const Args& args)
                                                                "{{/result}}");
     GenerateTemplateResults(benchmarkResults, args.output_json, ankerl::nanobench::templates::json());
 }
+
+} // namespace benchmark
