@@ -19,7 +19,6 @@ struct Proof
     G1Point T2;
     Scalar mu;
     Scalar tau_x;
-    Scalar t;
     G1Points Ls;
     G1Points Rs;
 

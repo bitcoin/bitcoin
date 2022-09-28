@@ -52,17 +52,6 @@ struct VerifyLoop1Result
     size_t Vs_size_sum = 0;
 };
 
-struct VerifyLoop2Result
-{
-    G1Points multi_exp;   // TODO give a better name
-    Scalar y0 = 0;
-    Scalar y1 = 0;
-    Scalar z1 = 0;
-    Scalar z3 = 0;
-    Scalars z4;
-    Scalars z5;
-};
-
 // implementation of range proof described in Bulletproofs
 // based on the paper: https://eprint.iacr.org/2017/1066.pdf
 class RangeProof
@@ -110,12 +99,12 @@ public:
     );
 
     bool Verify(
-        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const std::vector<Proof>& proofs,
         const TokenId& token_id
     ) const;
 
     bool RangeProof::ValidateProofsBySizes(
-        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const std::vector<Proof>& proofs,
         const size_t& num_rounds
     ) const;
 
@@ -125,7 +114,7 @@ public:
      * and maximum size of L,R
      */
     VerifyLoop1Result VerifyLoop1(
-        const std::vector<std::pair<size_t, Proof>>& indexed_proofs,
+        const std::vector<Proof>& proofs,
         const size_t& num_rounds
     ) const;
 
