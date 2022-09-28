@@ -95,12 +95,14 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     BOOST_CHECK(it_parent != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_parent->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_parent->second.m_state.GetRejectReason());
+    BOOST_CHECK(it_parent->second.m_effective_feerate.value().GetFee(GetVirtualTransactionSize(*tx_parent)) == COIN);
     BOOST_CHECK(it_child != result_parent_child.m_tx_results.end());
     BOOST_CHECK_MESSAGE(it_child->second.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << it_child->second.m_state.GetRejectReason());
     BOOST_CHECK(result_parent_child.m_package_feerate.has_value());
     BOOST_CHECK(result_parent_child.m_package_feerate.value() ==
                 CFeeRate(2 * COIN, GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child)));
+    BOOST_CHECK(it_child->second.m_effective_feerate.value().GetFee(GetVirtualTransactionSize(*tx_child)) == COIN);
 
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
@@ -323,8 +325,10 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         auto it_child = submit_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_parent_child.m_tx_results.end());
         BOOST_CHECK(it_parent->second.m_state.IsValid());
+        BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_parent)));
         BOOST_CHECK(it_child != submit_parent_child.m_tx_results.end());
         BOOST_CHECK(it_child->second.m_state.IsValid());
+        BOOST_CHECK(it_child->second.m_effective_feerate == CFeeRate(1 * COIN, GetVirtualTransactionSize(*tx_child)));
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent->GetHash())));
@@ -613,6 +617,8 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         BOOST_CHECK_MESSAGE(mixed_result.m_package_feerate.value() == expected_feerate,
                             strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
                                       mixed_result.m_package_feerate.value().ToString()));
+        BOOST_CHECK(it_parent3->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
     }
 }
 
@@ -695,6 +701,8 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
 
         const CFeeRate expected_feerate(coinbase_value - child_value,
                                         GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
+        BOOST_CHECK(it_parent->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
         BOOST_CHECK(expected_feerate.GetFeePerK() > 1000);
         BOOST_CHECK(submit_cpfp.m_package_feerate.has_value());
         BOOST_CHECK_MESSAGE(submit_cpfp.m_package_feerate.value() == expected_feerate,
@@ -756,6 +764,16 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK_MESSAGE(submit_prioritised_package.m_package_feerate.value() == expected_feerate,
                             strprintf("Expected package feerate %s, got %s", expected_feerate.ToString(),
                                       submit_prioritised_package.m_package_feerate.value().ToString()));
+        auto it_parent = submit_prioritised_package.m_tx_results.find(tx_parent_cheap->GetWitnessHash());
+        auto it_child = submit_prioritised_package.m_tx_results.find(tx_child_cheap->GetWitnessHash());
+        BOOST_CHECK(it_parent != submit_prioritised_package.m_tx_results.end());
+        BOOST_CHECK(it_parent->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_parent->second.m_base_fees.value() == 0);
+        BOOST_CHECK(it_parent->second.m_effective_feerate.value() == expected_feerate);
+        BOOST_CHECK(it_child != submit_prioritised_package.m_tx_results.end());
+        BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_child->second.m_base_fees.value() == 200);
+        BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
     }
 
     // Package feerate is calculated without topology in mind; it's just aggregating fees and sizes.
@@ -801,6 +819,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK(it_parent->second.m_state.GetRejectReason() == "");
         BOOST_CHECK_MESSAGE(it_parent->second.m_base_fees.value() == high_parent_fee,
                 strprintf("rich parent: expected fee %s, got %s", high_parent_fee, it_parent->second.m_base_fees.value()));
+        BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(high_parent_fee, GetVirtualTransactionSize(*tx_parent_rich)));
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         BOOST_CHECK(m_node.mempool->exists(GenTxid::Txid(tx_parent_rich->GetHash())));
