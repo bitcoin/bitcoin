@@ -9,13 +9,15 @@
 #include <addrdb.h>
 #include <addrman.h>
 #include <bloom.h>
+#include <chainparams.h>
 #include <compat.h>
 #include <fs.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
-#include <netaddress.h>
 #include <net_permissions.h>
+#include <netaddress.h>
+#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -827,9 +829,6 @@ class CNetMessage {
 public:
     CDataStream m_recv;                  // received message data
     int64_t m_time = 0;                  // time (in microseconds) of message receipt.
-    bool m_valid_netmagic = false;
-    bool m_valid_header = false;
-    bool m_valid_checksum = false;
     uint32_t m_message_size = 0;         // size of the payload
     uint32_t m_raw_message_size = 0;     // used wire size of the message (including header/checksum)
     std::string m_command;
@@ -855,13 +854,15 @@ public:
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
-    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
+    virtual Optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
 };
 
 class V1TransportDeserializer final : public TransportDeserializer
 {
 private:
+    const CChainParams& m_chain_params;
+    const NodeId m_node_id; // Only for logging
     mutable CHash256 hasher;
     mutable uint256 data_hash;
     bool in_data;                   // parsing header (false) or data (true)
@@ -887,8 +888,12 @@ private:
     }
 
 public:
-
-    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    V1TransportDeserializer(const CChainParams& chain_params, const NodeId node_id, int nTypeIn, int nVersionIn)
+        : m_chain_params(chain_params),
+          m_node_id(node_id),
+          hdrbuf(nTypeIn, nVersionIn),
+          vRecv(nTypeIn, nVersionIn)
+    {
         Reset();
     }
 
@@ -908,7 +913,7 @@ public:
         if (ret < 0) Reset();
         return ret;
     }
-    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
+    Optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err_raw_size) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport

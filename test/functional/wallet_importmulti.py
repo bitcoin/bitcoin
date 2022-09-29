@@ -448,13 +448,12 @@ class ImportMultiTest(BitcoinTestFramework):
                               error_code=-8,
                               error_message='Descriptor is ranged, please specify the range')
 
-        # Test importing of a ranged descriptor without keys
+        # Test importing of a ranged descriptor with xpriv
         self.log.info("Should import the ranged descriptor with specified range as solvable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
                                "range": 1},
-                              success=True,
-                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+                              success=True)
 
         self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
                               success=False, error_code=-8, error_message='End of range is too high')
@@ -470,6 +469,23 @@ class ImportMultiTest(BitcoinTestFramework):
 
         self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": [0, 1000001]},
                               success=False, error_code=-8, error_message='Range is too large')
+
+        # Test importing a descriptor containing a WIF private key
+        wif_priv = "cTT3BvHnd51YJf8fkdr2XvZTQRRUZruWhRvRyQY1raVFg5Lvam2A"
+        address = "ySWABbcNKyHUgBb1ffhpuETuis9jsdR3aq"
+        desc = "sh(pkh(" + wif_priv + "))"
+        self.log.info("Should import a descriptor with a WIF private key as spendable")
+        self.test_importmulti({"desc": descsum_create(desc),
+                               "timestamp": "now"},
+                              success=True)
+        test_address(self.nodes[1],
+                     address,
+                     solvable=True,
+                     ismine=True)
+
+        # dump the private key to ensure it matches what was imported
+        privkey = self.nodes[1].dumpprivkey(address)
+        assert_equal(privkey, wif_priv)
 
         # Test importing of a P2PKH address via descriptor
         key = get_key(self.nodes[0])

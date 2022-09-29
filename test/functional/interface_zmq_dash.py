@@ -13,7 +13,7 @@ import struct
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.mininode import P2PInterface, MSG_TX, MSG_TYPE_MASK
+from test_framework.mininode import P2PInterface
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import (
     CBlock,
@@ -30,6 +30,8 @@ from test_framework.messages import (
     msg_isdlock,
     msg_islock,
     msg_tx,
+    MSG_TX,
+    MSG_TYPE_MASK,
     ser_string,
     uint256_from_str,
     uint256_to_string

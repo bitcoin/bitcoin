@@ -19,13 +19,13 @@
 #include <script/descriptor.h>
 #include <util/bip32.h>
 #include <util/fees.h>
+#include <util/message.h> // For MessageSign()
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/ref.h>
 #include <util/string.h>
 #include <util/translation.h>
 #include <util/url.h>
-#include <util/validation.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -596,15 +596,13 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << strMessage;
+    std::string signature;
 
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(ss.GetHash(), vchSig))
+    if (!MessageSign(key, strMessage, signature)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+    }
 
-    return EncodeBase64(vchSig);
+    return signature;
 }
 
 static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
@@ -3943,18 +3941,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
-    for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
-    }
-    for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
-    }
-
-    // Use CTransaction for the constant parts of the
-    // transaction to avoid rehashing.
-    const CTransaction txConst(*psbtx.tx);
+    PartiallySignedTransaction psbtx{rawTx};
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();

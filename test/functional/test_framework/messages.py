@@ -50,6 +50,11 @@ NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
 NODE_HEADERS_COMPRESSED = (1 << 11)
 
+MSG_TX = 1
+MSG_BLOCK = 2
+MSG_CMPCT_BLOCK = 20
+MSG_TYPE_MASK = 0xffffffff >> 2
+
 FILTER_TYPE_BASIC = 0
 
 # Serialization/deserialization tools

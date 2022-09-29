@@ -29,6 +29,7 @@ constexpr int RANGE = 1; // Expected to be ranged descriptor
 constexpr int HARDENED = 2; // Derivation needs access to private keys
 constexpr int UNSOLVABLE = 4; // This descriptor is not expected to be solvable
 constexpr int SIGNABLE = 8; // We can sign with this descriptor (this is not true when actual BIP32 derivation is used, as that's not integrated in our signing code)
+constexpr int DERIVE_HARDENED = 16; // The final derivation is hardened, i.e. ends with *' or *h
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
 bool EqualDescriptor(std::string a, std::string b)
@@ -131,18 +132,81 @@ void DoCheck(const std::string& prv, const std::string& pub, int flags, const st
             // Evaluate the descriptor selected by `t` in position `i`.
             FlatSigningProvider script_provider, script_provider_cached;
             std::vector<CScript> spks, spks_cached;
-            std::vector<unsigned char> cache;
-            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &cache));
+            DescriptorCache desc_cache;
+            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &desc_cache));
 
             // Compare the output with the expected result.
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
 
             // Try to expand again using cached data, and compare.
-            BOOST_CHECK(parse_pub->ExpandFromCache(i, cache, spks_cached, script_provider_cached));
+            BOOST_CHECK(parse_pub->ExpandFromCache(i, desc_cache, spks_cached, script_provider_cached));
             BOOST_CHECK(spks == spks_cached);
             BOOST_CHECK(script_provider.pubkeys == script_provider_cached.pubkeys);
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
             BOOST_CHECK(script_provider.origins == script_provider_cached.origins);
+
+            // Check whether keys are in the cache
+            const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
+            const auto& parent_xpub_cache = desc_cache.GetCachedParentExtPubKeys();
+            if ((flags & RANGE) && !(flags & DERIVE_HARDENED)) {
+                // For ranged, unhardened derivation, None of the keys in origins should appear in the cache but the cache should have parent keys
+                // But we can derive one level from each of those parent keys and find them all
+                BOOST_CHECK(der_xpub_cache.empty());
+                BOOST_CHECK(parent_xpub_cache.size() > 0);
+                std::set<CPubKey> pubkeys;
+                for (const auto& xpub_pair : parent_xpub_cache) {
+                    const CExtPubKey& xpub = xpub_pair.second;
+                    CExtPubKey der;
+                    xpub.Derive(der, i);
+                    pubkeys.insert(der.pubkey);
+                }
+                for (const auto& origin_pair : script_provider_cached.origins) {
+                    const CPubKey& pk = origin_pair.second.first;
+                    BOOST_CHECK(pubkeys.count(pk) > 0);
+                }
+            } else if (pub1.find("xpub") != std::string::npos) {
+                // For ranged, hardened derivation, or not ranged, but has an xpub, all of the keys should appear in the cache
+                BOOST_CHECK(der_xpub_cache.size() + parent_xpub_cache.size() == script_provider_cached.origins.size());
+                // Get all of the derived pubkeys
+                std::set<CPubKey> pubkeys;
+                for (const auto& xpub_map_pair : der_xpub_cache) {
+                    for (const auto& xpub_pair : xpub_map_pair.second) {
+                        const CExtPubKey& xpub = xpub_pair.second;
+                        pubkeys.insert(xpub.pubkey);
+                    }
+                }
+                // Derive one level from all of the parents
+                for (const auto& xpub_pair : parent_xpub_cache) {
+                    const CExtPubKey& xpub = xpub_pair.second;
+                    pubkeys.insert(xpub.pubkey);
+                    CExtPubKey der;
+                    xpub.Derive(der, i);
+                    pubkeys.insert(der.pubkey);
+                }
+                for (const auto& origin_pair : script_provider_cached.origins) {
+                    const CPubKey& pk = origin_pair.second.first;
+                    BOOST_CHECK(pubkeys.count(pk) > 0);
+                }
+            } else {
+                // No xpub, nothing should be cached
+                BOOST_CHECK(der_xpub_cache.empty());
+                BOOST_CHECK(parent_xpub_cache.empty());
+            }
+
+            // Make sure we can expand using cached xpubs for unhardened derivation
+            if (!(flags & DERIVE_HARDENED)) {
+                // Evaluate the descriptor at i + 1
+                FlatSigningProvider script_provider1, script_provider_cached1;
+                std::vector<CScript> spks1, spk1_from_cache;
+                BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i + 1, key_provider, spks1, script_provider1, nullptr));
+
+                // Try again but use the cache from expanding i. That cache won't have the pubkeys for i + 1, but will have the parent xpub for derivation.
+                BOOST_CHECK(parse_pub->ExpandFromCache(i + 1, desc_cache, spk1_from_cache, script_provider_cached1));
+                BOOST_CHECK(spks1 == spk1_from_cache);
+                BOOST_CHECK(script_provider1.pubkeys == script_provider_cached1.pubkeys);
+                BOOST_CHECK(script_provider1.scripts == script_provider_cached1.scripts);
+                BOOST_CHECK(script_provider1.origins == script_provider_cached1.origins);
+            }
 
             // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
             for (size_t n = 0; n < spks.size(); ++n) {

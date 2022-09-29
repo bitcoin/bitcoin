@@ -53,7 +53,7 @@ Node1 is unused in tests 3-7:
 
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
-from test_framework.messages import CBlockHeader, CInv, msg_block, msg_headers, msg_inv
+from test_framework.messages import CBlockHeader, CInv, MSG_BLOCK, msg_block, msg_headers, msg_inv
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes
@@ -214,7 +214,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         with mininode_lock:
             # Clear state so we can check the getdata request
             test_node.last_message.pop("getdata", None)
-            test_node.send_message(msg_inv([CInv(2, block_h3.sha256)]))
+            test_node.send_message(msg_inv([CInv(MSG_BLOCK, block_h3.sha256)]))
 
         test_node.sync_with_ping()
         with mininode_lock:

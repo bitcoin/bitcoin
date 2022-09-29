@@ -66,14 +66,13 @@ from test_framework.messages import (
     msg_verack,
     msg_version,
     MY_SUBVERSION,
+    MSG_BLOCK,
+    MSG_TX,
+    MSG_TYPE_MASK,
     NODE_NETWORK,
     sha256,
 )
 from test_framework.util import wait_until
-
-MSG_TX = 1
-MSG_BLOCK = 2
-MSG_TYPE_MASK = 0xffffffff >> 2
 
 logger = logging.getLogger("TestFramework.mininode")
 

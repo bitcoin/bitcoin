@@ -263,6 +263,28 @@ class PSBTTest(BitcoinTestFramework):
         joined_decoded = self.nodes[0].decodepsbt(joined)
         assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
 
+        # Newly created PSBT needs UTXOs and updating
+        addr = self.nodes[1].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(addr, 7)
+        self.nodes[0].generate(6)
+        self.sync_all()
+        vout = find_output(self.nodes[0], txid, 7)
+        psbt = self.nodes[1].createpsbt([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress():Decimal('6.999')})
+        analyzed = self.nodes[0].analyzepsbt(psbt)
+        assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
+
+        # After update with wallet, only needs signing
+        updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
+        analyzed = self.nodes[0].analyzepsbt(updated)
+        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer'
+
+        # Check fee and size things
+        assert analyzed['fee'] == Decimal('0.00100000') and analyzed['estimated_vsize'] == 191 and analyzed['estimated_feerate'] == Decimal('0.00523560')
+
+        # After signing and finalizing, needs extracting
+        signed = self.nodes[1].walletprocesspsbt(updated)['psbt']
+        analyzed = self.nodes[0].analyzepsbt(signed)
+        assert analyzed['inputs'][0]['has_utxo'] and analyzed['inputs'][0]['is_final'] and analyzed['next'] == 'extractor'
 
 if __name__ == '__main__':
     PSBTTest().main()
