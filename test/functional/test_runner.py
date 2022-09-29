@@ -97,6 +97,9 @@ BASE_SCRIPTS = [
     'feature_block.py',
     'rpc_fundrawtransaction.py --legacy-wallet',
     'rpc_fundrawtransaction.py --descriptors',
+    # ITCOIN_SPECIFIC - START
+    'rpc_itcoin_testblockvalidity.py',
+    # ITCOIN_SPECIFIC - END
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
     'feature_segwit.py --legacy-wallet',
