@@ -951,18 +951,14 @@ BOOST_AUTO_TEST_CASE(muhash_tests)
 static void Test_pkcs5_pbkdf2_hmacsha512(
         std::string password, std::string salt, int iterations, std::string output)
 {
-    std::vector<uint8_t> P, S;
-
-    P.assign(password.begin(), password.end());
-    S.assign(salt.begin(), salt.end());
+    std::vector<uint8_t> P(password.begin(), password.end());
+    std::vector<uint8_t> S(salt.begin(), salt.end());
 
     std::vector<uint8_t> out = pkcs5_pbkdf2_hmacsha512(P, S, iterations);
 
     std::vector<uint8_t> expect = ParseHex(output);
     BOOST_CHECK_EQUAL_COLLECTIONS(out.begin(), out.end(), expect.begin(), expect.end());
 }
-
-
 
 BOOST_AUTO_TEST_CASE(pkcs5_pbkdf2_hmacsha512_tests)
 {

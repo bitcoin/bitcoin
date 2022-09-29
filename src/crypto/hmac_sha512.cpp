@@ -9,7 +9,9 @@
 CHMAC_SHA512::CHMAC_SHA512(const unsigned char* key, size_t keylen)
 {
     unsigned char rkey[128];
-    if (keylen <= 128) {
+    if (keylen == 0) {
+        memset(rkey, 0, 128);
+    } else if (keylen <= 128) {
         memcpy(rkey, key, keylen);
         memset(rkey + keylen, 0, 128 - keylen);
     } else {
