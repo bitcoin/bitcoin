@@ -1292,7 +1292,7 @@ RPCHelpMan sendall()
                         {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
                                               "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                               "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
-                        {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with send_max.",
+                        {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with the send_max, minconf, and maxconf options.",
                             {
                                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                     {
@@ -1307,6 +1307,8 @@ RPCHelpMan sendall()
                         {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                         {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
                         {"send_max", RPCArg::Type::BOOL, RPCArg::Default{false}, "When true, only use UTXOs that can pay for their own fees to maximize the output amount. When 'false' (default), no UTXO is left behind. send_max is incompatible with providing specific inputs."},
+                        {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Require inputs with at least this many confirmations."},
+                        {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
                     },
                     FundTxDoc()
                 ),
@@ -1381,6 +1383,23 @@ RPCHelpMan sendall()
 
             coin_control.fAllowWatchOnly = ParseIncludeWatchonly(options["include_watching"], *pwallet);
 
+            if (options.exists("minconf")) {
+                if (options["minconf"].getInt<int>() < 0)
+                {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid minconf (minconf cannot be negative): %s", options["minconf"].getInt<int>()));
+                }
+
+                coin_control.m_min_depth = options["minconf"].getInt<int>();
+            }
+
+            if (options.exists("maxconf")) {
+                coin_control.m_max_depth = options["maxconf"].getInt<int>();
+
+                if (coin_control.m_max_depth < coin_control.m_min_depth) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconf can't be lower than minconf: %d < %d", coin_control.m_max_depth, coin_control.m_min_depth));
+                }
+            }
+
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
             FeeCalculation fee_calc_out;
@@ -1402,6 +1421,8 @@ RPCHelpMan sendall()
             bool send_max{options.exists("send_max") ? options["send_max"].get_bool() : false};
             if (options.exists("inputs") && options.exists("send_max")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine send_max with specific inputs.");
+            } else if (options.exists("inputs") && (options.exists("minconf") || options.exists("maxconf"))) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine minconf or maxconf with specific inputs.");
             } else if (options.exists("inputs")) {
                 for (const CTxIn& input : rawTx.vin) {
                     if (pwallet->IsSpent(input.prevout)) {

@@ -8,3 +8,4 @@ added to the following RPCs:
 - `fundrawtransaction`
 - `send`
 - `walletcreatefundedpsbt`
+- `sendall`
