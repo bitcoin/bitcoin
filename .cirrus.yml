@@ -30,8 +30,8 @@ base_template: &BASE_TEMPLATE
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
-    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
-    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+    - git fetch $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
+    - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
 
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
