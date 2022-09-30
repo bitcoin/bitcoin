@@ -19,6 +19,8 @@ BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
 {
+    //TODO: Provide raw data for basic scheme as well
+    bls::bls_legacy_scheme.store(true);
     UniValue vectors = read_json(
         std::string(json_tests::trivially_valid, json_tests::trivially_valid + sizeof(json_tests::trivially_valid))
     );
@@ -84,6 +86,8 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
 {
+    //TODO: Provide raw data for basic scheme as well
+    bls::bls_legacy_scheme.store(true);
     UniValue vectors = read_json(
         std::string(json_tests::trivially_invalid, json_tests::trivially_invalid + sizeof(json_tests::trivially_invalid))
     );

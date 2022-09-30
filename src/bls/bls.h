@@ -26,7 +26,11 @@
 #include <mutex>
 #include <unistd.h>
 
-static constexpr bool fLegacyDefault{true};
+#include <atomic>
+
+namespace bls {
+    extern std::atomic<bool> bls_legacy_scheme;
+}
 
 // reversed BLS12-381
 constexpr int BLS_CURVE_ID_SIZE{32};
@@ -44,8 +48,6 @@ class CBLSWrapper
     friend class CBLSPublicKey;
     friend class CBLSSignature;
 
-    bool fLegacy{true};
-
 protected:
     ImplType impl;
     bool fValid{false};
@@ -54,10 +56,8 @@ protected:
 public:
     static constexpr size_t SerSize = _SerSize;
 
-    explicit CBLSWrapper(const bool fLegacyIn = fLegacyDefault) : fLegacy(fLegacyIn)
-    {
-    }
-    explicit CBLSWrapper(const std::vector<unsigned char>& vecBytes, const bool fLegacyIn = fLegacyDefault) : CBLSWrapper<ImplType, _SerSize, C>(fLegacyIn)
+    explicit CBLSWrapper() = default;
+    explicit CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
     {
         SetByteVector(vecBytes);
     }
@@ -69,14 +69,12 @@ public:
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
     }
     CBLSWrapper& operator=(CBLSWrapper&& ref) noexcept
     {
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
         return *this;
     }
 
@@ -98,10 +96,11 @@ public:
 
     void Reset()
     {
-        *(static_cast<C*>(this)) = C(fLegacy);
+        *(static_cast<C*>(this)) = C();
     }
 
-    void SetByteVector(const std::vector<uint8_t>& vecBytes)
+    //TODO: Overwrite function with default value of specificLegacyScheme
+    void SetByteVector(const std::vector<uint8_t>& vecBytes, const bool specificLegacyScheme)
     {
         if (vecBytes.size() != SerSize) {
             Reset();
@@ -112,7 +111,7 @@ public:
             Reset();
         } else {
             try {
-                impl = ImplType::FromBytes(bls::Bytes(vecBytes), fLegacy);
+                impl = ImplType::FromBytes(bls::Bytes(vecBytes), specificLegacyScheme);
                 fValid = true;
             } catch (...) {
                 Reset();
@@ -121,12 +120,23 @@ public:
         cachedHash.SetNull();
     }
 
-    std::vector<uint8_t> ToByteVector() const
+    void SetByteVector(const std::vector<uint8_t>& vecBytes)
+    {
+        SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
+    }
+
+    //TODO: Overwrite function with default value of specificLegacyScheme
+    std::vector<uint8_t> ToByteVector(const bool specificLegacyScheme) const
     {
         if (!fValid) {
             return std::vector<uint8_t>(SerSize, 0);
         }
-        return impl.Serialize(fLegacy);
+        return impl.Serialize(specificLegacyScheme);
+    }
+
+    std::vector<uint8_t> ToByteVector() const
+    {
+        return ToByteVector(bls::bls_legacy_scheme.load());
     }
 
     const uint256& GetHash() const
@@ -137,6 +147,7 @@ public:
         return cachedHash;
     }
 
+    //TODO: Add version with argument (bool specificLegacyScheme)
     bool SetHexStr(const std::string& str)
     {
         if (!IsHex(str)) {
@@ -157,26 +168,42 @@ public:
         s.seek(SerSize);
     }
 
+    //TODO: Overwrite function with default value of specificLegacyScheme
+    template <typename Stream>
+    inline void Serialize(Stream& s, const bool specificLegacyScheme) const
+    {
+        s.write(reinterpret_cast<const char*>(ToByteVector(specificLegacyScheme).data()), SerSize);
+    }
+
     template <typename Stream>
     inline void Serialize(Stream& s) const
     {
-        s.write(reinterpret_cast<const char*>(ToByteVector().data()), SerSize);
+        Serialize(s, bls::bls_legacy_scheme.load());
     }
+
+    //TODO: Overwrite function with default value of specificLegacyScheme
     template <typename Stream>
-    inline void Unserialize(Stream& s, bool checkMalleable = true)
+    inline void Unserialize(Stream& s, const bool specificLegacyScheme, bool checkMalleable = true)
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
         s.read(reinterpret_cast<char*>(vecBytes.data()), SerSize);
-        SetByteVector(vecBytes);
+        SetByteVector(vecBytes, specificLegacyScheme);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
             throw std::ios_base::failure("malleable BLS object");
         }
     }
 
-    inline bool CheckMalleable(const std::vector<uint8_t>& vecBytes) const
+    template <typename Stream>
+    inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
-        if (memcmp(vecBytes.data(), ToByteVector().data(), SerSize)) {
+        Unserialize(s, bls::bls_legacy_scheme.load(), checkMalleable);
+    }
+
+    //TODO: Overwrite function with default value of specificLegacyScheme
+    inline bool CheckMalleable(const std::vector<uint8_t>& vecBytes, const bool specificLegacyScheme) const
+    {
+        if (memcmp(vecBytes.data(), ToByteVector(specificLegacyScheme).data(), SerSize)) {
             // TODO not sure if this is actually possible with the BLS libs. I'm assuming here that somewhere deep inside
             // these libs masking might happen, so that 2 different binary representations could result in the same object
             // representation
@@ -185,10 +212,20 @@ public:
         return true;
     }
 
+    inline bool CheckMalleable(const std::vector<uint8_t>& vecBytes) const
+    {
+        return CheckMalleable(vecBytes, bls::bls_legacy_scheme.load());
+    }
+
+    inline std::string ToString(const bool specificLegacyScheme) const
+    {
+        std::vector<uint8_t> buf = ToByteVector(specificLegacyScheme);
+        return HexStr(buf);
+    }
+
     inline std::string ToString() const
     {
-        std::vector<uint8_t> buf = ToByteVector();
-        return HexStr(buf);
+        return ToString(bls::bls_legacy_scheme.load());
     }
 };
 
@@ -199,13 +236,13 @@ struct CBLSIdImplicit : public uint256
     {
         memcpy(begin(), id.begin(), sizeof(uint256));
     }
-    static CBLSIdImplicit FromBytes(const uint8_t* buffer, const bool fLegacy = false)
+    static CBLSIdImplicit FromBytes(const uint8_t* buffer, const bool fLegacy)
     {
         CBLSIdImplicit instance;
         memcpy(instance.begin(), buffer, sizeof(CBLSIdImplicit));
         return instance;
     }
-    [[nodiscard]] std::vector<uint8_t> Serialize(const bool fLegacy = false) const
+    [[nodiscard]] std::vector<uint8_t> Serialize(const bool fLegacy) const
     {
         return {begin(), end()};
     }
@@ -261,7 +298,7 @@ public:
     CBLSPublicKey() = default;
 
     void AggregateInsecure(const CBLSPublicKey& o);
-    static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks, bool fLegacy = fLegacyDefault);
+    static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
 
     bool PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const CBLSId& id);
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
@@ -282,8 +319,8 @@ public:
     CBLSSignature& operator=(const CBLSSignature&) = default;
 
     void AggregateInsecure(const CBLSSignature& o);
-    static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs, bool fLegacy = fLegacyDefault);
-    static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash, bool fLegacy = fLegacyDefault);
+    static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs);
+    static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash);
 
     void SubInsecure(const CBLSSignature& o);
 
