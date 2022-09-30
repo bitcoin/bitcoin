@@ -66,7 +66,6 @@ public:
 
     size_t size() const { return values.size(); }
 
-    bool getBool() const { return isTrue(); }
     void getObjMap(std::map<std::string,UniValue>& kv) const;
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes) const;
     const UniValue& operator[](const std::string& key) const;
