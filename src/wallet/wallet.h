@@ -250,7 +250,7 @@ private:
     int nWalletVersion GUARDED_BY(cs_wallet){FEATURE_BASE};
 
     /** The next scheduled rebroadcast of wallet transactions. */
-    std::atomic<int64_t> m_next_resend{GetDefaultNextResend()};
+    int64_t m_next_resend{GetDefaultNextResend()};
     /** Whether this wallet will submit newly created transactions to the node's mempool and
      * prompt rebroadcasts (see ResendWalletTransactions()). */
     bool fBroadcastTransactions = false;
