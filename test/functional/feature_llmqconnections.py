@@ -7,7 +7,9 @@ import time
 
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_greater_than_or_equal, force_finish_mnsync
-
+# Probes should age after this many seconds.
+# NOTE: mine_quorum() can bump mocktime quite often internally so make sure this number is high enough.
+MAX_AGE = 120
 '''
 feature_llmqconnections.py
 
@@ -65,7 +67,7 @@ class LLMQConnections(DashTestFramework):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 4)
 
         self.log.info("checking that probes age")
-        self.bump_mocktime(60)
+        self.bump_mocktime(MAX_AGE)
         for mn in self.get_quorum_masternodes(q):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
@@ -126,7 +128,7 @@ class LLMQConnections(DashTestFramework):
                 peerMap[p['verified_proregtx_hash']] = p
         for mn in self.get_quorum_masternodes(q):
             pi = mnMap[mn.proTxHash]
-            if pi['metaInfo']['lastOutboundSuccessElapsed'] < 60:
+            if pi['metaInfo']['lastOutboundSuccessElapsed'] < MAX_AGE:
                 count += 1
             elif check_peers and mn.proTxHash in peerMap:
                 count += 1

@@ -64,6 +64,7 @@
 #include <governance/governance.h>
 #include <services/assetconsensus.h>
 #include <stdexcept>
+#include <llmq/quorums_blockprocessor.h>
 
 using kernel::ValidationCacheSizes;
 using node::ApplyArgsManOptions;
@@ -176,6 +177,7 @@ BasicTestingSetup::~BasicTestingSetup()
     pnevmtxmintdb.reset();
     pblockindexdb.reset();
     pnevmdatadb.reset();
+    governance.reset();
     deterministicMNManager.reset();
     evoDb.reset();
     SetMockTime(0s); // Reset mocktime for following tests
@@ -183,7 +185,6 @@ BasicTestingSetup::~BasicTestingSetup()
     fs::remove_all(m_path_root);
     gArgs.ClearArgs();
 }
-
 ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : BasicTestingSetup(chainName, extra_args)
 {
@@ -197,7 +198,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args));
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node));
-
     m_cache_sizes = CalculateCacheSizes(m_args);
 
     const ChainstateManager::Options chainman_opts{
@@ -208,7 +208,15 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts);
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
     // SYSCOIN
-    governance.reset(new CGovernanceManager(*m_node.chainman));
+    m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
+    m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
+                                               /*deterministic=*/false,
+                                               m_node.args->GetIntArg("-checkaddrman", 0));
+    m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
+                                       m_node.banman.get(), *m_node.chainman,
+                                       *m_node.mempool, false);
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
 }
@@ -232,7 +240,6 @@ ChainTestingSetup::~ChainTestingSetup()
     // SYSCOIN
     llmq::DestroyLLMQSystem();
     m_node.chainman.reset();
-    governance.reset();
 }
 
 void TestingSetup::LoadVerifyActivateChainstate()
@@ -369,7 +376,7 @@ CBlock TestChain100Setup::CreateBlock(
         if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(),  *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         ds << cbTx;
@@ -383,7 +390,7 @@ CBlock TestChain100Setup::CreateBlock(
         if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), *llmq::quorumBlockProcessor, qc.cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         ds << qc;

@@ -837,8 +837,17 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     // SYSCOIN
-    void OpenMasternodeConnection(const CAddress& addrConnect, bool isProbe = false);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool masternode_connection = false, bool m_masternode_probe_connection = false);
+    enum class MasternodeConn {
+        IsNotConnection,
+        IsConnection,
+    };
+
+    enum class MasternodeProbeConn {
+        IsNotConnection,
+        IsConnection,
+    };
+    void OpenMasternodeConnection(const CAddress& addrConnect, MasternodeProbeConn probe = MasternodeProbeConn::IsConnection);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn masternode_connection = MasternodeConn::IsNotConnection, MasternodeProbeConn masternode_probe_connection = MasternodeProbeConn::IsNotConnection);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);

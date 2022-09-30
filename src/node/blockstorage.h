@@ -31,6 +31,7 @@ class ChainstateManager;
 // SYSCOIN
 class CDSNotificationInterface;
 class CDeterministicMNManager;
+class CActiveMasternodeManager;
 class CBlockHeader;
 class WalletInitInterface;
 struct CCheckpointData;
@@ -227,6 +228,6 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, c
 bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 // SYSCOIN
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node);
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, std::unique_ptr<CActiveMasternodeManager> &activeMasternodeManager, const WalletInitInterface &g_wallet_init_interface, NodeContext& node);
 }
 #endif // SYSCOIN_NODE_BLOCKSTORAGE_H

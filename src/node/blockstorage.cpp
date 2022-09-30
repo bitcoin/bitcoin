@@ -26,7 +26,7 @@
 #include <walletinitinterface.h>
 #include <primitives/block.h>
 #include <node/context.h>
-
+#include <masternode/activemasternode.h>
 #include <map>
 #include <unordered_map>
 
@@ -896,7 +896,7 @@ struct CImportingNow {
     }
 };
 
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, const WalletInitInterface &g_wallet_init_interface, node::NodeContext& node)
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args, const fs::path& mempool_path, CDSNotificationInterface* pdsNotificationInterface, std::unique_ptr<CDeterministicMNManager> &deterministicMNManager, std::unique_ptr<CActiveMasternodeManager> &activeMasternodeManager, const WalletInitInterface &g_wallet_init_interface, node::NodeContext& node)
 {
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_LOAD_BLOCKS);
     ScheduleBatchPriority();
@@ -977,7 +977,10 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
 
-        
+        if (fMasternodeMode) {
+            assert(activeMasternodeManager);
+            activeMasternodeManager->Init(chainman.ActiveChain().Tip());
+        }
         g_wallet_init_interface.AutoLockMasternodeCollaterals(node);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");

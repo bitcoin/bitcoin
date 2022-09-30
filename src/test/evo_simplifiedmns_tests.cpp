@@ -13,6 +13,8 @@ BOOST_FIXTURE_TEST_SUITE(evo_simplifiedmns_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
 {
+    //TODO: Provide raw data for basic scheme as well
+    bls::bls_legacy_scheme.store(true);
     std::vector<CSimplifiedMNListEntry> entries;
     for (size_t i = 0; i < 15; i++) {
         CSimplifiedMNListEntry smle;

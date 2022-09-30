@@ -75,6 +75,7 @@ public:
     explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
+    bool operator==(const CSimplifiedMNList& rhs) const;
 };
 
 /// P2P messages

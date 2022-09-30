@@ -51,6 +51,9 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
         } else if (GetTime<std::chrono::seconds>() - pnode->m_connected < std::chrono::seconds(5)) {
             // non-verified, give it some time to verify itself
             return;
+        } else if (pnode->qwatch) {
+            // keep watching nodes
+            return;
         }
         // we're not disconnecting masternode probes for at least a few seconds
         if (pnode->m_masternode_probe_connection && (GetTime<std::chrono::seconds>() - pnode->m_connected) < std::chrono::seconds(5)) return;

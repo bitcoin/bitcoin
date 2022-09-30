@@ -2906,8 +2906,7 @@ bool Chainstate::FlushStateToDisk(
     bool full_flush_completed = false;
 
     const size_t coins_count = CoinsTip().GetCacheSize();
-    // SYSCOIN
-    const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage() + evoDb->GetMemoryUsage();
+    const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
     try {
     {
         bool fFlushForPrune = false;
@@ -2969,8 +2968,10 @@ bool Chainstate::FlushStateToDisk(
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > nLastWrite + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > nLastFlush + DATABASE_FLUSH_INTERVAL;
-        // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        // SYSCOIN The evodb cache is too large
+        bool fEvoDbCacheCritical = mode == FlushStateMode::IF_NEEDED && evoDb != nullptr && evoDb->GetMemoryUsage() >= (64 << 20);
+        // SYSCOIN Combine all conditions that result in a full cache flush.
+        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fEvoDbCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Ensure we can write block index

@@ -100,9 +100,10 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     ChainstateManager& chainman;
-    mutable RecursiveMutex quorumsCacheCs;
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(quorumsCacheCs);
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(quorumsCacheCs);
+    mutable RecursiveMutex cs_map_quorums;
+    mutable RecursiveMutex cs_scan_quorums;
+    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
+    mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
 
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
@@ -130,7 +131,7 @@ private:
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew) const;
 
-    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
+    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const EXCLUSIVE_LOCKS_REQUIRED(cs_map_quorums);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;

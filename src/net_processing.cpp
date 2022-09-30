@@ -1895,8 +1895,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
     {
     case MSG_SPORK:
     {
-        CSporkMessage spork;
-        return sporkManager.GetSporkByHash(hash, spork);
+        return sporkManager.GetSporkByHash(hash).has_value();
     }
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
@@ -2300,9 +2299,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             bool push = false;
             switch(inv.type) {
                 case(MSG_SPORK): {
-                    CSporkMessage spork;
-                    if(sporkManager.GetSporkByHash(inv.hash, spork)) {
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                    if (auto opt_spork = sporkManager.GetSporkByHash(inv.hash)) {
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
                         push = true;
                     }
                     break;
@@ -3549,8 +3547,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // they may wish to request compact blocks from us
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
         }
-        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom.IsMasternodeConnection()) {
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
+        // SYSCOIN
+        if(!pfrom.IsBlockOnlyConn()) {
+            if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && m_connman.IsMasternodeQuorumNode(&pfrom)) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
+            }
         }
 
         if (m_txreconciliation) {

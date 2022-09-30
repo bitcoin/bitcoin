@@ -383,6 +383,12 @@ void Shutdown(NodeContext& node)
     if (fMasternodeMode) {
         UnregisterValidationInterface(activeMasternodeManager.get());
     }
+    {
+        LOCK(activeMasternodeInfoCs);
+        // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
+        activeMasternodeInfo.blsKeyOperator.reset();
+        activeMasternodeInfo.blsPubKeyOperator.reset();
+    }
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
@@ -391,12 +397,6 @@ void Shutdown(NodeContext& node)
     node.fee_estimator.reset();
     node.chainman.reset();
     node.scheduler.reset();
-     {
-        LOCK(activeMasternodeInfoCs);
-        // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-        activeMasternodeInfo.blsKeyOperator.reset();
-        activeMasternodeInfo.blsPubKeyOperator.reset();
-    }
     activeMasternodeManager.reset();
     governance.reset();
     // SYSCOIN
@@ -1262,19 +1262,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fRegTest = args.GetBoolArg("-regtest", false);
     fSigNet = args.GetBoolArg("-signet", false);
     fTestNet = args.GetBoolArg("-testnet", false);
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    fMasternodeMode = !strMasterNodeBLSPrivKey.empty();
-    CBLSSecretKey keyOperator;
-    if(fMasternodeMode) {
-        if(!IsHex(strMasterNodeBLSPrivKey))
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
-        keyOperator.SetByteVector(binKey);
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-    }
-
     auto opt_max_upload = ParseByteUnits(args.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET), ByteUnit::M);
     if (!opt_max_upload) {
         return InitError(strprintf(_("Unable to parse -maxuploadtarget: '%s'"), args.GetArg("-maxuploadtarget", "")));
@@ -1328,6 +1315,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     // SYSCOIN
+    assert(activeMasternodeInfo.blsKeyOperator == nullptr);
+    assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            LOCK(activeMasternodeInfoCs);
+            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
+        }
+        LogPrintf("MASTERNODE:\n  blsPubKeyOperator: %s\n", activeMasternodeInfo.blsPubKeyOperator->ToString());
+    } else {
+        LOCK(activeMasternodeInfoCs);
+        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    }
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
         vSporkAddresses = args.GetArgs("-sporkaddr");
@@ -1793,6 +1801,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
     RegisterValidationInterface(pdsNotificationInterface);
     RegisterValidationInterface(node.peerman.get());
+    if (fMasternodeMode) {
+        // Create and register activeMasternodeManager, will init later in ThreadImport
+        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
+        RegisterValidationInterface(activeMasternodeManager.get());
+    }
     ChainstateManager& chainman = *Assert(node.chainman);
 
     if(fNEVMConnection) {
@@ -1946,7 +1959,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args, &node] {
         // SYSCOIN
-        ThreadImport(chainman, vImportFiles, args, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, pdsNotificationInterface, deterministicMNManager, g_wallet_init_interface, node);
+        ThreadImport(chainman, vImportFiles, args, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, pdsNotificationInterface, deterministicMNManager, activeMasternodeManager, g_wallet_init_interface, node);
     });
     // Wait for genesis block to be processed
     {
@@ -1969,34 +1982,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(fDisableGovernance && fMasternodeMode) {
         return InitError(Untranslated("You can not disable governance validation on a masternode."));
     }
-    {
-        LOCK(activeMasternodeInfoCs);
-        activeMasternodeInfo.blsKeyOperator.reset();
-        activeMasternodeInfo.blsPubKeyOperator.reset();
-    }
-    if(fMasternodeMode) {
-        LogPrintf("MASTERNODE:\n");
-        {
-            LOCK(activeMasternodeInfoCs);
-            activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey(keyOperator));
-            activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey(activeMasternodeInfo.blsKeyOperator->GetPublicKey()));
-        }
-
-
-        LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
-        // Create register and init activeMasternodeManager
-        activeMasternodeManager.reset();
-        activeMasternodeManager.reset(new CActiveMasternodeManager(*node.connman));
-        RegisterValidationInterface(activeMasternodeManager.get());
-        {
-            LOCK(cs_main);
-            activeMasternodeManager->Init(node.chainman->ActiveTip());
-        }
-    } else {
-        LOCK(activeMasternodeInfoCs);
-        activeMasternodeInfo.blsKeyOperator.reset(new CBLSSecretKey());
-        activeMasternodeInfo.blsPubKeyOperator.reset(new CBLSPublicKey());
-    }
+    
     LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must define -zmqpubnevm on a masternode."));

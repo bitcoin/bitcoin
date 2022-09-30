@@ -213,7 +213,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, m_chainstate.CoinsTip(), &qc)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
-        if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state, &qc)) {
+        if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state, &qc)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
         }
 

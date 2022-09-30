@@ -270,6 +270,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
         self.log.info("Wait for dip0008 activation")
         while self.nodes[0].getblockcount() < 200:
+            self.bump_mocktime(10)
             self.generate(self.nodes[0], 10)
             if slow_mode:
                 self.sync_blocks()

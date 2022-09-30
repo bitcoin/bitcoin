@@ -25,6 +25,8 @@ BENCHMARKS =
 
 SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
 SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
+SYSCOIN_INCLUDES+=-I$(srcdir)/bls-dash/include -I$(srcdir)/bls-dash/depends/relic/include -I$(srcdir)/bls-dash/depends/minialloc/include
+SYSCOIN_INCLUDES+=-I$(srcdir)/immer
 
 if EMBEDDED_CHIABLS
 LIBCHIA = bls-dash/build/src/libbls-dash.a
@@ -1164,6 +1166,8 @@ libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
 libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL
+libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/bls-dash/include -I$(srcdir)/bls-dash/depends/relic/include -I$(srcdir)/bls-dash/depends/minialloc/include
+libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/immer
 libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
@@ -1227,7 +1231,9 @@ BLSDASH_DIST += bls-dash/cmake_modules
 BLSDASH_DIST += bls-dash/contrib
 BLSDASH_DIST += bls-dash/src
 
-EXTRA_DIST = $(CTAES_DIST) $(BLSDASH_DIST) immer
+IMMER_DIST = immer/immer
+
+EXTRA_DIST = $(CTAES_DIST) $(BLSDASH_DIST) $(IMMER_DIST)
 
 
 config/syscoin-config.h: config/stamp-h1

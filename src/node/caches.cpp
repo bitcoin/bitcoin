@@ -30,7 +30,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     nTotalCache -= sizes.coins_db;
     sizes.coins = nTotalCache; // the rest goes to in-memory cache
     // SYSCOIN
-    sizes.evo_db = 1024 * 1024 * 16; // TODO
+    sizes.evo_db = 1024 * 1024 * 64; // TODO
     return sizes;
 }
 } // namespace node
