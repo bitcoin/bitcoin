@@ -1903,6 +1903,23 @@ std::set<uint256> CWallet::GetTxConflicts(const CWalletTx& wtx) const
     return result;
 }
 
+bool CWallet::ShouldResend() const
+{
+    // Don't attempt to resubmit if the wallet is configured to not broadcast
+    if (!fBroadcastTransactions) return false;
+
+    // During reindex, importing and IBD, old wallet transactions become
+    // unconfirmed. Don't resend them as that would spam other nodes.
+    // We only allow forcing mempool submission when not relaying to avoid this spam.
+    if (!chain().isReadyToBroadcast()) return false;
+
+    // Do this infrequently and randomly to avoid giving away
+    // that these are our transactions.
+    if (GetTime() < m_next_resend) return false;
+
+    return true;
+}
+
 // Resubmit transactions from the wallet to the mempool, optionally asking the
 // mempool to relay them. On startup, we will do this for all unconfirmed
 // transactions but will not ask the mempool to relay them. We do this on startup
@@ -1934,14 +1951,6 @@ void CWallet::ResubmitWalletTransactions(bool relay, bool force)
     // even if forcing.
     if (!fBroadcastTransactions) return;
 
-    // During reindex, importing and IBD, old wallet transactions become
-    // unconfirmed. Don't resend them as that would spam other nodes.
-    // We only allow forcing mempool submission when not relaying to avoid this spam.
-    if (!force && relay && !chain().isReadyToBroadcast()) return;
-
-    // Do this infrequently and randomly to avoid giving away
-    // that these are our transactions.
-    if (!force && GetTime() < m_next_resend) return;
     // resend 12-36 hours from now, ~1 day on average.
     m_next_resend = GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60);
 
@@ -1979,6 +1988,7 @@ void CWallet::ResubmitWalletTransactions(bool relay, bool force)
 void MaybeResendWalletTxs(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
+        if (!pwallet->ShouldResend()) continue;
         pwallet->ResubmitWalletTransactions(/*relay=*/true, /*force=*/false);
     }
 }
