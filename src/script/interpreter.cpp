@@ -1497,6 +1497,11 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
 {
     // Do not allow overriding a sync function if one is already set
     if (m_bip119_cache_synchronizer) assert(f == nullptr);
+    // No need to check if f is nullptr, since we'll patch in a single threaded
+    // cache filler later. (previous line guarantees m_bip119_cache_synchronizer
+    // is known to be nullptr here)
+    else m_bip119_cache_synchronizer = f;
+
     assert(!m_spent_outputs_ready);
 
     m_spent_outputs = std::move(spent_outputs);
