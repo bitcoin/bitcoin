@@ -21,6 +21,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
+#include <random.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -1920,11 +1921,12 @@ bool CWallet::ShouldResend() const
     return true;
 }
 
+int64_t CWallet::GetDefaultNextResend() { return GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60); }
+
 // Resubmit transactions from the wallet to the mempool, optionally asking the
 // mempool to relay them. On startup, we will do this for all unconfirmed
 // transactions but will not ask the mempool to relay them. We do this on startup
-// to ensure that our own mempool is aware of our transactions, and to also
-// initialize m_next_resend so that the actual rebroadcast is scheduled. There
+// to ensure that our own mempool is aware of our transactions. There
 // is a privacy side effect here as not broadcasting on startup also means that we won't
 // inform the world of our wallet's state, particularly if the wallet (or node) is not
 // yet synced.
@@ -1950,9 +1952,6 @@ void CWallet::ResubmitWalletTransactions(bool relay, bool force)
     // Don't attempt to resubmit if the wallet is configured to not broadcast,
     // even if forcing.
     if (!fBroadcastTransactions) return;
-
-    // resend 12-36 hours from now, ~1 day on average.
-    m_next_resend = GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60);
 
     int submitted_tx_count = 0;
 
@@ -1990,6 +1989,7 @@ void MaybeResendWalletTxs(WalletContext& context)
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
         pwallet->ResubmitWalletTransactions(/*relay=*/true, /*force=*/false);
+        pwallet->SetNextResend();
     }
 }
 
