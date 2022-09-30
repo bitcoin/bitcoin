@@ -270,6 +270,10 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
 
     if (WriteBlock(*block, pindex)) {
+        // Setting the best block index is intentionally the last step of this
+        // function, so BlockUntilSyncedToCurrentChain callers waiting for the
+        // best block index to be updated can rely on the block being fully
+        // processed, and the index object being safe to delete.
         SetBestBlockIndex(pindex);
     } else {
         FatalError("%s: Failed to write block %s to index",
@@ -381,10 +385,17 @@ IndexSummary BaseIndex::GetSummary() const
 void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
     assert(!fPruneMode || AllowPrune());
 
-    m_best_block_index = block;
     if (AllowPrune() && block) {
         PruneLockInfo prune_lock;
         prune_lock.height_first = block->nHeight;
         WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
     }
+
+    // Intentionally set m_best_block_index as the last step in this function,
+    // after updating prune locks above, and after making any other references
+    // to *this, so the BlockUntilSyncedToCurrentChain function (which checks
+    // m_best_block_index as an optimization) can be used to wait for the last
+    // BlockConnected notification and safely assume that prune locks are
+    // updated and that the index object is safe to delete.
+    m_best_block_index = block;
 }
