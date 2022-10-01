@@ -66,7 +66,7 @@ def signet_txs(block, challenge):
 
     return spend, to_spend
 
-def do_decode_psbt(b64psbt):
+def decode_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
     assert len(psbt.tx.vin) == 1
@@ -166,7 +166,7 @@ def do_genpsbt(args):
     print(psbt)
 
 def do_solvepsbt(args):
-    block, signet_solution = do_decode_psbt(sys.stdin.read())
+    block, signet_solution = decode_psbt(sys.stdin.read())
     block = finish_block(block, signet_solution, args.grind_cmd)
     print(block.serialize().hex())
 
@@ -398,7 +398,7 @@ def do_generate(args):
             logging.debug("Generated PSBT: %s" % (psbt,))
             sys.stderr.write("PSBT signing failed\n")
             return 1
-        block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
+        block, signet_solution = decode_psbt(psbt_signed["psbt"])
         block = finish_block(block, signet_solution, args.grind_cmd)
 
         # submit block
