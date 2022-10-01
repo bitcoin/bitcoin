@@ -32,12 +32,6 @@ SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
 RE_MULTIMINER = re.compile(r"^(\d+)(-(\d+))?/(\d+)$")
 
-def create_coinbase(height, value, spk):
-    cb = CTransaction()
-    cb.vin = [CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff)]
-    cb.vout = [CTxOut(value, spk)]
-    return cb
-
 def signet_txs(block, challenge):
     # assumes signet solution has not been added yet so does not need
     # to be removed
@@ -103,7 +97,9 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     signet_spk = tmpl["signet_challenge"]
     signet_spk_bin = bytes.fromhex(signet_spk)
 
-    cbtx = create_coinbase(height=tmpl["height"], value=tmpl["coinbasevalue"], spk=reward_spk)
+    cbtx = CTransaction()
+    cbtx.vin = [CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(tmpl["height"]), 0xffffffff)]
+    cbtx.vout = [CTxOut(tmpl["coinbasevalue"], reward_spk)]
     cbtx.vin[0].nSequence = 2**32-2
     cbtx.rehash()
 
