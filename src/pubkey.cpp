@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -211,16 +211,16 @@ bool XOnlyPubKey::VerifySchnorr(const uint256& msg, Span<const unsigned char> si
     return secp256k1_schnorrsig_verify(secp256k1_context_verify, sigbytes.data(), msg.begin(), 32, &pubkey);
 }
 
-static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
+static const HashWriter HASHER_TAPTWEAK{TaggedHash("TapTweak")};
 
 uint256 XOnlyPubKey::ComputeTapTweakHash(const uint256* merkle_root) const
 {
     if (merkle_root == nullptr) {
         // We have no scripts. The actual tweak does not matter, but follow BIP341 here to
         // allow for reproducible tweaking.
-        return (CHashWriter(HASHER_TAPTWEAK) << m_keydata).GetSHA256();
+        return (HashWriter{HASHER_TAPTWEAK} << m_keydata).GetSHA256();
     } else {
-        return (CHashWriter(HASHER_TAPTWEAK) << m_keydata << *merkle_root).GetSHA256();
+        return (HashWriter{HASHER_TAPTWEAK} << m_keydata << *merkle_root).GetSHA256();
     }
 }
 
@@ -352,7 +352,20 @@ void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || !pubkey.IsFullyValid()) pubkey = CPubKey();
 }
 
+void CExtPubKey::EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const
+{
+    memcpy(code, version, 4);
+    Encode(&code[4]);
+}
+
+void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE])
+{
+    memcpy(version, code, 4);
+    Decode(&code[4]);
+}
+
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
+    if (nDepth == std::numeric_limits<unsigned char>::max()) return false;
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
     memcpy(out.vchFingerprint, &id, 4);

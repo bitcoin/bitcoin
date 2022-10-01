@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2020 The Bitcoin Core developers
+// Copyright (c) 2013-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,8 +91,9 @@ void static RandomScript(CScript &script) {
         script << oplist[InsecureRandRange(std::size(oplist))];
 }
 
-void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
-    tx.nVersion = InsecureRand32();
+void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
+{
+    tx.nVersion = int(InsecureRand32());
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (InsecureRandBool()) ? InsecureRand32() : 0;
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     int nRandomTests = 50000;
     #endif
     for (int i=0; i<nRandomTests; i++) {
-        int nHashType = InsecureRand32();
+        int nHashType{int(InsecureRand32())};
         CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
     UniValue tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        UniValue test = tests[idx];
+        const UniValue& test = tests[idx];
         std::string strTest = test.write();
         if (test.size() < 1) // Allow for extra stuff (useful for comments)
         {
@@ -183,8 +184,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           // deserialize test data
           raw_tx = test[0].get_str();
           raw_script = test[1].get_str();
-          nIn = test[2].get_int();
-          nHashType = test[3].get_int();
+          nIn = test[2].getInt<int>();
+          nHashType = test[3].getInt<int>();
           sigHashHex = test[4].get_str();
 
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the invalidateblock RPC."""
@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
 )
 
 
@@ -22,12 +23,12 @@ class InvalidateTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Make sure we repopulate setBlockIndexCandidates after InvalidateBlock:")
         self.log.info("Mine 4 blocks on Node 0")
-        self.generatetoaddress(self.nodes[0], 4, self.nodes[0].get_deterministic_priv_key().address)
+        self.generate(self.nodes[0], 4, sync_fun=self.no_op)
         assert_equal(self.nodes[0].getblockcount(), 4)
         besthash_n0 = self.nodes[0].getbestblockhash()
 
         self.log.info("Mine competing 6 blocks on Node 1")
-        self.generatetoaddress(self.nodes[1], 6, self.nodes[1].get_deterministic_priv_key().address)
+        self.generate(self.nodes[1], 6, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getblockcount(), 6)
 
         self.log.info("Connect nodes to force a reorg")
@@ -53,14 +54,14 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[2].invalidateblock(self.nodes[2].getblockhash(3))
         assert_equal(self.nodes[2].getblockcount(), 2)
         self.log.info("..and then mine a block")
-        self.generatetoaddress(self.nodes[2], 1, self.nodes[2].get_deterministic_priv_key().address)
+        self.generate(self.nodes[2], 1, sync_fun=self.no_op)
         self.log.info("Verify all nodes are at the right height")
         self.wait_until(lambda: self.nodes[2].getblockcount() == 3, timeout=5)
         self.wait_until(lambda: self.nodes[0].getblockcount() == 4, timeout=5)
         self.wait_until(lambda: self.nodes[1].getblockcount() == 4, timeout=5)
 
         self.log.info("Verify that we reconsider all ancestors as well")
-        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR)
+        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-1])
@@ -72,7 +73,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that we reconsider all descendants")
-        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR)
+        blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-2])
@@ -81,6 +82,10 @@ class InvalidateTest(BitcoinTestFramework):
         # Reconsider only the previous tip
         self.nodes[1].reconsiderblock(blocks[-4])
         # Should be back at the tip by now
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+
+        self.log.info("Verify that invalidating an unknown block throws an error")
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
 

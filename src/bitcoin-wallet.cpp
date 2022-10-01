@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,14 +8,22 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <clientversion.h>
+#include <compat/compat.h>
 #include <interfaces/init.h>
+#include <key.h>
 #include <logging.h>
+#include <pubkey.h>
+#include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 #include <wallet/wallettool.h>
 
+#include <exception>
 #include <functional>
+#include <string>
+#include <tuple>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
@@ -42,27 +50,35 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
 }
 
-static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
+static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[])
 {
     SetupWalletToolArgs(args);
     std::string error_message;
     if (!args.ParseParameters(argc, argv, error_message)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
-        return false;
+        return EXIT_FAILURE;
     }
-    if (argc < 2 || HelpRequested(args) || args.IsArgSet("-version")) {
+    const bool missing_args{argc < 2};
+    if (missing_args || HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
-        if (!args.IsArgSet("-version")) {
+
+        if (args.IsArgSet("-version")) {
+            strUsage += FormatParagraph(LicenseInfo());
+        } else {
             strUsage += "\n"
                         "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
                         "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
-                        "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n"
+                        "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet arguments.\n\n"
                         "Usage:\n"
                         "  bitcoin-wallet [options] <command>\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
         tfm::format(std::cout, "%s", strUsage);
-        return false;
+        if (missing_args) {
+            tfm::format(std::cerr, "Error: too few parameters\n");
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
     }
 
     // check for printtoconsole, allow -debug
@@ -70,15 +86,15 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
 
     if (!CheckDataDirOption()) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
-        return false;
+        return EXIT_FAILURE;
     }
     // Check for chain settings (Params() calls are only valid after this clause)
     SelectParams(args.GetChainName());
 
-    return true;
+    return std::nullopt;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
 #ifdef WIN32
@@ -95,7 +111,7 @@ int main(int argc, char* argv[])
     SetupEnvironment();
     RandomInit();
     try {
-        if (!WalletAppInit(args, argc, argv)) return EXIT_FAILURE;
+        if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "WalletAppInit()");
         return EXIT_FAILURE;
@@ -116,7 +132,7 @@ int main(int argc, char* argv[])
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(args, command->command)) {
+    if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }
     ECC_Stop();

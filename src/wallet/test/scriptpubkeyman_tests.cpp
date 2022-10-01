@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 
 // Test LegacyScriptPubKeyMan::CanProvide behavior, making sure it returns true
@@ -17,7 +18,7 @@ BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(CanProvide)
 {
     // Set up wallet and keyman variables.
-    CWallet wallet(m_node.chain.get(), "", CreateDummyWalletDatabase());
+    CWallet wallet(m_node.chain.get(), "", m_args, CreateDummyWalletDatabase());
     LegacyScriptPubKeyMan& keyman = *wallet.GetOrCreateLegacyScriptPubKeyMan();
 
     // Make a 1 of 2 multisig script
@@ -39,3 +40,4 @@ BOOST_AUTO_TEST_CASE(CanProvide)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

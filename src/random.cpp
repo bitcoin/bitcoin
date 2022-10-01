@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,16 +10,18 @@
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
-#include <compat.h> // for Windows API
+#include <compat/compat.h>
 #include <wincrypt.h>
 #endif
-#include <logging.h>  // for LogPrintf()
+#include <logging.h>
 #include <randomenv.h>
 #include <support/allocators/secure.h>
+#include <span.h>
 #include <sync.h>     // for Mutex
 #include <util/time.h> // for GetTimeMicros()
 
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <thread>
 
 #ifndef WIN32
@@ -31,10 +33,8 @@
 #include <sys/syscall.h>
 #include <linux/random.h>
 #endif
-#if defined(HAVE_GETENTROPY) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
-#include <unistd.h>
-#endif
 #if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+#include <unistd.h>
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
@@ -97,7 +97,7 @@ static void ReportHardwareRand()
     // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
     if (g_rdseed_supported) {
-        LogPrintf("Using RdSeed as additional entropy source\n");
+        LogPrintf("Using RdSeed as an additional entropy source\n");
     }
     if (g_rdrand_supported) {
         LogPrintf("Using RdRand as an additional entropy source\n");
@@ -304,16 +304,14 @@ void GetOSRand(unsigned char *ent32)
             RandFailure();
         }
     }
-#elif defined(HAVE_GETENTROPY) && defined(__OpenBSD__)
-    /* On OpenBSD this can return up to 256 bytes of entropy, will return an
-     * error if more are requested.
-     * The call cannot return less than the requested number of bytes.
-       getentropy is explicitly limited to openbsd here, as a similar (but not
-       the same) function may exist on other platforms via glibc.
+#elif defined(__OpenBSD__)
+    /* OpenBSD. From the arc4random(3) man page:
+       "Use of these functions is encouraged for almost all random number
+        consumption because the other interfaces are deficient in either
+        quality, portability, standardization, or availability."
+       The function call is always successful.
      */
-    if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
-        RandFailure();
-    }
+    arc4random_buf(ent32, NUM_OS_RANDOM_BYTES);
     // Silence a compiler warning about unused function.
     (void)GetDevURandom;
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
@@ -372,11 +370,9 @@ public:
         InitHardwareRand();
     }
 
-    ~RNGState()
-    {
-    }
+    ~RNGState() = default;
 
-    void AddEvent(uint32_t event_info) noexcept
+    void AddEvent(uint32_t event_info) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         LOCK(m_events_mutex);
 
@@ -390,7 +386,7 @@ public:
     /**
      * Feed (the hash of) all events added through AddEvent() to hasher.
      */
-    void SeedEvents(CSHA512& hasher) noexcept
+    void SeedEvents(CSHA512& hasher) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         // We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
         // since we want it to be fast as network peers may be able to trigger it repeatedly.
@@ -409,7 +405,7 @@ public:
      *
      * If this function has never been called with strong_seed = true, false is returned.
      */
-    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept
+    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         assert(num <= 32);
         unsigned char buf[64];
@@ -581,27 +577,22 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
     }
 }
 
-void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
+void GetRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST); }
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW); }
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
 bool g_mock_deterministic_tests{false};
 
-uint64_t GetRand(uint64_t nMax) noexcept
+uint64_t GetRandInternal(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
-}
-
-int GetRandInt(int nMax) noexcept
-{
-    return GetRand(nMax);
 }
 
 uint256 GetRandHash() noexcept
 {
     uint256 hash;
-    GetRandBytes((unsigned char*)&hash, sizeof(hash));
+    GetRandBytes(hash);
     return hash;
 }
 
@@ -713,4 +704,10 @@ void RandomInit()
     ProcRand(nullptr, 0, RNGLevel::FAST);
 
     ReportHardwareRand();
+}
+
+std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval)
+{
+    double unscaled = -std::log1p(GetRand(uint64_t{1} << 48) * -0.0000000000000035527136788 /* -1/2^48 */);
+    return now + std::chrono::duration_cast<std::chrono::microseconds>(unscaled * average_interval + 0.5us);
 }

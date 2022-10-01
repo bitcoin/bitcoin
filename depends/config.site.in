@@ -62,7 +62,7 @@ if test -z "$with_gui" && test -n "@no_qt@"; then
   with_gui=no
 fi
 
-if test -n "@debug@" && test -z "@no_qt@" && test "x$with_gui" != xno; then
+if test -n "@debug@" && test -z "@no_qt@" && test "$with_gui" != "no"; then
   with_gui=qt5_debug
 fi
 
@@ -70,20 +70,23 @@ if test -z "$enable_zmq" && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
-if test "@host_os@" = darwin; then
-  BREW=no
-  PORT=no
+if test -z "$enable_usdt" && test -n "@no_usdt@"; then
+  enable_usdt=no
 fi
 
-PATH="${depends_prefix}/native/bin:${PATH}"
+if test "@host_os@" = darwin; then
+  BREW=no
+fi
+
+if test -z "$enable_lto" && test -n "@lto@"; then
+  enable_lto=yes
+fi
+
 PKG_CONFIG="$(which pkg-config) --static"
 
-# These two need to remain exported because pkg-config does not see them
-# otherwise. That means they must be unexported at the end of configure.ac to
-# avoid ruining the cache. Sigh.
-export PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
+PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
 if test -z "@allow_host_packages@"; then
-  export PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
+  PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
 fi
 
 CPPFLAGS="-I${depends_prefix}/include/ ${CPPFLAGS}"
@@ -99,7 +102,7 @@ PYTHONPATH="${depends_prefix}/native/lib/python3/dist-packages${PYTHONPATH:+${PA
 
 if test -n "@AR@"; then
   AR="@AR@"
-  ac_cv_path_ac_pt_AR="${AR}"
+  ac_cv_path_AR="${AR}"
 fi
 
 if test -n "@RANLIB@"; then
@@ -110,6 +113,28 @@ fi
 if test -n "@NM@"; then
   NM="@NM@"
   ac_cv_path_ac_pt_NM="${NM}"
+fi
+
+if test -n "@STRIP@"; then
+  STRIP="@STRIP@"
+  ac_cv_path_ac_pt_STRIP="${STRIP}"
+fi
+
+if test "@host_os@" = darwin; then
+  if test -n "@OTOOL@"; then
+    OTOOL="@OTOOL@"
+    ac_cv_path_OTOOL="${OTOOL}"
+  fi
+
+  if test -n "@INSTALL_NAME_TOOL@"; then
+    INSTALL_NAME_TOOL="@INSTALL_NAME_TOOL@"
+    ac_cv_path_INSTALL_NAME_TOOL="${INSTALL_NAME_TOOL}"
+  fi
+
+  if test -n "@DSYMUTIL@"; then
+    DSYMUTIL="@DSYMUTIL@"
+    ac_cv_path_DSYMUTIL="${DSYMUTIL}"
+  fi
 fi
 
 if test -n "@debug@"; then

@@ -14,8 +14,8 @@
  *  - Each field element can be normalized or not.
  *  - Each field element has a magnitude, which represents how far away
  *    its representation is away from normalization. Normalized elements
- *    always have a magnitude of 1, but a magnitude of 1 doesn't imply
- *    normality.
+ *    always have a magnitude of 0 or 1, but a magnitude of 1 doesn't
+ *    imply normality.
  */
 
 #if defined HAVE_CONFIG_H
@@ -31,6 +31,12 @@
 #else
 #error "Please select wide multiplication implementation"
 #endif
+
+static const secp256k1_fe secp256k1_fe_one = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+static const secp256k1_fe secp256k1_const_beta = SECP256K1_FE_CONST(
+    0x7ae96a2bul, 0x657c0710ul, 0x6e64479eul, 0xac3434e9ul,
+    0x9cf04975ul, 0x12f58995ul, 0xc1396c28ul, 0x719501eeul
+);
 
 /** Normalize a field element. This brings the field element to a canonical representation, reduces
  *  its magnitude to 1, and reduces it modulo field size `p`.
@@ -50,7 +56,9 @@ static int secp256k1_fe_normalizes_to_zero(const secp256k1_fe *r);
  *  without constant-time guarantee. */
 static int secp256k1_fe_normalizes_to_zero_var(const secp256k1_fe *r);
 
-/** Set a field element equal to a small integer. Resulting field element is normalized. */
+/** Set a field element equal to a small (not greater than 0x7FFF), non-negative integer.
+ *  Resulting field element is normalized; it has magnitude 0 if a == 0, and magnitude 1 otherwise.
+ */
 static void secp256k1_fe_set_int(secp256k1_fe *r, int a);
 
 /** Sets a field element equal to zero, initializing all fields. */
@@ -121,5 +129,14 @@ static void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_f
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
 static void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag);
+
+/** Halves the value of a field element modulo the field prime. Constant-time.
+ *  For an input magnitude 'm', the output magnitude is set to 'floor(m/2) + 1'.
+ *  The output is not guaranteed to be normalized, regardless of the input. */
+static void secp256k1_fe_half(secp256k1_fe *r);
+
+/** Sets each limb of 'r' to its upper bound at magnitude 'm'. The output will also have its
+ *  magnitude set to 'm' and is normalized if (and only if) 'm' is zero. */
+static void secp256k1_fe_get_bounds(secp256k1_fe *r, int m);
 
 #endif /* SECP256K1_FIELD_H */

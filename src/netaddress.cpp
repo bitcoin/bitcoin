@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,6 @@
 #include <hash.h>
 #include <prevector.h>
 #include <tinyformat.h>
-#include <util/asmap.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -20,9 +19,6 @@
 #include <ios>
 #include <iterator>
 #include <tuple>
-
-constexpr size_t CNetAddr::V1_SERIALIZATION_SIZE;
-constexpr size_t CNetAddr::MAX_ADDRV2_SIZE;
 
 CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
 {
@@ -102,7 +98,7 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
  *
  * @note This address is considered invalid by CNetAddr::IsValid()
  */
-CNetAddr::CNetAddr() {}
+CNetAddr::CNetAddr() = default;
 
 void CNetAddr::SetIP(const CNetAddr& ipIn)
 {
@@ -196,7 +192,7 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
     SHA3_256 hasher;
 
-    hasher.Write(MakeSpan(prefix).first(prefix_len));
+    hasher.Write(Span{prefix}.first(prefix_len));
     hasher.Write(addr_pubkey);
     hasher.Write(VERSION);
 
@@ -211,7 +207,7 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
 bool CNetAddr::SetSpecial(const std::string& addr)
 {
-    if (!ValidAsCString(addr)) {
+    if (!ContainsNoNUL(addr)) {
         return false;
     }
 
@@ -235,17 +231,16 @@ bool CNetAddr::SetTor(const std::string& addr)
         return false;
     }
 
-    bool invalid;
-    const auto& input = DecodeBase32(addr.substr(0, addr.size() - suffix_len).c_str(), &invalid);
+    auto input = DecodeBase32(std::string_view{addr}.substr(0, addr.size() - suffix_len));
 
-    if (invalid) {
+    if (!input) {
         return false;
     }
 
-    if (input.size() == torv3::TOTAL_LEN) {
-        Span<const uint8_t> input_pubkey{input.data(), ADDR_TORV3_SIZE};
-        Span<const uint8_t> input_checksum{input.data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
-        Span<const uint8_t> input_version{input.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
+    if (input->size() == torv3::TOTAL_LEN) {
+        Span<const uint8_t> input_pubkey{input->data(), ADDR_TORV3_SIZE};
+        Span<const uint8_t> input_checksum{input->data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
+        Span<const uint8_t> input_version{input->data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
 
         if (input_version != torv3::VERSION) {
             return false;
@@ -281,15 +276,14 @@ bool CNetAddr::SetI2P(const std::string& addr)
     // can decode it.
     const std::string b32_padded = addr.substr(0, b32_len) + "====";
 
-    bool invalid;
-    const auto& address_bytes = DecodeBase32(b32_padded.c_str(), &invalid);
+    auto address_bytes = DecodeBase32(b32_padded);
 
-    if (invalid || address_bytes.size() != ADDR_I2P_SIZE) {
+    if (!address_bytes || address_bytes->size() != ADDR_I2P_SIZE) {
         return false;
     }
 
     m_net = NET_I2P;
-    m_addr.assign(address_bytes.begin(), address_bytes.end());
+    m_addr.assign(address_bytes->begin(), address_bytes->end());
 
     return true;
 }
@@ -303,7 +297,7 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
-    SetLegacyIPv6(Span<const uint8_t>(reinterpret_cast<const uint8_t*>(&ipv6Addr), sizeof(ipv6Addr)));
+    SetLegacyIPv6({reinterpret_cast<const uint8_t*>(&ipv6Addr), sizeof(ipv6Addr)});
     m_scope_id = scope;
 }
 
@@ -663,7 +657,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
 }
 
 /**
- * Try to get our IPv6 address.
+ * Try to get our IPv6 (or CJDNS) address.
  *
  * @param[out] pipv6Addr The in6_addr struct to which to copy.
  *
@@ -674,7 +668,7 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
  */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
-    if (!IsIPv6()) {
+    if (!IsIPv6() && !IsCJDNS()) {
         return false;
     }
     assert(sizeof(*pipv6Addr) == m_addr.size());
@@ -693,13 +687,13 @@ uint32_t CNetAddr::GetLinkedIPv4() const
         return ReadBE32(m_addr.data());
     } else if (IsRFC6052() || IsRFC6145()) {
         // mapped IPv4, SIIT translated IPv4: the IPv4 address is the last 4 bytes of the address
-        return ReadBE32(MakeSpan(m_addr).last(ADDR_IPV4_SIZE).data());
+        return ReadBE32(Span{m_addr}.last(ADDR_IPV4_SIZE).data());
     } else if (IsRFC3964()) {
         // 6to4 tunneled IPv4: the IPv4 address is in bytes 2-6
-        return ReadBE32(MakeSpan(m_addr).subspan(2, ADDR_IPV4_SIZE).data());
+        return ReadBE32(Span{m_addr}.subspan(2, ADDR_IPV4_SIZE).data());
     } else if (IsRFC4380()) {
         // Teredo tunneled IPv4: the IPv4 address is in the last 4 bytes of the address, but bitflipped
-        return ~ReadBE32(MakeSpan(m_addr).last(ADDR_IPV4_SIZE).data());
+        return ~ReadBE32(Span{m_addr}.last(ADDR_IPV4_SIZE).data());
     }
     assert(false);
 }
@@ -722,101 +716,6 @@ Network CNetAddr::GetNetClass() const
     return m_net;
 }
 
-uint32_t CNetAddr::GetMappedAS(const std::vector<bool> &asmap) const {
-    uint32_t net_class = GetNetClass();
-    if (asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
-        return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
-    }
-    std::vector<bool> ip_bits(128);
-    if (HasLinkedIPv4()) {
-        // For lookup, treat as if it was just an IPv4 address (IPV4_IN_IPV6_PREFIX + IPv4 bits)
-        for (int8_t byte_i = 0; byte_i < 12; ++byte_i) {
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (IPV4_IN_IPV6_PREFIX[byte_i] >> (7 - bit_i)) & 1;
-            }
-        }
-        uint32_t ipv4 = GetLinkedIPv4();
-        for (int i = 0; i < 32; ++i) {
-            ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
-        }
-    } else {
-        // Use all 128 bits of the IPv6 address otherwise
-        assert(IsIPv6());
-        for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
-            uint8_t cur_byte = m_addr[byte_i];
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
-            }
-        }
-    }
-    uint32_t mapped_as = Interpret(asmap, ip_bits);
-    return mapped_as;
-}
-
-/**
- * Get the canonical identifier of our network group
- *
- * The groups are assigned in a way where it should be costly for an attacker to
- * obtain addresses with many different group identifiers, even if it is cheap
- * to obtain addresses with the same identifier.
- *
- * @note No two connections will be attempted to addresses with the same network
- *       group.
- */
-std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) const
-{
-    std::vector<unsigned char> vchRet;
-    uint32_t net_class = GetNetClass();
-    // If non-empty asmap is supplied and the address is IPv4/IPv6,
-    // return ASN to be used for bucketing.
-    uint32_t asn = GetMappedAS(asmap);
-    if (asn != 0) { // Either asmap was empty, or address has non-asmappable net class (e.g. TOR).
-        vchRet.push_back(NET_IPV6); // IPv4 and IPv6 with same ASN should be in the same bucket
-        for (int i = 0; i < 4; i++) {
-            vchRet.push_back((asn >> (8 * i)) & 0xFF);
-        }
-        return vchRet;
-    }
-
-    vchRet.push_back(net_class);
-    int nBits{0};
-
-    if (IsLocal()) {
-        // all local addresses belong to the same group
-    } else if (IsInternal()) {
-        // all internal-usage addresses get their own group
-        nBits = ADDR_INTERNAL_SIZE * 8;
-    } else if (!IsRoutable()) {
-        // all other unroutable addresses belong to the same group
-    } else if (HasLinkedIPv4()) {
-        // IPv4 addresses (and mapped IPv4 addresses) use /16 groups
-        uint32_t ipv4 = GetLinkedIPv4();
-        vchRet.push_back((ipv4 >> 24) & 0xFF);
-        vchRet.push_back((ipv4 >> 16) & 0xFF);
-        return vchRet;
-    } else if (IsTor() || IsI2P() || IsCJDNS()) {
-        nBits = 4;
-    } else if (IsHeNet()) {
-        // for he.net, use /36 groups
-        nBits = 36;
-    } else {
-        // for the rest of the IPv6 network, use /32 groups
-        nBits = 32;
-    }
-
-    // Push our address onto vchRet.
-    const size_t num_bytes = nBits / 8;
-    vchRet.insert(vchRet.end(), m_addr.begin(), m_addr.begin() + num_bytes);
-    nBits %= 8;
-    // ...for the last byte, push nBits and for the rest of the byte push 1's
-    if (nBits > 0) {
-        assert(num_bytes < m_addr.size());
-        vchRet.push_back(m_addr[num_bytes] | ((1 << (8 - nBits)) - 1));
-    }
-
-    return vchRet;
-}
-
 std::vector<unsigned char> CNetAddr::GetAddrBytes() const
 {
     if (IsAddrV1Compatible()) {
@@ -825,14 +724,6 @@ std::vector<unsigned char> CNetAddr::GetAddrBytes() const
         return {std::begin(serialized), std::end(serialized)};
     }
     return std::vector<unsigned char>(m_addr.begin(), m_addr.end());
-}
-
-uint64_t CNetAddr::GetHash() const
-{
-    uint256 hash = Hash(m_addr);
-    uint64_t nRet;
-    memcpy(&nRet, &hash, sizeof(nRet));
-    return nRet;
 }
 
 // private extensions to enum Network, only returned by GetExtNetwork,
@@ -890,6 +781,11 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     case NET_I2P:
         switch (ourNet) {
         case NET_I2P: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
+    case NET_CJDNS:
+        switch (ourNet) {
+        case NET_CJDNS: return REACH_PRIVATE;
         default: return REACH_DEFAULT;
         }
     case NET_TEREDO:
@@ -993,7 +889,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         paddrin->sin_port = htons(port);
         return true;
     }
-    if (IsIPv6()) {
+    if (IsIPv6() || IsCJDNS()) {
         if (*addrlen < (socklen_t)sizeof(struct sockaddr_in6))
             return false;
         *addrlen = sizeof(struct sockaddr_in6);

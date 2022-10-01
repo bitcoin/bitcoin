@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > (size_t) header.size() && Span<const uint8_t>(pushdata.data(), header.size()) == header) {
+            if (!found_header && pushdata.size() > (size_t)header.size() && Span{pushdata}.first(header.size()) == header) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());
@@ -98,7 +98,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
-            VectorReader v(SER_NETWORK, INIT_PROTO_VERSION, signet_solution, 0);
+            SpanReader v{SER_NETWORK, INIT_PROTO_VERSION, signet_solution};
             v >> tx_spending.vin[0].scriptSig;
             v >> tx_spending.vin[0].scriptWitness.stack;
             if (!v.empty()) return std::nullopt; // extraneous data encountered

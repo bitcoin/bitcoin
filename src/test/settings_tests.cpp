@@ -1,9 +1,10 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/settings.h>
 
+#include <fs.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
 
@@ -13,6 +14,11 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+
+#include <fstream>
+#include <map>
+#include <string>
+#include <system_error>
 #include <vector>
 
 inline bool operator==(const util::SettingsValue& a, const util::SettingsValue& b)
@@ -36,7 +42,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, u
 
 inline void WriteText(const fs::path& path, const std::string& text)
 {
-    fsbridge::ofstream file;
+    std::ofstream file;
     file.open(path);
     file << text;
 }
@@ -99,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
 //! Check settings struct contents against expected json strings.
 static void CheckValues(const util::Settings& settings, const std::string& single_val, const std::string& list_val)
 {
-    util::SettingsValue single_value = GetSetting(settings, "section", "name", false, false);
+    util::SettingsValue single_value = GetSetting(settings, "section", "name", false, false, false);
     util::SettingsValue list_value(util::SettingsValue::VARR);
     for (const auto& item : GetSettingsList(settings, "section", "name", false)) {
         list_value.push_back(item);
@@ -135,9 +141,9 @@ BOOST_AUTO_TEST_CASE(NullOverride)
 {
     util::Settings settings;
     settings.command_line_options["name"].push_back("value");
-    BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false).write().c_str());
+    BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false, false).write().c_str());
     settings.forced_settings["name"] = {};
-    BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false).write().c_str());
+    BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false, false).write().c_str());
 }
 
 // Test different ways settings can be merged, and verify results. This test can
@@ -218,7 +224,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         }
 
         desc += " || ";
-        desc += GetSetting(settings, network, name, ignore_default_section_config, /* get_chain_name= */ false).write();
+        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_name=*/false).write();
         desc += " |";
         for (const auto& s : GetSettingsList(settings, network, name, ignore_default_section_config)) {
             desc += " ";

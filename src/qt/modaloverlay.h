@@ -26,7 +26,7 @@ public:
     ~ModalOverlay();
 
     void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
-    void setKnownBestHeight(int count, const QDateTime& blockDate);
+    void setKnownBestHeight(int count, const QDateTime& blockDate, bool presync);
 
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
@@ -52,6 +52,7 @@ private:
     bool userClosed;
     QPropertyAnimation m_animation;
     void UpdateHeaderSyncLabel();
+    void UpdateHeaderPresyncLabel(int height, const QDateTime& blockDate);
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

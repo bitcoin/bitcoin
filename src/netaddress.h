@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <attributes.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>
 #include <random.h>
@@ -194,7 +193,6 @@ public:
     enum Network GetNetwork() const;
     std::string ToString() const;
     std::string ToStringIP() const;
-    uint64_t GetHash() const;
     bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;
 
@@ -203,12 +201,6 @@ public:
     //! Whether this address has a linked IPv4 address (see GetLinkedIPv4()).
     bool HasLinkedIPv4() const;
 
-    // The AS on the BGP path to the node we use to diversify
-    // peers in AddrMan bucketing based on the AS infrastructure.
-    // The ip->AS mapping depends on how asmap is constructed.
-    uint32_t GetMappedAS(const std::vector<bool>& asmap) const;
-
-    std::vector<unsigned char> GetGroup(const std::vector<bool>& asmap) const;
     std::vector<unsigned char> GetAddrBytes() const;
     int GetReachabilityFrom(const CNetAddr* paddrPartner = nullptr) const;
 
@@ -224,7 +216,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
     /**
@@ -385,6 +377,12 @@ private:
 
     /**
      * Unserialize from a pre-ADDRv2/BIP155 format from an array.
+     *
+     * This function is only called from UnserializeV1Stream() and is a wrapper
+     * for SetLegacyIPv6(); however, we keep it for symmetry with
+     * SerializeV1Array() to have pairs of ser/unser functions and to make clear
+     * that if one is altered, a corresponding reverse modification should be
+     * applied to the other.
      */
     void UnserializeV1Array(uint8_t (&arr)[V1_SERIALIZATION_SIZE])
     {
@@ -427,7 +425,7 @@ private:
 
         if (SetNetFromBIP155Network(bip155_net, address_size)) {
             m_addr.resize(address_size);
-            s >> MakeSpan(m_addr);
+            s >> Span{m_addr};
 
             if (m_net != NET_IPV6) {
                 return;
@@ -550,11 +548,20 @@ public:
     }
 
     friend class CServiceHash;
+    friend CService MaybeFlipIPv6toCJDNS(const CService& service);
 };
 
 class CServiceHash
 {
 public:
+    CServiceHash()
+        : m_salt_k0{GetRand<uint64_t>()},
+          m_salt_k1{GetRand<uint64_t>()}
+    {
+    }
+
+    CServiceHash(uint64_t salt_k0, uint64_t salt_k1) : m_salt_k0{salt_k0}, m_salt_k1{salt_k1} {}
+
     size_t operator()(const CService& a) const noexcept
     {
         CSipHasher hasher(m_salt_k0, m_salt_k1);
@@ -565,8 +572,8 @@ public:
     }
 
 private:
-    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
-    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k0;
+    const uint64_t m_salt_k1;
 };
 
 #endif // BITCOIN_NETADDRESS_H

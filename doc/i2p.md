@@ -47,9 +47,26 @@ In a typical situation, this suffices:
 bitcoind -i2psam=127.0.0.1:7656
 ```
 
-The first time Bitcoin Core connects to the I2P router, its I2P address (and
-corresponding private key) will be automatically generated and saved in a file
-named `i2p_private_key` in the Bitcoin Core data directory.
+The first time Bitcoin Core connects to the I2P router, if
+`-i2pacceptincoming=1`, then it will automatically generate a persistent I2P
+address and its corresponding private key. The private key will be saved in a
+file named `i2p_private_key` in the Bitcoin Core data directory. The persistent
+I2P address is used for accepting incoming connections and for making outgoing
+connections if `-i2pacceptincoming=1`. If `-i2pacceptincoming=0` then only
+outbound I2P connections are made and a different transient I2P address is used
+for each connection to improve privacy.
+
+## Persistent vs transient I2P addresses
+
+In I2P connections, the connection receiver sees the I2P address of the
+connection initiator. This is unlike the Tor network where the recipient does
+not know who is connecting to them and can't tell if two connections are from
+the same peer or not.
+
+If an I2P node is not accepting incoming connections, then Bitcoin Core uses
+random, one-time, transient I2P addresses for itself for outbound connections
+to make it harder to discriminate, fingerprint or analyze it based on its I2P
+address.
 
 ## Additional configuration options related to I2P
 
@@ -65,13 +82,9 @@ logging` for more information.
 -onlynet=i2p
 ```
 
-Make outgoing connections only to I2P addresses. Incoming connections are not
-affected by this option. It can be specified multiple times to allow multiple
-network types, e.g. onlynet=ipv4, onlynet=ipv6, onlynet=onion, onlynet=i2p.
-
-Warning: if you use -onlynet with values other than onion, and the -onion or
--proxy option is set, then outgoing onion connections will still be made; use
--noonion or -onion=0 to disable outbound onion connections in this case.
+Make automatic outbound connections only to I2P addresses. Inbound and manual
+connections are not affected by this option. It can be specified multiple times
+to allow multiple networks, e.g. onlynet=onion, onlynet=i2p.
 
 I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
@@ -84,15 +97,16 @@ phase when syncing up a new node can be very slow. This phase can be sped up by
 using other networks, for instance `onlynet=onion`, at the same time.
 
 In general, a node can be run with both onion and I2P hidden services (or
-any/all of IPv4/IPv6/onion/I2P), which can provide a potential fallback if one
-of the networks has issues.
+any/all of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if
+one of the networks has issues.
 
 ## I2P-related information in Bitcoin Core
 
-There are several ways to see your I2P address in Bitcoin Core:
-- in the debug log (grep for `AddLocal`, the I2P address ends in `.b32.i2p`)
-- in the output of the `getnetworkinfo` RPC in the "localaddresses" section
-- in the output of `bitcoin-cli -netinfo` peer connections dashboard
+There are several ways to see your I2P address in Bitcoin Core if accepting
+incoming I2P connections (`-i2pacceptincoming`):
+- in the "Local addresses" output of CLI `-netinfo`
+- in the "localaddresses" output of RPC `getnetworkinfo`
+- in the debug log (grep for `AddLocal`; the I2P address ends in `.b32.i2p`)
 
 To see which I2P peers your node is connected to, use `bitcoin-cli -netinfo 4`
 or the `getpeerinfo` RPC (e.g. `bitcoin-cli getpeerinfo`).

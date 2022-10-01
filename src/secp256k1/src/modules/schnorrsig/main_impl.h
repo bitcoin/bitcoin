@@ -65,6 +65,17 @@ static int nonce_function_bip340(unsigned char *nonce32, const unsigned char *ms
         for (i = 0; i < 32; i++) {
             masked_key[i] ^= key32[i];
         }
+    } else {
+        /* Precomputed TaggedHash("BIP0340/aux", 0x0000...00); */
+        static const unsigned char ZERO_MASK[32] = {
+              84, 241, 105, 207, 201, 226, 229, 114,
+             116, 128,  68,  31, 144, 186,  37, 196,
+             136, 244,  97, 199,  11,  94, 165, 220,
+             170, 247, 175, 105, 39,  10, 165,  20
+        };
+        for (i = 0; i < 32; i++) {
+            masked_key[i] = key32[i] ^ ZERO_MASK[i];
+        }
     }
 
     /* Tag the hash with algo which is important to avoid nonce reuse across
@@ -77,12 +88,8 @@ static int nonce_function_bip340(unsigned char *nonce32, const unsigned char *ms
         secp256k1_sha256_initialize_tagged(&sha, algo, algolen);
     }
 
-    /* Hash (masked-)key||pk||msg using the tagged hash as per the spec */
-    if (data != NULL) {
-        secp256k1_sha256_write(&sha, masked_key, 32);
-    } else {
-        secp256k1_sha256_write(&sha, key32, 32);
-    }
+    /* Hash masked-key||pk||msg using the tagged hash as per the spec */
+    secp256k1_sha256_write(&sha, masked_key, 32);
     secp256k1_sha256_write(&sha, xonly_pk32, 32);
     secp256k1_sha256_write(&sha, msg, msglen);
     secp256k1_sha256_finalize(&sha, nonce32);
@@ -122,7 +129,7 @@ static void secp256k1_schnorrsig_challenge(secp256k1_scalar* e, const unsigned c
     secp256k1_scalar_set_b32(e, buf, NULL);
 }
 
-int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg, size_t msglen, const secp256k1_keypair *keypair, secp256k1_nonce_function_hardened noncefp, void *ndata) {
+static int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg, size_t msglen, const secp256k1_keypair *keypair, secp256k1_nonce_function_hardened noncefp, void *ndata) {
     secp256k1_scalar sk;
     secp256k1_scalar e;
     secp256k1_scalar k;
@@ -185,8 +192,13 @@ int secp256k1_schnorrsig_sign_internal(const secp256k1_context* ctx, unsigned ch
     return ret;
 }
 
-int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg32, const secp256k1_keypair *keypair, unsigned char *aux_rand32) {
-    return secp256k1_schnorrsig_sign_internal(ctx, sig64, msg32, 32, keypair, secp256k1_nonce_function_bip340, aux_rand32);
+int secp256k1_schnorrsig_sign32(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg32, const secp256k1_keypair *keypair, const unsigned char *aux_rand32) {
+    /* We cast away const from the passed aux_rand32 argument since we know the default nonce function does not modify it. */
+    return secp256k1_schnorrsig_sign_internal(ctx, sig64, msg32, 32, keypair, secp256k1_nonce_function_bip340, (unsigned char*)aux_rand32);
+}
+
+int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg32, const secp256k1_keypair *keypair, const unsigned char *aux_rand32) {
+    return secp256k1_schnorrsig_sign32(ctx, sig64, msg32, keypair, aux_rand32);
 }
 
 int secp256k1_schnorrsig_sign_custom(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg, size_t msglen, const secp256k1_keypair *keypair, secp256k1_schnorrsig_extraparams *extraparams) {
@@ -216,7 +228,6 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
     int overflow;
 
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     ARG_CHECK(sig64 != NULL);
     ARG_CHECK(msg != NULL || msglen == 0);
     ARG_CHECK(pubkey != NULL);
@@ -241,7 +252,7 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
     /* Compute rj =  s*G + (-e)*pkj */
     secp256k1_scalar_negate(&e, &e);
     secp256k1_gej_set_ge(&pkj, &pk);
-    secp256k1_ecmult(&ctx->ecmult_ctx, &rj, &pkj, &e, &s);
+    secp256k1_ecmult(&rj, &pkj, &e, &s);
 
     secp256k1_ge_set_gej_var(&r, &rj);
     if (secp256k1_ge_is_infinity(&r)) {

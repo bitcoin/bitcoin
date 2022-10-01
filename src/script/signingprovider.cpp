@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,6 +48,10 @@ bool HidingSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, T
 {
     return m_provider->GetTaprootSpendData(output_key, spenddata);
 }
+bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
+{
+    return m_provider->GetTaprootBuilder(output_key, builder);
+}
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
@@ -61,25 +65,26 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
 bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
 {
-    return LookupHelper(tr_spenddata, output_key, spenddata);
+    TaprootBuilder builder;
+    if (LookupHelper(tr_trees, output_key, builder)) {
+        spenddata = builder.GetSpendData();
+        return true;
+    }
+    return false;
+}
+bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
+{
+    return LookupHelper(tr_trees, output_key, builder);
 }
 
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
+FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
-    FlatSigningProvider ret;
-    ret.scripts = a.scripts;
-    ret.scripts.insert(b.scripts.begin(), b.scripts.end());
-    ret.pubkeys = a.pubkeys;
-    ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
-    ret.keys = a.keys;
-    ret.keys.insert(b.keys.begin(), b.keys.end());
-    ret.origins = a.origins;
-    ret.origins.insert(b.origins.begin(), b.origins.end());
-    ret.tr_spenddata = a.tr_spenddata;
-    for (const auto& [output_key, spenddata] : b.tr_spenddata) {
-        ret.tr_spenddata[output_key].Merge(spenddata);
-    }
-    return ret;
+    scripts.merge(b.scripts);
+    pubkeys.merge(b.pubkeys);
+    keys.merge(b.keys);
+    origins.merge(b.origins);
+    tr_trees.merge(b.tr_trees);
+    return *this;
 }
 
 void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
@@ -190,8 +195,8 @@ bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemS
 
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest)
 {
-    // Only supports destinations which map to single public keys, i.e. P2PKH,
-    // P2WPKH, and P2SH-P2WPKH.
+    // Only supports destinations which map to single public keys:
+    // P2PKH, P2WPKH, P2SH-P2WPKH, P2TR
     if (auto id = std::get_if<PKHash>(&dest)) {
         return ToKeyID(*id);
     }
@@ -206,6 +211,16 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
             if (auto inner_witness_id = std::get_if<WitnessV0KeyHash>(&inner_dest)) {
                 return ToKeyID(*inner_witness_id);
             }
+        }
+    }
+    if (auto output_key = std::get_if<WitnessV1Taproot>(&dest)) {
+        TaprootSpendData spenddata;
+        CPubKey pub;
+        if (store.GetTaprootSpendData(*output_key, spenddata)
+            && !spenddata.internal_key.IsNull()
+            && spenddata.merkle_root.IsNull()
+            && store.GetPubKeyByXOnly(spenddata.internal_key, pub)) {
+            return pub.GetID();
         }
     }
     return CKeyID();

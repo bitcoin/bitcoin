@@ -12,12 +12,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(spend_tests, WalletTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
 {
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    auto wallet = CreateSyncedWallet(*m_node.chain, m_node.chainman->ActiveChain(), coinbaseKey);
+    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), m_args, coinbaseKey);
 
     // Check that a subtract-from-recipient transaction slightly less than the
     // coinbase input amount does not create a change output (because it would
@@ -26,21 +27,19 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // instead of the miner.
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
         CRecipient recipient{GetScriptForRawPubKey({}), 50 * COIN - leftover_input_amount, true /* subtract fee */};
-        CTransactionRef tx;
-        CAmount fee;
-        int change_pos = -1;
-        bilingual_str error;
+        constexpr int RANDOM_CHANGE_POSITION = -1;
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
-        FeeCalculation fee_calc;
-        BOOST_CHECK(CreateTransaction(*wallet, {recipient}, tx, fee, change_pos, error, coin_control, fee_calc));
-        BOOST_CHECK_EQUAL(tx->vout.size(), 1);
-        BOOST_CHECK_EQUAL(tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - fee);
-        BOOST_CHECK_GT(fee, 0);
-        return fee;
+        auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, coin_control);
+        BOOST_CHECK(res);
+        const auto& txr = *res;
+        BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
+        BOOST_CHECK_EQUAL(txr.tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr.fee);
+        BOOST_CHECK_GT(txr.fee, 0);
+        return txr.fee;
     };
 
     // Send full input amount to recipient, check that only nonzero fee is
@@ -62,4 +61,56 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     BOOST_CHECK_EQUAL(fee, check_tx(fee + 123));
 }
 
+static void TestFillInputToWeight(int64_t additional_weight, std::vector<int64_t> expected_stack_sizes)
+{
+    static const int64_t EMPTY_INPUT_WEIGHT = GetTransactionInputWeight(CTxIn());
+
+    CTxIn input;
+    int64_t target_weight = EMPTY_INPUT_WEIGHT + additional_weight;
+    BOOST_CHECK(FillInputToWeight(input, target_weight));
+    BOOST_CHECK_EQUAL(GetTransactionInputWeight(input), target_weight);
+    BOOST_CHECK_EQUAL(input.scriptWitness.stack.size(), expected_stack_sizes.size());
+    for (unsigned int i = 0; i < expected_stack_sizes.size(); ++i) {
+        BOOST_CHECK_EQUAL(input.scriptWitness.stack[i].size(), expected_stack_sizes[i]);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(FillInputToWeightTest, BasicTestingSetup)
+{
+    {
+        // Less than or equal minimum of 165 should not add any witness data
+        CTxIn input;
+        BOOST_CHECK(!FillInputToWeight(input, -1));
+        BOOST_CHECK_EQUAL(GetTransactionInputWeight(input), 165);
+        BOOST_CHECK_EQUAL(input.scriptWitness.stack.size(), 0);
+        BOOST_CHECK(!FillInputToWeight(input, 0));
+        BOOST_CHECK_EQUAL(GetTransactionInputWeight(input), 165);
+        BOOST_CHECK_EQUAL(input.scriptWitness.stack.size(), 0);
+        BOOST_CHECK(!FillInputToWeight(input, 164));
+        BOOST_CHECK_EQUAL(GetTransactionInputWeight(input), 165);
+        BOOST_CHECK_EQUAL(input.scriptWitness.stack.size(), 0);
+        BOOST_CHECK(FillInputToWeight(input, 165));
+        BOOST_CHECK_EQUAL(GetTransactionInputWeight(input), 165);
+        BOOST_CHECK_EQUAL(input.scriptWitness.stack.size(), 0);
+    }
+
+    // Make sure we can add at least one weight
+    TestFillInputToWeight(1, {0});
+
+    // 1 byte compact size uint boundary
+    TestFillInputToWeight(252, {251});
+    TestFillInputToWeight(253, {83, 168});
+    TestFillInputToWeight(262, {86, 174});
+    TestFillInputToWeight(263, {260});
+
+    // 3 byte compact size uint boundary
+    TestFillInputToWeight(65535, {65532});
+    TestFillInputToWeight(65536, {21842, 43688});
+    TestFillInputToWeight(65545, {21845, 43694});
+    TestFillInputToWeight(65546, {65541});
+
+    // Note: We don't test the next boundary because of memory allocation constraints.
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

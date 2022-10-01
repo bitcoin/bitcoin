@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,7 @@
 #define BITCOIN_THREADINTERRUPT_H
 
 #include <sync.h>
+#include <threadsafety.h>
 
 #include <atomic>
 #include <chrono>
@@ -19,13 +20,12 @@
 class CThreadInterrupt
 {
 public:
+    using Clock = std::chrono::steady_clock;
     CThreadInterrupt();
     explicit operator bool() const;
-    void operator()();
+    void operator()() EXCLUSIVE_LOCKS_REQUIRED(!mut);
     void reset();
-    bool sleep_for(std::chrono::milliseconds rel_time);
-    bool sleep_for(std::chrono::seconds rel_time);
-    bool sleep_for(std::chrono::minutes rel_time);
+    bool sleep_for(Clock::duration rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
 
 private:
     std::condition_variable cond;
@@ -33,4 +33,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //BITCOIN_THREADINTERRUPT_H
+#endif // BITCOIN_THREADINTERRUPT_H

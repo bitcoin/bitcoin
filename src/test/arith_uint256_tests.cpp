@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,11 +129,11 @@ static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsign
     {
         unsigned int F = (T+bitsToShift/8);
         if (F < arrayLength)
-            to[T]  = from[F] >> (bitsToShift%8);
+            to[T] = uint8_t(from[F] >> (bitsToShift % 8));
         else
             to[T] = 0;
         if (F + 1 < arrayLength)
-            to[T] |= from[(F+1)] << (8-bitsToShift%8);
+            to[T] |= uint8_t(from[(F + 1)] << (8 - bitsToShift % 8));
     }
 }
 
@@ -144,9 +144,9 @@ static void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigne
         if (T >= bitsToShift/8)
         {
             unsigned int F = T-bitsToShift/8;
-            to[T]  = from[F] << (bitsToShift%8);
+            to[T] = uint8_t(from[F] << (bitsToShift % 8));
             if (T >= bitsToShift/8+1)
-                to[T] |= from[F-1] >> (8-bitsToShift%8);
+                to[T] |= uint8_t(from[F - 1] >> (8 - bitsToShift % 8));
         }
         else {
             to[T] = 0;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
     BOOST_CHECK(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];
-    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = ~R1Array[i]; }
+    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = uint8_t(~R1Array[i]); }
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
 
     BOOST_CHECK(-ZeroL == ZeroL);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 // Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
 // element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
-    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
+    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = uint8_t(_A_##Array[i] _OP_ _B_##Array[i]); } \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
 
 #define CHECKASSIGNMENTOPERATOR(_A_,_B_,_OP_)                           \

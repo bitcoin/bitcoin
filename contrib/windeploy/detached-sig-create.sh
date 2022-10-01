@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,6 +23,7 @@ TIMESERVER=http://timestamp.comodoca.com
 CERTFILE="win-codesign.cert"
 
 mkdir -p "${OUTSUBDIR}"
+# shellcheck disable=SC2046
 basename -a $(ls -1 "${SRCDIR}"/*-unsigned.exe) | while read UNSIGNED; do
   echo Signing "${UNSIGNED}"
   "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${SRCDIR}/${UNSIGNED}" -out "${WORKDIR}/${UNSIGNED}" "$@"

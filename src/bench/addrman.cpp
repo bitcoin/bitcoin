@@ -1,9 +1,10 @@
-// Copyright (c) 2020-2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrman.h>
 #include <bench/bench.h>
+#include <netgroup.h>
 #include <random.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -15,6 +16,9 @@
 
 static constexpr size_t NUM_SOURCES = 64;
 static constexpr size_t NUM_ADDRESSES_PER_SOURCE = 256;
+
+static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
+static constexpr uint32_t ADDRMAN_CONSISTENCY_CHECK_RATIO{0};
 
 static std::vector<CAddress> g_sources;
 static std::vector<std::vector<CAddress>> g_addresses;
@@ -39,7 +43,7 @@ static void CreateAddresses()
 
         CAddress ret(CService(addr, port), NODE_NETWORK);
 
-        ret.nTime = GetAdjustedTime();
+        ret.nTime = Now<NodeSeconds>();
 
         return ret;
     };
@@ -74,14 +78,14 @@ static void AddrManAdd(benchmark::Bench& bench)
     CreateAddresses();
 
     bench.run([&] {
-        AddrMan addrman{/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0};
+        AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
         AddAddressesToAddrMan(addrman);
     });
 }
 
 static void AddrManSelect(benchmark::Bench& bench)
 {
-    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
 
     FillAddrMan(addrman);
 
@@ -93,12 +97,12 @@ static void AddrManSelect(benchmark::Bench& bench)
 
 static void AddrManGetAddr(benchmark::Bench& bench)
 {
-    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
 
     FillAddrMan(addrman);
 
     bench.run([&] {
-        const auto& addresses = addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23, /* network */ std::nullopt);
+        const auto& addresses = addrman.GetAddr(/*max_addresses=*/2500, /*max_pct=*/23, /*network=*/std::nullopt);
         assert(addresses.size() > 0);
     });
 }
@@ -122,7 +126,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
         //
         // This has some overhead (exactly the result of AddrManAdd benchmark), but that overhead is constant so improvements in
         // AddrMan::Good() will still be noticeable.
-        AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+        AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
         AddAddressesToAddrMan(addrman);
 
         markSomeAsGood(addrman);

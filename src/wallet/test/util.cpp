@@ -15,9 +15,10 @@
 
 #include <memory>
 
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
+namespace wallet {
+std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, ArgsManager& args, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
+    auto wallet = std::make_unique<CWallet>(&chain, "", args, CreateMockWalletDatabase());
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
@@ -37,10 +38,11 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
-    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), 0 /* start_height */, {} /* max_height */, reserver, false /* update */);
+    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
     BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     BOOST_CHECK_EQUAL(result.last_scanned_block, cchain.Tip()->GetBlockHash());
     BOOST_CHECK_EQUAL(*result.last_scanned_height, cchain.Height());
     BOOST_CHECK(result.last_failed_block.IsNull());
     return wallet;
 }
+} // namespace wallet

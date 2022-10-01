@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,11 @@
 #include <rpc/protocol.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 /**
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
@@ -61,29 +66,29 @@ UniValue JSONRPCError(int code, const std::string& message)
  */
 static const std::string COOKIEAUTH_USER = "__cookie__";
 /** Default name for auth cookie file */
-static const std::string COOKIEAUTH_FILE = ".cookie";
+static const char* const COOKIEAUTH_FILE = ".cookie";
 
 /** Get name of RPC authentication cookie file */
 static fs::path GetAuthCookieFile(bool temp=false)
 {
-    std::string arg = gArgs.GetArg("-rpccookiefile", COOKIEAUTH_FILE);
+    fs::path arg = gArgs.GetPathArg("-rpccookiefile", COOKIEAUTH_FILE);
     if (temp) {
         arg += ".tmp";
     }
-    return AbsPathForConfigVal(fs::PathFromString(arg));
+    return AbsPathForConfigVal(arg);
 }
 
 bool GenerateAuthCookie(std::string *cookie_out)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
-    GetRandBytes(rand_pwd, COOKIE_SIZE);
+    GetRandBytes(rand_pwd);
     std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
 
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.
      */
-    fsbridge::ofstream file;
+    std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
@@ -107,7 +112,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
 bool GetAuthCookie(std::string *cookie_out)
 {
-    fsbridge::ifstream file;
+    std::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     file.open(filepath);
@@ -141,7 +146,7 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
         if (!rec.isObject()) {
             throw std::runtime_error("Batch member must be an object");
         }
-        size_t id = rec["id"].get_int();
+        size_t id = rec["id"].getInt<int>();
         if (id >= num) {
             throw std::runtime_error("Batch member id is larger than batch size");
         }

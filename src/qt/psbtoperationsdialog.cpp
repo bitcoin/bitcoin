@@ -1,10 +1,11 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/psbtoperationsdialog.h>
 
 #include <core_io.h>
+#include <fs.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/psbt.h>
@@ -15,8 +16,13 @@
 #include <qt/optionsmodel.h>
 #include <util/strencodings.h>
 
+#include <fstream>
 #include <iostream>
+#include <string>
 
+using node::AnalyzePSBT;
+using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::PSBTAnalysis;
 
 PSBTOperationsDialog::PSBTOperationsDialog(
     QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent, GUIUtil::dialog_flags),
@@ -110,8 +116,8 @@ void PSBTOperationsDialog::broadcastTransaction()
 
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
-    TransactionError error = BroadcastTransaction(
-        *m_client_model->node().context(), tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /* relay */ true, /* await_callback */ false);
+    TransactionError error =
+        m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), err_string);
 
     if (error == TransactionError::OK) {
         showStatus(tr("Transaction broadcast successfully! Transaction ID: %1")
@@ -155,7 +161,7 @@ void PSBTOperationsDialog::saveTransaction() {
     if (filename.isEmpty()) {
         return;
     }
-    std::ofstream out(filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary);
+    std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
     out << ssTx.str();
     out.close();
     showStatus(tr("PSBT saved to disk."), StatusLevel::INFO);
@@ -175,7 +181,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         ExtractDestination(out.scriptPubKey, address);
         totalAmount += out.nValue;
         tx_description.append(tr(" * Sends %1 to %2")
-            .arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, out.nValue))
+            .arg(BitcoinUnits::formatWithUnit(BitcoinUnit::BTC, out.nValue))
             .arg(QString::fromStdString(EncodeDestination(address))));
         tx_description.append("<br>");
     }
@@ -187,7 +193,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {
         tx_description.append(tr("Pays transaction fee: "));
-        tx_description.append(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, *analysis.fee));
+        tx_description.append(BitcoinUnits::formatWithUnit(BitcoinUnit::BTC, *analysis.fee));
 
         // add total amount in all subdivision units
         tx_description.append("<hr />");

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,4 +15,3 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-debug CC='clang -m32' CXX='clang++ -m32' LDFLAGS='--rtlib=compiler-rt -lgcc_s'"
 export TEST_RUNNER_ENV="BITCOIND=bitcoin-node"
 export TEST_RUNNER_EXTRA="--nosandbox"
-export PIP_PACKAGES="lief"

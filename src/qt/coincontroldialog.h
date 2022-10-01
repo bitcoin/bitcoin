@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,9 @@
 class PlatformStyle;
 class WalletModel;
 
+namespace wallet {
 class CCoinControl;
+} // namespace wallet
 
 namespace Ui {
     class CoinControlDialog;
@@ -42,11 +44,11 @@ class CoinControlDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit CoinControlDialog(CCoinControl& coin_control, WalletModel* model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit CoinControlDialog(wallet::CCoinControl& coin_control, WalletModel* model, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~CoinControlDialog();
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(CCoinControl& m_coin_control, WalletModel*, QDialog*);
+    static void updateLabels(wallet::CCoinControl& m_coin_control, WalletModel*, QDialog*);
 
     static QList<CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;
@@ -56,7 +58,7 @@ protected:
 
 private:
     Ui::CoinControlDialog *ui;
-    CCoinControl& m_coin_control;
+    wallet::CCoinControl& m_coin_control;
     WalletModel *model;
     int sortColumn;
     Qt::SortOrder sortOrder;

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
 {
     LOCK(cs_desc_man);
@@ -44,7 +45,8 @@ ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
     std::vector<ExternalSigner> signers;
     ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
     if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
-    // TODO: add fingerprint argument in case of multiple signers
+    // TODO: add fingerprint argument instead of failing in case of multiple signers.
+    if (signers.size() > 1) throw std::runtime_error(std::string(__func__) + ": More than one external signer found. Please connect only one at a time.");
     return signers[0];
 }
 
@@ -60,10 +62,10 @@ bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, c
 }
 
 // If sign is true, transaction must previously have been filled
-TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
+TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (!sign) {
-        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed);
+        return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed, finalize);
     }
 
     // Already complete if every input is now signed
@@ -79,6 +81,7 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
         tfm::format(std::cerr, "Failed to sign: %s\n", strFailReason);
         return TransactionError::EXTERNAL_SIGNER_FAILED;
     }
-    FinalizePSBT(psbt); // This won't work in a multisig setup
+    if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
     return TransactionError::OK;
 }
+} // namespace wallet

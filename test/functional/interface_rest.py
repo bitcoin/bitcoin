@@ -1,26 +1,38 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
 
 from decimal import Decimal
 from enum import Enum
+import http.client
 from io import BytesIO
 import json
 from struct import pack, unpack
-
-import http.client
+import typing
 import urllib.parse
 
+
+from test_framework.messages import (
+    BLOCK_HEADER_SIZE,
+    COIN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
 )
+from test_framework.wallet import (
+    MiniWallet,
+    getnewdestination,
+)
 
-from test_framework.messages import BLOCK_HEADER_SIZE
+
+INVALID_PARAM = "abc"
+UNKNOWN_PARAM = "0000000000000000000000000000000000000000000000000000000000000000"
+
 
 class ReqType(Enum):
     JSON = 1
@@ -39,22 +51,28 @@ def filter_output_indices_by_value(vouts, value):
 
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-rest"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
         self.supports_cli = False
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
-    def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
+    def test_rest_request(
+            self,
+            uri: str,
+            http_method: str = 'GET',
+            req_type: ReqType = ReqType.JSON,
+            body: str = '',
+            status: int = 200,
+            ret_type: RetType = RetType.JSON,
+            query_params: typing.Dict[str, typing.Any] = None,
+            ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
         rest_uri = '/rest' + uri
-        if req_type == ReqType.JSON:
-            rest_uri += '.json'
-        elif req_type == ReqType.BIN:
-            rest_uri += '.bin'
-        elif req_type == ReqType.HEX:
-            rest_uri += '.hex'
+        if req_type in ReqType:
+            rest_uri += f'.{req_type.name.lower()}'
+        if query_params:
+            rest_uri += f'?{urllib.parse.urlencode(query_params)}'
 
         conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
         self.log.debug(f'{http_method} {rest_uri} {body}')
@@ -73,21 +91,15 @@ class RESTTest (BitcoinTestFramework):
         elif ret_type == RetType.JSON:
             return json.loads(resp.read().decode('utf-8'), parse_float=Decimal)
 
+        return None
+
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mine blocks and send Bitcoin to node 1")
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
 
-        # Random address so node1's balance doesn't increase
-        not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"
-
-        self.generate(self.nodes[0], 1)
-        self.sync_all()
-        self.generatetoaddress(self.nodes[1], 100, not_related_address)
-        self.sync_all()
-
-        assert_equal(self.nodes[0].getbalance(), 50)
-
-        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        self.log.info("Broadcast test transaction and sync nodes")
+        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
         self.sync_all()
 
         self.log.info("Test the /tx URI")
@@ -105,13 +117,16 @@ class RESTTest (BitcoinTestFramework):
         n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
         spending = (txid, n)
 
+        # Test /tx with an invalid and an unknown txid
+        resp = self.test_rest_request(uri=f"/tx/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+        resp = self.test_rest_request(uri=f"/tx/{UNKNOWN_PARAM}", ret_type=RetType.OBJ, status=404)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"{UNKNOWN_PARAM} not found")
+
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
-        self.generatetoaddress(self.nodes[1], 1, not_related_address)
-        self.sync_all()
+        self.generate(self.wallet, 1)
         bb_hash = self.nodes[0].getbestblockhash()
-
-        assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
 
         # Check chainTip response
         json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
@@ -154,7 +169,7 @@ class RESTTest (BitcoinTestFramework):
         response_hash = output.read(32)[::-1].hex()
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
-        assert_equal(chain_height, 102)  # chain height must be 102
+        assert_equal(chain_height, 201)  # chain height must be 201 (pre-mined chain [200] + generated block [1])
 
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but
@@ -162,7 +177,7 @@ class RESTTest (BitcoinTestFramework):
         # found with or without /checkmempool.
 
         # do a tx and don't sync
-        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
         json_obj = self.test_rest_request(f"/tx/{txid}")
         # get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
@@ -183,7 +198,6 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj['utxos']), 0)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
         assert_equal(len(json_obj['utxos']), 1)
@@ -204,18 +218,17 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request(f"/getutxos/checkmempool/{long_uri}", http_method='POST', status=200)
 
         self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
-        self.sync_all()
 
-        self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
+        self.log.info("Test the /block, /blockhashbyheight, /headers, and /blockfilterheaders URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
-        assert_equal(self.test_rest_request('/headers/1/0000000000000000000000000000000000000000000000000000000000000000'), [])
-        self.test_rest_request('/block/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
+        assert_equal(self.test_rest_request(f"/headers/{UNKNOWN_PARAM}", query_params={"count": 1}), [])
+        self.test_rest_request(f"/block/{UNKNOWN_PARAM}", status=404, ret_type=RetType.OBJ)
 
         # Check result if block is not in the active chain
         self.nodes[0].invalidateblock(bb_hash)
-        assert_equal(self.test_rest_request(f'/headers/1/{bb_hash}'), [])
+        assert_equal(self.test_rest_request(f'/headers/{bb_hash}', query_params={'count': 1}), [])
         self.test_rest_request(f'/block/{bb_hash}')
         self.nodes[0].reconsiderblock(bb_hash)
 
@@ -225,7 +238,7 @@ class RESTTest (BitcoinTestFramework):
         response_bytes = response.read()
 
         # Compare with block header
-        response_header = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        response_header = self.test_rest_request(f"/headers/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ, query_params={"count": 1})
         assert_equal(int(response_header.getheader('content-length')), BLOCK_HEADER_SIZE)
         response_header_bytes = response_header.read()
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE], response_header_bytes)
@@ -237,7 +250,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(response_bytes.hex().encode(), response_hex_bytes)
 
         # Compare with hex block header
-        response_header_hex = self.test_rest_request(f"/headers/1/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        response_header_hex = self.test_rest_request(f"/headers/{bb_hash}", req_type=ReqType.HEX, ret_type=RetType.OBJ, query_params={"count": 1})
         assert_greater_than(int(response_header_hex.getheader('content-length')), BLOCK_HEADER_SIZE*2)
         response_header_hex_bytes = response_header_hex.read(BLOCK_HEADER_SIZE*2)
         assert_equal(response_bytes[:BLOCK_HEADER_SIZE].hex().encode(), response_header_hex_bytes)
@@ -255,8 +268,8 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(blockhash, bb_hash)
 
         # Check invalid blockhashbyheight requests
-        resp = self.test_rest_request("/blockhashbyheight/abc", ret_type=RetType.OBJ, status=400)
-        assert_equal(resp.read().decode('utf-8').rstrip(), "Invalid height: abc")
+        resp = self.test_rest_request(f"/blockhashbyheight/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid height: {INVALID_PARAM}")
         resp = self.test_rest_request("/blockhashbyheight/1000000", ret_type=RetType.OBJ, status=404)
         assert_equal(resp.read().decode('utf-8').rstrip(), "Block height out of range")
         resp = self.test_rest_request("/blockhashbyheight/-1", ret_type=RetType.OBJ, status=400)
@@ -264,7 +277,7 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/blockhashbyheight/", ret_type=RetType.OBJ, status=400)
 
         # Compare with json block header
-        json_obj = self.test_rest_request(f"/headers/1/{bb_hash}")
+        json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1})
         assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
@@ -275,24 +288,44 @@ class RESTTest (BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        self.sync_all()
-        json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
+        expected_filter = {
+            'basic block filter index': {'synced': True, 'best_block_height': 208},
+        }
+        self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
+        json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
+        json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
+        first_filter_header = json_obj[0]
+        assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
+        json_obj = self.test_rest_request(f"/blockfilter/basic/{bb_hash}")
+
+        # Compare with normal RPC blockfilter response
+        rpc_blockfilter = self.nodes[0].getblockfilter(bb_hash)
+        assert_equal(first_filter_header, rpc_blockfilter['header'])
+        assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
+
+        # Test blockfilterheaders with an invalid hash and filtertype
+        resp = self.test_rest_request(f"/blockfilterheaders/{INVALID_PARAM}/{bb_hash}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Unknown filtertype {INVALID_PARAM}")
+        resp = self.test_rest_request(f"/blockfilterheaders/basic/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
-                bytes(f'Header count out of range: {num}\r\n', 'ascii'),
-                self.test_rest_request(f"/headers/{num}/{bb_hash}", ret_type=RetType.BYTES, status=400),
+                bytes(f'Header count is invalid or out of acceptable range (1-2000): {num}\r\n', 'ascii'),
+                self.test_rest_request(f"/headers/{bb_hash}", ret_type=RetType.BYTES, status=400, query_params={"count": num}),
             )
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
 
-        # Make 3 tx and mine them on node 1
+        # Make 3 chained txs and mine them on node 1
         txs = []
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        input_txid = txid
+        for _ in range(3):
+            utxo_to_spend = self.wallet.get_utxo(txid=input_txid)
+            txs.append(self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_to_spend)['txid'])
+            input_txid = txs[-1]
         self.sync_all()
 
         # Check that there are exactly 3 transactions in the TX memory pool before generating the block
@@ -301,8 +334,15 @@ class RESTTest (BitcoinTestFramework):
         # the size of the memory pool should be greater than 3x ~100 bytes
         assert_greater_than(json_obj['bytes'], 300)
 
+        mempool_info = self.nodes[0].getmempoolinfo()
+        assert_equal(json_obj, mempool_info)
+
         # Check that there are our submitted transactions in the TX memory pool
         json_obj = self.test_rest_request("/mempool/contents")
+        raw_mempool_verbose = self.nodes[0].getrawmempool(verbose=True)
+
+        assert_equal(json_obj, raw_mempool_verbose)
+
         for i, tx in enumerate(txs):
             assert tx in json_obj
             assert_equal(json_obj[tx]['spentby'], txs[i + 1:i + 2])
@@ -310,7 +350,6 @@ class RESTTest (BitcoinTestFramework):
 
         # Now mine the transactions
         newblockhash = self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # Check if the 3 tx show up in the new block
         json_obj = self.test_rest_request(f"/block/{newblockhash[0]}")
@@ -338,6 +377,16 @@ class RESTTest (BitcoinTestFramework):
 
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
+
+        # Compare with normal RPC getblockchaininfo response
+        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(blockchain_info, json_obj)
+
+        # Test compatibility of deprecated and newer endpoints
+        self.log.info("Test compatibility of deprecated and newer endpoints")
+        assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))
+        assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
+
 
 if __name__ == '__main__':
     RESTTest().main()

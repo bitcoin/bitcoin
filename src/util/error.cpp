@@ -1,12 +1,14 @@
-// Copyright (c) 2010-2020 The Bitcoin Core developers
+// Copyright (c) 2010-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/error.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/translation.h>
+
+#include <cassert>
+#include <string>
 
 bilingual_str TransactionErrorString(const TransactionError err)
 {
@@ -20,9 +22,9 @@ bilingual_str TransactionErrorString(const TransactionError err)
         case TransactionError::P2P_DISABLED:
             return Untranslated("Peer-to-peer functionality missing or disabled");
         case TransactionError::MEMPOOL_REJECTED:
-            return Untranslated("Transaction rejected by AcceptToMemoryPool");
+            return Untranslated("Transaction rejected by mempool");
         case TransactionError::MEMPOOL_ERROR:
-            return Untranslated("AcceptToMemoryPool failed");
+            return Untranslated("Mempool internal error");
         case TransactionError::INVALID_PSBT:
             return Untranslated("PSBT is not well-formed");
         case TransactionError::PSBT_MISMATCH:
@@ -35,6 +37,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("External signer not found");
         case TransactionError::EXTERNAL_SIGNER_FAILED:
             return Untranslated("External signer failed to sign");
+        case TransactionError::INVALID_PACKAGE:
+            return Untranslated("Transaction rejected due to invalid package");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);

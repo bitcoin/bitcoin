@@ -7,10 +7,19 @@
 import random
 
 from decimal import Decimal
+from test_framework.address import output_key_to_p2tr
+from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.descriptors import descsum_create
-from test_framework.script import (CScript, OP_CHECKSIG, taproot_construct)
+from test_framework.script import (
+    CScript,
+    MAX_PUBKEYS_PER_MULTI_A,
+    OP_CHECKSIG,
+    OP_CHECKSIGADD,
+    OP_NUMEQUAL,
+    taproot_construct,
+)
 from test_framework.segwit_addr import encode_segwit_address
 
 # xprvs/xpubs, and m/* derived x-only pubkeys (created using independent implementation)
@@ -150,9 +159,6 @@ KEYS = [
 CHANGE_XPRV = "tprv8ZgxMBicQKsPcyDrWwiecVnTtFmfRwbfFqEfR4ZGWvq5aTTwLBWmAm5zrbMcYtb9gQNFfhRfqhhrBG37U3nhmXxEgeEPBJGHAPrHCrAd1WX"
 CHANGE_XPUB = "tpubD6NzVbkrYhZ4WSFeQbPF1uSaTHHbbGnZq8qShabZwCdUQwihxaLMMFhs2kidGF2qrRKiQVqw8VoyuTHj1bZqmMXMeciaU1gBjWA1sim2zUB"
 
-# Point with no known discrete log.
-H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
-
 
 def key(hex_key):
     """Construct an x-only pubkey from its hex representation."""
@@ -162,20 +168,31 @@ def pk(hex_key):
     """Construct a script expression for taproot_construct for pk(hex_key)."""
     return (None, CScript([bytes.fromhex(hex_key), OP_CHECKSIG]))
 
+def multi_a(k, hex_keys, sort=False):
+    """Construct a script expression for taproot_construct for a multi_a script."""
+    xkeys = [bytes.fromhex(hex_key) for hex_key in hex_keys]
+    if sort:
+        xkeys.sort()
+    ops = [xkeys[0], OP_CHECKSIG]
+    for i in range(1, len(hex_keys)):
+        ops += [xkeys[i], OP_CHECKSIGADD]
+    ops += [k, OP_NUMEQUAL]
+    return (None, CScript(ops))
+
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
-    tap = taproot_construct(pubkey, scripts)
-    assert tap.scriptPubKey[0] == 0x51
-    assert tap.scriptPubKey[1] == 0x20
-    return encode_segwit_address("bcrt", 1, tap.scriptPubKey[2:])
+    return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
+
+def compute_raw_taproot_address(pubkey):
+    return encode_segwit_address("bcrt", 1, pubkey)
 
 class WalletTaprootTest(BitcoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [['-keypool=100'], ['-keypool=100'], ["-vbparams=taproot:1:1"]]
+        self.extra_args = [['-keypool=100'], ['-keypool=100']]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
@@ -187,19 +204,6 @@ class WalletTaprootTest(BitcoinTestFramework):
 
     def init_wallet(self, *, node):
         pass
-
-    @staticmethod
-    def rand_keys(n):
-        ret = []
-        idxes = set()
-        for _ in range(n):
-            while True:
-                i = random.randrange(len(KEYS))
-                if not i in idxes:
-                    break
-            idxes.add(i)
-            ret.append(KEYS[i])
-        return ret
 
     @staticmethod
     def make_desc(pattern, privmap, keys, pub_only = False):
@@ -216,7 +220,12 @@ class WalletTaprootTest(BitcoinTestFramework):
         args = []
         for j in range(len(keys)):
             args.append(keys[j]['pubs'][i])
-        return compute_taproot_address(*treefn(*args))
+        tree = treefn(*args)
+        if isinstance(tree, tuple):
+            return compute_taproot_address(*tree)
+        if isinstance(tree, bytes):
+            return compute_raw_taproot_address(tree)
+        assert False
 
     def do_test_addr(self, comment, pattern, privmap, treefn, keys):
         self.log.info("Testing %s address derivation" % comment)
@@ -237,20 +246,11 @@ class WalletTaprootTest(BitcoinTestFramework):
             assert_equal(len(rederive), 1)
             assert_equal(rederive[0], addr_g)
 
-        # tr descriptors cannot be imported when Taproot is not active
+        # tr descriptors can be imported
         result = self.privs_tr_enabled.importdescriptors([{"desc": desc, "timestamp": "now"}])
         assert(result[0]["success"])
         result = self.pubs_tr_enabled.importdescriptors([{"desc": desc_pub, "timestamp": "now"}])
         assert(result[0]["success"])
-        if desc.startswith("tr"):
-            result = self.privs_tr_disabled.importdescriptors([{"desc": desc, "timestamp": "now"}])
-            assert(not result[0]["success"])
-            assert_equal(result[0]["error"]["code"], -4)
-            assert_equal(result[0]["error"]["message"], "Cannot import tr() descriptor when Taproot is not active")
-            result = self.pubs_tr_disabled.importdescriptors([{"desc": desc_pub, "timestamp": "now"}])
-            assert(not result[0]["success"])
-            assert_equal(result[0]["error"]["code"], -4)
-            assert_equal(result[0]["error"]["message"], "Cannot import tr() descriptor when Taproot is not active")
 
     def do_test_sendtoaddress(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
         self.log.info("Testing %s through sendtoaddress" % comment)
@@ -272,11 +272,12 @@ class WalletTaprootTest(BitcoinTestFramework):
             boring_balance = int(self.boring.getbalance() * 100000000)
             to_amnt = random.randrange(1000000, boring_balance)
             self.boring.sendtoaddress(address=addr_g, amount=Decimal(to_amnt) / 100000000, subtractfeefromamount=True)
-            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.rpc_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            res = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True)
-            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+            res = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=200)
+            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(self.rpc_online.gettransaction(res)["confirmations"] > 0)
 
     def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
@@ -303,19 +304,33 @@ class WalletTaprootTest(BitcoinTestFramework):
             boring_balance = int(self.boring.getbalance() * 100000000)
             to_amnt = random.randrange(1000000, boring_balance)
             self.boring.sendtoaddress(address=addr_g, amount=Decimal(to_amnt) / 100000000, subtractfeefromamount=True)
-            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(self.psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0]})['psbt']
-            res = self.psbt_offline.walletprocesspsbt(psbt)
-            assert(res['complete'])
+            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+            psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": "bech32m"})['psbt']
+            res = self.psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
+
+            decoded = self.psbt_offline.decodepsbt(res["psbt"])
+            if pattern.startswith("tr("):
+                for psbtin in decoded["inputs"]:
+                    assert "non_witness_utxo" not in psbtin
+                    assert "witness_utxo" in psbtin
+                    assert "taproot_internal_key" in psbtin
+                    assert "taproot_bip32_derivs" in psbtin
+                    assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
+                    if "taproot_script_path_sigs" in psbtin:
+                        assert "taproot_merkle_root" in psbtin
+                        assert "taproot_scripts" in psbtin
+
             rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
             txid = self.nodes[0].sendrawtransaction(rawtx)
-            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+            self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(self.psbt_online.gettransaction(txid)['confirmations'] > 0)
 
-    def do_test(self, comment, pattern, privmap, treefn, nkeys):
-        keys = self.rand_keys(nkeys * 4)
+    def do_test(self, comment, pattern, privmap, treefn):
+        nkeys = len(privmap)
+        keys = random.sample(KEYS, nkeys * 4)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
         self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
@@ -324,12 +339,8 @@ class WalletTaprootTest(BitcoinTestFramework):
         self.log.info("Creating wallets...")
         self.nodes[0].createwallet(wallet_name="privs_tr_enabled", descriptors=True, blank=True)
         self.privs_tr_enabled = self.nodes[0].get_wallet_rpc("privs_tr_enabled")
-        self.nodes[2].createwallet(wallet_name="privs_tr_disabled", descriptors=True, blank=True)
-        self.privs_tr_disabled=self.nodes[2].get_wallet_rpc("privs_tr_disabled")
         self.nodes[0].createwallet(wallet_name="pubs_tr_enabled", descriptors=True, blank=True, disable_private_keys=True)
         self.pubs_tr_enabled = self.nodes[0].get_wallet_rpc("pubs_tr_enabled")
-        self.nodes[2].createwallet(wallet_name="pubs_tr_disabled", descriptors=True, blank=True, disable_private_keys=True)
-        self.pubs_tr_disabled=self.nodes[2].get_wallet_rpc("pubs_tr_disabled")
         self.nodes[0].createwallet(wallet_name="boring")
         self.nodes[0].createwallet(wallet_name="addr_gen", descriptors=True, disable_private_keys=True, blank=True)
         self.nodes[0].createwallet(wallet_name="rpc_online", descriptors=True, blank=True)
@@ -343,84 +354,123 @@ class WalletTaprootTest(BitcoinTestFramework):
 
         self.log.info("Mining blocks...")
         gen_addr = self.boring.getnewaddress()
-        self.generatetoaddress(self.nodes[0], 101, gen_addr)
+        self.generatetoaddress(self.nodes[0], 101, gen_addr, sync_fun=self.no_op)
 
         self.do_test(
             "tr(XPRV)",
             "tr($1/*)",
             [True],
-            lambda k1: (key(k1), []),
-            1
+            lambda k1: (key(k1), [])
         )
         self.do_test(
             "tr(H,XPRV)",
             "tr($H,pk($1/*))",
             [True],
-            lambda k1: (key(H_POINT), [pk(k1)]),
-            1
+            lambda k1: (key(H_POINT), [pk(k1)])
         )
         self.do_test(
             "wpkh(XPRV)",
             "wpkh($1/*)",
             [True],
-            None,
-            1
+            None
         )
         self.do_test(
             "tr(XPRV,{H,{H,XPUB}})",
             "tr($1/*,{pk($H),{pk($H),pk($2/*)}})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(H_POINT), [pk(H_POINT), pk(k2)]]),
-            2
+            lambda k1, k2: (key(k1), [pk(H_POINT), [pk(H_POINT), pk(k2)]])
         )
         self.do_test(
             "wsh(multi(1,XPRV,XPUB))",
             "wsh(multi(1,$1/*,$2/*))",
             [True, False],
-            None,
-            2
+            None
         )
         self.do_test(
             "tr(XPRV,{XPUB,XPUB})",
             "tr($1/*,{pk($2/*),pk($2/*)})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(k2), pk(k2)]),
-            2
+            lambda k1, k2: (key(k1), [pk(k2), pk(k2)])
         )
         self.do_test(
             "tr(XPRV,{{XPUB,H},{H,XPUB}})",
             "tr($1/*,{{pk($2/*),pk($H)},{pk($H),pk($2/*)}})",
             [True, False],
-            lambda k1, k2: (key(k1), [[pk(k2), pk(H_POINT)], [pk(H_POINT), pk(k2)]]),
-            2
+            lambda k1, k2: (key(k1), [[pk(k2), pk(H_POINT)], [pk(H_POINT), pk(k2)]])
         )
         self.do_test(
             "tr(XPUB,{{H,{H,XPUB}},{H,{H,{H,XPRV}}}})",
             "tr($1/*,{{pk($H),{pk($H),pk($2/*)}},{pk($H),{pk($H),{pk($H),pk($3/*)}}}})",
             [False, False, True],
-            lambda k1, k2, k3: (key(k1), [[pk(H_POINT), [pk(H_POINT), pk(k2)]], [pk(H_POINT), [pk(H_POINT), [pk(H_POINT), pk(k3)]]]]),
-            3
+            lambda k1, k2, k3: (key(k1), [[pk(H_POINT), [pk(H_POINT), pk(k2)]], [pk(H_POINT), [pk(H_POINT), [pk(H_POINT), pk(k3)]]]])
         )
         self.do_test(
             "tr(XPRV,{XPUB,{{XPUB,{H,H}},{{H,H},XPUB}}})",
             "tr($1/*,{pk($2/*),{{pk($2/*),{pk($H),pk($H)}},{{pk($H),pk($H)},pk($2/*)}}})",
             [True, False],
-            lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]]),
-            2
+            lambda k1, k2: (key(k1), [pk(k2), [[pk(k2), [pk(H_POINT), pk(H_POINT)]], [[pk(H_POINT), pk(H_POINT)], pk(k2)]]])
+        )
+        self.do_test(
+            "tr(H,multi_a(1,XPRV))",
+            "tr($H,multi_a(1,$1/*))",
+            [True],
+            lambda k1: (key(H_POINT), [multi_a(1, [k1])])
+        )
+        self.do_test(
+            "tr(H,sortedmulti_a(1,XPRV,XPUB))",
+            "tr($H,sortedmulti_a(1,$1/*,$2/*))",
+            [True, False],
+            lambda k1, k2: (key(H_POINT), [multi_a(1, [k1, k2], True)])
+        )
+        self.do_test(
+            "tr(H,{H,multi_a(1,XPUB,XPRV)})",
+            "tr($H,{pk($H),multi_a(1,$1/*,$2/*)})",
+            [False, True],
+            lambda k1, k2: (key(H_POINT), [pk(H_POINT), [multi_a(1, [k1, k2])]])
+        )
+        self.do_test(
+            "tr(H,sortedmulti_a(1,XPUB,XPRV,XPRV))",
+            "tr($H,sortedmulti_a(1,$1/*,$2/*,$3/*))",
+            [False, True, True],
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(1, [k1, k2, k3], True)])
+        )
+        self.do_test(
+            "tr(H,multi_a(2,XPRV,XPUB,XPRV))",
+            "tr($H,multi_a(2,$1/*,$2/*,$3/*))",
+            [True, False, True],
+            lambda k1, k2, k3: (key(H_POINT), [multi_a(2, [k1, k2, k3])])
+        )
+        self.do_test(
+            "tr(XPUB,{{XPUB,{XPUB,sortedmulti_a(2,XPRV,XPUB,XPRV)}})",
+            "tr($2/*,{pk($2/*),{pk($2/*),sortedmulti_a(2,$1/*,$2/*,$3/*)}})",
+            [True, False, True],
+            lambda k1, k2, k3: (key(k2), [pk(k2), [pk(k2), multi_a(2, [k1, k2, k3], True)]])
+        )
+        rnd_pos = random.randrange(MAX_PUBKEYS_PER_MULTI_A)
+        self.do_test(
+            "tr(XPUB,multi_a(1,H...,XPRV,H...))",
+            "tr($2/*,multi_a(1" + (",$H" * rnd_pos) + ",$1/*" + (",$H" * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)) + "))",
+            [True, False],
+            lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))])
+        )
+        self.do_test(
+            "rawtr(XPRV)",
+            "rawtr($1/*)",
+            [True],
+            lambda k1: key(k1)
         )
 
         self.log.info("Sending everything back...")
 
-        txid = self.rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=self.rpc_online.getbalance(), subtractfeefromamount=True)
-        self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+        txid = self.rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
+        self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert(self.rpc_online.gettransaction(txid)["confirmations"] > 0)
 
-        psbt = self.psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): self.psbt_online.getbalance()}], None, {"subtractFeeFromOutputs": [0]})['psbt']
-        res = self.psbt_offline.walletprocesspsbt(psbt)
-        assert(res['complete'])
+        psbt = self.psbt_online.sendall(recipients=[self.boring.getnewaddress()], options={"psbt": True})["psbt"]
+        res = self.psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
-        self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress())
+        self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert(self.psbt_online.gettransaction(txid)['confirmations'] > 0)
 
 if __name__ == '__main__':

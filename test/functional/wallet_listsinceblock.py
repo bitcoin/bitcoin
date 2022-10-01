@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsinceblock RPC."""
 
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import BIP125_SEQUENCE_NUMBER
+from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
     assert_equal,
@@ -22,6 +23,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        # whitelist peers to speed up tx relay / mempool sync
+        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -31,7 +34,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # only one connection. (See fPreferredDownload in net_processing)
         self.connect_nodes(1, 2)
         self.generate(self.nodes[2], COINBASE_MATURITY + 1)
-        self.sync_all()
 
         self.test_no_blockhash()
         self.test_invalid_blockhash()
@@ -40,6 +42,9 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_double_send()
         self.double_spends_filtered()
         self.test_targetconfirmations()
+        if self.options.descriptors:
+            self.test_desc()
+        self.test_send_to_self()
 
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
@@ -54,7 +59,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
         blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
-        self.sync_all()
 
         txs = self.nodes[0].listtransactions()
         assert_array_result(txs, {"txid": txid}, {
@@ -99,7 +103,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.log.info("Test target_confirmations")
         blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
-        self.sync_all()
 
         assert_equal(
             self.nodes[0].getblockhash(0),
@@ -147,13 +150,10 @@ class ListSinceBlockTest(BitcoinTestFramework):
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
 
         # generate on both sides
-        nodes1_last_blockhash = self.generate(self.nodes[1], 6)[-1]
-        nodes2_first_blockhash = self.generate(self.nodes[2], 7)[0]
+        nodes1_last_blockhash = self.generate(self.nodes[1], 6, sync_fun=lambda: self.sync_all(self.nodes[:2]))[-1]
+        nodes2_first_blockhash = self.generate(self.nodes[2], 7, sync_fun=lambda: self.sync_all(self.nodes[2:]))[0]
         self.log.debug("nodes[1] last blockhash = {}".format(nodes1_last_blockhash))
         self.log.debug("nodes[2] first blockhash = {}".format(nodes2_first_blockhash))
-
-        self.sync_all(self.nodes[:2])
-        self.sync_all(self.nodes[2:])
 
         self.join_network()
 
@@ -203,7 +203,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         address = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
-        self.sync_all()
         self.nodes[2].importprivkey(privkey)
         utxos = self.nodes[2].listunspent()
         utxo = [u for u in utxos if u["address"] == address][0]
@@ -236,8 +235,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict2))['hex'])
 
         # generate on both sides
-        lastblockhash = self.generate(self.nodes[1], 3)[2]
-        self.generate(self.nodes[2], 4)
+        lastblockhash = self.generate(self.nodes[1], 3, sync_fun=self.no_op)[2]
+        self.generate(self.nodes[2], 4, sync_fun=self.no_op)
 
         self.join_network()
 
@@ -308,7 +307,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         txid1 = self.nodes[1].sendrawtransaction(signedtx)
 
         # generate bb1-bb2 on right side
-        self.generate(self.nodes[2], 2)
+        self.generate(self.nodes[2], 2, sync_fun=self.no_op)
 
         # send from nodes[2]; this will end up in bb3
         txid2 = self.nodes[2].sendrawtransaction(signedtx)
@@ -316,8 +315,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(txid1, txid2)
 
         # generate on both sides
-        lastblockhash = self.generate(self.nodes[1], 3)[2]
-        self.generate(self.nodes[2], 2)
+        lastblockhash = self.generate(self.nodes[1], 3, sync_fun=self.no_op)[2]
+        self.generate(self.nodes[2], 2, sync_fun=self.no_op)
 
         self.join_network()
 
@@ -353,7 +352,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         dest_address = spending_node.getnewaddress()
 
         tx_input = dict(
-            sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in spending_node.listunspent()))
+            sequence=MAX_BIP125_RBF_SEQUENCE, **next(u for u in spending_node.listunspent()))
         rawtx = spending_node.createrawtransaction(
             [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
                          spending_node.getrawchangeaddress(): Decimal("0.00050000")})
@@ -389,6 +388,66 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 double_found = True
         assert_equal(original_found, False)
         assert_equal(double_found, False)
+
+    def test_desc(self):
+        """Make sure we can track coins by descriptor."""
+        self.log.info("Test descriptor lookup by scriptPubKey.")
+
+        # Create a watchonly wallet tracking two multisig descriptors.
+        multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
+        multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
+        self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
+        wo_wallet = self.nodes[0].get_wallet_rpc("wo")
+        wo_wallet.importdescriptors([
+            {
+                "desc": multi_a,
+                "active": False,
+                "timestamp": "now",
+            },
+            {
+                "desc": multi_b,
+                "active": False,
+                "timestamp": "now",
+            },
+        ])
+
+        # Send a coin to each descriptor.
+        assert_equal(len(wo_wallet.listsinceblock()["transactions"]), 0)
+        addr_a = self.nodes[0].deriveaddresses(multi_a, 0)[0]
+        addr_b = self.nodes[0].deriveaddresses(multi_b, 0)[0]
+        self.nodes[2].sendtoaddress(addr_a, 1)
+        self.nodes[2].sendtoaddress(addr_b, 2)
+        self.generate(self.nodes[2], 1)
+
+        # We can identify on which descriptor each coin was received.
+        coins = wo_wallet.listsinceblock()["transactions"]
+        assert_equal(len(coins), 2)
+        coin_a = next(c for c in coins if c["amount"] == 1)
+        assert_equal(coin_a["parent_descs"][0], multi_a)
+        coin_b = next(c for c in coins if c["amount"] == 2)
+        assert_equal(coin_b["parent_descs"][0], multi_b)
+
+    def test_send_to_self(self):
+        """We can make listsinceblock output our change outputs."""
+        self.log.info("Test the inclusion of change outputs in the output.")
+
+        # Create a UTxO paying to one of our change addresses.
+        block_hash = self.nodes[2].getbestblockhash()
+        addr = self.nodes[2].getrawchangeaddress()
+        self.nodes[2].sendtoaddress(addr, 1)
+
+        # If we don't list change, we won't have an entry for it.
+        coins = self.nodes[2].listsinceblock(blockhash=block_hash)["transactions"]
+        assert not any(c["address"] == addr for c in coins)
+
+        # Now if we list change, we'll get both the send (to a change address) and
+        # the actual change.
+        res = self.nodes[2].listsinceblock(blockhash=block_hash, include_change=True)
+        coins = [entry for entry in res["transactions"] if entry["category"] == "receive"]
+        assert_equal(len(coins), 2)
+        assert any(c["address"] == addr for c in coins)
+        assert all(self.nodes[2].getaddressinfo(c["address"])["ischange"] for c in coins)
+
 
 if __name__ == '__main__':
     ListSinceBlockTest().main()

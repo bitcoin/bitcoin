@@ -19,6 +19,9 @@
     <ClCompile Include="..\..\src\wallet\test\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\libminisketch\libminisketch.vcxproj">
+      <Project>{542007e3-be0d-4b0d-a6b0-aa8813e2558d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
@@ -31,7 +34,7 @@
     <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
       <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+    <ProjectReference Include="..\libbitcoin_node\libbitcoin_node.vcxproj">
       <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">

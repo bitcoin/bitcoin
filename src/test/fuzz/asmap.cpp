@@ -1,8 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
+#include <netgroup.h>
 #include <test/fuzz/fuzz.h>
 #include <util/asmap.h>
 
@@ -49,12 +50,13 @@ FUZZ_TARGET(asmap)
     CNetAddr net_addr;
     if (ipv6) {
         assert(addr_size == ADDR_IPV6_SIZE);
-        net_addr.SetLegacyIPv6(Span<const uint8_t>(addr_data, addr_size));
+        net_addr.SetLegacyIPv6({addr_data, addr_size});
     } else {
         assert(addr_size == ADDR_IPV4_SIZE);
         in_addr ipv4;
         memcpy(&ipv4, addr_data, addr_size);
         net_addr.SetIP(CNetAddr{ipv4});
     }
-    (void)net_addr.GetMappedAS(asmap);
+    NetGroupManager netgroupman{asmap};
+    (void)netgroupman.GetMappedAS(net_addr);
 }

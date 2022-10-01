@@ -166,7 +166,7 @@ void run_tests(secp256k1_context *ctx, unsigned char *key) {
     ret = secp256k1_keypair_create(ctx, &keypair, key);
     VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
     CHECK(ret == 1);
-    ret = secp256k1_schnorrsig_sign(ctx, sig, msg, &keypair, NULL);
+    ret = secp256k1_schnorrsig_sign32(ctx, sig, msg, &keypair, NULL);
     VALGRIND_MAKE_MEM_DEFINED(&ret, sizeof(ret));
     CHECK(ret == 1);
 #endif

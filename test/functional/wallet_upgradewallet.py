@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """upgradewallet RPC functional test
@@ -119,8 +119,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
 
     def run_test(self):
-        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
-        self.dumb_sync_blocks()
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress(), sync_fun=lambda: self.dumb_sync_blocks())
         # # Sanity check the test framework:
         res = self.nodes[0].getblockchaininfo()
         assert_equal(res['blocks'], COINBASE_MATURITY + 1)
@@ -131,8 +130,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         # Send coins to old wallets for later conversion checks.
         v16_3_wallet  = v16_3_node.get_wallet_rpc('wallet.dat')
         v16_3_address = v16_3_wallet.getnewaddress()
-        self.generatetoaddress(node_master, COINBASE_MATURITY + 1, v16_3_address)
-        self.dumb_sync_blocks()
+        self.generatetoaddress(node_master, COINBASE_MATURITY + 1, v16_3_address, sync_fun=lambda: self.dumb_sync_blocks())
         v16_3_balance = v16_3_wallet.getbalance()
 
         self.log.info("Test upgradewallet RPC...")
@@ -346,6 +344,17 @@ class UpgradeWalletTest(BitcoinTestFramework):
             self.nodes[0].createwallet(wallet_name="desc_upgrade", descriptors=True)
             desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade")
             self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
+
+            self.log.info("Checking that descriptor wallets without privkeys do nothing, successfully")
+            self.nodes[0].createwallet(wallet_name="desc_upgrade_nopriv", descriptors=True, disable_private_keys=True)
+            desc_wallet = self.nodes[0].get_wallet_rpc("desc_upgrade_nopriv")
+            self.test_upgradewallet(desc_wallet, previous_version=169900, expected_version=169900)
+
+        if self.is_bdb_compiled():
+            self.log.info("Upgrading a wallet with private keys disabled")
+            self.nodes[0].createwallet(wallet_name="privkeys_disabled_upgrade", disable_private_keys=True, descriptors=False)
+            disabled_wallet = self.nodes[0].get_wallet_rpc("privkeys_disabled_upgrade")
+            self.test_upgradewallet(disabled_wallet, previous_version=169900, expected_version=169900)
 
 if __name__ == '__main__':
     UpgradeWalletTest().main()

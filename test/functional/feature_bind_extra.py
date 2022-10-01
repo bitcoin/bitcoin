@@ -18,11 +18,11 @@ from test_framework.test_framework import (
     SkipTest,
 )
 from test_framework.util import (
-    PORT_MIN,
-    PORT_RANGE,
     assert_equal,
+    p2p_port,
     rpc_port,
 )
+
 
 class BindExtraTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,11 +33,6 @@ class BindExtraTest(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_network(self):
-        # Override setup_network() because we want to put the result of
-        # p2p_port() in self.extra_args[], before the nodes are started.
-        # p2p_port() is not usable in set_test_params() because PortSeed.n is
-        # not set at that time.
-
         # Due to OS-specific network stats queries, we only run on Linux.
         self.log.info("Checking for Linux")
         if not sys.platform.startswith('linux'):
@@ -45,8 +40,8 @@ class BindExtraTest(BitcoinTestFramework):
 
         loopback_ipv4 = addr_to_hex("127.0.0.1")
 
-        # Start custom ports after p2p and rpc ports.
-        port = PORT_MIN + 2 * PORT_RANGE
+        # Start custom ports by reusing unused p2p ports
+        port = p2p_port(self.num_nodes)
 
         # Array of tuples [command line arguments, expected bind addresses].
         self.expected = []

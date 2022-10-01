@@ -43,14 +43,18 @@ class ListDescriptorsTest(BitcoinTestFramework):
         node.createwallet(wallet_name='w3', descriptors=True)
         result = node.get_wallet_rpc('w3').listdescriptors()
         assert_equal("w3", result['wallet_name'])
-        assert_equal(6, len(result['descriptors']))
-        assert_equal(6, len([d for d in result['descriptors'] if d['active']]))
-        assert_equal(3, len([d for d in result['descriptors'] if d['internal']]))
+        assert_equal(8, len(result['descriptors']))
+        assert_equal(8, len([d for d in result['descriptors'] if d['active']]))
+        assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
             assert item['next'] == 0
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
+
+        self.log.info('Test that descriptor strings are returned in lexicographically sorted order.')
+        descriptor_strings = [descriptor['desc'] for descriptor in result['descriptors']]
+        assert_equal(descriptor_strings, sorted(descriptor_strings))
 
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
         xprv = 'tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg'

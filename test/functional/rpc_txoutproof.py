@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxoutproof and verifytxoutproof RPCs."""
@@ -31,7 +31,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
         self.generate(miniwallet, 5)
         self.generate(self.nodes[0], COINBASE_MATURITY)
-        self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
@@ -43,7 +42,6 @@ class MerkleBlockTest(BitcoinTestFramework):
 
         self.generate(self.nodes[0], 1)
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
-        self.sync_all()
 
         txlist = []
         blocktxn = self.nodes[0].getblock(blockhash, True)["tx"]
@@ -54,11 +52,10 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2])), txlist)
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2], blockhash)), txlist)
 
-        txin_spent = miniwallet.get_utxo()  # Get the change from txid2
+        txin_spent = miniwallet.get_utxo(txid=txid2)  # Get the change from txid2
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1  # Input was change from txid2, so txid1 should be unspent

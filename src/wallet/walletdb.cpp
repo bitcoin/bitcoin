@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 
+namespace wallet {
 namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
@@ -58,6 +59,7 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
+const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
 } // namespace DBKeys
 
 //
@@ -312,9 +314,9 @@ public:
     std::map<std::pair<uint256, CKeyID>, std::pair<CPubKey, std::vector<unsigned char>>> m_descriptor_crypt_keys;
     std::map<uint160, CHDChain> m_hd_chains;
     bool tx_corrupt{false};
+    bool descriptor_unknown{false};
 
-    CWalletScanState() {
-    }
+    CWalletScanState() = default;
 };
 
 static bool
@@ -556,9 +558,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
                 if (internal) {
                     chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
-                    chain.nInternalChainCounter = std::max(chain.nInternalChainCounter, index);
+                    chain.nInternalChainCounter = std::max(chain.nInternalChainCounter, index + 1);
                 } else {
-                    chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index);
+                    chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index + 1);
                 }
             }
         } else if (strType == DBKeys::WATCHMETA) {
@@ -626,7 +628,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             uint256 id;
             ssKey >> id;
             WalletDescriptor desc;
-            ssValue >> desc;
+            try {
+                ssValue >> desc;
+            } catch (const std::ios_base::failure& e) {
+                strErr = e.what();
+                wss.descriptor_unknown = true;
+                return false;
+            }
             if (wss.m_descriptor_caches.count(id) == 0) {
                 wss.m_descriptor_caches[id] = DescriptorCache();
             }
@@ -766,6 +774,12 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     DBErrors result = DBErrors::LOAD_OK;
 
     LOCK(pwallet->cs_wallet);
+
+    // Last client version to open this wallet
+    int last_client = CLIENT_VERSION;
+    bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
+    pwallet->WalletLogPrintf("Wallet file version = %d, last client version = %d\n", pwallet->GetVersion(), last_client);
+
     try {
         int nMinVersion = 0;
         if (m_batch->Read(DBKeys::MINVERSION, nMinVersion)) {
@@ -787,7 +801,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #ifndef ENABLE_EXTERNAL_SIGNER
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
             pwallet->WalletLogPrintf("Error: External signer wallet being loaded without external signer support compiled\n");
-            return DBErrors::TOO_NEW;
+            return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
 
@@ -831,6 +845,13 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                     // Set tx_corrupt back to false so that the error is only printed once (per corrupt tx)
                     wss.tx_corrupt = false;
                     result = DBErrors::CORRUPT;
+                } else if (wss.descriptor_unknown) {
+                    strErr = strprintf("Error: Unrecognized descriptor found in wallet %s. ", pwallet->GetName());
+                    strErr += (last_client > CLIENT_VERSION) ? "The wallet might had been created on a newer version. " :
+                            "The database might be corrupted or the software version is not compatible with one of your wallet descriptors. ";
+                    strErr += "Please try running the latest software version";
+                    pwallet->WalletLogPrintf("%s\n", strErr);
+                    return DBErrors::UNKNOWN_DESCRIPTOR;
                 } else {
                     // Leave other errors alone, if we try to fix them we might make things worse.
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
@@ -849,25 +870,25 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     // Set the active ScriptPubKeyMans
     for (auto spk_man_pair : wss.m_active_external_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ false);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /*internal=*/false);
     }
     for (auto spk_man_pair : wss.m_active_internal_spks) {
-        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ true);
+        pwallet->LoadActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /*internal=*/true);
     }
 
     // Set the descriptor caches
-    for (auto desc_cache_pair : wss.m_descriptor_caches) {
+    for (const auto& desc_cache_pair : wss.m_descriptor_caches) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_cache_pair.first);
         assert(spk_man);
         ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
     }
 
     // Set the descriptor keys
-    for (auto desc_key_pair : wss.m_descriptor_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         ((DescriptorScriptPubKeyMan*)spk_man)->AddKey(desc_key_pair.first.second, desc_key_pair.second);
     }
-    for (auto desc_key_pair : wss.m_descriptor_crypt_keys) {
+    for (const auto& desc_key_pair : wss.m_descriptor_crypt_keys) {
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
         ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
     }
@@ -882,13 +903,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // upgrading, we don't want to make it worse.
     if (result != DBErrors::LOAD_OK)
         return result;
-
-    // Last client version to open this wallet, was previously the file version number
-    int last_client = CLIENT_VERSION;
-    m_batch->Read(DBKeys::VERSION, last_client);
-
-    int wallet_version = pwallet->GetVersion();
-    pwallet->WalletLogPrintf("Wallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
 
     pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
@@ -909,7 +923,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (wss.fIsEncrypted && (last_client == 40000 || last_client == 50000))
         return DBErrors::NEED_REWRITE;
 
-    if (last_client < CLIENT_VERSION) // Update
+    if (!has_last_client || last_client != CLIENT_VERSION) // Update
         m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
 
     if (wss.fAnyUnordered)
@@ -987,7 +1001,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
                 uint256 hash;
                 ssKey >> hash;
                 vTxHash.push_back(hash);
-                vWtx.emplace_back(nullptr /* tx */);
+                vWtx.emplace_back(/*tx=*/nullptr, TxStateInactive{});
                 ssValue >> vWtx.back();
             }
         }
@@ -1085,6 +1099,45 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
     return WriteIC(DBKeys::FLAGS, flags);
 }
 
+bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
+{
+    // Get cursor
+    if (!m_batch->StartCursor())
+    {
+        return false;
+    }
+
+    // Iterate the DB and look for any records that have the type prefixes
+    while (true)
+    {
+        // Read next record
+        CDataStream key(SER_DISK, CLIENT_VERSION);
+        CDataStream value(SER_DISK, CLIENT_VERSION);
+        bool complete;
+        bool ret = m_batch->ReadAtCursor(key, value, complete);
+        if (complete) {
+            break;
+        }
+        else if (!ret)
+        {
+            m_batch->CloseCursor();
+            return false;
+        }
+
+        // Make a copy of key to avoid data being deleted by the following read of the type
+        Span<const unsigned char> key_data = MakeUCharSpan(key);
+
+        std::string type;
+        key >> type;
+
+        if (types.count(type) > 0) {
+            m_batch->Erase(key_data);
+        }
+    }
+    m_batch->CloseCursor();
+    return true;
+}
+
 bool WalletBatch::TxnBegin()
 {
     return m_batch->TxnBegin();
@@ -1104,7 +1157,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 {
     bool exists;
     try {
-        exists = fs::symlink_status(path).type() != fs::file_not_found;
+        exists = fs::symlink_status(path).type() != fs::file_type::not_found;
     } catch (const fs::filesystem_error& e) {
         error = Untranslated(strprintf("Failed to access database path '%s': %s", fs::PathToString(path), fsbridge::get_filesystem_error_message(e)));
         status = DatabaseStatus::FAILED_BAD_PATH;
@@ -1186,11 +1239,36 @@ std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 }
 
 /** Return object for accessing temporary in-memory database. */
+std::unique_ptr<WalletDatabase> CreateMockWalletDatabase(DatabaseOptions& options)
+{
+
+    std::optional<DatabaseFormat> format;
+    if (options.require_format) format = options.require_format;
+    if (!format) {
+#ifdef USE_BDB
+        format = DatabaseFormat::BERKELEY;
+#endif
+#ifdef USE_SQLITE
+        format = DatabaseFormat::SQLITE;
+#endif
+    }
+
+    if (format == DatabaseFormat::SQLITE) {
+#ifdef USE_SQLITE
+        return std::make_unique<SQLiteDatabase>(":memory:", "", options, true);
+#endif
+        assert(false);
+    }
+
+#ifdef USE_BDB
+    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "", options);
+#endif
+    assert(false);
+}
+
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
-#ifdef USE_SQLITE
-    return std::make_unique<SQLiteDatabase>("", "", true);
-#elif USE_BDB
-    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
-#endif
+    DatabaseOptions options;
+    return CreateMockWalletDatabase(options);
 }
+} // namespace wallet

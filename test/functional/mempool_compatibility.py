@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that mempool.dat is both backward and forward compatible between versions
@@ -7,14 +7,17 @@
 NOTE: The test is designed to prevent cases when compatibility is broken accidentally.
 In case we need to break mempool compatibility we can continue to use the test by just bumping the version number.
 
-The previous release v0.15.2 is required by this test, see test/README.md.
+The previous release v0.19.1 is required by this test, see test/README.md.
 """
 
 import os
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.wallet import MiniWallet
+from test_framework.wallet import (
+    MiniWallet,
+    MiniWalletMode,
+)
 
 
 class MempoolCompatibilityTest(BitcoinTestFramework):
@@ -37,9 +40,9 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.log.info("Test that mempool.dat is compatible between versions")
 
         old_node, new_node = self.nodes
-        new_wallet = MiniWallet(new_node)
-        self.generate(new_wallet, 1)
-        self.generate(new_node, COINBASE_MATURITY)
+        new_wallet = MiniWallet(new_node, mode=MiniWalletMode.RAW_P2PK)
+        self.generate(new_wallet, 1, sync_fun=self.no_op)
+        self.generate(new_node, COINBASE_MATURITY, sync_fun=self.no_op)
         # Sync the nodes to ensure old_node has the block that contains the coinbase that new_wallet will spend.
         # Otherwise, because coinbases are only valid in a block and not as loose txns, if the nodes aren't synced
         # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.

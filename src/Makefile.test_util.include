@@ -20,7 +20,7 @@ TEST_UTIL_H = \
     test/util/validation.h \
     test/util/wallet.h
 
-libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libtest_util_a_SOURCES = \
   test/util/blockfilter.cpp \
@@ -34,8 +34,3 @@ libtest_util_a_SOURCES = \
   test/util/validation.cpp \
   test/util/wallet.cpp \
   $(TEST_UTIL_H)
-
-LIBTEST_UTIL += $(LIBBITCOIN_SERVER)
-LIBTEST_UTIL += $(LIBBITCOIN_COMMON)
-LIBTEST_UTIL += $(LIBBITCOIN_UTIL)
-LIBTEST_UTIL += $(LIBBITCOIN_CRYPTO_BASE)

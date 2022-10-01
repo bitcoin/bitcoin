@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <fs.h>
 #include <key.h>
 #include <util/system.h>
+#include <node/caches.h>
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
@@ -18,18 +19,24 @@
 #include <util/string.h>
 #include <util/vector.h>
 
+#include <functional>
 #include <type_traits>
 #include <vector>
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
+/** Retrieve the command line arguments. */
+extern const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS;
+
 // Enable BOOST_CHECK_EQUAL for enum class types
+namespace std {
 template <typename T>
 std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 {
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
+} // namespace std
 
 /**
  * This global and the helpers that use it are not thread-safe.
@@ -56,7 +63,7 @@ void Seed(FastRandomContext& ctx);
 static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
 {
     if (seed == SeedRand::ZEROS) {
-        g_insecure_rand_ctx = FastRandomContext(/* deterministic */ true);
+        g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);
     } else {
         Seed(g_insecure_rand_ctx);
     }
@@ -74,8 +81,7 @@ static constexpr CAmount CENT{1000000};
  * This just configures logging, data dir and chain parameters.
  */
 struct BasicTestingSetup {
-    ECCVerifyHandle globalVerifyHandle;
-    NodeContext m_node;
+    node::NodeContext m_node; // keep as first member to be destructed last
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
@@ -84,11 +90,15 @@ struct BasicTestingSetup {
     ArgsManager m_args;
 };
 
+
+CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
+
 /** Testing setup that performs all steps up until right before
  * ChainstateManager gets initialized. Meant for testing ChainstateManager
  * initialization behaviour.
  */
 struct ChainTestingSetup : public BasicTestingSetup {
+    node::CacheSizes m_cache_sizes{};
 
     explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~ChainTestingSetup();
@@ -114,7 +124,8 @@ class CScript;
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestingSetup {
-    TestChain100Setup(const std::vector<const char*>& extra_args = {});
+    TestChain100Setup(const std::string& chain_name = CBaseChainParams::REGTEST,
+                      const std::vector<const char*>& extra_args = {});
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -123,7 +134,7 @@ struct TestChain100Setup : public TestingSetup {
      */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey,
-                                 CChainState* chainstate = nullptr);
+                                 Chainstate* chainstate = nullptr);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -132,7 +143,7 @@ struct TestChain100Setup : public TestingSetup {
     CBlock CreateBlock(
         const std::vector<CMutableTransaction>& txns,
         const CScript& scriptPubKey,
-        CChainState& chainstate);
+        Chainstate& chainstate);
 
     //! Mine a series of new blocks on the active chain.
     void mineBlocks(int num_blocks);
@@ -155,6 +166,19 @@ struct TestChain100Setup : public TestingSetup {
                                                       CScript output_destination,
                                                       CAmount output_amount = CAmount(1 * COIN),
                                                       bool submit = true);
+
+    /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
+     * that exist in the current chain, but may be premature coinbase spends, have missing
+     * signatures, or violate some other consensus rules. They should only be used for testing
+     * mempool consistency. All transactions will have some random number of inputs and outputs
+     * (between 1 and 24). Transactions may or may not be dependent upon each other; if dependencies
+     * exit, every parent will always be somewhere in the list before the child so each transaction
+     * can be submitted in the same order they appear in the list.
+     * @param[in]   submit      When true, submit transactions to the mempool.
+     *                          When false, return them but don't submit them.
+     * @returns A vector of transactions that can be submitted to the mempool.
+     */
+    std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
@@ -227,4 +251,4 @@ private:
     const std::string m_reason;
 };
 
-#endif
+#endif // BITCOIN_TEST_UTIL_SETUP_COMMON_H

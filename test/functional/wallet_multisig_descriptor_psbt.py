@@ -85,7 +85,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             # This wallet will be the participant's `signer` for the resulting multisig. Avoid reusing this wallet for any other purpose (for privacy reasons).
             "signers": [node.get_wallet_rpc(node.createwallet(wallet_name=f"participant_{self.nodes.index(node)}", descriptors=True)["name"]) for node in self.nodes],
             # After participants generate and exchange their xpubs they will each create their own watch-only multisig.
-            # Note: these multisigs are all the same, this justs highlights that each participant can independently verify everything on their own node.
+            # Note: these multisigs are all the same, this just highlights that each participant can independently verify everything on their own node.
             "multisigs": []
         }
 
@@ -111,7 +111,6 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.log.info("Send funds to the resulting multisig receiving address...")
         coordinator_wallet.sendtoaddress(multisig_receiving_address, deposit_amount)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         for participant in participants["multisigs"]:
             assert_approx(participant.getbalance(), deposit_amount, vspan=0.001)
 
@@ -137,7 +136,6 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - value, vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value)
 
@@ -154,7 +152,6 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)
 

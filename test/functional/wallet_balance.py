@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
@@ -50,9 +50,14 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [
-            ['-limitdescendantcount=3'],  # Limit mempool descendants as a hack to have wallet txs rejected from the mempool
+            # Limit mempool descendants as a hack to have wallet txs rejected from the mempool.
+            # Set walletrejectlongchains=0 so the wallet still creates the transactions.
+            ['-limitdescendantcount=3', '-walletrejectlongchains=0'],
             [],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -71,10 +76,8 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info("Mining blocks ...")
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         self.generate(self.nodes[1], 1)
         self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         if not self.options.descriptors:
             # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
@@ -197,7 +200,6 @@ class WalletTest(BitcoinTestFramework):
         test_balances(fee_node_1=Decimal('0.02'))
 
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         # balances are correct after the transactions are confirmed
         balance_node0 = Decimal('69.99')  # node 1's send plus change from node 0's send
@@ -211,7 +213,6 @@ class WalletTest(BitcoinTestFramework):
         txs = create_transactions(self.nodes[1], self.nodes[0].getnewaddress(), Decimal('29.97'), [Decimal('0.01')])
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
         self.generatetoaddress(self.nodes[1], 2, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
         # TODO: fix getbalance tracking of coin spentness depth
@@ -258,15 +259,13 @@ class WalletTest(BitcoinTestFramework):
 
         # Now confirm tx_replace
         block_reorg = self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)[0]
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
 
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
-        self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY)
-        assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
 
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
@@ -274,8 +273,27 @@ class WalletTest(BitcoinTestFramework):
         self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
+
+        if not self.options.descriptors:
+            self.log.info('Check if mempool is taken into account after import*')
+            address = self.nodes[0].getnewaddress()
+            privkey = self.nodes[0].dumpprivkey(address)
+            self.nodes[0].sendtoaddress(address, 0.1)
+            self.nodes[0].unloadwallet('')
+            # check importaddress on fresh wallet
+            self.nodes[0].createwallet('w1', False, True)
+            self.nodes[0].importaddress(address)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], 0)
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], Decimal('0.1'))
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], 0)
+            self.nodes[0].unloadwallet('w1')
+            # check importprivkey on fresh wallet
+            self.nodes[0].createwallet('w2', False, True)
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
 
 
 if __name__ == '__main__':

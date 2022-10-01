@@ -9,8 +9,7 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
-    assert_greater_than,
-    assert_greater_than_or_equal,
+    assert_equal,
 )
 
 
@@ -35,14 +34,14 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
 
         # Encrypt the wallet
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].encryptwallet, '')
+        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].encryptwallet, '')
         self.nodes[0].encryptwallet(passphrase)
 
         # Test that the wallet is encrypted
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
         assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrase, '', 1)
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
+        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
+        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
@@ -76,21 +75,18 @@ class WalletEncryptionTest(BitcoinTestFramework):
 
         self.log.info('Check a timeout less than the limit')
         MAX_VALUE = 100000000
-        expected_time = int(time.time()) + MAX_VALUE - 600
+        now = int(time.time())
+        self.nodes[0].setmocktime(now)
+        expected_time = now + MAX_VALUE - 600
         self.nodes[0].walletpassphrase(passphrase2, MAX_VALUE - 600)
-        # give buffer for walletpassphrase, since it iterates over all encrypted keys
-        expected_time_with_buffer = time.time() + MAX_VALUE - 600
         actual_time = self.nodes[0].getwalletinfo()['unlocked_until']
-        assert_greater_than_or_equal(actual_time, expected_time)
-        assert_greater_than(expected_time_with_buffer, actual_time)
+        assert_equal(actual_time, expected_time)
 
         self.log.info('Check a timeout greater than the limit')
-        expected_time = int(time.time()) + MAX_VALUE - 1
+        expected_time = now + MAX_VALUE
         self.nodes[0].walletpassphrase(passphrase2, MAX_VALUE + 1000)
-        expected_time_with_buffer = time.time() + MAX_VALUE
         actual_time = self.nodes[0].getwalletinfo()['unlocked_until']
-        assert_greater_than_or_equal(actual_time, expected_time)
-        assert_greater_than(expected_time_with_buffer, actual_time)
+        assert_equal(actual_time, expected_time)
 
 
 if __name__ == '__main__':

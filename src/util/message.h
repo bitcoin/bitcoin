@@ -6,10 +6,11 @@
 #ifndef BITCOIN_UTIL_MESSAGE_H
 #define BITCOIN_UTIL_MESSAGE_H
 
-#include <key.h> // For CKey
 #include <uint256.h>
 
 #include <string>
+
+class CKey;
 
 extern const std::string MESSAGE_MAGIC;
 

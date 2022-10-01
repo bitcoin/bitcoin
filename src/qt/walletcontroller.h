@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,6 +32,10 @@ class Handler;
 class Node;
 class Wallet;
 } // namespace interfaces
+
+namespace fs {
+class path;
+}
 
 class AskPassphraseDialog;
 class CreateWalletActivity;
@@ -153,6 +157,22 @@ public:
     LoadWalletsActivity(WalletController* wallet_controller, QWidget* parent_widget);
 
     void load();
+};
+
+class RestoreWalletActivity : public WalletControllerActivity
+{
+    Q_OBJECT
+
+public:
+    RestoreWalletActivity(WalletController* wallet_controller, QWidget* parent_widget);
+
+    void restore(const fs::path& backup_file, const std::string& wallet_name);
+
+Q_SIGNALS:
+    void restored(WalletModel* wallet_model);
+
+private:
+    void finish();
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H

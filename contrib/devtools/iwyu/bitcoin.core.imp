@@ -1,0 +1,7 @@
+# Fixups / upstreamed changes
+[
+  { include: [ "<bits/termios-c_lflag.h>", private, "<termios.h>", public ] },
+  { include: [ "<bits/termios-struct.h>", private, "<termios.h>", public ] },
+  { include: [ "<bits/termios-tcflow.h>", private, "<termios.h>", public ] },
+  { include: [ "<bits/chrono.h>", private, "<chrono>", public ] },
+]

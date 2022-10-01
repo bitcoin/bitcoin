@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(wallet_crypto_tests, BasicTestingSetup)
 
 class TestCrypter
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(passphrase) {
 
     std::string hash(GetRandHash().ToString());
     std::vector<unsigned char> vchSalt(8);
-    GetRandBytes(vchSalt.data(), vchSalt.size());
+    GetRandBytes(vchSalt);
     uint32_t rounds = InsecureRand32();
     if (rounds > 30000)
         rounds = 30000;
@@ -124,3 +125,4 @@ BOOST_AUTO_TEST_CASE(decrypt) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

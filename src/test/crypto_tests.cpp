@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -574,10 +574,10 @@ BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
 {
     // Use rfc5869 test vectors but truncated to 32 bytes (our implementation only support length 32)
     TestHKDF_SHA256_32(
-                /* IKM */ "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
-                /* salt */ "000102030405060708090a0b0c",
-                /* info */ "f0f1f2f3f4f5f6f7f8f9",
-                /* expected OKM */ "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf");
+                /*ikm_hex=*/"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+                /*salt_hex=*/"000102030405060708090a0b0c",
+                /*info_hex=*/"f0f1f2f3f4f5f6f7f8f9",
+                /*okm_check_hex=*/"3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf");
     TestHKDF_SHA256_32(
                 "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f",
                 "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
@@ -770,8 +770,8 @@ static void TestSHA3_256(const std::string& input, const std::string& output)
     int s1 = InsecureRandRange(in_bytes.size() + 1);
     int s2 = InsecureRandRange(in_bytes.size() + 1 - s1);
     int s3 = in_bytes.size() - s1 - s2;
-    sha.Write(MakeSpan(in_bytes).first(s1)).Write(MakeSpan(in_bytes).subspan(s1, s2));
-    sha.Write(MakeSpan(in_bytes).last(s3)).Finalize(out);
+    sha.Write(Span{in_bytes}.first(s1)).Write(Span{in_bytes}.subspan(s1, s2));
+    sha.Write(Span{in_bytes}.last(s3)).Finalize(out);
     BOOST_CHECK(std::equal(std::begin(out_bytes), std::end(out_bytes), out));
 }
 

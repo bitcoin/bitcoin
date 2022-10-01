@@ -5,6 +5,8 @@
 #ifndef BITCOIN_UTIL_GOLOMBRICE_H
 #define BITCOIN_UTIL_GOLOMBRICE_H
 
+#include <util/fastrange.h>
+
 #include <streams.h>
 
 #include <cstdint>

@@ -1,4 +1,4 @@
-BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
+BIPs that are implemented by Bitcoin Core (up-to-date up to **v23.0**):
 
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -32,7 +32,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
 * [`BIP 111`](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki): `NODE_BLOOM` service bit added, and enforced for all peer versions as of **v0.13.0** ([PR #6579](https://github.com/bitcoin/bitcoin/pull/6579) and [PR #6641](https://github.com/bitcoin/bitcoin/pull/6641)).
 * [`BIP 112`](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki): The CHECKSEQUENCEVERIFY opcode has been implemented since **v0.12.1** ([PR #7524](https://github.com/bitcoin/bitcoin/pull/7524)), and has been *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
 * [`BIP 113`](https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki): Median time past lock-time calculations have been implemented since **v0.12.1** ([PR #6566](https://github.com/bitcoin/bitcoin/pull/6566)), and has been *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
-* [`BIP 125`](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki): Opt-in full replace-by-fee signaling honoured in mempool and mining as of **v0.12.0** ([PR 6871](https://github.com/bitcoin/bitcoin/pull/6871)). Enabled by default in the wallet GUI as of **v0.18.1** ([PR #11605](https://github.com/bitcoin/bitcoin/pull/11605))
+* [`BIP 125`](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki): Opt-in full replace-by-fee signaling partially implemented. See doc/policy/mempool-replacements.md.
 * [`BIP 130`](https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki): direct headers announcement is negotiated with peer versions `>=70012` as of **v0.12.0** ([PR 6494](https://github.com/bitcoin/bitcoin/pull/6494)).
 * [`BIP 133`](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki): feefilter messages are respected and sent for peer versions `>=70013` as of **v0.13.0** ([PR 7542](https://github.com/bitcoin/bitcoin/pull/7542)).
 * [`BIP 141`](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki): Segregated Witness (Consensus Layer) as of **v0.13.0** ([PR 8149](https://github.com/bitcoin/bitcoin/pull/8149)), defined for mainnet as of **v0.13.1** ([PR 8937](https://github.com/bitcoin/bitcoin/pull/8937)), and *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
@@ -42,7 +42,8 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
 * [`BIP 147`](https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki): NULLDUMMY softfork as of **v0.13.1** ([PR 8636](https://github.com/bitcoin/bitcoin/pull/8636) and [PR 8937](https://github.com/bitcoin/bitcoin/pull/8937)), *buried* since **v0.19.0** ([PR #16060](https://github.com/bitcoin/bitcoin/pull/16060)).
 * [`BIP 152`](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki): Compact block transfer and related optimizations are used as of **v0.13.0** ([PR 8068](https://github.com/bitcoin/bitcoin/pull/8068)).
 * [`BIP 155`](https://github.com/bitcoin/bips/blob/master/bip-0155.mediawiki): The 'addrv2' and 'sendaddrv2' messages which enable relay of Tor V3 addresses (and other networks) are supported as of **v0.21.0** ([PR 19954](https://github.com/bitcoin/bitcoin/pull/19954)).
-* [`BIP 158`](https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki): Compact Block Filters for Light Clients can be indexed as of **v0.19.0** ([PR #14121](https://github.com/bitcoin/bitcoin/pull/14121)).
+* [`BIP 157`](https://github.com/bitcoin/bips/blob/master/bip-0157.mediawiki)
+  [`158`](https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki): Compact Block Filters for Light Clients can be indexed as of **v0.19.0** ([PR #14121](https://github.com/bitcoin/bitcoin/pull/14121)) and served to peers on the P2P network as of **v0.21.0** ([PR #16442](https://github.com/bitcoin/bitcoin/pull/16442)).
 * [`BIP 159`](https://github.com/bitcoin/bips/blob/master/bip-0159.mediawiki): The `NODE_NETWORK_LIMITED` service bit is signalled as of **v0.16.0** ([PR 11740](https://github.com/bitcoin/bitcoin/pull/11740)), and such nodes are connected to as of **v0.17.0** ([PR 10387](https://github.com/bitcoin/bitcoin/pull/10387)).
 * [`BIP 173`](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki): Bech32 addresses for native Segregated Witness outputs are supported as of **v0.16.0** ([PR 11167](https://github.com/bitcoin/bitcoin/pull/11167)). Bech32 addresses are generated by default as of **v0.20.0** ([PR 16884](https://github.com/bitcoin/bitcoin/pull/16884)).
 * [`BIP 174`](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki): RPCs to operate on Partially Signed Bitcoin Transactions (PSBT) are present as of **v0.17.0** ([PR 13557](https://github.com/bitcoin/bitcoin/pull/13557)).
@@ -57,6 +58,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v22.0**):
   with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
   [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
+* [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
 * [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
   [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
   [`382`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki)

@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Encode and decode Bitcoin addresses.
 
 - base58 P2PKH and P2SH addresses.
-- bech32 segwit v0 P2WPKH and P2WSH addresses."""
+- bech32 segwit v0 P2WPKH and P2WSH addresses.
+- bech32m segwit v1 P2TR addresses."""
 
 import enum
 import unittest
 
-from .script import hash256, hash160, sha256, CScript, OP_0
+from .script import (
+    CScript,
+    OP_0,
+    OP_TRUE,
+    hash160,
+    hash256,
+    sha256,
+    taproot_construct,
+)
 from .segwit_addr import encode_segwit_address
 from .util import assert_equal
 
@@ -26,22 +35,34 @@ class AddressType(enum.Enum):
     legacy = 'legacy'  # P2PKH
 
 
-chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+
+def create_deterministic_address_bcrt1_p2tr_op_true():
+    """
+    Generates a deterministic bech32m address (segwit v1 output) that
+    can be spent with a witness stack of OP_TRUE and the control block
+    with internal public key (script-path spending).
+
+    Returns a tuple with the generated address and the internal key.
+    """
+    internal_key = (1).to_bytes(32, 'big')
+    address = output_key_to_p2tr(taproot_construct(internal_key, [(None, CScript([OP_TRUE]))]).output_pubkey)
+    assert_equal(address, 'bcrt1p9yfmy5h72durp7zrhlw9lf7jpwjgvwdg0jr0lqmmjtgg83266lqsekaqka')
+    return (address, internal_key)
 
 
 def byte_to_base58(b, version):
     result = ''
-    str = b.hex()
-    str = chr(version).encode('latin-1').hex() + str
-    checksum = hash256(bytes.fromhex(str)).hex()
-    str += checksum[:8]
-    value = int('0x' + str, 0)
+    b = bytes([version]) + b  # prepend version
+    b += hash256(b)[:4]       # append checksum
+    value = int.from_bytes(b, 'big')
     while value > 0:
-        result = chars[value % 58] + result
+        result = b58chars[value % 58] + result
         value //= 58
-    while (str[:2] == '00'):
-        result = chars[0] + result
-        str = str[2:]
+    while b[0] == 0:
+        result = b58chars[0] + result
+        b = b[1:]
     return result
 
 
@@ -54,8 +75,8 @@ def base58_to_byte(s):
     n = 0
     for c in s:
         n *= 58
-        assert c in chars
-        digit = chars.index(c)
+        assert c in b58chars
+        digit = b58chars.index(c)
         n += digit
     h = '%x' % n
     if len(h) % 2:
@@ -63,14 +84,14 @@ def base58_to_byte(s):
     res = n.to_bytes((n.bit_length() + 7) // 8, 'big')
     pad = 0
     for c in s:
-        if c == chars[0]:
+        if c == b58chars[0]:
             pad += 1
         else:
             break
     res = b'\x00' * pad + res
 
-    # Assert if the checksum is invalid
-    assert_equal(hash256(res[:-4])[:4], res[-4:])
+    if hash256(res[:-4])[:4] != res[-4:]:
+        raise ValueError('Invalid Base58Check checksum')
 
     return res[1:-4], int(res[0])
 
@@ -118,6 +139,10 @@ def script_to_p2sh_p2wsh(script, main=False):
     script = check_script(script)
     p2shscript = CScript([OP_0, sha256(script)])
     return script_to_p2sh(p2shscript, main)
+
+def output_key_to_p2tr(key, main=False):
+    assert len(key) == 32
+    return program_to_witness(1, key, main)
 
 def check_key(key):
     if (type(key) is str):

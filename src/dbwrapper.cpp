@@ -1,25 +1,38 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
 
-#include <memory>
+#include <fs.h>
+#include <logging.h>
 #include <random.h>
+#include <tinyformat.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
 #include <leveldb/cache.h>
+#include <leveldb/db.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
-#include <memenv.h>
-#include <stdint.h>
-#include <algorithm>
+#include <leveldb/helpers/memenv/memenv.h>
+#include <leveldb/iterator.h>
+#include <leveldb/options.h>
+#include <leveldb/status.h>
+#include <memory>
+#include <optional>
 
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
     void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB)) {
+            if (!LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug)) {
                 return;
             }
             char buffer[500];
@@ -63,7 +76,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintf("leveldb: %s", base);  /* Continued */
+                LogPrintLevel(BCLog::LEVELDB, BCLog::Level::Debug, "%s", base);  /* Continued */
                 if (base != buffer) {
                     delete[] base;
                 }
@@ -136,6 +149,10 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
         TryCreateDirectories(path);
         LogPrintf("Opening LevelDB in %s\n", fs::PathToString(path));
     }
+    // PathToString() return value is safe to pass to leveldb open function,
+    // because on POSIX leveldb passes the byte string directly to ::open(), and
+    // on Windows it converts from UTF-8 to UTF-16 before calling ::CreateFileW
+    // (see env_posix.cc and env_windows.cc).
     leveldb::Status status = leveldb::DB::Open(options, fs::PathToString(path), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
@@ -182,7 +199,7 @@ CDBWrapper::~CDBWrapper()
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
-    const bool log_memory = LogAcceptCategory(BCLog::LEVELDB);
+    const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug);
     double mem_before = 0;
     if (log_memory) {
         mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
@@ -223,7 +240,7 @@ const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
 std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 {
     std::vector<uint8_t> ret(OBFUSCATE_KEY_NUM_BYTES);
-    GetRandBytes(ret.data(), OBFUSCATE_KEY_NUM_BYTES);
+    GetRandBytes(ret);
     return ret;
 }
 

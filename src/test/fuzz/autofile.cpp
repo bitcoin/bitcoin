@@ -18,21 +18,21 @@ FUZZ_TARGET(autofile)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
-    CAutoFile auto_file = fuzzed_auto_file_provider.open();
-    while (fuzzed_data_provider.ConsumeBool()) {
+    AutoFile auto_file{fuzzed_auto_file_provider.open()};
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                std::array<uint8_t, 4096> arr{};
+                std::array<std::byte, 4096> arr{};
                 try {
-                    auto_file.read((char*)arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                    auto_file.read({arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
                 } catch (const std::ios_base::failure&) {
                 }
             },
             [&] {
-                const std::array<uint8_t, 4096> arr{};
+                const std::array<std::byte, 4096> arr{};
                 try {
-                    auto_file.write((const char*)arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                    auto_file.write({arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
                 } catch (const std::ios_base::failure&) {
                 }
             },
@@ -53,8 +53,6 @@ FUZZ_TARGET(autofile)
             });
     }
     (void)auto_file.Get();
-    (void)auto_file.GetType();
-    (void)auto_file.GetVersion();
     (void)auto_file.IsNull();
     if (fuzzed_data_provider.ConsumeBool()) {
         FILE* f = auto_file.release();

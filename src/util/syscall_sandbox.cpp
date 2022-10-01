@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,6 +66,10 @@ bool g_syscall_sandbox_log_violation_before_terminating{false};
 
 #ifndef __NR_copy_file_range
 #define __NR_copy_file_range 326
+#endif
+
+#ifndef  __NR_rseq
+#define __NR_rseq 334
 #endif
 
 // This list of syscalls in LINUX_SYSCALLS is only used to map syscall numbers to syscall names in
@@ -327,6 +331,7 @@ const std::map<uint32_t, std::string> LINUX_SYSCALLS{
     {__NR_request_key, "request_key"},
     {__NR_restart_syscall, "restart_syscall"},
     {__NR_rmdir, "rmdir"},
+    {__NR_rseq, "rseq"},
     {__NR_rt_sigaction, "rt_sigaction"},
     {__NR_rt_sigpending, "rt_sigpending"},
     {__NR_rt_sigprocmask, "rt_sigprocmask"},
@@ -581,7 +586,7 @@ public:
         allowed_syscalls.insert(__NR_fdatasync);       // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_flock);           // apply or remove an advisory lock on an open file
         allowed_syscalls.insert(__NR_fstat);           // get file status
-        allowed_syscalls.insert(__NR_newfstatat);      // get file status
+        allowed_syscalls.insert(__NR_fstatfs);         // get file system status
         allowed_syscalls.insert(__NR_fsync);           // synchronize a file's in-core state with storage device
         allowed_syscalls.insert(__NR_ftruncate);       // truncate a file to a specified length
         allowed_syscalls.insert(__NR_getcwd);          // get current working directory
@@ -589,15 +594,18 @@ public:
         allowed_syscalls.insert(__NR_getdents64);      // get directory entries
         allowed_syscalls.insert(__NR_lstat);           // get file status
         allowed_syscalls.insert(__NR_mkdir);           // create a directory
+        allowed_syscalls.insert(__NR_newfstatat);      // get file status
         allowed_syscalls.insert(__NR_open);            // open and possibly create a file
         allowed_syscalls.insert(__NR_openat);          // open and possibly create a file
         allowed_syscalls.insert(__NR_readlink);        // read value of a symbolic link
         allowed_syscalls.insert(__NR_rename);          // change the name or location of a file
         allowed_syscalls.insert(__NR_rmdir);           // delete a directory
+        allowed_syscalls.insert(__NR_sendfile);        // transfer data between file descriptors
         allowed_syscalls.insert(__NR_stat);            // get file status
         allowed_syscalls.insert(__NR_statfs);          // get filesystem statistics
         allowed_syscalls.insert(__NR_statx);           // get file status (extended)
         allowed_syscalls.insert(__NR_unlink);          // delete a name and possibly the file it refers to
+        allowed_syscalls.insert(__NR_unlinkat);        // delete relative to a directory file descriptor
     }
 
     void AllowFutex()
@@ -720,6 +728,7 @@ public:
         allowed_syscalls.insert(__NR_fork);       // create a child process
         allowed_syscalls.insert(__NR_tgkill);     // send a signal to a thread
         allowed_syscalls.insert(__NR_wait4);      // wait for process to change state, BSD style
+        allowed_syscalls.insert(__NR_rseq);       // register restartable sequence for thread
     }
 
     void AllowScheduling()
@@ -812,7 +821,6 @@ bool SetupSyscallSandbox(bool log_syscall_violation_before_terminating)
             return false;
         }
     }
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION);
     return true;
 }
 

@@ -1,23 +1,32 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <interfaces/chain.h>
+#include <kernel/chain.h>
 #include <node/blockstorage.h>
-#include <node/ui_interface.h>
+#include <node/context.h>
+#include <node/interface_ui.h>
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <util/syscall_sandbox.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
 #include <warnings.h>
 
+#include <string>
+#include <utility>
+
+using node::ReadBlockFromDisk;
+
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
-constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
-constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
+constexpr auto SYNC_LOG_INTERVAL{30s};
+constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
 template <typename... Args>
 static void FatalError(const char* fmt, const Args&... args)
@@ -27,6 +36,15 @@ static void FatalError(const char* fmt, const Args&... args)
     LogPrintf("*** %s\n", strMessage);
     AbortError(_("A fatal internal error occurred, see debug.log for details"));
     StartShutdown();
+}
+
+CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
+{
+    CBlockLocator locator;
+    bool found = chain.findBlock(block_hash, interfaces::FoundBlock().locator(locator));
+    assert(found);
+    assert(!locator.IsNull());
+    return locator;
 }
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
@@ -47,6 +65,9 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
     batch.Write(DB_BEST_BLOCK, locator);
 }
 
+BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
+    : m_chain{std::move(chain)}, m_name{std::move(name)} {}
+
 BaseIndex::~BaseIndex()
 {
     Interrupt();
@@ -63,21 +84,21 @@ bool BaseIndex::Init()
     LOCK(cs_main);
     CChain& active_chain = m_chainstate->m_chain;
     if (locator.IsNull()) {
-        m_best_block_index = nullptr;
+        SetBestBlockIndex(nullptr);
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
+        SetBestBlockIndex(m_chainstate->FindForkInGlobalIndex(locator));
     }
+
+    // Note: this will latch to true immediately if the user starts up with an empty
+    // datadir and an index enabled. If this is the case, indexation will happen solely
+    // via `BlockConnected` signals until, possibly, the next restart.
     m_synced = m_best_block_index.load() == active_chain.Tip();
     if (!m_synced) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
             // make sure we have all block data back to the genesis
-            const CBlockIndex* block = active_chain.Tip();
-            while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-                block = block->pprev;
-            }
-            prune_violation = block != active_chain.Genesis();
+            prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(*active_chain.Tip()) != active_chain.Genesis();
         }
         // in case the index has a best block set and is not fully synced
         // check if we have the required blocks to continue building the index
@@ -91,11 +112,14 @@ bool BaseIndex::Init()
             const CBlockIndex* block = active_chain.Tip();
             prune_violation = true;
             // check backwards from the tip if we have all block data until we reach the indexes bestblock
-            while (block_to_test && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+            while (block_to_test && block && (block->nStatus & BLOCK_HAVE_DATA)) {
                 if (block_to_test == block) {
                     prune_violation = false;
                     break;
                 }
+                // block->pprev must exist at this point, since block_to_test is part of the chain
+                // and thus must be encountered when going backwards from the tip
+                assert(block->pprev);
                 block = block->pprev;
             }
         }
@@ -129,11 +153,11 @@ void BaseIndex::ThreadSync()
     if (!m_synced) {
         auto& consensus_params = Params().GetConsensus();
 
-        int64_t last_log_time = 0;
-        int64_t last_locator_write_time = 0;
+        std::chrono::steady_clock::time_point last_log_time{0s};
+        std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
             if (m_interrupt) {
-                m_best_block_index = pindex;
+                SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. If it fails, the error will be already be
                 // logged. The best way to recover is to continue, as index cannot be corrupted by
                 // a missed commit to disk for an advanced index state.
@@ -145,7 +169,7 @@ void BaseIndex::ThreadSync()
                 LOCK(cs_main);
                 const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
                 if (!pindex_next) {
-                    m_best_block_index = pindex;
+                    SetBestBlockIndex(pindex);
                     m_synced = true;
                     // No need to handle errors in Commit. See rationale above.
                     Commit();
@@ -159,7 +183,7 @@ void BaseIndex::ThreadSync()
                 pindex = pindex_next;
             }
 
-            int64_t current_time = GetTime();
+            auto current_time{std::chrono::steady_clock::now()};
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
                 LogPrintf("Syncing %s with block chain from height %d\n",
                           GetName(), pindex->nHeight);
@@ -167,19 +191,22 @@ void BaseIndex::ThreadSync()
             }
 
             if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                m_best_block_index = pindex;
+                SetBestBlockIndex(pindex->pprev);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
             }
 
             CBlock block;
+            interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
             if (!ReadBlockFromDisk(block, pindex, consensus_params)) {
                 FatalError("%s: Failed to read block %s from disk",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
+            } else {
+                block_info.data = &block;
             }
-            if (!WriteBlock(block, pindex)) {
+            if (!CustomAppend(block_info)) {
                 FatalError("%s: Failed to write block %s to index database",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
@@ -196,17 +223,20 @@ void BaseIndex::ThreadSync()
 
 bool BaseIndex::Commit()
 {
-    CDBBatch batch(GetDB());
-    if (!CommitInternal(batch) || !GetDB().WriteBatch(batch)) {
+    // Don't commit anything if we haven't indexed any block yet
+    // (this could happen if init is interrupted).
+    bool ok = m_best_block_index != nullptr;
+    if (ok) {
+        CDBBatch batch(GetDB());
+        ok = CustomCommit(batch);
+        if (ok) {
+            GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            ok = GetDB().WriteBatch(batch);
+        }
+    }
+    if (!ok) {
         return error("%s: Failed to commit latest %s state", __func__, GetName());
     }
-    return true;
-}
-
-bool BaseIndex::CommitInternal(CDBBatch& batch)
-{
-    LOCK(cs_main);
-    GetDB().WriteBestBlock(batch, m_chainstate->m_chain.GetLocator(m_best_block_index));
     return true;
 }
 
@@ -215,15 +245,19 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
+    if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
+        return false;
+    }
+
     // In the case of a reorg, ensure persisted block locator is not stale.
     // Pruning has a minimum of 288 blocks-to-keep and getting the index
     // out of sync may be possible but a users fault.
     // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
     // throw and lead to a graceful shutdown
-    m_best_block_index = new_tip;
+    SetBestBlockIndex(new_tip);
     if (!Commit()) {
         // If commit fails, revert the best block index to avoid corruption.
-        m_best_block_index = current_tip;
+        SetBestBlockIndex(current_tip);
         return false;
     }
 
@@ -262,9 +296,9 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
             return;
         }
     }
-
-    if (WriteBlock(*block, pindex)) {
-        m_best_block_index = pindex;
+    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block.get());
+    if (CustomAppend(block_info)) {
+        SetBestBlockIndex(pindex);
     } else {
         FatalError("%s: Failed to write block %s to index",
                    __func__, pindex->GetBlockHash().ToString());
@@ -340,13 +374,18 @@ void BaseIndex::Interrupt()
     m_interrupt();
 }
 
-bool BaseIndex::Start(CChainState& active_chainstate)
+bool BaseIndex::Start()
 {
-    m_chainstate = &active_chainstate;
+    // m_chainstate member gives indexing code access to node internals. It is
+    // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
+    m_chainstate = &m_chain->context()->chainman->ActiveChainstate();
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
     RegisterValidationInterface(this);
-    if (!Init()) {
+    if (!Init()) return false;
+
+    const CBlockIndex* index = m_best_block_index.load();
+    if (!CustomInit(index ? std::make_optional(interfaces::BlockKey{index->GetBlockHash(), index->nHeight}) : std::nullopt)) {
         return false;
     }
 
@@ -370,4 +409,15 @@ IndexSummary BaseIndex::GetSummary() const
     summary.synced = m_synced;
     summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
     return summary;
+}
+
+void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
+    assert(!node::fPruneMode || AllowPrune());
+
+    m_best_block_index = block;
+    if (AllowPrune() && block) {
+        node::PruneLockInfo prune_lock;
+        prune_lock.height_first = block->nHeight;
+        WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
+    }
 }

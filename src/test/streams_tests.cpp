@@ -1,11 +1,14 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <fs.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+
+using namespace std::string_literals;
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
@@ -71,7 +74,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -101,7 +104,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader new_reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, data};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
@@ -160,62 +163,43 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<uint8_t> in;
-    std::vector<char> expected_xor;
-    std::vector<unsigned char> key;
-    CDataStream ds(in, 0, 0);
+    std::vector<std::byte> in;
 
     // Degenerate case
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0x00, 0x00});
+        BOOST_CHECK_EQUAL(""s, ds.str());
+    }
 
-    key.push_back('\x00');
-    key.push_back('\x00');
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
-
-    in.push_back('\x0f');
-    in.push_back('\xf0');
-    expected_xor.push_back('\xf0');
-    expected_xor.push_back('\x0f');
+    in.push_back(std::byte{0x0f});
+    in.push_back(std::byte{0xf0});
 
     // Single character key
-
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-    key.clear();
-
-    key.push_back('\xff');
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff});
+        BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+    }
 
     // Multi character key
 
     in.clear();
-    expected_xor.clear();
-    in.push_back('\xf0');
-    in.push_back('\x0f');
-    expected_xor.push_back('\x0f');
-    expected_xor.push_back('\x00');
+    in.push_back(std::byte{0xf0});
+    in.push_back(std::byte{0x0f});
 
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    key.clear();
-    key.push_back('\xff');
-    key.push_back('\x0f');
-
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff, 0x0f});
+        BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
-    FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
+    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
         fwrite(&j, 1, 1, file);
@@ -343,7 +327,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // We can explicitly close the file, or the destructor will do it.
     bf.fclose();
 
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
@@ -351,8 +335,9 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
     // Make this test deterministic.
     SeedInsecureRand(SeedRand::ZEROS);
 
+    fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
+        FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
             fwrite(&i, 1, 1, file);
@@ -418,7 +403,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
-                bf.FindByte(static_cast<char>(find));
+                bf.FindByte(uint8_t(find));
                 // The value at each offset is the offset.
                 BOOST_CHECK_EQUAL(bf.GetPos(), find);
                 currentPos = find;
@@ -453,7 +438,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 maxPos = currentPos;
         }
     }
-    fs::remove("streams_test_tmp");
+    fs::remove(streams_test_filename);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
