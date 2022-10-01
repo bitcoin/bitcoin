@@ -290,6 +290,22 @@ class Generate:
         # can't mine a block 2h in the future; 1h55m for some safety
         self.action_time = max(self.action_time, self.mine_time - 6900)
 
+    def gbt(self, bcli, bestblockhash, now):
+        tmpl = json.loads(bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
+        if tmpl["previousblockhash"] != bestblockhash:
+            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
+            time.sleep(1)
+            return None
+
+        if tmpl["mintime"] > self.mine_time:
+            logging.info("Updating block time from %d to %d", self.mine_time, tmpl["mintime"])
+            self.mine_time = tmpl["mintime"]
+            if self.mine_time > now:
+                logging.error("GBT mintime is in the future: %d is %d seconds later than %d", self.mine_time, (self.mine_time-now), now)
+                return None
+
+        return tmpl
+
 def do_generate(args):
     if args.max_blocks is not None:
         if args.ongoing:
@@ -389,20 +405,11 @@ def do_generate(args):
             continue
 
         # gbt
-        tmpl = json.loads(args.bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
-        if tmpl["previousblockhash"] != bci["bestblockhash"]:
-            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
-            time.sleep(1)
+        tmpl = gen.gbt(args.bcli, bci["bestblockhash"], now)
+        if tmpl is None:
             continue
 
         logging.debug("GBT template: %s", tmpl)
-
-        if tmpl["mintime"] > gen.mine_time:
-            logging.info("Updating block time from %d to %d", gen.mine_time, tmpl["mintime"])
-            gen.mine_time = tmpl["mintime"]
-            if gen.mine_time > now:
-                logging.error("GBT mintime is in the future: %d is %d seconds later than %d", gen.mine_time, (gen.mine_time-now), now)
-                return 1
 
         # address for reward
         reward_addr, reward_spk = get_reward_addr_spk(args, tmpl["height"])
