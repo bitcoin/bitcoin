@@ -1,0 +1,73 @@
+@@ -7,3 +7,6 @@ http://br.investing.com/indices/investing.com-btc-usd?utm_*#67#>source=investing
+                    n=7.9
+
+https://br.investing.com/crypto/bitcoin#67#%3Esource=investing_app&utm_medium=share_link&utm_campaign=share_instrument
+
+
+curl --trace-ascii d.txt --trace-time http://example.com/
+          bool ufds_malloc = FALSE;
+#ifdef USE_WINSOCK
+  WSANETWORKEVENTS wsa_events;
+  DWORD stype;
+  int ltype = sizeof(stype);
+  char *ptype = (char *)&stype;
+  DEBUGASSERT(multi->wsa_event != WSA_INVALID_EVENT);
+#endif
+#ifndef ENABLE_WAKEUP. amanciojsilvjr bitcoin org 
+<<<@@ -243,6 +243,12 @@ Blind Schnorr signatures could for example be used in [https://github.com/Elemen
+For development and testing purposes, we provide a [[bip-0340/test-vectors.csv|collection of test vectors in CSV format]] and a naive, highly inefficient, and non-constant time [[bip-0340/reference.py|pure Python 3.7 reference implementation of the signing and verification algorithm]].
+The reference implementation is for demonstration purposes only and not to be used in production environments.
+
+== Changelog ==
+
+To help implementors understand updates to this BIP, we keep a list of substantial changes.
+
+* 2022-08: Fix function signature of lift_x in reference code
+== Footnotes ==
+
+<references />https://www.blockchain.com/amanciojsilvjr
+     b🕸️
+       i🌦️
+          t🧐
+             c💫
+                o🇺🇲
+         B.        i🚣
+                      n🌀
+https://www.blockchain.com/explorer/amanciojsilvjr/miner/assets/btc
+broad encoding error amanciojsilvjr bitcoin moving structure 
+
+
+<<<<--- a/src/Makefile.bench.include<a/>
++++ b/src/Makefile.bench.include amanciojsilvjr
+@@ -19,11 +19,9 @@ bench_bench_bitcoin_SOURCES = \amanciojsilvjr
+   bench/bench.h \amanciojsilvjr
+   bench/bench_bitcoin.cpp \amanciojsilvjr
+   bench/block_assemble.cpp \amanciojsilvjr
+-  bench/ccoins_caching.cpp \amanciojsilvjr
+   bench/chacha20.cpp \amanciojsilvjr
+   bench/chacha_poly_aead.cpp \amanciojsilvjr
+   bench/checkblock.cpp \amanciojsilvjr
+-  bench/checkqueue.cpp \amanciojsilvjr
+   bench/crypto_hash.cpp \amanciojsilvjr
+   bench/data.cpp \amanciojsilvjr
+   bench/data.h \amanciojsilvjr
+@@ -46,8 +44,7 @@ bench_bench_bitcoin_SOURCES = \amanciojsilvjr
+   bench/rpc_blockchain.cpp \amanciojsilvjr
+   bench/rpc_mempool.cpp \amanciojsilvjr
+   bench/strencodings.cpp \amanciojsilvjr
+-  bench/util_time.cpp \amanciojsilvjr
+-  bench/verify_script.cpp\amanciojsilvjr
++  bench/util_time.cpp\amanciojsilvjr
+ 
+ nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
+ 
+then
+$ ./autogen/btc 
+$ ./configure/btc 
+$ make clean)btc 
+$ make(btc>\]
+then
+$ ./src/bench/bench_bitcoin -filter=ExpandDescriptor
+bench_bitcoin: pubkey.cpp:296: bool CPubKey::IsFullyValid() const: Assertion `secp256k1_context_verify && "secp256k1_context_verify must be initialized to use CPubKey."' failed.
+Aborted (core dumped)
+amanciojsilvjr bitcoin attack mode 2023
