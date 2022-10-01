@@ -301,10 +301,10 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     transcript << proof.mu;
     transcript << proof.t_hat;
 
-    Scalar x_ip = transcript.GetHash();
-    if (x_ip == 0) goto retry;
+    Scalar x_for_inner_product_argument = transcript.GetHash();
+    if (x_for_inner_product_argument == 0) goto retry;
 
-    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_ip, l, r, y, proof, transcript)) {
+    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_for_inner_product_argument, l, r, y, proof, transcript)) {
         goto retry;
     }
     return proof;
@@ -331,45 +331,30 @@ bool RangeProof::ValidateProofsBySizes(
     return true;
 }
 
-VerifyLoop1Result RangeProof::VerifyLoop1(
-    const std::vector<Proof>& proofs,
-    const size_t& num_rounds
+G1Point RangeProof::VerifyLoop2(
+    const std::vector<ProofWithDerivedValues>& proof_derivs,
+    const Generators& gens,
+    const size_t& max_mn
 ) const {
-    VerifyLoop1Result res;
+    G1Points points;
+    Scalar h_pos_exp = 0;
+    Scalar g_neg_exp = 0;
+    Scalar h_neg_exp = 0;
+    Scalar g_pos_exp = 0;
+    Scalars gi_exp;
+    Scalars hi_exp;
 
-    for (const Proof& proof: proofs) {
-        // update max # of rounds and sum of all V bits
-        res.max_num_rounds = std::max(res.max_num_rounds, proof.Ls.Size());
-        res.Vs_size_sum += proof.Vs.Size();
-
-        // derive required Scalars from proof
-        auto proof_deriv = ProofWithDerivedValues::Build(proof, num_rounds);
-        res.proof_derivs.push_back(proof_deriv);
-    }
-    return res;
-}
-
-VerifyLoop2Result RangeProof::VerifyLoop2(
-    const std::vector<ProofWithDerivedValues>& proof_derivs
-) const {
-    G1Points multi_exp;
-    Scalar y0 = 0;
-    Scalar y1 = 0;
-    Scalar z1 = 0;
-    Scalar z3 = 0;
-    Scalars z4;
-    Scalars z5;
-
-    // construct y0, y1, z1, z3, z4 and z5
     for (const ProofWithDerivedValues& p: proof_derivs) {
 
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
         // every proof subtract its tau_x (=<L,R>) from y0
-        y0 = y0 - (p.proof.tau_x * weight_y);
+        h_pos_exp = h_pos_exp - (p.proof.tau_x * weight_y);  // ** (65) LHS should be for h instead of g
 
+        // ** used in (65) V^(z^2)
         Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 3); // VectorPowers(pd.z, M+3);
+
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits - 1).Sum(); // VectorPowerSum(p.y, MN);
 
         // processing z_pow[2], z_pow[3] ... originally
@@ -378,16 +363,18 @@ VerifyLoop2Result RangeProof::VerifyLoop2(
             k = k - (z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows);  // was i + 2
         }
 
-        y1 = y1 + ((p.proof.t_hat - (k + (p.z * y_pows_sum))) * weight_y);
+        // ** t_hat (65) LHS. not clear where k, z and y_pows_sum is coming from now
+        g_neg_exp = g_neg_exp + ((p.proof.t_hat - (k + (p.z * y_pows_sum))) * weight_y);
 
+        // ** (65) V^(z^2)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-            res.multi_exp.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // was i + 2
+            points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // was i + 2
         }
 
-        res.multi_exp.Add(p.proof.T1 * (p.x * weight_y));  // (65)?
-        res.multi_exp.Add(p.proof.T2 * (p.x.Square() * weight_y));  // (65)?
-        res.multi_exp.Add(p.proof.A * weight_z);
-        res.multi_exp.Add(p.proof.S * (p.x * weight_z));
+        points.Add(p.proof.T1 * (p.x * weight_y));  // ** (65) T1^x
+        points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // (65) T2^(x^2)
+        points.Add(p.proof.A * weight_z); // ** (66) RHS A
+        points.Add(p.proof.S * (p.x * weight_z));  // ** (66) RHS S^x
 
         Scalar y_inv_pow = 1;
         Scalar y_pow = 1;
@@ -423,8 +410,8 @@ VerifyLoop2Result RangeProof::VerifyLoop2(
                 h_scalar = h_scalar - ((tmp + (p.z * y_pow)) * y_inv_pow);
             }
 
-            z4[i] = z4[i] - (g_scalar * weight_z);
-            z5[i] = z5[i] - (h_scalar * weight_z);
+            gi_exp[i] = gi_exp[i] - (g_scalar * weight_z);
+            hi_exp[i] = hi_exp[i] - (h_scalar * weight_z);
 
             if (i == 0) {
                 y_inv_pow = p.inv_y;
@@ -435,30 +422,31 @@ VerifyLoop2Result RangeProof::VerifyLoop2(
             }
         }
 
-        z1 = z1 + (p.proof.mu * weight_z);
+        h_neg_exp = h_neg_exp + (p.proof.mu * weight_z);  // ** h^mu (67) RHS
 
         for (size_t i = 0; i < p.num_rounds; ++i) {
-            res.multi_exp.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
-            res.multi_exp.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
+            points.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
+            points.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
         }
 
-        // t_hat = <L, R>
+        // t_hat = <L, R> (68)?
         // a, b are result of inner product argument
         // x_ip is a random number generated from transcript
-        z3 = z3 + (((p.proof.t_hat - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
+        g_pos_exp = g_pos_exp + (((p.proof.t_hat - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
     }
 
-    multi_exp.Add(gens.G.get() * (y0 - z1));
-    multi_exp.Add(gens.H * (z3 - y1));
+    points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
+    points.Add(gens.H * (h_pos_exp - h_neg_exp));
 
     // from z4 and z5, create maxMN points and add to mutil_exp
     // multi_exp_data needs to be maxMN * 2 long. z4 and z5 needs to be maxMN long.
-    for (size_t i = 0; i < maxMN; ++i) {
-        multi_exp.Add(gens.Gi.get()[i] * z4[i]);
-        multi_exp.Add(gens.Hi.get()[i] * z5[i]);
+    for (size_t i = 0; i < max_mn; ++i) {
+        points.Add(gens.Gi.get()[i] * gi_exp[i]);
+        points.Add(gens.Hi.get()[i] * hi_exp[i]);
     }
 
-    return multi_exp;
+    // should be aggregated to zero if proofs are all valid
+    return points.Sum();
 }
 
 bool RangeProof::Verify(
@@ -468,20 +456,30 @@ bool RangeProof::Verify(
     const size_t num_rounds = GetInnerProdArgRounds(Config::m_input_value_bits);
     if (!ValidateProofsBySizes(proofs, num_rounds)) return false;
 
-    const VerifyLoop1Result loop1 = VerifyLoop1(
-        proofs,
-        num_rounds
-    );
+    std::vector<ProofWithDerivedValues> proof_derivs;
+    size_t max_num_rounds = 0;
+    size_t Vs_size_sum = 0;
 
-    let maxMN = 1u << loop1.max_num_rounds;
+    for (const Proof& proof: proofs) {
+        // update max # of rounds and sum of all V bits
+        max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
+        Vs_size_sum += proof.Vs.Size();
+
+        // derive required Scalars from proof
+        auto proof_deriv = ProofWithDerivedValues::Build(proof, num_rounds);
+        proof_derivs.push_back(proof_deriv);
+    }
+
+
+    const size_t max_mn = 1u << max_num_rounds;
     const Generators gens = m_gf.GetInstance(token_id);
 
-    G1Points multi_exp = VerifyLoop2(
-        loop1.proof_derivs,
-        gen,
-        maxMN
+    G1Point point_sum = VerifyLoop2(
+        proof_derivs,
+        gens,
+        max_mn
     );
-    return multi_exp.Sum().IsUnity();
+    return point_sum.IsUnity();
 }
 
 std::vector<RecoveredAmount> RangeProof::RecoverAmounts(

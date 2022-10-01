@@ -45,13 +45,6 @@ struct RecoveredAmount
     std::string message;
 };
 
-struct VerifyLoop1Result
-{
-    std::vector<ProofWithDerivedValues> proof_derivs;
-    size_t max_num_rounds = 0;
-    size_t Vs_size_sum = 0;
-};
-
 // implementation of range proof described in Bulletproofs
 // based on the paper: https://eprint.iacr.org/2017/1066.pdf
 class RangeProof
@@ -108,18 +101,10 @@ public:
         const size_t& num_rounds
     ) const;
 
-    /**
-     * Recover derived scalars used in Prove() from proof
-     * while calculating total number of bits in cocatinated input value
-     * and maximum size of L,R
-     */
-    VerifyLoop1Result VerifyLoop1(
-        const std::vector<Proof>& proofs,
-        const size_t& num_rounds
-    ) const;
-
-    VerifyLoop2Result VerifyLoop2(
-        const std::vector<ProofWithDerivedValues>& proof_derivs
+    G1Point VerifyLoop2(
+        const std::vector<ProofWithDerivedValues>& proof_derivs,
+        const Generators& gens,
+        const size_t& max_mn
     ) const;
 
     std::vector<RecoveredAmount> RecoverAmounts(
