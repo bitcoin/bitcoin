@@ -209,36 +209,46 @@ def seconds_to_hms(s):
         out = "-" + out
     return out
 
-def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson, max_interval):
-    # strategy:
-    #  1) work out how far off our desired target we are
-    #  2) cap it to a factor of 4 since that's the best we can do in a single retarget period
-    #  3) use that to work out the desired average interval in this retarget period
-    #  4) if doing poisson, use the last hash to pick a uniformly random number in [0,1), and work out a random multiplier to vary the average by
-    #  5) cap the resulting interval between 1 second and 1 hour to avoid extremes
-
+class Generate:
     INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
 
-    current_target = nbits_to_target(last_nbits)
-    retarget_factor = ultimate_target / current_target
-    retarget_factor = max(0.25, min(retarget_factor, 4.0))
 
-    avg_interval = INTERVAL * retarget_factor
+    def __init__(self, multiminer=None, ultimate_target=None, poisson=False, max_interval=1800):
+        if multiminer is None:
+            multiminer = (0, 1, 1)
+        (self.multi_low, self.multi_high, self.multi_period) = multiminer
+        self.ultimate_target = ultimate_target
+        self.poisson = poisson
+        self.max_interval = max_interval
 
-    if do_poisson:
-        det_rand = int(last_hash[-8:], 16) * 2**-32
-        this_interval_variance = -math.log1p(-det_rand)
-    else:
-        this_interval_variance = 1
+    def next_block_delta(self, last_nbits, last_hash):
+        # strategy:
+        #  1) work out how far off our desired target we are
+        #  2) cap it to a factor of 4 since that's the best we can do in a single retarget period
+        #  3) use that to work out the desired average interval in this retarget period
+        #  4) if doing poisson, use the last hash to pick a uniformly random number in [0,1), and work out a random multiplier to vary the average by
+        #  5) cap the resulting interval between 1 second and 1 hour to avoid extremes
 
-    this_interval = avg_interval * this_interval_variance
-    this_interval = max(1, min(this_interval, max_interval))
+        current_target = nbits_to_target(last_nbits)
+        retarget_factor = self.ultimate_target / current_target
+        retarget_factor = max(0.25, min(retarget_factor, 4.0))
 
-    return this_interval
+        avg_interval = self.INTERVAL * retarget_factor
 
-def next_block_is_mine(last_hash, my_blocks):
-    det_rand = int(last_hash[-16:-8], 16)
-    return my_blocks[0] <= (det_rand % my_blocks[2]) < my_blocks[1]
+        if self.poisson:
+            det_rand = int(last_hash[-8:], 16) * 2**-32
+            this_interval_variance = -math.log1p(-det_rand)
+        else:
+            this_interval_variance = 1
+
+        this_interval = avg_interval * this_interval_variance
+        this_interval = max(1, min(this_interval, self.max_interval))
+
+        return this_interval
+
+    def next_block_is_mine(self, last_hash):
+        det_rand = int(last_hash[-16:-8], 16)
+        return self.multi_low <= (det_rand % self.multi_period) < self.multi_high
 
 def do_generate(args):
     if args.max_blocks is not None:
@@ -298,6 +308,8 @@ def do_generate(args):
 
     ultimate_target = nbits_to_target(int(args.nbits,16))
 
+    gen = Generate(multiminer=my_blocks, ultimate_target=ultimate_target, poisson=args.poisson, max_interval=args.max_interval)
+
     mined_blocks = 0
     bestheader = {"hash": None}
     lastheader = None
@@ -312,9 +324,9 @@ def do_generate(args):
         if lastheader is None:
             lastheader = bestheader["hash"]
         elif bestheader["hash"] != lastheader:
-            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson, args.max_interval)
+            next_delta = gen.next_block_delta(int(bestheader["bits"], 16), bestheader["hash"])
             next_delta += bestheader["time"] - time.time()
-            next_is_mine = next_block_is_mine(bestheader["hash"], my_blocks)
+            next_is_mine = gen.next_block_is_mine(bestheader["hash"])
             logging.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
             lastheader = bestheader["hash"]
 
@@ -326,17 +338,17 @@ def do_generate(args):
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
+            time_delta = gen.next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"])
             time_delta *= 100 # 100 blocks
             logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
             mine_time = now - time_delta
             action_time = now
             is_mine = True
         else:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
+            time_delta = gen.next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"])
             mine_time = bestheader["time"] + time_delta
 
-            is_mine = next_block_is_mine(bci["bestblockhash"], my_blocks)
+            is_mine = gen.next_block_is_mine(bci["bestblockhash"])
 
             action_time = mine_time
             if not is_mine:
@@ -407,9 +419,9 @@ def do_generate(args):
         # report
         bstr = "block" if is_mine else "backup block"
 
-        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson, args.max_interval)
+        next_delta = gen.next_block_delta(block.nBits, block.hash)
         next_delta += block.nTime - time.time()
-        next_is_mine = next_block_is_mine(block.hash, my_blocks)
+        next_is_mine = gen.next_block_is_mine(block.hash)
 
         logging.debug("Block hash %s payout to %s", block.hash, reward_addr)
         logging.info("Mined %s at height %d; next in %s (%s)", bstr, tmpl["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
