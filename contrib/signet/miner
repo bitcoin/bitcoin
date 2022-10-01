@@ -72,17 +72,6 @@ def signet_txs(block, challenge):
 
     return spend, to_spend
 
-def do_createpsbt(block, signme, spendme):
-    psbt = PSBT()
-    psbt.g = PSBTMap( {PSBT_GLOBAL_UNSIGNED_TX: signme.serialize(),
-                       PSBT_SIGNET_BLOCK: block.serialize()
-                     } )
-    psbt.i = [ PSBTMap( {PSBT_IN_NON_WITNESS_UTXO: spendme.serialize(),
-                         PSBT_IN_SIGHASH_TYPE: bytes([1,0,0,0])})
-             ]
-    psbt.o = [ PSBTMap() ]
-    return psbt.to_base64()
-
 def do_decode_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
@@ -137,7 +126,15 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
 
     signme, spendme = signet_txs(block, signet_spk_bin)
 
-    return do_createpsbt(block, signme, spendme)
+    psbt = PSBT()
+    psbt.g = PSBTMap( {PSBT_GLOBAL_UNSIGNED_TX: signme.serialize(),
+                       PSBT_SIGNET_BLOCK: block.serialize()
+                     } )
+    psbt.i = [ PSBTMap( {PSBT_IN_NON_WITNESS_UTXO: spendme.serialize(),
+                         PSBT_IN_SIGHASH_TYPE: bytes([1,0,0,0])})
+             ]
+    psbt.o = [ PSBTMap() ]
+    return psbt.to_base64()
 
 def get_reward_addr_spk(args, height):
     assert args.address is not None or args.descriptor is not None
