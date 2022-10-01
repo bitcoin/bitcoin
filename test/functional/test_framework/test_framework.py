@@ -596,24 +596,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.wait_until(lambda: sum(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in to_connection.getpeerinfo()) == to_num_peers)
 
     def disconnect_nodes(self, a, b):
-        def disconnect_nodes_helper(from_connection, node_num):
-            def get_peer_ids():
+        def disconnect_nodes_helper(node_a, node_b):
+            def get_peer_ids(from_connection, node_num):
                 result = []
                 for peer in from_connection.getpeerinfo():
                     if "testnode{}".format(node_num) in peer['subver']:
                         result.append(peer['id'])
                 return result
 
-            peer_ids = get_peer_ids()
+            peer_ids = get_peer_ids(node_a, node_b.index)
             if not peer_ids:
                 self.log.warning("disconnect_nodes: {} and {} were not connected".format(
-                    from_connection.index,
-                    node_num,
+                    node_a.index,
+                    node_b.index,
                 ))
                 return
             for peer_id in peer_ids:
                 try:
-                    from_connection.disconnectnode(nodeid=peer_id)
+                    node_a.disconnectnode(nodeid=peer_id)
                 except JSONRPCException as e:
                     # If this node is disconnected between calculating the peer id
                     # and issuing the disconnect, don't worry about it.
@@ -622,9 +622,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                         raise
 
             # wait to disconnect
-            self.wait_until(lambda: not get_peer_ids(), timeout=5)
+            self.wait_until(lambda: not get_peer_ids(node_a, node_b.index), timeout=5)
+            self.wait_until(lambda: not get_peer_ids(node_b, node_a.index), timeout=5)
 
-        disconnect_nodes_helper(self.nodes[a], b)
+        disconnect_nodes_helper(self.nodes[a], self.nodes[b])
 
     def split_network(self):
         """

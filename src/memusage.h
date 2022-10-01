@@ -8,9 +8,8 @@
 #include <indirectmap.h>
 #include <prevector.h>
 
-#include <stdlib.h>
-
 #include <cassert>
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <set>

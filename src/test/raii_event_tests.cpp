@@ -4,8 +4,8 @@
 
 #include <event2/event.h>
 
+#include <cstdlib>
 #include <map>
-#include <stdlib.h>
 
 #include <support/events.h>
 

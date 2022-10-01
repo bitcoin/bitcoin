@@ -516,7 +516,7 @@ RPCHelpMan listunspent()
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                         },
-                        "query_options"},
+                        RPCArgOptions{.oneline_description="query_options"}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",

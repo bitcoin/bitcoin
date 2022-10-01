@@ -52,6 +52,10 @@ class ListDescriptorsTest(BitcoinTestFramework):
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
 
+        self.log.info('Test that descriptor strings are returned in lexicographically sorted order.')
+        descriptor_strings = [descriptor['desc'] for descriptor in result['descriptors']]
+        assert_equal(descriptor_strings, sorted(descriptor_strings))
+
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
         xprv = 'tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg'
         xpub_acc = 'tpubDCMVLhErorrAGfApiJSJzEKwqeaf2z3NrkVMxgYQjZLzMjXMBeRw2muGNYbvaekAE8rUFLftyEar4LdrG2wXyyTJQZ26zptmeTEjPTaATts'
