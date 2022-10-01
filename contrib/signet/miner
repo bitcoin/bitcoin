@@ -306,6 +306,17 @@ class Generate:
 
         return tmpl
 
+    def mine(self, bcli, grind_cmd, tmpl, reward_spk):
+        psbt = generate_psbt(tmpl, reward_spk, blocktime=self.mine_time)
+        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+        psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
+        if not psbt_signed.get("complete",False):
+            logging.debug("Generated PSBT: %s" % (psbt,))
+            sys.stderr.write("PSBT signing failed\n")
+            return None
+        block, signet_solution = decode_psbt(psbt_signed["psbt"])
+        return finish_block(block, signet_solution, grind_cmd)
+
 def do_generate(args):
     if args.max_blocks is not None:
         if args.ongoing:
@@ -417,15 +428,9 @@ def do_generate(args):
         # mine block
         logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(gen.mine_time-bestheader["time"]), gen.mine_time, gen.is_mine)
         mined_blocks += 1
-        psbt = generate_psbt(tmpl, reward_spk, blocktime=gen.mine_time)
-        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
-        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
-        if not psbt_signed.get("complete",False):
-            logging.debug("Generated PSBT: %s" % (psbt,))
-            sys.stderr.write("PSBT signing failed\n")
+        block = gen.mine(args.bcli, args.grind_cmd, tmpl, reward_spk)
+        if block is None:
             return 1
-        block, signet_solution = decode_psbt(psbt_signed["psbt"])
-        block = finish_block(block, signet_solution, args.grind_cmd)
 
         # submit block
         r = args.bcli("-stdin", "submitblock", input=block.serialize().hex().encode('utf8'))
