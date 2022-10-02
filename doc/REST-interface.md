@@ -30,6 +30,7 @@ Supported API
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
+Responds with 404 if the transaction doesn't exist.
 
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
@@ -55,6 +56,7 @@ Returns empty if the block doesn't exist or it isn't in the active chain.
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
 Given a height: returns hash of block in best-block-chain at height provided.
+Responds with 404 if block not found.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
