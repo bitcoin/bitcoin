@@ -183,9 +183,9 @@ task:
     - python build_msvc\msvc-autogen.py
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
-  unit_tests_script:
+  check_script:
     - src\test_bitcoin.exe -l test_suite
-    - src\bench_bitcoin.exe > NUL
+    - src\bench_bitcoin.exe --sanity-check > NUL
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:
