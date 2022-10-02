@@ -349,13 +349,11 @@ G1Point RangeProof::VerifyLoop2(
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-        // every proof subtract its tau_x (=<L,R>) from y0
-        h_pos_exp = h_pos_exp - (p.proof.tau_x * weight_y);  // ** (65) LHS should be for h instead of g
-
         // ** used in (65) V^(z^2)
         Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 3); // VectorPowers(pd.z, M+3);
-
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits - 1).Sum(); // VectorPowerSum(p.y, MN);
+
+        h_pos_exp = h_pos_exp - (p.proof.tau_x * weight_y);  // ** (65) LHS h^tau_x; should add to h_neg_exp instead
 
         // processing z_pow[2], z_pow[3] ... originally
         Scalar k = (z_pows[0] * y_pows_sum).Negate();  // was z_pow[2]
@@ -376,47 +374,53 @@ G1Point RangeProof::VerifyLoop2(
         points.Add(p.proof.A * weight_z); // ** (66) RHS A
         points.Add(p.proof.S * (p.x * weight_z));  // ** (66) RHS S^x
 
-        Scalar y_inv_pow = 1;
-        Scalar y_pow = 1;
-
-        std::vector<Scalar> w_cache(1 << p.num_rounds, 1);
+        // for all bits of input values
+        std::vector<Scalar> w_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
+        // even index = w_inv
+        // odd index = w
         w_cache[0] = p.inv_ws[0];
         w_cache[1] = p.ws[0];
-
         for (size_t j = 1; j < p.num_rounds; ++j) {
-            const size_t sl = 1 << (j + 1);
+            const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
-            for (size_t s = sl; s-- > 0; --s) {
+            // j=4: (4,3),(2,1)
+            // j=8: (8,7),(6,5) + j=4
+            for (size_t s = sl; s > 0; s -= 2) {
                 w_cache[s] = w_cache[s / 2] * p.ws[j];
                 w_cache[s - 1] = w_cache[s / 2] * p.inv_ws[j];
             }
         }
 
-        for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar g_scalar = p.proof.a;
-            Scalar h_scalar = i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;
+        Scalar y_inv_pow = p.inv_y;  // used to build h' = h, h^(y-1), h^(y-2) ...
+        Scalar y_pow = p.y;
+        for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) { // for all bits of all input values, do
+            // set initial g_scalar and h_scalar for each loop
+            // when i = 0, a and b
+            // when i > 0, a and b * y_inv_pow
+            Scalar g_scalar = p.proof.a;  // ** g^l (67) RHS?
+            Scalar h_scalar = i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // ** (h')^r (67) RHS?
 
-            g_scalar = g_scalar * w_cache[i];
-            h_scalar = h_scalar * w_cache[(~i) & (p.concat_input_values_in_bits - 1)];
+            g_scalar = g_scalar * w_cache[i];  // from the beg from end
+            h_scalar = h_scalar * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg
 
-            g_scalar = g_scalar + p.z;
+            g_scalar = g_scalar + p.z;  // ** g^(-z) (66) RHS?
 
+            gi_exp[i] = gi_exp[i] - (g_scalar * weight_z);
+            hi_exp[i] = hi_exp[i] - (h_scalar * weight_z);
+
+            // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66) RHS
             Scalar tmp =
-                z_pows[2 + i / Config::m_input_value_bits] *
-                m_two_pows[i % Config::m_input_value_bits];
+                z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
+                m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
+            // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66) RHS
             if (i == 0) {
                 h_scalar = h_scalar - (tmp + p.z);
             } else {
                 h_scalar = h_scalar - ((tmp + (p.z * y_pow)) * y_inv_pow);
             }
 
-            gi_exp[i] = gi_exp[i] - (g_scalar * weight_z);
-            hi_exp[i] = hi_exp[i] - (h_scalar * weight_z);
-
-            if (i == 0) {
-                y_inv_pow = p.inv_y;
-                y_pow = p.y;
-            } else if (i != p.concat_input_values_in_bits - 1) {
+            // update y_pow and y_inv_pow to the next power
+            if (i > 0) { //  && i != p.concat_input_values_in_bits - 1)
                 y_inv_pow = y_inv_pow * p.inv_y;
                 y_pow = y_pow * p.y;
             }
@@ -438,8 +442,6 @@ G1Point RangeProof::VerifyLoop2(
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
     points.Add(gens.H * (h_pos_exp - h_neg_exp));
 
-    // from z4 and z5, create maxMN points and add to mutil_exp
-    // multi_exp_data needs to be maxMN * 2 long. z4 and z5 needs to be maxMN long.
     for (size_t i = 0; i < max_mn; ++i) {
         points.Add(gens.Gi.get()[i] * gi_exp[i]);
         points.Add(gens.Hi.get()[i] * hi_exp[i]);
