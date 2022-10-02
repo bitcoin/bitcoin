@@ -10,8 +10,10 @@ This test takes 30 mins or more (up to 2 hours)
 """
 import os
 
-from test_framework.blocktools import create_coinbase
-from test_framework.messages import CBlock
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
 from test_framework.script import (
     CScript,
     OP_NOP,
@@ -48,21 +50,7 @@ def mine_large_blocks(node, n):
     previousblockhash = int(best_block["hash"], 16)
 
     for _ in range(n):
-        # Build the coinbase transaction (with large scriptPubKey)
-        coinbase_tx = create_coinbase(height)
-        coinbase_tx.vin[0].nSequence = 2 ** 32 - 1
-        coinbase_tx.vout[0].scriptPubKey = big_script
-        coinbase_tx.rehash()
-
-        # Build the block
-        block = CBlock()
-        block.nVersion = best_block["version"]
-        block.hashPrevBlock = previousblockhash
-        block.nTime = mine_large_blocks.nTime
-        block.nBits = int('207fffff', 16)
-        block.nNonce = 0
-        block.vtx = [coinbase_tx]
-        block.hashMerkleRoot = block.calc_merkle_root()
+        block = create_block(hashprev=previousblockhash, ntime=mine_large_blocks.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
         block.solve()
 
         # Submit to the node
