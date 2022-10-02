@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_DERIEVED_VALUES_H
-#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_DERIEVED_VALUES_H
+#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
+#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/scalar.h>
 #include <blsct/arith/range_proof/proof.h>
 
-class ProofWithDerivedValues
+class ProofWithTranscript
 {
 public:
-    ProofWithDerivedValues(
+    ProofWithTranscript(
         const Proof& proof,
         const Scalar& x,
         const Scalar& y,
@@ -29,14 +29,14 @@ public:
         concat_input_values_in_bits(concat_input_values_in_bits),
         num_rounds(num_rounds) {}
 
-    static ProofWithDerivedValues Build(
+    static ProofWithTranscript Build(
       const Proof& proof,
       const size_t& num_rounds
     );
 
     const Proof proof;
 
-    // values derived from proof through transcript
+    // transcript
     const Scalar x;
     const Scalar y;
     const Scalar z;
@@ -50,4 +50,4 @@ public:
     const size_t num_rounds;  // log2 M + log2 N in old impl
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_DERIVED_VALUES_H
+#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H

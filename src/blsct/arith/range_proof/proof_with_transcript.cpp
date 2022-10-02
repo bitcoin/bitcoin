@@ -4,14 +4,13 @@
 
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/proof.h>
-#include <blsct/arith/range_proof/proof_with_derived_values.h>
+#include <blsct/arith/range_proof/proof_with_transcript.h>
 
-ProofWithDerivedValues ProofWithDerivedValues::Build(
+ProofWithTranscript ProofWithTranscript::Build(
   const Proof& proof,
   const size_t& num_rounds
 ) {
-    // create x, y, z and x_ip through transcript from proof
-    // in the same way they were created in Prove function
+    // build transcript from proof in the same way it was built in Prove function
     CHashWriter transcript(0,0);
 
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
@@ -52,8 +51,7 @@ ProofWithDerivedValues ProofWithDerivedValues::Build(
     size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
-    return ProofWithDerivedValues(
-        // Scalars derived from proof through transcript
+    return ProofWithTranscript(
         proof,
         x,
         y,
