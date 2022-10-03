@@ -12,7 +12,7 @@
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
-#include <blsct/arith/range_proof/proof_with_derived_values.h>
+#include <blsct/arith/range_proof/proof_with_transcript.h>
 #include <blsct/arith/scalar.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -102,7 +102,7 @@ public:
     ) const;
 
     G1Point VerifyLoop2(
-        const std::vector<ProofWithDerivedValues>& proof_derivs,
+        const std::vector<ProofWithTranscript>& proof_derivs,
         const Generators& gens,
         const size_t& max_mn
     ) const;

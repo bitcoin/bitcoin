@@ -11,7 +11,7 @@ ProofWithTranscript ProofWithTranscript::Build(
   const size_t& num_rounds
 ) {
     // build transcript from proof in the same way it was built in Prove function
-    CHashWriter transcript(0,0);
+    CHashWriter transcript_gen(0,0);
 
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
         transcript_gen << proof.Vs[i];
@@ -33,7 +33,7 @@ ProofWithTranscript ProofWithTranscript::Build(
 
     transcript_gen << proof.tau_x;
     transcript_gen << proof.mu;
-    transcript_gen << proof.t;
+    transcript_gen << proof.t_hat;
 
     Scalar x_ip = transcript_gen.GetHash();
 

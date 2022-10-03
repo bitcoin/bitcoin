@@ -304,7 +304,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalar x_for_inner_product_argument = transcript_gen.GetHash();
     if (x_for_inner_product_argument == 0) goto retry;
 
-    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_for_inner_product_argument, l, r, y, proof, transcript)) {
+    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_for_inner_product_argument, l, r, y, proof, transcript_gen)) {
         goto retry;
     }
     return proof;
@@ -332,7 +332,7 @@ bool RangeProof::ValidateProofsBySizes(
 }
 
 G1Point RangeProof::VerifyLoop2(
-    const std::vector<ProofWithDerivedValues>& proof_derivs,
+    const std::vector<ProofWithTranscript>& proof_derivs,
     const Generators& gens,
     const size_t& max_mn
 ) const {
@@ -345,7 +345,7 @@ G1Point RangeProof::VerifyLoop2(
     Scalars hi_exps;
 
     // for each proof, do:
-    for (const ProofWithDerivedValues& p: proof_derivs) {
+    for (const ProofWithTranscript& p: proof_derivs) {
 
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
@@ -475,7 +475,7 @@ bool RangeProof::Verify(
     const size_t num_rounds = GetInnerProdArgRounds(Config::m_input_value_bits);
     if (!ValidateProofsBySizes(proofs, num_rounds)) return false;
 
-    std::vector<ProofWithDerivedValues> proof_derivs;
+    std::vector<ProofWithTranscript> proof_derivs;
     size_t max_num_rounds = 0;
     size_t Vs_size_sum = 0;
 
@@ -485,7 +485,7 @@ bool RangeProof::Verify(
         Vs_size_sum += proof.Vs.Size();
 
         // derive required Scalars from proof
-        auto proof_deriv = ProofWithDerivedValues::Build(proof, num_rounds);
+        auto proof_deriv = ProofWithTranscript::Build(proof, num_rounds);
         proof_derivs.push_back(proof_deriv);
     }
 
