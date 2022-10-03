@@ -348,40 +348,41 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 }
 
 
-CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactionRef input_transaction,
-                                                                     int input_vout,
+CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(const std::vector<CTransactionRef>& input_transactions,
+                                                                     const std::vector<COutPoint>& inputs,
                                                                      int input_height,
-                                                                     CKey input_signing_key,
-                                                                     CScript output_destination,
-                                                                     CAmount output_amount,
+                                                                     const std::vector<CKey>& input_signing_keys,
+                                                                     const std::vector<CTxOut>& outputs,
                                                                      bool submit)
 {
-    // Transaction we will submit to the mempool
     CMutableTransaction mempool_txn;
+    mempool_txn.vin.reserve(inputs.size());
+    mempool_txn.vout.reserve(outputs.size());
 
-    // Create an input
-    COutPoint outpoint_to_spend(input_transaction->GetHash(), input_vout);
-    CTxIn input(outpoint_to_spend);
-    mempool_txn.vin.push_back(input);
+    for (const auto& outpoint : inputs) {
+        mempool_txn.vin.emplace_back(CTxIn{outpoint});
+    }
+    mempool_txn.vout = outputs;
 
-    // Create an output
-    CTxOut output(output_amount, output_destination);
-    mempool_txn.vout.push_back(output);
-
-    // Sign the transaction
     // - Add the signing key to a keystore
     FillableSigningProvider keystore;
-    keystore.AddKey(input_signing_key);
+    for (const auto& input_signing_key : input_signing_keys) {
+        keystore.AddKey(input_signing_key);
+    }
     // - Populate a CoinsViewCache with the unspent output
     CCoinsView coins_view;
     CCoinsViewCache coins_cache(&coins_view);
-    AddCoins(coins_cache, *input_transaction.get(), input_height);
-    // - Use GetCoin to properly populate utxo_to_spend,
-    Coin utxo_to_spend;
-    assert(coins_cache.GetCoin(outpoint_to_spend, utxo_to_spend));
-    // - Then add it to a map to pass in to SignTransaction
+    for (const auto& input_transaction : input_transactions) {
+        AddCoins(coins_cache, *input_transaction.get(), input_height);
+    }
+    // Build Outpoint to Coin map for SignTransaction
     std::map<COutPoint, Coin> input_coins;
-    input_coins.insert({outpoint_to_spend, utxo_to_spend});
+    for (const auto& outpoint_to_spend : inputs) {
+        // - Use GetCoin to properly populate utxo_to_spend,
+        Coin utxo_to_spend;
+        assert(coins_cache.GetCoin(outpoint_to_spend, utxo_to_spend));
+        input_coins.insert({outpoint_to_spend, utxo_to_spend});
+    }
     // - Default signature hashing type
     int nHashType = SIGHASH_ALL;
     std::map<int, bilingual_str> input_errors;
@@ -395,6 +396,24 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     }
 
     return mempool_txn;
+}
+
+CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactionRef input_transaction,
+                                                                     uint32_t input_vout,
+                                                                     int input_height,
+                                                                     CKey input_signing_key,
+                                                                     CScript output_destination,
+                                                                     CAmount output_amount,
+                                                                     bool submit)
+{
+    COutPoint input{input_transaction->GetHash(), input_vout};
+    CTxOut output{output_amount, output_destination};
+    return CreateValidMempoolTransaction(/*input_transactions=*/{input_transaction},
+                                         /*inputs=*/{input},
+                                         /*input_height=*/input_height,
+                                         /*input_signing_keys=*/{input_signing_key},
+                                         /*outputs=*/{output},
+                                         /*submit=*/submit);
 }
 
 std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit)

@@ -157,6 +157,23 @@ struct TestChain100Setup : public TestingSetup {
     /**
      * Create a transaction and submit to the mempool.
      *
+     * @param input_transactions   The transactions to spend
+     * @param input_height         The height of the block that included the input transactions.
+     * @param inputs               Outpoints with which to construct transaction vin.
+     * @param input_signing_keys   The keys to spend the input transactions.
+     * @param outputs              Transaction vout.
+     * @param submit               Whether or not to submit to mempool
+     */
+    CMutableTransaction CreateValidMempoolTransaction(const std::vector<CTransactionRef>& input_transactions,
+                                                      const std::vector<COutPoint>& inputs,
+                                                      int input_height,
+                                                      const std::vector<CKey>& input_signing_keys,
+                                                      const std::vector<CTxOut>& outputs,
+                                                      bool submit = true);
+
+    /**
+     * Create a transaction and submit to the mempool.
+     *
      * @param input_transaction  The transaction to spend
      * @param input_vout         The vout to spend from the input_transaction
      * @param input_height       The height of the block that included the input_transaction
@@ -166,7 +183,7 @@ struct TestChain100Setup : public TestingSetup {
      * @param submit             Whether or not to submit to mempool
      */
     CMutableTransaction CreateValidMempoolTransaction(CTransactionRef input_transaction,
-                                                      int input_vout,
+                                                      uint32_t input_vout,
                                                       int input_height,
                                                       CKey input_signing_key,
                                                       CScript output_destination,
