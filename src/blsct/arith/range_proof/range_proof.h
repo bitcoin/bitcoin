@@ -68,7 +68,7 @@ public:
         const Scalars& r,
         const Scalar& y,
         Proof& st,
-        CHashWriter& transcript
+        CHashWriter& transcript_gen
     );
 
     /**

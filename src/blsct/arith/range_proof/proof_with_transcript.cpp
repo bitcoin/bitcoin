@@ -14,36 +14,36 @@ ProofWithTranscript ProofWithTranscript::Build(
     CHashWriter transcript(0,0);
 
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
-        transcript << proof.Vs[i];
+        transcript_gen << proof.Vs[i];
     }
-    transcript << proof.A;
-    transcript << proof.S;
+    transcript_gen << proof.A;
+    transcript_gen << proof.S;
 
-    Scalar y = transcript.GetHash();
-    transcript << y;
+    Scalar y = transcript_gen.GetHash();
+    transcript_gen << y;
 
-    Scalar z = transcript.GetHash();
-    transcript << z;
+    Scalar z = transcript_gen.GetHash();
+    transcript_gen << z;
 
-    transcript << proof.T1;
-    transcript << proof.T2;
+    transcript_gen << proof.T1;
+    transcript_gen << proof.T2;
 
-    Scalar x = transcript.GetHash();
-    transcript << x;
+    Scalar x = transcript_gen.GetHash();
+    transcript_gen << x;
 
-    transcript << proof.tau_x;
-    transcript << proof.mu;
-    transcript << proof.t;
+    transcript_gen << proof.tau_x;
+    transcript_gen << proof.mu;
+    transcript_gen << proof.t;
 
-    Scalar x_ip = transcript.GetHash();
+    Scalar x_ip = transcript_gen.GetHash();
 
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars ws;
     Scalars inv_ws;
     for (size_t i = 0; i < num_rounds; ++i) {
-        transcript << proof.Ls[i];
-        transcript << proof.Rs[i];
-        Scalar w(transcript.GetHash());
+        transcript_gen << proof.Ls[i];
+        transcript_gen << proof.Rs[i];
+        Scalar w(transcript_gen.GetHash());
         ws.Add(w);
         inv_ws.Add(w.Invert());
     }

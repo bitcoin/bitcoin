@@ -38,7 +38,7 @@ bool RangeProof::InnerProductArgument(
     const Scalars& r,
     const Scalar& y,
     Proof& proof,
-    CHashWriter& transcript
+    CHashWriter& transcript_gen
 ) {
     // build initial state
     Scalars scale_factors = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
@@ -74,10 +74,10 @@ bool RangeProof::InnerProductArgument(
         );
 
         // (25)-(27)
-        transcript << proof.Ls[round];
-        transcript << proof.Rs[round];
+        transcript_gen << proof.Ls[round];
+        transcript_gen << proof.Rs[round];
 
-        Scalar x = transcript.GetHash();
+        Scalar x = transcript_gen.GetHash();
         if (x == 0)
             return false;
         Scalar x_inv = x.Invert();
@@ -146,12 +146,12 @@ Proof RangeProof::Prove(
     Generators gens = m_gf.GetInstance(token_id);
 
     // This hash is updated for Fiat-Shamir throughout the proof
-    CHashWriter transcript(0, 0);
+    CHashWriter transcript_gen(0, 0);
 
     // Calculate value commitments and add them to transcript
     proof.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
     for (size_t i = 0; i < vs.Size(); ++i) {
-        transcript << proof.Vs[i];
+        transcript_gen << proof.Vs[i];
     }
 
     // (41)-(42)
@@ -210,16 +210,16 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     proof.S = (gens.H * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
 
     // (48)-(50)
-    transcript << proof.A;
-    transcript << proof.S;
+    transcript_gen << proof.A;
+    transcript_gen << proof.S;
 
-    Scalar y = transcript.GetHash();
+    Scalar y = transcript_gen.GetHash();
     if (y == 0) goto retry;
-    transcript << y;
+    transcript_gen << y;
 
-    Scalar z = transcript.GetHash();
+    Scalar z = transcript_gen.GetHash();
     if (z == 0) goto retry;
-    transcript << z;
+    transcript_gen << z;
 
     // Polynomial construction by coefficients
     // AFTER (50)
@@ -269,10 +269,10 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     proof.T2 = (gens.G.get() * t2) + (gens.H * tau2);
 
     // (54)-(56)
-    transcript << proof.T1;
-    transcript << proof.T2;
+    transcript_gen << proof.T1;
+    transcript_gen << proof.T2;
 
-    Scalar x = transcript.GetHash();
+    Scalar x = transcript_gen.GetHash();
     if (x == 0) goto retry;
 
     // x will be added to transcript later
@@ -296,12 +296,12 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     proof.mu = alpha + (rho * x);  // (62)
 
     // (63)
-    transcript << x;
-    transcript << proof.tau_x;
-    transcript << proof.mu;
-    transcript << proof.t_hat;
+    transcript_gen << x;
+    transcript_gen << proof.tau_x;
+    transcript_gen << proof.mu;
+    transcript_gen << proof.t_hat;
 
-    Scalar x_for_inner_product_argument = transcript.GetHash();
+    Scalar x_for_inner_product_argument = transcript_gen.GetHash();
     if (x_for_inner_product_argument == 0) goto retry;
 
     if (!InnerProductArgument(concat_input_values_in_bits, gens, x_for_inner_product_argument, l, r, y, proof, transcript)) {
