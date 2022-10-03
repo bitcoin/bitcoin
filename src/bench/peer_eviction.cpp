@@ -40,7 +40,7 @@ static void EvictionProtection0Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_network = NET_IPV4;
@@ -51,7 +51,7 @@ static void EvictionProtection1Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
@@ -67,7 +67,7 @@ static void EvictionProtection2Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = false;
@@ -85,7 +85,7 @@ static void EvictionProtection3Networks050Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        50 /* num_candidates */,
+        /*num_candidates=*/50,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id == 28 || c.id == 47); //  2 localhost
@@ -103,7 +103,7 @@ static void EvictionProtection3Networks100Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        100 /* num_candidates */,
+        /*num_candidates=*/100,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id >= 55 && c.id < 60); //  5 localhost
@@ -121,7 +121,7 @@ static void EvictionProtection3Networks250Candidates(benchmark::Bench& bench)
 {
     EvictionProtectionCommon(
         bench,
-        250 /* num_candidates */,
+        /*num_candidates=*/250,
         [](NodeEvictionCandidate& c) {
             c.m_connected = std::chrono::seconds{c.id};
             c.m_is_local = (c.id >= 140 && c.id < 160); // 20 localhost

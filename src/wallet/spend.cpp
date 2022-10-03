@@ -636,7 +636,7 @@ std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coi
             // If partial groups are allowed, relax the requirement of spending OutputGroups (groups
             // of UTXOs sent to the same address, which are obviously controlled by a single wallet)
             // in their entirety.
-            if (auto r6{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+            if (auto r6{AttemptSelection(wallet, value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, /*include_partial=*/true),
                                    available_coins, coin_selection_params, /*allow_mixed_output_types=*/true)}) {
                 return r6;
             }
@@ -644,7 +644,7 @@ std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coi
             // received from other wallets.
             if (coin_control.m_include_unsafe_inputs) {
                 if (auto r7{AttemptSelection(wallet, value_to_select,
-                    CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+                    CoinEligibilityFilter(/*conf_mine=*/0, /*conf_theirs=*/0, max_ancestors-1, max_descendants-1, /*include_partial=*/true),
                     available_coins, coin_selection_params, /*allow_mixed_output_types=*/true)}) {
                     return r7;
                 }
@@ -654,7 +654,7 @@ std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coi
             // OutputGroups use heuristics that may overestimate ancestor/descendant counts.
             if (!fRejectLongChains) {
                 if (auto r8{AttemptSelection(wallet, value_to_select,
-                                      CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
+                                      CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), /*include_partial=*/true),
                                       available_coins, coin_selection_params, /*allow_mixed_output_types=*/true)}) {
                     return r8;
                 }

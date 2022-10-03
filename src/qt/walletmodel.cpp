@@ -217,7 +217,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         int nChangePosRet = -1;
 
         auto& newTx = transaction.getWtx();
-        const auto& res = m_wallet->createTransaction(vecSend, coinControl, !wallet().privateKeysDisabled() /* sign */, nChangePosRet, nFeeRequired);
+        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), nChangePosRet, nFeeRequired);
         newTx = res ? *res : nullptr;
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
@@ -258,7 +258,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
         }
 
         auto& newTx = transaction.getWtx();
-        wallet().commitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm));
+        wallet().commitTransaction(newTx, /*value_map=*/{}, std::move(vOrderForm));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << *newTx;
@@ -542,7 +542,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     if (retval == QMessageBox::Save) {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, false /* sign */, true /* bip32derivs */, nullptr, psbtx, complete);
+        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete);
         if (err != TransactionError::OK || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;

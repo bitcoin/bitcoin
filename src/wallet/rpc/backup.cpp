@@ -184,7 +184,7 @@ RPCHelpMan importprivkey()
 
             // Add the wpkh script for this key if possible
             if (pubkey.IsCompressed()) {
-                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, 0 /* timestamp */);
+                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, /*timestamp=*/0);
             }
         }
     }
@@ -273,19 +273,19 @@ RPCHelpMan importaddress()
 
             pwallet->MarkDirty();
 
-            pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, false /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
+            pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
         } else if (IsHex(request.params[0].get_str())) {
             std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
             CScript redeem_script(data.begin(), data.end());
 
             std::set<CScript> scripts = {redeem_script};
-            pwallet->ImportScripts(scripts, 0 /* timestamp */);
+            pwallet->ImportScripts(scripts, /*timestamp=*/0);
 
             if (fP2SH) {
                 scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
             }
 
-            pwallet->ImportScriptPubKeys(strLabel, scripts, false /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
+            pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
@@ -464,9 +464,9 @@ RPCHelpMan importpubkey()
 
         pwallet->MarkDirty();
 
-        pwallet->ImportScriptPubKeys(strLabel, script_pub_keys, true /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
+        pwallet->ImportScriptPubKeys(strLabel, script_pub_keys, /*have_solving_data=*/true, /*apply_label=*/true, /*timestamp=*/1);
 
-        pwallet->ImportPubKeys({pubKey.GetID()}, {{pubKey.GetID(), pubKey}} , {} /* key_origins */, false /* add_keypool */, false /* internal */, 1 /* timestamp */);
+        pwallet->ImportPubKeys({pubKey.GetID()}, {{pubKey.GetID(), pubKey}} , /*key_origins=*/{}, /*add_keypool=*/false, /*internal=*/false, /*timestamp=*/1);
     }
     if (fRescan)
     {
@@ -625,7 +625,7 @@ RPCHelpMan importwallet()
         pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     }
     pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
-    RescanWallet(*pwallet, reserver, nTimeBegin, false /* update */);
+    RescanWallet(*pwallet, reserver, nTimeBegin, /*update=*/false);
     pwallet->MarkDirty();
 
     if (!fGood)
@@ -1399,7 +1399,7 @@ RPCHelpMan importmulti()
         }
     }
     if (fRescan && fRunScan && requests.size()) {
-        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
+        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, /*update=*/true);
         pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {
@@ -1691,7 +1691,7 @@ RPCHelpMan importdescriptors()
 
     // Rescan the blockchain using the lowest timestamp
     if (rescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, true /* update */);
+        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, /*update=*/true);
         pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {

@@ -481,7 +481,7 @@ public:
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
-        RemoveWallet(m_context, m_wallet, false /* load_on_start */);
+        RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
     }
     bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override

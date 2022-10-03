@@ -58,7 +58,7 @@ static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const 
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance{new CWallet(nullptr /* chain */, name, args, std::move(database)), WalletToolReleaseWallet};
+    std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, args, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
         load_wallet_ret = wallet_instance->LoadWallet();
