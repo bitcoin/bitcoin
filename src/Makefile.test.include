@@ -188,6 +188,7 @@ SYSCOIN_TESTS += \
   wallet/test/coinselector_tests.cpp \
   wallet/test/init_tests.cpp \
   wallet/test/ismine_tests.cpp \
+  wallet/test/rpc_util_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp \
   wallet/test/walletload_tests.cpp
 
@@ -199,8 +200,12 @@ if USE_BDB
 SYSCOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
-if USE_SQLITE
 FUZZ_WALLET_SRC = \
+ wallet/test/fuzz/coinselection.cpp \
+ wallet/test/fuzz/parse_iso8601.cpp
+
+if USE_SQLITE
+FUZZ_WALLET_SRC += \
  wallet/test/fuzz/notifications.cpp
 endif # USE_SQLITE
 
@@ -299,7 +304,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
  test/fuzz/parse_hd_keypath.cpp \
- test/fuzz/parse_iso8601.cpp \
  test/fuzz/parse_numbers.cpp \
  test/fuzz/parse_script.cpp \
  test/fuzz/parse_univalue.cpp \

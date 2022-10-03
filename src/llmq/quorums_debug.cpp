@@ -114,7 +114,7 @@ UniValue CDKGDebugStatus::ToJson(ChainstateManager &chainman, int detailLevel) c
     UniValue ret(UniValue::VOBJ);
 
     ret.pushKV("time", nTime);
-    ret.pushKV("timeStr", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime));
+    ret.pushKV("timeStr", DurationToDHMS(nTime));
 
     UniValue sessionsArrJson(UniValue::VARR);
     for (const auto& p : sessions) {

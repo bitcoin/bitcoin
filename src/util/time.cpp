@@ -12,8 +12,6 @@
 #include <util/time.h>
 #include <util/check.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <atomic>
 #include <chrono>
 #include <ctime>
@@ -142,17 +140,6 @@ std::string FormatISO8601Date(int64_t nTime) {
     return strprintf("%04i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday);
 }
 // SYSCOIN
-std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
-{
-	static std::locale classic(std::locale::classic());
-	// std::locale takes ownership of the pointer
-	std::locale loc(classic, new boost::posix_time::time_facet(pszFormat));
-	std::stringstream ss;
-	ss.imbue(loc);
-	ss << boost::posix_time::from_time_t(nTime);
-	return ss.str();
-}
-
 std::string DurationToDHMS(int64_t nDurationTime)
 {
 	int seconds = nDurationTime % 60;
@@ -166,20 +153,6 @@ std::string DurationToDHMS(int64_t nDurationTime)
 	if (hours)
 		return strprintf("%02dh:%02dm:%02ds", hours, minutes, seconds);
 	return strprintf("%02dm:%02ds", minutes, seconds);
-}
-
-int64_t ParseISO8601DateTime(const std::string& str)
-{
-    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    static const std::locale loc(std::locale::classic(),
-        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-    std::istringstream iss(str);
-    iss.imbue(loc);
-    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-    iss >> ptime;
-    if (ptime.is_not_a_date_time() || epoch > ptime)
-        return 0;
-    return (ptime - epoch).total_seconds();
 }
 
 struct timeval MillisToTimeval(int64_t nTimeout)
