@@ -271,6 +271,14 @@ extern const char* SENDTXRCNCL;
 extern const char* SENDPACKAGES;
 /** List of wtxids corresponding to a transaction's ancestor package. */
 extern const char* ANCPKGINFO;
+/**
+ * Requests all or none of a list of transactions, specified by wtxid.
+ */
+extern const char* GETPKGTXNS;
+/**
+ * List of transactions.
+ */
+extern const char* PKGTXNS;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -476,6 +484,7 @@ enum GetDataMsg : uint32_t {
     // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
     // use and remains unused.
     // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    MSG_PKGTXNS = 6,                                 //!< Defined in BIP331
     MSG_ANCPKGINFO = 7,                              //!< Defined in BIP331
 };
 
@@ -501,6 +510,7 @@ public:
     bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
     bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
     bool IsMsgAncPkgInfo() const { return type == MSG_ANCPKGINFO; }
+    bool IsMsgPkgTxns() const { return type == MSG_PKGTXNS; }
 
     // Combined-message helper methods
     bool IsGenTxMsg() const

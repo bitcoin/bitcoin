@@ -53,11 +53,13 @@ from test_framework.messages import (
     msg_getcfilters,
     msg_getdata,
     msg_getheaders,
+    msg_getpkgtxns,
     msg_headers,
     msg_inv,
     msg_mempool,
     msg_merkleblock,
     msg_notfound,
+    msg_pkgtxns,
     msg_ping,
     msg_pong,
     msg_sendaddrv2,
@@ -128,11 +130,13 @@ MESSAGEMAP = {
     b"getcfilters": msg_getcfilters,
     b"getdata": msg_getdata,
     b"getheaders": msg_getheaders,
+    b"getpkgtxns": msg_getpkgtxns,
     b"headers": msg_headers,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
     b"merkleblock": msg_merkleblock,
     b"notfound": msg_notfound,
+    b"pkgtxns": msg_pkgtxns,
     b"ping": msg_ping,
     b"pong": msg_pong,
     b"sendaddrv2": msg_sendaddrv2,
@@ -427,10 +431,12 @@ class P2PInterface(P2PConnection):
     def on_getblocktxn(self, message): pass
     def on_getdata(self, message): pass
     def on_getheaders(self, message): pass
+    def on_getpkgtxns(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
     def on_merkleblock(self, message): pass
     def on_notfound(self, message): pass
+    def on_pkgtxns(self, message): pass
     def on_pong(self, message): pass
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
@@ -789,6 +795,7 @@ class P2PDataStore(P2PInterface):
                 # Check that none of the txs are now in the mempool
                 for tx in txs:
                     assert tx.hash not in raw_mempool, "{} tx found in mempool".format(tx.hash)
+
 
 class P2PTxInvStore(P2PInterface):
     """A P2PInterface which stores a count of how many times each txid has been announced."""

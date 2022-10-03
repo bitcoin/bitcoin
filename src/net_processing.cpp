@@ -4947,6 +4947,68 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    if (msg_type == NetMsgType::GETPKGTXNS) {
+        unsigned int num_txns = ReadCompactSize(vRecv);
+        if (num_txns == 0) return;
+        if (num_txns > node::MAX_PKGTXNS_COUNT) {
+            LogPrint(BCLog::NET, "\ngetpkgtxns exceeds allowed size, disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        std::vector<uint256> txns_requested;
+        txns_requested.resize(num_txns);
+        for (unsigned int n = 0; n < num_txns; ++n) vRecv >> txns_requested[n];
+
+        {
+            LOCK(peer->m_getdata_requests_mutex);
+            std::vector<CTransactionRef> pkgtxns;
+            auto tx_relay = peer->GetTxRelay();
+            const auto mempool_req = tx_relay != nullptr ? tx_relay->m_last_mempool_req.load() : std::chrono::seconds::min();
+            const auto now{GetTime<std::chrono::seconds>()};
+            for (const auto& wtxid : txns_requested) {
+                auto ptx = FindTxForGetData(*peer->GetTxRelay(), GenTxid::Wtxid(wtxid), mempool_req, now);
+                if (ptx) {
+                    pkgtxns.push_back(ptx);
+                } else {
+                    // A getpkgtxns request is all or nothing; if any of the transactions are
+                    // unavailable, return a notfound for the full request.
+                    break;
+                }
+            }
+            if (pkgtxns.size() == txns_requested.size()) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::PKGTXNS, pkgtxns));
+            } else {
+                std::vector<CInv> notfound{{CInv{MSG_PKGTXNS, GetCombinedHash(txns_requested)}}};
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::NOTFOUND, notfound));
+            }
+        }
+    }
+
+    if (msg_type == NetMsgType::PKGTXNS) {
+        if (RejectIncomingTxs(pfrom)) {
+            LogPrint(BCLog::NET, "\npkgtxns sent in violation of protocol peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        if (!m_txpackagetracker) return;
+        unsigned int num_txns = ReadCompactSize(vRecv);
+        if (num_txns == 0) return;
+        if (num_txns > node::MAX_PKGTXNS_COUNT) {
+            LogPrint(BCLog::NET, "\npkgtxns exceeds allowed size, disconnecting peer=%d\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        std::vector<CTransactionRef> package_txns;
+        package_txns.resize(num_txns);
+        for (unsigned int n = 0; n < num_txns; n++) {
+            vRecv >> package_txns[n];
+        }
+        if (const auto package_to_validate{m_txpackagetracker->ReceivedPkgTxns(pfrom.GetId(), package_txns)}) {
+            ProcessPackage(pfrom, package_to_validate.value());
+        }
+        return;
+    }
+
     if (msg_type == NetMsgType::PING) {
         if (pfrom.GetCommonVersion() > BIP0031_VERSION) {
             uint64_t nonce = 0;

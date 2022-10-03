@@ -27,6 +27,7 @@ import random
 import socket
 import struct
 import time
+import unittest
 
 from test_framework.siphash import siphash256
 from test_framework.util import assert_equal
@@ -60,6 +61,7 @@ MSG_WTX = 5
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
 MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG
+MSG_PKGTXNS = 6
 MSG_ANCPKGINFO = 7
 
 FILTER_TYPE_BASIC = 0
@@ -336,6 +338,7 @@ class CInv:
         MSG_CMPCT_BLOCK: "CompactBlock",
         MSG_WTX: "WTX",
         MSG_ANCPKGINFO: "ancpkginfo",
+        MSG_PKGTXNS: "pkgtxns",
     }
 
     def __init__(self, t=0, h=0):
@@ -1892,3 +1895,81 @@ class msg_ancpkginfo:
 
     def __repr__(self):
         return "msg_ancpkginfo(wtxids=%s)" % (self.wtxids)
+
+class msg_pkgtxns:
+    __slots__ = ("txns")
+    msgtype = b"pkgtxns"
+
+    def __init__(self, txns=None):
+        self.txns = txns if txns is not None else []
+
+    def deserialize(self, f):
+        self.txns = deser_vector(f, CTransaction)
+
+    def serialize(self):
+        r = b""
+        r += ser_vector(self.txns, "serialize_with_witness")
+        return r
+
+    def __repr__(self):
+        return "msg_pkgtxns(txns=%s)" % (self.txns)
+
+
+class msg_getpkgtxns:
+    __slots__ = ("hashes")
+    msgtype = b"getpkgtxns"
+
+    def __init__(self, hashes=None):
+        self.hashes = hashes if hashes is not None else []
+
+    def deserialize(self, f):
+        self.hashes = deser_uint256_vector(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256_vector(self.hashes)
+        return r
+
+    def __repr__(self):
+        return "msg_getpkgtxns(hashes=%s)" % (self.hashes)
+
+def get_combined_hash(package_wtxids):
+    # There should never be duplicate hashes
+    assert_equal(len(package_wtxids), len(set(package_wtxids)))
+    wtxids_copy = [x for x in package_wtxids]
+
+    def uint256_lexico(a):
+        return ser_uint256(a)
+    wtxids_copy.sort(key=uint256_lexico)
+    return uint256_from_str(hash256(ser_uint256_vector(wtxids_copy)))
+
+def get_package_hash(package_txns):
+    # There should never be duplicate hashes
+    assert_equal(len(package_txns), len(set(package_txns)))
+    wtxids = [int(tx.getwtxid(), 16) for tx in package_txns]
+    return get_combined_hash(wtxids)
+
+class TestFrameworkMessages(unittest.TestCase):
+    def test_combined_hash(self):
+        zero = int(ser_uint256(0)[::-1].hex(), 16)
+        one = int(ser_uint256(1)[::-1].hex(), 16)
+        two = int(ser_uint256(2)[::-1].hex(), 16)
+        eff = uint256_from_str(b"\xff" * 32)
+        assert zero < one
+        assert one < two
+        assert two < eff
+        hash_0 = uint256_from_str(hash256(ser_uint256_vector([zero])))
+        hash_01 = uint256_from_str(hash256(ser_uint256_vector([zero, one])))
+        hash_12 = uint256_from_str(hash256(ser_uint256_vector([one, two])))
+        hash_012 = uint256_from_str(hash256(ser_uint256_vector([zero, one, two])))
+        hash_012f = uint256_from_str(hash256(ser_uint256_vector([zero, one, two, eff])))
+        assert_equal(hash_0, get_combined_hash([zero]))
+        assert_equal(hash_01, get_combined_hash([one, zero]))
+        assert_equal(hash_12, get_combined_hash([two, one]))
+        assert_equal(hash_012, get_combined_hash([zero, two, one]))
+        assert_equal(hash_012, get_combined_hash([two, zero, one]))
+        assert_equal(hash_012, get_combined_hash([one, zero, two]))
+        assert_equal(hash_012f, get_combined_hash([one, zero, two, eff]))
+
+if __name__ == '__main__':
+    unittest.main()
