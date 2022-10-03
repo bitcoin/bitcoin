@@ -344,35 +344,51 @@ G1Point RangeProof::VerifyLoop2(
     Scalars gi_exp;
     Scalars hi_exp;
 
+    // for each proof, do:
     for (const ProofWithDerivedValues& p: proof_derivs) {
 
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-        // ** used in (65) V^(z^2)
-        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 3); // VectorPowers(pd.z, M+3);
+        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits - 1).Sum(); // VectorPowerSum(p.y, MN);
 
-        h_pos_exp = h_pos_exp - (p.proof.tau_x * weight_y);  // ** (65) LHS h^tau_x; should add to h_neg_exp instead
+        //////// (65)
+        // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
+        // g^t_hat * h^(-tau_x) * V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
 
-        // processing z_pow[2], z_pow[3] ... originally
-        Scalar k = (z_pows[0] * y_pows_sum).Negate();  // was z_pow[2]
+        h_neg_exp = h_neg_exp + (p.proof.tau_x * weight_y);  // h^tau_x
+
+        // delta(y,z) in (39)
+        // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
+        // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
+        Scalar delta_yz = p.z * y_pows_sum;  // (1)
+        delta_yz = (z_pows[0] * y_pows_sum).Negate(); // (2)
         for (size_t i = 1; i <= Config::m_input_value_bits; ++i) {
-            k = k - (z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows);  // was i + 2
+            // multiply z^3, z^4, ..., z^(mn+3)
+            delta_yz = delta_yz - (z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows);  // (3)
         }
 
-        // ** t_hat (65) LHS. not clear where k, z and y_pows_sum is coming from now
-        g_neg_exp = g_neg_exp + ((p.proof.t_hat - (k + (p.z * y_pows_sum))) * weight_y);
+        // g^t_hat ... = ... g^delta_yz
+        // g^(t_hat - delta_yz) = ...
+        // ... = - g^(t_hat - delta_yz)
+        g_neg_exp = g_neg_exp + ((p.proof.t_hat - delta_yz) * weight_y);
 
-        // ** (65) V^(z^2)
+        // V^(z^2)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-            points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // was i + 2
+            points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
-        points.Add(p.proof.T1 * (p.x * weight_y));  // ** (65) T1^x
-        points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // (65) T2^(x^2)
-        points.Add(p.proof.A * weight_z); // ** (66) RHS A
-        points.Add(p.proof.S * (p.x * weight_z));  // ** (66) RHS S^x
+        points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
+        points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
+
+        //////// (66)
+        // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
+        // ** exponent of g and (h') are created in loop below
+        points.Add(p.proof.A * weight_z); // A
+        points.Add(p.proof.S * (p.x * weight_z));  // S^x
+
+        //////// (67), (68)
 
         // for all bits of input values
         std::vector<Scalar> w_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
@@ -391,33 +407,34 @@ G1Point RangeProof::VerifyLoop2(
             }
         }
 
+        // for each bit of concat input values, do:
         Scalar y_inv_pow = p.inv_y;  // used to build h' = h, h^(y-1), h^(y-2) ...
         Scalar y_pow = p.y;
-        for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) { // for all bits of all input values, do
+        for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
             // set initial g_scalar and h_scalar for each loop
             // when i = 0, a and b
             // when i > 0, a and b * y_inv_pow
-            Scalar g_scalar = p.proof.a;  // ** g^l (67) RHS?
-            Scalar h_scalar = i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // ** (h')^r (67) RHS?
+            Scalar g_scalar = p.proof.a;  // a is the final reduced form of L
+            Scalar h_scalar = i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // some for b for R. y_inv_pow to turn the generator to (h')
 
             g_scalar = g_scalar * w_cache[i];  // from the beg from end
             h_scalar = h_scalar * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg
 
-            g_scalar = g_scalar + p.z;  // ** g^(-z) (66) RHS?
+            g_scalar = g_scalar + p.z;  // g^(-z) (66)
 
-            gi_exp[i] = gi_exp[i] - (g_scalar * weight_z);
-            hi_exp[i] = hi_exp[i] - (h_scalar * weight_z);
-
-            // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66) RHS
+            // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66)
             Scalar tmp =
                 z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
                 m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
-            // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66) RHS
+            // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             if (i == 0) {
                 h_scalar = h_scalar - (tmp + p.z);
             } else {
                 h_scalar = h_scalar - ((tmp + (p.z * y_pow)) * y_inv_pow);
             }
+
+            gi_exp[i] = gi_exp[i] - (g_scalar * weight_z);  // there exists generator for each bit
+            hi_exp[i] = hi_exp[i] - (h_scalar * weight_z);
 
             // update y_pow and y_inv_pow to the next power
             if (i > 0) { //  && i != p.concat_input_values_in_bits - 1)
@@ -428,6 +445,8 @@ G1Point RangeProof::VerifyLoop2(
 
         h_neg_exp = h_neg_exp + (p.proof.mu * weight_z);  // ** h^mu (67) RHS
 
+        // for each round, do:
+        // add L^(x^2) * R^(x-1)^2 of all rounds
         for (size_t i = 0; i < p.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
