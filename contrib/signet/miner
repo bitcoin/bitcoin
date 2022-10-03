@@ -225,7 +225,7 @@ def seconds_to_hms(s):
         out = "-" + out
     return out
 
-def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson):
+def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson, max_interval):
     # strategy:
     #  1) work out how far off our desired target we are
     #  2) cap it to a factor of 4 since that's the best we can do in a single retarget period
@@ -248,7 +248,7 @@ def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson):
         this_interval_variance = 1
 
     this_interval = avg_interval * this_interval_variance
-    this_interval = max(1, min(this_interval, 3600))
+    this_interval = max(1, min(this_interval, max_interval))
 
     return this_interval
 
@@ -308,6 +308,10 @@ def do_generate(args):
             return 1
         my_blocks = (start-1, stop, total)
 
+    if args.max_interval < 960:
+        logging.error("--max-interval must be at least 960 (16 minutes)")
+        return 1
+
     ultimate_target = nbits_to_target(int(args.nbits,16))
 
     mined_blocks = 0
@@ -324,7 +328,7 @@ def do_generate(args):
         if lastheader is None:
             lastheader = bestheader["hash"]
         elif bestheader["hash"] != lastheader:
-            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson)
+            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson, args.max_interval)
             next_delta += bestheader["time"] - time.time()
             next_is_mine = next_block_is_mine(bestheader["hash"], my_blocks)
             logging.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
@@ -338,14 +342,14 @@ def do_generate(args):
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
             time_delta *= 100 # 100 blocks
             logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
             mine_time = now - time_delta
             action_time = now
             is_mine = True
         else:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
             mine_time = bestheader["time"] + time_delta
 
             is_mine = next_block_is_mine(bci["bestblockhash"], my_blocks)
@@ -419,7 +423,7 @@ def do_generate(args):
         # report
         bstr = "block" if is_mine else "backup block"
 
-        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson)
+        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson, args.max_interval)
         next_delta += block.nTime - time.time()
         next_is_mine = next_block_is_mine(block.hash, my_blocks)
 
@@ -497,6 +501,7 @@ def main():
     generate.add_argument("--multiminer", default=None, type=str, help="Specify which set of blocks to mine (eg: 1-40/100 for the first 40%%, 2/3 for the second 3rd)")
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
+    generate.add_argument("--max-interval", default=1800, type=int, help="Maximum interblock interval (seconds)")
 
     calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
     calibrate.set_defaults(fn=do_calibrate)
