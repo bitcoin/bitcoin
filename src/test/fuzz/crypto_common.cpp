@@ -13,7 +13,7 @@
 #include <cstring>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(crypto_common)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     const uint16_t random_u16 = fuzzed_data_provider.ConsumeIntegral<uint16_t>();

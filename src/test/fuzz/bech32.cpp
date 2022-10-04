@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(bech32)
 {
     const std::string random_string(buffer.begin(), buffer.end());
     const std::pair<std::string, std::vector<uint8_t>> r1 = bech32::Decode(random_string);

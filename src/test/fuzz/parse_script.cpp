@@ -6,7 +6,7 @@
 #include <script/script.h>
 #include <test/fuzz/fuzz.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(parse_script)
 {
     const std::string script_string(buffer.begin(), buffer.end());
     try {

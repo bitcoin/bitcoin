@@ -4,7 +4,6 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <optional.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -12,15 +11,16 @@
 #include <test/fuzz/util.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_pow()
 {
     SelectParams(CBaseChainParams::MAIN);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(pow, initialize_pow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const Consensus::Params& consensus_params = Params().GetConsensus();
@@ -28,7 +28,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const uint32_t fixed_time = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const uint32_t fixed_bits = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     while (fuzzed_data_provider.remaining_bytes() > 0) {
-        const Optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
+        const std::optional<CBlockHeader> block_header = ConsumeDeserializable<CBlockHeader>(fuzzed_data_provider);
         if (!block_header) {
             continue;
         }
@@ -72,7 +72,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             }
         }
         {
-            const Optional<uint256> hash = ConsumeDeserializable<uint256>(fuzzed_data_provider);
+            const std::optional<uint256> hash = ConsumeDeserializable<uint256>(fuzzed_data_provider);
             if (hash) {
                 (void)CheckProofOfWork(*hash, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), consensus_params);
             }

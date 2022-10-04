@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(parse_iso8601)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 

@@ -5,58 +5,19 @@
 """Run fuzz test targets.
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
 import configparser
-import os
-import sys
-import subprocess
 import logging
-
-# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
-FUZZERS_MISSING_CORPORA = [
-    "addr_info_deserialize",
-    "asmap",
-    "base_encode_decode",
-    "block",
-    "block_file_info_deserialize",
-    "block_filter_deserialize",
-    "block_header_and_short_txids_deserialize",
-    "bloom_filter",
-    "decode_tx",
-    "fee_rate_deserialize",
-    "flat_file_pos_deserialize",
-    "float",
-    "hex",
-    "key_io",
-    "integer",
-    "key",
-    "key_origin_info_deserialize",
-    "locale",
-    "merkle_block_deserialize",
-    "netaddress",
-    "out_point_deserialize",
-    "p2p_transport_deserializer",
-    "parse_hd_keypath",
-    "parse_numbers",
-    "parse_script",
-    "parse_univalue",
-    "partial_merkle_tree_deserialize",
-    "partially_signed_transaction_deserialize",
-    "prefilled_transaction_deserialize",
-    "psbt_input_deserialize",
-    "psbt_output_deserialize",
-    "pub_key_deserialize",
-    "rolling_bloom_filter",
-    "script_deserialize",
-    "strprintf",
-    "sub_net_deserialize",
-    "tx_in",
-    "tx_in_deserialize",
-    "tx_out",
-]
+import os
+import subprocess
+import sys
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='''Run the fuzz targets with all inputs from the seed_dir once.''',
+    )
     parser.add_argument(
         "-l",
         "--loglevel",
@@ -65,14 +26,21 @@ def main():
         help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console.",
     )
     parser.add_argument(
-        '--export_coverage',
-        action='store_true',
-        help='If true, export coverage information to files in the seed corpus',
-    )
-    parser.add_argument(
         '--valgrind',
         action='store_true',
-        help='If true, run fuzzing binaries under the valgrind memory error detector. Valgrind 3.14 or later required.',
+        help='If true, run fuzzing binaries under the valgrind memory error detector',
+    )
+    parser.add_argument(
+        '-x',
+        '--exclude',
+        help="A comma-separated list of targets to exclude",
+    )
+    parser.add_argument(
+        '--par',
+        '-j',
+        type=int,
+        default=4,
+        help='How many targets to merge or execute in parallel.',
     )
     parser.add_argument(
         'seed_dir',
@@ -82,6 +50,18 @@ def main():
         'target',
         nargs='*',
         help='The target(s) to run. Default is to run all targets.',
+    )
+    parser.add_argument(
+        '--m_dir',
+        help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
+    )
+    parser.add_argument(
+        '-g',
+        '--generate',
+        action='store_true',
+        help='Create new corpus seeds (or extend the existing ones) by running'
+             ' the given targets for a finite number of times. Outputs them to'
+             ' the passed seed_dir.'
     )
 
     args = parser.parse_args()
@@ -102,13 +82,13 @@ def main():
         sys.exit(1)
 
     # Build list of tests
-    test_list_all = parse_test_list(makefile=os.path.join(config["environment"]["SRCDIR"], 'src', 'Makefile.test.include'))
+    test_list_all = parse_test_list(fuzz_bin=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
 
     if not test_list_all:
         logging.error("No fuzz targets found")
         sys.exit(1)
 
-    logging.info("Fuzz targets found: {}".format(test_list_all))
+    logging.debug("{} fuzz target(s) found: {}".format(len(test_list_all), " ".join(sorted(test_list_all))))
 
     args.target = args.target or test_list_all  # By default run all
     test_list_error = list(set(args.target).difference(set(test_list_all)))
@@ -117,15 +97,41 @@ def main():
     test_list_selection = list(set(test_list_all).intersection(set(args.target)))
     if not test_list_selection:
         logging.error("No fuzz targets selected")
-    logging.info("Fuzz targets selected: {}".format(test_list_selection))
+    if args.exclude:
+        for excluded_target in args.exclude.split(","):
+            if excluded_target not in test_list_selection:
+                logging.error("Target \"{}\" not found in current target list.".format(excluded_target))
+                continue
+            test_list_selection.remove(excluded_target)
+    test_list_selection.sort()
+
+    logging.info("{} of {} detected fuzz target(s) selected: {}".format(len(test_list_selection), len(test_list_all), " ".join(test_list_selection)))
+
+    if not args.generate:
+        test_list_seedless = []
+        for t in test_list_selection:
+            corpus_path = os.path.join(args.seed_dir, t)
+            if not os.path.exists(corpus_path) or len(os.listdir(corpus_path)) == 0:
+                test_list_seedless.append(t)
+        test_list_seedless.sort()
+        if test_list_seedless:
+            logging.info(
+                "Fuzzing harnesses lacking a seed corpus: {}".format(
+                    " ".join(test_list_seedless)
+                )
+            )
+            logging.info("Please consider adding a fuzz seed corpus at https://github.com/bitcoin-core/qa-assets")
 
     try:
         help_output = subprocess.run(
             args=[
-                os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', test_list_selection[0]),
+                os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'),
                 '-help=1',
             ],
-            timeout=1,
+            env={
+                'FUZZ': test_list_selection[0]
+            },
+            timeout=20,
             check=True,
             stderr=subprocess.PIPE,
             universal_newlines=True,
@@ -137,56 +143,149 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
-    run_once(
-        corpus=args.seed_dir,
-        test_list=test_list_selection,
-        build_dir=config["environment"]["BUILDDIR"],
-        export_coverage=args.export_coverage,
-        use_valgrind=args.valgrind,
-    )
+    with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
+        if args.generate:
+            return generate_corpus_seeds(
+                fuzz_pool=fuzz_pool,
+                build_dir=config["environment"]["BUILDDIR"],
+                seed_dir=args.seed_dir,
+                targets=test_list_selection,
+            )
+
+        if args.m_dir:
+            merge_inputs(
+                fuzz_pool=fuzz_pool,
+                corpus=args.seed_dir,
+                test_list=test_list_selection,
+                build_dir=config["environment"]["BUILDDIR"],
+                merge_dir=args.m_dir,
+            )
+            return
+
+        run_once(
+            fuzz_pool=fuzz_pool,
+            corpus=args.seed_dir,
+            test_list=test_list_selection,
+            build_dir=config["environment"]["BUILDDIR"],
+            use_valgrind=args.valgrind,
+        )
 
 
-def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
+def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
+    """Generates new corpus seeds.
+
+    Run {targets} without input, and outputs the generated corpus seeds to
+    {seed_dir}.
+    """
+    logging.info("Generating corpus seeds to {}".format(seed_dir))
+
+    def job(command, t):
+        logging.debug("Running '{}'\n".format(" ".join(command)))
+        logging.debug("Command '{}' output:\n'{}'\n".format(
+            ' '.join(command),
+            subprocess.run(
+                command,
+                env={
+                    'FUZZ': t
+                },
+                check=True,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            ).stderr))
+
+    futures = []
+    for target in targets:
+        target_seed_dir = os.path.join(seed_dir, target)
+        os.makedirs(target_seed_dir, exist_ok=True)
+        command = [
+            os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
+            "-runs=100000",
+            target_seed_dir,
+        ]
+        futures.append(fuzz_pool.submit(job, command, target))
+
+    for future in as_completed(futures):
+        future.result()
+
+
+def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
+    logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    jobs = []
+    for t in test_list:
+        args = [
+            os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
+            '-merge=1',
+            '-use_value_profile=1',  # Also done by oss-fuzz https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
+            os.path.join(corpus, t),
+            os.path.join(merge_dir, t),
+        ]
+        os.makedirs(os.path.join(corpus, t), exist_ok=True)
+        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+
+        def job(t, args):
+            output = 'Run {} with args {}\n'.format(t, " ".join(args))
+            output += subprocess.run(
+                args,
+                env={
+                    'FUZZ': t
+                },
+                check=True,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            ).stderr
+            logging.debug(output)
+
+        jobs.append(fuzz_pool.submit(job, t, args))
+
+    for future in as_completed(jobs):
+        future.result()
+
+
+def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
+    jobs = []
     for t in test_list:
         corpus_path = os.path.join(corpus, t)
-        if t in FUZZERS_MISSING_CORPORA:
-            os.makedirs(corpus_path, exist_ok=True)
+        os.makedirs(corpus_path, exist_ok=True)
         args = [
-            os.path.join(build_dir, 'src', 'test', 'fuzz', t),
+            os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             '-runs=1',
-            '-detect_leaks=0',
             corpus_path,
         ]
         if use_valgrind:
-            args = ['valgrind', '--quiet', '--error-exitcode=1', '--exit-on-first-error=yes'] + args
-        logging.debug('Run {} with args {}'.format(t, args))
-        result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
-        output = result.stderr
-        logging.debug('Output: {}'.format(output))
-        result.check_returncode()
-        if not export_coverage:
-            continue
-        for l in output.splitlines():
-            if 'INITED' in l:
-                with open(os.path.join(corpus, t + '_coverage'), 'w', encoding='utf-8') as cov_file:
-                    cov_file.write(l)
-                    break
+            args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
+
+        def job(t, args):
+            output = 'Run {} with args {}'.format(t, args)
+            result = subprocess.run(args, env={'FUZZ': t}, stderr=subprocess.PIPE, universal_newlines=True)
+            output += result.stderr
+            return output, result
+
+        jobs.append(fuzz_pool.submit(job, t, args))
+
+    for future in as_completed(jobs):
+        output, result = future.result()
+        logging.debug(output)
+        try:
+            result.check_returncode()
+        except subprocess.CalledProcessError as e:
+            if e.stdout:
+                logging.info(e.stdout)
+            if e.stderr:
+                logging.info(e.stderr)
+            logging.info("Target \"{}\" failed with exit code {}".format(" ".join(result.args), e.returncode))
+            sys.exit(1)
 
 
-def parse_test_list(makefile):
-    with open(makefile, encoding='utf-8') as makefile_test:
-        test_list_all = []
-        read_targets = False
-        for line in makefile_test.readlines():
-            line = line.strip().replace('test/fuzz/', '').replace(' \\', '')
-            if read_targets:
-                if not line:
-                    break
-                test_list_all.append(line)
-                continue
-
-            if line == 'FUZZ_TARGETS =':
-                read_targets = True
+def parse_test_list(*, fuzz_bin):
+    test_list_all = subprocess.run(
+        fuzz_bin,
+        env={
+            'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': ''
+        },
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        universal_newlines=True,
+    ).stdout.splitlines()
     return test_list_all
 
 
