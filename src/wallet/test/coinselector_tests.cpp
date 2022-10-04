@@ -942,10 +942,10 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
         dummyWallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
         dummyWallet->SetupDescriptorScriptPubKeyMans();
 
-        add_coin(available_coins, *dummyWallet, 100000); // 0.001 BTC
+        add_coin(available_coins, *dummyWallet, 100000); // 0.001 SYS
     }
 
-    CAmount target{99900}; // 0.000999 BTC
+    CAmount target{99900}; // 0.000999 SYS
 
     FastRandomContext rand;
     CoinSelectionParams cs_params{
