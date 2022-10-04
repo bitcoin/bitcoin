@@ -6,7 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <util/run_command.h>
+#include <common/run_command.h>
 
 #include <tinyformat.h>
 #include <univalue.h>
