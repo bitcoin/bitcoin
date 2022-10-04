@@ -194,7 +194,7 @@ class WindowsRandomAccessFile : public RandomAccessFile {
   Status Read(uint64_t offset, size_t n, Slice* result,
               char* scratch) const override {
     DWORD bytes_read = 0;
-    OVERLAPPED overlapped = {0};
+    OVERLAPPED overlapped = {};
 
     overlapped.OffsetHigh = static_cast<DWORD>(offset >> 32);
     overlapped.Offset = static_cast<DWORD>(offset);
