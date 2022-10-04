@@ -154,8 +154,8 @@ static RPCHelpMan mnauth()
             {"\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n"},
             {
                 {"nodeId", RPCArg::Type::NUM, RPCArg::Optional::NO, "Internal peer id of the node the mock data gets added to"},
-                {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "proTxHash", "The authenticated proTxHash as hex string"},
-                {"publicKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "publicKey", "The authenticated public key as hex string"},
+                {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The authenticated proTxHash as hex string"},
+                {"publicKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The authenticated public key as hex string"},
             },
             RPCResult{
                 RPCResult::Type::BOOL, "", "If MNAUTH was overridden or not."

@@ -49,7 +49,7 @@ static RPCHelpMan protx_list()
         "\nLists all ProTxs on-chain, depending on the given type.\n"
         "This will also include ProTx which failed PoSe verification.\n",
         {
-             {"type", RPCArg::Type::STR, RPCArg::Default{"registered"}, "Type of ProTx.\n",
+             {"type", RPCArg::Type::STR, RPCArg::Default{"registered"},
             "\nAvailable types:\n"
             "  registered   - List all ProTx which are registered at the given chain height.\n"
             "                 This will also include ProTx which failed PoSe verification.\n"

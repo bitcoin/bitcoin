@@ -23,7 +23,7 @@ static RPCHelpMan convertaddresswallet()
     "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.",   
     {	
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
-        {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address", "An optional label"},	
+        {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address"},	
         {"rescan", RPCArg::Type::BOOL, RPCArg::Default{false}, "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},	
     },	
     RPCResult{
