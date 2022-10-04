@@ -987,7 +987,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             outputs[recipient.getnewaddress()] = 0.1
         wallet.sendmany("", outputs)
         self.generate(self.nodes[0], 10)
-        assert_raises_rpc_error(-4, "Transaction too large", recipient.fundrawtransaction, rawtx)
+        assert_raises_rpc_error(-4, "Insufficient funds", recipient.fundrawtransaction, rawtx)
         self.nodes[0].unloadwallet("large")
 
     def test_external_inputs(self):
