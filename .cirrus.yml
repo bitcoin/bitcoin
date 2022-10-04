@@ -24,11 +24,8 @@ filter_template: &FILTER_TEMPLATE
 base_template: &BASE_TEMPLATE
   << : *FILTER_TEMPLATE
   merge_base_script:
-    # Unconditionally install git (used in fingerprint_script) and set the
-    # default git author name (used in verify-commits.py)
+    # Unconditionally install git (used in fingerprint_script).
     - bash -c "$PACKAGE_MANAGER_INSTALL git"
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
