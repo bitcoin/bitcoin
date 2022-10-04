@@ -370,7 +370,7 @@ class BlockchainTest(BitcoinTestFramework):
         # hash_type muhash should return a different UTXO set hash.
         res6 = node.gettxoutsetinfo(hash_type='muhash')
         assert 'muhash' in res6
-        assert(res['hash_serialized_2'] != res6['muhash'])
+        assert res['hash_serialized_2'] != res6['muhash']
 
         # muhash should not be returned unless requested.
         for r in [res, res2, res3, res4, res5]:

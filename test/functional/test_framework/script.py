@@ -824,10 +824,10 @@ def taproot_tree_helper(scripts):
     if len(scripts) == 1:
         # One entry: treat as a leaf
         script = scripts[0]
-        assert(not callable(script))
+        assert not callable(script)
         if isinstance(script, list):
             return taproot_tree_helper(script)
-        assert(isinstance(script, tuple))
+        assert isinstance(script, tuple)
         version = LEAF_VERSION_TAPSCRIPT
         name = script[0]
         code = script[1]

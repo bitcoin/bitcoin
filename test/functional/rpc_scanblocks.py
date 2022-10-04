@@ -46,7 +46,7 @@ class ScanblocksTest(BitcoinTestFramework):
         self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
 
         out = node.scanblocks("start", [f"addr({addr_1})"])
-        assert(blockhash in out['relevant_blocks'])
+        assert blockhash in out['relevant_blocks']
         assert_equal(height, out['to_height'])
         assert_equal(0, out['from_height'])
 
@@ -56,24 +56,24 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # make sure the blockhash is not in the filter result if we set the start_height
         # to the just mined block (unlikely to hit a false positive)
-        assert(blockhash not in node.scanblocks(
-            "start", [f"addr({addr_1})"], height_new)['relevant_blocks'])
+        assert blockhash not in node.scanblocks(
+            "start", [f"addr({addr_1})"], height_new)['relevant_blocks']
 
         # make sure the blockhash is present when using the first mined block as start_height
-        assert(blockhash in node.scanblocks(
-            "start", [f"addr({addr_1})"], height)['relevant_blocks'])
+        assert blockhash in node.scanblocks(
+            "start", [f"addr({addr_1})"], height)['relevant_blocks']
 
         # also test the stop height
-        assert(blockhash in node.scanblocks(
-            "start", [f"addr({addr_1})"], height, height)['relevant_blocks'])
+        assert blockhash in node.scanblocks(
+            "start", [f"addr({addr_1})"], height, height)['relevant_blocks']
 
         # use the stop_height to exclude the relevant block
-        assert(blockhash not in node.scanblocks(
-            "start", [f"addr({addr_1})"], 0, height - 1)['relevant_blocks'])
+        assert blockhash not in node.scanblocks(
+            "start", [f"addr({addr_1})"], 0, height - 1)['relevant_blocks']
 
         # make sure the blockhash is present when using the first mined block as start_height
-        assert(blockhash in node.scanblocks(
-            "start", [{"desc": f"pkh({parent_key}/*)", "range": [0, 100]}], height)['relevant_blocks'])
+        assert blockhash in node.scanblocks(
+            "start", [{"desc": f"pkh({parent_key}/*)", "range": [0, 100]}], height)['relevant_blocks']
 
         # check that false-positives are included in the result now; note that
         # finding a false-positive at runtime would take too long, hence we simply
@@ -89,10 +89,10 @@ class ScanblocksTest(BitcoinTestFramework):
         false_positive_hash = bip158_basic_element_hash(false_positive_spk, 1, genesis_blockhash)
         assert_equal(genesis_coinbase_hash, false_positive_hash)
 
-        assert(genesis_blockhash in node.scanblocks(
-            "start", [{"desc": f"raw({genesis_coinbase_spk.hex()})"}], 0, 0)['relevant_blocks'])
-        assert(genesis_blockhash in node.scanblocks(
-            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks'])
+        assert genesis_blockhash in node.scanblocks(
+            "start", [{"desc": f"raw({genesis_coinbase_spk.hex()})"}], 0, 0)['relevant_blocks']
+        assert genesis_blockhash in node.scanblocks(
+            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
 
         # TODO: after an "accurate" mode for scanblocks is implemented (e.g. PR #26325)
         # check here that it filters out the false-positive

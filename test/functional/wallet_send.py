@@ -279,11 +279,11 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Don't broadcast...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
-        assert(res["hex"])
+        assert res["hex"]
 
         self.log.info("Return PSBT...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, psbt=True)
-        assert(res["psbt"])
+        assert res["psbt"]
 
         self.log.info("Create transaction that spends to address, but don't broadcast...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
