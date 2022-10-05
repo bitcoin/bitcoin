@@ -596,8 +596,9 @@ private:
      *                     orphan will be reconsidered on each call of this function. This set
      *                     may be added to if accepting an orphan causes its children to be
      *                     reconsidered.
+     * @return             True if there are still orphans in this peer's work set.
      */
-    void ProcessOrphanTx(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+    bool ProcessOrphanTx(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
     /** Process a single headers message from a peer.
      *
@@ -2883,11 +2884,13 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     return;
 }
 
-void PeerManagerImpl::ProcessOrphanTx(Peer& peer)
+bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
+
+    if (peer.m_orphan_work_set.empty()) return false;
 
     while (!peer.m_orphan_work_set.empty()) {
         const uint256 orphanHash = *peer.m_orphan_work_set.begin();
@@ -2953,6 +2956,8 @@ void PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             break;
         }
     }
+
+    return !peer.m_orphan_work_set.empty();
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
@@ -4768,26 +4773,22 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         }
     }
 
+    bool has_more_orphans;
     {
         LOCK2(cs_main, g_cs_orphans);
-        if (!peer->m_orphan_work_set.empty()) {
-            ProcessOrphanTx(*peer);
-        }
+        has_more_orphans = ProcessOrphanTx(*peer);
     }
 
     if (pfrom->fDisconnect)
         return false;
+
+    if (has_more_orphans) return true;
 
     // this maintains the order of responses
     // and prevents m_getdata_requests to grow unbounded
     {
         LOCK(peer->m_getdata_requests_mutex);
         if (!peer->m_getdata_requests.empty()) return true;
-    }
-
-    {
-        LOCK(g_cs_orphans);
-        if (!peer->m_orphan_work_set.empty()) return true;
     }
 
     // Don't bother if send buffer is too full to respond anyway
