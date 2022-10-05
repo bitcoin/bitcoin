@@ -20,6 +20,10 @@ class InvalidateTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+    def check_blocks_headers(self, node):
+        blockchaininfos = node.getblockchaininfo()
+        assert_equal(blockchaininfos['blocks'], blockchaininfos['headers'])
+
     def run_test(self):
         self.log.info("Make sure we repopulate setBlockIndexCandidates after InvalidateBlock:")
         self.log.info("Mine 4 blocks on Node 0")
@@ -88,6 +92,22 @@ class InvalidateTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
+        self.log.info("Verify that reconsiderblock sets the best header to the last valid block")
+        hash = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[0]
+        self.check_blocks_headers(self.nodes[1])
+        self.nodes[1].invalidateblock(hash)
+        self.check_blocks_headers(self.nodes[1])
+        self.nodes[1].reconsiderblock(hash)
+        self.check_blocks_headers(self.nodes[1])
+
+        self.log.info("Verify that reconsiderblock works with an older block hash")
+        height = self.nodes[1].getblockcount() - 5
+        assert height > 2
+        hash = self.nodes[1].getblockhash(height)
+        self.nodes[1].invalidateblock(hash)
+        self.check_blocks_headers(self.nodes[1])
+        self.nodes[1].reconsiderblock(hash)
+        self.check_blocks_headers(self.nodes[1])
 
 if __name__ == '__main__':
     InvalidateTest().main()
