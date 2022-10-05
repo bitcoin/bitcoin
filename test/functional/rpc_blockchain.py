@@ -89,6 +89,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
+        self._test_y2106()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
@@ -254,6 +255,14 @@ class BlockchainTest(BitcoinTestFramework):
 
         # calling with an explicit hash works
         self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"], "started")
+
+    def _test_y2106(self):
+        self.log.info("Check that block timestamps work until year 2106")
+        self.generate(self.nodes[0], 8)[-1]
+        time_2106 = 2**32 - 1
+        self.nodes[0].setmocktime(time_2106)
+        last = self.generate(self.nodes[0], 6)[-1]
+        assert_equal(self.nodes[0].getblockheader(last)["mediantime"], time_2106)
 
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")
