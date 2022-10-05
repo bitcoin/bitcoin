@@ -40,14 +40,13 @@ bool RangeProof::InnerProductArgument(
     Proof& proof,
     CHashWriter& transcript_gen
 ) {
-    // build initial state
     Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
     G1Points g_prime = gens.Gi;
     G1Points h_prime = gens.Hi;
     Scalars a_prime = l;
     Scalars b_prime = r;
 
-    size_t n_prime = input_value_vec_len;  // # of rounds is log2 n_prime
+    size_t n_prime = input_value_vec_len;
     size_t round = 0;
     Scalars ws;
 
@@ -431,9 +430,8 @@ G1Point RangeProof::VerifyLoop2(
             points.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
         }
 
-        // t_hat = <L, R> (68)?
-        // a, b are result of inner product argument
-        // x_ip is a random number generated from transcript
+        // inner product argument replaces `t_hat = <L, R> (68)` with `t_hat = a * b`
+        // in verification, that becomes `p.proof.t_hat - p.proof.a * p.proof.b`
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.x_ip) * weight_z;
     }
 
