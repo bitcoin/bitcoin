@@ -33,7 +33,7 @@ RangeProof::RangeProof()
 bool RangeProof::InnerProductArgument(
     const size_t input_value_vec_len,
     const Generators& gens,
-    const Scalar& x_ip,
+    const Scalar& x_ip,  // factor to multiply to cL and cR
     const Scalars& l,
     const Scalars& r,
     const Scalar& y,
@@ -49,7 +49,7 @@ bool RangeProof::InnerProductArgument(
 
     size_t n_prime = input_value_vec_len;  // # of rounds is log2 n_prime
     size_t round = 0;
-    Scalars xs;
+    Scalars ws;
 
     while (n_prime > 1) {
         // (20)
@@ -60,42 +60,40 @@ bool RangeProof::InnerProductArgument(
         Scalar cR = (a_prime.From(n_prime) * b_prime.To(n_prime)).Sum();
 
         // (23)-(24)
-        Scalar extra_scalar_cL = cL * x_ip;
         proof.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
             (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
-            (gens.H * extra_scalar_cL)
+            (gens.H * cL * x_ip)  // H = u in paper
         );
-        Scalar extra_scalar_cR = cR * x_ip;
         proof.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
             (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
-            (gens.H * extra_scalar_cR)
+            (gens.H * cR * x_ip)  // H = u in paper
         );
 
         // (25)-(27)
         transcript_gen << proof.Ls[round];
         transcript_gen << proof.Rs[round];
 
-        Scalar x = transcript_gen.GetHash();
-        if (x == 0)
+        Scalar w = transcript_gen.GetHash();
+        if (w == 0)
             return false;
-        Scalar x_inv = x.Invert();
-        xs.Add(x);
+        Scalar w_inv = w.Invert();
+        ws.Add(w);
 
         // (29)-(31)
         if (n_prime > 1) {
-            g_prime = (g_prime.To(n_prime) * x_inv) + (g_prime.From(n_prime) * x);
+            g_prime = (g_prime.To(n_prime) * x_inv) + (g_prime.From(n_prime) * w);
 
             // apply scale_factors to x and x_inv
-            Scalars sf_ws = scale_factors * x;
-            Scalars sf_w_invs = scale_factors * x_inv;
+            Scalars sf_ws = scale_factors * w;
+            Scalars sf_w_invs = scale_factors * w_inv;
             h_prime = (h_prime.To(n_prime) * sf_ws) + (h_prime.From(n_prime) * sf_w_invs);
         }
 
         // (33)-(34)
-        a_prime = (a_prime.To(n_prime) * x) + (a_prime.From(n_prime) * x_inv);
-        b_prime = (b_prime.To(n_prime) * x_inv) + (b_prime.From(n_prime) * x);
+        a_prime = (a_prime.To(n_prime) * w) + (a_prime.From(n_prime) * w_inv);
+        b_prime = (b_prime.To(n_prime) * w_inv) + (b_prime.From(n_prime) * w);
 
         ++round;
     }
@@ -301,10 +299,10 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     transcript_gen << proof.mu;
     transcript_gen << proof.t_hat;
 
-    Scalar x_for_inner_product_argument = transcript_gen.GetHash();
-    if (x_for_inner_product_argument == 0) goto retry;
+    Scalar x_ip = transcript_gen.GetHash();
+    if (x_ip == 0) goto retry;
 
-    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_for_inner_product_argument, l, r, y, proof, transcript_gen)) {
+    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_ip, l, r, y, proof, transcript_gen)) {
         goto retry;
     }
     return proof;
