@@ -408,12 +408,12 @@ G1Point RangeProof::VerifyLoop2(
         }
 
         // for each bit of concat input values, do:
-        Scalar y_inv_pow = p.inv_y;  // used to build h' = h, h^(y-1), h^(y-2) ...
-        Scalar y_pow = p.y;
+        Scalar y_inv_pow(1); // used to build h' = h, h^(y-1), h^(y-2) ...
+        Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
             // set initial g_scalar and h_scalar for each loop
             Scalar gi_exp = p.proof.a;  // a is the final reduced form of L
-            Scalar hi_exp = i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // some for b for R. y_inv_pow to turn the generator to (h')
+            Scalar hi_exp = p.proof.b * y_inv_pow;  // i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // some for b for R. y_inv_pow to turn the generator to (h')
 
             gi_exp = gi_exp * w_cache[i];  // from the beg from end
             hi_exp = hi_exp * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg
@@ -425,20 +425,14 @@ G1Point RangeProof::VerifyLoop2(
                 z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
                 m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
-            if (i == 0) {
-                hi_exp = hi_exp - (tmp + p.z);
-            } else {
-                hi_exp = hi_exp - ((tmp + (p.z * y_pow)) * y_inv_pow);
-            }
+            hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
             gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // there exists generator for each bit
             hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);
 
             // update y_pow and y_inv_pow to the next power
-            if (i > 0) { //  && i != p.concat_input_values_in_bits - 1)
-                y_inv_pow = y_inv_pow * p.inv_y;
-                y_pow = y_pow * p.y;
-            }
+            y_inv_pow = y_inv_pow * p.inv_y;
+            y_pow = y_pow * p.y;
         }
 
         h_neg_exp = h_neg_exp + (p.proof.mu * weight_z);  // ** h^mu (67) RHS
