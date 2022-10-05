@@ -10,7 +10,7 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 
-/** Guards orphan transactions and extra txs for compact blocks */
+/** Guards orphan transactions */
 extern RecursiveMutex g_cs_orphans;
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
