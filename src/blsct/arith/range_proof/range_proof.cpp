@@ -355,7 +355,7 @@ G1Point RangeProof::VerifyLoop2(
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
         // g^t_hat * h^(-tau_x) * V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
 
-        h_neg_exp = h_neg_exp + (p.proof.tau_x * weight_y);  // h^tau_x
+        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // h^tau_x
 
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
@@ -364,13 +364,13 @@ G1Point RangeProof::VerifyLoop2(
         delta_yz = (z_pows[0] * y_pows_sum).Negate(); // (2)
         for (size_t i = 1; i <= Config::m_input_value_bits; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
-            delta_yz = delta_yz - (z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows);  // (3)
+            delta_yz = delta_yz - z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
         }
 
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
         // ... = - g^(t_hat - delta_yz)
-        g_neg_exp = g_neg_exp + ((p.proof.t_hat - delta_yz) * weight_y);
+        g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
 
         // V^(z^2)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
@@ -425,7 +425,7 @@ G1Point RangeProof::VerifyLoop2(
             y_pow = y_pow * p.y;
         }
 
-        h_neg_exp = h_neg_exp + (p.proof.mu * weight_z);  // ** h^mu (67) RHS
+        h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
         // for each round, do:
         // add L^(x^2) * R^(x-1)^2 of all rounds
@@ -437,7 +437,7 @@ G1Point RangeProof::VerifyLoop2(
         // t_hat = <L, R> (68)?
         // a, b are result of inner product argument
         // x_ip is a random number generated from transcript
-        g_pos_exp = g_pos_exp + (((p.proof.t_hat - (p.proof.a * p.proof.b)) * p.x_ip) * weight_z);
+        g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.x_ip) * weight_z;
     }
 
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
