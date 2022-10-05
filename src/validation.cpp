@@ -6331,7 +6331,6 @@ bool StopGethNode(bool bOnStart)
             if(hProcessGeth) {
                 for (int i = 0; i < 10; ++i) {
                     LogPrintf("Geth shutdown check (%d)\n", i);
-                    int status;
                     if(WaitForSingleObject(hProcessGeth, 0) == WAIT_OBJECT_0) {
                         CloseHandle(hProcessGeth);
                         return true;
