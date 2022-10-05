@@ -6329,14 +6329,27 @@ bool StopGethNode(bool bOnStart)
             LogPrintf("Waiting for sysgeth to shutdown...\n");
             #ifdef WIN32
             if(hProcessGeth) {
-                WaitForSingleObject(hProcessGeth, INFINITE);
+                for (int i = 0; i < 10; ++i) {
+                    LogPrintf("Geth shutdown check (%d)\n", i);
+                    int status;
+                    if(WaitForSingleObject(hProcessGeth, 0) == WAIT_OBJECT_0) {
+                        CloseHandle(hProcessGeth);
+                        return true;
+                    }
+                    UninterruptibleSleep(std::chrono::milliseconds{2000});
+                }
                 CloseHandle(hProcessGeth);
             }
             #else
-            int status;
-            waitpid(gethpid, &status, 0);
+            for (int i = 0; i < 10; ++i) {
+                LogPrintf("Geth shutdown check (%d)\n", i);
+                int status;
+                if(waitpid(gethpid, &status, WNOHANG) != 0 && !WIFEXITED(status)){
+                    return true;
+                }
+                UninterruptibleSleep(std::chrono::milliseconds{2000});
+            }
             #endif
-            return true;
         }
     }
     
