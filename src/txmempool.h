@@ -547,10 +547,16 @@ private:
     /**
      * Helper function to calculate all in-mempool ancestors of staged_ancestors and apply ancestor
      * and descendant limits (including staged_ancestors thsemselves, entry_size and entry_count).
-     * param@[in]   entry_size          Virtual size to include in the limits.
-     * param@[in]   entry_count         How many entries to include in the limits.
-     * param@[in]   staged_ancestors    Should contain entries in the mempool.
-     * param@[out]  setAncestors        Will be populated with all mempool ancestors.
+     *
+     * @param[in]   entry_size          Virtual size to include in the limits.
+     * @param[in]   entry_count         How many entries to include in the limits.
+     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
+     * @param[in]   staged_ancestors    Should contain entries in the mempool.
+     * @param[in]   limits              Maximum number and size of ancestors and descendants
+     * @param[out]  errString           Populated with error reason if any limits are hit
+     *
+     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
+     * otherwise
      */
     bool CalculateAncestorsAndCheckLimits(size_t entry_size,
                                           size_t entry_count,
@@ -665,12 +671,20 @@ public:
      */
     void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
-    /** Try to calculate all in-mempool ancestors of entry.
-     *  (these are all calculated including the tx itself)
-     *  limits = maximum number and size of ancestors and descendants
-     *  errString = populated with error reason if any limits are hit
-     *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
-     *    look up parents from mapLinks. Must be true for entries not in the mempool
+    /**
+     * Try to calculate all in-mempool ancestors of entry.
+     * (these are all calculated including the tx itself)
+     *
+     * @param[in]   entry               CTxMemPoolEntry of which all in-mempool ancestors are calculated
+     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
+     * @param[in]   limits              Maximum number and size of ancestors and descendants
+     * @param[out]  errString           Populated with error reason if any limits are hit
+     * @param[in]   fSearchForParents   Whether to search a tx's vin for in-mempool parents, or look
+     *                                  up parents from mapLinks. Must be true for entries not in
+     *                                  the mempool
+     *
+     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
+     * otherwise
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
                                    setEntries& setAncestors,
