@@ -41,7 +41,7 @@ bool RangeProof::InnerProductArgument(
     CHashWriter& transcript_gen
 ) {
     // build initial state
-    Scalars scale_factors = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
+    Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
     G1Points g_prime = gens.Gi;
     G1Points h_prime = gens.Hi;
     Scalars a_prime = l;
@@ -62,12 +62,12 @@ bool RangeProof::InnerProductArgument(
         // (23)-(24)
         proof.Ls.Add(
             (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
-            (h_prime.To(n_prime) * (round == 0 ? b_prime * scale_factors.To(n_prime) : b_prime.From(n_prime))).Sum() +
+            (h_prime.To(n_prime) * (round == 0 ? b_prime * y_inv_pows.To(n_prime) : b_prime.From(n_prime))).Sum() +
             (gens.H * cL * x_ip)  // H = u in paper
         );
         proof.Rs.Add(
             (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
-            (h_prime.From(n_prime) * (round == 0 ? b_prime * scale_factors.From(n_prime) : b_prime.To(n_prime))).Sum() +
+            (h_prime.From(n_prime) * (round == 0 ? b_prime * y_inv_pows.From(n_prime) : b_prime.To(n_prime))).Sum() +
             (gens.H * cR * x_ip)  // H = u in paper
         );
 
@@ -85,10 +85,9 @@ bool RangeProof::InnerProductArgument(
         if (n_prime > 1) {
             g_prime = (g_prime.To(n_prime) * x_inv) + (g_prime.From(n_prime) * w);
 
-            // apply scale_factors to x and x_inv
-            Scalars sf_ws = scale_factors * w;
-            Scalars sf_w_invs = scale_factors * w_inv;
-            h_prime = (h_prime.To(n_prime) * sf_ws) + (h_prime.From(n_prime) * sf_w_invs);
+            Scalars y_inv_pows_w = y_inv_pows * w;
+            Scalars y_inv_pows_w_inv = y_inv_pows * w_inv;
+            h_prime = (h_prime.To(n_prime) * y_inv_pows_w) + (h_prime.From(n_prime) * y_inv_pows_w_inv);
         }
 
         // (33)-(34)
