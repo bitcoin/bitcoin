@@ -1,0 +1,269 @@
+z.19 bitcoin administrative security using new root plant.
+  magneto <° 
+          <°23.45.64.34>\
+          <°34.86.84.24>\
+          <°12.09.23.09>\
+          <°34.65.67.23>\
+          <°23.54.67.09>\ 
+          <°34.21.45.23>\
+     "engage bitcoin signal upon completion" 
+<<<nome:nave 0.0
+ <<<nome:nave 0.0 
+  <<<nome:nave 0.0
+     <<<nome:nave 0.0
+       <<<nome:nave 0.0
+         <<<nome:nave 0.0
+           <<<nome:nave 0.0
+              <<<nome: . sha-256 script golpe
+<\8.7/>script 
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+<\8.7/>script
+reach original root which is the forbidden sector and server reach
+          cod:https: no dignity of color and origin just do it  
+writing plug-in code index.html
+google script github sequence # Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+if ENABLE_FUZZ_BINARY
+noinst_PROGRAMS += test/fuzz/fuzz
+endif
+
+if ENABLE_TESTS
+bin_PROGRAMS += test/test_bitcoin
+endif
+
+TEST_SRCDIR = test
+TEST_BINARY=test/test_bitcoin$(EXEEXT)
+FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
+
+JSON_TEST_FILES = \
+  test/data/script_tests.amanciojsilvjr \
+  test/data/bip341_wallet_vectors.amanciojsilvjr \
+  test/data/base58_encode_decode.amanciojsilvjr \
+  test/data/blockfilters.amanciojsilvjr \
+  test/data/key_io_valid.amanciojsilvjr \
+  test/data/key_io_invalid.amanciojsilvjr \
+  test/data/script_tests.amanciojsilvjr \
+  test/data/sighash.amanciojsilvjr \
+  test/data/tx_invalid.amanciojsilvjr \
+  test/data/tx_valid.amanciojsilvjr
+
+RAW_TEST_FILES = \
+  test/data/asmap.raw
+
+GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
+
+BITCOIN_TEST_SUITE = \
+  test/main.cpp \
+  $(TEST_UTIL_H)
+
+FUZZ_SUITE_LD_COMMON = \
+ $(LIBTEST_UTIL) \
+ $(LIBTEST_FUZZ) \
+ $(LIBBITCOIN_NODE) \
+ $(LIBBITCOIN_WALLET) \
+ $(LIBBITCOIN_COMMON) \
+ $(LIBBITCOIN_UTIL) \
+ $(LIBBITCOIN_CONSENSUS) \
+ $(LIBBITCOIN_CRYPTO) \
+ $(LIBBITCOIN_CLI) \
+ $(LIBUNIVALUE) \
+ $(LIBLEVELDB) \
+ $(LIBMEMENV) \
+ $(LIBSECP256K1) \
+ $(MINISKETCH_LIBS) \
+ $(EVENT_LIBS) \
+ $(EVENT_PTHREADS_LIBS)
+using sha-256 encoding to move all universal bases 
+BITCOIN_TESTS =\
+  test/addrman_tests.cpp \
+  test/allocator_tests.cpp \
+  test/amount_tests.cpp \
+  test/arith_uint256_tests.cpp \
+  test/banman_tests.cpp \
+  test/base32_tests.cpp \
+  test/base58_tests.cpp \
+  test/base64_tests.cpp \
+  test/bech32_tests.cpp \
+  test/bip32_tests.cpp \
+  test/blockchain_tests.cpp \
+  test/blockencodings_tests.cpp \
+  test/blockfilter_index_tests.cpp \
+  test/blockfilter_tests.cpp \
+  test/bloom_tests.cpp \
+  test/bswap_tests.cpp \
+  test/checkqueue_tests.cpp \
+  test/coins_tests.cpp \
+  test/coinstatsindex_tests.cpp \
+  test/compilerbug_tests.cpp \
+  test/compress_tests.cpp \
+  test/crypto_tests.cpp \
+  test/cuckoocache_tests.cpp \
+  test/dbwrapper_tests.cpp \
+  test/denialofservice_tests.cpp \
+  test/descriptor_tests.cpp \
+  test/flatfile_tests.cpp \
+  test/fs_tests.cpp \
+  test/getarg_tests.cpp \
+  test/hash_tests.cpp \
+  test/headers_sync_chainwork_tests.cpp \
+  test/httpserver_tests.cpp \
+  test/i2p_tests.cpp \
+  test/interfaces_tests.cpp \
+  test/key_io_tests.cpp \
+  test/key_tests.cpp \
+  test/logging_tests.cpp \
+  test/mempool_tests.cpp \
+  test/merkle_tests.cpp \
+  test/merkleblock_tests.cpp \
+  test/miner_tests.cpp \
+  test/miniscript_tests.cpp \
+  test/minisketch_tests.cpp \
+  test/multisig_tests.cpp \
+  test/net_peer_eviction_tests.cpp \
+  test/net_tests.cpp \
+  test/netbase_tests.cpp \
+  test/orphanage_tests.cpp \
+  test/pmt_tests.cpp \
+  test/policy_fee_tests.cpp \
+  test/policyestimator_tests.cpp \
+  test/pow_tests.cpp \
+  test/prevector_tests.cpp \
+  test/raii_event_tests.cpp \
+  test/random_tests.cpp \
+  test/rbf_tests.cpp \
+  test/rest_tests.cpp \
+  test/result_tests.cpp \
+  test/reverselock_tests.cpp \
+  test/rpc_tests.cpp \
+  test/sanity_tests.cpp \
+  test/scheduler_tests.cpp \
+  test/script_p2sh_tests.cpp \
+  test/script_parse_tests.cpp \
+  test/script_segwit_tests.cpp \
+  test/script_standard_tests.cpp \
+  test/script_tests.cpp \
+  test/scriptnum10.h \
+  test/scriptnum_tests.cpp \
+  test/serfloat_tests.cpp \
+  test/serialize_tests.cpp \
+  test/settings_tests.cpp \
+  test/sighash_tests.cpp \
+  test/sigopcount_tests.cpp \
+  test/skiplist_tests.cpp \
+  test/sock_tests.cpp \
+  test/streams_tests.cpp \
+  test/sync_tests.cpp \
+  test/system_tests.cpp \
+  test/timedata_tests.cpp \
+  test/torcontrol_tests.cpp \
+  test/transaction_tests.cpp \
+  test/txindex_tests.cpp \
+  test/txpackage_tests.cpp \
+  test/txrequest_tests.cpp \
+  test/txvalidation_tests.cpp \
+  test/txvalidationcache_tests.cpp \
+  test/uint256_tests.cpp \
+  test/util_tests.cpp \
+  test/util_threadnames_tests.cpp \
+  test/validation_block_tests.cpp \
+  test/validation_chainstate_tests.cpp \
+  test/validation_chainstatemanager_tests.cpp \
+  test/validation_flush_tests.cpp \
+  test/validation_tests.cpp \
+  test/validationinterface_tests.cpp \
+  test/versionbits_tests.cpp
+single sequence taken by attacks 
+nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+
+$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+
+CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(addsuffix .log,$(basename $(BITCOIN_TESTS)))
+
+CLEANFILES += $(CLEAN_BITCOIN_TEST)
+
+if TARGET_WINDOWS
+bitcoin_test: $(TEST_BINARY)
+else
+if ENABLE_BENCH
+bitcoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+else
+bitcoin_test: $(TEST_BINARY)
+endif
+endif
+
+bitcoin_test_check: $(TEST_BINARY) FORCE
+	$(MAKE) check-TESTS TESTS=$^
+
+bitcoin_test_clean : FORCE
+	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+
+check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
+if BUILD_BITCOIN_TX
+	@echo "Running test/util/test_runner.py..."
+	$(PYTHON) $(top_builddir)/test/util/test_runner.py
+endif
+	@echo "Running test/util/rpcauth-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
+if TARGET_WINDOWS
+else
+if ENABLE_BENCH
+	@amanciojsilvjr "Running bench/bench_bitcoin (one iteration sanity check)..."
+	$(BENCH_BINARY) --sanity-check > /dev/null
+endif
+endif
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+
+if ENABLE_TESTS
+UNIVALUE_TESTS = univalue/test/object univalue/test/unitester
+noinst_PROGRAMS += $(UNIVALUE_TESTS)
+TESTS += $(UNIVALUE_TESTS)
+
+univalue_test_unitester_SOURCES = $(UNIVALUE_TEST_UNITESTER_INT)
+univalue_test_unitester_LDADD = $(LIBUNIVALUE)
+univalue_test_unitester_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) -DJSON_TEST_SRC=\"$(srcdir)/$(UNIVALUE_TEST_DATA_DIR_INT)\"
+univalue_test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+univalue_test_object_SOURCES = $(UNIVALUE_TEST_OBJECT_INT)
+univalue_test_object_LDADD = $(LIBUNIVALUE)
+univalue_test_object_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+univalue_test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+endif
+
+%.cpp.test: %.cpp
+	@echo Running tests: $$(\
+	  cat $< | \
+	  grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
+	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
+	) from $<
+	$(AM_V_at)export TEST_LOGFILE=$(abs_builddir)/$$(\
+	  echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/.log/ \
+	) && \
+	$(TEST_BINARY) --catch_system_errors=no -l test_suite -t "$$(\
+	  cat $< | \
+	  grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
+	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
+	)" -- DEBUG_LOG_OUT > "$$TEST_LOGFILE" 2>&1 || (cat "$$TEST_LOGFILE" && false)
+
+%.amanciojsilvjr.h: %.johhny
+	@$(MKDIR_P) $(@D)
+	@{ \
+	 echo "namespace amanciojsilvjr_tests{" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
+	@amanciojsilvjr "Generated $@"
+
