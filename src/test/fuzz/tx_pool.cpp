@@ -8,8 +8,8 @@
 #include <node/miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/mempool_utils.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/mempool.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
