@@ -332,7 +332,7 @@ bool RangeProof::ValidateProofsBySizes(
 }
 
 G1Point RangeProof::VerifyLoop2(
-    const std::vector<ProofWithTranscript>& proof_derivs,
+    const std::vector<ProofWithTranscript>& proof_transcripts,
     const Generators& gens,
     const size_t& max_mn
 ) const {
@@ -344,9 +344,7 @@ G1Point RangeProof::VerifyLoop2(
     Scalars gi_exps(max_mn, 0);
     Scalars hi_exps(max_mn, 0);
 
-    // for each proof, do:
-    for (const ProofWithTranscript& p: proof_derivs) {
-
+    for (const ProofWithTranscript& p: proof_transcripts) {
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
@@ -392,15 +390,11 @@ G1Point RangeProof::VerifyLoop2(
 
         // for all bits of input values
         std::vector<Scalar> w_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
-        // even index = w_inv
-        // odd index = w
         w_cache[0] = p.inv_ws[0];
         w_cache[1] = p.ws[0];
         for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
-            // j=4: (4,3),(2,1)
-            // j=8: (8,7),(6,5) + j=4
             for (size_t s = sl; s > 0; s -= 2) {
                 w_cache[s] = w_cache[s / 2] * p.ws[j];
                 w_cache[s - 1] = w_cache[s / 2] * p.inv_ws[j];
@@ -408,15 +402,11 @@ G1Point RangeProof::VerifyLoop2(
         }
 
         // for each bit of concat input values, do:
-        Scalar y_inv_pow(1); // used to build h' = h, h^(y-1), h^(y-2) ...
+        Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            // set initial g_scalar and h_scalar for each loop
-            Scalar gi_exp = p.proof.a;  // a is the final reduced form of L
-            Scalar hi_exp = p.proof.b * y_inv_pow;  // i == 0 ?  p.proof.b : p.proof.b * y_inv_pow;  // some for b for R. y_inv_pow to turn the generator to (h')
-
-            gi_exp = gi_exp * w_cache[i];  // from the beg from end
-            hi_exp = hi_exp * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg
+            Scalar gi_exp = p.proof.a * w_cache[i];  // from the beg from end
+            Scalar hi_exp = p.proof.b * y_inv_pow * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
 
             gi_exp = gi_exp + p.z;  // g^(-z) (66)
 
@@ -427,7 +417,7 @@ G1Point RangeProof::VerifyLoop2(
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // there exists generator for each bit
+            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);
             hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);
 
             // update y_pow and y_inv_pow to the next power
