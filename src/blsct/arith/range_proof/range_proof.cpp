@@ -341,8 +341,8 @@ G1Point RangeProof::VerifyLoop2(
     Scalar g_neg_exp = 0;
     Scalar h_neg_exp = 0;
     Scalar g_pos_exp = 0;
-    Scalars gi_exps;
-    Scalars hi_exps;
+    Scalars gi_exps(max_mn, 0);
+    Scalars hi_exps(max_mn, 0);
 
     // for each proof, do:
     for (const ProofWithTranscript& p: proof_derivs) {

@@ -17,14 +17,35 @@ BOOST_FIXTURE_TEST_SUITE(elements_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_elements_constructors)
 {
-    Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
-    auto g = G1Point::GetBasePoint();
-    BOOST_CHECK(ss.Size() == 2);
-    BOOST_CHECK(ss[0].GetUint64() == 1);
-    BOOST_CHECK(ss[1].GetUint64() == 2);
-
-    G1Points g1s(std::vector<G1Point> { g, g + g });
-    BOOST_CHECK(g1s.Size() == 2);
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        BOOST_CHECK(ss.Size() == 2);
+        BOOST_CHECK(ss[0].GetUint64() == 1);
+        BOOST_CHECK(ss[1].GetUint64() == 2);
+    }
+    {
+        Scalar s(2);
+        Scalars ss(3, s);
+        BOOST_CHECK(ss.Size() == 3);
+        BOOST_CHECK(ss[0].GetUint64() == 2);
+        BOOST_CHECK(ss[1].GetUint64() == 2);
+        BOOST_CHECK(ss[2].GetUint64() == 2);
+    }
+    {
+        auto g = G1Point::GetBasePoint();
+        G1Points g1s(2, g);
+        BOOST_CHECK(g1s.Size() == 2);
+        BOOST_CHECK(g1s[0] == g);
+        BOOST_CHECK(g1s[1] == g);
+    }
+    {
+        auto g = G1Point::GetBasePoint();
+        auto g2 = g + g;
+        G1Points g1s(std::vector<G1Point> { g, g2 });
+        BOOST_CHECK(g1s.Size() == 2);
+        BOOST_CHECK(g1s[0] == g);
+        BOOST_CHECK(g1s[1] == g2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_elements_size)

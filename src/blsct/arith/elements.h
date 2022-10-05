@@ -30,6 +30,7 @@ class Elements
 public:
     Elements() {}
     Elements(const std::vector<T>& vec) : m_vec(vec) {}
+    Elements(const size_t& size, T& default_value);
 
     T Sum() const;
     T operator[](int index) const;

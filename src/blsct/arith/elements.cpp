@@ -7,6 +7,15 @@
 #include <blsct/arith/scalar.h>
 
 template <typename T>
+Elements<T>::Elements(const size_t& size, const T& default_value)
+{
+    std::vector<T> vec(size, default_value);
+    m_vec = vec;
+}
+template Elements<Scalar>::Elements(const size_t&, const T&) const;
+template Elements<G1Point>::Elements(const size_t&, const T&) const;
+
+template <typename T>
 T Elements<T>::Sum() const
 {
     T ret;
