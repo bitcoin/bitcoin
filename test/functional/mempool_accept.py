@@ -33,17 +33,16 @@ from test_framework.script import (
     sign_input_legacy,
 )
 from test_framework.script_util import (
-    DUMMY_MIN_OP_RETURN_SCRIPT,
+    INVALID_SPK_LEN,
     keys_to_multisig_script,
-    MIN_PADDING,
-    MIN_STANDARD_TX_NONWITNESS_SIZE,
+    NONSTANDARD_OP_RETURN_SCRIPT,
+    NONSTANDARD_TX_NONWITNESS_SIZE,
     PAY_TO_ANCHOR,
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     assert_raises_rpc_error,
     sync_txindex,
 )
@@ -352,30 +351,35 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             maxfeerate=0,
         )
 
-        # Prep for tiny-tx tests with wsh(OP_TRUE) output
-        seed_tx = self.wallet.send_to(from_node=node, scriptPubKey=script_to_p2wsh_script(CScript([OP_TRUE])), amount=COIN)
+        # Prep for tiny-tx tests with MiniWallet anyone-can-spend output
+        seed_utxo = self.wallet.send_self_transfer(from_node=node)["new_utxo"]
         self.generate(node, 1)
 
         self.log.info('A tiny transaction(in non-witness bytes) that is disallowed')
-        tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int(seed_tx["txid"], 16), seed_tx["sent_vout"]), b"", SEQUENCE_FINAL))
-        tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
-        tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
+        tx = self.wallet.create_self_transfer(utxo_to_spend=seed_utxo)["tx"]
+        tx.vout[0].scriptPubKey = NONSTANDARD_OP_RETURN_SCRIPT
         # Note it's only non-witness size that matters!
-        assert_equal(len(tx.serialize_without_witness()), 64)
-        assert_equal(MIN_STANDARD_TX_NONWITNESS_SIZE - 1, 64)
-        assert_greater_than(len(tx.serialize()), 64)
+        assert_equal(len(tx.serialize_without_witness()), NONSTANDARD_TX_NONWITNESS_SIZE)
+        assert len(tx.serialize()) != NONSTANDARD_TX_NONWITNESS_SIZE
 
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'tx-size-small'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'tx-bad-nonwit-size'}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
 
-        self.log.info('Minimally-small transaction(in non-witness bytes) that is allowed')
-        tx.vout[0] = CTxOut(COIN - 1000, DUMMY_MIN_OP_RETURN_SCRIPT)
-        assert_equal(len(tx.serialize_without_witness()), MIN_STANDARD_TX_NONWITNESS_SIZE)
+        self.log.info('Just-below size transaction(in non-witness bytes) that is allowed')
+        tx.vout[0] = CTxOut(int(seed_utxo["value"] * COIN) - 1000, CScript([OP_RETURN] + ([OP_0] * (INVALID_SPK_LEN - 2))))
+        assert_equal(len(tx.serialize_without_witness()), NONSTANDARD_TX_NONWITNESS_SIZE - 1)
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.00001000')}}],
+            rawtxs=[tx.serialize().hex()],
+            maxfeerate=0,
+        )
+
+        self.log.info('Just-above size transaction(in non-witness bytes) that is allowed')
+        tx.vout[0] = CTxOut(int(seed_utxo["value"] * COIN) - 1000, CScript([OP_RETURN] + ([OP_0] * (INVALID_SPK_LEN))))
+        assert_equal(len(tx.serialize_without_witness()), NONSTANDARD_TX_NONWITNESS_SIZE + 1)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.00001000')}}],
             rawtxs=[tx.serialize().hex()],
