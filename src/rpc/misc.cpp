@@ -450,7 +450,7 @@ static RPCHelpMan deriveaddresses()
 
     UniValue addresses(UniValue::VARR);
 
-    for (int i = range_begin; i <= range_end; ++i) {
+    for (int64_t i = range_begin; i <= range_end; ++i) {
         FlatSigningProvider provider;
         std::vector<CScript> scripts;
         if (!desc->Expand(i, key_provider, scripts, provider)) {
