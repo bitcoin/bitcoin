@@ -79,6 +79,7 @@ TEST_FRAMEWORK_MODULES = [
     "key",
     "messages",
     "crypto.muhash",
+    "crypto.poly1305",
     "crypto.ripemd160",
     "script",
     "segwit_addr",
