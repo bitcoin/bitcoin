@@ -11,6 +11,7 @@ if [ "$CI_OS_NAME" == "macos" ]; then
   echo > "${HOME}/Library/Application Support/Bitcoin"
 else
   CI_EXEC echo \> \$HOME/.bitcoin
+  CI_EXEC_ROOT echo \> \$HOME/.bitcoin
 fi
 
 CI_EXEC mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
