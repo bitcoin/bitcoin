@@ -123,6 +123,15 @@ class PSBT:
         psbt = [x.serialize() for x in [self.g] + self.i + self.o]
         return b"psbt\xff" + b"".join(psbt)
 
+    def make_blank(self):
+        """
+        Remove all fields except for PSBT_GLOBAL_UNSIGNED_TX
+        """
+        for m in self.i + self.o:
+            m.map.clear()
+
+        self.g = PSBTMap(map={0: self.g.map[0]})
+
     def to_base64(self):
         return base64.b64encode(self.serialize()).decode("utf8")
 
