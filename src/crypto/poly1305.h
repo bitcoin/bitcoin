@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CRYPTO_POLY1305_H
 #define BITCOIN_CRYPTO_POLY1305_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 #define POLY1305_KEYLEN 32
 #define POLY1305_TAGLEN 16
