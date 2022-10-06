@@ -2632,6 +2632,12 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
 
     m_chain.SetTip(*pindexDelete->pprev);
 
+    // if we are roll-backing the chain, rollback the best header as well
+    if (m_chainman.m_best_header && m_chainman.m_best_header->GetBlockHash() == pindexDelete->GetBlockHash()) {
+        assert(pindexDelete->pprev);
+        m_chainman.m_best_header = pindexDelete->pprev;
+    }
+
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
@@ -2745,6 +2751,12 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // Update m_chain & related variables.
     m_chain.SetTip(*pindexNew);
+
+    // If the best header is the prev block, update the best header
+    if (m_chainman.m_best_header == pindexNew->pprev) {
+        m_chainman.m_best_header = pindexNew;
+    }
+
     UpdateTip(pindexNew);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
