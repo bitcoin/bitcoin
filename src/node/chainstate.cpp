@@ -197,6 +197,11 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                 break;
             case VerifyDBResult::CORRUPTED_BLOCK_DB:
                 return {ChainstateLoadStatus::FAILURE, _("Corrupted block database detected")};
+            case VerifyDBResult::SKIPPED_L3_CHECKS:
+                if (options.require_full_verification) {
+                    return {ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE, _("Insufficient dbcache for block verification")};
+                }
+                break;
             } // no default case, so the compiler can warn about missing cases
         }
     }

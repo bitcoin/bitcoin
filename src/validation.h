@@ -353,6 +353,7 @@ enum class VerifyDBResult {
     SUCCESS,
     CORRUPTED_BLOCK_DB,
     INTERRUPTED,
+    SKIPPED_L3_CHECKS,
 };
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */

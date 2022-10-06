@@ -4185,6 +4185,9 @@ VerifyDBResult CVerifyDB::VerifyDB(
 
     LogPrintf("Verification: No coin database inconsistencies in last %i blocks (%i transactions)\n", block_count, nGoodTransactions);
 
+    if (skipped_l3_checks) {
+        return VerifyDBResult::SKIPPED_L3_CHECKS;
+    }
     return VerifyDBResult::SUCCESS;
 }
 
