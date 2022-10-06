@@ -41,63 +41,45 @@ bool RangeProof::InnerProductArgument(
     CHashWriter& transcript_gen
 ) {
     Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
-    G1Points g_prime = gens.Gi;
-    G1Points h_prime = gens.Hi;
-    Scalars a_prime = l;
-    Scalars b_prime = r;
+    G1Points Gi = gens.Gi;
+    G1Points Hi = gens.Hi;
+    Scalars a = l;
+    Scalars b = r;
+    size_t n = input_value_vec_len;
 
-    size_t n_prime = input_value_vec_len;
-    size_t round = 0;
-    Scalars ws;
+    while (n > 1) {
+        n /= 2;
 
-    while (n_prime > 1) {
-        // (20)
-        n_prime /= 2;
+        Scalar cL = (a.To(n) * b.From(n)).Sum();
+        Scalar cR = (a.From(n) * b.To(n)).Sum();
 
-        // (21)-(22)
-        Scalar cL = (a_prime.To(n_prime) * b_prime.From(n_prime)).Sum();
-        Scalar cR = (a_prime.From(n_prime) * b_prime.To(n_prime)).Sum();
+        G1Point L =
+            (Gi.From(n) * a.To(n)).Sum() +
+            (Hi.To(n) * (round == 0 ? b_prime * y_inv_pows.To(n) : b.From(n))).Sum() +
+            (gens.H * cL * x_ip);  // H = u in paper
+        G1Point R =
+            (Gi.To(n) * a.From(n)).Sum() +
+            (Hi.From(n) * (round == 0 ? b_prime * y_inv_pows.From(n) : b.To(n))).Sum() +
+            (gens.H * cR * x_ip);  // H = u in paper
+        proof.Ls.Add(L);
+        proof.Rs.Add(R);
 
-        // (23)-(24)
-        proof.Ls.Add(
-            (g_prime.From(n_prime) * a_prime.To(n_prime)).Sum() +
-            (h_prime.To(n_prime) * (round == 0 ? b_prime * y_inv_pows.To(n_prime) : b_prime.From(n_prime))).Sum() +
-            (gens.H * cL * x_ip)  // H = u in paper
-        );
-        proof.Rs.Add(
-            (g_prime.To(n_prime) * a_prime.From(n_prime)).Sum() +
-            (h_prime.From(n_prime) * (round == 0 ? b_prime * y_inv_pows.From(n_prime) : b_prime.To(n_prime))).Sum() +
-            (gens.H * cR * x_ip)  // H = u in paper
-        );
-
-        // (25)-(27)
-        transcript_gen << proof.Ls[round];
-        transcript_gen << proof.Rs[round];
+        transcript_gen << L;
+        transcript_gen << R;
 
         Scalar w = transcript_gen.GetHash();
         if (w == 0)
             return false;
         Scalar w_inv = w.Invert();
-        ws.Add(w);
 
-        // (29)-(31)
-        if (n_prime > 1) {
-            g_prime = (g_prime.To(n_prime) * x_inv) + (g_prime.From(n_prime) * w);
-
-            Scalars y_inv_pows_w = y_inv_pows * w;
-            Scalars y_inv_pows_w_inv = y_inv_pows * w_inv;
-            h_prime = (h_prime.To(n_prime) * y_inv_pows_w) + (h_prime.From(n_prime) * y_inv_pows_w_inv);
-        }
-
-        // (33)-(34)
-        a_prime = (a_prime.To(n_prime) * w) + (a_prime.From(n_prime) * w_inv);
-        b_prime = (b_prime.To(n_prime) * w_inv) + (b_prime.From(n_prime) * w);
-
-        ++round;
+        // update Gi, Hi, a and b
+        Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * w);
+        Hi = (Hi.To(n) * y_inv_pows * w) + (Hi.From(n) * y_inv_pows * w_inv);
+        a = (a.To(n) * w) + (a.From(n) * w_inv);
+        b = (b.To(n) * w_inv) + (b.From(n) * w);
     }
-
-    proof.a = a_prime[0];
-    proof.b = b_prime[0];
+    proof.a = a[0];
+    proof.b = b[0];
 
     return true;
 }
