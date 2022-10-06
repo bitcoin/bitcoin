@@ -1943,7 +1943,7 @@ void CWallet::ResubmitWalletTransactions(bool relay, bool force)
     // that these are our transactions.
     if (!force && GetTime() < m_next_resend) return;
     // resend 12-36 hours from now, ~1 day on average.
-    m_next_resend = GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60);
+    if (relay) m_next_resend = GetTime() + (12 * 60 * 60) + GetRand(24 * 60 * 60);
 
     int submitted_tx_count = 0;
 
