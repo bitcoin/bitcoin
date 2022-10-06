@@ -256,8 +256,10 @@ public:
         m_coinbase_tx_outputs = coinbase_tx->vout;
         m_coinbase_tx_locktime =  coinbase_tx->nLockTime;
 
-        for (const auto& tx : block.vtx) {
-            m_merkle_path.push_back(tx->GetHash());
+        // Skip the coinbase_tx hash from the merkle path, as the downstream client
+        // will build their own coinbase tx.
+        for (auto it = block.vtx.begin() + 1; it != block.vtx.end(); ++it) {
+            m_merkle_path.push_back((*it)->GetHash());
         }
     };
 
@@ -277,7 +279,6 @@ public:
         // with the current stratum v2 pool and proxy implementations.
         s << static_cast<uint16_t>(0)
           << m_coinbase_tx_locktime
-          << static_cast<uint8_t>(m_merkle_path.size())
           << m_merkle_path;
     }
 
@@ -294,7 +295,6 @@ public:
             + 2 // m_coinbase_tx_outputs byte len
             +  m_coinbase_tx_outputs.size()
             +  sizeof(m_coinbase_tx_locktime)
-            + 1 // m_merkle_path byte len
             +  m_merkle_path.size() * sizeof(uint256);
     }
 };
