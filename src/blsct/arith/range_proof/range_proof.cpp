@@ -368,15 +368,15 @@ G1Point RangeProof::VerifyLoop2(
         //////// (67), (68)
 
         // for all bits of input values
-        std::vector<Scalar> x_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
-        x_cache[0] = p.inv_xs[0];
-        x_cache[1] = p.xs[0];
+        std::vector<Scalar> acc_xs(1 << p.num_rounds, 1);  // initialize all elems to 1
+        acc_xs[0] = p.inv_xs[0];
+        acc_xs[1] = p.xs[0];
         for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
             for (size_t s = sl; s > 0; s -= 2) {
-                x_cache[s] = x_cache[s / 2] * p.xs[j];
-                x_cache[s - 1] = x_cache[s / 2] * p.inv_xs[j];
+                acc_xs[s] = acc_xs[s / 2] * p.xs[j];
+                acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[j];
             }
         }
 
@@ -384,29 +384,29 @@ G1Point RangeProof::VerifyLoop2(
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar gi_exp = p.proof.a * x_cache[i];  // from the beg from end
-            Scalar hi_exp = p.proof.b * y_inv_pow * x_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
+            Scalar gi_exp = p.proof.a * acc_xs[i];  // from the beg from end
+            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
 
-            gi_exp = gi_exp + p.z;  // g^(-z) (66)
+            // gi_exp = gi_exp + p.z;  // g^(-z) (66)
 
-            // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66)
-            Scalar tmp =
-                z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
-                m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
-            // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
-            hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
+            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66)
+            // Scalar tmp =
+            //     z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
+            //     m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
+            // // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
+            // hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
             gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);
             hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;
-            y_pow = y_pow * p.y;
+            // y_pow = y_pow * p.y;
         }
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
-        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds
+        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds that consits the final P - P*h^mu
         for (size_t i = 0; i < p.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));

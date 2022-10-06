@@ -38,14 +38,14 @@ ProofWithTranscript ProofWithTranscript::Build(
     Scalar x_ip = transcript_gen.GetHash();
 
     // for each proof, generate w from Ls and Rs and store the inverse
-    Scalars ws;
-    Scalars inv_ws;
+    Scalars xs;
+    Scalars inv_xs;
     for (size_t i = 0; i < num_rounds; ++i) {
         transcript_gen << proof.Ls[i];
         transcript_gen << proof.Rs[i];
-        Scalar w(transcript_gen.GetHash());
-        ws.Add(w);
-        inv_ws.Add(w.Invert());
+        Scalar x(transcript_gen.GetHash());
+        xs.Add(x);
+        inv_xs.Add(x.Invert());
     }
 
     size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
@@ -57,8 +57,8 @@ ProofWithTranscript ProofWithTranscript::Build(
         y,
         z,
         x_ip,
-        ws,
-        inv_ws,
+        xs,
+        inv_xs,
         num_input_values_power_2,
         concat_input_values_in_bits,
         num_rounds
