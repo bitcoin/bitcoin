@@ -675,9 +675,14 @@ private:
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /** Helper function for AddOrphanResolutionCandidates, but can also be called by itself if the
+     * orphan is announced again later. */
+    void AddOrphanAnnouncer(NodeId nodeid, const uint256& orphan_wtxid, const CTransactionRef& tx, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !m_peer_mutex);
+
     /** Register with orphan TxRequestTracker that a peer may help us resolve this orphan. */
-    void AddOrphanResolutionCandidate(NodeId nodeid, const uint256& orphan_wtxid, const CTransactionRef& tx, std::chrono::microseconds current_time)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void AddOrphanResolutionCandidates(const CTransactionRef& orphan, NodeId originator)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !m_peer_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -1436,16 +1441,47 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     }
 }
 
-void PeerManagerImpl::AddOrphanResolutionCandidate(NodeId nodeid, const uint256& orphan_wtxid, const CTransactionRef& orphan, std::chrono::microseconds current_time)
+void PeerManagerImpl::AddOrphanAnnouncer(NodeId nodeid, const uint256& orphan_wtxid, const CTransactionRef& tx, std::chrono::microseconds current_time)
 {
-    AssertLockHeld(::cs_main);
+    AssertLockHeld(::cs_main); // For m_txrequest
+    const bool connected = m_connman.ForNode(nodeid, [](CNode* node) { return node->fSuccessfullyConnected && !node->fDisconnect; });
+    if (!connected) return;
+    if (m_txpackagetracker->Count(nodeid) + m_txrequest.Count(nodeid) >= MAX_PEER_TX_ANNOUNCEMENTS) {
+        // Too many queued announcements. Request from a different peer.
+        // TODO: Allow peers with Relay permissions to bypass this restriction.
+        return;
+    }
     const CNodeState* state = State(nodeid);
-    // Decide the TxRequestTracker parameters for this orphan resolution:
+    // Decide the TxRequestTracker parameters for this orphan resolution.
+    // TxPackageTracker may also increase the delay.
     // - "preferred": if fPreferredDownload is set (= outbound, or NetPermissionFlags::NoBan permission)
-    // - "reqtime": current time
+    // - "reqtime": current time plus delays for:
+    //   - NONPREF_PEER_TX_DELAY for announcements from non-preferred connections
+    //   - OVERLOADED_PEER_TX_DELAY for announcements from peers which have at least
+    //     MAX_PEER_TX_REQUEST_IN_FLIGHT requests in flight
+    //     TODO: allow peers with Relay permissions to bypass this restiction
     auto delay{0us};
     const bool preferred = state->fPreferredDownload;
-    m_txpackagetracker->AddOrphanTx(nodeid, orphan_wtxid, orphan, preferred, current_time + delay);
+    if (!preferred) delay += NONPREF_PEER_TX_DELAY;
+    const bool overloaded = m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
+    if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
+    m_txpackagetracker->AddOrphanTx(nodeid, orphan_wtxid, tx, preferred, current_time + delay);
+}
+void PeerManagerImpl::AddOrphanResolutionCandidates(const CTransactionRef& orphan, NodeId originator)
+{
+    const auto current_time{GetTime<std::chrono::microseconds>()};
+
+    // The originator will not show up in GetCandidatePeers() since we already requested from them.
+    AddOrphanAnnouncer(originator, orphan->GetWitnessHash(), orphan, current_time);
+    // We prefer to request the orphan's ancestors via package relay rather than txids
+    // of missing inputs. Also, if the first request fails, we should try again.
+    // Get all peers that announced this transaction and prioritize accordingly...
+    for (const auto nodeid : m_txrequest.GetCandidatePeers(orphan->GetWitnessHash())) {
+        AddOrphanAnnouncer(nodeid, orphan->GetWitnessHash(), orphan, current_time);
+    }
+    for (const auto nodeid : m_txrequest.GetCandidatePeers(orphan->GetHash())) {
+        AddOrphanAnnouncer(nodeid, orphan->GetWitnessHash(), orphan, current_time);
+    }
 }
 
 void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
@@ -3869,6 +3905,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 if (!fAlreadyHave && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
+                if (inv.IsMsgWtx() && m_txpackagetracker->OrphanageHaveTx(gtxid) && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
+                    AddOrphanAnnouncer(pfrom.GetId(), inv.hash, nullptr, current_time);
+                }
             } else {
                 LogPrint(BCLog::NET, "Unknown inv type \"%s\" received from peer=%d\n", inv.ToString(), pfrom.GetId());
             }
@@ -4226,9 +4265,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
             if (!fRejectedParents) {
                 const bool had_before{m_txpackagetracker->OrphanageHaveTx(GenTxid::Wtxid(ptx->GetWitnessHash()))};
-                const auto current_time{GetTime<std::chrono::microseconds>()};
-                AddOrphanResolutionCandidate(pfrom.GetId(), ptx->GetWitnessHash(), ptx, current_time);
-
+                AddOrphanResolutionCandidates(ptx, pfrom.GetId());
                 if (!had_before && m_txpackagetracker->OrphanageHaveTx(GenTxid::Wtxid(ptx->GetWitnessHash()))) {
                     AddToCompactExtraTransactions(ptx);
                 }
@@ -5900,7 +5937,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
 
         //
-        // Message: getdata (transactions)
+        // Message: getdata (transactions and ancpkginfo)
         //
         std::vector<std::pair<NodeId, GenTxid>> expired;
         auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);

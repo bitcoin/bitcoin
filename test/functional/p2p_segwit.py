@@ -2058,7 +2058,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
         # Expect a request for parent (tx) by txid despite use of WTX peer
-        self.wtx_node.wait_for_getdata([tx.sha256], 60)
+        self.wtx_node.wait_for_getdata([tx.sha256], 65)
         with p2p_lock:
             lgd = self.wtx_node.lastgetdata[:]
         assert_equal(lgd, [CInv(MSG_WITNESS_TX, tx.sha256)])
