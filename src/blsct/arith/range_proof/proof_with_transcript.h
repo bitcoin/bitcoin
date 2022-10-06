@@ -17,14 +17,14 @@ public:
         const Scalar& x,
         const Scalar& y,
         const Scalar& z,
-        const Scalar& x_ip,
-        const Scalars& ws,
-        const Scalars& inv_ws,
+        const Scalar& cx_factor,
+        const Scalars& xs,
+        const Scalars& inv_xs,
         const size_t& num_input_values_power_2,
         const size_t& concat_input_values_in_bits,
         const size_t& num_rounds
-    ): proof{proof}, x{x}, y{y}, z{z}, x_ip{x_ip}, ws(ws),
-        inv_ws{inv_ws}, inv_y(y.Invert()),
+    ): proof{proof}, x{x}, y{y}, z{z}, cx_factor{cx_factor}, xs(xs),
+        inv_xs{inv_xs}, inv_y(y.Invert()),
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits),
         num_rounds(num_rounds) {}
@@ -37,12 +37,12 @@ public:
     const Proof proof;
 
     // transcript
-    const Scalar x;
+    const Scalar x;  // x used in the main prove procedure
     const Scalar y;
     const Scalar z;
-    const Scalar x_ip;
-    const Scalars ws;
-    const Scalars inv_ws;
+    const Scalar cx_factor;  // factor multiplied to cL and cR in inner product argument
+    const Scalars xs;      // x used in inner product argument
+    const Scalars inv_xs;  // x^-1 used in inner product argument
     const Scalar inv_y;
 
     const size_t num_input_values_power_2;  // M in old impl

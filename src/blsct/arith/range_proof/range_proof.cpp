@@ -32,8 +32,8 @@ RangeProof::RangeProof()
 
 bool RangeProof::InnerProductArgument(
     const size_t input_value_vec_len,
-    const Generators& gens,
-    const Scalar& x_ip,  // factor to multiply to cL and cR
+    const G1Point& u,
+    const Scalar& cx_factor,  // factor to multiply to cL and cR
     const Scalars& l,
     const Scalars& r,
     const Scalar& y,
@@ -55,28 +55,28 @@ bool RangeProof::InnerProductArgument(
 
         G1Point L =
             (Gi.From(n) * a.To(n)).Sum() +
-            (Hi.To(n) * (round == 0 ? b_prime * y_inv_pows.To(n) : b.From(n))).Sum() +
-            (gens.H * cL * x_ip);  // H = u in paper
+            (Hi.To(n) * (proof.Ls.Size() == 0 ? b * y_inv_pows.To(n) : b.From(n))).Sum() +
+            (u * cL * cx_factor);
         G1Point R =
             (Gi.To(n) * a.From(n)).Sum() +
-            (Hi.From(n) * (round == 0 ? b_prime * y_inv_pows.From(n) : b.To(n))).Sum() +
-            (gens.H * cR * x_ip);  // H = u in paper
+            (Hi.From(n) * (proof.Rs.Size() == 0 ? b * y_inv_pows.From(n) : b.To(n))).Sum() +
+            (u * cR * cx_factor);
         proof.Ls.Add(L);
         proof.Rs.Add(R);
 
         transcript_gen << L;
         transcript_gen << R;
 
-        Scalar w = transcript_gen.GetHash();
-        if (w == 0)
+        Scalar x = transcript_gen.GetHash();
+        if (x == 0)
             return false;
-        Scalar w_inv = w.Invert();
+        Scalar x_inv = x.Invert();
 
         // update Gi, Hi, a and b
-        Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * w);
-        Hi = (Hi.To(n) * y_inv_pows * w) + (Hi.From(n) * y_inv_pows * w_inv);
-        a = (a.To(n) * w) + (a.From(n) * w_inv);
-        b = (b.To(n) * w_inv) + (b.From(n) * w);
+        Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * x);
+        Hi = (Hi.To(n) * y_inv_pows * x) + (Hi.From(n) * y_inv_pows * x_inv);
+        a = (a.To(n) * x) + (a.From(n) * x_inv);
+        b = (b.To(n) * x_inv) + (b.From(n) * x);
     }
     proof.a = a[0];
     proof.b = b[0];
@@ -279,10 +279,11 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     transcript_gen << proof.mu;
     transcript_gen << proof.t_hat;
 
-    Scalar x_ip = transcript_gen.GetHash();
-    if (x_ip == 0) goto retry;
+    Scalar cx_factor = transcript_gen.GetHash();
+    if (cx_factor == 0) goto retry;
 
-    if (!InnerProductArgument(concat_input_values_in_bits, gens, x_ip, l, r, y, proof, transcript_gen)) {
+    // using gens.G for u
+    if (!InnerProductArgument(concat_input_values_in_bits, gens.G, cx_factor, l, r, y, proof, transcript_gen)) {
         goto retry;
     }
     return proof;
@@ -367,15 +368,15 @@ G1Point RangeProof::VerifyLoop2(
         //////// (67), (68)
 
         // for all bits of input values
-        std::vector<Scalar> w_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
-        w_cache[0] = p.inv_ws[0];
-        w_cache[1] = p.ws[0];
+        std::vector<Scalar> x_cache(1 << p.num_rounds, 1);  // initialize all elems to 1
+        x_cache[0] = p.inv_xs[0];
+        x_cache[1] = p.xs[0];
         for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
             for (size_t s = sl; s > 0; s -= 2) {
-                w_cache[s] = w_cache[s / 2] * p.ws[j];
-                w_cache[s - 1] = w_cache[s / 2] * p.inv_ws[j];
+                x_cache[s] = x_cache[s / 2] * p.xs[j];
+                x_cache[s - 1] = x_cache[s / 2] * p.inv_xs[j];
             }
         }
 
@@ -383,8 +384,8 @@ G1Point RangeProof::VerifyLoop2(
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar gi_exp = p.proof.a * w_cache[i];  // from the beg from end
-            Scalar hi_exp = p.proof.b * y_inv_pow * w_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
+            Scalar gi_exp = p.proof.a * x_cache[i];  // from the beg from end
+            Scalar hi_exp = p.proof.b * y_inv_pow * x_cache[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
 
             gi_exp = gi_exp + p.z;  // g^(-z) (66)
 
@@ -405,15 +406,14 @@ G1Point RangeProof::VerifyLoop2(
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
-        // for each round, do:
-        // add L^(x^2) * R^(x-1)^2 of all rounds
+        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds
         for (size_t i = 0; i < p.num_rounds; ++i) {
-            points.Add(p.proof.Ls[i] * (p.ws[i].Square() * weight_z));
-            points.Add(p.proof.Rs[i] * (p.inv_ws[i].Square() * weight_z));
+            points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
+            points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
         }
 
-        // inner product argument replaces `t_hat = <L, R> (68)` with `t_hat = a * b`
-        // in verification, that becomes `p.proof.t_hat - p.proof.a * p.proof.b`
+        // maps to (68) t_hat = <l, r>; t_hat is used for inner product argument paremeter c
+        // and (16) checks c == a * b
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.x_ip) * weight_z;
     }
 
