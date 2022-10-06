@@ -74,6 +74,7 @@ TEST_EXIT_SKIPPED = 77
 TEST_FRAMEWORK_MODULES = [
     "address",
     "blocktools",
+    "crypto.chacha20",
     "crypto.ellswift",
     "key",
     "messages",
