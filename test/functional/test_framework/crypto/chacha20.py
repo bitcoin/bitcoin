@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-"""Test-only implementation of ChaCha20 cipher
+"""Test-only implementation of ChaCha20 cipher and FSChaCha20 for BIP 324
 
 It is designed for ease of understanding, not performance.
 
@@ -19,6 +19,7 @@ CHACHA20_INDICES = (
 )
 
 CHACHA20_CONSTANTS = (0x61707865, 0x3320646e, 0x79622d32, 0x6b206574)
+REKEY_INTERVAL = 224 # packets
 
 
 def rotl32(v, bits):
@@ -62,6 +63,34 @@ def chacha20_block(key, nonce, cnt):
     # Produce byte output
     return b''.join(state[i].to_bytes(4, 'little') for i in range(16))
 
+class FSChaCha20:
+    """Rekeying wrapper stream cipher around ChaCha20."""
+    def __init__(self, initial_key, rekey_interval=REKEY_INTERVAL):
+        self._key = initial_key
+        self._rekey_interval = rekey_interval
+        self._block_counter = 0
+        self._chunk_counter = 0
+        self._keystream = b''
+
+    def _get_keystream_bytes(self, nbytes):
+        while len(self._keystream) < nbytes:
+            nonce = ((0).to_bytes(4, 'little') + (self._chunk_counter // self._rekey_interval).to_bytes(8, 'little'))
+            self._keystream += chacha20_block(self._key, nonce, self._block_counter)
+            self._block_counter += 1
+        ret = self._keystream[:nbytes]
+        self._keystream = self._keystream[nbytes:]
+        return ret
+
+    def crypt(self, chunk):
+        ks = self._get_keystream_bytes(len(chunk))
+        ret = bytes([ks[i] ^ chunk[i] for i in range(len(chunk))])
+        if ((self._chunk_counter + 1) % self._rekey_interval) == 0:
+            self._key = self._get_keystream_bytes(32)
+            self._block_counter = 0
+            self._keystream = b''
+        self._chunk_counter += 1
+        return ret
+
 
 # Test vectors from RFC7539/8439 consisting of 32 byte key, 12 byte nonce, block counter
 # and 64 byte output after applying `chacha20_block` function
@@ -98,6 +127,16 @@ CHACHA20_TESTS = [
      "34a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a"],
 ]
 
+FSCHACHA20_TESTS = [
+    ["000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "0000000000000000000000000000000000000000000000000000000000000000", 256,
+     "a93df4ef03011f3db95f60d996e1785df5de38fc39bfcb663a47bb5561928349"],
+    ["01", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 5, "ea"],
+    ["e93fdb5c762804b9a706816aca31e35b11d2aa3080108ef46a5b1f1508819c0a",
+     "8ec4c3ccdaea336bdeb245636970be01266509b33f3d2642504eaf412206207a", 4096,
+     "8bfaa4eacff308fdb4a94a5ff25bd9d0c1f84b77f81239f67ff39d6e1ac280c9"],
+]
+
 
 class TestFrameworkChacha(unittest.TestCase):
     def test_chacha20(self):
@@ -108,3 +147,16 @@ class TestFrameworkChacha(unittest.TestCase):
             nonce_bytes = nonce[0].to_bytes(4, 'little') + nonce[1].to_bytes(8, 'little')
             keystream = chacha20_block(key, nonce_bytes, counter)
             self.assertEqual(hex_output, keystream.hex())
+
+    def test_fschacha20(self):
+        """FSChaCha20 test vectors."""
+        for test_vector in FSCHACHA20_TESTS:
+            hex_plaintext, hex_key, rekey_interval, hex_ciphertext_after_rotation = test_vector
+            plaintext = bytes.fromhex(hex_plaintext)
+            key = bytes.fromhex(hex_key)
+            fsc20 = FSChaCha20(key, rekey_interval)
+            for _ in range(rekey_interval):
+                fsc20.crypt(plaintext)
+
+            ciphertext = fsc20.crypt(plaintext)
+            self.assertEqual(hex_ciphertext_after_rotation, ciphertext.hex())
