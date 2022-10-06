@@ -265,7 +265,7 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
     if (m_tap_internal_key.IsNull() && !output.m_tap_internal_key.IsNull()) m_tap_internal_key = output.m_tap_internal_key;
-    if (m_tap_tree.has_value() && !output.m_tap_tree.has_value()) m_tap_tree = output.m_tap_tree;
+    if (!m_tap_tree.has_value() && output.m_tap_tree.has_value()) m_tap_tree = output.m_tap_tree;
 }
 bool PSBTInputSigned(const PSBTInput& input)
 {
