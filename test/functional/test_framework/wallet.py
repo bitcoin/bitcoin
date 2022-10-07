@@ -264,14 +264,12 @@ class MiniWallet:
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
-        for txin, seq in zip(tx.vin, sequence):
-            txin.nSequence = seq
         tx.wit.vtxinwit = [deepcopy(tx.wit.vtxinwit[0]) for _ in range(len(utxos_to_spend))]
         tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
 
         # adapt input prevouts
         for i, utxo in enumerate(utxos_to_spend):
-            tx.vin[i] = CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout']))
+            tx.vin[i] = CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout']), nSequence=sequence[i])
 
         # adapt output amounts (use fixed fee per output)
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
