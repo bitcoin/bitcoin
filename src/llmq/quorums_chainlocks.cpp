@@ -360,6 +360,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         return;
     }
     CBlockIndex* pindexScan{nullptr};
+    const CChain *activeChain;
     {
         LOCK(cs_main);
         if (clsig.nHeight > chainman.ActiveHeight() + (CSigningManager::SIGN_HEIGHT_OFFSET - CSigningManager::SIGN_HEIGHT_LOOKBACK)) {
@@ -394,8 +395,13 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             return;
         }
+        activeChain = &chainman.ActiveChain();
+    }
+    bool bConflict{false};
+    {
+        LOCK(cs);
         // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
-        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
+        if (bestChainLockBlockIndex && !activeChain->Contains(bestChainLockBlockIndex)) {
             // Should not happen
             LogPrintf("CChainLocksHandler::%s -- current chainlock not confirmed. CLSIG (%s) rejected\n",
                     __func__, clsig.ToString());
@@ -405,10 +411,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             return;
         }
-    }
-    bool bConflict{false};
-    {
-        LOCK(cs);
         bConflict = InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash);
     }
     if (bConflict) {
@@ -655,15 +657,17 @@ void CChainLocksHandler::TrySignChainTip()
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
+    const CChain *activeChain;
     {
         LOCK(cs_main);
-        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
-        if (bestChainLockBlockIndex && !chainman.ActiveChain().Contains(bestChainLockBlockIndex)) {
-            return;
-        }
+        activeChain = &chainman.ActiveChain();
     }
     {
         LOCK(cs);
+        // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
+        if (bestChainLockBlockIndex && !activeChain->Contains(bestChainLockBlockIndex)) {
+            return;
+        }
 
         if (!isEnabled) {
             return;
