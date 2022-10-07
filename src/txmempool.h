@@ -28,6 +28,7 @@
 #include <txmempool_entry.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
+#include <util/result.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -428,24 +429,20 @@ private:
 
     /**
      * Helper function to calculate all in-mempool ancestors of staged_ancestors and apply ancestor
-     * and descendant limits (including staged_ancestors thsemselves, entry_size and entry_count).
+     * and descendant limits (including staged_ancestors themselves, entry_size and entry_count).
      *
      * @param[in]   entry_size          Virtual size to include in the limits.
      * @param[in]   entry_count         How many entries to include in the limits.
-     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
      * @param[in]   staged_ancestors    Should contain entries in the mempool.
      * @param[in]   limits              Maximum number and size of ancestors and descendants
-     * @param[out]  errString           Populated with error reason if any limits are hit
      *
-     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
-     * otherwise
+     * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    bool CalculateAncestorsAndCheckLimits(size_t entry_size,
-                                          size_t entry_count,
-                                          setEntries& setAncestors,
-                                          CTxMemPoolEntry::Parents &staged_ancestors,
-                                          const Limits& limits,
-                                          std::string &errString) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    util::Result<setEntries> CalculateAncestorsAndCheckLimits(size_t entry_size,
+                                                              size_t entry_count,
+                                                              CTxMemPoolEntry::Parents &staged_ancestors,
+                                                              const Limits& limits
+                                                              ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);

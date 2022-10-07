@@ -17,8 +17,10 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
+#include <util/result.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validationinterface.h>
 
 #include <cmath>
@@ -147,32 +149,29 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     }
 }
 
-bool CTxMemPool::CalculateAncestorsAndCheckLimits(size_t entry_size,
-                                                  size_t entry_count,
-                                                  setEntries& setAncestors,
-                                                  CTxMemPoolEntry::Parents& staged_ancestors,
-                                                  const Limits& limits,
-                                                  std::string &errString) const
+util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimits(
+    size_t entry_size,
+    size_t entry_count,
+    CTxMemPoolEntry::Parents& staged_ancestors,
+    const Limits& limits) const
 {
     size_t totalSizeWithAncestors = entry_size;
+    setEntries ancestors;
 
     while (!staged_ancestors.empty()) {
         const CTxMemPoolEntry& stage = staged_ancestors.begin()->get();
         txiter stageit = mapTx.iterator_to(stage);
 
-        setAncestors.insert(stageit);
+        ancestors.insert(stageit);
         staged_ancestors.erase(stage);
         totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry_size > static_cast<uint64_t>(limits.descendant_size_vbytes)) {
-            errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_size_vbytes);
-            return false;
+            return util::Error{Untranslated(strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_size_vbytes))};
         } else if (stageit->GetCountWithDescendants() + entry_count > static_cast<uint64_t>(limits.descendant_count)) {
-            errString = strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_count);
-            return false;
+            return util::Error{Untranslated(strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_count))};
         } else if (totalSizeWithAncestors > static_cast<uint64_t>(limits.ancestor_size_vbytes)) {
-            errString = strprintf("exceeds ancestor size limit [limit: %u]", limits.ancestor_size_vbytes);
-            return false;
+            return util::Error{Untranslated(strprintf("exceeds ancestor size limit [limit: %u]", limits.ancestor_size_vbytes))};
         }
 
         const CTxMemPoolEntry::Parents& parents = stageit->GetMemPoolParentsConst();
@@ -180,17 +179,16 @@ bool CTxMemPool::CalculateAncestorsAndCheckLimits(size_t entry_size,
             txiter parent_it = mapTx.iterator_to(parent);
 
             // If this is a new ancestor, add it.
-            if (setAncestors.count(parent_it) == 0) {
+            if (ancestors.count(parent_it) == 0) {
                 staged_ancestors.insert(parent);
             }
-            if (staged_ancestors.size() + setAncestors.size() + entry_count > static_cast<uint64_t>(limits.ancestor_count)) {
-                errString = strprintf("too many unconfirmed ancestors [limit: %u]", limits.ancestor_count);
-                return false;
+            if (staged_ancestors.size() + ancestors.size() + entry_count > static_cast<uint64_t>(limits.ancestor_count)) {
+                return util::Error{Untranslated(strprintf("too many unconfirmed ancestors [limit: %u]", limits.ancestor_count))};
             }
         }
     }
 
-    return true;
+    return ancestors;
 }
 
 bool CTxMemPool::CheckPackageLimits(const Package& package,
@@ -215,13 +213,11 @@ bool CTxMemPool::CheckPackageLimits(const Package& package,
     // When multiple transactions are passed in, the ancestors and descendants of all transactions
     // considered together must be within limits even if they are not interdependent. This may be
     // stricter than the limits for each individual transaction.
-    setEntries setAncestors;
-    const auto ret = CalculateAncestorsAndCheckLimits(total_size, package.size(),
-                                                      setAncestors, staged_ancestors,
-                                                      limits, errString);
+    const auto ancestors{CalculateAncestorsAndCheckLimits(total_size, package.size(),
+                                                          staged_ancestors, limits)};
     // It's possible to overestimate the ancestor/descendant totals.
-    if (!ret) errString.insert(0, "possibly ");
-    return ret;
+    if (!ancestors.has_value()) errString = "possibly " + util::ErrorString(ancestors).original;
+    return ancestors.has_value();
 }
 
 bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
@@ -254,9 +250,14 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry,
         staged_ancestors = it->GetMemPoolParentsConst();
     }
 
-    return CalculateAncestorsAndCheckLimits(entry.GetTxSize(), /*entry_count=*/1,
-                                            setAncestors, staged_ancestors,
-                                            limits, errString);
+    const auto calculated_ancestors{CalculateAncestorsAndCheckLimits(entry.GetTxSize(), /*entry_count=*/1,
+                                                       staged_ancestors, limits)};
+    if (!calculated_ancestors.has_value()) {
+        errString = util::ErrorString(calculated_ancestors).original;
+        return false;
+    }
+    setAncestors = *calculated_ancestors;
+    return true;
 }
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors)
