@@ -360,7 +360,11 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         return;
     }
     CBlockIndex* pindexScan{nullptr};
-    const CBlockIndex* bestIndex = bestChainLockBlockIndex;
+    const CBlockIndex* bestIndex;
+    {
+        LOCK(cs);
+        bestIndex = bestChainLockBlockIndex;
+    }
     {
         LOCK(cs_main);
         if (clsig.nHeight > chainman.ActiveHeight() + (CSigningManager::SIGN_HEIGHT_OFFSET - CSigningManager::SIGN_HEIGHT_LOOKBACK)) {
@@ -656,7 +660,11 @@ void CChainLocksHandler::TrySignChainTip()
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
-    const CBlockIndex* bestIndex = bestChainLockBlockIndex;
+    const CBlockIndex* bestIndex;
+    {
+        LOCK(cs);
+        bestIndex = bestChainLockBlockIndex;
+    }
     {
         LOCK(cs_main);
         // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
