@@ -120,13 +120,132 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                 }},
             }},
         }},
-        {RPCResult::Type::ANY, "sysx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proRegTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpServTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpRegTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "proUpRevTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "cbTx", /*optional=*/true, ""},
-        {RPCResult::Type::ANY, "qcTx", /*optional=*/true, ""},
+        {RPCResult::Type::OBJ, "systx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::STR, "txtype", "Transaction type"},
+            {RPCResult::Type::STR_HEX, "txid", "Transaction id"},
+            {RPCResult::Type::STR_HEX, "blockhash", "Block hash"},
+            {RPCResult::Type::ARR, "allocations", /*optional=*/true, "",
+            {
+                {RPCResult::Type::OBJ, "receiverObj", /*optional=*/true, "",
+                {
+                    {RPCResult::Type::NUM, "asset_guid", "Asset guid"},
+                    {RPCResult::Type::STR, "notary_sig", /*optional=*/true, "Notary sig"},
+                    {RPCResult::Type::ARR, "outputs", "",
+                    {
+                        {RPCResult::Type::OBJ, "output_object", "",
+                        {
+                            {RPCResult::Type::NUM, "n", "n"},
+                            {RPCResult::Type::STR_AMOUNT, "value", "Value"}
+                        }}
+                    }},
+                    {RPCResult::Type::STR_AMOUNT, "total", "Total"}
+                }}
+            }},
+            {RPCResult::Type::STR, "nevm_destination", /*optional=*/true, "NEVM destination address"},
+            {RPCResult::Type::OBJ, "spv_proof", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR_HEX, "txhash", "Transaction Hash"},
+                {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
+                {RPCResult::Type::STR_HEX, "postx", "postx"},
+                {RPCResult::Type::STR_HEX, "txroot", "txroot"},
+                {RPCResult::Type::STR, "txparenstnode", "txparentsnode"},
+                {RPCResult::Type::STR, "txpath", "txpath"},
+                {RPCResult::Type::STR, "posReceipt", "pos receipt"},
+                {RPCResult::Type::STR, "receiptroot", "receipt root"},
+                {RPCResult::Type::STR, "receiptparentnodes", "Receipt parent nodes"}
+            }},
+            {RPCResult::Type::STR, "symbol", /*optional=*/true, "Symbol"},
+            {RPCResult::Type::NUM, "max_supply", /*optional=*/true, "Max supply"},
+            {RPCResult::Type::NUM, "precision", /*optional=*/true, "Precision"},
+            {RPCResult::Type::STR, "public_value", /*optional=*/true, "Public value"},
+            {RPCResult::Type::STR, "contract", /*optional=*/true, "Contract"},
+            {RPCResult::Type::STR, "notary_address", /*optional=*/true, "Notary address"},
+            {RPCResult::Type::OBJ, "notary_detail", /*optional=*/true, "Notary detail",
+            {
+                {RPCResult::Type::STR, "endpoint", "Endpoint"},
+                {RPCResult::Type::BOOL, "instant_transfers", "Instant Transfers"},
+                {RPCResult::Type::BOOL, "hd_required", "HD Required"},
+            }},
+            {RPCResult::Type::OBJ, "aux_fee", /*optional=*/true, "Aux fee",
+            {
+                {RPCResult::Type::STR, "auxfee_address", /*optional=*/true, "Auxfee Address"},
+                {RPCResult::Type::ARR, "fee_struct", "Fee Structure",
+                {
+                    {RPCResult::Type::OBJ, "AuxFeeObj", "",
+                    {
+                        {RPCResult::Type::STR_AMOUNT, "bound", "Bound"},
+                        {RPCResult::Type::STR, "percentage", "Percentage"}
+                    }}
+                }}
+            }},
+            {RPCResult::Type::STR, "updatecapability_flags", /*optional=*/true, "Update capability flags"},
+            {RPCResult::Type::STR, "capability_flags", /*optional=*/true, "Update flags"}
+        }},
+        {RPCResult::Type::OBJ, "proRegTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::NUM, "version", "Version"},
+            {RPCResult::Type::STR_HEX, "collateralHash", "Collateral Hash"},
+            {RPCResult::Type::NUM, "collateralIndex", "Collateral Index"},
+            {RPCResult::Type::STR, "service", "Service IP"},
+            {RPCResult::Type::STR, "ownerAddress", "Owner Address"},
+            {RPCResult::Type::STR, "votingAddress", "Voting Address"},
+            {RPCResult::Type::STR, "payoutAddress", /*optional=*/true, "Payout Address"},
+            {RPCResult::Type::STR_HEX, "pubKeyOperator", "Operator public key"},
+            {RPCResult::Type::NUM, "operatorReward", "Operator reward"},
+            {RPCResult::Type::STR_HEX, "inputsHash", "Inputs Hash"}
+        }},
+        {RPCResult::Type::OBJ, "proUpServTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::NUM, "version", "Version"},
+            {RPCResult::Type::STR_HEX, "proTxHash", "proTxHash"},
+            {RPCResult::Type::STR, "service", "Service IP"},
+            {RPCResult::Type::STR, "payoutAddress", /*optional=*/true, "Payout Address"},
+            {RPCResult::Type::STR_HEX, "inputsHash", "Inputs Hash"}
+        }},
+        {RPCResult::Type::OBJ, "proUpRegTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::NUM, "version", "Version"},
+            {RPCResult::Type::STR_HEX, "proTxHash", "proTxHash"},
+            {RPCResult::Type::STR, "votingAddress", "Voting Address"},
+            {RPCResult::Type::STR, "payoutAddress", /*optional=*/true, "Payout Address"},
+            {RPCResult::Type::STR_HEX, "pubKeyOperator", "Operator public key"},
+            {RPCResult::Type::STR_HEX, "inputsHash", "Inputs Hash"}
+        }},
+        {RPCResult::Type::OBJ, "proUpRevTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::NUM, "version", "Version"},
+            {RPCResult::Type::STR_HEX, "proTxHash", "proTxHash"},
+            {RPCResult::Type::NUM, "reason", "Reason code"},
+            {RPCResult::Type::STR_HEX, "inputsHash", "Inputs Hash"}
+        }},
+        {RPCResult::Type::OBJ, "cbTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::NUM, "version", "Version"},
+            {RPCResult::Type::NUM, "height", "Height"},
+            {RPCResult::Type::STR, "merkleRootMNList", "Merkle Root MN List"},
+            {RPCResult::Type::STR, "merkleRootQuorums", "Merkle Root Quorums"}
+        }},
+        {RPCResult::Type::OBJ, "qcTx", /*optional=*/true, "",
+        {
+            {RPCResult::Type::ARR, "commitments", /*optional=*/true, "Commitments",
+            {
+                {RPCResult::Type::OBJ, "commitment", /*optional=*/true, "Commitment Object",
+                { 
+                    {RPCResult::Type::NUM, "version", "Version"},
+                    {RPCResult::Type::NUM, "llmqType", "LLMQ Type"},
+                    {RPCResult::Type::STR, "quorumHash", "Quorum Hash"},
+                    {RPCResult::Type::STR, "signersCount", "Signers Count"},
+                    {RPCResult::Type::STR_HEX, "signers", "Signers"},
+                    {RPCResult::Type::STR, "validMembersCount", "Valid Members Count"},
+                    {RPCResult::Type::STR_HEX, "validMembers", "Valid Members"},
+                    {RPCResult::Type::STR, "quorumPublicKey", "Quorum Public Key"},
+                    {RPCResult::Type::STR, "quorumVvecHash", "Quorum Vvec Hash"},
+                    {RPCResult::Type::STR, "quorumSig", "Quorum Sig"},
+                    {RPCResult::Type::STR, "membersSig", "Members Sig"}
+                }}
+            }}
+        }}
     };
 }
 
@@ -243,7 +362,7 @@ static RPCHelpMan getrawtransaction()
     // SYSCOIN
     } else {
         uint32_t nBlockHeight;
-        if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
+        if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){     
             LOCK(cs_main);
             blockindex = chainman.ActiveChain()[nBlockHeight];
         } 
