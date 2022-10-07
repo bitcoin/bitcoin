@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
-Test LIP-0007
+Test LIP-0006
 
 1. Test getdata 'mwebheader' *before* MWEB activation
 2. Test getdata 'mwebheader' *after* MWEB activation

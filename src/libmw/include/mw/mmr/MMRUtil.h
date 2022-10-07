@@ -4,10 +4,13 @@
 #include <mw/mmr/Index.h>
 #include <mw/mmr/LeafIndex.h>
 
+class ILeafSet;
+
 class MMRUtil
 {
 public:
     static mw::Hash CalcParentHash(const mmr::Index& index, const mw::Hash& left_hash, const mw::Hash& right_hash);
+    static std::vector<mmr::Index> CalcPeakIndices(const uint64_t num_nodes);
 
     static BitSet BuildCompactBitSet(const uint64_t num_leaves, const BitSet& unspent_leaf_indices);
     static BitSet DiffCompactBitSet(const BitSet& prev_compact, const BitSet& new_compact);

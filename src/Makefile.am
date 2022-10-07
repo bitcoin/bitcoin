@@ -133,6 +133,7 @@ libmw_a_SOURCES = \
 	libmw/src/mmr/PMMRCache.cpp \
 	libmw/src/mmr/PMMR.cpp \
 	libmw/src/mmr/PruneList.cpp \
+	libmw/src/mmr/Segment.cpp \
 	libmw/src/models/block/Block.cpp \
 	libmw/src/models/crypto/Commitment.cpp \
 	libmw/src/models/crypto/PublicKey.cpp \

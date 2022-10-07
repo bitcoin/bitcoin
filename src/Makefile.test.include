@@ -332,6 +332,7 @@ BITCOIN_TESTS += \
   libmw/test/tests/mmr/Test_MMR.cpp \
   libmw/test/tests/mmr/Test_MMRUtil.cpp \
   libmw/test/tests/mmr/Test_PruneList.cpp \
+  libmw/test/tests/mmr/Test_Segment.cpp \
   libmw/test/tests/models/block/Test_Block.cpp \
   libmw/test/tests/models/block/Test_Header.cpp \
   libmw/test/tests/models/crypto/Test_BigInteger.cpp \

@@ -16,6 +16,32 @@ mw::Hash MMRUtil::CalcParentHash(const Index& index, const mw::Hash& left_hash, 
         .hash();
 }
 
+std::vector<mmr::Index> MMRUtil::CalcPeakIndices(const uint64_t num_nodes)
+{
+    if (num_nodes == 0) {
+        return {};
+    }
+
+    // Find the "peaks"
+    std::vector<mmr::Index> peak_indices;
+
+    uint64_t peakSize = BitUtil::FillOnesToRight(num_nodes);
+    uint64_t numLeft = num_nodes;
+    uint64_t sumPrevPeaks = 0;
+    while (peakSize != 0) {
+        if (numLeft >= peakSize) {
+            peak_indices.push_back(mmr::Index::At(sumPrevPeaks + peakSize - 1));
+            sumPrevPeaks += peakSize;
+            numLeft -= peakSize;
+        }
+
+        peakSize >>= 1;
+    }
+
+    assert(numLeft == 0);
+    return peak_indices;
+}
+
 BitSet MMRUtil::BuildCompactBitSet(const uint64_t num_leaves, const BitSet& unspent_leaf_indices)
 {
     BitSet compactable_node_indices(num_leaves * 2);
@@ -93,7 +119,7 @@ BitSet MMRUtil::CalcPrunedParents(const BitSet& unspent_leaf_indices)
     Index last_node = LeafIndex::At(unspent_leaf_indices.size()).GetNodeIndex();
 
     uint64_t height = 1;
-    while ((std::pow(2, height + 1) - 2) <= last_node.GetPosition()) {
+    while ((uint64_t(2) << height) - 2 <= last_node.GetPosition()) {
         SiblingIter iter(height, last_node);
         while (iter.Next()) {
             Index right_child = iter.Get().GetRightChild();
