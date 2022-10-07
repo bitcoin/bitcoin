@@ -29,11 +29,9 @@ FUZZ_TARGET(netbase_dns_lookup)
     };
 
     {
-        std::vector<CNetAddr> resolved_addresses;
-        if (LookupHost(name, resolved_addresses, max_results, allow_lookup, fuzzed_dns_lookup_function)) {
-            for (const CNetAddr& resolved_address : resolved_addresses) {
-                assert(!resolved_address.IsInternal());
-            }
+        const std::vector<CNetAddr> resolved_addresses{LookupHost(name, max_results, allow_lookup, fuzzed_dns_lookup_function)};
+        for (const CNetAddr& resolved_address : resolved_addresses) {
+            assert(!resolved_address.IsInternal());
         }
         assert(resolved_addresses.size() <= max_results || max_results == 0);
     }

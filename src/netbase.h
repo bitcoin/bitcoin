@@ -105,21 +105,22 @@ extern DNSLookupFn g_dns_lookup;
  * @param name    The string representing a host. Could be a name or a numerical
  *                IP address (IPv6 addresses in their bracketed form are
  *                allowed).
- * @param[out] vIP The resulting network addresses to which the specified host
- *                 string resolved.
  *
- * @returns Whether or not the specified host string successfully resolved to
- *          any resulting network addresses.
+ * @returns The resulting network addresses to which the specified host
+ *          string resolved.
  *
  * @see Lookup(const std::string&, std::vector<CService>&, uint16_t, bool, unsigned int, DNSLookupFn)
  *      for additional parameter descriptions.
  */
-bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
+std::vector<CNetAddr> LookupHost(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
 
 /**
  * Resolve a host string to its first corresponding network address.
  *
- * @see LookupHost(const std::string&, std::vector<CNetAddr>&, uint16_t, bool, DNSLookupFn)
+ * @returns The resulting network addresses to which the specified host
+ *          string resolved.
+ *
+ * @see LookupHost(const std::string&, uint16_t, bool, DNSLookupFn)
  *      for additional parameter descriptions.
  */
 bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);

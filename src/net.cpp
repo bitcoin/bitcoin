@@ -1487,7 +1487,6 @@ void CConnman::ThreadDNSAddressSeed()
         if (HaveNameProxy()) {
             AddAddrFetch(seed);
         } else {
-            std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
             std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
@@ -1496,8 +1495,9 @@ void CConnman::ThreadDNSAddressSeed()
                 continue;
             }
             unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
-            if (LookupHost(host, vIPs, nMaxIPs, true)) {
-                for (const CNetAddr& ip : vIPs) {
+            const auto addresses{LookupHost(host, nMaxIPs, true)};
+            if (!addresses.empty()) {
+                for (const CNetAddr& ip : addresses) {
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
                     addr.nTime = rng.rand_uniform_delay(Now<NodeSeconds>() - 3 * 24h, -4 * 24h); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
@@ -2201,14 +2201,11 @@ void Discover()
     char pszHostName[256] = "";
     if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
     {
-        std::vector<CNetAddr> vaddr;
-        if (LookupHost(pszHostName, vaddr, 0, true))
+        const std::vector<CNetAddr> addresses{LookupHost(pszHostName, 0, true)};
+        for (const CNetAddr& addr : addresses)
         {
-            for (const CNetAddr &addr : vaddr)
-            {
-                if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToStringAddr());
-            }
+            if (AddLocal(addr, LOCAL_IF))
+                LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToStringAddr());
         }
     }
 #elif (HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS)

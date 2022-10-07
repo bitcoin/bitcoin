@@ -161,20 +161,16 @@ static std::vector<CNetAddr> LookupIntern(const std::string& name, unsigned int 
     return addresses;
 }
 
-bool LookupHost(const std::string& name, std::vector<CNetAddr>& addresses, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+std::vector<CNetAddr> LookupHost(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
+    if (!ContainsNoNUL(name)) return {};
     std::string strHost = name;
-    if (strHost.empty())
-        return false;
+    if (strHost.empty()) return {};
     if (strHost.front() == '[' && strHost.back() == ']') {
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    addresses = LookupIntern(strHost, nMaxSolutions, fAllowLookup, dns_lookup_function);
-    return addresses.size() > 0;
+    return LookupIntern(strHost, nMaxSolutions, fAllowLookup, dns_lookup_function);
 }
 
 bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
@@ -182,11 +178,10 @@ bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSL
     if (!ContainsNoNUL(name)) {
         return false;
     }
-    std::vector<CNetAddr> vIP;
-    LookupHost(name, vIP, 1, fAllowLookup, dns_lookup_function);
-    if(vIP.empty())
+    const std::vector<CNetAddr> addresses{LookupHost(name, 1, fAllowLookup, dns_lookup_function)};
+    if(addresses.empty())
         return false;
-    addr = vIP.front();
+    addr = addresses.front();
     return true;
 }
 
