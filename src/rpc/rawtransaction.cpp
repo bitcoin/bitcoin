@@ -127,61 +127,60 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
             {RPCResult::Type::STR_HEX, "blockhash", "Block hash"},
             {RPCResult::Type::ARR, "allocations", /*optional=*/true, "",
             {
-            {RPCResult::Type::OBJ, "receiverObj", /*optional=*/true, "",
-            {
-                {RPCResult::Type::NUM, "asset_guid", "Asset guid"},
-                {RPCResult::Type::STR, "notary_sig", /*optional=*/true, "Notary sig"},
-                {RPCResult::Type::ARR, "outputs", "",
+                {RPCResult::Type::OBJ, "receiverObj", /*optional=*/true, "",
                 {
-                    {RPCResult::Type::OBJ, "output_object", "",
+                    {RPCResult::Type::NUM, "asset_guid", "Asset guid"},
+                    {RPCResult::Type::STR, "notary_sig", /*optional=*/true, "Notary sig"},
+                    {RPCResult::Type::ARR, "outputs", "",
                     {
-                        {RPCResult::Type::NUM, "n", "n"},
-                        {RPCResult::Type::STR_AMOUNT, "value", "Value"}
-                    }}
-                }},
-                {RPCResult::Type::STR_AMOUNT, "total", "Total"}
-            }}
-        }},
-        {RPCResult::Type::STR, "nevm_destination", /*optional=*/true, "NEVM destination address"},
-        {RPCResult::Type::OBJ, "spv_proof", /*optional=*/true, "",
-        {
-            {RPCResult::Type::STR_HEX, "txhash", "Transaction Hash"},
-            {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
-            {RPCResult::Type::STR_HEX, "postx", "postx"},
-            {RPCResult::Type::STR_HEX, "txroot", "txroot"},
-            {RPCResult::Type::STR, "txparenstnode", "txparentsnode"},
-            {RPCResult::Type::STR, "txpath", "txpath"},
-            {RPCResult::Type::STR, "posReceipt", "pos receipt"},
-            {RPCResult::Type::STR, "receiptroot", "receipt root"},
-            {RPCResult::Type::STR, "receiptparentnodes", "Receipt parent nodes"}
-        }},
-        {RPCResult::Type::STR, "symbol", /*optional=*/true, "Symbol"},
-        {RPCResult::Type::NUM, "max_supply", /*optional=*/true, "Max supply"},
-        {RPCResult::Type::NUM, "precision", /*optional=*/true, "Precision"},
-        {RPCResult::Type::STR, "public_value", /*optional=*/true, "Public value"},
-        {RPCResult::Type::STR, "contract", /*optional=*/true, "Contract"},
-        {RPCResult::Type::STR, "notary_address", /*optional=*/true, "Notary address"},
-        {RPCResult::Type::OBJ, "notary_detail", /*optional=*/true, "Notary detail",
-        {
-            {RPCResult::Type::STR, "endpoint", "Endpoint"},
-            {RPCResult::Type::BOOL, "instant_transfers", "Instant Transfers"},
-            {RPCResult::Type::BOOL, "hd_required", "HD Required"},
-        }},
-        {RPCResult::Type::OBJ, "aux_fee", /*optional=*/true, "Aux fee",
-        {
-            {RPCResult::Type::STR, "auxfee_address", /*optional=*/true, "Auxfee Address"},
-            {RPCResult::Type::ARR, "fee_struct", "Fee Structure",
-            {
-                {RPCResult::Type::OBJ, "AuxFeeObj", "",
-                {
-                    {RPCResult::Type::STR_AMOUNT, "bound", "Bound"},
-                    {RPCResult::Type::STR, "percentage", "Percentage"}
+                        {RPCResult::Type::OBJ, "output_object", "",
+                        {
+                            {RPCResult::Type::NUM, "n", "n"},
+                            {RPCResult::Type::STR_AMOUNT, "value", "Value"}
+                        }}
+                    }},
+                    {RPCResult::Type::STR_AMOUNT, "total", "Total"}
                 }}
-            }}
-        }},
-        {RPCResult::Type::STR, "updatecapability_flags", /*optional=*/true, "Update capability flags"},
-        {RPCResult::Type::STR, "capability_flags", /*optional=*/true, "Update flags"}
-
+            }},
+            {RPCResult::Type::STR, "nevm_destination", /*optional=*/true, "NEVM destination address"},
+            {RPCResult::Type::OBJ, "spv_proof", /*optional=*/true, "",
+            {
+                {RPCResult::Type::STR_HEX, "txhash", "Transaction Hash"},
+                {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
+                {RPCResult::Type::STR_HEX, "postx", "postx"},
+                {RPCResult::Type::STR_HEX, "txroot", "txroot"},
+                {RPCResult::Type::STR, "txparenstnode", "txparentsnode"},
+                {RPCResult::Type::STR, "txpath", "txpath"},
+                {RPCResult::Type::STR, "posReceipt", "pos receipt"},
+                {RPCResult::Type::STR, "receiptroot", "receipt root"},
+                {RPCResult::Type::STR, "receiptparentnodes", "Receipt parent nodes"}
+            }},
+            {RPCResult::Type::STR, "symbol", /*optional=*/true, "Symbol"},
+            {RPCResult::Type::NUM, "max_supply", /*optional=*/true, "Max supply"},
+            {RPCResult::Type::NUM, "precision", /*optional=*/true, "Precision"},
+            {RPCResult::Type::STR, "public_value", /*optional=*/true, "Public value"},
+            {RPCResult::Type::STR, "contract", /*optional=*/true, "Contract"},
+            {RPCResult::Type::STR, "notary_address", /*optional=*/true, "Notary address"},
+            {RPCResult::Type::OBJ, "notary_detail", /*optional=*/true, "Notary detail",
+            {
+                {RPCResult::Type::STR, "endpoint", "Endpoint"},
+                {RPCResult::Type::BOOL, "instant_transfers", "Instant Transfers"},
+                {RPCResult::Type::BOOL, "hd_required", "HD Required"},
+            }},
+            {RPCResult::Type::OBJ, "aux_fee", /*optional=*/true, "Aux fee",
+            {
+                {RPCResult::Type::STR, "auxfee_address", /*optional=*/true, "Auxfee Address"},
+                {RPCResult::Type::ARR, "fee_struct", "Fee Structure",
+                {
+                    {RPCResult::Type::OBJ, "AuxFeeObj", "",
+                    {
+                        {RPCResult::Type::STR_AMOUNT, "bound", "Bound"},
+                        {RPCResult::Type::STR, "percentage", "Percentage"}
+                    }}
+                }}
+            }},
+            {RPCResult::Type::STR, "updatecapability_flags", /*optional=*/true, "Update capability flags"},
+            {RPCResult::Type::STR, "capability_flags", /*optional=*/true, "Update flags"}
         }},
         {RPCResult::Type::OBJ, "proRegTx", /*optional=*/true, "",
         {
