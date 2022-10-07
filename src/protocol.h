@@ -265,6 +265,10 @@ extern const char* WTXIDRELAY;
  * txreconciliation, as described by BIP 330.
  */
 extern const char* SENDTXRCNCL;
+/**
+ * Indicates that a node wants to relay packages, described in BIP 331.
+ */
+extern const char* SENDPACKAGES;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */

@@ -73,6 +73,8 @@ MAX_OP_RETURN_RELAY = 83
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 
+PKG_RELAY_ANCPKG = 1
+
 def sha256(s):
     return hashlib.sha256(s).digest()
 
@@ -1852,3 +1854,21 @@ class msg_sendtxrcncl:
     def __repr__(self):
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
+
+class msg_sendpackages:
+    __slots__ = ("versions")
+    msgtype = b"sendpackages"
+
+    def __init__(self):
+        self.versions = 0
+
+    def deserialize(self, f):
+        self.versions = struct.unpack("<Q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<Q", self.versions)
+        return r
+
+    def __repr__(self):
+        return "msg_sendpackages(versions={})".format(self.versions)
