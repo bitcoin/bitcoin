@@ -14,6 +14,12 @@
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
+/**
+ * Maximum number of wtxids stored in a peer local set, bounded to protect the memory use of
+ * reconciliation sets and short ids mappings, and CPU used for sketch computation.
+ */
+constexpr size_t MAX_RECONSET_SIZE = 3000;
+
 enum class ReconciliationRegisterResult {
     NOT_FOUND,
     SUCCESS,
@@ -73,6 +79,20 @@ public:
      */
     ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound,
                                               uint32_t peer_recon_version, uint64_t remote_salt);
+
+    /**
+     * Step 1. Add a new transaction we want to announce to the peer to the local reconciliation set
+     * of the peer, so that it will be reconciled later, unless the set limit is reached.
+     * Returns whether the transaction appears in the set.
+     */
+    bool AddToSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
+     * the peer just announced the transaction to us.
+     * Returns whether the wtxid was removed.
+     */
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
