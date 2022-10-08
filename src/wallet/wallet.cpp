@@ -124,7 +124,7 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
 
-    // Unregister with the validation interface which also drops shared ponters.
+    // Unregister with the validation interface which also drops shared pointers.
     wallet->m_chain_notifications_handler.reset();
     LOCK(context.wallets_mutex);
     std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(context.wallets.begin(), context.wallets.end(), wallet);
