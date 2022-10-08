@@ -9,6 +9,7 @@
 #include <hash.h>
 #include <primitives/transaction_identifier.h>
 #include <uint256.h>
+#include <util/hasher.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -46,6 +47,14 @@ public:
      * based on the direction of the p2p connection.
      */
     bool m_we_initiate;
+
+    /**
+     * Store all wtxids that we would announce to the peer (policy checks passed, etc.)
+     * in this set instead of announcing them right away. When reconciliation time comes, we will
+     * compute a compressed representation of this set (a "sketch") and use it to efficiently
+     * reconcile this set with a set on the peer's side.
+     */
+    std::unordered_set<Wtxid, SaltedWtxidHasher> m_local_set;
 
     /**
      * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
