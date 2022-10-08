@@ -29,6 +29,15 @@ private:
      */
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
+    TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        AssertLockHeld(m_txreconciliation_mutex);
+        auto salt_or_state = m_states.find(peer_id);
+        if (salt_or_state == m_states.end()) return nullptr;
+
+        return std::get_if<TxReconciliationState>(&salt_or_state->second);
+    }
+
 public:
     explicit TxReconciliationTrackerImpl(uint32_t recon_version) : m_recon_version(recon_version) {}
 
@@ -71,10 +80,16 @@ public:
         LogDebug(BCLog::TXRECONCILIATION, "Register peer=%d (inbound=%i).\n", peer_id, is_peer_inbound);
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
-        peer_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
+
+        auto new_state = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
+        m_states.erase(peer_state);
+        bool emplaced = m_states.emplace(peer_id, std::move(new_state)).second;
+        Assume(emplaced);
+
         return std::nullopt;
     }
 
+    /** For calls within this class use GetRegisteredPeerState instead. */
     bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -91,6 +106,53 @@ public:
         if (m_states.erase(peer_id)) {
             LogDebug(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d.\n", peer_id);
         }
+    }
+
+    std::optional<AddToSetError> AddToSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return AddToSetError(ReconciliationError::NOT_FOUND);
+
+        // TODO: We should compute the short_id here here first and see if there's any collision
+        // if so, return AddToSetResult::Collision(wtxid)
+
+        // Transactions which don't make it to the set due to the limit are announced via fanout.
+        if (peer_state->m_local_set.size() >= MAX_RECONSET_SIZE) {
+            LogDebug(BCLog::TXRECONCILIATION, "Reconciliation set maximum size reached for peer=%d.\n", peer_id);
+            return AddToSetError(ReconciliationError::FULL_RECON_SET);
+        }
+
+        // The caller currently keeps track of the per-peer transaction announcements, so it
+        // should not attempt to add same tx to the set twice. However, if that happens, we will
+        // simply ignore it.
+        if (peer_state->m_local_set.insert(wtxid).second) {
+            LogDebug(BCLog::TXRECONCILIATION, "Added %s to the reconciliation set for peer=%d. Now the set contains %i transactions.\n",
+                wtxid.ToString(), peer_id, peer_state->m_local_set.size());
+        }
+        return std::nullopt;
+    }
+
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return false;
+
+        const bool removed = peer_state->m_local_set.erase(wtxid) > 0;
+        if (removed) {
+            LogDebug(BCLog::TXRECONCILIATION, "Removed %s from the reconciliation set for peer=%d. Now the set contains %i transactions.\n",
+                wtxid.ToString(), peer_id, peer_state->m_local_set.size());
+        } else {
+            LogDebug(BCLog::TXRECONCILIATION, "Couldn't remove %s from the reconciliation set for peer=%d. Transaction not found.\n",
+                wtxid.ToString(), peer_id);
+        }
+
+        return removed;
     }
 };
 
@@ -116,5 +178,15 @@ bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
 {
     m_impl->ForgetPeer(peer_id);
+}
+
+std::optional<AddToSetError> TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->AddToSet(peer_id, wtxid);
+}
+
+bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->TryRemovingFromSet(peer_id, wtxid);
 }
 } // namespace node

@@ -13,6 +13,12 @@ class TxReconciliationTrackerImpl;
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
+/**
+ * Maximum number of wtxids stored in a peer local set, bounded to protect the memory use of
+ * reconciliation sets and short ids mappings, and CPU used for sketch computation.
+ */
+constexpr size_t MAX_RECONSET_SIZE = 3000;
+
 enum class ReconciliationError
 {
     NOT_FOUND,
@@ -22,6 +28,21 @@ enum class ReconciliationError
     FULL_RECON_SET,
     SHORTID_COLLISION,
     PROTOCOL_VIOLATION,
+};
+
+class AddToSetError {
+    public:
+        ReconciliationError m_error;
+        std::optional<Wtxid> m_collision;
+
+        Wtxid GetCollision() const
+        {
+            Assume(m_collision.has_value());
+            return m_collision.value();
+        }
+
+        explicit AddToSetError(ReconciliationError error): m_error(error), m_collision(std::nullopt) {}
+        explicit AddToSetError(ReconciliationError error, Wtxid collision): m_error(error), m_collision(std::optional(collision)) {}
 };
 
 /**
@@ -82,6 +103,19 @@ public:
      * After this, we won't be able to reconcile transactions with the peer.
      */
     void ForgetPeer(NodeId peer_id);
+
+    /**
+     * Step 1. Add a to-be-announced transaction to the local reconciliation set of the target peer
+     * so that it can be reconciled later.
+     * Returns a error if the wtxid cannot be added to the set, nullopt otherwise.
+     */
+    std::optional<AddToSetError> AddToSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
+     * the peer just announced the transaction to us. Returns whether the wtxid was removed.
+     */
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H
