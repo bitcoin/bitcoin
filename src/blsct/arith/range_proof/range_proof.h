@@ -62,12 +62,14 @@ public:
 
     bool InnerProductArgument(
         const size_t input_value_vec_len,
-        const Generators& gens,
-        const Scalar& x_ip,
+        const G1Points& Gi,
+        const G1Points& Hi,
+        const G1Point& u,
+        const Scalar& cx_factor,  // factor to multiply to cL and cR
         const Scalars& l,
         const Scalars& r,
         const Scalar& y,
-        Proof& st,
+        Proof& proof,
         CHashWriter& transcript_gen
     );
 
@@ -96,7 +98,7 @@ public:
         const TokenId& token_id
     ) const;
 
-    bool RangeProof::ValidateProofsBySizes(
+    bool ValidateProofsBySizes(
         const std::vector<Proof>& proofs,
         const size_t& num_rounds
     ) const;

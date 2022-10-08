@@ -32,6 +32,8 @@ RangeProof::RangeProof()
 
 bool RangeProof::InnerProductArgument(
     const size_t input_value_vec_len,
+    const G1Points& Gi,
+    const G1Points& Hi,
     const G1Point& u,
     const Scalar& cx_factor,  // factor to multiply to cL and cR
     const Scalars& l,
@@ -41,8 +43,6 @@ bool RangeProof::InnerProductArgument(
     CHashWriter& transcript_gen
 ) {
     Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
-    G1Points Gi = gens.Gi;
-    G1Points Hi = gens.Hi;
     Scalars a = l;
     Scalars b = r;
     size_t n = input_value_vec_len;
@@ -283,7 +283,18 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     if (cx_factor == 0) goto retry;
 
     // using gens.G for u
-    if (!InnerProductArgument(concat_input_values_in_bits, gens.G, cx_factor, l, r, y, proof, transcript_gen)) {
+    if (!InnerProductArgument(
+        concat_input_values_in_bits,
+        gens.Gi,
+        gens.Hi,
+        gens.G,
+        cx_factor,
+        l,
+        r,
+        y,
+        proof,
+        transcript_gen
+    )) {
         goto retry;
     }
     return proof;
@@ -384,8 +395,8 @@ G1Point RangeProof::VerifyLoop2(
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar gi_exp = p.proof.a * acc_xs[i];  // from the beg from end
-            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // from the end to beg. y_inv_pow to turn generator to (h')
+            Scalar gi_exp = p.proof.a * acc_xs[i];  // from beg to end
+            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // from end to beg. y_inv_pow to turn generator to (h')
 
             // gi_exp = gi_exp + p.z;  // g^(-z) (66)
 
@@ -406,7 +417,7 @@ G1Point RangeProof::VerifyLoop2(
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
-        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds that consits the final P - P*h^mu
+        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds that consist the final P - P*h^mu
         for (size_t i = 0; i < p.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
@@ -414,7 +425,7 @@ G1Point RangeProof::VerifyLoop2(
 
         // maps to (68) t_hat = <l, r>; t_hat is used for inner product argument paremeter c
         // and (16) checks c == a * b
-        g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.x_ip) * weight_z;
+        g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
 
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));

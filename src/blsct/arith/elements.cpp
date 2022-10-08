@@ -12,8 +12,8 @@ Elements<T>::Elements(const size_t& size, const T& default_value)
     std::vector<T> vec(size, default_value);
     m_vec = vec;
 }
-template Elements<Scalar>::Elements(const size_t&, const T&) const;
-template Elements<G1Point>::Elements(const size_t&, const T&) const;
+template Elements<Scalar>::Elements(const size_t&, const Scalar&);
+template Elements<G1Point>::Elements(const size_t&, const G1Point&);
 
 template <typename T>
 T Elements<T>::Sum() const
