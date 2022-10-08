@@ -81,4 +81,60 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
     BOOST_CHECK(!tracker.IsPeerRegistered(peer_id0));
 }
 
+BOOST_AUTO_TEST_CASE(AddToSetTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid));
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
+
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+
+    tracker.ForgetPeer(peer_id0);
+    Wtxid wtxid2{Wtxid::FromUint256(frc.rand256())};
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid2));
+
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(peer_id1));
+
+    for (size_t i = 0; i < 3000; ++i)
+        BOOST_REQUIRE(tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())));
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())));
+}
+
+BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
+
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+    BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+    tracker.ForgetPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

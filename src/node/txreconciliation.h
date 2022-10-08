@@ -75,6 +75,20 @@ public:
                                               uint32_t peer_recon_version, uint64_t remote_salt);
 
     /**
+     * Step 1. Add a new transaction we want to announce to the peer to the local reconciliation set
+     * of the peer, so that it will be reconciled later, unless the set limit is reached.
+     * Returns whether the transaction appears in the set.
+     */
+    bool AddToSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
+     * the peer just announced the transaction to us.
+     * Returns whether the wtxid was removed.
+     */
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid_to_remove);
+
+    /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
      * After this, we won't be able to reconcile transactions with the peer.
      */
