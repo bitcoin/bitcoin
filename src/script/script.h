@@ -524,6 +524,10 @@ public:
      */
     unsigned int GetSigOpCount(bool fAccurate) const;
 
+    unsigned int getAccurateSigOpCount() const;
+    unsigned int getSimpleSigOpCount() const;
+    unsigned int getAccurateSigOpCount(opcodetype lastOpcode) const;
+
     /**
      * Accurately count sigOps, including sigOps in
      * pay-to-script-hash transactions:

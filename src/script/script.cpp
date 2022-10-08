@@ -150,11 +150,18 @@ std::string GetOpName(opcodetype opcode)
     }
 }
 
-unsigned int CScript::GetSigOpCount(bool fAccurate) const
+unsigned int CScript::getAccurateSigOpCount(opcodetype lastOpcode) const {
+  if (lastOpcode >= OP_1 && lastOpcode <= OP_16)
+           return DecodeOP_N(lastOpcode);
+    else
+           return MAX_PUBKEYS_PER_MULTISIG;
+
+}
+
+unsigned int CScript::getSimpleSigOpCount() const
 {
     unsigned int n = 0;
     const_iterator pc = begin();
-    opcodetype lastOpcode = OP_INVALIDOPCODE;
     while (pc < end())
     {
         opcodetype opcode;
@@ -162,16 +169,65 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
             break;
         if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
             n++;
-        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-        {
-            if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
-                n += DecodeOP_N(lastOpcode);
-            else
+        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY) {
                 n += MAX_PUBKEYS_PER_MULTISIG;
         }
+    }
+    return n;
+}
+
+// Supports only one level of argument nesting for CHECKMULTISIG
+unsigned int CScript::getAccurateSigOpCount() const
+{
+    unsigned int n = 0;
+    unsigned int if_n = MAX_PUBKEYS_PER_MULTISIG;
+    unsigned int else_n = MAX_PUBKEYS_PER_MULTISIG;
+    const_iterator pc = begin();
+    opcodetype lastOpcode = OP_INVALIDOPCODE;
+    while (pc < end())
+    {
+        opcodetype opcode;
+        if (!GetOp(pc, opcode))
+            break;
+        switch (opcode)
+            {
+             case OP_CHECKSIG:
+             case OP_CHECKSIGVERIFY:
+                n++;
+                break;
+             case OP_CHECKMULTISIG:
+             case OP_CHECKMULTISIGVERIFY:
+                if (lastOpcode==OP_ENDIF) {
+                        n +=std::max(if_n,else_n);
+                        if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                    }
+                    else
+                    n += getAccurateSigOpCount(lastOpcode);
+                break;
+            case OP_IF:
+            case OP_NOTIF:
+                if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                break;
+            case OP_ELSE:
+                else_n = getAccurateSigOpCount(lastOpcode);
+                break;
+            case OP_ENDIF:
+                if_n = getAccurateSigOpCount(lastOpcode);
+                break;
+            default:
+                break;
+            }
         lastOpcode = opcode;
     }
     return n;
+}
+
+unsigned int CScript::GetSigOpCount(bool fAccurate) const
+{
+    if (fAccurate)
+        return getAccurateSigOpCount();
+    else
+        return getSimpleSigOpCount();
 }
 
 unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const

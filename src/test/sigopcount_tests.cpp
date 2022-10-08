@@ -152,6 +152,48 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 
+    // Multisig nested in P2SH with IF 2 /ELSE 4/END_IF
+    {
+        CScript redeemScript = CScript() <<
+         OP_IF << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 <<
+         OP_ELSE <<  1 << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << 4 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
+        CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  <<ToByteVector(redeemScript);
+
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 4 * WITNESS_SCALE_FACTOR);
+        assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    }
+        // Multisig nested in P2SH with NOTIF 4 /ELSE 2/END_IF
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF <<  1 << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << 4 <<
+         OP_ELSE << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
+        CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  << ToByteVector(redeemScript);
+
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 4 * WITNESS_SCALE_FACTOR);
+        assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+    }
+    // Last opcode of ENDIF is not a push
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF <<  1 << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << ToByteVector(pubkey) << OP_NOT <<
+         OP_ELSE << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
+        CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  << ToByteVector(redeemScript);
+
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
+    }
+
     // P2WPKH witness program
     {
         CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
