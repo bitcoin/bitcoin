@@ -7,6 +7,7 @@
 #include <common/system.h>
 #include <logging.h>
 #include <util/check.h>
+#include <util/hasher.h>
 
 #include <unordered_map>
 #include <variant>
@@ -49,6 +50,14 @@ public:
      */
     uint64_t m_k0, m_k1;
 
+    /**
+     * Store all wtxids which we would announce to the peer (policy checks passed, etc.)
+     * in this set instead of announcing them right away. When reconciliation time comes, we will
+     * compute a compressed representation of this set ("sketch") and use it to efficiently
+     * reconcile this set with a set on the peer's side.
+     */
+    std::unordered_set<Wtxid, SaltedTxidHasher> m_local_set;
+
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 };
 
@@ -70,6 +79,15 @@ private:
      * "full" salt) is stored instead.
      */
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
+
+    TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        AssertLockHeld(m_txreconciliation_mutex);
+        auto salt_or_state = m_states.find(peer_id);
+        if (salt_or_state == m_states.end()) return nullptr;
+
+        return std::get_if<TxReconciliationState>(&salt_or_state->second);
+    }
 
 public:
     explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
@@ -116,8 +134,58 @@ public:
                       peer_id, is_peer_inbound);
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
-        recon_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
+
+        auto new_state = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));;
+        m_states.erase(recon_state);
+        bool emplaced = m_states.emplace(peer_id, std::move(new_state)).second;
+        Assume(emplaced);
+
         return ReconciliationRegisterResult::SUCCESS;
+    }
+
+    bool AddToSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return false;
+
+        // Transactions which don't make it to the set due to the limit are announced via fanout.
+        if (peer_state->m_local_set.size() >= MAX_RECONSET_SIZE) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Reconciliation set maximum size reached for peer=%d.\n", peer_id);
+            return false;
+        }
+
+        // The caller currently keeps track of the per-peer transaction announcements, so it
+        // should not attempt to add same tx to the set twice. However, if that happens, we will
+        // simply ignore it.
+        if (peer_state->m_local_set.insert(wtxid).second) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Added %s to the reconciliation set for peer=%d. "
+                                                                        "Now the set contains %i transactions.\n",
+                          wtxid.ToString(), peer_id, peer_state->m_local_set.size());
+        }
+        return true;
+    }
+
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return false;
+
+        auto removed = peer_state->m_local_set.erase(wtxid) > 0;
+        if (removed) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Removed %s from the reconciliation set for peer=%d. "
+                                                                        "Now the set contains %i transactions.\n",
+                          wtxid.ToString(), peer_id, peer_state->m_local_set.size());
+        } else {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Couldn't remove %s from the reconciliation set for peer=%d. "
+                                                                        "Transaction not found\n",
+                          wtxid.ToString(), peer_id);
+        }
+
+        return removed;
     }
 
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -129,6 +197,9 @@ public:
         }
     }
 
+    /**
+     * For calls within this class use GetRegisteredPeerState instead.
+     */
     bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -152,6 +223,16 @@ ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_i
                                                           uint32_t peer_recon_version, uint64_t remote_salt)
 {
     return m_impl->RegisterPeer(peer_id, is_peer_inbound, peer_recon_version, remote_salt);
+}
+
+bool TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->AddToSet(peer_id, wtxid);
+}
+
+bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->TryRemovingFromSet(peer_id, wtxid);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
