@@ -394,9 +394,8 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
             continue;
         }
 
-        CTxMemPool::setEntries ancestors;
-        std::string dummy;
-        mempool.CalculateMemPoolAncestors(*iter, ancestors, CTxMemPool::Limits::NoLimits(), dummy, false);
+        auto ancestors_result{mempool.CalculateMemPoolAncestors(*iter, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
+        auto ancestors{std::move(ancestors_result).value_or(CTxMemPool::setEntries{})};
 
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);

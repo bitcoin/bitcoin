@@ -555,20 +555,15 @@ public:
      * (these are all calculated including the tx itself)
      *
      * @param[in]   entry               CTxMemPoolEntry of which all in-mempool ancestors are calculated
-     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
      * @param[in]   limits              Maximum number and size of ancestors and descendants
-     * @param[out]  errString           Populated with error reason if any limits are hit
      * @param[in]   fSearchForParents   Whether to search a tx's vin for in-mempool parents, or look
      *                                  up parents from mapLinks. Must be true for entries not in
      *                                  the mempool
      *
-     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
-     * otherwise
+     * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
-                                   setEntries& setAncestors,
+    util::Result<setEntries> CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
                                    const Limits& limits,
-                                   std::string& errString,
                                    bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
