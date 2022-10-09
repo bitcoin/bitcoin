@@ -367,7 +367,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     }
     {
         LOCK(cs_main);
-        if (clsig.nHeight > chainman.ActiveHeight() + (CSigningManager::SIGN_HEIGHT_OFFSET - CSigningManager::SIGN_HEIGHT_LOOKBACK)) {
+        if (clsig.nHeight > (chainman.ActiveHeight() - (CSigningManager::SIGN_HEIGHT_LOOKBACK-2))) {
             // too far into the future
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             return;

@@ -824,7 +824,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 peerman.Misbehaving(*peer, 10, "invalid CLSIG");
             return;
         }
-        if (pindex->nHeight > chainman.ActiveHeight() + (SIGN_HEIGHT_OFFSET - SIGN_HEIGHT_LOOKBACK)) {
+        if (pindex->nHeight > (chainman.ActiveHeight() - (SIGN_HEIGHT_LOOKBACK-2))) {
             // too far into the future
             LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the future\n",
                     __func__, recoveredSig->id.ToString());
