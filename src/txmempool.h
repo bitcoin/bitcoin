@@ -825,7 +825,7 @@ private:
      *  mempool but may have child transactions in the mempool, eg during a
      *  chain reorg.
      *
-     * @pre CTxMemPool::m_children is correct for the given tx and all
+     * @pre CTxMemPoolEntry::m_children is correct for the given tx and all
      *      descendants.
      * @pre cachedDescendants is an accurate cache where each entry has all
      *      descendants of the corresponding key, including those that should
