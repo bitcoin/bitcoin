@@ -526,6 +526,8 @@ public:
 
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
+    using Limits = kernel::MemPoolLimits;
+
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
@@ -545,19 +547,22 @@ private:
     /**
      * Helper function to calculate all in-mempool ancestors of staged_ancestors and apply ancestor
      * and descendant limits (including staged_ancestors thsemselves, entry_size and entry_count).
-     * param@[in]   entry_size          Virtual size to include in the limits.
-     * param@[in]   entry_count         How many entries to include in the limits.
-     * param@[in]   staged_ancestors    Should contain entries in the mempool.
-     * param@[out]  setAncestors        Will be populated with all mempool ancestors.
+     *
+     * @param[in]   entry_size          Virtual size to include in the limits.
+     * @param[in]   entry_count         How many entries to include in the limits.
+     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
+     * @param[in]   staged_ancestors    Should contain entries in the mempool.
+     * @param[in]   limits              Maximum number and size of ancestors and descendants
+     * @param[out]  errString           Populated with error reason if any limits are hit
+     *
+     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
+     * otherwise
      */
     bool CalculateAncestorsAndCheckLimits(size_t entry_size,
                                           size_t entry_count,
                                           setEntries& setAncestors,
                                           CTxMemPoolEntry::Parents &staged_ancestors,
-                                          uint64_t limitAncestorCount,
-                                          uint64_t limitAncestorSize,
-                                          uint64_t limitDescendantCount,
-                                          uint64_t limitDescendantSize,
+                                          const Limits& limits,
                                           std::string &errString) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
@@ -575,8 +580,6 @@ public:
     const std::optional<unsigned> m_max_datacarrier_bytes;
     const bool m_require_standard;
     const bool m_full_rbf;
-
-    using Limits = kernel::MemPoolLimits;
 
     const Limits m_limits;
 
@@ -668,38 +671,41 @@ public:
      */
     void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
-    /** Try to calculate all in-mempool ancestors of entry.
-     *  (these are all calculated including the tx itself)
-     *  limitAncestorCount = max number of ancestors
-     *  limitAncestorSize = max size of ancestors
-     *  limitDescendantCount = max number of descendants any ancestor can have
-     *  limitDescendantSize = max size of descendants any ancestor can have
-     *  errString = populated with error reason if any limits are hit
-     *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
-     *    look up parents from mapLinks. Must be true for entries not in the mempool
+    /**
+     * Try to calculate all in-mempool ancestors of entry.
+     * (these are all calculated including the tx itself)
+     *
+     * @param[in]   entry               CTxMemPoolEntry of which all in-mempool ancestors are calculated
+     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
+     * @param[in]   limits              Maximum number and size of ancestors and descendants
+     * @param[out]  errString           Populated with error reason if any limits are hit
+     * @param[in]   fSearchForParents   Whether to search a tx's vin for in-mempool parents, or look
+     *                                  up parents from mapLinks. Must be true for entries not in
+     *                                  the mempool
+     *
+     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
+     * otherwise
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
+                                   setEntries& setAncestors,
+                                   const Limits& limits,
+                                   std::string& errString,
+                                   bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
      * check ancestor and descendant limits. Heuristics are used to estimate the ancestor and
      * descendant count of all entries if the package were to be added to the mempool.  The limits
      * are applied to the union of all package transactions. For example, if the package has 3
-     * transactions and limitAncestorCount = 25, the union of all 3 sets of ancestors (including the
+     * transactions and limits.ancestor_count = 25, the union of all 3 sets of ancestors (including the
      * transactions themselves) must be <= 22.
      * @param[in]       package                 Transaction package being evaluated for acceptance
      *                                          to mempool. The transactions need not be direct
      *                                          ancestors/descendants of each other.
-     * @param[in]       limitAncestorCount      Max number of txns including ancestors.
-     * @param[in]       limitAncestorSize       Max virtual size including ancestors.
-     * @param[in]       limitDescendantCount    Max number of txns including descendants.
-     * @param[in]       limitDescendantSize     Max virtual size including descendants.
+     * @param[in]       limits                  Maximum number and size of ancestors and descendants
      * @param[out]      errString               Populated with error reason if a limit is hit.
      */
     bool CheckPackageLimits(const Package& package,
-                            uint64_t limitAncestorCount,
-                            uint64_t limitAncestorSize,
-                            uint64_t limitDescendantCount,
-                            uint64_t limitDescendantSize,
+                            const Limits& limits,
                             std::string &errString) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Populate setDescendants with all in-mempool descendants of hash.
