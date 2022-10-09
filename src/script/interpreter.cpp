@@ -1671,9 +1671,11 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
         ss << cache.m_spent_outputs[in_pos];
         ss << tx_to.vin[in_pos].nSequence;
     } else if (input_type == SIGHASH_ANYPREVOUT) {
+        assert(keyversion == KeyVersion::ANYPREVOUT);
         ss << cache.m_spent_outputs[in_pos];
         ss << tx_to.vin[in_pos].nSequence;
     } else if (input_type == SIGHASH_ANYPREVOUTANYSCRIPT) {
+        assert(keyversion == KeyVersion::ANYPREVOUT);
         ss << tx_to.vin[in_pos].nSequence;
     } else {
         ss << in_pos;
@@ -1698,6 +1700,8 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
         assert(execdata.m_tapleaf_hash_init);
         if (input_type != SIGHASH_ANYPREVOUTANYSCRIPT) {
             ss << execdata.m_tapleaf_hash;
+        } else {
+            assert(keyversion == KeyVersion::ANYPREVOUT);
         }
         ss << uint8_t(keyversion);
         assert(execdata.m_codeseparator_pos_init);
