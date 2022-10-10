@@ -16,7 +16,6 @@
 #include <uint256.h>
 #include <util/args.h>
 #include <util/check.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <wallet/context.h>

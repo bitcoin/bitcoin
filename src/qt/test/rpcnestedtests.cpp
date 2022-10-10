@@ -9,7 +9,6 @@
 #include <qt/rpcconsole.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
-#include <util/system.h>
 
 #include <QTest>
 

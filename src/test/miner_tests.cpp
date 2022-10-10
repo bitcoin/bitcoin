@@ -14,7 +14,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 #include <versionbits.h>

@@ -13,7 +13,6 @@
 #include <span.h>
 #include <util/bip32.h>
 #include <util/spanparsing.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <util/vector.h>
 

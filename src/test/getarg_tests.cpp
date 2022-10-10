@@ -6,7 +6,6 @@
 #include <univalue.h>
 #include <util/settings.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <limits>
 #include <string>

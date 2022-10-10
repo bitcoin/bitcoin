@@ -6,12 +6,12 @@
 
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
+#include <logging.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <util/args.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <walletinitinterface.h>
 
 #include <algorithm>

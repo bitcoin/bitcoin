@@ -5,7 +5,6 @@
 #include <net_permissions.h>
 #include <netbase.h>
 #include <util/error.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{

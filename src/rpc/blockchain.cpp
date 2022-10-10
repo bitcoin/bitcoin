@@ -20,6 +20,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <kernel/coinstats.h>
+#include <logging.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
@@ -40,7 +41,6 @@
 #include <util/args.h>
 #include <util/check.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>

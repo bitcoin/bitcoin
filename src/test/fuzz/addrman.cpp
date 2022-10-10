@@ -15,7 +15,6 @@
 #include <test/util/setup_common.h>
 #include <time.h>
 #include <util/asmap.h>
-#include <util/system.h>
 
 #include <cassert>
 #include <cstdint>

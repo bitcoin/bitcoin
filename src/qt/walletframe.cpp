@@ -13,7 +13,6 @@
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
 #include <util/fs.h>
-#include <util/system.h>
 
 #include <cassert>
 #include <fstream>

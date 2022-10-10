@@ -9,7 +9,6 @@
 #include <logging.h>
 #include <tinyformat.h>
 #include <util/fs.h>
-#include <util/system.h>
 
 FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
     m_dir(std::move(dir)),

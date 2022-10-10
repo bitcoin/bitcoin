@@ -18,7 +18,6 @@
 #include <node/interface_ui.h>
 #include <policy/policy.h>
 #include <util/args.h>
-#include <util/system.h>
 #include <wallet/wallet.h>
 
 #include <cstdlib>

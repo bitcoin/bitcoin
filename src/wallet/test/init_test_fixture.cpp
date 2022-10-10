@@ -5,7 +5,6 @@
 #include <fs.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/system.h>
 
 #include <fstream>
 #include <string>

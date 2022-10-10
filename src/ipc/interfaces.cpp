@@ -10,7 +10,6 @@
 #include <ipc/protocol.h>
 #include <logging.h>
 #include <tinyformat.h>
-#include <util/system.h>
 
 #include <cstdio>
 #include <cstdlib>

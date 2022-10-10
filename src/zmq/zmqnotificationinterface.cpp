@@ -8,7 +8,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <util/args.h>
-#include <util/system.h>
 #include <validationinterface.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqpublishnotifier.h>

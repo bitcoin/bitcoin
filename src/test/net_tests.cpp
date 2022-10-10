@@ -19,7 +19,6 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 

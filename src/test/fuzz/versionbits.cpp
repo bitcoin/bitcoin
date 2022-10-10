@@ -7,7 +7,6 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <util/args.h>
-#include <util/system.h>
 #include <versionbits.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>

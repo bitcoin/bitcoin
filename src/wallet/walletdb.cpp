@@ -7,11 +7,11 @@
 
 #include <fs.h>
 #include <key_io.h>
+#include <logging.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util/bip32.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 #ifdef USE_BDB

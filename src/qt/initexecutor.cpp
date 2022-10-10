@@ -6,7 +6,6 @@
 
 #include <interfaces/node.h>
 #include <util/exception.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 
 #include <exception>

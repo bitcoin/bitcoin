@@ -17,7 +17,6 @@
 #include <test/util/setup_common.h>
 #include <timedata.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 

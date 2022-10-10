@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <support/lockedpool.h>
-#include <util/system.h>
 
 #include <limits>
 #include <memory>

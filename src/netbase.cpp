@@ -12,7 +12,6 @@
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <atomic>

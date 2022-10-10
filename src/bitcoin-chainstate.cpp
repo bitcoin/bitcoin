@@ -24,7 +24,6 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <util/args.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <validation.h>
 #include <validationinterface.h>

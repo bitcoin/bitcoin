@@ -13,7 +13,6 @@
 #include <txdb.h>
 #include <util/args.h>
 #include <undo.h>
-#include <util/system.h>
 #include <validation.h>
 
 using kernel::CCoinsStats;

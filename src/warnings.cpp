@@ -5,9 +5,12 @@
 
 #include <warnings.h>
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <sync.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 #include <vector>

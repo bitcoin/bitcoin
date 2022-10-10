@@ -5,7 +5,6 @@
 #include <compat/compat.h>
 #include <test/util/setup_common.h>
 #include <util/sock.h>
-#include <util/system.h>
 #include <util/threadinterrupt.h>
 
 #include <boost/test/unit_test.hpp>

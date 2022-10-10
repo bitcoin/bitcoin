@@ -7,7 +7,6 @@
 #include <noui.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 #include <wallet/test/init_test_fixture.h>
 
 namespace wallet {

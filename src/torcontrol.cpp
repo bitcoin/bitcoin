@@ -9,6 +9,7 @@
 #include <chainparamsbase.h>
 #include <compat/compat.h>
 #include <crypto/hmac_sha256.h>
+#include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -16,7 +17,6 @@
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/time.h>
 

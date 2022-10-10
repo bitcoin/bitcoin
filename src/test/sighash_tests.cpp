@@ -12,7 +12,6 @@
 #include <test/data/sighash.json.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <iostream>

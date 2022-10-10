@@ -17,7 +17,6 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 
 #include <map>
 #include <string>

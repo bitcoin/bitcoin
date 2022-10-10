@@ -24,7 +24,6 @@
 #include <node/interface_ui.h>
 #include <psbt.h>
 #include <util/args.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient

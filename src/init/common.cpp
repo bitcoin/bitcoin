@@ -13,7 +13,6 @@
 #include <tinyformat.h>
 #include <util/args.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 

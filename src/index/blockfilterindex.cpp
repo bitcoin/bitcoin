@@ -11,7 +11,6 @@
 #include <node/blockstorage.h>
 #include <util/args.h>
 #include <util/fs.h>
-#include <util/system.h>
 #include <validation.h>
 
 using node::UndoReadFromDisk;

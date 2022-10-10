@@ -11,7 +11,6 @@
 #include <node/context.h>
 #include <util/args.h>
 #include <util/check.h>
-#include <util/system.h>
 
 #include <memory>
 

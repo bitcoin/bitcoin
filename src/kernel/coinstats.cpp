@@ -20,7 +20,6 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/overflow.h>
-#include <util/system.h>
 #include <validation.h>
 #include <version.h>
 

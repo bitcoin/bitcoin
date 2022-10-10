@@ -22,7 +22,6 @@
 #include <util/args.h>
 #include <util/fs.h>
 #include <util/settings.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 namespace {

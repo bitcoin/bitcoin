@@ -8,7 +8,6 @@
 #include <script/standard.h>
 
 #include <logging.h>
-#include <util/system.h>
 
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
