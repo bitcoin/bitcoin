@@ -367,10 +367,22 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     }
     {
         LOCK(cs_main);
-        if (clsig.nHeight > (chainman.ActiveHeight() - (CSigningManager::SIGN_HEIGHT_LOOKBACK-2))) {
-            // too far into the future
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
-            return;
+        if(chainman.m_best_header) {
+            const auto& nHeightDiff = chainman.m_best_header->nHeight - clsig.nHeight;
+            // height from best known header does not look back enough (SIGN_HEIGHT_LOOKBACK blocks). MNs should be locking active chain - SIGN_HEIGHT_LOOKBACK block height
+            if(nHeightDiff < CSigningManager::SIGN_HEIGHT_LOOKBACK) {
+                // too far into the future
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+                return;
+            }
+            // if best known header has moved on 2 more blocks from when it should have locked then also reject
+            // this means there is a window of time of 2 blocks when a chainlock should be formed, completed and propogated
+            // it will stop scenario of masternodes/miners colluding to form their own chain as they see fit after the fact (after any number of blocks), rolling back the chain to previous chainlock
+            if(nHeightDiff > (CSigningManager::SIGN_HEIGHT_LOOKBACK+2)) {
+                // too far into the past
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- old CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+                return;
+            }
         }
         pindexScan = chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
         // make sure block or header exists before accepting CLSIG

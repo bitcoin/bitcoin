@@ -97,7 +97,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(self.nodes[0])
-        bad_cl =  self.generate(self.nodes[0], 20, sync_fun=self.no_op)[-6]
+        bad_cl =  self.generate(self.nodes[0], 15, sync_fun=self.no_op)[-6]
         bad_tip = self.nodes[0].getbestblockhash()
         good_cl = self.nodes[1].getbestblockhash()
         self.generatetoaddress(self.nodes[1], 10, node0_mining_addr, sync_fun=self.no_op)
@@ -180,22 +180,17 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(self.nodes[0].getbestblockhash() == good_tip)
         found = False
         foundConflict = False
-        conflictLength = 0
-        activeLength = 0
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == good_tip:
                 assert(tip["status"] == "active")
-                activeLength = tip["height"] + tip["branchlen"]
                 found = True
             if tip["status"] == "conflicting":
                 foundConflict = True
-                conflictLength = tip["height"] + tip["branchlen"]
             if tip["status"] == "valid-fork":
                 forkChain = tip["hash"]
 
         assert(found and foundConflict)
         self.log.info("Should switch to the locked tip on invalidate and stay there across restarts until reconsider is called again")
-        assert(conflictLength > activeLength)
         self.stop_node(0)
         self.start_node(0)
         # will set valid-fork to active

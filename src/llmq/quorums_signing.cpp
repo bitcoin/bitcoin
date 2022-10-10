@@ -824,12 +824,24 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 peerman.Misbehaving(*peer, 10, "invalid CLSIG");
             return;
         }
-        if (pindex->nHeight > (chainman.ActiveHeight() - (SIGN_HEIGHT_LOOKBACK-2))) {
-            // too far into the future
-            LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the future\n",
-                    __func__, recoveredSig->id.ToString());
-            peerman.ForgetTxHash(nodeId, hash);
-            return;
+        if(chainman.m_best_header) {
+            const auto& nHeightDiff = chainman.m_best_header->nHeight - pindex->nHeight;
+            // height from best known header does not look back enough (SIGN_HEIGHT_LOOKBACK blocks). MNs should be locking active chain - SIGN_HEIGHT_LOOKBACK block height
+            if(nHeightDiff < SIGN_HEIGHT_LOOKBACK) {
+                // too far into the future
+                LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the future\n",
+                        __func__, recoveredSig->id.ToString());
+                peerman.ForgetTxHash(nodeId, hash);
+                return;
+            }
+            // if best known header has moved on 2 more blocks from when it should have locked then also reject
+            if(nHeightDiff > (SIGN_HEIGHT_LOOKBACK+2)) {
+                // too far into the past
+                LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the past\n",
+                        __func__, recoveredSig->id.ToString());
+                peerman.ForgetTxHash(nodeId, hash);
+                return;
+            }
         }
     }
 
