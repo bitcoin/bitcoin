@@ -74,6 +74,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">আপনি কি সেটিংস পুনরায় ডিফল্ট করতে,অথবা কোনো পরিবর্তন ছাড়াই ফিরে যেতে চান? </translation>
+    </message>
+    <message>
         <source>%1 didn't yet exit safely…</source>
         <translation type="unfinished">%1 এখনো নিরাপদে বের হয়নি</translation>
     </message>
@@ -268,10 +273,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>WalletController</name>
     <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">ওয়ালেট বন্ধ করুন</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation type="unfinished">আপনি কি নিশ্চিত যে আপনি ওয়ালেট বন্ধ করতে চান&lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
@@ -311,6 +312,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -321,11 +343,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PeerTableModel</name>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">ঠিকানা</translation>
-    </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
@@ -370,10 +387,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">লেবেল</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -416,10 +429,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Type</source>
         <translation type="unfinished">টাইপ</translation>
     </message>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">লেবেল</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
@@ -443,14 +452,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Type</source>
         <translation type="unfinished">টাইপ</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation type="unfinished">লেবেল</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="unfinished">ঠিকানা</translation>
     </message>
     <message>
         <source>ID</source>

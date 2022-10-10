@@ -3,15 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">برای ویرایش نشانی یا برچسب زدن کلیک ‌راست کنید</translation>
+        <translation type="unfinished">برای ویرایش نشانی یا برچسب راست-کلیک کنید</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">آدرس جدید ایجاد کنید</translation>
+        <translation type="unfinished">یک آدرس جدید ایجاد کنید</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">و جدید</translation>
+        <translation type="unfinished">&amp;جدید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">حذف آدرس ‌انتخاب شده از فهرست</translation>
+        <translation type="unfinished">حذف آدرس ‌انتخاب شده ی جاری از فهرست</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -39,11 +39,19 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">صدور</translation>
+        <translation type="unfinished">&amp;صدور</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
         <translation type="unfinished">حذف</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">آدرس را برای ارسال کوین وارد کنید</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">آدرس را برای دریافت کوین وارد کنید</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -160,7 +168,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">هشدار: اگر کیف پول خود را رمزگذاری کنید و عبارت خود را گام کنید ، این کار را انجام می دهید &lt;b&gt;تمام کویت های خود را از دست &lt;/b&gt;استفاده کنید!
+        <translation type="unfinished">هشدار: اگر کیف پول خود را رمزگذاری کنید و عبارت خود را گم کنید ، &lt;b&gt;تمام کویت های خود را از دست &lt;/b&gt;خواهید داد!
 </translation>
     </message>
     <message>
@@ -253,10 +261,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">استثناء فراری (این استثناء نشان دهنده این است که هسته بیتکوین نتوانست چیزی را در کیف(والت) بنویسد.)</translation>
-    </message>
-    <message>
-        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished"> خطای تخریب کننده ای روی داده است.%1 نمیتواند بصورت ایمن ادامه پیدا کند و پایان می یابد.</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -591,10 +595,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">خطا در خواندن رکورد بعدی از پایگاه داده کیف پول</translation>
     </message>
     <message>
-        <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">خطا در بارگذاری پایگاه داده ها</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">خطا: مکان نما در پایگاه داده ایجاد نشد</translation>
     </message>
@@ -692,10 +692,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">توصیفگرهای فایل به اندازه کافی در دسترس نیست</translation>
     </message>
     <message>
-        <source>Prune mode is incompatible with -coinstatsindex.</source>
-        <translation type="unfinished">حالت Prune با -coinstatsindex ناسازگار است.</translation>
-    </message>
-    <message>
         <source>Pruning blockstore…</source>
         <translation type="unfinished">هرس بلوک فروشی…</translation>
     </message>
@@ -773,6 +769,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">حجم تراکنش خیلی زیاد است</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">قادر به پیدا کردن UTXO  برای ورودی جانبی نیست.</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation type="unfinished">نمیتوان کلید های اولیه را تولید کرد.</translation>
     </message>
@@ -800,10 +800,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">قوانین جدید ناشناخته فعال شد (‌%iversionbit)</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation type="unfinished">ارتقا دادن پایگاه داده UTXO</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
@@ -932,6 +928,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">پیام تایید</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation type="unfinished">پیام ها را تأیید کنید تا مطمئن شوید با آدرس های مشخص شده بیت کوین امضا شده اند
+ </translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -1099,6 +1100,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">هیچ کیف پولی در دسترس نمی باشد</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">داده های کیف پول</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">نام کیف پول</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">پنجره</translation>
     </message>
@@ -1113,6 +1124,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 client</source>
         <translation type="unfinished">کلاینت: %1</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">مخفی کن</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1399,7 +1414,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">نمی‌توان امضاکنندگان را فهرست کرد</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1472,7 +1487,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation type="unfinished">کیف پول را رمز نگاری نمائید. کیف پول با کلمات رمز انتخاب خودتان رمز نگاری خواهد شد</translation>
+        <translation type="unfinished">کیف پول را رمز نگاری نمائید. کیف پول با کلمات رمز دلخواه شما رمز نگاری خواهد شد</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
@@ -1593,13 +1608,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Bitcoin</source>
         <translation type="unfinished">بیت کوین</translation>
     </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation type="unfinished">(%1 گیگابایت لازم است)</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation type="unfinished">(%1 برای زنجیر کامل نیاز است)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1740,7 +1765,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">ناشناخته. هماهنگ‌سازی سربرگ‌ها (%1، %2%) </translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2004,15 +2029,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation type="unfinished">باز نشانی گزینه ها را تأیید کنید
   </translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
+        <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">کلاینت نیازمند ریست شدن است برای فعال کردن تغییرات</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">کلاینت خاموش خواهد شد.آیا میخواهید ادامه دهید؟</translation>
     </message>
     <message>
@@ -2168,6 +2196,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">یا</translation>
     </message>
     <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation type="unfinished">%1Transaction has  unsigned inputs.</translation>
+    </message>
+    <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">عملیات هنوز به امضا(ها) نیاز دارد.</translation>
     </message>
@@ -2227,6 +2259,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
         <translation type="unfinished">همتا </translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">سن</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2405,29 +2442,22 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Whether we relay addresses to this peer.</source>
-        <extracomment>Tooltip text for the Address Relay field in the peer details area.</extracomment>
+        <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished"> ما آدرس‌ها را به این همتا ارسال می‌کنیم.</translation>
     </message>
     <message>
         <source>Address Relay</source>
+        <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">رله آدرس</translation>
     </message>
     <message>
-        <source>Total number of addresses processed, excluding those dropped due to rate-limiting.</source>
-        <extracomment>Tooltip text for the Addresses Processed field in the peer details area.</extracomment>
-        <translation type="unfinished">تعداد کل آدرس‌های پردازش شده، به استثنای آدرس‌هایی که به دلیل محدودیت نرخ حذف شده‌اند.</translation>
-    </message>
-    <message>
         <source>Addresses Processed</source>
+        <extracomment>Text title for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
         <translation type="unfinished">آدرس ها پردازش شد</translation>
     </message>
     <message>
-        <source>Total number of addresses dropped due to rate-limiting.</source>
-        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area.</extracomment>
-        <translation type="unfinished">تعداد کل آدرس‌ها به دلیل محدودیت نرخ کاهش یافت.</translation>
-    </message>
-    <message>
         <source>Addresses Rate-Limited</source>
+        <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation type="unfinished">آدرس ها با نرخ محدود</translation>
     </message>
     <message>
@@ -3028,7 +3058,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">مقدار کپی</translation>
+        <translation type="unfinished">کپی مقدار</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -3167,10 +3197,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">کارمزد بیشتر از %1 است,این یعنی کارمزد خیلی زیادی در نظر گرفته شده است.</translation>
     </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation type="unfinished">درخواست پرداخت منقضی شد یا تاریخ آن گذشت.</translation>
-    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -3238,25 +3264,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>Message:</source>
         <translation type="unfinished">پیام:</translation>
     </message>
-    <message>
-        <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">این یک درخواست پرداخت غیرمجاز است.
- </translation>
-    </message>
-    <message>
-        <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">این یک درخواست پرداخت معتبر است.
- </translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">پرداخت کردن</translation>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished">یادداشت:</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -3421,14 +3429,17 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>TransactionDesc</name>
     <message>
         <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
         <translation type="unfinished">رها شده</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/تأیید نشده</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 تأییدیه</translation>
     </message>
     <message>
@@ -3859,11 +3870,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">صدور</translation>
+        <translation type="unfinished">&amp;صدور</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">داده های موجود در برگه فعلی را به یک فایل صادر کنید</translation>
+        <translation type="unfinished">خروجی گرفتن داده‌ها از برگه ی کنونی در یک پوشه</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
