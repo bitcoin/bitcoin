@@ -376,7 +376,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 return;
             }
             // if best known header has moved on 2 more blocks from when it should have locked then also reject
-            // this means there is a window of time of 2 blocks when a chainlock should be formed, completed and propogated
+            // this means there is a window of time of 2 blocks when a chainlock should be formed, completed and propagated
             // it will stop scenario of masternodes/miners colluding to form their own chain as they see fit after the fact (after any number of blocks), rolling back the chain to previous chainlock
             if(nHeightDiff > (CSigningManager::SIGN_HEIGHT_LOOKBACK+2)) {
                 // too far into the past
