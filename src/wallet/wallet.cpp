@@ -3111,12 +3111,14 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 // If a block is pruned after this check, we will load the wallet,
                 // but fail the rescan with a generic error.
 
-                error = chain.hasAssumedValidChain() ?
-                     _(
-                        "Assumed-valid: last wallet synchronisation goes beyond "
-                        "available block data. You need to wait for the background "
-                        "validation chain to download more blocks.") :
-                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
+                error = chain.havePruned() ?
+                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)") :
+                     strprintf(_(
+                        "Error loading wallet. Wallet requires blocks to be downloaded, "
+                        "and software does not currently support loading wallets while "
+                        "blocks are being downloaded out of order when using assumeutxo "
+                        "snapshots. Wallet should be able to load successfully after "
+                        "node sync reaches height %s"), block_height);
                 return false;
             }
         }
