@@ -934,7 +934,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     case OP_ABS:        if (bn < bnZero) bn = -bn; break;
                     case OP_NOT:        bn = (bn == bnZero); break;
                     case OP_0NOTEQUAL:  bn = (bn != bnZero); break;
-                    default:            assert(!"invalid opcode"); break;
+                    default:            assert(false); break; // invalid opcode
                     }
                     popstack(stack);
                     stack.push_back(bn.getvch());
@@ -982,7 +982,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     case OP_GREATERTHANOREQUAL:  bn = (bn1 >= bn2); break;
                     case OP_MIN:                 bn = (bn1 < bn2 ? bn1 : bn2); break;
                     case OP_MAX:                 bn = (bn1 > bn2 ? bn1 : bn2); break;
-                    default:                     assert(!"invalid opcode"); break;
+                    default:                     assert(false); break; // invalid opcode
                     }
                     popstack(stack);
                     popstack(stack);
@@ -1466,12 +1466,12 @@ static bool HandleMissingData(MissingDataBehavior mdb)
 {
     switch (mdb) {
     case MissingDataBehavior::ASSERT_FAIL:
-        assert(!"Missing data");
+        assert(false); // Missing data
         break;
     case MissingDataBehavior::FAIL:
         return false;
     }
-    assert(!"Unknown MissingDataBehavior value");
+    assert(false); // Unknown MissingDataBehavior value
 }
 
 template<typename T>

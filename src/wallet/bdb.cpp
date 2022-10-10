@@ -850,8 +850,7 @@ bool BerkeleyBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrit
 {
     if (!pdb)
         return false;
-    if (fReadOnly)
-        assert(!"Write called on database in read-only mode");
+    assert(!fReadOnly); // Write called on database in read-only mode
 
     SafeDbt datKey(key.data(), key.size());
 
@@ -865,8 +864,7 @@ bool BerkeleyBatch::EraseKey(DataStream&& key)
 {
     if (!pdb)
         return false;
-    if (fReadOnly)
-        assert(!"Erase called on database in read-only mode");
+    assert(!fReadOnly); // Erase called on database in read-only mode
 
     SafeDbt datKey(key.data(), key.size());
 
