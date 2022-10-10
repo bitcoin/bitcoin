@@ -19,6 +19,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
+#include <constants.h>
 #include <deploymentstatus.h>
 #include <fs.h>
 #include <hash.h>

@@ -143,6 +143,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
+  constants.h \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \

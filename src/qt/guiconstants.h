@@ -5,6 +5,8 @@
 #ifndef BITCOIN_QT_GUICONSTANTS_H
 #define BITCOIN_QT_GUICONSTANTS_H
 
+#include <constants.h>
+
 #include <chrono>
 #include <cstdint>
 
@@ -53,8 +55,8 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 #define QAPP_APP_NAME_SIGNET "Bitcoin-Qt-signet"
 #define QAPP_APP_NAME_REGTEST "Bitcoin-Qt-regtest"
 
-/* One gigabyte (GB) in bytes */
-static constexpr uint64_t GB_BYTES{1000000000};
+/* Minimum prune target displayed in GUI. */
+static constexpr uint64_t MIN_PRUNE_TARGET_GB{(MIN_BYTES_FOR_BLOCK_FILES / GB_BYTES) + ((MIN_BYTES_FOR_BLOCK_FILES % GB_BYTES) ? 1 : 0)};
 
 // Default prune target displayed in GUI.
 static constexpr int DEFAULT_PRUNE_TARGET_GB{2};

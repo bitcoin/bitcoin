@@ -4,6 +4,7 @@
 
 
 #include <bench/bench.h>
+#include <constants.h>
 #include <crypto/chacha_poly_aead.h>
 #include <crypto/poly1305.h> // for the POLY1305_TAGLEN constant
 #include <hash.h>
@@ -14,7 +15,7 @@
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY = 64;
 static constexpr uint64_t BUFFER_SIZE_SMALL = 256;
-static constexpr uint64_t BUFFER_SIZE_LARGE = 1024 * 1024;
+static constexpr uint64_t BUFFER_SIZE_LARGE{MIB_BYTES};
 
 static const unsigned char k1[32] = {0};
 static const unsigned char k2[32] = {0};

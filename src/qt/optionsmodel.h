@@ -5,13 +5,13 @@
 #ifndef BITCOIN_QT_OPTIONSMODEL_H
 #define BITCOIN_QT_OPTIONSMODEL_H
 
-#include <cstdint>
+#include <constants.h>
 #include <qt/bitcoinunits.h>
-#include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
 
 #include <assert.h>
+#include <cstdint>
 
 struct bilingual_str;
 namespace interfaces {
@@ -24,12 +24,12 @@ static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
  */
-static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYTES - 1) / GB_BYTES; }
+static constexpr int PruneMiBtoGB(int64_t mib) { return (mib * MIB_BYTES + GB_BYTES - 1) / GB_BYTES; }
 
 /**
  * Convert displayed prune target GB to configured MiB. Round down so roundtrip GB -> MiB -> GB conversion is stable.
  */
-static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
+static constexpr int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / MIB_BYTES; }
 
 /** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
