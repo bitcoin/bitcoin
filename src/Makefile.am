@@ -179,6 +179,7 @@ SYSCOIN_CORE_H = \
   clientversion.h \
   coins.h \
   common/bloom.h \
+  common/run_command.h \
   compat/assumptions.h \
   compat/byteswap.h \
   compat/compat.h \
@@ -794,7 +795,7 @@ libsyscoin_consensus_a_SOURCES = \
   version.h
 
 # common: shared between syscoind, and syscoin-qt and non-server tools
-libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   services/asset.cpp \
@@ -805,6 +806,7 @@ libsyscoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   common/bloom.cpp \
+  common/run_command.cpp \
   core_read.cpp \
   core_write.cpp \
   dbwrapper.cpp \
