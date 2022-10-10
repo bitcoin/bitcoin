@@ -402,6 +402,38 @@ public:
     CWalletScanState() = default;
 };
 
+static util::Result<CKey> DeserializeKeyWithHash(CWallet* pwallet, CDataStream& ss_key, CDataStream& ss_value, CWalletScanState& wss)
+{
+    CPubKey pubkey;
+    ss_key >> pubkey;
+    if (!pubkey.IsValid())
+    {
+        return util::Error{Untranslated("Error reading wallet database: CPubKey corrupt")};
+    }
+    CKey key;
+    CPrivKey pkey;
+    uint256 hash;
+
+    wss.nKeys++;
+    ss_value >> pkey;
+    ss_value >> hash;
+
+    // hash pubkey/privkey to accelerate wallet load
+    std::vector<unsigned char> to_hash;
+    to_hash.reserve(pubkey.size() + pkey.size());
+    to_hash.insert(to_hash.end(), pubkey.begin(), pubkey.end());
+    to_hash.insert(to_hash.end(), pkey.begin(), pkey.end());
+
+    if (Hash(to_hash) != hash) {
+        return util::Error{Untranslated("Error reading wallet database: CPubKey/CPrivKey corrupt")};
+    }
+
+    if (!key.Load(pkey, pubkey, true)) {
+        return util::Error{Untranslated("Error reading wallet database: CPrivKey corrupt")};
+    }
+    return key;
+}
+
 static bool
 ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
@@ -760,40 +792,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             wss.m_descriptor_caches[desc_id].CacheLastHardenedExtPubKey(key_exp_index, xpub);
         } else if (strType == DBKeys::WALLETDESCRIPTORKEY) {
             uint256 desc_id;
-            CPubKey pubkey;
             ssKey >> desc_id;
-            ssKey >> pubkey;
-            if (!pubkey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
+
+            auto res = DeserializeKeyWithHash(pwallet, ssKey, ssValue, wss);
+            if (!res) {
+                strErr = ErrorString(res).original;
                 return false;
             }
-            CKey key;
-            CPrivKey pkey;
-            uint256 hash;
-
-            wss.nKeys++;
-            ssValue >> pkey;
-            ssValue >> hash;
-
-            // hash pubkey/privkey to accelerate wallet load
-            std::vector<unsigned char> to_hash;
-            to_hash.reserve(pubkey.size() + pkey.size());
-            to_hash.insert(to_hash.end(), pubkey.begin(), pubkey.end());
-            to_hash.insert(to_hash.end(), pkey.begin(), pkey.end());
-
-            if (Hash(to_hash) != hash)
-            {
-                strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
-                return false;
-            }
-
-            if (!key.Load(pkey, pubkey, true))
-            {
-                strErr = "Error reading wallet database: CPrivKey corrupt";
-                return false;
-            }
-            wss.m_descriptor_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), key));
+            wss.m_descriptor_keys.insert(std::make_pair(std::make_pair(desc_id, res->GetPubKey().GetID()), res.value()));
         } else if (strType == DBKeys::WALLETDESCRIPTORCKEY) {
             uint256 desc_id;
             CPubKey pubkey;
