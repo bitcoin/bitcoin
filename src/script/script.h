@@ -524,9 +524,8 @@ public:
      */
     unsigned int GetSigOpCount(bool fAccurate) const;
 
-    unsigned int getAccurateSigOpCount() const;
-    unsigned int getSimpleSigOpCount() const;
-    unsigned int getAccurateSigOpCount(opcodetype lastOpcode) const;
+    unsigned int GetStandardSigOpCount() const;
+    unsigned int GetStandardSigOpCount(opcodetype lastOpcode) const;
 
     /**
      * Accurately count sigOps, including sigOps in

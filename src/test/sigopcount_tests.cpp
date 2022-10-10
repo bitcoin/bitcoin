@@ -8,6 +8,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 
@@ -152,7 +153,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
 
-    // Multisig nested in P2SH with IF 2 /ELSE 4/END_IF
+    // Standard costs: Multisig nested in P2SH with IF 2 /ELSE 4/END_IF
     {
         CScript redeemScript = CScript() <<
          OP_IF << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 <<
@@ -162,8 +163,18 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  <<ToByteVector(redeemScript);
 
+        // The standard cost of the redeem script has changed
+        assert(redeemScript.GetStandardSigOpCount()==4);
+
+
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 4 * WITNESS_SCALE_FACTOR);
+
+        // The transaction is now standard
+        assert(AreInputsStandard(CTransaction(spendingTx),coins));
+
+        // But the consensus cost has not changed
+
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
         // Multisig nested in P2SH with NOTIF 4 /ELSE 2/END_IF
@@ -176,8 +187,16 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  << ToByteVector(redeemScript);
 
+        // The standard cost of the redeem script has changed
+        assert(redeemScript.GetStandardSigOpCount()==4);
+
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
-        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 4 * WITNESS_SCALE_FACTOR);
+
+        // The transaction is now standard
+        assert(AreInputsStandard(CTransaction(spendingTx),coins));
+
+        // But the consensus cost has not changed
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
     // Last opcode of ENDIF is not a push
@@ -190,7 +209,15 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << OP_1 << OP_0 << OP_0  << ToByteVector(redeemScript);
 
+        // The standard cost of the redeem script has changed
+        assert(redeemScript.GetStandardSigOpCount()==MAX_PUBKEYS_PER_MULTISIG);
+
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CScriptWitness());
+
+        // The transaction is not standard
+        assert(AreInputsStandard(CTransaction(spendingTx),coins)==false);
+
+
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
     }
 
