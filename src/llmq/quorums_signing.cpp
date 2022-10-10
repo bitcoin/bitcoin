@@ -834,14 +834,6 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 peerman.ForgetTxHash(nodeId, hash);
                 return;
             }
-            // if best known header has moved on 2 more blocks from when it should have locked then also reject
-            if(nHeightDiff > (SIGN_HEIGHT_LOOKBACK+2)) {
-                // too far into the past
-                LogPrint(BCLog::CHAINLOCKS, "CSigningManager::%s -- block of recovered signature (%s) is too far into the past\n",
-                        __func__, recoveredSig->id.ToString());
-                peerman.ForgetTxHash(nodeId, hash);
-                return;
-            }
         }
     }
 
