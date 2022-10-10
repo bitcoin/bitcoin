@@ -7,7 +7,11 @@
 
 #include <zmq/zmqabstractnotifier.h>
 
+#include <cstddef>
+#include <cstdint>
+
 class CBlockIndex;
+class CTransaction;
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
