@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define SYSCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
-
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>

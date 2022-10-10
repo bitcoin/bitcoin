@@ -6,8 +6,12 @@
 #define SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
 #include <zmq/zmqabstractnotifier.h>
-#include <vector>
+
+#include <cstddef>
+#include <cstdint>
+
 class CBlockIndex;
+class CTransaction;
 // SYSCOIN
 class CNEVMBlock;
 class CNEVMHeader;
