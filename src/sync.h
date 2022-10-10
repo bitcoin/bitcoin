@@ -111,7 +111,7 @@ public:
         return PARENT::try_lock();
     }
 
-    using UniqueLock = std::unique_lock<PARENT>;
+    using unique_lock = std::unique_lock<PARENT>;
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
     //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
@@ -149,10 +149,10 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 
 /** Wrapper around std::unique_lock style lock for MutexType. */
 template <typename MutexType>
-class SCOPED_LOCKABLE UniqueLock : public MutexType::UniqueLock
+class SCOPED_LOCKABLE UniqueLock : public MutexType::unique_lock
 {
 private:
-    using Base = typename MutexType::UniqueLock;
+    using Base = typename MutexType::unique_lock;
 
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
