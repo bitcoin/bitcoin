@@ -190,7 +190,7 @@ public:
     bool GetReservedDestination(CTxDestination& pubkey, bool internal);
     //! Return reserved address
     void ReturnDestination();
-    //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
+    //! Keep the address. Do not return its key to the keypool when this object goes out of scope
     void KeepDestination();
 };
 
