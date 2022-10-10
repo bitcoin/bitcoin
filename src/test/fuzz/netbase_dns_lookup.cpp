@@ -42,18 +42,16 @@ FUZZ_TARGET(netbase_dns_lookup)
         }
     }
     {
-        std::vector<CService> resolved_services;
-        if (Lookup(name, resolved_services, default_port, allow_lookup, max_results, fuzzed_dns_lookup_function)) {
-            for (const CNetAddr& resolved_service : resolved_services) {
-                assert(!resolved_service.IsInternal());
-            }
+        const std::vector<CService> resolved_services{Lookup(name, default_port, allow_lookup, max_results, fuzzed_dns_lookup_function)};
+        for (const CNetAddr& resolved_service : resolved_services) {
+            assert(!resolved_service.IsInternal());
         }
         assert(resolved_services.size() <= max_results || max_results == 0);
     }
     {
-        CService resolved_service;
-        if (Lookup(name, resolved_service, default_port, allow_lookup, fuzzed_dns_lookup_function)) {
-            assert(!resolved_service.IsInternal());
+        const std::optional<CService> resolved_service{Lookup(name, default_port, allow_lookup, fuzzed_dns_lookup_function)};
+        if (resolved_service.has_value()) {
+            assert(!resolved_service.value().IsInternal());
         }
     }
     {

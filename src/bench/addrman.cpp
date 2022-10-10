@@ -79,13 +79,6 @@ static CNetAddr ResolveIP(const std::string& ip)
     return addr;
 }
 
-static CService ResolveService(const std::string& ip, uint16_t port = 0)
-{
-    CService serv;
-    Lookup(ip, serv, port, false);
-    return serv;
-}
-
 /* Benchmarks */
 
 static void AddrManAdd(benchmark::Bench& bench)
@@ -118,8 +111,8 @@ static void AddrManSelectFromAlmostEmpty(benchmark::Bench& bench)
     AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
 
     // Add one address to the new table
-    CService addr = ResolveService("250.3.1.1", 8333);
-    addrman.Add({CAddress(addr, NODE_NONE)}, ResolveService("250.3.1.1", 8333));
+    CService addr = Lookup("250.3.1.1", 8333, false).value();
+    addrman.Add({CAddress(addr, NODE_NONE)}, addr);
 
     bench.run([&] {
         (void)addrman.Select();
