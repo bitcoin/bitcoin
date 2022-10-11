@@ -10,7 +10,7 @@
 #include <qt/walletmodel.h>
 
 #include <clientversion.h>
-#include <interfaces/wallet.h>
+#include <common/interfaces/wallet.h>
 #include <key_io.h>
 #include <streams.h>
 #include <util/string.h>

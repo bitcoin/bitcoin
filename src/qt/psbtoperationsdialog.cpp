@@ -4,9 +4,9 @@
 
 #include <qt/psbtoperationsdialog.h>
 
+#include <common/interfaces/node.h>
 #include <core_io.h>
 #include <fs.h>
-#include <interfaces/node.h>
 #include <key_io.h>
 #include <node/psbt.h>
 #include <policy/policy.h>

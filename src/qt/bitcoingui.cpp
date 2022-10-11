@@ -33,8 +33,8 @@
 #include <functional>
 #include <chain.h>
 #include <chainparams.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
+#include <common/interfaces/handler.h>
+#include <common/interfaces/node.h>
 #include <node/interface_ui.h>
 #include <util/system.h>
 #include <util/translation.h>

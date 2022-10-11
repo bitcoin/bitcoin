@@ -9,10 +9,10 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/init.h>
 #include <compat/compat.h>
 #include <init.h>
-#include <interfaces/chain.h>
-#include <interfaces/init.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>

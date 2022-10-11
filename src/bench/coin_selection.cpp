@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <interfaces/chain.h>
+#include <common/interfaces/chain.h>
 #include <node/context.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>

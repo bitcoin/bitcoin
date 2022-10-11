@@ -15,7 +15,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <util/system.h>
 #include <validation.h>
 

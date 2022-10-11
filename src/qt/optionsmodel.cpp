@@ -12,7 +12,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <mapport.h>
 #include <net.h>
 #include <netbase.h>

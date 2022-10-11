@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACES_CHAIN_H
-#define BITCOIN_INTERFACES_CHAIN_H
+#ifndef BITCOIN_COMMON_INTERFACES_CHAIN_H
+#define BITCOIN_COMMON_INTERFACES_CHAIN_H
 
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/settings.h>          // For util::SettingsValue
@@ -353,4 +353,4 @@ std::unique_ptr<Chain> MakeChain(node::NodeContext& node);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_CHAIN_H
+#endif // BITCOIN_COMMON_INTERFACES_CHAIN_H

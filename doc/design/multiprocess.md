@@ -37,7 +37,7 @@ Alternately, you can install [Cap'n Proto](https://capnproto.org/) and [libmulti
 ## IPC implementation details
 
 Cross process Node, Wallet, and Chain interfaces are defined in
-[`src/interfaces/`](../src/interfaces/). These are C++ classes which follow
+[`src/common/interfaces/`](../src/common/interfaces/). These are C++ classes which follow
 [conventions](developer-notes.md#internal-interface-guidelines), like passing
 serializable arguments so they can be called from different processes, and
 making methods pure virtual so they can have proxy implementations that forward
@@ -58,7 +58,7 @@ actual serialization and socket communication.
 As much as possible, calls between processes are meant to work the same as
 calls within a single process without adding limitations or requiring extra
 implementation effort. Processes communicate with each other by calling regular
-[C++ interface methods](../src/interfaces/README.md). Method arguments and
+[C++ interface methods](../src/common/interfaces/README.md). Method arguments and
 return values are automatically serialized and sent between processes. Object
 references and `std::function` arguments are automatically tracked and mapped
 to allow invoked code to call back into invoking code at any time, and there is

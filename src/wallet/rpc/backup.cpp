@@ -4,9 +4,9 @@
 
 #include <chain.h>
 #include <clientversion.h>
+#include <common/interfaces/chain.h>
 #include <core_io.h>
 #include <fs.h>
-#include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
 #include <rpc/util.h>

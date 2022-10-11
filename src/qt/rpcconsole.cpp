@@ -10,7 +10,7 @@
 #include <qt/forms/ui_debugwindow.h>
 
 #include <chainparams.h>
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <netbase.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>

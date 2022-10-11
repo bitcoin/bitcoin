@@ -4,7 +4,7 @@
 
 #include <qt/initexecutor.h>
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_OVERVIEWPAGE_H
 #define BITCOIN_QT_OVERVIEWPAGE_H
 
-#include <interfaces/wallet.h>
+#include <common/interfaces/wallet.h>
 
 #include <QWidget>
 #include <memory>

@@ -5,8 +5,8 @@
 
 #include <wallet/load.h>
 
+#include <common/interfaces/chain.h>
 #include <fs.h>
-#include <interfaces/chain.h>
 #include <scheduler.h>
 #include <util/check.h>
 #include <util/string.h>

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_INITEXECUTOR_H
 #define BITCOIN_QT_INITEXECUTOR_H
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 
 #include <exception>
 

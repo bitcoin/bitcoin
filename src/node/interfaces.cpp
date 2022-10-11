@@ -6,13 +6,13 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/handler.h>
+#include <common/interfaces/node.h>
+#include <common/interfaces/wallet.h>
 #include <deploymentstatus.h>
 #include <external_signer.h>
 #include <init.h>
-#include <interfaces/chain.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <interfaces/wallet.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>

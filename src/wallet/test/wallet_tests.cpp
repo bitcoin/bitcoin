@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <vector>
 
-#include <interfaces/chain.h>
+#include <common/interfaces/chain.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
 #include <policy/policy.h>

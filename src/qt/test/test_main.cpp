@@ -6,8 +6,8 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <interfaces/init.h>
-#include <interfaces/node.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
 #include <index/base.h>
-#include <interfaces/chain.h>
 #include <kernel/chain.h>
 #include <node/blockstorage.h>
 #include <node/context.h>

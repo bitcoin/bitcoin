@@ -18,6 +18,9 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/node.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <fs.h>
@@ -28,9 +31,6 @@
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <init/common.h>
-#include <interfaces/chain.h>
-#include <interfaces/init.h>
-#include <interfaces/node.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_permissions.h>

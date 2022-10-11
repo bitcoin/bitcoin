@@ -1402,14 +1402,14 @@ Internal interface guidelines
 
 Internal interfaces between parts of the codebase that are meant to be
 independent (node, wallet, GUI), are defined in
-[`src/interfaces/`](../src/interfaces/). The main interface classes defined
-there are [`interfaces::Chain`](../src/interfaces/chain.h), used by wallet to
+[`src/common/interfaces/`](../src/common/interfaces/). The main interface classes defined
+there are [`interfaces::Chain`](../src/common/interfaces/chain.h), used by wallet to
 access the node's latest chain state,
-[`interfaces::Node`](../src/interfaces/node.h), used by the GUI to control the
-node, and [`interfaces::Wallet`](../src/interfaces/wallet.h), used by the GUI
+[`interfaces::Node`](../src/common/interfaces/node.h), used by the GUI to control the
+node, and [`interfaces::Wallet`](../src/common/interfaces/wallet.h), used by the GUI
 to control an individual wallet. There are also more specialized interface
-types like [`interfaces::Handler`](../src/interfaces/handler.h)
-[`interfaces::ChainClient`](../src/interfaces/chain.h) passed to and from
+types like [`interfaces::Handler`](../src/common/interfaces/handler.h)
+[`interfaces::ChainClient`](../src/common/interfaces/chain.h) passed to and from
 various interface methods.
 
 Interface classes are written in a particular style so node, wallet, and GUI
@@ -1427,7 +1427,7 @@ communication:
   implementing new functionality. Any substantial new node or wallet
   functionality should be implemented in [`src/node/`](../src/node/) or
   [`src/wallet/`](../src/wallet/) and just exposed in
-  [`src/interfaces/`](../src/interfaces/) instead of being implemented there,
+  [`src/common/interfaces/`](../src/common/interfaces/) instead of being implemented there,
   so it can be more modular and accessible to unit tests.
 
 - Interface method parameter and return types should either be serializable or
@@ -1505,5 +1505,5 @@ communication:
   ```
 
   Note: This last convention isn't generally followed outside of
-  [`src/interfaces/`](../src/interfaces/), though it did come up for discussion
+  [`src/common/interfaces/`](../src/common/interfaces/), though it did come up for discussion
   before in [#14635](https://github.com/bitcoin/bitcoin/pull/14635).

@@ -9,10 +9,10 @@
 #include <qt/bitcoin.h>
 
 #include <chainparams.h>
+#include <common/interfaces/handler.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/node.h>
 #include <init.h>
-#include <interfaces/handler.h>
-#include <interfaces/init.h>
-#include <interfaces/node.h>
 #include <node/interface_ui.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>

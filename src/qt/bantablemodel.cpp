@@ -4,7 +4,7 @@
 
 #include <qt/bantablemodel.h>
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <net_types.h> // For banmap_t
 
 #include <utility>

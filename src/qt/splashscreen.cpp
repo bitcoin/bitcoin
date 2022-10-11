@@ -9,9 +9,9 @@
 #include <qt/splashscreen.h>
 
 #include <clientversion.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <interfaces/wallet.h>
+#include <common/interfaces/handler.h>
+#include <common/interfaces/node.h>
+#include <common/interfaces/wallet.h>
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
 #include <qt/walletmodel.h>

@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/interfaces/init.h>
+#include <common/interfaces/ipc.h>
 #include <fs.h>
-#include <interfaces/init.h>
-#include <interfaces/ipc.h>
 #include <ipc/capnp/protocol.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>

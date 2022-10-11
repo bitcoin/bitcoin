@@ -8,7 +8,7 @@ using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("ipc::capnp::messages");
 
 using Proxy = import "/mp/proxy.capnp";
-$Proxy.include("interfaces/echo.h");
+$Proxy.include("common/interfaces/echo.h");
 $Proxy.include("ipc/capnp/echo.capnp.h");
 
 interface Echo $Proxy.wrap("interfaces::Echo") {

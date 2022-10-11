@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/interfaces/chain.h>
 #include <core_io.h>
-#include <interfaces/chain.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>

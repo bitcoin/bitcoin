@@ -6,7 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <qt/createwalletdialog.h>
 #include <qt/forms/ui_createwalletdialog.h>
 

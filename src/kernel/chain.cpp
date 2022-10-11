@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <interfaces/chain.h>
+#include <common/interfaces/chain.h>
 #include <sync.h>
 #include <uint256.h>
 

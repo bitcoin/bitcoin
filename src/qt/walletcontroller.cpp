@@ -11,9 +11,9 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <common/interfaces/handler.h>
+#include <common/interfaces/node.h>
 #include <external_signer.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/translation.h>

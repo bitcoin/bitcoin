@@ -96,7 +96,7 @@ request. However:
   should be used.
 * For GUI-related build system changes, the node repository should be used
   because the change needs review by the build systems reviewers.
-* Changes in `src/interfaces` need to go to the node repository because they
+* Changes in `src/common/interfaces` need to go to the node repository because they
   might affect other components like the wallet.
 
 For large GUI changes that include build system and interface changes, it is

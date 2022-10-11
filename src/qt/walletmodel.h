@@ -14,7 +14,7 @@
 
 #include <qt/walletmodeltransaction.h>
 
-#include <interfaces/wallet.h>
+#include <common/interfaces/wallet.h>
 #include <support/allocators/secure.h>
 
 #include <vector>

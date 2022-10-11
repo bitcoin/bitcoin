@@ -4,14 +4,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/echo.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/ipc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
-#include <interfaces/chain.h>
-#include <interfaces/echo.h>
-#include <interfaces/init.h>
-#include <interfaces/ipc.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>

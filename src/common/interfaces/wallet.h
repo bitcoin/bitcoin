@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACES_WALLET_H
-#define BITCOIN_INTERFACES_WALLET_H
+#ifndef BITCOIN_COMMON_INTERFACES_WALLET_H
+#define BITCOIN_COMMON_INTERFACES_WALLET_H
 
 #include <consensus/amount.h>
 #include <fs.h>
-#include <interfaces/chain.h>          // For ChainClient
+#include <common/interfaces/chain.h>   // For ChainClient
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
@@ -432,4 +432,4 @@ std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_WALLET_H
+#endif // BITCOIN_COMMON_INTERFACES_WALLET_H

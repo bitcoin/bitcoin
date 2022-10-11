@@ -5,8 +5,8 @@
 #ifndef BITCOIN_INDEX_BASE_H
 #define BITCOIN_INDEX_BASE_H
 
+#include <common/interfaces/chain.h>
 #include <dbwrapper.h>
-#include <interfaces/chain.h>
 #include <threadinterrupt.h>
 #include <validationinterface.h>
 

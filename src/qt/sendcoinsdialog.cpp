@@ -19,7 +19,7 @@
 #include <qt/sendcoinsentry.h>
 
 #include <chainparams.h>
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <policy/fees.h>

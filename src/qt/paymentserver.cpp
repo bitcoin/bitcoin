@@ -13,7 +13,7 @@
 #include <qt/optionsmodel.h>
 
 #include <chainparams.h>
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <policy/policy.h>

@@ -18,8 +18,8 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
+#include <common/interfaces/handler.h>
+#include <common/interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <psbt.h>

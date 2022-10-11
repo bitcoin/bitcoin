@@ -18,7 +18,7 @@
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <node/interface_ui.h>
 #include <util/strencodings.h>
 

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
 #include <index/txindex.h>
-#include <interfaces/chain.h>
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_IPC_PROTOCOL_H
 #define BITCOIN_IPC_PROTOCOL_H
 
-#include <interfaces/init.h>
+#include <common/interfaces/init.h>
 
 #include <functional>
 #include <memory>

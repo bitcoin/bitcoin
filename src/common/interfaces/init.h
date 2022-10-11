@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACES_INIT_H
-#define BITCOIN_INTERFACES_INIT_H
+#ifndef BITCOIN_COMMON_INTERFACES_INIT_H
+#define BITCOIN_COMMON_INTERFACES_INIT_H
 
 #include <memory>
 
@@ -51,4 +51,4 @@ std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status);
 std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[]);
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_INIT_H
+#endif // BITCOIN_COMMON_INTERFACES_INIT_H

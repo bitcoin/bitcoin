@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interfaces/wallet.h>
+#include <common/interfaces/wallet.h>
 
 #include <consensus/amount.h>
-#include <interfaces/chain.h>
-#include <interfaces/handler.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/handler.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>

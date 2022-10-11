@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/interfaces/chain.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/wallet.h>
 #include <init.h>
-#include <interfaces/chain.h>
-#include <interfaces/init.h>
-#include <interfaces/wallet.h>
 #include <net.h>
 #include <node/context.h>
 #include <node/interface_ui.h>

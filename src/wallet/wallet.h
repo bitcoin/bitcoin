@@ -6,10 +6,10 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <common/interfaces/chain.h>
+#include <common/interfaces/handler.h>
 #include <consensus/amount.h>
 #include <fs.h>
-#include <interfaces/chain.h>
-#include <interfaces/handler.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
 #include <index/coinstatsindex.h>
-#include <interfaces/chain.h>
 #include <kernel/coinstats.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>

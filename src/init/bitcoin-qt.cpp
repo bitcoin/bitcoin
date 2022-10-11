@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <interfaces/chain.h>
-#include <interfaces/echo.h>
-#include <interfaces/init.h>
-#include <interfaces/node.h>
-#include <interfaces/wallet.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/echo.h>
+#include <common/interfaces/init.h>
+#include <common/interfaces/node.h>
+#include <common/interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
 #include <util/system.h>

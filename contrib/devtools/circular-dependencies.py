@@ -16,7 +16,7 @@ MAPPING = {
 # define functions and variables declared in corresponding .h files is
 # incorrect.
 HEADER_MODULE_PATHS = [
-    'interfaces/'
+    'common/interfaces/'
 ]
 
 def module_name(path):

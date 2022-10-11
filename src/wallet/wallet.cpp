@@ -6,13 +6,13 @@
 #include <wallet/wallet.h>
 
 #include <chain.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/wallet.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <external_signer.h>
 #include <fs.h>
-#include <interfaces/chain.h>
-#include <interfaces/wallet.h>
 #include <key.h>
 #include <key_io.h>
 #include <outputtype.h>

@@ -7,8 +7,8 @@
 
 #include <test/util/setup_common.h>
 
-#include <interfaces/chain.h>
-#include <interfaces/wallet.h>
+#include <common/interfaces/chain.h>
+#include <common/interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
 #include <wallet/wallet.h>

@@ -9,7 +9,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <interfaces/node.h>
+#include <common/interfaces/node.h>
 #include <qt/initexecutor.h>
 
 #include <assert.h>

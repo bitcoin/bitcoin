@@ -9,13 +9,13 @@
 #include <addrman.h>
 #include <banman.h>
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <init.h>
 #include <init/common.h>
-#include <interfaces/chain.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>

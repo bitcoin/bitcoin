@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACES_HANDLER_H
-#define BITCOIN_INTERFACES_HANDLER_H
+#ifndef BITCOIN_COMMON_INTERFACES_HANDLER_H
+#define BITCOIN_COMMON_INTERFACES_HANDLER_H
 
 #include <functional>
 #include <memory>
@@ -36,4 +36,4 @@ std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_HANDLER_H
+#endif // BITCOIN_COMMON_INTERFACES_HANDLER_H

@@ -133,6 +133,13 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coins.h \
   common/bloom.h \
+  common/interfaces/chain.h \
+  common/interfaces/echo.h \
+  common/interfaces/handler.h \
+  common/interfaces/init.h \
+  common/interfaces/ipc.h \
+  common/interfaces/node.h \
+  common/interfaces/wallet.h \
   common/run_command.h \
   compat/assumptions.h \
   compat/byteswap.h \
@@ -164,13 +171,6 @@ BITCOIN_CORE_H = \
   indirectmap.h \
   init.h \
   init/common.h \
-  interfaces/chain.h \
-  interfaces/echo.h \
-  interfaces/handler.h \
-  interfaces/init.h \
-  interfaces/ipc.h \
-  interfaces/node.h \
-  interfaces/wallet.h \
   kernel/chain.h \
   kernel/chainstatemanager_opts.h \
   kernel/checks.h \
@@ -625,6 +625,9 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   common/bloom.cpp \
+  common/interfaces/echo.cpp \
+  common/interfaces/handler.cpp \
+  common/interfaces/init.cpp \
   common/run_command.cpp \
   compressor.cpp \
   core_read.cpp \
@@ -664,9 +667,6 @@ libbitcoin_util_a_SOURCES = \
   chainparamsbase.cpp \
   clientversion.cpp \
   fs.cpp \
-  interfaces/echo.cpp \
-  interfaces/handler.cpp \
-  interfaces/init.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
@@ -985,7 +985,7 @@ CLEANFILES += consensus/*.gcda consensus/*.gcno
 CLEANFILES += crc32c/src/*.gcda crc32c/src/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
 CLEANFILES += index/*.gcda index/*.gcno
-CLEANFILES += interfaces/*.gcda interfaces/*.gcno
+CLEANFILES += common/interfaces/*.gcda common/interfaces/*.gcno
 CLEANFILES += node/*.gcda node/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno

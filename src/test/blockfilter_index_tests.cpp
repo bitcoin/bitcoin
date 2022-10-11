@@ -4,10 +4,10 @@
 
 #include <blockfilter.h>
 #include <chainparams.h>
+#include <common/interfaces/chain.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
-#include <interfaces/chain.h>
 #include <node/miner.h>
 #include <pow.h>
 #include <script/standard.h>
