@@ -8,8 +8,8 @@
 #include <test/util/logging.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
-#include <threadinterrupt.h>
 #include <util/system.h>
+#include <util/threadinterrupt.h>
 
 #include <boost/test/unit_test.hpp>
 

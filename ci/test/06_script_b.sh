@@ -56,7 +56,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " src/test/fuzz/txorphan.cpp"\
-          " src/threadinterrupt.cpp"\
           " src/util/bip32.cpp"\
           " src/util/bytevectorhash.cpp"\
           " src/util/error.cpp"\
@@ -69,6 +68,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/strencodings.cpp"\
           " src/util/string.cpp"\
           " src/util/syserror.cpp"\
+          " src/util/threadinterrupt.cpp"\
           " src/zmq"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
 fi

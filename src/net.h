@@ -24,10 +24,10 @@
 #include <span.h>
 #include <streams.h>
 #include <sync.h>
-#include <threadinterrupt.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/sock.h>
+#include <util/threadinterrupt.h>
 
 #include <atomic>
 #include <condition_variable>

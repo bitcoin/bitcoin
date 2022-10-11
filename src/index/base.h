@@ -7,7 +7,7 @@
 
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
 #include <string>
