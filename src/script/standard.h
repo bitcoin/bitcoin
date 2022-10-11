@@ -38,16 +38,6 @@ public:
  */
 static const unsigned int MAX_OP_RETURN_RELAY = 83;
 
-/**
- * Mandatory script verification flags that all new blocks must comply with for
- * them to be valid. (but old blocks may not comply with) Currently just P2SH,
- * but in the future other flags may be added.
- *
- * Failing one of these tests may trigger a DoS ban - see CheckInputScripts() for
- * details.
- */
-static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
-
 enum class TxoutType {
     NONSTANDARD,
     // 'standard' transaction types:
