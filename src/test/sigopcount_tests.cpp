@@ -230,6 +230,23 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(redeemScript.GetStandardSigOpCount()==4);
 
     }
+    // nested IFs #3
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF  << 1 <<
+         OP_ELSE <<
+           OP_IF <<
+             4 <<
+           OP_ELSE <<
+             5 <<
+           OP_ENDIF  <<
+           2 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==2);
+
+    }
+
      // Two IFs #1
     {
         CScript redeemScript = CScript() <<
