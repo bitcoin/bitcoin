@@ -220,9 +220,9 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
          OP_NOTIF  << 4 <<
          OP_ELSE <<
            OP_IF <<
-             1 << ToByteVector(pubkey) << 1 <<
+             1 <<
            OP_ELSE <<
-             1 << ToByteVector(pubkey) << 1 <<
+             1 <<
            OP_ENDIF  <<
            1 <<
          OP_ENDIF << OP_CHECKMULTISIGVERIFY;
