@@ -33,9 +33,9 @@ static int32_t GetCheckRatio(const NodeContext& node_ctx)
 
 static CNetAddr ResolveIP(const std::string& ip)
 {
-    CNetAddr addr;
-    BOOST_CHECK_MESSAGE(LookupHost(ip, addr, false), strprintf("failed to resolve: %s", ip));
-    return addr;
+    const std::optional<CNetAddr> addr{LookupHost(ip, false)};
+    BOOST_CHECK_MESSAGE(addr.has_value(), strprintf("failed to resolve: %s", ip));
+    return addr.value_or(CNetAddr{});
 }
 
 static CService ResolveService(const std::string& ip, uint16_t port = 0)
@@ -1012,9 +1012,9 @@ static CDataStream MakeCorruptPeersDat()
     const std::optional<CService> serv{Lookup("252.1.1.1", 7777, false)};
     BOOST_REQUIRE(serv.has_value());
     CAddress addr = CAddress(serv.value(), NODE_NONE);
-    CNetAddr resolved;
-    BOOST_REQUIRE(LookupHost("252.2.2.2", resolved, false));
-    AddrInfo info = AddrInfo(addr, resolved);
+    std::optional<CNetAddr> resolved{LookupHost("252.2.2.2", false)};
+    BOOST_REQUIRE(resolved.has_value());
+    AddrInfo info = AddrInfo(addr, resolved.value());
     s << info;
 
     return s;

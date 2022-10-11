@@ -117,13 +117,13 @@ std::vector<CNetAddr> LookupHost(const std::string& name, unsigned int nMaxSolut
 /**
  * Resolve a host string to its first corresponding network address.
  *
- * @returns The resulting network addresses to which the specified host
- *          string resolved.
+ * @returns The resulting network address to which the specified host
+ *          string resolved or std::nullopt if host does not resolve to an address.
  *
- * @see LookupHost(const std::string&, uint16_t, bool, DNSLookupFn)
+ * @see LookupHost(const std::string&, unsigned int, bool, DNSLookupFn)
  *      for additional parameter descriptions.
  */
-bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
+std::optional<CNetAddr> LookupHost(const std::string& name, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
 
 /**
  * Resolve a service string to its corresponding service.

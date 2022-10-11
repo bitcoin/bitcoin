@@ -173,16 +173,10 @@ std::vector<CNetAddr> LookupHost(const std::string& name, unsigned int nMaxSolut
     return LookupIntern(strHost, nMaxSolutions, fAllowLookup, dns_lookup_function);
 }
 
-bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+std::optional<CNetAddr> LookupHost(const std::string& name, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
-    if (!ContainsNoNUL(name)) {
-        return false;
-    }
     const std::vector<CNetAddr> addresses{LookupHost(name, 1, fAllowLookup, dns_lookup_function)};
-    if(addresses.empty())
-        return false;
-    addr = addresses.front();
-    return true;
+    return addresses.empty() ? std::nullopt : std::make_optional(addresses.front());
 }
 
 std::vector<CService> Lookup(const std::string& name, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
@@ -669,27 +663,27 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 
     const size_t slash_pos{subnet_str.find_last_of('/')};
     const std::string str_addr{subnet_str.substr(0, slash_pos)};
-    CNetAddr addr;
+    const std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
 
-    if (LookupHost(str_addr, addr, /*fAllowLookup=*/false)) {
+    if (addr.has_value()) {
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
             uint8_t netmask;
             if (ParseUInt8(netmask_str, &netmask)) {
                 // Valid number; assume CIDR variable-length subnet masking.
-                subnet_out = CSubNet{addr, netmask};
+                subnet_out = CSubNet{addr.value(), netmask};
                 return subnet_out.IsValid();
             } else {
                 // Invalid number; try full netmask syntax. Never allow lookup for netmask.
-                CNetAddr full_netmask;
-                if (LookupHost(netmask_str, full_netmask, /*fAllowLookup=*/false)) {
-                    subnet_out = CSubNet{addr, full_netmask};
+                const std::optional<CNetAddr> full_netmask{LookupHost(netmask_str, /*fAllowLookup=*/false)};
+                if (full_netmask.has_value()) {
+                    subnet_out = CSubNet{addr.value(), full_netmask.value()};
                     return subnet_out.IsValid();
                 }
             }
         } else {
             // Single IP subnet (<ipv4>/32 or <ipv6>/128).
-            subnet_out = CSubNet{addr};
+            subnet_out = CSubNet{addr.value()};
             return subnet_out.IsValid();
         }
     }

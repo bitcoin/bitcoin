@@ -36,9 +36,9 @@ FUZZ_TARGET(netbase_dns_lookup)
         assert(resolved_addresses.size() <= max_results || max_results == 0);
     }
     {
-        CNetAddr resolved_address;
-        if (LookupHost(name, resolved_address, allow_lookup, fuzzed_dns_lookup_function)) {
-            assert(!resolved_address.IsInternal());
+        const std::optional<CNetAddr> resolved_address{LookupHost(name, allow_lookup, fuzzed_dns_lookup_function)};
+        if (resolved_address.has_value()) {
+            assert(!resolved_address.value().IsInternal());
         }
     }
     {

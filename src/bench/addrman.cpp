@@ -72,13 +72,6 @@ static void FillAddrMan(AddrMan& addrman)
     AddAddressesToAddrMan(addrman);
 }
 
-static CNetAddr ResolveIP(const std::string& ip)
-{
-    CNetAddr addr;
-    LookupHost(ip, addr, false);
-    return addr;
-}
-
 /* Benchmarks */
 
 static void AddrManAdd(benchmark::Bench& bench)
@@ -128,7 +121,7 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     i2p_service.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
     CAddress i2p_address(i2p_service, NODE_NONE);
     i2p_address.nTime = Now<NodeSeconds>();
-    CNetAddr source = ResolveIP("252.2.2.2");
+    const CNetAddr source{LookupHost("252.2.2.2", false).value()};
     addrman.Add({i2p_address}, source);
 
     FillAddrMan(addrman);
