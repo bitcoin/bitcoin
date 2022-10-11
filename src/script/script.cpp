@@ -190,6 +190,8 @@ unsigned int CScript::GetStandardSigOpCount() const
                 break;
             case OP_IF:
             case OP_NOTIF:
+                if (nesting==0)
+                   if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
                 nesting++;
                 break;
             case OP_ELSE:
