@@ -246,7 +246,17 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(redeemScript.GetStandardSigOpCount()==2);
 
     }
+    // multiple ELSEs
+    {
+        CScript redeemScript = CScript() <<
+         OP_IF  << 1 <<
+         OP_ELSE << 7 <<
+         OP_ELSE << 1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
 
+        assert(redeemScript.GetStandardSigOpCount()==MAX_PUBKEYS_PER_MULTISIG);
+
+    }
      // Two IFs #1
     {
         CScript redeemScript = CScript() <<
