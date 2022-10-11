@@ -199,6 +199,65 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(CTransaction(creationTx), spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
+     // nested IFs
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF <<  4 <<
+         OP_ELSE <<
+           OP_IF <<
+             1 <<
+           OP_ELSE <<
+             1 <<
+           OP_ENDIF  <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==MAX_PUBKEYS_PER_MULTISIG);
+
+    }
+    // nested IFs #2
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF  << 4 <<
+         OP_ELSE <<
+           OP_IF <<
+             1 << ToByteVector(pubkey) << 1 <<
+           OP_ELSE <<
+             1 << ToByteVector(pubkey) << 1 <<
+           OP_ENDIF  <<
+           1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==4);
+
+    }
+     // Two IFs #1
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF << 4 <<
+         OP_ELSE  << 1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY <<
+
+         OP_NOTIF << 3 <<
+         OP_ELSE  << 5 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==9);
+
+    }
+    // Two IFs #2
+    {
+        CScript redeemScript = CScript() <<
+         OP_NOTIF << 4 <<
+         OP_ELSE  << 1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY <<
+
+         OP_NOTIF <<
+         OP_ELSE << 1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==4+MAX_PUBKEYS_PER_MULTISIG);
+    }
+
     // Last opcode of ENDIF is not a push
     {
         CScript redeemScript = CScript() <<
