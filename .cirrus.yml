@@ -18,11 +18,8 @@ persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
 
 base_template: &BASE_TEMPLATE
   merge_base_script:
-    # Unconditionally install git (used in fingerprint_script) and set the
-    # default git author name (used in verify-commits.py)
+    # Unconditionally install git (used in fingerprint_script).
     - bash -c "$PACKAGE_MANAGER_INSTALL git"
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
@@ -97,7 +94,7 @@ task:
   env:
     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin;%PATH%'
     PYTHONUTF8: 1
-    CI_VCPKG_TAG: '2022.06.16.1'
+    CI_VCPKG_TAG: '2022.09.27'
     VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
@@ -105,14 +102,7 @@ task:
     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
     IgnoreWarnIntDirInTempDetected: 'true'
   merge_script:
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
-    # Windows filesystem loses the executable bit, and all of the executable
-    # files are considered "modified" now. It will break the following `git merge`
-    # command. The next two commands make git ignore this issue.
-    - git config core.filemode false
-    - git reset --hard
-    - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH; git merge FETCH_HEAD; }
+    - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL pull/$env:CIRRUS_PR/merge; git reset --hard FETCH_HEAD; }
   vcpkg_tools_cache:
     folder: '%VCPKG_DOWNLOADS%\tools'
     reupload_on_changes: false
@@ -152,9 +142,9 @@ task:
     - python build_msvc\msvc-autogen.py
     - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
-  unit_tests_script:
-    - src\test_navcoin.exe -l test_suite
-    - src\bench_navcoin.exe > NUL
+  check_script:
+    - src\test_bitcoin.exe -l test_suite
+    - src\bench_bitcoin.exe --sanity-check > NUL
     - python test\util\test_runner.py
     - python test\util\rpcauth-test.py
   functional_tests_script:

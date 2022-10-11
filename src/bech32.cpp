@@ -241,7 +241,7 @@ constexpr std::array<uint32_t, 25> GenerateSyndromeConstants() {
     std::array<uint32_t, 25> SYNDROME_CONSTS{};
     for (int k = 1; k < 6; ++k) {
         for (int shift = 0; shift < 5; ++shift) {
-            int16_t b = GF1024_LOG.at(1 << shift);
+            int16_t b = GF1024_LOG.at(size_t{1} << shift);
             int16_t c0 = GF1024_EXP.at((997*k + b) % 1023);
             int16_t c1 = GF1024_EXP.at((998*k + b) % 1023);
             int16_t c2 = GF1024_EXP.at((999*k + b) % 1023);

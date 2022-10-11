@@ -10,12 +10,6 @@ if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
   export LC_ALL=C
 fi
 
-if [ "$CI_OS_NAME" == "macos" ]; then
-  sudo -H pip3 install --upgrade pip
-  # shellcheck disable=SC2086
-  IN_GETOPT_BIN="/usr/local/opt/gnu-getopt/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-fi
-
 # Create folders that are mounted into the docker
 mkdir -p "${CCACHE_DIR}"
 mkdir -p "${PREVIOUS_RELEASES_DIR}"
@@ -78,9 +72,16 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   fi
   ${CI_RETRY_EXE} CI_EXEC apt-get update
   ${CI_RETRY_EXE} CI_EXEC apt-get install --no-install-recommends --no-upgrade -y "$PACKAGES" "$DOCKER_PACKAGES"
-  if [ -n "$PIP_PACKAGES" ]; then
+fi
+
+if [ -n "$PIP_PACKAGES" ]; then
+  if [ "$CI_OS_NAME" == "macos" ]; then
+    sudo -H pip3 install --upgrade pip
     # shellcheck disable=SC2086
-    ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
+    IN_GETOPT_BIN="/usr/local/opt/gnu-getopt/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
+  else
+    # shellcheck disable=SC2086
+    ${CI_RETRY_EXE} CI_EXEC pip3 install --user $PIP_PACKAGES
   fi
 fi
 
