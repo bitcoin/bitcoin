@@ -710,6 +710,7 @@ libbitcoin_util_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if USE_LIBEVENT
+libbitcoin_util_a_CPPFLAGS += $(EVENT_CFLAGS)
 libbitcoin_util_a_SOURCES += util/url.cpp
 endif
 #
