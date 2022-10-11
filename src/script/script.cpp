@@ -166,6 +166,7 @@ unsigned int CScript::GetStandardSigOpCount() const
     unsigned int if_n = MAX_PUBKEYS_PER_MULTISIG;
     unsigned int else_n = MAX_PUBKEYS_PER_MULTISIG;
     unsigned int nesting =0;
+    bool  elseFound = false;
     const_iterator pc = begin();
     opcodetype lastOpcode = OP_INVALIDOPCODE;
     while (pc < end())
@@ -184,24 +185,29 @@ unsigned int CScript::GetStandardSigOpCount() const
                 if ((lastOpcode==OP_ENDIF) && (nesting==0)) {
                         n +=std::max(if_n,else_n);
                         if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                        elseFound = false;
                     }
                     else
                     n += GetStandardSigOpCount(lastOpcode);
                 break;
             case OP_IF:
             case OP_NOTIF:
-                if (nesting==0)
+                if (nesting==0) {
                    if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                   elseFound = false;
+                }
                 nesting++;
                 break;
             case OP_ELSE:
                 if (nesting==1) {
                     // Avoid considering scripts with multiple OP_ELSE as standard.
                     // IF ELSE ELSE ENDIF is allowed by Bitcoin script
-                    if (else_n!=MAX_PUBKEYS_PER_MULTISIG)
+                    if (elseFound)
                         else_n = MAX_PUBKEYS_PER_MULTISIG;
-                    else
+                    else {
                         else_n = GetStandardSigOpCount(lastOpcode);
+                        elseFound = true;
+                    }
                 }
                 break;
             case OP_ENDIF:
