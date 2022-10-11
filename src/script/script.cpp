@@ -165,6 +165,7 @@ unsigned int CScript::GetStandardSigOpCount() const
     unsigned int n = 0;
     unsigned int if_n = MAX_PUBKEYS_PER_MULTISIG;
     unsigned int else_n = MAX_PUBKEYS_PER_MULTISIG;
+    unsigned int nesting =0;
     const_iterator pc = begin();
     opcodetype lastOpcode = OP_INVALIDOPCODE;
     while (pc < end())
@@ -180,7 +181,7 @@ unsigned int CScript::GetStandardSigOpCount() const
                 break;
              case OP_CHECKMULTISIG:
              case OP_CHECKMULTISIGVERIFY:
-                if (lastOpcode==OP_ENDIF) {
+                if ((lastOpcode==OP_ENDIF) && (nesting==0)) {
                         n +=std::max(if_n,else_n);
                         if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
                     }
@@ -189,13 +190,16 @@ unsigned int CScript::GetStandardSigOpCount() const
                 break;
             case OP_IF:
             case OP_NOTIF:
-                if_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                nesting++;
                 break;
             case OP_ELSE:
-                else_n = GetStandardSigOpCount(lastOpcode);
+                if (nesting==1)
+                    else_n = GetStandardSigOpCount(lastOpcode);
                 break;
             case OP_ENDIF:
-                if_n = GetStandardSigOpCount(lastOpcode);
+                if (nesting==1)
+                    if_n = GetStandardSigOpCount(lastOpcode);
+                nesting--;
                 break;
             default:
                 break;
