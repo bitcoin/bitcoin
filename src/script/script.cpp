@@ -195,8 +195,14 @@ unsigned int CScript::GetStandardSigOpCount() const
                 nesting++;
                 break;
             case OP_ELSE:
-                if (nesting==1)
-                    else_n = GetStandardSigOpCount(lastOpcode);
+                if (nesting==1) {
+                    // Avoid considering scripts with multiple OP_ELSE as standard.
+                    // IF ELSE ELSE ENDIF is allowed by Bitcoin script
+                    if (else_n!=MAX_PUBKEYS_PER_MULTISIG)
+                        else_n = MAX_PUBKEYS_PER_MULTISIG;
+                    else
+                        else_n = GetStandardSigOpCount(lastOpcode);
+                }
                 break;
             case OP_ENDIF:
                 if (nesting==1)
