@@ -49,6 +49,11 @@ bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBi
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
 }
 
+bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& invalid_value)
+{
+    return strprintf(_("Invalid port specified in %s: '%s'"), optname, invalid_value);
+}
+
 bilingual_str AmountHighWarn(const std::string& optname)
 {
     return strprintf(_("%s is set very high!"), optname);
