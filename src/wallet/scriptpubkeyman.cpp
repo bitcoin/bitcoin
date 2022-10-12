@@ -2660,6 +2660,11 @@ const std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::Ge
     return script_pub_keys;
 }
 
+int32_t DescriptorScriptPubKeyMan::GetEndRange() const
+{
+    return m_max_cached_index + 1;
+}
+
 bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool priv) const
 {
     LOCK(cs_desc_man);
