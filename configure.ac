@@ -463,6 +463,8 @@ if test "$CXXFLAGS_overridden" = "no"; then
                         [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
   AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"], [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wimplicit-fallthrough"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wsign-compare], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsign-compare"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wsign-conversion], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsign-conversion"], [], [$CXXFLAG_WERROR])
 
   if test "$suppress_external_warnings" != "no" ; then
     AX_CHECK_COMPILE_FLAG([-Wdocumentation], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"], [], [$CXXFLAG_WERROR])
