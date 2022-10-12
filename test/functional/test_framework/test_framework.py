@@ -815,31 +815,47 @@ class DashTestFramework(BitcoinTestFramework):
         # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
         self.log.info("Wait for dip0008 activation")
         while self.nodes[0].getblockcount() < self.dip8_activation_height:
+            self.bump_mocktime(10)
             self.nodes[0].generate(10)
             if slow_mode:
                 self.sync_blocks()
         self.sync_blocks()
 
-    def activate_dip0024(self, slow_mode=False, expected_activation_height=None):
+    def activate_dip0024(self, expected_activation_height=None):
         self.log.info("Wait for dip0024 activation")
 
+        # disable spork17 while mining blocks to activate dip0024 to prevent accidental quorum formation
+        spork17_value = self.nodes[0].spork('show')['SPORK_17_QUORUM_DKG_ENABLED']
+        self.bump_mocktime(1)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+
+        # mine blocks in batches
+        batch_size = 10
         if expected_activation_height is not None:
             height = self.nodes[0].getblockcount()
-            batch_size = 100
             while height - expected_activation_height > batch_size:
+                self.bump_mocktime(batch_size)
                 self.nodes[0].generate(batch_size)
                 height += batch_size
                 self.sync_blocks()
             assert height - expected_activation_height < batch_size
-            self.nodes[0].generate(height - expected_activation_height - 1)
+            blocks_left = height - expected_activation_height - 1
+            self.bump_mocktime(blocks_left)
+            self.nodes[0].generate(blocks_left)
             self.sync_blocks()
             assert self.nodes[0].getblockchaininfo()['bip9_softforks']['dip0024']['status'] != 'active'
 
         while self.nodes[0].getblockchaininfo()['bip9_softforks']['dip0024']['status'] != 'active':
-            self.nodes[0].generate(10)
-            if slow_mode:
-                self.sync_blocks()
+            self.bump_mocktime(batch_size)
+            self.nodes[0].generate(batch_size)
+            self.sync_blocks()
         self.sync_blocks()
+
+        # revert spork17 changes
+        self.bump_mocktime(1)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", spork17_value)
+        self.wait_for_sporks_same()
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
@@ -1155,40 +1171,46 @@ class DashTestFramework(BitcoinTestFramework):
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
 
-    def wait_for_quorum_connections(self, quorum_hash, expected_connections, nodes, llmq_type_name="llmq_test", timeout = 60, wait_proc=None):
+    def wait_for_quorum_connections(self, quorum_hash, expected_connections, mninfos, llmq_type_name="llmq_test", timeout = 60, wait_proc=None):
         def check_quorum_connections():
-            all_ok = True
-            for node in nodes:
-                s = node.quorum("dkgstatus")
-                mn_ok = True
-                for qs in s:
-                    if "llmqType" not in qs:
-                        continue
+            def ret():
+                if wait_proc is not None:
+                    wait_proc()
+                return False
+
+            for mn in mninfos:
+                s = mn.node.quorum("dkgstatus")
+                for qs in s["session"]:
                     if qs["llmqType"] != llmq_type_name:
                         continue
-                    if "quorumConnections" not in qs:
+                    if qs["status"]["quorumHash"] != quorum_hash:
                         continue
-                    qconnections = qs["quorumConnections"]
-                    if qconnections["quorumHash"] != quorum_hash:
-                        mn_ok = False
-                        continue
-                    cnt = 0
-                    for c in qconnections["quorumConnections"]:
-                        if c["connected"]:
-                            cnt += 1
-                    if cnt < expected_connections:
-                        mn_ok = False
-                        break
-                    break
-                if not mn_ok:
-                    all_ok = False
-                    break
-            if not all_ok and wait_proc is not None:
-                wait_proc()
-            return all_ok
+                    for qc in s["quorumConnections"]:
+                        if "quorumConnections" not in qc:
+                            continue
+                        if qc["llmqType"] != llmq_type_name:
+                            continue
+                        if qc["quorumHash"] != quorum_hash:
+                            continue
+                        if len(qc["quorumConnections"]) == 0:
+                            continue
+                        cnt = 0
+                        for c in qc["quorumConnections"]:
+                            if c["connected"]:
+                                cnt += 1
+                        if cnt < expected_connections:
+                            return ret()
+                        return True
+                    # a session with no matching connections - not ok
+                    return ret()
+                # a node with no sessions - ok
+                pass
+            # no sessions at all - not ok
+            return ret()
+
         wait_until(check_quorum_connections, timeout=timeout, sleep=1)
 
-    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None, llmq_type_name="llmq_test"):
+    def wait_for_masternode_probes(self, quorum_hash, mninfos, timeout = 30, wait_proc=None, llmq_type_name="llmq_test"):
         def check_probes():
             def ret():
                 if wait_proc is not None:
@@ -1197,75 +1219,63 @@ class DashTestFramework(BitcoinTestFramework):
 
             for mn in mninfos:
                 s = mn.node.quorum('dkgstatus')
-                if llmq_type_name not in s["session"]:
-                    continue
-                if "quorumConnections" not in s:
-                    return ret()
-                s = s["quorumConnections"]
-                if llmq_type_name not in s:
-                    return ret()
-
-                for c in s[llmq_type_name]:
-                    if c["proTxHash"] == mn.proTxHash:
+                for qs in s["session"]:
+                    if qs["llmqType"] != llmq_type_name:
                         continue
-                    if not c["outbound"]:
-                        mn2 = mn.node.protx('info', c["proTxHash"])
-                        if [m for m in mninfos if c["proTxHash"] == m.proTxHash]:
-                            # MN is expected to be online and functioning, so let's verify that the last successful
-                            # probe is not too old. Probes are retried after 50 minutes, while DKGs consider a probe
-                            # as failed after 60 minutes
-                            if mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
-                                return ret()
-                        else:
-                            # MN is expected to be offline, so let's only check that the last probe is not too long ago
-                            if mn2['metaInfo']['lastOutboundAttemptElapsed'] > 55 * 60 and mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
-                                return ret()
-
+                    if qs["status"]["quorumHash"] != quorum_hash:
+                        continue
+                    for qc in s["quorumConnections"]:
+                        if qc["llmqType"] != llmq_type_name:
+                            continue
+                        if qc["quorumHash"] != quorum_hash:
+                            continue
+                        for c in qc["quorumConnections"]:
+                            if c["proTxHash"] == mn.proTxHash:
+                                continue
+                            if not c["outbound"]:
+                                mn2 = mn.node.protx('info', c["proTxHash"])
+                                if [m for m in mninfos if c["proTxHash"] == m.proTxHash]:
+                                    # MN is expected to be online and functioning, so let's verify that the last successful
+                                    # probe is not too old. Probes are retried after 50 minutes, while DKGs consider a probe
+                                    # as failed after 60 minutes
+                                    if mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
+                                        return ret()
+                                else:
+                                    # MN is expected to be offline, so let's only check that the last probe is not too long ago
+                                    if mn2['metaInfo']['lastOutboundAttemptElapsed'] > 55 * 60 and mn2['metaInfo']['lastOutboundSuccessElapsed'] > 55 * 60:
+                                        return ret()
             return True
+
         wait_until(check_probes, timeout=timeout, sleep=1)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, llmq_type_name="llmq_test", timeout=30, sleep=1):
         def check_dkg_session():
-            all_ok = True
             member_count = 0
             for mn in mninfos:
                 s = mn.node.quorum("dkgstatus")["session"]
-                mn_ok = True
                 for qs in s:
                     if qs["llmqType"] != llmq_type_name:
                         continue
                     qstatus = qs["status"]
                     if qstatus["quorumHash"] != quorum_hash:
                         continue
-                    member_count += 1
-                    if "phase" not in qstatus:
-                        mn_ok = False
-                        break
                     if qstatus["phase"] != phase:
-                        mn_ok = False
-                        break
+                        return False
                     if check_received_messages is not None:
                         if qstatus[check_received_messages] < check_received_messages_count:
-                            mn_ok = False
-                            break
+                            return False
+                    member_count += 1
                     break
-                if not mn_ok:
-                    all_ok = False
-                    break
-            if all_ok and member_count != expected_member_count:
-                return False
-            return all_ok
+            return member_count >= expected_member_count
+
         wait_until(check_dkg_session, timeout=timeout, sleep=sleep)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, llmq_type=100, timeout=15):
         def check_dkg_comitments():
-            time.sleep(2)
-            all_ok = True
             for node in nodes:
                 s = node.quorum("dkgstatus")
                 if "minableCommitments" not in s:
-                    all_ok = False
-                    break
+                    return False
                 commits = s["minableCommitments"]
                 c_ok = False
                 for c in commits:
@@ -1276,9 +1286,9 @@ class DashTestFramework(BitcoinTestFramework):
                     c_ok = True
                     break
                 if not c_ok:
-                    all_ok = False
-                    break
-            return all_ok
+                    return False
+            return True
+
         wait_until(check_dkg_comitments, timeout=timeout, sleep=1)
 
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2, llmq_type_name="llmq_test"):
@@ -1344,9 +1354,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Expected quorum_hash:"+str(q))
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, llmq_type_name=llmq_type_name)
-        self.wait_for_quorum_connections(q, expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
+        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
         if spork23_active:
-            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+            self.wait_for_masternode_probes(q, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
 
         self.move_blocks(nodes, 2)
 
@@ -1440,9 +1450,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("quorumIndex 0: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_0, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 0: Waiting for quorum connections (init)")
-        self.wait_for_quorum_connections(q_0, expected_connections, nodes, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q_0, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         if spork23_active:
-            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+            self.wait_for_masternode_probes(q_0, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
 
         self.move_blocks(nodes, 1)
 
@@ -1454,7 +1464,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("quorumIndex 1: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_1, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 1: Waiting for quorum connections (init)")
-        self.wait_for_quorum_connections(q_1, expected_connections, nodes, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q_1, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        if spork23_active:
+            self.wait_for_masternode_probes(q_1, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
 
         self.move_blocks(nodes, 1)
 
@@ -1554,8 +1566,8 @@ class DashTestFramework(BitcoinTestFramework):
         # Note: recsigs aren't relayed to regular nodes by default,
         # make sure to pick a mn as a node to query for recsigs.
         node = self.mninfo[0].node if node is None else node
-        time_start = time.time()
-        while time.time() - time_start < 10:
+        stop_time = time.time() + 10 * self.options.timeout_scale
+        while time.time() < stop_time:
             try:
                 return node.quorum('getrecsig', llmq_type, rec_sig_id, rec_sig_msg_hash)
             except JSONRPCException:
@@ -1596,6 +1608,7 @@ class DashTestFramework(BitcoinTestFramework):
                 if self.mocktime % 2:
                     self.bump_mocktime(self.quorum_data_request_expiration_timeout + 1)
                     self.nodes[0].generate(1)
+                    self.sync_blocks()
                 else:
                     self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
 

@@ -68,9 +68,13 @@ class AddrTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log([
                 'Added 10 addresses from 127.0.0.1: 0 tried',
                 'received: addrv2 (131 bytes) peer=1',
-                'sending addrv2 (131 bytes) peer=2',
         ]):
             addr_source.send_and_ping(msg)
+
+        # Wait until "Added ..." before bumping mocktime to make sure addv2 is (almost) fully processed
+        with self.nodes[0].assert_debug_log([
+                'sending addrv2 (131 bytes) peer=2',
+        ]):
             self.bump_mocktime(30 * 60)
             addr_receiver.wait_for_addrv2()
 

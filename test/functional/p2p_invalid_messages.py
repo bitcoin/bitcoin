@@ -152,7 +152,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             # modify magic bytes
             msg = b'\xff' * 4 + msg[4:]
             conn.send_raw_message(msg)
-            conn.wait_for_disconnect(timeout=1)
+            conn.wait_for_disconnect(timeout=5)
             self.nodes[0].disconnect_p2ps()
 
     def test_checksum(self):
@@ -178,7 +178,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             # modify len to MAX_SIZE + 1
             msg = msg[:cut_len] + struct.pack("<I", 0x02000000 + 1) + msg[cut_len + 4:]
             self.nodes[0].p2p.send_raw_message(msg)
-            conn.wait_for_disconnect(timeout=1)
+            conn.wait_for_disconnect(timeout=5)
             self.nodes[0].disconnect_p2ps()
 
     def test_command(self):
