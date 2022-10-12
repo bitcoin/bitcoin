@@ -36,7 +36,7 @@
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
-using interfaces::MakeHandler;
+using interfaces::MakeSignalHandler;
 using interfaces::Wallet;
 using interfaces::WalletAddress;
 using interfaces::WalletBalances;
@@ -486,34 +486,34 @@ public:
     bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyUnload.connect(fn));
+        return MakeSignalHandler(m_wallet->NotifyUnload.connect(fn));
     }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
-        return MakeHandler(m_wallet->ShowProgress.connect(fn));
+        return MakeSignalHandler(m_wallet->ShowProgress.connect(fn));
     }
     std::unique_ptr<Handler> handleStatusChanged(StatusChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyStatusChanged.connect([fn](CWallet*) { fn(); }));
+        return MakeSignalHandler(m_wallet->NotifyStatusChanged.connect([fn](CWallet*) { fn(); }));
     }
     std::unique_ptr<Handler> handleAddressBookChanged(AddressBookChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyAddressBookChanged.connect(
+        return MakeSignalHandler(m_wallet->NotifyAddressBookChanged.connect(
             [fn](const CTxDestination& address, const std::string& label, bool is_mine,
                  const std::string& purpose, ChangeType status) { fn(address, label, is_mine, purpose, status); }));
     }
     std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyTransactionChanged.connect(
+        return MakeSignalHandler(m_wallet->NotifyTransactionChanged.connect(
             [fn](const uint256& txid, ChangeType status) { fn(txid, status); }));
     }
     std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyWatchonlyChanged.connect(fn));
+        return MakeSignalHandler(m_wallet->NotifyWatchonlyChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
+        return MakeSignalHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
     CWallet* wallet() override { return m_wallet.get(); }
 

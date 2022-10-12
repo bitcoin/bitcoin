@@ -20,10 +20,10 @@ public:
     std::function<void()> m_cleanup;
 };
 
-class HandlerImpl : public interfaces::Handler
+class SignalHandler : public interfaces::Handler
 {
 public:
-    explicit HandlerImpl(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
+    explicit SignalHandler(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
 
     void disconnect() override { m_connection.disconnect(); }
 
@@ -39,14 +39,14 @@ public:
 } // namespace common
 
 namespace interfaces {
-std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup)
+std::unique_ptr<Handler> MakeCleanupHandler(std::function<void()> cleanup)
 {
     return std::make_unique<common::CleanupHandler>(std::move(cleanup));
 }
 
-std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection)
+std::unique_ptr<Handler> MakeSignalHandler(boost::signals2::connection connection)
 {
-    return std::make_unique<common::HandlerImpl>(std::move(connection));
+    return std::make_unique<common::SignalHandler>(std::move(connection));
 }
 
 std::unique_ptr<Echo> MakeEcho() { return std::make_unique<common::EchoImpl>(); }
