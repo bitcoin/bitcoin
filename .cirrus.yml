@@ -171,7 +171,7 @@ task:
     - cd %CIRRUS_WORKING_DIR%
     - ccache --zero-stats --max-size=%CCACHE_SIZE%
     - python build_msvc\msvc-autogen.py
-    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - msbuild build_msvc\bitcoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
     - ccache --show-stats
   check_script:
     - src\test_bitcoin.exe -l test_suite
