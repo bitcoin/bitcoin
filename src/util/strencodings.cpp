@@ -97,8 +97,9 @@ std::vector<Byte> ParseHex(std::string_view str)
 template std::vector<std::byte> ParseHex(std::string_view);
 template std::vector<uint8_t> ParseHex(std::string_view);
 
-void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
+bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 {
+    bool valid = false;
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
@@ -109,13 +110,18 @@ void SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
         if (ParseUInt16(in.substr(colon + 1), &n)) {
             in = in.substr(0, colon);
             portOut = n;
+            valid = (portOut != 0);
         }
+    } else {
+        valid = true;
     }
     if (in.size() > 0 && in[0] == '[' && in[in.size() - 1] == ']') {
         hostOut = in.substr(1, in.size() - 2);
     } else {
         hostOut = in;
     }
+
+    return valid;
 }
 
 std::string EncodeBase64(Span<const unsigned char> input)
