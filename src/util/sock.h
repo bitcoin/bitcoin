@@ -133,6 +133,18 @@ public:
      */
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
 
+    /**
+     * Set the non-blocking option on the socket.
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNonBlocking() const;
+
+    /**
+     * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
+     * @return true if selectable
+     */
+    [[nodiscard]] virtual bool IsSelectable() const;
+
     using Event = uint8_t;
 
     /**
