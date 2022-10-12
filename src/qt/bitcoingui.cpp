@@ -401,7 +401,7 @@ void BitcoinGUI::createActions()
     openInfoAction = new QAction(tr("&Information"), this);
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
     openRPCConsoleAction = new QAction(tr("&Debug console"), this);
-    openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
+    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
     openGraphAction = new QAction(tr("&Network Monitor"), this);
     openGraphAction->setStatusTip(tr("Show network monitor"));
     openPeersAction = new QAction(tr("&Peers list"), this);
@@ -886,6 +886,10 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
 void BitcoinGUI::removeWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
+
+    labelWalletHDStatusIcon->hide();
+    labelWalletEncryptionIcon->hide();
+
     int index = m_wallet_selector->findData(QVariant::fromValue(walletModel));
     m_wallet_selector->removeItem(index);
     if (m_wallet_selector->count() == 0) {
@@ -1770,6 +1774,7 @@ void BitcoinGUI::setHDStatus(int hdEnabled)
     if (hdEnabled) {
         labelWalletHDStatusIcon->setPixmap(GUIUtil::getIcon("hd_enabled", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         labelWalletHDStatusIcon->setToolTip(tr("HD key generation is <b>enabled</b>"));
+        labelWalletHDStatusIcon->show();
     }
     labelWalletHDStatusIcon->setVisible(hdEnabled);
 }

@@ -495,6 +495,7 @@ def force_finish_mnsync(node):
 # Transaction/Block functions
 #############################
 
+
 def find_output(node, txid, amount, *, blockhash=None):
     """
     Return index to output of txid with value amount

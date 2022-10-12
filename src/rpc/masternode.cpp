@@ -77,7 +77,7 @@ static UniValue masternode_connect(const JSONRPCRequest& request)
     std::string strAddress = request.params[0].get_str();
 
     CService addr;
-    if (!Lookup(strAddress.c_str(), addr, 0, false))
+    if (!Lookup(strAddress, addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.

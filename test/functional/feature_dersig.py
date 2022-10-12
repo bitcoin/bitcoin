@@ -42,13 +42,12 @@ def unDERify(tx):
     tx.vin[0].scriptSig = CScript(newscript)
 
 
-
 class BIP66Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000', '-par=1', '-enablebip61']]  # Use only one script thread to get the exact reject reason for testing
         self.setup_clean_chain = True
-        self.rpc_timeout = 120
+        self.rpc_timeout = 240
 
     def test_dersig_info(self, *, is_active):
         assert_equal(

@@ -1808,11 +1808,11 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *mi->second));
                     }
                     push = true;
-                } else if (pfrom->m_tx_relay->timeLastMempoolReq) {
+                } else if (pfrom->m_tx_relay->m_last_mempool_req.load().count()) {
                     auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
                     // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (txinfo.tx && txinfo.nTime <= pfrom->m_tx_relay->timeLastMempoolReq) {
+                    if (txinfo.tx && txinfo.m_time <= pfrom->m_tx_relay->m_last_mempool_req.load()) {
                         if (dstx) {
                             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
                         } else {
@@ -4804,7 +4804,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         queueAndMaybePushInv(CInv(MSG_CLSIG, chainlockHash));
                     }
 
-                    pto->m_tx_relay->timeLastMempoolReq = GetTime();
+                    pto->m_tx_relay->m_last_mempool_req = GetTime<std::chrono::seconds>();
                 }
 
                 // Determine transactions to relay

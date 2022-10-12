@@ -9,21 +9,23 @@
 #include <uint256.h>
 #include <amount.h>
 
+#include <chrono>
+
 struct CMempoolAddressDelta
 {
-    int64_t time;
+    std::chrono::seconds time;
     CAmount amount;
     uint256 prevhash;
     unsigned int prevout;
 
-    CMempoolAddressDelta(int64_t t, CAmount a, uint256 hash, unsigned int out) {
+    CMempoolAddressDelta(std::chrono::seconds t, CAmount a, uint256 hash, unsigned int out) {
         time = t;
         amount = a;
         prevhash = hash;
         prevout = out;
     }
 
-    CMempoolAddressDelta(int64_t t, CAmount a) {
+    CMempoolAddressDelta(std::chrono::seconds t, CAmount a) {
         time = t;
         amount = a;
         prevhash.SetNull();
