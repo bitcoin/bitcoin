@@ -503,12 +503,14 @@ public:
     AutoFile(const AutoFile&) = delete;
     AutoFile& operator=(const AutoFile&) = delete;
 
-    void fclose()
+    int fclose()
     {
+        int retval{0};
         if (file) {
-            ::fclose(file);
+            retval = ::fclose(file);
             file = nullptr;
         }
+        return retval;
     }
 
     /** Get wrapped FILE* with transfer of ownership.

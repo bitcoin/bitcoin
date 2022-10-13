@@ -243,27 +243,12 @@ ChainTestingSetup::~ChainTestingSetup()
     governance.reset();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
-    : ChainTestingSetup(chainName, extra_args)
+void TestingSetup::LoadVerifyActivateChainstate()
 {
-    // Ideally we'd move all the RPC tests to the functional testing framework
-    // instead of unit tests, but for now we need these here.
-    RegisterAllCoreRPCCommands(tableRPC);
-    // SYSCOIN
-    m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
-    m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
-                                               /*deterministic=*/false,
-                                               m_node.args->GetIntArg("-checkaddrman", 0));
-    m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
-    m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
-                                       m_node.banman.get(), *m_node.chainman,
-                                       *m_node.mempool, false);
-    fRegTest = chainName == CBaseChainParams::REGTEST;
     node::ChainstateLoadOptions options;
     options.mempool = Assert(m_node.mempool.get());
-    options.block_tree_db_in_memory = true;
-    options.coins_db_in_memory = true;
+    options.block_tree_db_in_memory = m_block_tree_db_in_memory;
+    options.coins_db_in_memory = m_coins_db_in_memory;
     options.reindex = node::fReindex;
     options.reindex_chainstate = m_args.GetBoolArg("-reindex-chainstate", false);
     options.prune = node::fPruneMode;
@@ -283,6 +268,34 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+}
+
+TestingSetup::TestingSetup(
+    const std::string& chainName,
+    const std::vector<const char*>& extra_args,
+    const bool coins_db_in_memory,
+    const bool block_tree_db_in_memory)
+    : ChainTestingSetup(chainName, extra_args),
+      m_coins_db_in_memory(coins_db_in_memory),
+      m_block_tree_db_in_memory(block_tree_db_in_memory)
+{
+    // Ideally we'd move all the RPC tests to the functional testing framework
+    // instead of unit tests, but for now we need these here.
+    RegisterAllCoreRPCCommands(tableRPC);
+
+    // SYSCOIN
+    m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
+    m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
+                                               /*deterministic=*/false,
+                                               m_node.args->GetIntArg("-checkaddrman", 0));
+    m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
+                                       m_node.banman.get(), *m_node.chainman,
+                                       *m_node.mempool, false);
+    fRegTest = chainName == CBaseChainParams::REGTEST;
+
+    LoadVerifyActivateChainstate();
 
     // m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
     // m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
@@ -301,8 +314,14 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 }
 
 // SYSCOIN
-TestChain100Setup::TestChain100Setup(const std::string& chain_name, const std::vector<const char*>& extra_args, int count)
-    : TestingSetup{chain_name, extra_args}
+TestChain100Setup::TestChain100Setup(
+        const std::string& chain_name,
+        const std::vector<const char*>& extra_args,
+        // SYSCOIN
+        int count,
+        const bool coins_db_in_memory,
+        const bool block_tree_db_in_memory)
+    : TestingSetup{CBaseChainParams::REGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}
 {
     SetMockTime(1598887952);
     constexpr std::array<unsigned char, 32> vchKey = {
