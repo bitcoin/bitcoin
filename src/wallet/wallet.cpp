@@ -2386,7 +2386,6 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
         return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
     }
 
-    spk_man->TopUp();
     auto op_dest = spk_man->GetNewDestination(type);
     if (op_dest) {
         SetAddressBook(*op_dest, label, "receive");
@@ -2480,10 +2479,7 @@ util::Result<CTxDestination> ReserveDestination::GetReservedDestination(bool int
         return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
     }
 
-    if (nIndex == -1)
-    {
-        m_spk_man->TopUp();
-
+    if (nIndex == -1) {
         CKeyPool keypool;
         auto op_address = m_spk_man->GetReservedDestination(type, internal, nIndex, keypool);
         if (!op_address) return op_address;
