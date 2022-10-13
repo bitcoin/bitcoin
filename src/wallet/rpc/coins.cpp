@@ -591,11 +591,8 @@ RPCHelpMan listunspent()
         include_unsafe = request.params[3].get_bool();
     }
 
-    CAmount nMinimumAmount = 0;
-    CAmount nMaximumAmount = MAX_MONEY;
-    CAmount nMinimumSumAmount = MAX_MONEY;
-    uint64_t nMaximumCount = 0;
-    bool include_immature_coinbase{false};
+    CoinFilterParams filter_coins;
+    filter_coins.nMinimumAmount = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -611,19 +608,19 @@ RPCHelpMan listunspent()
             true, true);
 
         if (options.exists("minimumAmount"))
-            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+            filter_coins.nMinimumAmount = AmountFromValue(options["minimumAmount"]);
 
         if (options.exists("maximumAmount"))
-            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+            filter_coins.nMaximumAmount = AmountFromValue(options["maximumAmount"]);
 
         if (options.exists("minimumSumAmount"))
-            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+            filter_coins.nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
 
         if (options.exists("maximumCount"))
-            nMaximumCount = options["maximumCount"].getInt<int64_t>();
+            filter_coins.nMaximumCount = options["maximumCount"].getInt<int64_t>();
 
         if (options.exists("include_immature_coinbase")) {
-            include_immature_coinbase = options["include_immature_coinbase"].get_bool();
+            filter_coins.include_immature_coinbase = options["include_immature_coinbase"].get_bool();
         }
     }
 
@@ -640,7 +637,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, include_immature_coinbase).All();
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, filter_coins).All();
     }
 
     LOCK(pwallet->cs_wallet);
