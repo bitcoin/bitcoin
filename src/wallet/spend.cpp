@@ -268,7 +268,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(wtxid, i);
 
-            if (output.nValue < params.nMinimumAmount || output.nValue > params.nMaximumAmount)
+            if (output.nValue < params.min_amount || output.nValue > params.max_amount)
                 continue;
 
             // Skip manually selected coins (the caller can fetch them directly)
@@ -324,14 +324,14 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Cache total amount as we go
             result.total_amount += output.nValue;
             // Checks the sum amount of all UTXO's.
-            if (params.nMinimumSumAmount != MAX_MONEY) {
-                if (result.total_amount >= params.nMinimumSumAmount) {
+            if (params.min_sum_amount != MAX_MONEY) {
+                if (result.total_amount >= params.min_sum_amount) {
                     return result;
                 }
             }
 
             // Checks the maximum number of UTXO's.
-            if (params.nMaximumCount > 0 && result.Size() >= params.nMaximumCount) {
+            if (params.max_count > 0 && result.Size() >= params.max_count) {
                 return result;
             }
         }

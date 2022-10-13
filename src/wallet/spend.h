@@ -57,13 +57,13 @@ struct CoinsResult {
 
 struct CoinFilterParams {
     // Outputs below the minimum amount will not get selected
-    CAmount nMinimumAmount{1};
+    CAmount min_amount{1};
     // Outputs above the maximum amount will not get selected
-    CAmount nMaximumAmount{MAX_MONEY};
+    CAmount max_amount{MAX_MONEY};
     // Return outputs until the minimum sum amount is covered
-    CAmount nMinimumSumAmount{MAX_MONEY};
+    CAmount min_sum_amount{MAX_MONEY};
     // Maximum number of outputs that can be returned
-    uint64_t nMaximumCount{0};
+    uint64_t max_count{0};
     // By default, return only spendable outputs
     bool only_spendable{true};
     // By default, do not include immature coinbase outputs

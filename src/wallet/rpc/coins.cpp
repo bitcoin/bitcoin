@@ -592,7 +592,7 @@ RPCHelpMan listunspent()
     }
 
     CoinFilterParams filter_coins;
-    filter_coins.nMinimumAmount = 0;
+    filter_coins.min_amount = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -608,16 +608,16 @@ RPCHelpMan listunspent()
             true, true);
 
         if (options.exists("minimumAmount"))
-            filter_coins.nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+            filter_coins.min_amount = AmountFromValue(options["minimumAmount"]);
 
         if (options.exists("maximumAmount"))
-            filter_coins.nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+            filter_coins.max_amount = AmountFromValue(options["maximumAmount"]);
 
         if (options.exists("minimumSumAmount"))
-            filter_coins.nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+            filter_coins.min_sum_amount = AmountFromValue(options["minimumSumAmount"]);
 
         if (options.exists("maximumCount"))
-            filter_coins.nMaximumCount = options["maximumCount"].getInt<int64_t>();
+            filter_coins.max_count = options["maximumCount"].getInt<int64_t>();
 
         if (options.exists("include_immature_coinbase")) {
             filter_coins.include_immature_coinbase = options["include_immature_coinbase"].get_bool();

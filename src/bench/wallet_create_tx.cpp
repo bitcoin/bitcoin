@@ -112,7 +112,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     if (preset_inputs) {
         // Select inputs, each has 49 BTC
         wallet::CoinFilterParams filter_coins;
-        filter_coins.nMaximumCount = preset_inputs->num_of_internal_inputs;
+        filter_coins.max_count = preset_inputs->num_of_internal_inputs;
         const auto& res = WITH_LOCK(wallet.cs_wallet,
                                     return wallet::AvailableCoins(wallet, /*coinControl=*/nullptr, /*feerate=*/std::nullopt, filter_coins));
         for (int i=0; i < preset_inputs->num_of_internal_inputs; i++) {
