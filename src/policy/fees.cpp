@@ -1036,6 +1036,7 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
 
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
+    AssertLockNotHeld(m_insecure_rand_mutex);
     std::set<double>::iterator it = m_fee_set.lower_bound(currentMinFee);
     if (it == m_fee_set.end() ||
         (it != m_fee_set.begin() &&
