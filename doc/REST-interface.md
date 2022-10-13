@@ -37,8 +37,8 @@ By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
 #### Blocks
-`GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
-`GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
 Responds with 404 if the block doesn't exist.
@@ -87,11 +87,13 @@ Only supports JSON as output format.
 Refer to the `getblockchaininfo` RPC help for details.
 
 #### Query UTXO set
-`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
+- `GET /rest/getutxos/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
+- `GET /rest/getutxos/checkmempool/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
 
-The getutxo command allows querying of the UTXO set given a set of outpoints.
-See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+The getutxos endpoint allows querying the UTXO set, given a set of outpoints.
+With the `/checkmempool/` option, the mempool is also taken into account.
+See [BIP64](https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki) for
+input and output serialization (relevant for `bin` and `hex` output formats).
 
 Example:
 ```
