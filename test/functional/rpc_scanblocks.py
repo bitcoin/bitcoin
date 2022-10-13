@@ -3,8 +3,16 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scanblocks RPC call."""
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
+from test_framework.wallet import (
+    MiniWallet,
+    getnewdestination,
+)
 
 
 class ScanblocksTest(BitcoinTestFramework):
@@ -12,19 +20,21 @@ class ScanblocksTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-blockfilterindex=1"], []]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         node = self.nodes[0]
+        wallet = MiniWallet(node)
+        wallet.rescan_utxos()
+
         # send 1.0, mempool only
-        addr_1 = node.getnewaddress()
-        node.sendtoaddress(addr_1, 1.0)
+        _, spk_1, addr_1 = getnewdestination()
+        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
 
         parent_key = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
         # send 1.0, mempool only
         # childkey 5 of `parent_key`
-        node.sendtoaddress("mkS4HXoTYWRTescLGaUTGbtTTYX5EjJyEE", 1.0)
+        wallet.send_to(from_node=node,
+                       scriptPubKey=bytes.fromhex(node.validateaddress("mkS4HXoTYWRTescLGaUTGbtTTYX5EjJyEE")['scriptPubKey']),
+                       amount=1 * COIN)
 
         # mine a block and assure that the mined blockhash is in the filterresult
         blockhash = self.generate(node, 1)[0]
