@@ -474,6 +474,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
 
+        self.restart_node(0, extra_args=["-mempoolfullrbf=0"])
+        assert_equal(self.nodes[0].getmempoolinfo()["fullrbf"], False)
+        self.connect_nodes(0, 1)
+
         # Create a non-opting in transaction
         tx1a_utxo = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
@@ -544,6 +548,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=0,
             fee=Decimal("0.4"),
         )
+
+        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
+        assert_equal(self.nodes[0].getmempoolinfo()["fullrbf"], True)
+        self.connect_nodes(0, 1)
 
     def test_prioritised_transactions(self):
         # Ensure that fee deltas used via prioritisetransaction are
@@ -632,6 +640,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_no_inherited_signaling(self):
         confirmed_utxo = self.wallet.get_utxo()
 
+        self.restart_node(0, extra_args=["-mempoolfullrbf=0"])
+        assert_equal(self.nodes[0].getmempoolinfo()["fullrbf"], False)
+        self.connect_nodes(0, 1)
+
         # Create an explicitly opt-in parent transaction
         optin_parent_tx = self.wallet.send_self_transfer(
             from_node=self.nodes[0],
@@ -692,6 +704,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, 'Transaction not in mempool', self.nodes[0].getmempoolentry, optout_child_tx['txid'])
         self.wallet.get_utxo(txid=optout_child_tx['txid'])
 
+        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
+        assert_equal(self.nodes[0].getmempoolinfo()["fullrbf"], True)
+        self.connect_nodes(0, 1)
+
     def test_replacement_relay_fee(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']
 
@@ -704,8 +720,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_fullrbf(self):
 
         confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
-        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
-        assert self.nodes[0].getmempoolinfo()["fullrbf"]
 
         # Create an explicitly opt-out transaction
         optout_tx = self.wallet.send_self_transfer(
