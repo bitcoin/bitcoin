@@ -1241,13 +1241,9 @@ static RPCHelpMan decodepsbt()
         }
 
         // Taproot tree
-        if (output.m_tap_tree.has_value()) {
+        if (!output.m_tap_tree.empty()) {
             UniValue tree(UniValue::VARR);
-            const auto& tuples = output.m_tap_tree->GetTreeTuples();
-            for (const auto& tuple : tuples) {
-                uint8_t depth = std::get<0>(tuple);
-                uint8_t leaf_ver = std::get<1>(tuple);
-                CScript script = std::get<2>(tuple);
+            for (const auto& [depth, leaf_ver, script] : output.m_tap_tree) {
                 UniValue elem(UniValue::VOBJ);
                 elem.pushKV("depth", (int)depth);
                 elem.pushKV("leaf_ver", (int)leaf_ver);

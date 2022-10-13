@@ -27,6 +27,7 @@ from test_framework.psbt import (
     PSBT_IN_SHA256,
     PSBT_IN_HASH160,
     PSBT_IN_HASH256,
+    PSBT_OUT_TAP_TREE,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -779,9 +780,18 @@ class PSBTTest(BitcoinTestFramework):
             self.generate(self.nodes[0], 1)
             self.nodes[0].importdescriptors([{"desc": descsum_create("tr({})".format(privkey)), "timestamp":"now"}])
 
-            psbt = watchonly.sendall([wallet.getnewaddress()])["psbt"]
+            psbt = watchonly.sendall([wallet.getnewaddress(), addr])["psbt"]
             psbt = self.nodes[0].walletprocesspsbt(psbt)["psbt"]
-            self.nodes[0].sendrawtransaction(self.nodes[0].finalizepsbt(psbt)["hex"])
+            txid = self.nodes[0].sendrawtransaction(self.nodes[0].finalizepsbt(psbt)["hex"])
+            vout = find_vout_for_address(self.nodes[0], txid, addr)
+
+            # Make sure tap tree is in psbt
+            parsed_psbt = PSBT.from_base64(psbt)
+            assert_greater_than(len(parsed_psbt.o[vout].map[PSBT_OUT_TAP_TREE]), 0)
+            assert "taproot_tree" in self.nodes[0].decodepsbt(psbt)["outputs"][vout]
+            parsed_psbt.make_blank()
+            comb_psbt = self.nodes[0].combinepsbt([psbt, parsed_psbt.to_base64()])
+            assert_equal(comb_psbt, psbt)
 
             self.log.info("Test that walletprocesspsbt both updates and signs a non-updated psbt containing Taproot inputs")
             addr = self.nodes[0].getnewaddress("", "bech32m")
@@ -792,6 +802,14 @@ class PSBTTest(BitcoinTestFramework):
             rawtx = self.nodes[0].finalizepsbt(signed["psbt"])["hex"]
             self.nodes[0].sendrawtransaction(rawtx)
             self.generate(self.nodes[0], 1)
+
+            # Make sure tap tree is not in psbt
+            parsed_psbt = PSBT.from_base64(psbt)
+            assert PSBT_OUT_TAP_TREE not in parsed_psbt.o[0].map
+            assert "taproot_tree" not in self.nodes[0].decodepsbt(psbt)["outputs"][0]
+            parsed_psbt.make_blank()
+            comb_psbt = self.nodes[0].combinepsbt([psbt, parsed_psbt.to_base64()])
+            assert_equal(comb_psbt, psbt)
 
         self.log.info("Test decoding PSBT with per-input preimage types")
         # note that the decodepsbt RPC doesn't check whether preimages and hashes match

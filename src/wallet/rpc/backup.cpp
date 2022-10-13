@@ -293,10 +293,7 @@ RPCHelpMan importaddress()
     if (fRescan)
     {
         RescanWallet(*pwallet, reserver);
-        {
-            LOCK(pwallet->cs_wallet);
-            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
-        }
+        pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
     }
 
     return UniValue::VNULL;
@@ -474,10 +471,7 @@ RPCHelpMan importpubkey()
     if (fRescan)
     {
         RescanWallet(*pwallet, reserver);
-        {
-            LOCK(pwallet->cs_wallet);
-            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
-        }
+        pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
     }
 
     return UniValue::VNULL;
@@ -1395,10 +1389,7 @@ RPCHelpMan importmulti()
     }
     if (fRescan && fRunScan && requests.size()) {
         int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
-        {
-            LOCK(pwallet->cs_wallet);
-            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
-        }
+        pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
@@ -1689,10 +1680,7 @@ RPCHelpMan importdescriptors()
     // Rescan the blockchain using the lowest timestamp
     if (rescan) {
         int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, true /* update */);
-        {
-            LOCK(pwallet->cs_wallet);
-            pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
-        }
+        pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
