@@ -284,6 +284,7 @@ BASE_SCRIPTS = [
     'feature_governance_objects.py',
     'feature_governance.py --legacy-wallet',
     'rpc_uptime.py',
+    'feature_discover.py',
     'wallet_resendwallettransactions.py --legacy-wallet',
     'wallet_resendwallettransactions.py --descriptors',
     'wallet_fallbackfee.py --legacy-wallet',
