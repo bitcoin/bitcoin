@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <array>
 #include <key.h>
 
 #include <crypto/common.h>
@@ -15,6 +16,7 @@
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+#include <secp256k1_ecdh.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -172,6 +174,79 @@ bool CKey::Negate()
     return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata.data());
 }
 
+CKey CKey::AddTweak(const unsigned char *tweak32) const
+{
+    assert(fValid);
+
+    unsigned char tweaked_seckey[32];
+    memcpy(tweaked_seckey, data(), 32);
+
+    int ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, tweaked_seckey, tweak32);
+    assert(ret);
+
+    CKey new_seckey;
+    new_seckey.Set(std::begin(tweaked_seckey), std::end(tweaked_seckey), true);
+
+    return new_seckey;
+}
+
+CKey CKey::MultiplyTweak(const unsigned char *tweak32) const
+{
+    assert(fValid);
+
+    unsigned char tweaked_seckey[32];
+    memcpy(tweaked_seckey, data(), 32);
+
+    int ret = secp256k1_ec_seckey_tweak_mul(secp256k1_context_sign, tweaked_seckey, tweak32);
+    assert(ret);
+
+    CKey new_seckey;
+    new_seckey.Set(std::begin(tweaked_seckey), std::end(tweaked_seckey), true);
+
+    return new_seckey;
+}
+
+// we dont want to hash the output of ECDH yet, so we provide a custom hash function to secp256k1_ecdh which
+// returns the serialized public key without hashing it
+int custom_ecdh_hash_function(unsigned char *output, const unsigned char *x32, const unsigned char *y32, void *data) {
+
+    secp256k1_pubkey pubkey;
+    unsigned char uncompressed_pubkey[65];
+    uncompressed_pubkey[0] = 0x04;
+    memcpy(uncompressed_pubkey + 1, x32, 32);
+    memcpy(uncompressed_pubkey + 33, y32, 32);
+
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_sign, &pubkey, uncompressed_pubkey, 65)) {
+        return 0;
+    }
+
+    size_t outputlen = 33;
+    if (!secp256k1_ec_pubkey_serialize(secp256k1_context_sign, output, &outputlen, &pubkey, SECP256K1_EC_COMPRESSED)) {
+        return 0;
+    }
+    return 1;
+}
+
+// WARNING: DO NOT USE THIS FUNCTION OUTSIDE OF SILENT PAYMENTS
+// This function returns the un-hashed ECDH result and is specific to silent payments.
+// If ECDH is required for a different use-case, a separate function should be used which does not use
+// the `custom_ecdh_hash_function` and instead returns the hashed ECDH result (as is standard practice)
+CPubKey CKey::SilentPaymentECDH(const CPubKey& pubkey) const
+{
+    unsigned char shared_secret[33];
+
+    secp256k1_pubkey ecdh_pubkey;
+    int return_val = secp256k1_ec_pubkey_parse(secp256k1_context_sign, &ecdh_pubkey, pubkey.data(), pubkey.size());
+    assert(return_val);
+
+    int ret = secp256k1_ecdh(secp256k1_context_sign, shared_secret, &ecdh_pubkey, begin(), custom_ecdh_hash_function, nullptr);
+    assert(ret);
+
+    CPubKey result(shared_secret);
+    assert(result.IsValid());
+
+    return result;
+}
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey seckey;

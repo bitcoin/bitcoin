@@ -211,6 +211,12 @@ public:
      */
     static bool CheckLowS(const std::vector<unsigned char>& vchSig);
 
+    //! Add a number of public keys together.
+    static CPubKey Combine(std::vector<CPubKey> pubkeys);
+
+    /** Tweak a public key by adding the generator multiplied with tweak32 to it. */
+    CPubKey AddTweak(const unsigned char *tweak32) const;
+
     //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
@@ -271,6 +277,7 @@ public:
     /** Construct a Taproot tweaked output point with this point as internal key. */
     std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
 
+
     /** Returns a list of CKeyIDs for the CPubKeys that could have been used to create this XOnlyPubKey.
      * This is needed for key lookups since keys are indexed by CKeyID.
      */
@@ -286,6 +293,13 @@ public:
     bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
     bool operator!=(const XOnlyPubKey& other) const { return m_keydata != other.m_keydata; }
     bool operator<(const XOnlyPubKey& other) const { return m_keydata < other.m_keydata; }
+
+    CPubKey ConvertToCompressedPubKey(bool even = true) const
+    {
+        std::vector<unsigned char> vch(std::begin(m_keydata), std::end(m_keydata));
+        vch.insert(vch.begin(), even ? 2 : 3);
+        return CPubKey(vch.begin(), vch.end());
+    }
 
     //! Implement serialization without length prefixes since it is a fixed length
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
