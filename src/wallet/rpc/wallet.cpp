@@ -802,6 +802,7 @@ RPCHelpMan newkeypool();
 RPCHelpMan getaddressesbylabel();
 RPCHelpMan listlabels();
 RPCHelpMan getsilentaddress();
+RPCHelpMan listsilentaddresses();
 #ifdef ENABLE_EXTERNAL_SIGNER
 RPCHelpMan walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
@@ -887,6 +888,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getreceivedbyaddress},
         {"wallet", &getreceivedbylabel},
         {"wallet", &getsilentaddress},
+        {"wallet", &listsilentaddresses},
         {"wallet", &gettransaction},
         {"wallet", &getunconfirmedbalance},
         {"wallet", &getbalances},

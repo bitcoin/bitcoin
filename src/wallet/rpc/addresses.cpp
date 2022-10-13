@@ -144,6 +144,63 @@ RPCHelpMan getsilentaddress()
     };
 }
 
+RPCHelpMan listsilentaddresses()
+{
+    return RPCHelpMan{"listsilentaddresses",
+                "\nList silent addresses already generated in the wallet.\n",
+                { },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "wallet_name", "the wallet name"},
+                        {RPCResult::Type::ARR, "silent_addresses", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "address", "The silent address"},
+                                {RPCResult::Type::STR, "label", "The label assigned to this silent address"},
+                                {RPCResult::Type::NUM, "identifier", "The identifier corresponding to the given label"},
+                            }},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listsilentaddresses", "")
+            + HelpExampleRpc("listsilentaddresses", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    LOCK(pwallet->cs_wallet);
+
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENT)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet is not enabled for silent payments");
+    }
+
+    UniValue ret(UniValue::VOBJ);
+
+    ret.pushKV("wallet_name", pwallet->GetName());
+
+    UniValue varr(UniValue::VARR);
+
+    for (auto const& [key, val] : pwallet->m_silent_address_book)
+    {
+        UniValue addr(UniValue::VOBJ);
+        addr.pushKV("address", val.m_address);
+        addr.pushKV("label", val.m_label);
+        addr.pushKV("identifier", key);
+        varr.push_back(addr);
+    }
+
+    ret.pushKV("silent_addresses", varr);
+
+    return ret;
+},
+    };
+}
+
 RPCHelpMan getrawchangeaddress()
 {
     return RPCHelpMan{"getrawchangeaddress",
