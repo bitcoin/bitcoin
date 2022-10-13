@@ -101,6 +101,14 @@ public:
     //! Negate private key
     bool Negate();
 
+    //! Tweak a secret key by adding tweak to it.
+    CKey AddTweak(const unsigned char *tweak32) const;
+
+    //! Tweak a secret key by adding tweak to it.
+    CKey MultiplyTweak(const unsigned char *tweak32) const;
+
+    std::array<unsigned char,32> ECDH(const CPubKey& pubkey) const;
+
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
      * This is expensive.
@@ -144,6 +152,8 @@ public:
      *                              Merkle root of the script tree).
      */
     bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
+
+    bool TweakCKey(const uint256* merkle_root, CKey& key) const;
 
     //! Derive BIP32 child key.
     [[nodiscard]] bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;

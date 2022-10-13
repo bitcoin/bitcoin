@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <array>
 #include <key.h>
 
 #include <crypto/common.h>
@@ -14,6 +15,7 @@
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+#include <secp256k1_ecdh.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -171,6 +173,56 @@ bool CKey::Negate()
     return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata.data());
 }
 
+CKey CKey::AddTweak(const unsigned char *tweak32) const
+{
+    assert(fValid);
+
+    unsigned char tweaked_seckey[32];
+    memcpy(tweaked_seckey, data(), 32);
+
+    int ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, tweaked_seckey, tweak32);
+    assert(ret);
+
+    CKey new_seckey;
+    new_seckey.Set(std::begin(tweaked_seckey), std::end(tweaked_seckey), true);
+
+    return new_seckey;
+}
+
+CKey CKey::MultiplyTweak(const unsigned char *tweak32) const
+{
+    assert(fValid);
+
+    unsigned char tweaked_seckey[32];
+    memcpy(tweaked_seckey, data(), 32);
+
+    int ret = secp256k1_ec_seckey_tweak_mul(secp256k1_context_sign, tweaked_seckey, tweak32);
+    assert(ret);
+
+    CKey new_seckey;
+    new_seckey.Set(std::begin(tweaked_seckey), std::end(tweaked_seckey), true);
+
+    return new_seckey;
+}
+
+std::array<unsigned char,32> CKey::ECDH(const CPubKey& pubkey) const
+{
+    unsigned char shared_secret[32];
+
+    secp256k1_pubkey ecdh_pubkey;
+    int return_val = secp256k1_ec_pubkey_parse(secp256k1_context_sign, &ecdh_pubkey, pubkey.data(), pubkey.size());
+    assert(return_val);
+
+    int ret = secp256k1_ecdh(secp256k1_context_sign, shared_secret, &ecdh_pubkey, begin(), nullptr, nullptr);
+    assert(ret);
+
+    std::array<unsigned char, 32> result;
+
+    std::copy(std::begin(shared_secret), std::end(shared_secret), std::begin(result));
+
+    return result;
+}
+
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey seckey;
@@ -297,6 +349,24 @@ bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint2
     if (!ret) memory_cleanse(sig.data(), sig.size());
     memory_cleanse(&keypair, sizeof(keypair));
     return ret;
+}
+
+bool CKey::TweakCKey(const uint256* merkle_root, CKey& key) const
+{
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, begin())) return false;
+
+    secp256k1_xonly_pubkey pubkey;
+    if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, &keypair)) return false;
+    unsigned char pubkey_bytes[32];
+    if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return false;
+    uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
+    if (!secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, &keypair, tweak.data())) return false;
+
+    unsigned char tweaked_secret_key[32];
+    if (!secp256k1_keypair_sec(secp256k1_context_sign, tweaked_secret_key, &keypair)) return false;
+    key.Set(std::begin(tweaked_secret_key), std::end(tweaked_secret_key), true);
+    return key.IsValid();
 }
 
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
