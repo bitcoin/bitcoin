@@ -36,15 +36,13 @@ bool RangeProof::InnerProductArgument(
     const G1Points& Hi,
     const G1Point& u,
     const Scalar& cx_factor,  // factor to multiply to cL and cR
-    const Scalars& l,
-    const Scalars& r,
+    const Scalars& a,
+    const Scalars& b,
     const Scalar& y,
     Proof& proof,
     CHashWriter& transcript_gen
 ) {
     Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
-    Scalars a = l;
-    Scalars b = r;
     size_t n = input_value_vec_len;
 
     while (n > 1) {
@@ -282,15 +280,14 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalar cx_factor = transcript_gen.GetHash();
     if (cx_factor == 0) goto retry;
 
-    // using gens.G for u
-    if (!InnerProductArgument(
+    if (!InnerProductArgument(  // fails if x == 0 is generated from transcript_gen
         concat_input_values_in_bits,
         gens.Gi,
         gens.Hi,
-        gens.G,
+        gens.G,    // u
         cx_factor,
-        l,
-        r,
+        l,         // a
+        r,         // b
         y,
         proof,
         transcript_gen
@@ -385,13 +382,13 @@ G1Point RangeProof::VerifyLoop2(
         for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
-            for (size_t s = sl; s > 0; s -= 2) {
+            for (size_t s = sl - 1; s > 0; s -= 2) {
                 acc_xs[s] = acc_xs[s / 2] * p.xs[j];
                 acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[j];
             }
         }
 
-        // for each bit of concat input values, do:
+        // for all bits of concat input values, do:
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
@@ -424,10 +421,12 @@ G1Point RangeProof::VerifyLoop2(
         }
 
         // maps to (68) t_hat = <l, r>; t_hat is used for inner product argument paremeter c
+        // l anr r had been aggregated to a and b respectively
         // and (16) checks c == a * b
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
 
+    // generate points from aggregated exponents from G, H, Gi and Hi generators
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
     points.Add(gens.H * (h_pos_exp - h_neg_exp));
 
