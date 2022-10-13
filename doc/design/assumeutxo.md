@@ -76,8 +76,9 @@ original chainstate remains in use as active.
 
 Once the snapshot chainstate is loaded and validated, it is promoted to active
 chainstate and a sync to tip begins. A new chainstate directory is created in the
-datadir for the snapshot chainstate called
-`chainstate_[SHA256 blockhash of snapshot base block]`.
+datadir for the snapshot chainstate called `chainstate_snapshot`. When this directory
+is present in the datadir, the snapshot chainstate will be detected and loaded as
+active on node startup (via `DetectSnapshotChainstate()`).
 
 |    |    |
 | ---------- | ----------- |
