@@ -315,6 +315,8 @@ public:
     TaprootSpendData GetSpendData() const;
     /** Returns a vector of tuples representing the depth, leaf version, and script */
     std::vector<std::tuple<uint8_t, uint8_t, CScript>> GetTreeTuples() const;
+    /** Returns true if there are any tapscripts */
+    bool HasScripts() const { return !m_branch.empty(); }
 };
 
 /** Given a TaprootSpendData and the output key, reconstruct its script tree.
