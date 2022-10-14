@@ -40,6 +40,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
   ( CI_EXEC run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   export P_CI_DIR="${BASE_BUILD_DIR}/bitcoin-$HOST/"
   CI_EXEC "python3 ${DIR_IWYU}/include-what-you-use/iwyu_tool.py"\
+          " src/common/url.cpp"\
           " src/compat"\
           " src/dbwrapper.cpp"\
           " src/init"\
@@ -68,7 +69,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/util/strencodings.cpp"\
           " src/util/string.cpp"\
           " src/util/syserror.cpp"\
-          " src/util/url.cpp"\
           " src/zmq"\
           " -p . ${MAKEJOBS} -- -Xiwyu --cxx17ns -Xiwyu --mapping_file=${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp"
 fi
