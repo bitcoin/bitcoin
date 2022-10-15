@@ -8,7 +8,6 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 #include <script/sign.h>
 
 #include <limits>

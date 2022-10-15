@@ -20,7 +20,6 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
-#include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -86,8 +85,8 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = std::make_unique<PeerLogicValidation>(
         connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, llmq::quorumBlockProcessor,
         llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
         llmq::chainLocksHandler, llmq::quorumInstantSendManager, false
@@ -161,8 +160,8 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidat
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
-    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(
+    auto connman = std::make_unique<CConnmanTest>(0x1337, 0x1337);
+    auto peerLogic = std::make_unique<PeerLogicValidation>(
         connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, llmq::quorumBlockProcessor,
         llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
         llmq::chainLocksHandler, llmq::quorumInstantSendManager, false
@@ -237,9 +236,9 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(
+    auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = std::make_unique<PeerLogicValidation>(
         connman.get(), banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, llmq::quorumBlockProcessor,
         llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
         llmq::chainLocksHandler, llmq::quorumInstantSendManager, false
@@ -296,9 +295,9 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(
+    auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = std::make_unique<PeerLogicValidation>(
         connman.get(), banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, llmq::quorumBlockProcessor,
         llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
         llmq::chainLocksHandler, llmq::quorumInstantSendManager, false
@@ -347,9 +346,9 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
-    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(
+    auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = std::make_unique<PeerLogicValidation>(
         connman.get(), banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, llmq::quorumBlockProcessor,
         llmq::quorumDKGSessionManager, llmq::quorumManager, llmq::quorumSigSharesManager, llmq::quorumSigningManager,
         llmq::chainLocksHandler, llmq::quorumInstantSendManager, false

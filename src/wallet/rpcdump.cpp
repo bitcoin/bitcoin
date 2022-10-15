@@ -1146,7 +1146,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid redeem script \"" + strRedeemScript + "\": must be hex string");
         }
         auto parsed_redeemscript = ParseHex(strRedeemScript);
-        import_data.redeemscript = MakeUnique<CScript>(parsed_redeemscript.begin(), parsed_redeemscript.end());
+        import_data.redeemscript = std::make_unique<CScript>(parsed_redeemscript.begin(), parsed_redeemscript.end());
     }
     for (size_t i = 0; i < pubKeys.size(); ++i) {
         const auto& str = pubKeys[i].get_str();

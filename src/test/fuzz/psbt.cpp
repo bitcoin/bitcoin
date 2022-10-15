@@ -9,7 +9,6 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
-#include <util/memory.h>
 #include <version.h>
 
 #include <cstdint>
@@ -18,7 +17,7 @@
 
 void initialize_psbt()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
 }
 
 FUZZ_TARGET_INIT(psbt, initialize_psbt)
