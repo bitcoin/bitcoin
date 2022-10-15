@@ -25,6 +25,7 @@
 #include <stacktraces.h>
 
 #include <functional>
+#include <optional>
 #include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;

@@ -148,7 +148,7 @@ public:
 
     ~CTransactionBuilderTestSetup()
     {
-        RemoveWallet(wallet, nullopt);
+        RemoveWallet(wallet, std::nullopt);
     }
 
     std::shared_ptr<interfaces::Chain> chain;

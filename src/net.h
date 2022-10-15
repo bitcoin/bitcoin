@@ -17,7 +17,6 @@
 #include <limitedmap.h>
 #include <net_permissions.h>
 #include <netaddress.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -36,6 +35,7 @@
 #include <memory>
 #include <condition_variable>
 #include <unordered_set>
+#include <optional>
 #include <queue>
 
 #ifndef WIN32
@@ -854,7 +854,7 @@ public:
     // read and deserialize data
     virtual int Read(const char *data, unsigned int bytes) = 0;
     // decomposes a message from the context
-    virtual Optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err) = 0;
+    virtual std::optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -913,7 +913,7 @@ public:
         if (ret < 0) Reset();
         return ret;
     }
-    Optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err_raw_size) override;
+    std::optional<CNetMessage> GetMessage(int64_t time, uint32_t& out_err_raw_size) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport

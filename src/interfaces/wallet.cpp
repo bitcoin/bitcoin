@@ -369,7 +369,7 @@ public:
         if (mi == m_wallet->mapWallet.end()) {
             return false;
         }
-        if (Optional<int> height = m_wallet->chain().getHeight()) {
+        if (std::optional<int> height = m_wallet->chain().getHeight()) {
             block_time = m_wallet->chain().getBlockTime(*height);
         } else {
             block_time = -1;
