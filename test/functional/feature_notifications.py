@@ -44,8 +44,8 @@ class NotificationsTest(BitcoinTestFramework):
                             "-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s'))],
                            ["-blockversion=211",
                             "-rescan",
-                            "-wallet={}".format(self.wallet),
                             "-walletnotify=echo > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s')))]]
+        self.wallet_names = [self.default_wallet_name, self.wallet]
         super().setup_network()
 
     def run_test(self):
