@@ -122,6 +122,7 @@ public:
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
+    int64_t DeferFullRBF() const { return m_defer_full_rbf; }
 protected:
     CChainParams() {}
 
@@ -144,6 +145,7 @@ protected:
     CCheckpointData checkpointData;
     MapAssumeutxo m_assumeutxo_data;
     ChainTxData chainTxData;
+    int64_t m_defer_full_rbf{0}; // seconds since unix epoch
 };
 
 /**

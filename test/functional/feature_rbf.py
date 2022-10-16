@@ -5,6 +5,7 @@
 """Test the RBF code."""
 
 from decimal import Decimal
+import time
 
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -43,6 +44,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # MiniWallet's default address in blocks 76-100 (see method
         # BitcoinTestFramework._initialize_chain())
         self.wallet.rescan_utxos()
+
+        self.log.info("Running test opt-in backdated...")
+        self.test_opt_in_backdated()
 
         self.log.info("Running test simple doublespend...")
         self.test_simple_doublespend()
@@ -470,6 +474,24 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.generate(normal_node, 1)
         self.wallet.rescan_utxos()
 
+    def test_opt_in_backdated(self):
+        """If fullrbf is enabled but defered, opt-in rules apply."""
+
+        # This test must be run first, to avoid "block timestamp too far in future" errors during self.generate()
+
+        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
+        assert self.nodes[0].getmempoolinfo()["fullrbf"]
+        defer = self.nodes[0].getmempoolinfo()["defer_fullrbf"]
+        assert defer > 0 and defer < time.time()
+        self.nodes[0].setmocktime(defer - 1)
+        self.connect_nodes(0, 1)
+
+        self.test_opt_in()
+
+        self.nodes[0].setmocktime(0)
+        self.restart_node(0, self.extra_args[0])
+        self.connect_nodes(0, 1)
+
     def test_opt_in(self):
         """Replacing should only work if orig tx opted in"""
         tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
@@ -706,6 +728,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
         self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
         assert self.nodes[0].getmempoolinfo()["fullrbf"]
+        assert self.nodes[0].getmempoolinfo()["defer_fullrbf"] < time.time()
 
         # Create an explicitly opt-out transaction
         optout_tx = self.wallet.send_self_transfer(

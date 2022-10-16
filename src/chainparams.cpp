@@ -96,6 +96,9 @@ public:
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000003404ba0801921119f903495e");
         consensus.defaultAssumeValid = uint256S("0x00000000000000000009c97098b5295f7e5f183ac811fb5d1534040adb93cabd"); // 751565
 
+        // Defer full RBF activation
+        m_defer_full_rbf =  1682899200; // 1 May 2023 00:00:00 +0000
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -420,6 +423,10 @@ public:
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
+
+        // Defer full RBF activation
+        // set to past date, so usable with setmocktime
+        m_defer_full_rbf = 1664582400; // 01 Oct 2022 00:00:00 +0000
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

@@ -726,6 +726,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-same-nonwitness-data-in-mempool");
     }
 
+    const bool do_full_rbf = m_pool.m_full_rbf && args.m_chainparams.DeferFullRBF() <= args.m_accept_time;
+
     // Check for conflicts with in-memory transactions
     for (const CTxIn &txin : tx.vin)
     {
@@ -747,7 +749,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 //
                 // If replaceability signaling is ignored due to node setting,
                 // replacement is always allowed.
-                if (!m_pool.m_full_rbf && !SignalsOptInRBF(*ptxConflicting)) {
+                if (!do_full_rbf && !SignalsOptInRBF(*ptxConflicting)) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
 
