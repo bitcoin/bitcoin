@@ -1343,8 +1343,10 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
     bool disableAppNap = !m_node.masternodeSync().isSynced();
 #ifdef ENABLE_WALLET
-    for (const auto& wallet : m_node.walletClient().getWallets()) {
-        disableAppNap |= wallet->coinJoin().isMixing();
+    if (enableWallet) {
+        for (const auto& wallet : m_node.walletClient().getWallets()) {
+            disableAppNap |= wallet->coinJoin().isMixing();
+        }
     }
 #endif // ENABLE_WALLET
     if (disableAppNap) {
