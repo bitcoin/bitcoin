@@ -23,7 +23,7 @@ class ConfArgsTest(BitcoinTestFramework):
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
 
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli',
+            expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli=1',
             extra_args=['-dash_cli=1'],
         )
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
