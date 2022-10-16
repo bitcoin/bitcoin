@@ -37,6 +37,7 @@ export BITCOIN_PORT=38333
 export RPC_PORT=38332
 export ZMQ_PUBHASHTX_PORT=29009
 export ZMQ_PUBRAWBLOCK_PORT=29009
+export ZMQ_PUBITCOINBLOCK_PORT=29010
 
 errecho() {
     # prints to stderr
@@ -79,7 +80,7 @@ mkdir "${DATADIR}"
 
 # creare il file di configurazione del demone bitcoin
 # Lo facciamo partire su signet e il signetchallenge varrà BLOCKSCRIPT.
-"${MYDIR}/render-template.sh" BLOCKSCRIPT BITCOIN_PORT RPC_PORT ZMQ_PUBHASHTX_PORT ZMQ_PUBRAWBLOCK_PORT < "${MYDIR}/bitcoin.conf.tmpl" > "${DATADIR}/bitcoin.conf"
+"${MYDIR}/render-template.sh" BLOCKSCRIPT BITCOIN_PORT RPC_PORT ZMQ_PUBHASHTX_PORT ZMQ_PUBRAWBLOCK_PORT ZMQ_PUBITCOINBLOCK_PORT < "${MYDIR}/bitcoin.conf.tmpl" > "${DATADIR}/bitcoin.conf"
 
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will

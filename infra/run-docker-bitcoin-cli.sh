@@ -50,6 +50,9 @@ ZMQ_PUBHASHTX_PORT="NOT_RELEVANT"
 # ZMQ_PUBRAWBLOCK_PORT is not relevant for bitcoin-cli
 ZMQ_PUBRAWBLOCK_PORT="NOT_RELEVANT"
 
+# ZMQ_PUBITCOINBLOCK_PORT is not relevant for bitcoin-cli
+ZMQ_PUBITCOINBLOCK_PORT="NOT_RELEVANT"
+
 errecho() {
     # prints to stderr
     >&2 echo "${@}"
@@ -69,6 +72,7 @@ docker run \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
+	--env ZMQ_PUBITCOINBLOCK_PORT="${ZMQ_PUBITCOINBLOCK_PORT}" \
 	--network=host \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}",readonly \

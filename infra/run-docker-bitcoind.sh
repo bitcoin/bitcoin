@@ -43,6 +43,7 @@ RPC_HOST="NOT_RELEVANT"
 RPC_PORT=38332
 ZMQ_PUBHASHTX_PORT=29009
 ZMQ_PUBRAWBLOCK_PORT=29009
+ZMQ_PUBITCOINBLOCK_PORT=29010
 
 errecho() {
     # prints to stderr
@@ -76,7 +77,7 @@ errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 declare -a ZMQ_PARAMS
 while IFS= read -r ZMQ_PORT; do
     ZMQ_PARAMS+=("--publish" "${ZMQ_PORT}:${ZMQ_PORT}")
-done <<<$(printf '%s\n' "${ZMQ_PUBHASHTX_PORT}" "${ZMQ_PUBRAWBLOCK_PORT}" | sort | uniq )
+done <<<$(printf '%s\n' "${ZMQ_PUBHASHTX_PORT}" "${ZMQ_PUBRAWBLOCK_PORT}" "${ZMQ_PUBITCOINBLOCK_PORT}" | sort | uniq )
 
 docker run \
 	--read-only \
@@ -89,6 +90,7 @@ docker run \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
+	--env ZMQ_PUBITCOINBLOCK_PORT="${ZMQ_PUBITCOINBLOCK_PORT}" \
 	--network=host \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
