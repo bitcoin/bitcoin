@@ -4,7 +4,7 @@
 #
 # Author: Antonio Muci <antonio.muci@bancaditalia.it>
 
-FROM ubuntu:20.04 as build-stage
+FROM ubuntu:22.04 as build-stage
 
 LABEL \
     maintainer.0="Antonio Muci <antonio.muci@bancaditalia.it>" \
@@ -18,21 +18,21 @@ RUN apt update && \
     apt install --no-install-recommends -y \
         autoconf \
         automake \
-        bsdmainutils \
+        bsdextrautils \
         build-essential \
         libtool \
-        g++-10 \
+        g++ \
         pkg-config \
     && echo "Foregoing deletion of package cache: this is a throwaway building container"
 
 RUN apt install -y --no-install-recommends \
-    libboost1.71-dev \
-    libboost-filesystem1.71-dev \
-    libboost-thread1.71-dev \
+    libboost1.74-dev \
+    libboost-filesystem1.74-dev \
+    libboost-thread1.74-dev \
     libdb5.3++-dev \
     libevent-dev \
     libsqlite3-dev \
-    libzmqpp-dev
+    libzmq3-dev
 
 RUN mkdir --parents /opt/itcoin-core-source/infra
 
@@ -70,7 +70,7 @@ RUN make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1)
 RUN make install-strip
 
 # ==============================================================================
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 LABEL \
     maintainer.0="Antonio Muci <antonio.muci@bancaditalia.it>" \
@@ -83,8 +83,8 @@ WORKDIR /opt/itcoin-core
 RUN apt update && \
     apt install --no-install-recommends -y \
         gettext-base \
-        libboost-filesystem1.71.0 \
-        libboost-thread1.71.0 \
+        libboost-filesystem1.74.0 \
+        libboost-thread1.74.0 \
         libdb5.3++ \
         libevent-2.1-7 \
         libevent-pthreads-2.1-7 \
