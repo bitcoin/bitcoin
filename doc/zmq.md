@@ -61,6 +61,7 @@ Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
     -zmqpubhashblock=address
+    -zmqpubitcoinblock=address (ITCOIN_SPECIFIC)
     -zmqpubrawblock=address
     -zmqpubrawtx=address
     -zmqpubsequence=address
@@ -74,6 +75,7 @@ The option to set the PUB socket's outbound message high water mark
 
     -zmqpubhashtxhwm=n
     -zmqpubhashblockhwm=n
+    -zmqpubitcoinblockhwm=n (ITCOIN_SPECIFIC)
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
     -zmqpubsequencehwm=address
@@ -122,6 +124,19 @@ Where the 8-byte uints correspond to the mempool sequence number.
     | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
 
 **_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
+
+`itcoinblock`: (**ITCOIN_SPECIFIC**): similar to `hashblock`, but also contains the height of the new tip and its timestamp;
+
+    | FISRT PART  | SECOND PART (40 bytes)                                                  | THIRD PART
+    | itcoinblock | <32-byte block hash in Little Endian><int32_t: height><uint32_t: nTime> | <uint32 sequence number in Little Endian>
+
+The second part of the ZMQ message is 40 bytes long and has to be parsed according to the following specification:
+
+- the block hash is the same as in `hashblock`
+- `height` is the height of the new block as a non negative (>=0) signed 32 bit integer in Little Endian
+- `nTime` is the block time as an unsigned 32 bit integer in Little Endian
+
+The fields are of fixed width: there are no separators.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).

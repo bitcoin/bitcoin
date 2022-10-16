@@ -34,6 +34,14 @@ public:
     bool NotifyBlock(const CBlockIndex *pindex) override;
 };
 
+// ITCOIN_SPECIFIC - START
+class CZMQPublishItcoinBlockNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyBlock(const CBlockIndex *pindex) override;
+};
+// ITCOIN_SPECIFIC - END
+
 class CZMQPublishHashTransactionNotifier : public CZMQAbstractPublishNotifier
 {
 public:

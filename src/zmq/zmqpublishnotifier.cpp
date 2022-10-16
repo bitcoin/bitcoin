@@ -28,6 +28,7 @@ using node::ReadBlockFromDisk;
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
 static const char *MSG_HASHBLOCK = "hashblock";
+static const char *MSG_ITCOINBLOCK = "itcoinblock"; // ITCOIN_SPECIFIC
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
@@ -215,6 +216,49 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     }
     return SendZmqMessage(MSG_HASHBLOCK, data, 32);
 }
+
+// ITCOIN_SPECIFIC - START
+bool CZMQPublishItcoinBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+{
+    uint256 hash = pindex->GetBlockHash();
+
+    /*
+     * Let's enforce at compile time that the message we will send is 40 bytes
+     * in size (32 for the block hash, and 4 each for block height and time).
+     *
+     * If the check fails, a compile-time error will be thrown.
+     */
+    constexpr uint8_t data_size = sizeof(hash) + sizeof(pindex->nHeight) + sizeof(pindex->nTime);
+    static_assert(data_size == 40, "the sum of the sizes of hash, block_height and block_time is not 40. Did anything change in bitcoin?");
+    uint8_t data[data_size];
+
+    /*
+     * Same as same as CZMQPublishHashBlockNotifier::NotifyBlock(): store the
+     * block hash in Little Endian, starting from position 0 of the buffer.
+     */
+    for (unsigned int i = 0; i < 32; i++) {
+        data[31 - i] = hash.begin()[i];
+    }
+
+    /*
+     * pindex->nHeight is a signed int, but block height must be > 0. Let's
+     * enforce it to prevent wrapping problems.
+     */
+    if (pindex->nHeight < 0) {
+        LogPrint(BCLog::ZMQ, "zmq: validation ERROR in itcoinblock, block height (%d) cannot be negative. The notification will not be sent\n", pindex->nHeight);
+        return false;
+    }
+
+    // store height at positions 32-35 (zero-based)
+    WriteLE32(&data[32], pindex->nHeight);
+
+    // store height at positions 36-39 (zero-based)
+    WriteLE32(&data[36], pindex->nTime);
+
+    LogPrint(BCLog::ZMQ, "zmq: Publish itcoinblock. Hash: %s, height: %d, time: %u to %s\n", hash.GetHex(), pindex->nHeight, pindex->nTime, this->address);
+    return SendZmqMessage(MSG_ITCOINBLOCK, data, data_size);
+}
+// ITCOIN_SPECIFIC - END
 
 bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {

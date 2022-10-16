@@ -106,6 +106,7 @@ BASE_SCRIPTS = [
     'itcoin_feature_taproot_challenge_frost_pubkey_tweaked.py',
     'itcoin_rpc_testblockvalidity_1.py',
     'itcoin_rpc_testblockvalidity_2.py',
+    'itcoin_zmq_itcoinblock.py',
     # ITCOIN_SPECIFIC - END
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',

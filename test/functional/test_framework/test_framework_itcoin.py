@@ -1,7 +1,9 @@
 """Base test module for Signet test utilities."""
 import configparser
 import datetime
+import io
 import os
+import struct
 import tempfile
 from pathlib import Path
 from typing import List, Optional, Sequence, Callable, Any, Dict, Set
@@ -18,10 +20,10 @@ from test_framework.conftest import (
     SIGNET, ITCOIN_CORE_ROOT_DIR,
 )
 from test_framework.key import ECKey
-from test_framework.messages import CBlock
+from test_framework.messages import CBlock, deser_uint256, ser_uint256
 from test_framework.test_framework import TMPDIR_PREFIX, BitcoinTestFramework
 from test_framework.test_node import TestNode
-from test_framework.util import PortSeed, initialize_datadir, assert_equal
+from test_framework.util import PortSeed, initialize_datadir, assert_equal, assert_greater_than_or_equal
 
 # import itcoin's miner
 from .itcoin_abs_import import import_miner
@@ -396,6 +398,65 @@ class BitcoindNode:
         self._rpc.stop_node()
         self._node = None
         PortSeed.n = self._old_port_seed
+
+
+class MsgItcoinblock:
+    """
+    Encodes and decodes the contents of the zmq itcoinblock message.
+
+    >>> m = MsgItcoinblock("1234567890123456789012345678901234567890123456789012345678901234", 15, 1600000000)
+    >>> m
+    MsgItcoinblock(blockhash=1234567890123456789012345678901234567890123456789012345678901234, height=15, nTime=1600000000)
+
+    >>> serialized_m = m.to_bin_buf()
+    >>> serialized_m.hex()
+    '12345678901234567890123456789012345678901234567890123456789012340f00000000105e5f'
+
+    >>> MsgItcoinblock.from_bin_buf(serialized_m) == m
+    True
+    """
+    __slots__ = ("_blockhash_native", "height", "nTime")
+    msgtype = b"itcoinblock"
+
+    def __init__(self, blockhash_hex: str, height: int, nTime: int):
+        # let's be strict about blockhash_hex: it must be exactly 64 chars
+        assert_equal(len(blockhash_hex), 64)
+        # both height and nTime must be non negative integers, even if height
+        # is serialized as a signed integer
+        assert_greater_than_or_equal(height, 0)
+        assert_greater_than_or_equal(nTime, 0)
+        # _blockhash_native is in machine-dependent representation: do not use
+        # from outside this class!
+        self._blockhash_native: int = deser_uint256(io.BytesIO(bytes.fromhex(blockhash_hex)))
+        self.height: int = height
+        self.nTime: int = nTime
+
+    @classmethod
+    def from_bin_buf(cls, bin_buf: bytes):
+        # itcoinblock messages must be 40 bytes in length
+        assert_equal(len(bin_buf), 40)
+        blockhash_hex = bin_buf[0:32].hex()
+        (height, nTime) = struct.unpack_from("<iI", bin_buf, offset=32)
+        return cls(blockhash_hex, height, nTime)
+
+    def __eq__(self, other) -> bool:
+        return (
+            self._blockhash_native == other._blockhash_native and
+            self.height == other.height and
+            self.nTime == other.nTime
+        )
+
+    def to_bin_buf(self) -> bytes:
+        bin_buf = b""
+        bin_buf += ser_uint256(self._blockhash_native)
+        bin_buf += struct.pack("<iI", self.height, self.nTime)
+        return bin_buf
+
+    def blockhash_hex(self) -> str:
+        return ser_uint256(self._blockhash_native).hex()
+
+    def __repr__(self):
+        return f"MsgItcoinblock(blockhash={self.blockhash_hex()}, height={self.height}, nTime={self.nTime})"
 
 
 def utc_timestamp(y: int, m: int, d: int, h: int, minutes: int, s: int) -> int:

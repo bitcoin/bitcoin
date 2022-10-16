@@ -33,6 +33,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
+    factories["pubitcoinblock"] = CZMQAbstractNotifier::Create<CZMQPublishItcoinBlockNotifier>; // ITCOIN_SPECIFIC
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
