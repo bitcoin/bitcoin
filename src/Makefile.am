@@ -267,6 +267,7 @@ SYSCOIN_CORE_H = \
   node/psbt.h \
   node/transaction.h \
   node/interface_ui.h \
+  node/txreconciliation.h \
   node/utxo_snapshot.h \
   node/validation_cache_args.h \
   noui.h \
@@ -557,6 +558,7 @@ libsyscoin_node_a_SOURCES = \
   node/psbt.cpp \
   node/transaction.cpp \
   node/interface_ui.cpp \
+  node/txreconciliation.cpp \
   node/utxo_snapshot.cpp \
   node/validation_cache_args.cpp \
   noui.cpp \

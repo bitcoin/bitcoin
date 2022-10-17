@@ -605,7 +605,7 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
 
     switch (rf) {
     case RESTResponseFormat::JSON: {
-        JSONRPCRequest jsonRequest;
+        node::JSONRPCRequest jsonRequest;
         jsonRequest.context = context;
         jsonRequest.params = UniValue(UniValue::VARR);
 
