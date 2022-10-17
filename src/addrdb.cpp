@@ -24,6 +24,9 @@
 
 namespace {
 
+/** Anchor IP address database file name */
+const char* const ANCHORS_DATABASE_FILENAME = "anchors.dat";
+
 class DbNotFoundError : public std::exception
 {
     using std::exception::exception;
@@ -214,18 +217,20 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
     return std::nullopt;
 }
 
-void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
+void DumpAnchors(const std::vector<CAddress>& anchors)
 {
+    const fs::path path{gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME};
     LOG_TIME_SECONDS(strprintf("Flush %d outbound block-relay-only peer addresses to anchors.dat", anchors.size()));
-    SerializeFileDB("anchors", anchors_db_path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
+    SerializeFileDB("anchors", path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
 }
 
-std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
+std::vector<CAddress> ReadAnchors()
 {
     std::vector<CAddress> anchors;
+    const fs::path path{gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME};
     try {
-        DeserializeFileDB(anchors_db_path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
+        DeserializeFileDB(path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
+        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(path.filename())));
     } catch (const std::exception&) {
         anchors.clear();
     }
@@ -233,4 +238,8 @@ std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
     return anchors;
 }
 
-void DeleteAnchorsFile(const fs::path& anchors_db_path) { fs::remove(anchors_db_path); }
+void DeleteAnchorsFile()
+{
+    const fs::path path{gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME};
+    fs::remove(path);
+}

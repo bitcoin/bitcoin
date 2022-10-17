@@ -61,8 +61,6 @@
 /** Maximum number of block-relay-only anchor connections */
 static constexpr size_t MAX_BLOCK_RELAY_ONLY_ANCHORS = 2;
 static_assert (MAX_BLOCK_RELAY_ONLY_ANCHORS <= static_cast<size_t>(MAX_BLOCK_RELAY_ONLY_CONNECTIONS), "MAX_BLOCK_RELAY_ONLY_ANCHORS must not exceed MAX_BLOCK_RELAY_ONLY_CONNECTIONS.");
-/** Anchor IP address database file name */
-const char* const ANCHORS_DATABASE_FILENAME = "anchors.dat";
 
 // How often to dump addresses to peers.dat
 static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
@@ -1861,7 +1859,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         if (delete_anchors_file) {
             tried_connect_anchors = true;
-            DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
+            DeleteAnchorsFile();
         }
     }
 }
@@ -2300,12 +2298,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (m_use_addrman_outgoing) {
         // Load addresses from anchors.dat
-        m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
+        m_anchors = ReadAnchors();
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         } else if (m_anchors.empty()) {
             tried_connect_anchors = true;
-            DeleteAnchorsFile(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
+            DeleteAnchorsFile();
         }
         LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
     }
@@ -2447,7 +2445,7 @@ void CConnman::StopNodes()
             }
 
             if (tried_connect_anchors) {
-                DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+                DumpAnchors(anchors_to_dump);
             }
         }
     }

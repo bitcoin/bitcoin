@@ -57,12 +57,12 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
  * Anchors are last known outgoing block-relay-only peers that are
  * tried to re-connect to on startup.
  */
-void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors);
+void DumpAnchors(const std::vector<CAddress>& anchors);
 
 /** Read the anchor IP address database (anchors.dat) */
-std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path);
+std::vector<CAddress> ReadAnchors();
 
 /** Delete the anchor IP address database (anchors.dat) */
-void DeleteAnchorsFile(const fs::path& anchors_db_path);
+void DeleteAnchorsFile();
 
 #endif // BITCOIN_ADDRDB_H
