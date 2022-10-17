@@ -6,7 +6,7 @@ import time
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import wait_until, connect_nodes
+from test_framework.util import wait_until
 
 '''
 feature_llmq_is_migration.py
@@ -33,7 +33,7 @@ class LLMQISMigrationTest(DashTestFramework):
 
         for i in range(len(self.nodes)):
             if i != 1:
-                connect_nodes(self.nodes[i], 0)
+                self.connect_nodes(i, 0)
 
         self.activate_dip8()
 

@@ -13,7 +13,7 @@ from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.script import CScript, OP_CHECKSIG, OP_DUP, OP_EQUAL, OP_EQUALVERIFY, OP_HASH160
-from test_framework.util import assert_equal, connect_nodes
+from test_framework.util import assert_equal
 
 class AddressIndexTest(BitcoinTestFramework):
 
@@ -33,9 +33,9 @@ class AddressIndexTest(BitcoinTestFramework):
         # Nodes 2/3 are used for testing
         self.start_node(2, ["-addressindex"])
         self.start_node(3, ["-addressindex"])
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
         self.sync_all()
         self.import_deterministic_coinbase_privkeys()
 
@@ -44,12 +44,12 @@ class AddressIndexTest(BitcoinTestFramework):
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-addressindex=0"], "You need to rebuild the database using -reindex to change -addressindex", match=ErrorMatch.PARTIAL_REGEX)
         self.start_node(1, ["-addressindex=0", "-reindex"])
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_all()
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-addressindex"], "You need to rebuild the database using -reindex to change -addressindex", match=ErrorMatch.PARTIAL_REGEX)
         self.start_node(1, ["-addressindex", "-reindex"])
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_all()
 
         self.log.info("Mining blocks...")

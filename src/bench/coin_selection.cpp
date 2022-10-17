@@ -31,7 +31,7 @@ static void CoinSelection(benchmark::Bench& bench)
 {
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
-    const CWallet wallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
+    const CWallet wallet(chain.get(), "", CreateDummyWalletDatabase());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -63,7 +63,7 @@ static void CoinSelection(benchmark::Bench& bench)
 typedef std::set<CInputCoin> CoinSet;
 static NodeContext testNode;
 static auto testChain = interfaces::MakeChain(testNode);
-static const CWallet testWallet(testChain.get(), WalletLocation(), CreateDummyWalletDatabase());
+static const CWallet testWallet(testChain.get(), "", CreateDummyWalletDatabase());
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp

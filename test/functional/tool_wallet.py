@@ -69,12 +69,14 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Invalid command: help', 'help')
         self.assert_raises_tool_error('Error: two methods provided (info and create). Only one method should be provided.', 'info', 'create')
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
+        locked_dir = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets")
         self.assert_raises_tool_error(
-            'Error loading wallet.dat. Is wallet being used by another process?',
-            '-wallet=wallet.dat',
+            'Error initializing wallet database environment "{}"!'.format(locked_dir),
+            '-wallet=' + self.default_wallet_name,
             'info',
         )
-        self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'info')
+        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "nonexistent.dat")
+        self.assert_raises_tool_error("Failed to load database path '{}'. Path does not exist.".format(path), '-wallet=nonexistent.dat', 'info')
 
     def test_tool_wallet_info(self):
         # Stop the node to close the wallet to call the info command.
@@ -116,7 +118,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Transactions: 0
             Address Book: 1
         ''')
-        self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
@@ -155,7 +157,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Transactions: 1
             Address Book: 1
         ''')
-        self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
@@ -193,7 +195,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def test_getwalletinfo_on_different_wallet(self):
         self.log.info('Starting node with arg -wallet=foo')
-        self.start_node(0, ['-wallet=foo'])
+        self.start_node(0, ['-nowallet', '-wallet=foo'])
 
         self.log.info('Calling getwalletinfo on a different wallet ("foo"), testing output')
         shasum_before = self.wallet_shasum()
@@ -217,13 +219,14 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_salvage(self):
         # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
         self.log.info('Check salvage')
-        self.start_node(0, ['-wallet=salvage'])
+        self.start_node(0)
+        self.nodes[0].createwallet("salvage")
         self.stop_node(0)
 
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
 
     def run_test(self):
-        self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', 'wallet.dat')
+        self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename)
         self.test_invalid_tool_commands_and_args()
         # Warning: The following tests are order-dependent.
         self.test_tool_wallet_info()

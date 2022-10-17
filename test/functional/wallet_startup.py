@@ -26,6 +26,16 @@ class WalletStartupTest(BitcoinTestFramework):
         self.start_nodes()
 
     def run_test(self):
+        self.log.info('Should start without any wallets')
+        assert_equal(self.nodes[0].listwallets(), [])
+        assert_equal(self.nodes[0].listwalletdir(), {'wallets': []})
+
+        self.log.info('New default wallet should load by default when there are no other wallets')
+        self.nodes[0].createwallet(wallet_name='', load_on_startup=False)
+        self.restart_node(0)
+        assert_equal(self.nodes[0].listwallets(), [''])
+
+        self.log.info('Test load on startup behavior')
         self.nodes[0].createwallet(wallet_name='w0', load_on_startup=True)
         self.nodes[0].createwallet(wallet_name='w1', load_on_startup=False)
         self.nodes[0].createwallet(wallet_name='w2', load_on_startup=True)

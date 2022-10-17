@@ -6,7 +6,7 @@
 import time
 from test_framework.mininode import logger
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, connect_nodes, wait_until
+from test_framework.util import force_finish_mnsync, wait_until
 
 '''
 feature_llmq_data_recovery.py
@@ -29,19 +29,19 @@ class QuorumDataRecoveryTest(DashTestFramework):
         self.set_dash_llmq_test_params(4, 3)
 
     def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
-        args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
+        args = self.extra_args[mn.node.index] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
                                               '-llmq-data-recovery=%d' % qdata_recovery_enabled]
         for llmq_sync in qvvec_sync:
             args.append('-llmq-qvvec-sync=%s:%d' % (llmq_type_strings[llmq_sync[0]], llmq_sync[1]))
         if reindex:
             args.append('-reindex')
             bb_hash = mn.node.getbestblockhash()
-            self.restart_node(mn.nodeIdx, args)
+            self.restart_node(mn.node.index, args)
             wait_until(lambda: mn.node.getbestblockhash() == bb_hash)
         else:
-            self.restart_node(mn.nodeIdx, args)
+            self.restart_node(mn.node.index, args)
         force_finish_mnsync(mn.node)
-        connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node.index, 0)
         if qdata_recovery_enabled:
             # trigger recovery threads and wait for them to start
             self.nodes[0].generate(1)

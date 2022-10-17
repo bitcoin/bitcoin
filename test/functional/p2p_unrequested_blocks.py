@@ -56,7 +56,7 @@ from test_framework.blocktools import create_block, create_coinbase, create_tx_w
 from test_framework.messages import CBlockHeader, CInv, MSG_BLOCK, msg_block, msg_headers, msg_inv
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 
 class AcceptBlockTest(BitcoinTestFramework):
@@ -300,7 +300,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.wait_for_disconnect()
 
         # 9. Connect node1 to node0 and ensure it is able to sync
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
 

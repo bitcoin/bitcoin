@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from test_framework.messages import CMerkleBlock, FromHex, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class MerkleBlockTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -22,9 +22,9 @@ class MerkleBlockTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
 
         self.sync_all()
 

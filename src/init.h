@@ -33,7 +33,7 @@ void InitParameterInteraction(ArgsManager& args);
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInitBasicSetup(ArgsManager& args);
+bool AppInitBasicSetup(const ArgsManager& args);
 /**
  * Initialization: parameter interaction.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.

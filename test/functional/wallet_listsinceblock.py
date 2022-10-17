@@ -10,9 +10,6 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
-    isolate_node,
-    reconnect_isolated_node,
 )
 
 from decimal import Decimal
@@ -28,7 +25,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
     def run_test(self):
         # All nodes are in IBD from genesis, so they'll need the miner (node2) to be an outbound connection, or have
         # only one connection. (See fPreferredDownload in net_processing)
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
         self.nodes[2].generate(101)
         self.sync_all()
 
@@ -312,7 +309,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
             [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00052000"),
                          spending_node.getrawchangeaddress(): Decimal("0.00050000")})
 
-        isolate_node(double_spending_node)
+        self.isolate_node(3)
 
         signedtx = spending_node.signrawtransactionwithwallet(rawtx)
         orig_tx_id = spending_node.sendrawtransaction(signedtx["hex"])
@@ -323,7 +320,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         double_tx = double_spending_node.getrawtransaction(dbl_tx_id, 1)
         lastblockhash = double_spending_node.generate(1)[0]
 
-        reconnect_isolated_node(double_spending_node, 2)
+        self.reconnect_isolated_node(3, 2)
         self.sync_all()
         spending_node.invalidateblock(lastblockhash)
 

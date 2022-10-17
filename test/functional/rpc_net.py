@@ -13,7 +13,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes,
     p2p_port,
     wait_until,
 )
@@ -58,8 +57,8 @@ class NetTest(DashTestFramework):
         self.nodes[0].ping()
         wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
         self.log.info('Connect nodes both way')
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 0)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 0)
 
         self._test_connection_count()
         self._test_getnettotals()
@@ -117,8 +116,8 @@ class NetTest(DashTestFramework):
 
         self.nodes[0].setnetworkactive(state=True)
         self.log.info('Connect nodes both way')
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 0)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 0)
 
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
@@ -129,7 +128,7 @@ class NetTest(DashTestFramework):
             assert_net_servicesnames(int(info["localservices"], 16), info["localservicesnames"])
 
         self.log.info('Test extended connections info')
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
         self.nodes[1].ping()
         wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
         assert_equal(self.nodes[1].getnetworkinfo()['connections'], 3)
