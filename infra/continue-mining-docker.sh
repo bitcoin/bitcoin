@@ -12,7 +12,6 @@
 #
 # REQUIREMENTS:
 # - docker
-# - jq
 # - the itcoin docker image must be available and tagged
 # - initialize-itcoin-docker.sh has been started and stopped already
 #
@@ -59,10 +58,6 @@ cleanup() {
 checkPrerequisites() {
     if ! command -v docker &> /dev/null; then
         errecho "Please install docker (https://www.docker.com/)"
-        exit 1
-    fi
-    if ! command -v jq &> /dev/null; then
-        errecho "Please install jq (https://stedolan.github.io/jq/)"
         exit 1
     fi
 }
@@ -112,7 +107,7 @@ errecho "Wallet ${WALLET_NAME} loaded"
 
 # Retrieve the address of the first transaction in this blockchain
 errecho "Retrieve the address of the first transaction we find"
-ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" listtransactions | jq --raw-output '.[0].address')
+ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" listtransactions | docker run --rm --interactive "${ITCOIN_IMAGE}" jq --raw-output '.[0].address')
 errecho "Address ${ADDR} retrieved"
 
 # Let's start mining continuously. We'll reuse the same ADDR as before.

@@ -11,7 +11,6 @@
 #
 # REQUIREMENTS:
 # - docker
-# - jq
 # - the itcoin docker image must be available and tagged
 #
 # USAGE:
@@ -57,10 +56,6 @@ checkPrerequisites() {
         errecho "Please install docker (https://www.docker.com/)"
         exit 1
     fi
-    if ! command -v jq &> /dev/null; then
-        errecho "Please install jq (https://stedolan.github.io/jq/)"
-        exit 1
-    fi
 }
 
 # Automatically stop the container (wich will also self-remove at script exit
@@ -79,8 +74,8 @@ INIT_DATA=$(docker run \
     create-initdata.sh
 )
 
-BLOCKSCRIPT=$(echo "${INIT_DATA}" | jq --raw-output '.blockscript')
-DESCRIPTORS=$(echo "${INIT_DATA}" | jq --raw-output '.descriptors')
+BLOCKSCRIPT=$(echo "${INIT_DATA}" | docker run --rm --interactive "${ITCOIN_IMAGE}" jq --raw-output '.blockscript')
+DESCRIPTORS=$(echo "${INIT_DATA}" | docker run --rm --interactive "${ITCOIN_IMAGE}" jq --raw-output '.descriptors')
 
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
 mkdir "${EXTERNAL_DATADIR}"
