@@ -13,6 +13,7 @@
 #include <hash.h>
 #include <pow.h>
 #include <reverse_iterator.h>
+#include <shared_mutex>
 #include <shutdown.h>
 #include <signet.h>
 #include <streams.h>
@@ -29,6 +30,7 @@ std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fPruneMode = false;
 uint64_t nPruneTarget = 0;
+std::shared_mutex cs_UnlinkFiles;
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
@@ -482,6 +484,7 @@ static bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const
 
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
 {
+    std::shared_lock<std::shared_mutex> lock(cs_UnlinkFiles);
     const FlatFilePos pos{WITH_LOCK(::cs_main, return pindex->GetUndoPos())};
 
     if (pos.IsNull()) {
@@ -556,6 +559,7 @@ uint64_t BlockManager::CalculateCurrentUsage()
 
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 {
+    std::unique_lock<std::shared_mutex> lock(cs_UnlinkFiles);
     for (std::set<int>::iterator it = setFilesToPrune.begin(); it != setFilesToPrune.end(); ++it) {
         FlatFilePos pos(*it, 0);
         fs::remove(BlockFileSeq().FileName(pos));
@@ -752,6 +756,7 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
+    std::shared_lock<std::shared_mutex> lock(cs_UnlinkFiles);
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return pindex->GetBlockPos())};
 
     if (!ReadBlockFromDisk(block, block_pos, consensusParams)) {
@@ -766,6 +771,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start)
 {
+    std::shared_lock<std::shared_mutex> lock(cs_UnlinkFiles);
     FlatFilePos pos{WITH_LOCK(cs_main, return pindex->GetBlockPos())};
     pos.nPos -= 8; // Seek back 8 bytes for meta header
     CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
