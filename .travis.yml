@@ -6,6 +6,7 @@ dist: xenial
 
 os: linux
 language: minimal
+arch: amd64
 
 services:
   - docker
@@ -13,7 +14,12 @@ services:
 cache:
   ccache: true
   directories:
-    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+    - $BASE_BUILD_DIR/ci/scratch/.ccache
+    # macOS
+    - $HOME/Library/Caches/Homebrew
+    - /usr/local/Homebrew
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 env:
   global:
     # DOCKER_HUB_USER
@@ -54,6 +60,8 @@ builddocker: &builddocker
     # no need to run tests again here
     - if [ "$DOCKER_BUILD" = "true" ]; then $DOCKER_RUN_IN_BUILDER ./ci/dash/build_depends.sh && $DOCKER_RUN_IN_BUILDER ./ci/dash/build_src.sh && BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./ci/dash/build-docker.sh; fi
     - CI_RETRY_EXE="travis_retry"
+    - CI_WAIT="while sleep 500; do echo .; done"
+    - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. See https://docs.travis-ci.com/user/customizing-the-build#build-timeouts . Please manually re-run this job by using the travis restart button. The next run should not time out because the build cache has been saved."
 before_install:
   - set -o errexit; source ./ci/test/00_setup_env.sh
   - set -o errexit; source ./ci/test/03_before_install.sh
@@ -151,7 +159,7 @@ install:
     - export PULL_REQUEST="$TRAVIS_PULL_REQUEST"
     - export COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
     - export JOB_NUMBER="$TRAVIS_JOB_NUMBER"
-    - export HOST_SRC_DIR=$TRAVIS_BUILD_DIR
+    - export HOST_SRC_DIR=$BASE_BUILD_DIR
     - export HOST_CACHE_DIR=$HOME/cache
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     - source ./ci/matrix.sh
@@ -202,32 +210,12 @@ after_success:
       script:
         - set -o errexit; source ./ci/extended_lint/06_script.sh
 
-    - stage: extended-lint
-      name: 'lint macOS 10.12 (compat)'
-      os: osx
-      # Use the earliest macOS that can build our lint dependencies:
-      # Xcode 8.3.3, macOS 10.12, JDK 1.8.0_112-b16
-      # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
-      osx_image: xcode8.3
-      # TODO: if you're updating osx_image, try using "rvm:" to supply the
-      # version of ruby required by homebrew. Despite this "rvm:" declaration,
-      # brew update installs ruby 2.3.7 as its first action.
-      language: ruby
-      rvm:
-        - 2.3.7
-      env:
-      cache: false
-      install:
-        - set -o errexit; source ./ci/lint/04_install.sh
-      before_script:
-        - set -o errexit; source ./ci/lint/05_before_script.sh
-      script:
-        - set -o errexit; source ./ci/lint/06_script.sh
-
     - stage: test
-      name: 'ARM  [GOAL: install]  [unit tests, no functional tests]'
+      name: 'ARM  [GOAL: install]  [unit tests, functional tests]'
+      arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
+        QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
       name: 'S390x  [GOAL: install]  [unit tests, functional tests]'
@@ -246,35 +234,44 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [CentOS 7]  [no depends, only system libs]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_qt5.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_trusty.sh"
-
+        FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
+# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_tsan.sh"
-
+        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
+# x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_asan.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_fuzz.sh"
-
+        FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
     - stage: test
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_amd64_nowallet.sh"
+        FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
     - stage: test
       name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
+
+    - stage: test
+      name: 'macOS 10.14 native [GOAL: install] [GUI: BIP70 enabled] [no depends]'
+      os: osx
+      # Use the most recent version:
+      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # https://docs.travis-ci.com/user/reference/osx/#macos-version
+      osx_image: xcode11
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

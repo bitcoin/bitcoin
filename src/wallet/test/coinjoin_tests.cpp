@@ -8,9 +8,11 @@
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/options.h>
+#include <node/context.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
+#include <coinjoin/client.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -59,31 +61,94 @@ BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
     static_assert(!CCoinJoin::IsCollateralAmount(0.00100001 * COIN));
 }
 
+BOOST_AUTO_TEST_CASE(coinjoin_pending_dsa_request_tests)
+{
+    CPendingDsaRequest dsa_request;
+    BOOST_CHECK(dsa_request.GetAddr() == CService());
+    BOOST_CHECK(dsa_request.GetDSA() == CCoinJoinAccept());
+    BOOST_CHECK_EQUAL(dsa_request.IsExpired(), true);
+    CPendingDsaRequest dsa_request_2;
+    BOOST_CHECK(dsa_request == dsa_request_2);
+    CCoinJoinAccept cja;
+    cja.nDenom = 4;
+    CService cserv(CNetAddr(), 1111);
+    CPendingDsaRequest custom_request(cserv, cja);
+    BOOST_CHECK(custom_request.GetAddr() == cserv);
+    BOOST_CHECK(custom_request.GetDSA() == cja);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), false);
+    SetMockTime(GetTime() + 15);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), false);
+    SetMockTime(GetTime() + 1);
+    BOOST_CHECK_EQUAL(custom_request.IsExpired(), true);
+
+    BOOST_CHECK(dsa_request != custom_request);
+    BOOST_CHECK(!(dsa_request == custom_request));
+    BOOST_CHECK(!dsa_request);
+    BOOST_CHECK(custom_request);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_dstxin_tests)
+{
+    CTxDSIn txin;
+    BOOST_CHECK(txin.prevPubKey == CScript());
+    BOOST_CHECK_EQUAL(txin.fHasSig, false);
+    BOOST_CHECK_EQUAL(txin.nRounds, -10);
+    CTxDSIn custom_txin(txin, CScript(4), -9);
+    BOOST_CHECK(custom_txin.prevPubKey == CScript(4));
+    BOOST_CHECK_EQUAL(custom_txin.fHasSig, false);
+    BOOST_CHECK_EQUAL(custom_txin.nRounds, -9);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_status_update_tests)
+{
+    CCoinJoinStatusUpdate cjsu;
+    BOOST_CHECK_EQUAL(cjsu.nSessionID, 0);
+    BOOST_CHECK_EQUAL(cjsu.nState, POOL_STATE_IDLE);
+    BOOST_CHECK_EQUAL(cjsu.nEntriesCount, 0);
+    BOOST_CHECK_EQUAL(cjsu.nStatusUpdate, STATUS_ACCEPTED);
+    BOOST_CHECK_EQUAL(cjsu.nMessageID, MSG_NOERR);
+    CCoinJoinStatusUpdate custom_cjsu(1, POOL_STATE_QUEUE, 1, STATUS_REJECTED, ERR_QUEUE_FULL);
+    BOOST_CHECK_EQUAL(custom_cjsu.nSessionID, 1);
+    BOOST_CHECK_EQUAL(custom_cjsu.nState, POOL_STATE_QUEUE);
+    BOOST_CHECK_EQUAL(custom_cjsu.nEntriesCount, 1);
+    BOOST_CHECK_EQUAL(custom_cjsu.nStatusUpdate, STATUS_REJECTED);
+    BOOST_CHECK_EQUAL(custom_cjsu.nMessageID, ERR_QUEUE_FULL);
+}
+
+BOOST_AUTO_TEST_CASE(coinjoin_accept_tests)
+{
+    CCoinJoinAccept cja;
+    BOOST_CHECK_EQUAL(cja.nDenom, 0);
+    BOOST_CHECK_EQUAL(cja.txCollateral.GetHash(), CMutableTransaction().GetHash());
+    // CMutableTransaction custom_cmt()
+}
+
 class CTransactionBuilderTestSetup : public TestChain100Setup
 {
 public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        chain = interfaces::MakeChain();
-        wallet = MakeUnique<CWallet>(*chain, WalletLocation(), CreateMockWalletDatabase());
+        NodeContext node;
+        chain = interfaces::MakeChain(node);
+        wallet = MakeUnique<CWallet>(chain.get(), WalletLocation(), CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);
         {
-            LOCK(wallet->cs_wallet);
-            wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            LOCK2(wallet->cs_wallet, cs_main);
+            wallet->GetLegacyScriptPubKeyMan()->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+            WalletRescanReserver reserver(wallet.get());
+            reserver.reserve();
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
-        WalletRescanReserver reserver(wallet.get());
-        reserver.reserve();
-
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     }
 
     ~CTransactionBuilderTestSetup()
     {
-        RemoveWallet(wallet);
+        RemoveWallet(wallet, nullopt);
     }
 
     std::shared_ptr<interfaces::Chain> chain;
@@ -100,29 +165,28 @@ public:
             blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        auto locked_chain = wallet->chain().lock();
-        LOCK(wallet->cs_wallet);
-        it->second.SetMerkleBranch(::ChainActive().Tip()->GetBlockHash(), 1);
+        LOCK2(wallet->cs_wallet, cs_main);
+        wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.m_confirm = confirm;
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
     {
         CompactTallyItem tallyItem;
         CTransactionRef tx;
-        CReserveKey destKey(wallet.get());
+        ReserveDestination reserveDest(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         bilingual_str strError;
         CCoinControl coinControl;
-        CPubKey pubKey;
-        BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
-        tallyItem.txdest = pubKey.GetID();
+        BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
         for (CAmount nAmount : vecAmounts) {
+            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             {
-                auto locked_chain = chain->lock();
-                BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
+                LOCK2(wallet->cs_wallet, cs_main);
+                wallet->CommitTransaction(tx, {}, {});
             }
-            wallet->CommitTransaction(tx, {}, {});
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && int(n) == nChangePosRet) {
@@ -134,10 +198,23 @@ public:
             }
         }
         assert(tallyItem.vecInputCoins.size() == vecAmounts.size());
-        destKey.KeepKey();
+        reserveDest.KeepDestination();
         return tallyItem;
     }
 };
+
+BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
+{
+    BOOST_CHECK_EQUAL(coinJoinClientManagers.size(), 1);
+    auto& cj_man = coinJoinClientManagers.begin()->second;
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
+    BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);
+    BOOST_CHECK_EQUAL(cj_man->StartMixing(), false);
+    cj_man->StopMixing();
+    BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
 {

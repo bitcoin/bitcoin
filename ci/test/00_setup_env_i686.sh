@@ -7,7 +7,9 @@
 export LC_ALL=C.UTF-8
 
 export HOST=i686-pc-linux-gnu
+export DEP_OPTS="NO_PROTOBUF=1"
 export PACKAGES="g++-multilib python3-zmq"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined"
 export CONFIG_SHELL="/bin/dash"
+export PYZMQ=true

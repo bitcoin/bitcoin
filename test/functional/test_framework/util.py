@@ -18,6 +18,7 @@ import random
 import shutil
 import re
 import time
+import unittest
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -202,6 +203,11 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
+def EncodeDecimal(o):
+    if isinstance(o, Decimal):
+        return str(o)
+    raise TypeError(repr(o) + " is not JSON serializable")
+
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
@@ -221,9 +227,10 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, lock=None, do_assert=True, allow_exception=False):
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, timeout_factor=1.0, lock=None, do_assert=True, allow_exception=False):
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
+    timeout = timeout * timeout_factor
     attempt = 0
     timeout *= Options.timeout_scale
     time_end = time.time() + timeout
@@ -286,7 +293,7 @@ def get_rpc_proxy(url, node_number, *, timeout=None, coveragedir=None):
     """
     proxy_kwargs = {}
     if timeout is not None:
-        proxy_kwargs['timeout'] = timeout
+        proxy_kwargs['timeout'] = int(timeout)
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
     proxy.url = url  # store URL on proxy for info
@@ -351,6 +358,13 @@ def initialize_datadir(dirname, n, chain):
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
+
+def adjust_bitcoin_conf_for_pre_17(conf_file):
+    with open(conf_file,'r', encoding='utf8') as conf:
+        conf_data = conf.read()
+    with open(conf_file, 'w', encoding='utf8') as conf:
+        conf_data_changed = conf_data.replace('[regtest]', '')
+        conf.write(conf_data_changed)
 
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
@@ -466,43 +480,6 @@ def isolate_node(node, timeout=5):
 def reconnect_isolated_node(node, node_num):
     node.setnetworkactive(True)
     connect_nodes(node, node_num)
-
-def sync_blocks(rpc_connections, *, wait=1, timeout=60):
-    """
-    Wait until everybody has the same tip.
-
-    sync_blocks needs to be called with an rpc_connections set that has least
-    one node already synced to the latest, stable tip, otherwise there's a
-    chance it might return before all nodes are stably synced.
-    """
-    timeout *= Options.timeout_scale
-
-    stop_time = time.time() + timeout
-    while time.time() <= stop_time:
-        best_hash = [x.getbestblockhash() for x in rpc_connections]
-        if best_hash.count(best_hash[0]) == len(rpc_connections):
-            return
-        time.sleep(wait)
-    raise AssertionError("Block sync timed out:{}".format("".join("\n  {!r}".format(b) for b in best_hash)))
-
-def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True, wait_func=None):
-    """
-    Wait until everybody has the same transactions in their memory
-    pools
-    """
-    timeout *= Options.timeout_scale
-    stop_time = time.time() + timeout
-    while time.time() <= stop_time:
-        pool = [set(r.getrawmempool()) for r in rpc_connections]
-        if pool.count(pool[0]) == len(rpc_connections):
-            if flush_scheduler:
-                for r in rpc_connections:
-                    r.syncwithvalidationinterfacequeue()
-            return
-        if wait_func is not None:
-            wait_func()
-        time.sleep(wait)
-    raise AssertionError("Mempool sync timed out:{}".format("".join("\n  {!r}".format(m) for m in pool)))
 
 def force_finish_mnsync(node):
     """
@@ -678,3 +655,33 @@ def find_vout_for_address(node, txid, addr):
         if any([addr == a for a in tx["vout"][i]["scriptPubKey"]["addresses"]]):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+def modinv(a, n):
+    """Compute the modular inverse of a modulo n using the extended Euclidean
+    Algorithm. See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers.
+    """
+    # TODO: Change to pow(a, -1, n) available in Python 3.8
+    t1, t2 = 0, 1
+    r1, r2 = n, a
+    while r2 != 0:
+        q = r1 // r2
+        t1, t2 = t2, t1 - q * t2
+        r1, r2 = r2, r1 - q * r2
+    if r1 > 1:
+        return None
+    if t1 < 0:
+        t1 += n
+    return t1
+
+class TestFrameworkUtil(unittest.TestCase):
+    def test_modinv(self):
+        test_vectors = [
+            [7, 11],
+            [11, 29],
+            [90, 13],
+            [1891, 3797],
+            [6003722857, 77695236973],
+        ]
+
+        for a, n in test_vectors:
+            self.assertEqual(modinv(a, n), pow(a, n-2, n))

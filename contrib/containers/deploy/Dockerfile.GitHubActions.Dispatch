@@ -16,7 +16,7 @@ RUN apt-get update && \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /dash
+WORKDIR /home/dash
 
 COPY . .
 
@@ -38,8 +38,8 @@ RUN make -j`nproc | awk '{x=$1/2; print x}'` && make install
 
 RUN mkdir built-target && \
   case "$TARGETPLATFORM" in \
-  "linux/arm64") cp depends/arm-linux-gnueabihf/bin/dash* /dash/built-target ;; \
-  "linux/amd64") cp depends/x86_64-pc-linux-gnu/bin/dash* /dash/built-target ;; \
+  "linux/arm64") cp depends/arm-linux-gnueabihf/bin/dash* /home/dash/built-target ;; \
+  "linux/amd64") cp depends/x86_64-pc-linux-gnu/bin/dash* /home/dash/built-target ;; \
 esac
 
 FROM ubuntu:focal
@@ -50,15 +50,15 @@ ARG USER_ID
 ARG GROUP_ID
 ARG TAG
 
-ENV HOME /dash
+ENV HOME /home/dash
 
 # add user with specified (or default) user/group ids
 ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
 RUN groupadd -g ${GROUP_ID} dash && \
-    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash  && \
-    mkdir /dash/.dashcore && \
-    chown dash:dash -R /dash
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash  && \
+    mkdir /home/dash/.dashcore && \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
@@ -66,15 +66,15 @@ RUN apt-get update && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /dash/built-target/dash* /usr/local/bin
+COPY --from=builder /home/dash/built-target/dash* /usr/local/bin
 
 USER dash
 
-VOLUME ["/dash"]
+VOLUME ["/home/dash"]
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 9998 9999 19998 19999
 
-WORKDIR /dash
+WORKDIR /home/dash

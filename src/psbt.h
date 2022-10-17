@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
@@ -327,7 +328,6 @@ struct PartiallySignedTransaction
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
     PartiallySignedTransaction() {}
-    PartiallySignedTransaction(const PartiallySignedTransaction& psbt_in) : tx(psbt_in.tx), inputs(psbt_in.inputs), outputs(psbt_in.outputs), unknown(psbt_in.unknown) {}
 
     /**
      * Finds the UTXO for a given input index
@@ -485,6 +485,12 @@ struct PartiallySignedTransaction
 
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
 bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash = SIGHASH_ALL);
+
+/** Updates a PSBTOutput with information from provider.
+ *
+ * This fills in the redeem_script, and hd_keypaths where possible.
+ */
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index);
 
 /**
  * Finalizes a PSBT if possible, combining partial signatures.

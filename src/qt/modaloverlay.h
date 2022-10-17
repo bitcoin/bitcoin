@@ -21,7 +21,7 @@ class ModalOverlay : public QWidget
     Q_OBJECT
 
 public:
-    explicit ModalOverlay(QWidget *parent);
+    explicit ModalOverlay(bool enable_wallet, QWidget *parent);
     ~ModalOverlay();
 
 public Q_SLOTS:

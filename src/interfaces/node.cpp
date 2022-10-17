@@ -22,6 +22,7 @@
 #include <net_processing.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/settings.h>
@@ -32,13 +33,15 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/check.h>
+#include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <coinjoin/coinjoin.h>
@@ -46,17 +49,7 @@
 
 #include <univalue.h>
 
-class CWallet;
-fs::path GetWalletDir();
-std::vector<fs::path> ListWalletDir();
-std::vector<std::shared_ptr<CWallet>> GetWallets();
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings);
-WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::shared_ptr<CWallet>& result);
-
 namespace interfaces {
-
-class Wallet;
-
 namespace {
 
 class EVOImpl : public EVO
@@ -64,16 +57,17 @@ class EVOImpl : public EVO
 public:
     CDeterministicMNList getListAtChainTip() override
     {
-        return deterministicMNManager->GetListAtChainTip();
+        return deterministicMNManager == nullptr ? CDeterministicMNList() : deterministicMNManager->GetListAtChainTip();
     }
 };
 
 class GOVImpl : public GOV
 {
 public:
-    std::vector<CGovernanceObject> getAllNewerThan(int64_t nMoreThanTime) override
+    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
     {
-        return governance.GetAllNewerThan(nMoreThanTime);
+        if (governance == nullptr) return;
+        governance->GetAllNewerThan(objs, nMoreThanTime);
     }
 };
 
@@ -82,10 +76,7 @@ class LLMQImpl : public LLMQ
 public:
     size_t getInstantSentLockCount() override
     {
-        if (!llmq::quorumInstantSendManager) {
-            return 0;
-        }
-        return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+        return llmq::quorumInstantSendManager == nullptr ? 0 : llmq::quorumInstantSendManager->GetInstantSendLockCount();
     }
 };
 
@@ -94,15 +85,15 @@ class MasternodeSyncImpl : public Masternode::Sync
 public:
     bool isSynced() override
     {
-        return masternodeSync.IsSynced();
+        return masternodeSync == nullptr ? false : masternodeSync->IsSynced();
     }
     bool isBlockchainSynced() override
     {
-        return masternodeSync.IsBlockchainSynced();
+        return masternodeSync == nullptr ? false : masternodeSync->IsBlockchainSynced();
     }
     std::string getSyncStatus() override
     {
-        return masternodeSync.GetSyncStatus();
+        return masternodeSync == nullptr ? "" : masternodeSync->GetSyncStatus();
     }
 };
 
@@ -170,14 +161,13 @@ public:
 class NodeImpl : public Node
 {
 public:
-    NodeImpl() { m_interfaces.chain = MakeChain(); }
-
     EVOImpl m_evo;
     GOVImpl m_gov;
     LLMQImpl m_llmq;
     MasternodeSyncImpl m_masternodeSync;
     CoinJoinOptionsImpl m_coinjoin;
 
+    NodeImpl(NodeContext* context) { setContext(context); }
     void initError(const bilingual_str& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
@@ -187,46 +177,50 @@ public:
     bool softSetArg(const std::string& arg, const std::string& value) override { return gArgs.SoftSetArg(arg, value); }
     bool softSetBoolArg(const std::string& arg, bool value) override { return gArgs.SoftSetBoolArg(arg, value); }
     void selectParams(const std::string& network) override { SelectParams(network); }
+    bool initSettings(std::string& error) override { return gArgs.InitSettings(error); }
     uint64_t getAssumedBlockchainSize() override { return Params().AssumedBlockchainSize(); }
     uint64_t getAssumedChainStateSize() override { return Params().AssumedChainStateSize(); }
     std::string getNetwork() override { return Params().NetworkIDString(); }
-    void initLogging() override { InitLogging(); }
-    void initParameterInteraction() override { InitParameterInteraction(); }
-    std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
+    void initLogging() override { InitLogging(gArgs); }
+    void initParameterInteraction() override { InitParameterInteraction(gArgs); }
+    std::string getWarnings() override { return GetWarnings(true); }
     uint64_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
-        return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
-               AppInitLockDataDirectory();
+        return AppInitBasicSetup(gArgs) && AppInitParameterInteraction(gArgs) && AppInitSanityChecks() &&
+               AppInitLockDataDirectory() && AppInitInterfaces(*m_context);
     }
-    bool appInitMain() override { return AppInitMain(m_interfaces); }
+    bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
+    {
+        return AppInitMain(m_context_ref, *m_context, tip_info);
+    }
     void appShutdown() override
     {
-        Interrupt();
-        Shutdown(m_interfaces);
+        Interrupt(*m_context);
+        Shutdown(*m_context);
     }
     void appPrepareShutdown() override
     {
-        Interrupt();
+        Interrupt(*m_context);
         StartRestart();
-        PrepareShutdown(m_interfaces);
+        PrepareShutdown(*m_context);
     }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
-    void setupServerArgs() override { return SetupServerArgs(); }
+    void setupServerArgs() override { return SetupServerArgs(*m_context); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(CConnman::NumConnections flags) override
     {
-        return g_connman ? g_connman->GetNodeCount(flags) : 0;
+        return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
     }
     bool getNodesStats(NodesStats& stats) override
     {
         stats.clear();
 
-        if (g_connman) {
+        if (m_context->connman) {
             std::vector<CNodeStats> stats_temp;
-            g_connman->GetNodeStats(stats_temp);
+            m_context->connman->GetNodeStats(stats_temp);
 
             stats.reserve(stats_temp.size());
             for (auto& node_stats_temp : stats_temp) {
@@ -247,46 +241,46 @@ public:
     }
     bool getBanned(banmap_t& banmap) override
     {
-        if (g_banman) {
-            g_banman->GetBanned(banmap);
+        if (m_context->banman) {
+            m_context->banman->GetBanned(banmap);
             return true;
         }
         return false;
     }
-    bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) override
+    bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) override
     {
-        if (g_banman) {
-            g_banman->Ban(net_addr, reason, ban_time_offset);
+        if (m_context->banman) {
+            m_context->banman->Ban(net_addr, ban_time_offset);
             return true;
         }
         return false;
     }
     bool unban(const CSubNet& ip) override
     {
-        if (g_banman) {
-            g_banman->Unban(ip);
+        if (m_context->banman) {
+            m_context->banman->Unban(ip);
             return true;
         }
         return false;
     }
     bool disconnect(const CNetAddr& net_addr) override
     {
-        if (g_connman) {
-            return g_connman->DisconnectNode(net_addr);
+        if (m_context->connman) {
+            return m_context->connman->DisconnectNode(net_addr);
         }
         return false;
     }
     bool disconnect(NodeId id) override
     {
-        if (g_connman) {
-            return g_connman->DisconnectNode(id);
+        if (m_context->connman) {
+            return m_context->connman->DisconnectNode(id);
         }
         return false;
     }
-    int64_t getTotalBytesRecv() override { return g_connman ? g_connman->GetTotalBytesRecv() : 0; }
-    int64_t getTotalBytesSent() override { return g_connman ? g_connman->GetTotalBytesSent() : 0; }
-    size_t getMempoolSize() override { return ::mempool.size(); }
-    size_t getMempoolDynamicUsage() override { return ::mempool.DynamicMemoryUsage(); }
+    int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
+    int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }
+    size_t getMempoolSize() override { return m_context->mempool ? m_context->mempool->size() : 0; }
+    size_t getMempoolDynamicUsage() override { return m_context->mempool ? m_context->mempool->DynamicMemoryUsage() : 0; }
     bool getHeaderTip(int& height, int64_t& block_time) override
     {
         LOCK(::cs_main);
@@ -332,11 +326,11 @@ public:
     bool getImporting() override { return ::fImporting; }
     void setNetworkActive(bool active) override
     {
-        if (g_connman) {
-            g_connman->SetNetworkActive(active);
+        if (m_context->connman) {
+            m_context->connman->SetNetworkActive(active);
         }
     }
-    bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
+    bool getNetworkActive() override { return m_context->connman && m_context->connman->GetNetworkActive(); }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) override
     {
         FeeCalculation fee_calc;
@@ -349,7 +343,7 @@ public:
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req;
+        JSONRPCRequest req(m_context_ref);
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
@@ -363,29 +357,9 @@ public:
         LOCK(::cs_main);
         return ::ChainstateActive().CoinsTip().GetCoin(output, coin);
     }
-    std::string getWalletDir() override
+    WalletClient& walletClient() override
     {
-        return GetWalletDir().string();
-    }
-    std::vector<std::string> listWalletDir() override
-    {
-        std::vector<std::string> paths;
-        for (auto& path : ListWalletDir()) {
-            paths.push_back(path.string());
-        }
-        return paths;
-    }
-    std::vector<std::unique_ptr<Wallet>> getWallets() override
-    {
-        std::vector<std::unique_ptr<Wallet>> wallets;
-        for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
-            wallets.emplace_back(MakeWallet(wallet));
-        }
-        return wallets;
-    }
-    std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
-    {
-        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warnings));
+        return *Assert(m_context->wallet_client);
     }
 
     EVO& evo() override { return m_evo; }
@@ -394,13 +368,6 @@ public:
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
 
-    WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, std::unique_ptr<Wallet>& result) override
-    {
-        std::shared_ptr<CWallet> wallet;
-        WalletCreationStatus status = CreateWallet(*m_interfaces.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
-        result = MakeWallet(wallet);
-        return status;
-    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage_connect(fn));
@@ -416,10 +383,6 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(::uiInterface.ShowProgress_connect(fn));
-    }
-    std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
-    {
-        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::unique_ptr<Wallet>& wallet) { fn(std::move(wallet)); }));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
@@ -455,7 +418,7 @@ public:
         return MakeHandler(
             ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
                 fn(initial_download, block->nHeight, block->GetBlockTime(), block->GetBlockHash().ToString(),
-                    GuessVerificationProgress(Params().TxData(), block));
+                    /* verification progress is unused when a header was received */ 0);
             }));
     }
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
@@ -472,11 +435,22 @@ public:
                 fn(nSyncProgress);
             }));
     }
-    InitInterfaces m_interfaces;
+    NodeContext* context() override { return m_context; }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+        if (context) {
+            m_context_ref.Set(*context);
+        } else {
+            m_context_ref.Clear();
+        }
+    }
+    NodeContext* m_context{nullptr};
+    util::Ref m_context_ref;
 };
 
 } // namespace
 
-std::unique_ptr<Node> MakeNode() { return MakeUnique<NodeImpl>(); }
+std::unique_ptr<Node> MakeNode(NodeContext* context) { return MakeUnique<NodeImpl>(context); }
 
 } // namespace interfaces

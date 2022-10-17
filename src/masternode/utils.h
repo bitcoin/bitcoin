@@ -10,7 +10,6 @@ class CConnman;
 class CMasternodeUtils
 {
 public:
-    static void ProcessMasternodeConnections(CConnman& connman);
     static void DoMaintenance(CConnman &connman);
 };
 

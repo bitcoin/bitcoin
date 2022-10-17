@@ -15,13 +15,6 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Open payment request from URI or file</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label">
@@ -31,18 +24,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="uriEdit"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="selectFileButton">
-       <property name="toolTip">
-        <string>Select payment request file</string>
-       </property>
-       <property name="text">
-        <string notr="true">...</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
+      <widget class="QValidatedLineEdit" name="uriEdit">
+       <property name="placeholderText">
+        <string notr="true">dash:</string>
        </property>
       </widget>
      </item>

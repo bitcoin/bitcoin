@@ -269,7 +269,13 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
 
     void PushAggQueue(const T& v)
     {
-        aggQueue.push(new T(v));
+        auto copyT = new T(v);
+        try {
+            aggQueue.push(copyT);
+        } catch (...) {
+            delete copyT;
+            throw;
+        }
 
         if (++aggQueueSize >= batchSize) {
             // we've collected enough intermediate results to form a new batch.

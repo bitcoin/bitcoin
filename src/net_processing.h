@@ -6,11 +6,23 @@
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
-#include <net.h>
-#include <validation.h>
-#include <validationinterface.h>
 #include <consensus/params.h>
+#include <net.h>
 #include <sync.h>
+#include <validationinterface.h>
+
+class CTxMemPool;
+class ChainstateManager;
+
+namespace llmq {
+class CChainLocksHandler;
+class CDKGSessionManager;
+class CInstantSendManager;
+class CQuorumBlockProcessor;
+class CQuorumManager;
+class CSigningManager;
+class CSigSharesManager;
+} // namespace llmq
 
 extern CCriticalSection cs_main;
 
@@ -27,10 +39,23 @@ class PeerLogicValidation final : public CValidationInterface, public NetEventsI
 private:
     CConnman* const connman;
     BanMan* const m_banman;
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
+    std::unique_ptr<llmq::CDKGSessionManager>& m_qdkgsman;
+    std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
+    std::unique_ptr<llmq::CQuorumManager>& m_qman;
+    std::unique_ptr<llmq::CSigningManager>& m_sigman;
+    std::unique_ptr<llmq::CSigSharesManager>& m_shareman;
+    std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
+    std::unique_ptr<llmq::CInstantSendManager>& m_isman;
 
-    bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool MaybeDiscourageAndDisconnect(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
-    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, bool enable_bip61);
+    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                        std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor, std::unique_ptr<llmq::CDKGSessionManager>& qdkgsman,
+                        std::unique_ptr<llmq::CQuorumManager>& qman, std::unique_ptr<llmq::CSigSharesManager>& shareman,
+                        std::unique_ptr<llmq::CSigningManager>& sigman, std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                        std::unique_ptr<llmq::CInstantSendManager>& isman, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.
@@ -74,6 +99,8 @@ public:
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
+    void ReattemptInitialBroadcast(CScheduler& scheduler) const;
 
 private:
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip

@@ -52,7 +52,7 @@ For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-ex
 
 Common linux dependencies:
 
-    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
+    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch bison
 
 For linux ARM cross compilation:
 
@@ -83,6 +83,8 @@ The following can be set when running make: `make FOO=bar`
 <dd>If a source file can't be fetched, try here before giving up</dd>
 <dt>NO_QT</dt>
 <dd>Don't download/build/cache qt and its dependencies</dd>
+<dt>NO_QR</dt>
+<dd>Don't download/build/cache packages needed for enabling qrencode</dd>
 <dt>NO_ZMQ</dt>
 <dd>Don't download/build/cache packages needed for enabling zeromq</dd>
 <dt>NO_WALLET</dt>
@@ -93,8 +95,6 @@ The following can be set when running make: `make FOO=bar`
 <dd>Don't download/build/cache packages needed for enabling NAT-PMP</dd>
 <dt>DEBUG</dt>
 <dd>disable some optimizations and enable more runtime checking</dd>
-<dt>PROTOBUF</dt>
-<dd>build protobuf (used for deprecated BIP70 support)</dd>
 <dt>HOST_ID_SALT</dt>
 <dd>Optional salt to use when generating host package ids</dd>
 <dt>BUILD_ID_SALT</dt>

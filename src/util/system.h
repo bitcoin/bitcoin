@@ -12,7 +12,7 @@
 #define BITCOIN_UTIL_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <attributes.h>
@@ -20,9 +20,11 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
+#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/memory.h>
+#include <util/settings.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 #include <amount.h>
@@ -59,6 +61,7 @@ extern const std::string gCoinJoinName;
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_SETTINGS_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -92,13 +95,17 @@ fs::path GetDefaultDataDir();
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
+// Return true if -datadir option points to a valid directory or is not specified.
+bool CheckDataDirOption();
 /** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
+#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -153,8 +160,7 @@ struct SectionInfo
 class ArgsManager
 {
 public:
-    enum Flags {
-        NONE = 0x00,
+    enum Flags : uint32_t {
         // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
         ALLOW_BOOL = 0x01,
         ALLOW_INT = 0x02,
@@ -167,6 +173,8 @@ public:
          * between mainnet and regtest/testnet won't cause problems due to these
          * parameters by accident. */
         NETWORK_ONLY = 0x200,
+        // This argument's value is sensitive (such as a password).
+        SENSITIVE = 0x400,
     };
 
 protected:
@@ -180,9 +188,7 @@ protected:
     };
 
     mutable CCriticalSection cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
-    std::map<std::string, std::vector<std::string>> m_command_line_args GUARDED_BY(cs_args);
-    std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
+    util::Settings m_settings GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
@@ -192,6 +198,7 @@ protected:
 
 public:
     ArgsManager();
+    ~ArgsManager();
 
     /**
      * Select the network in use
@@ -215,9 +222,9 @@ public:
     const std::list<SectionInfo> GetUnrecognizedSections() const;
 
     /**
-     * Return the map of all the args passed via cmd line
+     * Return the map of all the args passed via the command line
      */
-    const std::map<std::string, std::vector<std::string>> GetCommandLineArgs() const;
+    const std::map<std::string, std::vector<util::SettingsValue>> GetCommandLineArgs() const;
 
     /**
      * Return a vector of strings of the given argument
@@ -295,7 +302,7 @@ public:
     void ForceRemoveArg(const std::string& strArg);
 
     /**
-     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * Returns the appropriate chain name from the program arguments.
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
@@ -333,9 +340,55 @@ public:
 
     /**
      * Return Flags for known arg.
-     * Return ArgsManager::NONE for unknown arg.
+     * Return nullopt for unknown arg.
      */
-    unsigned int FlagsOfKnownArg(const std::string& key) const;
+    Optional<unsigned int> GetArgFlags(const std::string& name) const;
+
+    /**
+     * Read and update settings file with saved settings. This needs to be
+     * called after SelectParams() because the settings file location is
+     * network-specific.
+     */
+    bool InitSettings(std::string& error);
+
+    /**
+     * Get settings file path, or return false if read-write settings were
+     * disabled with -nosettings.
+     */
+    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false) const;
+
+    /**
+     * Read settings file. Push errors to vector, or log them if null.
+     */
+    bool ReadSettingsFile(std::vector<std::string>* errors = nullptr);
+
+    /**
+     * Write settings file. Push errors to vector, or log them if null.
+     */
+    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr) const;
+
+    /**
+     * Access settings with lock held.
+     */
+    template <typename Fn>
+    void LockSettings(Fn&& fn)
+    {
+        LOCK(cs_args);
+        fn(m_settings);
+    }
+
+    /**
+     * Log the config file options and the command line arguments,
+     * useful for troubleshooting.
+     */
+    void LogArgs() const;
+
+private:
+    // Helper function for LogArgs().
+    void logArgsPrefix(
+        const std::string& prefix,
+        const std::string& section,
+        const std::map<std::string, std::vector<util::SettingsValue>>& args) const;
 };
 
 extern ArgsManager gArgs;
@@ -344,6 +397,9 @@ extern ArgsManager gArgs;
  * @return true if help has been requested via a command-line arg
  */
 bool HelpRequested(const ArgsManager& args);
+
+/** Add help options to the args manager */
+void SetupHelpOptions(ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages
@@ -402,10 +458,8 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
  * On platforms that support it, tell the kernel the calling thread is
  * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
  *
- * @return The return value of sched_setschedule(), or 1 on systems without
- * sched_setchedule().
  */
-int ScheduleBatchPriority();
+void ScheduleBatchPriority();
 
 namespace util {
 

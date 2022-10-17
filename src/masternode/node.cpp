@@ -16,7 +16,7 @@
 // Keep track of the active Masternode
 CCriticalSection activeMasternodeInfoCs;
 CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);
-CActiveMasternodeManager* activeMasternodeManager;
+std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 std::string CActiveMasternodeManager::GetStateString() const
 {
@@ -202,7 +202,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
         auto service = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.service);
-        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
+        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);

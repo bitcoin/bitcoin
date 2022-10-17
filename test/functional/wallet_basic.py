@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
 from decimal import Decimal
-import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -26,15 +25,15 @@ class WalletTest(BitcoinTestFramework):
             '-usehd={:d}'.format(i%2==0),
         ] for i in range(self.num_nodes)]
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        self.add_nodes(4, self.extra_args)
-        self.start_node(0)
-        self.start_node(1)
-        self.start_node(2)
+        self.setup_nodes()
+        # Only need nodes 0-2 running at start of test
+        self.stop_node(3)
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
         connect_nodes(self.nodes[0], 2)
@@ -397,8 +396,6 @@ class WalletTest(BitcoinTestFramework):
         maintenance = [
             '-rescan',
             '-reindex',
-            '-zapwallettxes=1',
-            '-zapwallettxes=2',
         ]
         chainlimit = 6
         for m in maintenance:
@@ -457,12 +454,8 @@ class WalletTest(BitcoinTestFramework):
         self.stop_node(0)
         self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
 
-        # wait for loadmempool
-        timeout = 10
-        while (timeout > 0 and len(self.nodes[0].getrawmempool()) < chainlimit * 2):
-            time.sleep(0.5)
-            timeout -= 0.5
-        assert_equal(len(self.nodes[0].getrawmempool()), chainlimit * 2)
+        # wait until the wallet has submitted all transactions to the mempool
+        wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
 
         # Prevent potential race condition when calling wallet RPCs right after restart
         self.nodes[0].syncwithvalidationinterfacequeue()

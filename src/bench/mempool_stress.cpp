@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <policy/policy.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 
 #include <vector>
@@ -23,12 +24,6 @@ struct Available {
     size_t vin_left{0};
     size_t tx_count;
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
-    Available& operator=(Available other) {
-        ref = other.ref;
-        vin_left = other.vin_left;
-        tx_count = other.tx_count;
-        return *this;
-    }
 };
 
 static void ComplexMemPool(benchmark::Bench& bench)
@@ -82,6 +77,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
     }
+    TestingSetup test_setup;
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {

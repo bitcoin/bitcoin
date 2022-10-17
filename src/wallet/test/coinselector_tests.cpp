@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/context.h>
 #include <wallet/wallet.h>
 #include <wallet/coinselection.h>
 #include <wallet/coincontrol.h>
@@ -29,8 +30,9 @@ std::vector<std::unique_ptr<CWalletTx>> wtxn;
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
-static auto testChain = interfaces::MakeChain();
-static CWallet testWallet(*testChain, WalletLocation(), CreateDummyWalletDatabase());
+static NodeContext testNode;
+static auto testChain = interfaces::MakeChain(testNode);
+static CWallet testWallet(testChain.get(), WalletLocation(), CreateDummyWalletDatabase());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);
@@ -123,7 +125,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
 
-    LOCK2(cs_main, testWallet.cs_wallet);
+    LOCK(testWallet.cs_wallet);
 
     // Setup
     std::vector<CInputCoin> utxo_pool;
@@ -282,7 +284,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     CAmount nValueRet;
     bool bnb_used;
 
-    LOCK2(cs_main, testWallet.cs_wallet);
+    LOCK(testWallet.cs_wallet);
 
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
@@ -561,7 +563,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     CAmount nValueRet;
     bool bnb_used;
 
-    LOCK2(cs_main, testWallet.cs_wallet);
+    LOCK(testWallet.cs_wallet);
 
     empty_wallet();
 
@@ -585,7 +587,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
     std::exponential_distribution<double> distribution (100);
     FastRandomContext rand;
 
-    LOCK2(cs_main, testWallet.cs_wallet);
+    LOCK(testWallet.cs_wallet);
 
     // Run this test 100 times
     for (int i = 0; i < 100; ++i)

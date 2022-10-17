@@ -45,8 +45,6 @@ script: |
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg xorrisofs"
 
-  export QT_RCC_TEST=1
-  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
@@ -147,6 +145,7 @@ script: |
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make -C src osx_debug
+    make ${MAKEOPTS} -C src check-security
     make install-strip DESTDIR=${INSTALLPATH}
 
     make osx_volname

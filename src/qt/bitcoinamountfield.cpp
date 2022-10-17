@@ -79,10 +79,19 @@ public:
 
     void fixup(const QString &input)
     {
-        bool valid = false;
-        CAmount val = parse(input, currentUnit, &valid);
-        if(valid)
-        {
+        bool valid;
+        CAmount val;
+
+        if (input.isEmpty() && !m_allow_empty) {
+            valid = true;
+            val = m_min_amount;
+        } else {
+            valid = false;
+            val = parse(input, currentUnit, &valid);
+        }
+
+        if (valid) {
+            val = qBound(m_min_amount, val, m_max_amount);
             setText(BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways));
         }
     }
@@ -96,6 +105,21 @@ public:
     {
         setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
         Q_EMIT valueChanged();
+    }
+
+    void SetAllowEmpty(bool allow)
+    {
+        m_allow_empty = allow;
+    }
+
+    void SetMinValue(const CAmount& value)
+    {
+        m_min_amount = value;
+    }
+
+    void SetMaxValue(const CAmount& value)
+    {
+        m_max_amount = value;
     }
 
     void setDisplayUnit(int unit)
@@ -124,7 +148,10 @@ public:
     }
 
 private:
-    int currentUnit;
+    int currentUnit{BitcoinUnits::DASH};
+    bool m_allow_empty{true};
+    CAmount m_min_amount{CAmount(0)};
+    CAmount m_max_amount{BitcoinUnits::maxMoney()};
 
 protected:
     bool event(QEvent *event) override
@@ -231,6 +258,21 @@ CAmount BitcoinAmountField::value(bool *valid_out) const
 void BitcoinAmountField::setValue(const CAmount& value)
 {
     amount->setValue(value);
+}
+
+void BitcoinAmountField::SetAllowEmpty(bool allow)
+{
+    amount->SetAllowEmpty(allow);
+}
+
+void BitcoinAmountField::SetMinValue(const CAmount& value)
+{
+    amount->SetMinValue(value);
+}
+
+void BitcoinAmountField::SetMaxValue(const CAmount& value)
+{
+    amount->SetMaxValue(value);
 }
 
 void BitcoinAmountField::setReadOnly(bool fReadOnly)

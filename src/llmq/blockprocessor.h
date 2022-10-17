@@ -15,8 +15,6 @@
 #include <sync.h>
 #include <optional>
 
-#include <unordered_map>
-
 class CNode;
 class CConnman;
 class CValidationState;
@@ -34,6 +32,7 @@ class CQuorumBlockProcessor
 {
 private:
     CEvoDB& evoDb;
+    CConnman& connman;
 
     // TODO cleanup
     mutable CCriticalSection minableCommitmentsCs;
@@ -43,7 +42,7 @@ private:
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb);
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman& _connman);
 
     bool UpgradeDB();
 
@@ -69,12 +68,12 @@ public:
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    static bool IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     size_t GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight, int quorumIndex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
-extern CQuorumBlockProcessor* quorumBlockProcessor;
+extern std::unique_ptr<CQuorumBlockProcessor> quorumBlockProcessor;
 
 } // namespace llmq
 

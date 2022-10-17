@@ -1404,34 +1404,37 @@ public:
     }
 };
 
+/** Compute the (single) SHA256 of the concatenation of all prevouts of a tx. */
 template <class T>
-uint256 GetPrevoutHash(const T& txTo)
+uint256 GetPrevoutsSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txin : txTo.vin) {
         ss << txin.prevout;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
+/** Compute the (single) SHA256 of the concatenation of all nSequences of a tx. */
 template <class T>
-uint256 GetSequenceHash(const T& txTo)
+uint256 GetSequencesSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txin : txTo.vin) {
         ss << txin.nSequence;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
+/** Compute the (single) SHA256 of the concatenation of all txouts of a tx. */
 template <class T>
-uint256 GetOutputsHash(const T& txTo)
+uint256 GetOutputsSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txout : txTo.vout) {
         ss << txout;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
 } // namespace
@@ -1442,10 +1445,6 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     assert(!m_ready);
 
     m_spent_outputs = std::move(spent_outputs);
-
-    hashPrevouts = GetPrevoutHash(txTo);
-    hashSequence = GetSequenceHash(txTo);
-    hashOutputs = GetOutputsHash(txTo);
 
     m_ready = true;
 }
@@ -1467,13 +1466,11 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 {
     assert(nIn < txTo.vin.size());
 
-    static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
-
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
             //  nOut out of range
-            return one;
+            return uint256::ONE;
         }
     }
 

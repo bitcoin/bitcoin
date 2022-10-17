@@ -10,10 +10,11 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
+#include <util/irange.h>
 
 namespace llmq
 {
-CDKGDebugManager* quorumDKGDebugManager;
+std::unique_ptr<CDKGDebugManager> quorumDKGDebugManager;
 
 UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
 {
@@ -27,7 +28,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
     if (detailLevel == 2) {
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers(llmqType, pindex);
+            dmnMembers = utils::GetAllQuorumMembers(llmqType, pindex);
         }
     }
 
@@ -79,7 +80,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
         }
     };
 
-    for (size_t i = 0; i < members.size(); i++) {
+    for (const auto i : irange::range(members.size())) {
         const auto& m = members[i];
         add(badMembers, i, m.bad);
         add(weComplain, i, m.weComplain);

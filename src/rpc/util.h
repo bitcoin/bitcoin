@@ -5,11 +5,15 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <script/script.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -20,16 +24,17 @@
 
 #include <boost/variant.hpp>
 
-class CKeyStore;
+/**
+ * String used to describe UNIX epoch time in documentation, factored out to a
+ * constant for consistency.
+ */
+extern const std::string UNIX_EPOCH_TIME;
+
+class FillableSigningProvider;
+class FillableSigningProvider;
 class CPubKey;
 class CScript;
 struct Sections;
-struct InitInterfaces;
-
-//! Pointers to interfaces that need to be accessible from RPC methods. Due to
-//! limitations of the RPC framework, there's currently no direct way to pass in
-//! state to RPC method implementations.
-extern InitInterfaces* g_rpc_interfaces;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
@@ -79,7 +84,7 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
+CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in);
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
 
 UniValue DescribeAddress(const CTxDestination& dest);
@@ -102,6 +107,8 @@ enum class OuterType {
     OBJ,
     NONE, // Only set on first recursion
 };
+/** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
 
 struct RPCArg {
     enum class Type {
@@ -228,8 +235,6 @@ struct RPCResult {
     const bool m_optional;
     const std::string m_description;
     const std::string m_cond;
-    const bool m_legacy;                  //!< Used for legacy support
-    const std::string m_result;           //!< Used for legacy support
 
     RPCResult(
         const std::string cond,
@@ -243,43 +248,12 @@ struct RPCResult {
           m_inner{std::move(inner)},
           m_optional{optional},
           m_description{std::move(description)},
-          m_cond{std::move(cond)},
-          m_result{},
-          m_legacy{false}
+          m_cond{std::move(cond)}
     {
         CHECK_NONFATAL(!m_cond.empty());
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
         CHECK_NONFATAL(inner_needed != inner.empty());
     }
-
-    // start legacy support logic
-    RPCResult(std::string cond, std::string result)
-        : m_type{Type::NONE},
-          m_key_name{},
-          m_inner{},
-          m_optional{false},
-          m_description{},
-          m_cond{std::move(cond)},
-          m_result{std::move(result)},
-          m_legacy{true}
-    {
-        CHECK_NONFATAL(!m_cond.empty());
-        CHECK_NONFATAL(!m_result.empty());
-    }
-
-    RPCResult(std::string result)
-        : m_type{Type::NONE},
-          m_key_name{},
-          m_inner{},
-          m_optional{false},
-          m_description{},
-          m_cond{},
-          m_result{std::move(result)},
-          m_legacy{true}
-    {
-        CHECK_NONFATAL(!m_result.empty());
-    }
-    // end legacy support logic
 
     RPCResult(
         const std::string cond,
@@ -300,9 +274,7 @@ struct RPCResult {
           m_inner{std::move(inner)},
           m_optional{optional},
           m_description{std::move(description)},
-          m_cond{},
-          m_result{},
-          m_legacy{false}
+          m_cond{}
     {
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
         CHECK_NONFATAL(inner_needed != inner.empty());

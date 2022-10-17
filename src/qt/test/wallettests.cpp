@@ -101,30 +101,30 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     QT_QPA_PLATFORM=xcb     src/qt/test/test_dash-qt  # Linux
 //     QT_QPA_PLATFORM=windows src/qt/test/test_dash-qt  # Windows
 //     QT_QPA_PLATFORM=cocoa   src/qt/test/test_dash-qt  # macOS
-void TestGUI()
+void TestGUI(interfaces::Node& node)
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    auto chain = interfaces::MakeChain();
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), CreateMockWalletDatabase());
+    node.setContext(&test.m_node);
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
+        auto spk_man = wallet->GetLegacyScriptPubKeyMan();
         LOCK(wallet->cs_wallet);
+        AssertLockHeld(spk_man->cs_wallet);
         wallet->SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
-        wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        spk_man->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        wallet->SetLastBlockProcessed(105, ::ChainActive().Tip()->GetBlockHash());
     }
     {
-        auto locked_chain = wallet->chain().lock();
-        LockAnnotation lock(::cs_main);
-
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(wallet->chain().getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
         QCOMPARE(result.last_scanned_block, ::ChainActive().Tip()->GetBlockHash());
         QVERIFY(result.last_failed_block.IsNull());
@@ -134,10 +134,9 @@ void TestGUI()
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
-    auto node = interfaces::MakeNode();
-    OptionsModel optionsModel(*node);
-    ClientModel clientModel(*node, &optionsModel);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);;
+    OptionsModel optionsModel(node);
+    ClientModel clientModel(node, &optionsModel);
+    WalletModel walletModel(interfaces::MakeWallet(wallet), node, &optionsModel);;
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -212,7 +211,7 @@ void TestGUI()
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
-    RemoveWallet(wallet);
+    RemoveWallet(wallet, nullopt);
 }
 
 } // namespace
@@ -230,5 +229,5 @@ void WalletTests::walletTests()
         return;
     }
 #endif
-    TestGUI();
+    TestGUI(m_node);
 }

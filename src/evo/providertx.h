@@ -9,6 +9,7 @@
 #include <evo/specialtx.h>
 #include <primitives/transaction.h>
 
+#include <consensus/validation.h>
 #include <key_io.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -20,11 +21,11 @@ class CValidationState;
 
 struct maybe_error{
     bool did_err{false};
-    int ban_amount{0};
+    ValidationInvalidReason reason{ValidationInvalidReason::CONSENSUS};
     std::string_view error_str;
 
     constexpr maybe_error() = default;
-    constexpr maybe_error(int amount, std::string_view err): did_err(true), ban_amount(amount), error_str(err) {};
+    constexpr maybe_error(ValidationInvalidReason reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
 };
 
 class CProRegTx
@@ -235,7 +236,7 @@ template <typename ProTx>
 static maybe_error CheckInputsHash(const CTransaction& tx, const ProTx& proTx)
 {
     if (uint256 inputsHash = CalcTxInputsHash(tx); inputsHash != proTx.inputsHash) {
-        return {100, "bad-protx-inputs-hash"};
+        return {ValidationInvalidReason::CONSENSUS, "bad-protx-inputs-hash"};
     }
 
     return {};

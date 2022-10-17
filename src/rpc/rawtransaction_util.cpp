@@ -9,11 +9,11 @@
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/request.h>
 #include <rpc/util.h>
+#include <script/signingprovider.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -129,9 +129,8 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
     vErrorsRet.push_back(entry);
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool is_temp_keystore, const UniValue& hashType)
+void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins)
 {
-    // Add previous txouts given in the RPC call:
     if (!prevTxsUnival.isNull()) {
         UniValue prevTxs = prevTxsUnival.get_array();
         for (unsigned int idx = 0; idx < prevTxs.size(); ++idx) {
@@ -179,7 +178,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             }
 
             // if redeemScript and private keys were given, add redeemScript to the keystore so it can be signed
-            if (is_temp_keystore && scriptPubKey.IsPayToScriptHash()) {
+            if (keystore && scriptPubKey.IsPayToScriptHash()) {
                 RPCTypeCheckObj(prevOut,
                 {
                     {"redeemScript", UniValueType(UniValue::VSTR)},
@@ -193,7 +192,10 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             }
         }
     }
+}
 
+UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType)
+{
     int nHashType = ParseSighashString(hashType);
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);

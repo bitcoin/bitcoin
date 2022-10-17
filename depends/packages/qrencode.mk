@@ -7,6 +7,7 @@ $(package)_sha256_hash=efe5188b1ddbcbf98763b819b146be6a90481aac30cfc8d858ab78a19
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared --without-tools --without-tests --disable-sdltest
 $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
+$(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 $(package)_config_opts_linux=--with-pic
 $(package)_config_opts_android=--with-pic
 endef
@@ -25,4 +26,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm lib/*.la
 endef

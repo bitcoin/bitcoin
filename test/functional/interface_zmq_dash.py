@@ -13,7 +13,7 @@ import struct
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.mininode import P2PInterface
+from test_framework.mininode import P2PInterface, MSG_TX, MSG_TYPE_MASK
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import (
     CBlock,
@@ -81,18 +81,18 @@ class TestP2PConn(P2PInterface):
         inv = msg_inv([CInv(31 if deterministic else 30, hash)])
         self.send_message(inv)
 
-    def send_tx(self, tx, deterministic):
+    def send_tx(self, tx):
         hash = uint256_from_str(hash256(tx.serialize()))
         self.txes[hash] = tx
 
-        inv = msg_inv([CInv(31 if deterministic else 30, hash)])
+        inv = msg_inv([CInv(MSG_TX, hash)])
         self.send_message(inv)
 
     def on_getdata(self, message):
         for inv in message.inv:
-            if inv.hash in self.islocks:
+            if ((inv.type & MSG_TYPE_MASK) == 30 or (inv.type & MSG_TYPE_MASK) == 31) and inv.hash in self.islocks:
                 self.send_message(self.islocks[inv.hash])
-            if inv.hash in self.txes:
+            if (inv.type & MSG_TYPE_MASK) == MSG_TX and inv.hash in self.txes:
                 self.send_message(self.txes[inv.hash])
 
 
@@ -127,7 +127,7 @@ class DashZMQTest (DashTestFramework):
             self.zmq_context = zmq.Context()
             # Initialize the network
             self.activate_dip8()
-            self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+            self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
             # Create an LLMQ for testing
             self.quorum_type = 100  # llmq_test
@@ -327,7 +327,7 @@ class DashZMQTest (DashTestFramework):
             # this is expected
             pass
         # Now send the tx itself
-        self.test_node.send_tx(FromHex(msg_tx(), rpc_raw_tx_3['hex']), deterministic)
+        self.test_node.send_tx(FromHex(msg_tx(), rpc_raw_tx_3['hex']))
         self.wait_for_instantlock(rpc_raw_tx_3['txid'], self.nodes[0])
         # Validate hashtxlock
         zmq_tx_lock_hash = self.subscribers[ZMQPublisher.hash_tx_lock].receive().read(32).hex()

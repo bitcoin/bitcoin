@@ -5,13 +5,17 @@
 """Test the listsincelast RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.messages import BIP125_SEQUENCE_NUMBER
 from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
+    isolate_node,
+    reconnect_isolated_node,
 )
 
+from decimal import Decimal
 
 class ListSinceBlockTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,6 +37,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_reorg()
         self.test_double_spend()
         self.test_double_send()
+        self.double_spends_filtered()
 
     def test_no_blockhash(self):
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -288,6 +293,66 @@ class ListSinceBlockTest(BitcoinTestFramework):
         for tx in lsbres['removed']:
             if tx['txid'] == txid1:
                 assert_equal(tx['confirmations'], 2)
+
+    def double_spends_filtered(self):
+        '''
+        `listsinceblock` was returning conflicted transactions even if they
+        occurred before the specified cutoff blockhash
+        '''
+        spending_node = self.nodes[2]
+        double_spending_node = self.nodes[3]
+        dest_address = spending_node.getnewaddress()
+
+        tx_input = dict(
+            sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in spending_node.listunspent()))
+        rawtx = spending_node.createrawtransaction(
+            [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
+                         spending_node.getrawchangeaddress(): Decimal("0.00050000")})
+        double_rawtx = spending_node.createrawtransaction(
+            [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00052000"),
+                         spending_node.getrawchangeaddress(): Decimal("0.00050000")})
+
+        isolate_node(double_spending_node)
+
+        signedtx = spending_node.signrawtransactionwithwallet(rawtx)
+        orig_tx_id = spending_node.sendrawtransaction(signedtx["hex"])
+        original_tx = spending_node.gettransaction(orig_tx_id)
+
+        double_signedtx = spending_node.signrawtransactionwithwallet(double_rawtx)
+        dbl_tx_id = double_spending_node.sendrawtransaction(double_signedtx["hex"])
+        double_tx = double_spending_node.getrawtransaction(dbl_tx_id, 1)
+        lastblockhash = double_spending_node.generate(1)[0]
+
+        reconnect_isolated_node(double_spending_node, 2)
+        self.sync_all()
+        spending_node.invalidateblock(lastblockhash)
+
+        # check that both transactions exist
+        block_hash = spending_node.listsinceblock(
+            spending_node.getblockhash(spending_node.getblockcount()))
+        original_found = False
+        double_found = False
+        for tx in block_hash['transactions']:
+            if tx['txid'] == original_tx['txid']:
+                original_found = True
+            if tx['txid'] == double_tx['txid']:
+                double_found = True
+        assert_equal(original_found, True)
+        assert_equal(double_found, True)
+
+        lastblockhash = spending_node.generate(1)[0]
+
+        # check that neither transaction exists
+        block_hash = spending_node.listsinceblock(lastblockhash)
+        original_found = False
+        double_found = False
+        for tx in block_hash['transactions']:
+            if tx['txid'] == original_tx['txid']:
+                original_found = True
+            if tx['txid'] == double_tx['txid']:
+                double_found = True
+        assert_equal(original_found, False)
+        assert_equal(double_found, False)
 
 if __name__ == '__main__':
     ListSinceBlockTest().main()

@@ -84,11 +84,12 @@ static void BLS_Sign_Normal(benchmark::Bench& bench)
 {
     CBLSSecretKey secKey;
     secKey.MakeNewKey();
+    CBLSSignature sig;
 
     // Benchmark.
     bench.minEpochIterations(100).run([&] {
         uint256 hash = GetRandHash();
-        secKey.Sign(hash);
+        sig = secKey.Sign(hash);
     });
 }
 
@@ -129,7 +130,8 @@ static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench, uint3
     // Benchmark.
     bench.minEpochIterations(epoch_iters).run([&] {
         for (size_t i = 0; i < pubKeys.size(); i++) {
-            sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
+            bool ok = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
+            assert(ok);
         }
     });
 }
@@ -156,7 +158,8 @@ static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench
     // Benchmark.
     bench.minEpochIterations(epoch_iters).run([&] {
         CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
-        aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        assert(ok);
     });
 }
 
@@ -183,7 +186,8 @@ static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& be
 
     // Benchmark.
     bench.minEpochIterations(epoch_iters).run([&] {
-        aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
+        assert(ok);
     });
 }
 

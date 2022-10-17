@@ -9,11 +9,13 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <util/check.h>
 
 #include <type_traits>
 
@@ -72,10 +74,13 @@ static constexpr CAmount CENT{1000000};
  */
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
+    NodeContext m_node;
 
-    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
+
 private:
+    std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
 };
 
@@ -84,9 +89,8 @@ private:
  */
 struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
-    CScheduler scheduler;
 
-    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~TestingSetup();
 };
 

@@ -14,6 +14,7 @@ from .util import hex_str_to_bytes
 
 # Note unlike in bitcoin, this address isn't bech32 since we don't (at this time) support bech32.
 ADDRESS_BCRT1_UNSPENDABLE = 'yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9'
+ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9)#e5kt0jtk'
 
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 

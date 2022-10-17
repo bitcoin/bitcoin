@@ -1079,7 +1079,7 @@ class CSimplifiedMNListEntry:
         self.proRegTxHash = 0
         self.confirmedHash = 0
         self.service = CService()
-        self.pubKeyOperator = b'\\x0' * 48
+        self.pubKeyOperator = b'\x00' * 48
         self.keyIDVoting = 0
         self.isValid = False
 
@@ -1116,10 +1116,10 @@ class CFinalCommitment:
         self.quorumIndex = 0
         self.signers = []
         self.validMembers = []
-        self.quorumPublicKey = b'\\x0' * 48
+        self.quorumPublicKey = b'\x00' * 48
         self.quorumVvecHash = 0
-        self.quorumSig = b'\\x0' * 96
-        self.membersSig = b'\\x0' * 96
+        self.quorumSig = b'\x00' * 96
+        self.membersSig = b'\x00' * 96
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<H", f.read(2))[0]
@@ -1239,7 +1239,7 @@ class CRecoveredSig:
         self.quorumHash = 0
         self.id = 0
         self.msgHash = 0
-        self.sig = b'\\x0' * 96
+        self.sig = b'\x00' * 96
 
     def deserialize(self, f):
         self.llmqType = struct.unpack("<B", f.read(1))[0]
@@ -1267,7 +1267,7 @@ class CSigShare:
         self.quorumMember = 0
         self.id = 0
         self.msgHash = 0
-        self.sigShare = b'\\x0' * 96
+        self.sigShare = b'\x00' * 96
 
     def deserialize(self, f):
         self.llmqType = struct.unpack("<B", f.read(1))[0]
@@ -1292,7 +1292,7 @@ class CBLSPublicKey:
     __slots__ = ("data")
 
     def __init__(self):
-        self.data = b'\\x0' * 48
+        self.data = b'\x00' * 48
 
     def deserialize(self, f):
         self.data = f.read(48)
@@ -1307,9 +1307,9 @@ class CBLSIESEncryptedSecretKey:
     __slots__ = ("ephemeral_pubKey", "iv", "data")
 
     def __init__(self):
-        self.ephemeral_pubKey = b'\\x0' * 48
-        self.iv = b'\\x0' * 32
-        self.data = b'\\x0' * 32
+        self.ephemeral_pubKey = b'\x00' * 48
+        self.iv = b'\x00' * 32
+        self.data = b'\x00' * 32
 
     def deserialize(self, f):
         self.ephemeral_pubKey = f.read(48)
@@ -1976,7 +1976,7 @@ class msg_clsig:
     __slots__ = ("height", "blockHash", "sig",)
     command = b"clsig"
 
-    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96):
+    def __init__(self, height=0, blockHash=0, sig=b'\x00' * 96):
         self.height = height
         self.blockHash = blockHash
         self.sig = sig
@@ -2001,7 +2001,7 @@ class msg_islock:
     __slots__ = ("inputs", "txid", "sig",)
     command = b"islock"
 
-    def __init__(self, inputs=[], txid=0, sig=b'\\x0' * 96):
+    def __init__(self, inputs=[], txid=0, sig=b'\x00' * 96):
         self.inputs = inputs
         self.txid = txid
         self.sig = sig
@@ -2026,7 +2026,7 @@ class msg_isdlock:
     __slots__ = ("nVersion", "inputs", "txid", "cycleHash", "sig")
     command = b"isdlock"
 
-    def __init__(self, nVersion=1, inputs=[], txid=0, cycleHash=0, sig=b'\\x0' * 96):
+    def __init__(self, nVersion=1, inputs=[], txid=0, cycleHash=0, sig=b'\x00' * 96):
         self.nVersion = nVersion
         self.inputs = inputs
         self.txid = txid

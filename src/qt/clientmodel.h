@@ -68,7 +68,7 @@ public:
     CDeterministicMNList getMasternodeList() const;
     void refreshMasternodeList();
 
-    std::vector<CGovernanceObject> getAllGovernanceObjects();
+    void getAllGovernanceObjects(std::vector<CGovernanceObject> &obj);
 
     //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;

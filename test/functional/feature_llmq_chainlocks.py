@@ -31,7 +31,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.activate_dip8()
 
-        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
         self.log.info("Mining 4 quorums")
@@ -144,10 +144,10 @@ class LLMQChainLocksTest(DashTestFramework):
         assert not node0_tip_block["chainlock"]
         assert node0_tip_block["previousblockhash"] == good_tip
         self.log.info("Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)")
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
+        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
         self.log.info("Now the TXs should be included")
         self.nodes[0].generate(1)
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.log.info("Assert that TXs got included now")
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)

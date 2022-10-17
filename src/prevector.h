@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
  *  elements directly (without heap allocation). The types Size and Diff are

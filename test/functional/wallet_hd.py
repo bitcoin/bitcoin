@@ -22,6 +22,7 @@ class WalletHDTest(BitcoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

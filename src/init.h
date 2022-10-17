@@ -8,44 +8,38 @@
 
 #include <memory>
 #include <string>
-#include <util/system.h>
 
+class ArgsManager;
+struct NodeContext;
 namespace interfaces {
-class Chain;
-class ChainClient;
+struct BlockAndHeaderTipInfo;
 } // namespace interfaces
-
-//! Pointers to interfaces used during init and destroyed on shutdown.
-struct InitInterfaces
-{
-    std::unique_ptr<interfaces::Chain> chain;
-    std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
-};
-
-namespace boost
-{
+namespace boost {
 class thread_group;
 } // namespace boost
+namespace util {
+class Ref;
+} // namespace util
 
 /** Interrupt threads */
-void Interrupt();
-void Shutdown(InitInterfaces& interfaces);
+void Interrupt(NodeContext& node);
+void Shutdown(NodeContext& node);
 //!Initialize the logging infrastructure
-void InitLogging();
+void InitLogging(const ArgsManager& args);
 //!Parameter interaction: change current parameters depending on various rules
-void InitParameterInteraction();
+void InitParameterInteraction(ArgsManager& args);
 
 /** Initialize Dash Core: Basic context setup.
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInitBasicSetup();
+bool AppInitBasicSetup(ArgsManager& args);
 /**
  * Initialization: parameter interaction.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitBasicSetup should have been called.
  */
-bool AppInitParameterInteraction();
+bool AppInitParameterInteraction(const ArgsManager& args);
 /**
  * Initialization sanity checks: ecc init, sanity checks, dir lock.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
@@ -59,17 +53,21 @@ bool AppInitSanityChecks();
  */
 bool AppInitLockDataDirectory();
 /**
+ * Initialize node and wallet interface pointers. Has no prerequisites or side effects besides allocating memory.
+ */
+bool AppInitInterfaces(NodeContext& node);
+/**
  * Dash Core main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(InitInterfaces& interfaces);
-void PrepareShutdown(InitInterfaces& interfaces);
+bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
+void PrepareShutdown(NodeContext& node);
 
 /**
- * Setup the arguments for gArgs
+ * Register all arguments with the ArgsManager
  */
-void SetupServerArgs();
+void SetupServerArgs(NodeContext& node);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();

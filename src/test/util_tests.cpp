@@ -6,6 +6,8 @@
 
 #include <clientversion.h>
 #include <sync.h>
+#include <test/util/logging.h>
+#include <test/util.h>
 #include <util/getuniquepath.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -16,8 +18,9 @@
 #include <util/spanparsing.h>
 
 #include <stdint.h>
-#include <utility>
 #include <thread>
+#include <univalue.h>
+#include <utility>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>
@@ -33,6 +36,19 @@ namespace BCLog {
 }
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(util_check)
+{
+    // Check that Assert can forward
+    const std::unique_ptr<int> p_two = Assert(MakeUnique<int>(2));
+    // Check that Assert works on lvalues and rvalues
+    const int two = *Assert(p_two);
+    Assert(two == 2);
+    Assert(true);
+    // Check that Assume can be used as unary expression
+    const bool result{Assume(two == 2)};
+    Assert(result);
+}
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
 {
@@ -142,14 +158,12 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Time)
 struct TestArgsManager : public ArgsManager
 {
     TestArgsManager() { m_network_only_args.clear(); }
-    std::map<std::string, std::vector<std::string> >& GetOverrideArgs() { return m_override_args; }
-    std::map<std::string, std::vector<std::string> >& GetConfigArgs() { return m_config_args; }
     void ReadConfigString(const std::string str_config)
     {
         std::istringstream streamConfig(str_config);
         {
             LOCK(cs_args);
-            m_config_args.clear();
+            m_settings.ro_config.clear();
             m_config_sections.clear();
         }
         std::string error;
@@ -166,6 +180,10 @@ struct TestArgsManager : public ArgsManager
             AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
     }
+    using ArgsManager::ReadConfigStream;
+    using ArgsManager::cs_args;
+    using ArgsManager::m_network;
+    using ArgsManager::m_settings;
 };
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
@@ -179,28 +197,29 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
     std::string error;
+    LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, ccc, d});
-    testArgs.ParseParameters(0, (char**)argv_test, error);
-    BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
+    BOOST_CHECK(testArgs.ParseParameters(0, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    testArgs.ParseParameters(1, (char**)argv_test, error);
-    BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
+    BOOST_CHECK(testArgs.ParseParameters(1, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    testArgs.ParseParameters(7, (char**)argv_test, error);
+    BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.GetOverrideArgs().size() == 3 && testArgs.GetConfigArgs().empty());
+    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
                 && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
-    BOOST_CHECK(testArgs.GetOverrideArgs().count("-a") && testArgs.GetOverrideArgs().count("-b") && testArgs.GetOverrideArgs().count("-ccc")
-                && !testArgs.GetOverrideArgs().count("f") && !testArgs.GetOverrideArgs().count("-d"));
+    BOOST_CHECK(testArgs.m_settings.command_line_options.count("a") && testArgs.m_settings.command_line_options.count("b") && testArgs.m_settings.command_line_options.count("ccc")
+                && !testArgs.m_settings.command_line_options.count("f") && !testArgs.m_settings.command_line_options.count("d"));
 
-    BOOST_CHECK(testArgs.GetOverrideArgs()["-a"].size() == 1);
-    BOOST_CHECK(testArgs.GetOverrideArgs()["-a"].front() == "");
-    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].size() == 2);
-    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].front() == "argument");
-    BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].back() == "multiple");
+    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].size() == 1);
+    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
+    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].size() == 2);
+    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].front().get_str() == "argument");
+    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].back().get_str() == "multiple");
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
@@ -271,16 +290,17 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     const char *argv_test[] = {
         "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
     std::string error;
+    LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, c, d, e, f});
-    testArgs.ParseParameters(7, (char**)argv_test, error);
+    BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
 
     // Each letter should be set.
     for (const char opt : "abcdef")
         BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
 
     // Nothing else should be in the map
-    BOOST_CHECK(testArgs.GetOverrideArgs().size() == 6 &&
-                testArgs.GetConfigArgs().empty());
+    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 6 &&
+                testArgs.m_settings.ro_config.empty());
 
     // The -no prefix should get stripped on the way in.
     BOOST_CHECK(!testArgs.IsArgSet("-nob"));
@@ -309,7 +329,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.SetupArgs({foo, bar});
     std::string error;
-    testArgs.ParseParameters(4, (char**)argv_test, error);
+    BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
@@ -321,7 +341,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Config test
     const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
-    testArgs.ParseParameters(1, (char**)argv_test, error);
+    BOOST_CHECK(testArgs.ParseParameters(1, (char**)argv_test, error));
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,
@@ -336,7 +356,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // Combined test
     const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
     const char *combo_test_conf = "foo=1\nnobar=1\n";
-    testArgs.ParseParameters(3, (char**)combo_test_args, error);
+    BOOST_CHECK(testArgs.ParseParameters(3, (char**)combo_test_args, error));
     testArgs.ReadConfigString(combo_test_conf);
 
     // Command line overrides, but doesn't erase old setting
@@ -376,6 +396,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "iii=2\n";
 
     TestArgsManager test_args;
+    LOCK(test_args.cs_args);
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_BOOL);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_BOOL);
     const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_STRING);
@@ -392,60 +413,58 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
     // so do sec1.ccc, sec1.d, sec1.h, sec2.ccc, sec2.iii
 
-    BOOST_CHECK(test_args.GetOverrideArgs().empty());
-    BOOST_CHECK(test_args.GetConfigArgs().size() == 13);
+    BOOST_CHECK(test_args.m_settings.command_line_options.empty());
+    BOOST_CHECK(test_args.m_settings.ro_config.size() == 3);
+    BOOST_CHECK(test_args.m_settings.ro_config[""].size() == 8);
+    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].size() == 3);
+    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].size() == 2);
 
-    BOOST_CHECK(test_args.GetConfigArgs().count("-a")
-                && test_args.GetConfigArgs().count("-b")
-                && test_args.GetConfigArgs().count("-ccc")
-                && test_args.GetConfigArgs().count("-d")
-                && test_args.GetConfigArgs().count("-fff")
-                && test_args.GetConfigArgs().count("-ggg")
-                && test_args.GetConfigArgs().count("-h")
-                && test_args.GetConfigArgs().count("-i")
-               );
-    BOOST_CHECK(test_args.GetConfigArgs().count("-sec1.ccc")
-                && test_args.GetConfigArgs().count("-sec1.h")
-                && test_args.GetConfigArgs().count("-sec2.ccc")
-                && test_args.GetConfigArgs().count("-sec2.iii")
-               );
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("a"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("b"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("d"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("fff"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ggg"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("h"));
+    BOOST_CHECK(test_args.m_settings.ro_config[""].count("i"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("h"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("ccc"));
+    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("iii"));
 
-    BOOST_CHECK(test_args.IsArgSet("-a")
-                && test_args.IsArgSet("-b")
-                && test_args.IsArgSet("-ccc")
-                && test_args.IsArgSet("-d")
-                && test_args.IsArgSet("-fff")
-                && test_args.IsArgSet("-ggg")
-                && test_args.IsArgSet("-h")
-                && test_args.IsArgSet("-i")
-                && !test_args.IsArgSet("-zzz")
-                && !test_args.IsArgSet("-iii")
-               );
+    BOOST_CHECK(test_args.IsArgSet("-a"));
+    BOOST_CHECK(test_args.IsArgSet("-b"));
+    BOOST_CHECK(test_args.IsArgSet("-ccc"));
+    BOOST_CHECK(test_args.IsArgSet("-d"));
+    BOOST_CHECK(test_args.IsArgSet("-fff"));
+    BOOST_CHECK(test_args.IsArgSet("-ggg"));
+    BOOST_CHECK(test_args.IsArgSet("-h"));
+    BOOST_CHECK(test_args.IsArgSet("-i"));
+    BOOST_CHECK(!test_args.IsArgSet("-zzz"));
+    BOOST_CHECK(!test_args.IsArgSet("-iii"));
 
-    BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
-                && test_args.GetArg("-b", "xxx") == "1"
-                && test_args.GetArg("-ccc", "xxx") == "argument"
-                && test_args.GetArg("-d", "xxx") == "e"
-                && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
-                && test_args.GetArg("-h", "xxx") == "0"
-                && test_args.GetArg("-i", "xxx") == "1"
-                && test_args.GetArg("-zzz", "xxx") == "xxx"
-                && test_args.GetArg("-iii", "xxx") == "xxx"
-               );
+    BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-ccc", "xxx"), "argument");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-d", "xxx"), "e");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-h", "xxx"), "0");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-i", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
 
     for (const bool def : {false, true}) {
-        BOOST_CHECK(test_args.GetBoolArg("-a", def)
-                     && test_args.GetBoolArg("-b", def)
-                     && !test_args.GetBoolArg("-ccc", def)
-                     && !test_args.GetBoolArg("-d", def)
-                     && !test_args.GetBoolArg("-fff", def)
-                     && test_args.GetBoolArg("-ggg", def)
-                     && !test_args.GetBoolArg("-h", def)
-                     && test_args.GetBoolArg("-i", def)
-                     && test_args.GetBoolArg("-zzz", def) == def
-                     && test_args.GetBoolArg("-iii", def) == def
-                   );
+        BOOST_CHECK(test_args.GetBoolArg("-a", def));
+        BOOST_CHECK(test_args.GetBoolArg("-b", def));
+        BOOST_CHECK(!test_args.GetBoolArg("-ccc", def));
+        BOOST_CHECK(!test_args.GetBoolArg("-d", def));
+        BOOST_CHECK(!test_args.GetBoolArg("-fff", def));
+        BOOST_CHECK(test_args.GetBoolArg("-ggg", def));
+        BOOST_CHECK(!test_args.GetBoolArg("-h", def));
+        BOOST_CHECK(test_args.GetBoolArg("-i", def));
+        BOOST_CHECK(test_args.GetBoolArg("-zzz", def) == def);
+        BOOST_CHECK(test_args.GetBoolArg("-iii", def) == def);
     }
 
     BOOST_CHECK(test_args.GetArgs("-a").size() == 1
@@ -481,13 +500,12 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SelectConfigNetwork("sec1");
 
     // same as original
-    BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
-                && test_args.GetArg("-b", "xxx") == "1"
-                && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
-                && test_args.GetArg("-zzz", "xxx") == "xxx"
-                && test_args.GetArg("-iii", "xxx") == "xxx"
-               );
+    BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
+    BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
     // d is overridden
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
     // section-specific setting
@@ -502,14 +520,13 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SelectConfigNetwork("sec2");
 
     // same as original
-    BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
-                && test_args.GetArg("-b", "xxx") == "1"
-                && test_args.GetArg("-d", "xxx") == "e"
-                && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
-                && test_args.GetArg("-zzz", "xxx") == "xxx"
-                && test_args.GetArg("-h", "xxx") == "0"
-               );
+    BOOST_CHECK(test_args.GetArg("-a", "xxx") == "");
+    BOOST_CHECK(test_args.GetArg("-b", "xxx") == "1");
+    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
+    BOOST_CHECK(test_args.GetArg("-fff", "xxx") == "0");
+    BOOST_CHECK(test_args.GetArg("-ggg", "xxx") == "1");
+    BOOST_CHECK(test_args.GetArg("-zzz", "xxx") == "xxx");
+    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
     // section-specific setting
     BOOST_CHECK(test_args.GetArg("-iii", "xxx") == "2");
     // section takes priority for multiple values
@@ -546,24 +563,25 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
-    testArgs.GetOverrideArgs().clear();
-    testArgs.GetOverrideArgs()["strtest1"] = {"string..."};
+    LOCK(testArgs.cs_args);
+    testArgs.m_settings.command_line_options.clear();
+    testArgs.m_settings.command_line_options["strtest1"] = {"string..."};
     // strtest2 undefined on purpose
-    testArgs.GetOverrideArgs()["inttest1"] = {"12345"};
-    testArgs.GetOverrideArgs()["inttest2"] = {"81985529216486895"};
+    testArgs.m_settings.command_line_options["inttest1"] = {"12345"};
+    testArgs.m_settings.command_line_options["inttest2"] = {"81985529216486895"};
     // inttest3 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest1"] = {""};
+    testArgs.m_settings.command_line_options["booltest1"] = {""};
     // booltest2 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest3"] = {"0"};
-    testArgs.GetOverrideArgs()["booltest4"] = {"1"};
+    testArgs.m_settings.command_line_options["booltest3"] = {"0"};
+    testArgs.m_settings.command_line_options["booltest4"] = {"1"};
 
     // priorities
-    testArgs.GetOverrideArgs()["pritest1"] = {"a", "b"};
-    testArgs.GetConfigArgs()["pritest2"] = {"a", "b"};
-    testArgs.GetOverrideArgs()["pritest3"] = {"a"};
-    testArgs.GetConfigArgs()["pritest3"] = {"b"};
-    testArgs.GetOverrideArgs()["pritest4"] = {"a","b"};
-    testArgs.GetConfigArgs()["pritest4"] = {"c","d"};
+    testArgs.m_settings.command_line_options["pritest1"] = {"a", "b"};
+    testArgs.m_settings.ro_config[""]["pritest2"] = {"a", "b"};
+    testArgs.m_settings.command_line_options["pritest3"] = {"a"};
+    testArgs.m_settings.ro_config[""]["pritest3"] = {"b"};
+    testArgs.m_settings.command_line_options["pritest4"] = {"a","b"};
+    testArgs.m_settings.ro_config[""]["pritest4"] = {"c","d"};
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
@@ -598,38 +616,38 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
     std::string error;
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "regtest");
 
-    test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
+    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_test_no_reg, error));
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
+    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
@@ -637,25 +655,347 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     // [test] regtest=1 potentially relevant) doesn't break things
     test_args.SelectConfigNetwork("test");
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(2, (char**)argv_test_no_reg, error);
+    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+}
+
+// Test different ways settings can be merged, and verify results. This test can
+// be used to confirm that updates to settings code don't change behavior
+// unintentionally.
+//
+// The test covers:
+//
+// - Combining different setting actions. Possible actions are: configuring a
+//   setting, negating a setting (adding "-no" prefix), and configuring/negating
+//   settings in a network section (adding "main." or "test." prefixes).
+//
+// - Combining settings from command line arguments and a config file.
+//
+// - Combining SoftSet and ForceSet calls.
+//
+// - Testing "main" and "test" network values to make sure settings from network
+//   sections are applied and to check for mainnet-specific behaviors like
+//   inheriting settings from the default section.
+//
+// - Testing network-specific settings like "-wallet", that may be ignored
+//   outside a network section, and non-network specific settings like "-server"
+//   that aren't sensitive to the network.
+//
+struct ArgsMergeTestingSetup : public BasicTestingSetup {
+    //! Max number of actions to sequence together. Can decrease this when
+    //! debugging to make test results easier to understand.
+    static constexpr int MAX_ACTIONS = 3;
+
+    enum Action { NONE, SET, NEGATE, SECTION_SET, SECTION_NEGATE };
+    using ActionList = Action[MAX_ACTIONS];
+
+    //! Enumerate all possible test configurations.
+    template <typename Fn>
+    void ForEachMergeSetup(Fn&& fn)
+    {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, SET, SECTION_NEGATE, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, SET, SECTION_NEGATE, [&] {
+                for (bool soft_set : {false, true}) {
+                    for (bool force_set : {false, true}) {
+                        for (const std::string& section : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
+                            for (const std::string& network : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
+                                for (bool net_specific : {false, true}) {
+                                    fn(arg_actions, conf_actions, soft_set, force_set, section, network, net_specific);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    //! Translate actions into a list of <key>=<value> setting strings.
+    std::vector<std::string> GetValues(const ActionList& actions,
+        const std::string& section,
+        const std::string& name,
+        const std::string& value_prefix)
+    {
+        std::vector<std::string> values;
+        int suffix = 0;
+        for (Action action : actions) {
+            if (action == NONE) break;
+            std::string prefix;
+            if (action == SECTION_SET || action == SECTION_NEGATE) prefix = section + ".";
+            if (action == SET || action == SECTION_SET) {
+                for (int i = 0; i < 2; ++i) {
+                    values.push_back(prefix + name + "=" + value_prefix + std::to_string(++suffix));
+                }
+            }
+            if (action == NEGATE || action == SECTION_NEGATE) {
+                values.push_back(prefix + "no" + name + "=1");
+            }
+        }
+        return values;
+    }
+};
+
+// Regression test covering different ways config settings can be merged. The
+// test parses and merges settings, representing the results as strings that get
+// compared against an expected hash. To debug, the result strings can be dumped
+// to a file (see comments below).
+BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
+{
+    CHash256 out_sha;
+    FILE* out_file = nullptr;
+    if (const char* out_path = getenv("ARGS_MERGE_TEST_OUT")) {
+        out_file = fsbridge::fopen(out_path, "w");
+        if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
+    }
+
+    ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool soft_set, bool force_set,
+                          const std::string& section, const std::string& network, bool net_specific) {
+        TestArgsManager parser;
+        LOCK(parser.cs_args);
+
+        std::string desc = "net=";
+        desc += network;
+        parser.m_network = network;
+
+        const std::string& name = net_specific ? "wallet" : "server";
+        const std::string key = "-" + name;
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        if (net_specific) parser.SetNetworkOnlyArg(key);
+
+        auto args = GetValues(arg_actions, section, name, "a");
+        std::vector<const char*> argv = {"ignored"};
+        for (auto& arg : args) {
+            arg.insert(0, "-");
+            desc += " ";
+            desc += arg;
+            argv.push_back(arg.c_str());
+        }
+        std::string error;
+        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        std::string conf;
+        for (auto& conf_val : GetValues(conf_actions, section, name, "c")) {
+            desc += " ";
+            desc += conf_val;
+            conf += conf_val;
+            conf += "\n";
+        }
+        std::istringstream conf_stream(conf);
+        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        if (soft_set) {
+            desc += " soft";
+            parser.SoftSetArg(key, "soft1");
+            parser.SoftSetArg(key, "soft2");
+        }
+
+        if (force_set) {
+            desc += " force";
+            parser.ForceSetArg(key, "force1");
+            parser.ForceSetArg(key, "force2");
+        }
+
+        desc += " || ";
+
+        if (!parser.IsArgSet(key)) {
+            desc += "unset";
+            BOOST_CHECK(!parser.IsArgNegated(key));
+            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "default");
+            BOOST_CHECK(parser.GetArgs(key).empty());
+        } else if (parser.IsArgNegated(key)) {
+            desc += "negated";
+            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "0");
+            BOOST_CHECK(parser.GetArgs(key).empty());
+        } else {
+            desc += parser.GetArg(key, "default");
+            desc += " |";
+            for (const auto& arg : parser.GetArgs(key)) {
+                desc += " ";
+                desc += arg;
+            }
+        }
+
+        std::set<std::string> ignored = parser.GetUnsuitableSectionOnlyArgs();
+        if (!ignored.empty()) {
+            desc += " | ignored";
+            for (const auto& arg : ignored) {
+                desc += " ";
+                desc += arg;
+            }
+        }
+
+        desc += "\n";
+
+        out_sha.Write(MakeUCharSpan(desc));
+        if (out_file) {
+            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+        }
+    });
+
+    if (out_file) {
+        if (fclose(out_file)) throw std::system_error(errno, std::generic_category(), "fclose failed");
+        out_file = nullptr;
+    }
+
+    unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
+    out_sha.Finalize(out_sha_bytes);
+    std::string out_sha_hex = HexStr(out_sha_bytes);
+
+    // If check below fails, should manually dump the results with:
+    //
+    //   ARGS_MERGE_TEST_OUT=results.txt ./test_dash --run_test=util_tests/util_ArgsMerge
+    //
+    // And verify diff against previous results to make sure the changes are expected.
+    //
+    // Results file is formatted like:
+    //
+    //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
+    BOOST_CHECK_EQUAL(out_sha_hex, "b835eef5977d69114eb039a976201f8c7121f34fe2b7ea2b73cafb516e5c9dc8");
+}
+
+// Similar test as above, but for ArgsManager::GetChainName function.
+struct ChainMergeTestingSetup : public BasicTestingSetup {
+    static constexpr int MAX_ACTIONS = 2;
+
+    enum Action { NONE, ENABLE_TEST, DISABLE_TEST, NEGATE_TEST, ENABLE_REG, DISABLE_REG, NEGATE_REG };
+    using ActionList = Action[MAX_ACTIONS];
+
+    //! Enumerate all possible test configurations.
+    template <typename Fn>
+    void ForEachMergeSetup(Fn&& fn)
+    {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, ENABLE_TEST, NEGATE_REG, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, ENABLE_TEST, NEGATE_REG, [&] { fn(arg_actions, conf_actions); });
+        });
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
+{
+    CHash256 out_sha;
+    FILE* out_file = nullptr;
+    if (const char* out_path = getenv("CHAIN_MERGE_TEST_OUT")) {
+        out_file = fsbridge::fopen(out_path, "w");
+        if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
+    }
+
+    ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
+        TestArgsManager parser;
+        LOCK(parser.cs_args);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
+        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
+                                              action == DISABLE_TEST ? "-testnet=0"   :
+                                              action == NEGATE_TEST  ? "-notestnet=1" :
+                                              action == ENABLE_REG   ? "-regtest=1"   :
+                                              action == DISABLE_REG  ? "-regtest=0"   :
+                                              action == NEGATE_REG   ? "-noregtest=1" : nullptr; };
+
+        std::string desc;
+        std::vector<const char*> argv = {"ignored"};
+        for (Action action : arg_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            argv.push_back(argstr);
+            desc += " ";
+            desc += argv.back();
+        }
+        std::string error;
+        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        std::string conf;
+        for (Action action : conf_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            desc += " ";
+            desc += argstr + 1;
+            conf += argstr + 1;
+        }
+        std::istringstream conf_stream(conf);
+        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        desc += " || ";
+        try {
+            desc += parser.GetChainName();
+        } catch (const std::runtime_error& e) {
+            desc += "error: ";
+            desc += e.what();
+        }
+        desc += "\n";
+
+        out_sha.Write(MakeUCharSpan(desc));
+        if (out_file) {
+            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+        }
+    });
+
+    if (out_file) {
+        if (fclose(out_file)) throw std::system_error(errno, std::generic_category(), "fclose failed");
+        out_file = nullptr;
+    }
+
+    unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
+    out_sha.Finalize(out_sha_bytes);
+    std::string out_sha_hex = HexStr(out_sha_bytes);
+
+    // If check below fails, should manually dump the results with:
+    //
+    //   CHAIN_MERGE_TEST_OUT=results.txt ./test_dash --run_test=util_tests/util_ChainMerge
+    //
+    // And verify diff against previous results to make sure the changes are expected.
+    //
+    // Results file is formatted like:
+    //
+    //   <input> || <output>
+    BOOST_CHECK_EQUAL(out_sha_hex, "3e70723862e346ed6e9b48d8efa13d4d56334c0b73fbf3c3a6ac8b8f4d914f65");
+}
+
+BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
+{
+    // Test writing setting.
+    TestArgsManager args1;
+    args1.LockSettings([&](util::Settings& settings) { settings.rw_settings["name"] = "value"; });
+    args1.WriteSettingsFile();
+
+    // Test reading setting.
+    TestArgsManager args2;
+    args2.ReadSettingsFile();
+    args2.LockSettings([&](util::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
+
+    // Test error logging, and remove previously written setting.
+    {
+        ASSERT_DEBUG_LOG("Failed renaming settings file");
+        fs::remove(GetDataDir() / "settings.json");
+        fs::create_directory(GetDataDir() / "settings.json");
+        args2.WriteSettingsFile();
+        fs::remove(GetDataDir() / "settings.json");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)

@@ -5,6 +5,7 @@
 #define BITCOIN_MASTERNODE_SYNC_H
 
 #include <atomic>
+#include <memory>
 #include <string>
 
 class CMasternodeSync;
@@ -23,7 +24,7 @@ static constexpr int MASTERNODE_SYNC_TICK_SECONDS    = 6;
 static constexpr int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
 static constexpr int MASTERNODE_SYNC_RESET_SECONDS   = 600; // Reset fReachedBestHeader in CMasternodeSync::Reset if UpdateBlockTip hasn't been called for this seconds
 
-extern CMasternodeSync masternodeSync;
+extern std::unique_ptr<CMasternodeSync> masternodeSync;
 
 //
 // CMasternodeSync : Sync masternode assets in stages
@@ -47,10 +48,12 @@ private:
     /// Last time UpdateBlockTip has been called
     std::atomic<int64_t> nTimeLastUpdateBlockTip{0};
 
-public:
-    CMasternodeSync();
+    CConnman& connman;
 
-    static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
+public:
+    explicit CMasternodeSync(CConnman& _connman);
+
+    void SendGovernanceSyncRequest(CNode* pnode);
 
     bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
     bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
@@ -63,16 +66,16 @@ public:
     std::string GetSyncStatus() const;
 
     void Reset(bool fForce = false, bool fNotifyReset = true);
-    void SwitchToNextAsset(CConnman& connman);
+    void SwitchToNextAsset();
 
     void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) const;
-    void ProcessTick(CConnman& connman);
+    void ProcessTick();
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
+    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void DoMaintenance(CConnman &connman);
+    void DoMaintenance();
 };
 
 #endif // BITCOIN_MASTERNODE_SYNC_H

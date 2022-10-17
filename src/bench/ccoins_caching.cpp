@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <coins.h>
 #include <policy/policy.h>
-#include <wallet/crypter.h>
+#include <script/signingprovider.h>
 
 #include <vector>
 
@@ -17,7 +17,7 @@
 // paid to a TX_PUBKEYHASH.
 //
 static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
+SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet)
 {
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -55,7 +55,10 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::Bench& bench)
 {
-    CBasicKeyStore keystore;
+    const ECCVerifyHandle verify_handle;
+    ECC_Start();
+
+    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
@@ -83,6 +86,7 @@ static void CCoinsCaching(benchmark::Bench& bench)
         CAmount value = coins.GetValueIn(tx_1);
         assert(value == (50 + 21 + 22) * COIN);
     });
+    ECC_Stop();
 }
 
 BENCHMARK(CCoinsCaching);

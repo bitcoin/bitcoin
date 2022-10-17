@@ -257,7 +257,15 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
     return true;
 }
 
-static const size_t MAX_OUTPUTS_PER_BLOCK = MaxBlockSize() /  ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION); // TODO: merge with similar definition in undo.h.
+void CCoinsViewCache::ReallocateCache()
+{
+    // Cache should be empty when we're calling this.
+    assert(cacheCoins.size() == 0);
+    cacheCoins.~CCoinsMap();
+    ::new (&cacheCoins) CCoinsMap();
+}
+
+static const size_t MAX_OUTPUTS_PER_BLOCK = MaxBlockSize() /  ::GetSerializeSize(CTxOut(), PROTOCOL_VERSION); // TODO: merge with similar definition in undo.h.
 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
 {

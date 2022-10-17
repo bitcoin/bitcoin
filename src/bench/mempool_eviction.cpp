@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <policy/policy.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 
 
@@ -24,6 +25,8 @@ static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& po
 // unique transactions for a more meaningful performance measurement.
 static void MempoolEviction(benchmark::Bench& bench)
 {
+    RegTestingSetup test_setup;
+
     CMutableTransaction tx1 = CMutableTransaction();
     tx1.vin.resize(1);
     tx1.vin[0].scriptSig = CScript() << OP_1;
@@ -115,7 +118,7 @@ static void MempoolEviction(benchmark::Bench& bench)
         AddTx(tx6_r, 1100LL, pool);
         AddTx(tx7_r, 9000LL, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
-        pool.TrimToSize(::GetSerializeSize(tx1, SER_NETWORK, PROTOCOL_VERSION));
+        pool.TrimToSize(::GetSerializeSize(tx1, PROTOCOL_VERSION));
     });
 }
 

@@ -8,6 +8,7 @@
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <validation.h>
 
@@ -15,6 +16,8 @@
 
 static void DuplicateInputs(benchmark::Bench& bench)
 {
+    RegTestingSetup test_setup;
+
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};
 
     const CChainParams& chainparams = Params();
@@ -41,7 +44,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
     naughtyTx.vout[0].nValue = 0;
     naughtyTx.vout[0].scriptPubKey = SCRIPT_PUB;
 
-    uint64_t n_inputs = (((MaxBlockSize() / ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION)) - (CTransaction(coinbaseTx).GetTotalSize() + CTransaction(naughtyTx).GetTotalSize())) / 41) - 100;
+    uint64_t n_inputs = (((MaxBlockSize() / ::GetSerializeSize(CTransaction(), PROTOCOL_VERSION)) - (CTransaction(coinbaseTx).GetTotalSize() + CTransaction(naughtyTx).GetTotalSize())) / 41) - 100;
     for (uint64_t x = 0; x < (n_inputs - 1); ++x) {
         naughtyTx.vin.emplace_back(GetRandHash(), 0, CScript(), 0);
     }

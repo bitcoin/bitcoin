@@ -15,9 +15,9 @@ class CBlockIndex;
 class CDeterministicMNList;
 class CDeterministicMN;
 
-namespace llmq
-{
-    class CFinalCommitment;
+namespace llmq {
+class CFinalCommitment;
+class CQuorumBlockProcessor;
 } // namespace llmq
 
 class CSimplifiedMNListEntry
@@ -28,7 +28,9 @@ public:
     CService service;
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
-    bool isValid;
+    bool isValid{false};
+    CScript scriptPayout; // mem-only
+    CScript scriptOperatorPayout; // mem-only
 
     CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
@@ -63,7 +65,7 @@ public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj, bool extended = false) const;
 };
 
 class CSimplifiedMNList
@@ -76,6 +78,7 @@ public:
     explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
+    bool operator==(const CSimplifiedMNList& rhs) const;
 };
 
 /// P2P messages
@@ -114,11 +117,13 @@ public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
 
-    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
+    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex,
+                          const llmq::CQuorumBlockProcessor& quorum_block_processor);
 
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj, bool extended = false) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
+bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
+                               const llmq::CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet, bool extended = false);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

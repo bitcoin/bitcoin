@@ -71,7 +71,7 @@ struct CSporkDef
     MAKE_SPORK_DEF(SPORK_23_QUORUM_POSE,                   4070908800ULL), // OFF
 };
 #undef MAKE_SPORK_DEF
-extern CSporkManager sporkManager;
+extern std::unique_ptr<CSporkManager> sporkManager;
 
 /**
  * Sporks are network parameters used primarily to prevent forking and turn
@@ -174,7 +174,7 @@ private:
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
 
     std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
-    int nMinSporkKeys GUARDED_BY(cs);
+    int nMinSporkKeys GUARDED_BY(cs) {std::numeric_limits<int>::max()};
     CKey sporkPrivKey GUARDED_BY(cs);
 
     /**

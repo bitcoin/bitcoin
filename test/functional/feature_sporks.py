@@ -32,7 +32,7 @@ class SporkTest(BitcoinTestFramework):
         else:
             value = 4070908800
         # use InstantSend spork for tests
-        node.spork('SPORK_2_INSTANTSEND_ENABLED', value)
+        node.sporkupdate("SPORK_2_INSTANTSEND_ENABLED", value)
 
     def run_test(self):
         spork_default_state = self.get_test_spork_state(self.nodes[0])

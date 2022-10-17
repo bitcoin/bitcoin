@@ -8,22 +8,7 @@ keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
 import random
 
-def modinv(a, n):
-    """Compute the modular inverse of a modulo n
-
-    See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers.
-    """
-    t1, t2 = 0, 1
-    r1, r2 = n, a
-    while r2 != 0:
-        q = r1 // r2
-        t1, t2 = t2, t1 - q * t2
-        r1, r2 = r2, r1 - q * r2
-    if r1 > 1:
-        return None
-    if t1 < 0:
-        t1 += n
-    return t1
+from .util import modinv
 
 def jacobi_symbol(n, k):
     """Compute the Jacobi symbol of n modulo k

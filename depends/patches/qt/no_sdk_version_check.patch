@@ -1,0 +1,20 @@
+commit f5eb142cd04be2bc4ca610ed3b5b7e8ce3520ee3
+Author: fanquake <fanquake@gmail.com>
+Date:   Tue Jan 5 16:08:49 2021 +0800
+
+    Don't invoke macOS SDK version checking
+    
+    This tries to use xcrun which is not available when cross-compiling.
+
+diff --git a/qtbase/mkspecs/features/mac/default_post.prf b/qtbase/mkspecs/features/mac/default_post.prf
+index 92a9112bca6..447e186eb26 100644
+--- a/qtbase/mkspecs/features/mac/default_post.prf
++++ b/qtbase/mkspecs/features/mac/default_post.prf
+@@ -8,7 +8,6 @@ contains(TEMPLATE, .*app) {
+     !macx-xcode:if(isEmpty(BUILDS)|build_pass) {
+         # Detect changes to the platform SDK
+         QMAKE_EXTRA_VARIABLES += QMAKE_MAC_SDK QMAKE_MAC_SDK_VERSION QMAKE_XCODE_DEVELOPER_PATH
+-        QMAKE_EXTRA_INCLUDES += $$shell_quote($$PWD/sdk.mk)
+     }
+ 
+     # Detect incompatible SDK versions

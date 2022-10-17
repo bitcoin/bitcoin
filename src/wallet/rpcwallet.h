@@ -5,23 +5,27 @@
 #ifndef BITCOIN_WALLET_RPCWALLET_H
 #define BITCOIN_WALLET_RPCWALLET_H
 
+#include <span.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
-class CRPCTable;
+class CRPCCommand;
 class CWallet;
 class JSONRPCRequest;
 class UniValue;
-struct PartiallySignedTransaction;
 class CTransaction;
+struct PartiallySignedTransaction;
+struct WalletContext;
 
-namespace interfaces {
-class Chain;
-class Handler;
-}
+static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
-void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
+namespace util {
+class Ref;
+} // namespace util
+
+Span<const CRPCCommand> GetWalletRPCCommands();
 
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
@@ -31,8 +35,8 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
-std::string HelpRequiringPassphrase();
 void EnsureWalletIsUnlocked(CWallet *);
+WalletContext& EnsureWalletContext(const util::Ref& context);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);

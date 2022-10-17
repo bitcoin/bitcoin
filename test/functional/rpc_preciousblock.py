@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
-    sync_blocks,
 )
 
 def unidirectional_node_sync_via_rpc(node_src, node_dest):
@@ -37,6 +36,7 @@ class PreciousTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.supports_cli = False
 
     def setup_network(self):
         self.setup_nodes()
@@ -72,7 +72,7 @@ class PreciousTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), hashC)
         self.log.info("Make Node1 prefer block C")
         self.nodes[1].preciousblock(hashC)
-        sync_blocks(self.nodes[0:2])  # wait because node 1 may not have downloaded hashC
+        self.sync_blocks(self.nodes[0:2])  # wait because node 1 may not have downloaded hashC
         assert_equal(self.nodes[1].getbestblockhash(), hashC)
         self.log.info("Make Node1 prefer block G again")
         self.nodes[1].preciousblock(hashG)

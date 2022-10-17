@@ -27,21 +27,12 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), *psbtx.tx, input, i, sighash_type);
+        complete &= SignPSBTInput(HidingSigningProvider(pwallet->GetSigningProvider(), !sign, !bip32derivs), *psbtx.tx, input, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        const CTxOut& out = psbtx.tx->vout.at(i);
-        PSBTOutput& psbt_out = psbtx.outputs.at(i);
-
-        // Fill a SignatureData with output info
-        SignatureData sigdata;
-        psbt_out.FillSignatureData(sigdata);
-
-        MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
-        ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
-        psbt_out.FromSignatureData(sigdata);
+        UpdatePSBTOutput(HidingSigningProvider(pwallet->GetSigningProvider(), true, !bip32derivs), psbtx, i);
     }
 
     return TransactionError::OK;

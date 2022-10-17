@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <psbt.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 bool PartiallySignedTransaction::IsNull() const
@@ -161,6 +162,26 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     unknown.insert(output.unknown.begin(), output.unknown.end());
 
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
+}
+
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
+{
+    CMutableTransaction& tx = *Assert(psbt.tx);
+    const CTxOut& out = tx.vout.at(index);
+    PSBTOutput& psbt_out = psbt.outputs.at(index);
+
+    // Fill a SignatureData with output info
+    SignatureData sigdata;
+    psbt_out.FillSignatureData(sigdata);
+
+    // Construct a would-be spend of this output, to update sigdata with.
+    // Note that ProduceSignature is used to fill in metadata (not actual signatures),
+    // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
+    MutableTransactionSignatureCreator creator(&tx, /* index */ 0, out.nValue, SIGHASH_ALL);
+    ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
+
+    // Put redeem_script, key paths, into PSBTOutput.
+    psbt_out.FromSignatureData(sigdata);
 }
 
 bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash)

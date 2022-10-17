@@ -40,8 +40,8 @@ config.log
 config.status
 configure
 libtool
-src/config/dash-config.h
-src/config/dash-config.h.in
+src/config/bitcoin-config.h
+src/config/bitcoin-config.h.in
 src/config/stamp-h1
 src/obj
 share/setup.nsi
@@ -160,3 +160,9 @@ dist/
 *.background.tiff
 
 /guix-build-*
+
+# cppcheck cache-directory
+.cppcheck/*
+
+# flake8 cache location
+.cache/*

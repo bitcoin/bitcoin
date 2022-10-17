@@ -6,8 +6,13 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <governance/governance.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <miner.h>
 #include <script/interpreter.h>
+#include <spork.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -37,7 +42,7 @@ struct TestChainDATSetup : public TestChainSetup
         for (int i = 0; i < window - num_blocks; ++i) {
             CreateAndProcessBlock({}, coinbaseKey);
         }
-        gArgs.ForceRemoveArg("-blockversion");
+        gArgs.ForceRemoveArg("blockversion");
         if (num_blocks > 0) {
             // Mine signalling blocks
             for (int i = 0; i < num_blocks; ++i) {
@@ -72,7 +77,7 @@ struct TestChainDATSetup : public TestChainSetup
             BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::STARTED);
             BOOST_CHECK_EQUAL(VersionBitsTipStatistics(consensus_params, deployment_id).threshold, threshold(0));
             // Next block should be signaling by default
-            const auto pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbasePubKey);
+            const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
             const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
             BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion & bitmask, 0);
             BOOST_CHECK_EQUAL(pblocktemplate->block.nVersion & bitmask, bitmask);

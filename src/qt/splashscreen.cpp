@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <qt/splashscreen.h>
@@ -17,6 +17,7 @@
 #include <interfaces/wallet.h>
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
+#include <qt/walletmodel.h>
 #include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -176,21 +177,22 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
                                 : _("press q to shutdown").translated) +
             strprintf("\n%d", nProgress) + "%");
 }
-#ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
-{
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
-}
-#endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
     m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
     m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+}
+
+void SplashScreen::handleLoadWallet()
+{
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    if (!WalletModel::isWalletEnabled()) return;
+    m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+        m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
+        m_connected_wallets.emplace_back(std::move(wallet));
+    });
 #endif
 }
 
@@ -200,7 +202,9 @@ void SplashScreen::unsubscribeFromCoreSignals()
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet->disconnect();
+    if (m_handler_load_wallet != nullptr) {
+        m_handler_load_wallet->disconnect();
+    }
 #endif // ENABLE_WALLET
     for (const auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();

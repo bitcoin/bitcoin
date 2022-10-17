@@ -21,10 +21,16 @@ if(UNIX AND NOT APPLE)
     set(DEPENDS_PREFIX depends/x86_64-pc-linux-gnu)
 elseif(APPLE)
     EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+    EXECUTE_PROCESS( COMMAND system_profiler -detailLevel mini -json SPSoftwareDataType
+            COMMAND jq .SPSoftwareDataType
+            COMMAND jq .[]
+            COMMAND jq .kernel_version
+            COMMAND tr -d "Dawrin\" "
+            OUTPUT_VARIABLE DARWIN_KERNEL_VERSION)
     if( ${ARCHITECTURE} STREQUAL "arm64" )
-        set(DEPENDS_PREFIX depends/aarch64-apple-darwin21.2.0)
+        set(DEPENDS_PREFIX depends/aarch64-apple-darwin${DARWIN_KERNEL_VERSION})
     else()
-        set(DEPENDS_PREFIX depends/x86_64-apple-darwin19)
+        set(DEPENDS_PREFIX depends/x86_64-apple-darwin${DARWIN_KERNEL_VERSION})
     endif()
 elseif(WIN32)
     set(DEPENDS_PREFIX depends/x86_64-w64-mingw32)

@@ -24,7 +24,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return true;
 
     if (pindexPrev && pindexPrev->nHeight + 1 < Params().GetConsensus().DIP0003Height) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
+        return state.Invalid(ValidationInvalidReason::TX_BAD_SPECIAL, false, REJECT_INVALID, "bad-tx-type");
     }
 
     try {
@@ -46,10 +46,10 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.DoS(100, false, REJECT_INVALID, "failed-check-special-tx");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "failed-check-special-tx");
     }
 
-    return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
+    return state.Invalid(ValidationInvalidReason::TX_BAD_SPECIAL, false, REJECT_INVALID, "bad-tx-type-check");
 }
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
@@ -72,7 +72,7 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true; // handled per block
     }
 
-    return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
+    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-tx-type-proc");
 }
 
 bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
@@ -98,7 +98,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor,
+                              CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
     AssertLockHeld(cs_main);
 
@@ -125,7 +126,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
-        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
+        if (!quorum_block_processor.ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
             // pass the state returned by the function above
             return false;
         }
@@ -143,7 +144,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         nTimeDMN += nTime4 - nTime3;
         LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
-        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state, view)) {
+        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, quorum_block_processor, state, view)) {
             // pass the state returned by the function above
             return false;
         }
@@ -153,13 +154,13 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.DoS(100, false, REJECT_INVALID, "failed-procspectxsinblock");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "failed-procspectxsinblock");
     }
 
     return true;
 }
 
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor)
 {
     AssertLockHeld(cs_main);
 
@@ -175,7 +176,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
             return false;
         }
 
-        if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
+        if (!quorum_block_processor.UndoBlock(block, pindex)) {
             return false;
         }
     } catch (const std::exception& e) {

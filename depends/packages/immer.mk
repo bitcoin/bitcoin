@@ -1,9 +1,9 @@
 package=immer
-$(package)_version=v0.6.2
+$(package)_version=v0.7.0
 $(package)_download_path=https://github.com/arximboldi/immer/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
-$(package)_sha256_hash=c3bb8847034437dee64adacb04e1e0163ae640b596c582eb4c0aa1d7c6447cd7
+$(package)_sha256_hash=cf67ab428aa3610eb0f72d0ea936c15cce3f91df26ee143ab783acd053507fe4
 $(package)_build_subdir=build_tmp
 $(package)_dependencies=cmake boost
 

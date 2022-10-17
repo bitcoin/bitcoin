@@ -31,10 +31,12 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
+    set_node_times,
 )
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    TIME_GENESIS_BLOCK,
 )
 from test_framework.messages import (
     CBlockHeader,
@@ -48,9 +50,12 @@ from test_framework.mininode import (
 
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.setup_clean_chain = True
         self.num_nodes = 1
+        self.supports_cli = False
 
     def run_test(self):
+        self.mine_chain()
         self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1', '-txindex=0'])  # Set extra args with pruning after rescan is complete
 
         # Actual tests
@@ -63,6 +68,15 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_stopatheight()
         self._test_waitforblockheight()
         assert self.nodes[0].verifychain(4, 0)
+
+    def mine_chain(self):
+        self.log.info('Create some old blocks')
+        address = self.nodes[0].get_deterministic_priv_key().address
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 156, 156):
+            # 156 sec steps from genesis block time
+            set_node_times(self.nodes, t)
+            self.nodes[0].generatetoaddress(1, address)
+        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
@@ -203,6 +217,29 @@ class BlockchainTest(BitcoinTestFramework):
         # compared between res and res3.  Everything else should be the same.
         del res['disk_size'], res3['disk_size']
         assert_equal(res, res3)
+
+        self.log.info("Test hash_type option for gettxoutsetinfo()")
+        # Adding hash_type 'hash_serialized_2', which is the default, should
+        # not change the result.
+        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
+        del res4['disk_size']
+        assert_equal(res, res4)
+
+        # hash_type none should not return a UTXO set hash.
+        res5 = node.gettxoutsetinfo(hash_type='none')
+        assert 'hash_serialized_2' not in res5
+
+        # hash_type muhash should return a different UTXO set hash.
+        res6 = node.gettxoutsetinfo(hash_type='muhash')
+        assert 'muhash' in res6
+        assert(res['hash_serialized_2'] != res6['muhash'])
+
+        # muhash should not be included in gettxoutset unless requested.
+        for r in [res, res2, res3, res4, res5]:
+            assert 'muhash' not in r
+
+        # Unknown hash_type raises an error
+        assert_raises_rpc_error(-8, "foohash is not a valid hash_type", node.gettxoutsetinfo, "foohash")
 
     def _test_getblockheader(self):
         node = self.nodes[0]

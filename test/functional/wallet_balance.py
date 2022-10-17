@@ -12,7 +12,6 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
-    sync_blocks,
 )
 
 
@@ -79,6 +78,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*"), 500)
         assert_equal(self.nodes[0].getbalance("*", 1), 500)
         assert_equal(self.nodes[0].getbalance("*", 1, True), 500)
+        assert_equal(self.nodes[0].getbalance("*", 1, True, False), 500)
+        assert_equal(self.nodes[0].getbalance(minconf=1, addlocked=True), 500)
+        assert_equal(self.nodes[0].getbalance(minconf=1, avoid_reuse=False), 500)
         assert_equal(self.nodes[0].getbalance(minconf=1), 500)
         assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 1000)
         assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 500)
@@ -190,6 +192,8 @@ class WalletTest(BitcoinTestFramework):
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
+        self.sync_blocks()
+        self.nodes[0].syncwithvalidationinterfacequeue()
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
         self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
@@ -198,7 +202,7 @@ class WalletTest(BitcoinTestFramework):
         self.restart_node(1, ['-persistmempool=0', '-checklevel=0'])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 0)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.sync_all()

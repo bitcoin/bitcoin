@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <univalue.h>
 #include <unordered_lru_cache.h>
+#include <util/irange.h>
 
 #include <optional>
 
@@ -21,6 +22,9 @@ class CDeterministicMN;
 class CDeterministicMNList;
 
 namespace llmq {
+class CQuorumBlockProcessor;
+class CQuorumManager;
+
 //TODO use enum class (probably)
 enum SnapshotSkipMode : int {
     MODE_NO_SKIPPING = 0,
@@ -71,7 +75,7 @@ public:
         size_t cnt = ReadCompactSize(s);
         ReadFixedBitSet(s, activeQuorumMembers, cnt);
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             int obj;
             s >> obj;
             mnSkipList.push_back(obj);
@@ -111,7 +115,7 @@ public:
     CSimplifiedMNListDiff mnListDiffAtHMinus2C;
     CSimplifiedMNListDiff mnListDiffAtHMinus3C;
 
-    bool extraShare;
+    bool extraShare{false};
     std::optional<CQuorumSnapshot> quorumSnapshotAtHMinus4C;
     std::optional<CSimplifiedMNListDiff> mnListDiffAtHMinus4C;
 
@@ -176,22 +180,21 @@ public:
         }
 
         size_t cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
-            uint256 hash;
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             CFinalCommitment qc;
             ::Unserialize(s, qc);
             lastCommitmentPerIndex.push_back(std::move(qc));
         }
 
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             CQuorumSnapshot snap;
             ::Unserialize(s, snap);
             quorumSnapshotList.push_back(std::move(snap));
         }
 
         cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
+        for ([[maybe_unused]] const auto _ : irange::range(cnt)) {
             CSimplifiedMNListDiff mnlist;
             ::Unserialize(s, mnlist);
             mnListDiffList.push_back(std::move(mnlist));
@@ -204,7 +207,8 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& quorumRotationInfoRet, std::string& errorRet);
+bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,
+                             const CQuorumManager& qman, const CQuorumBlockProcessor& quorumBlockProcessor, std::string& errorRet);
 uint256 GetLastBaseBlockHash(const std::vector<const CBlockIndex*>& baseBlockIndexes, const CBlockIndex* blockIndex);
 
 class CQuorumSnapshotManager

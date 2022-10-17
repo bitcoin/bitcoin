@@ -42,6 +42,9 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
+    /** Handle wallet load notifications. */
+    void handleLoadWallet();
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
@@ -50,8 +53,6 @@ private:
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
-    /** Connect wallet signals to splash screen */
-    void ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet);
 
     QPixmap pixmap;
     QString curMessage;

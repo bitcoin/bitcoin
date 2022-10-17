@@ -1416,9 +1416,6 @@
        </item>
        <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="wallet_path">
-         <property name="text">
-          <string>Wallet Path</string>
-         </property>
         </widget>
        </item>
        <item row="3" column="0">
@@ -1468,52 +1465,6 @@
         </widget>
        </item>
        <item row="5" column="0">
-        <widget class="QPushButton" name="btn_zapwallettxes1">
-         <property name="minimumSize">
-          <size>
-           <width>180</width>
-           <height>23</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Recover transactions 1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QLabel" name="label_repair_zap1">
-         <property name="text">
-          <string>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QPushButton" name="btn_zapwallettxes2">
-         <property name="minimumSize">
-          <size>
-           <width>180</width>
-           <height>23</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Recover transactions 2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLabel" name="label_repair_zap2">
-         <property name="text">
-          <string>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
         <widget class="QPushButton" name="btn_upgradewallet">
          <property name="minimumSize">
           <size>
@@ -1526,7 +1477,7 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
+       <item row="5" column="1">
         <widget class="QLabel" name="label_repair_upgrade">
          <property name="text">
           <string>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</string>
@@ -1536,14 +1487,14 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
+       <item row="6" column="0">
         <widget class="QPushButton" name="btn_reindex">
          <property name="text">
           <string>Rebuild index</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="6" column="1">
         <widget class="QLabel" name="label_repair_reindex">
          <property name="text">
           <string>-reindex: Rebuild block chain index from current blk000??.dat files.</string>
@@ -1553,7 +1504,7 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="7" column="1">
         <spacer name="verticalSpacerRepair">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

@@ -27,7 +27,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "wallet/coincontrol -> wallet/wallet -> wallet/coincontrol"
     "txmempool -> validation -> validationinterface -> txmempool"
-    "wallet/ismine -> wallet/wallet -> wallet/ismine"
+    "wallet/scriptpubkeyman -> wallet/wallet -> wallet/scriptpubkeyman"
     # Dash
     "coinjoin/server -> net_processing -> coinjoin/server"
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
@@ -40,7 +40,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "governance/governance -> masternode/sync -> governance/governance"
     "governance/governance -> net_processing -> governance/governance"
     "governance/object -> governance/validators -> governance/object"
-    "hdchain -> wallet/walletdb -> hdchain"
     "llmq/quorums -> llmq/utils -> llmq/quorums"
     "llmq/blockprocessor -> net_processing -> llmq/blockprocessor"
     "llmq/chainlocks -> llmq/instantsend -> llmq/chainlocks"
@@ -76,22 +75,22 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     "coinjoin/client -> net_processing -> coinjoin/client"
     "llmq/quorums -> net_processing -> llmq/quorums"
-    "llmq/commitment -> llmq/utils -> llmq/commitment"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "evo/deterministicmns -> validationinterface -> txmempool -> evo/deterministicmns"
-    "llmq/chainlocks -> llmq/instantsend -> validation -> llmq/chainlocks"
+    "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
     "policy/fees -> txmempool -> validation -> policy/fees"
     "policy/policy -> policy/settings -> policy/policy"
     "evo/specialtxman -> validation -> evo/specialtxman"
-    "bloom -> llmq/commitment -> llmq/utils -> net -> bloom"
 
     "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> llmq/snapshot -> evo/simplifiedmns"
     "llmq/blockprocessor -> net_processing -> llmq/snapshot -> llmq/blockprocessor"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/quorums -> llmq/dkgsession"
     "llmq/dkgsessionmgr -> llmq/quorums -> llmq/dkgsessionmgr"
     "llmq/snapshot -> llmq/utils -> llmq/snapshot"
+    "spork -> validation -> spork"
+    "governance/governance -> validation -> governance/governance"
 )
 
 EXIT_CODE=0

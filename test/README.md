@@ -100,7 +100,7 @@ By default, up to 4 tests will be run in parallel by test_runner. To specify
 how many jobs to run, append `--jobs=n`
 
 The individual tests and the test_runner harness have many command-line
-options. Run `test_runner.py -h` to see them all.
+options. Run `test/functional/test_runner.py -h` to see them all.
 
 #### Troubleshooting and debugging test failures
 
@@ -113,7 +113,7 @@ killed all its dashd nodes), then there may be a port conflict which will
 cause the test to fail. It is recommended that you run the tests on a system
 where no other dashd processes are running.
 
-On linux, the test_framework will warn if there is another
+On linux, the test framework will warn if there is another
 dashd process running when the tests are started.
 
 If there are zombie dashd processes after test failure, you can kill them
@@ -142,7 +142,7 @@ tests will fail. If this happens, remove the cache directory (and make
 sure dashd processes are stopped as above):
 
 ```bash
-rm -rf cache
+rm -rf test/cache
 killall dashd
 ```
 
@@ -161,6 +161,15 @@ levels using the logger included in the test_framework, e.g.
   fails, the `test_framework.log` and dashd `debug.log`s will all be dumped
   to the console to help troubleshooting.
 
+These log files can be located under the test data directory (which is always
+printed in the first line of test output):
+  - `<test data directory>/test_framework.log`
+  - `<test data directory>/node<node number>/regtest/debug.log`.
+
+The node number identifies the relevant test node, starting from `node0`, which
+corresponds to its position in the nodes list of the specific test,
+e.g. `self.nodes[0]`.
+
 To change the level of logs output to the console, use the `-l` command line
 argument.
 
@@ -169,7 +178,7 @@ aggregate log by running the `combine_logs.py` script. The output can be plain
 text, colorized text or html. For example:
 
 ```
-combine_logs.py -c <test data directory> | less -r
+test/functional/combine_logs.py -c <test data directory> | less -r
 ```
 
 will pipe the colorized logs from the test into less.
@@ -227,6 +236,10 @@ gdb /home/example/dashd <pid>
 
 Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
 See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
+
+Often while debugging rpc calls from functional tests, the test might reach timeout before
+process can return a response. Use `--timeout-factor 0` to disable all rpc timeouts for that partcular
+functional test. Ex: `test/functional/wallet_hd.py --timeout-factor 0`.
 
 ##### Profiling
 

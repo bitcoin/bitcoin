@@ -73,6 +73,7 @@ class ZMQTest (BitcoinTestFramework):
         ]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         try:

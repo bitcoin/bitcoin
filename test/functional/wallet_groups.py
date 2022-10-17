@@ -17,6 +17,7 @@ class WalletGroupTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [[], [], ['-avoidpartialspends']]
         self.rpc_timeout = 120
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

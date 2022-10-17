@@ -25,7 +25,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
-    size_t nSize = GetSerializeSize(txout, SER_DISK, 0)+148u;
+    size_t nSize = GetSerializeSize(txout)+148u;
     return dustRelayFeeIn.GetFee(nSize);
 }
 
@@ -57,7 +57,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -68,7 +68,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = GetSerializeSize(tx, SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = GetSerializeSize(tx, CTransaction::CURRENT_VERSION);
     if (sz >= MAX_STANDARD_TX_SIZE) {
         reason = "tx-size";
         return false;
@@ -103,10 +103,10 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
 
         if (whichType == TX_NULL_DATA)
             nDataOut++;
-        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
+        else if ((whichType == TX_MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
-        } else if (IsDust(txout, ::dustRelayFee)) {
+        } else if (IsDust(txout, dust_relay_fee)) {
             reason = "dust";
             return false;
         }
@@ -167,12 +167,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
-int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp)
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp, unsigned int bytes_per_sigop)
 {
-    return std::max(nSize, nSigOp * nBytesPerSigOp);
+    return std::max(nSize, nSigOp * bytes_per_sigop);
 }
 
-int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp)
+int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp, unsigned int bytes_per_sigop)
 {
-    return GetVirtualTransactionSize(tx.GetTotalSize(), nSigOp);
+    return GetVirtualTransactionSize(tx.GetTotalSize(), nSigOp, bytes_per_sigop);
 }

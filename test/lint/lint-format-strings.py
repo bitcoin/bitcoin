@@ -11,6 +11,8 @@
 import argparse
 import re
 import sys
+from functools import partial
+from multiprocessing import Pool
 
 FALSE_POSITIVES = [
     ("src/batchedlogger.h", "strprintf(fmt, args...)"),
@@ -28,6 +30,9 @@ FALSE_POSITIVES = [
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
     ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
+    ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const std::string& fmt, const Params&... parameters)"),
+    ("src/wallet/scriptpubkeyman.cpp", "WalletLogPrintf(fmt, parameters...)"),
+    ("src/wallet/scriptpubkeyman.cpp", "WalletLogPrintf(const std::string& fmt, const Params&... parameters)"),
 ]
 
 def parse_function_calls(function_name, source_code):
@@ -261,6 +266,28 @@ def count_format_specifiers(format_string):
     return n
 
 
+def handle_filename(filename, args):
+    exit_code = 0
+    with open(filename, "r", encoding="utf-8") as f:
+        for function_call_str in parse_function_calls(args.function_name, f.read()):
+            parts = parse_function_call_and_arguments(args.function_name, function_call_str)
+            relevant_function_call_str = unescape("".join(parts))[:512]
+            if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
+                continue
+            if len(parts) < 3 + args.skip_arguments:
+                exit_code = 1
+                print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
+                continue
+            argument_count = len(parts) - 3 - args.skip_arguments
+            format_str = parse_string_content(parts[1 + args.skip_arguments])
+            format_specifier_count = count_format_specifiers(format_str)
+            if format_specifier_count != argument_count:
+                exit_code = 1
+                print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
+                continue
+    return exit_code
+
+
 def main():
     parser = argparse.ArgumentParser(description="This program checks that the number of arguments passed "
                                      "to a variadic format string function matches the number of format "
@@ -270,26 +297,12 @@ def main():
     parser.add_argument("function_name", help="function name (e.g. fprintf)", default=None)
     parser.add_argument("file", nargs="*", help="C++ source code file (e.g. foo.cpp)")
     args = parser.parse_args()
-    exit_code = 0
-    for filename in args.file:
-        with open(filename, "r", encoding="utf-8") as f:
-            for function_call_str in parse_function_calls(args.function_name, f.read()):
-                parts = parse_function_call_and_arguments(args.function_name, function_call_str)
-                relevant_function_call_str = unescape("".join(parts))[:512]
-                if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
-                    continue
-                if len(parts) < 3 + args.skip_arguments:
-                    exit_code = 1
-                    print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
-                    continue
-                argument_count = len(parts) - 3 - args.skip_arguments
-                format_str = parse_string_content(parts[1 + args.skip_arguments])
-                format_specifier_count = count_format_specifiers(format_str)
-                if format_specifier_count != argument_count:
-                    exit_code = 1
-                    print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
-                    continue
-    sys.exit(exit_code)
+    exit_codes = []
+
+    with Pool(8) as pool:
+        exit_codes = pool.map(partial(handle_filename, args=args), args.file)
+
+    sys.exit(max(exit_codes))
 
 
 if __name__ == "__main__":

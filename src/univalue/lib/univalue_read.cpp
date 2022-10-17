@@ -1,6 +1,6 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <string.h>
 #include <vector>
@@ -227,7 +227,7 @@ enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
             }
 
             else {
-                writer.push_back(*raw);
+                writer.push_back(static_cast<unsigned char>(*raw));
                 raw++;
             }
         }
@@ -244,7 +244,7 @@ enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
     }
 }
 
-enum expect_bits {
+enum expect_bits : unsigned {
     EXP_OBJ_NAME = (1U << 0),
     EXP_COLON = (1U << 1),
     EXP_ARR_VALUE = (1U << 2),

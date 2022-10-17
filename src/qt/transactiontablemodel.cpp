@@ -433,6 +433,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::SendToSelf:
+        return formatAddressLabel(wtx->strAddress, wtx->label, tooltip) + watchAddress;
     default:
         return tr("(n/a)") + watchAddress;
     }

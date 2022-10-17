@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <wallet/coinselection.h>
 #include <wallet/wallet.h>
 
@@ -28,8 +29,9 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::Bench& bench)
 {
-    auto chain = interfaces::MakeChain();
-    const CWallet wallet(*chain, WalletLocation(), CreateDummyWalletDatabase());
+    NodeContext node;
+    auto chain = interfaces::MakeChain(node);
+    const CWallet wallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -59,8 +61,9 @@ static void CoinSelection(benchmark::Bench& bench)
 }
 
 typedef std::set<CInputCoin> CoinSet;
-static auto testChain = interfaces::MakeChain();
-static const CWallet testWallet(*testChain, WalletLocation(), CreateDummyWalletDatabase());
+static NodeContext testNode;
+static auto testChain = interfaces::MakeChain(testNode);
+static const CWallet testWallet(testChain.get(), WalletLocation(), CreateDummyWalletDatabase());
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp

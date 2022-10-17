@@ -6,8 +6,10 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
+
+#include <qt/optionsdialog.h>
 
 #include <amount.h>
 
@@ -40,6 +42,7 @@ class ModalOverlay;
 namespace interfaces {
 class Handler;
 class Node;
+struct BlockAndHeaderTipInfo;
 }
 
 QT_BEGIN_NAMESPACE
@@ -74,7 +77,7 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
-    void setClientModel(ClientModel *clientModel);
+    void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
     void setWalletController(WalletController* wallet_controller);
 #endif
@@ -117,8 +120,8 @@ private:
     UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
     QLabel* labelWalletEncryptionIcon = nullptr;
     QLabel* labelWalletHDStatusIcon = nullptr;
-    QLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* labelConnectionsIcon = nullptr;
+    GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
     QLabel* progressBarLabel = nullptr;
     GUIUtil::ClickableProgressBar* progressBar = nullptr;
@@ -235,6 +238,9 @@ private:
     void updateHeadersSyncProgressLabel();
 
     void updateProgressBarVisibility();
+
+    /** Open the OptionsDialog on the specified tab index */
+    void openOptionsDialogWithTab(OptionsDialog::Tab tab);
 
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
@@ -372,9 +378,6 @@ public Q_SLOTS:
 
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
-
-    /** Toggle networking */
-    void toggleNetworkActive();
 
     void showModalOverlay();
 

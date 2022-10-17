@@ -21,24 +21,24 @@ inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeN
 }
 
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
-    reserveKey(pwallet)
+    reserveDestination(pwallet)
 {
-    reserveKey.GetReservedKey(pubKey, false);
+    reserveDestination.GetReservedDestination(dest, false);
 }
 
 void CKeyHolder::KeepKey()
 {
-    reserveKey.KeepKey();
+    reserveDestination.KeepDestination();
 }
 
 void CKeyHolder::ReturnKey()
 {
-    reserveKey.ReturnKey();
+    reserveDestination.ReturnDestination();
 }
 
 CScript CKeyHolder::GetScriptForDestination() const
 {
-    return ::GetScriptForDestination(pubKey.GetID());
+    return ::GetScriptForDestination(dest);
 }
 
 
@@ -89,13 +89,13 @@ void CKeyHolderStorage::ReturnAll()
 
 CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, std::shared_ptr<CWallet> pwalletIn, CAmount nAmountIn) :
     pTxBuilder(pTxBuilderIn),
-    key(pwalletIn.get()),
+    dest(pwalletIn.get()),
     nAmount(nAmountIn)
 {
     assert(pTxBuilder);
-    CPubKey pubKey;
-    key.GetReservedKey(pubKey, false);
-    script = ::GetScriptForDestination(pubKey.GetID());
+    CTxDestination txdest;
+    dest.GetReservedDestination(txdest, false);
+    script = ::GetScriptForDestination(txdest);
 }
 
 bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
@@ -109,7 +109,7 @@ bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
 
 CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
     pwallet(pwalletIn),
-    dummyReserveKey(pwalletIn.get()),
+    dummyReserveDestination(pwalletIn.get()),
     tallyItem(tallyItemIn)
 {
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
@@ -142,7 +142,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), pwallet.get(), false);
     }
     // Calculate the output size
-    nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
+    nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), PROTOCOL_VERSION);
     // Just to make sure..
     Clear();
 }
@@ -170,7 +170,7 @@ void CTransactionBuilder::Clear()
         }
     }
     // Always return this key just to make sure..
-    dummyReserveKey.ReturnKey();
+    dummyReserveDestination.ReturnDestination();
 }
 
 bool CTransactionBuilder::CouldAddOutput(CAmount nAmountOutput) const
@@ -252,7 +252,7 @@ int CTransactionBuilder::GetSizeOfCompactSizeDiff(size_t nAdd) const
 
 bool CTransactionBuilder::IsDust(CAmount nAmount) const
 {
-    return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.get());
+    return ::IsDust(CTxOut(nAmount, ::GetScriptForDestination(tallyItem.txdest)), coinControl.m_discard_feerate.value());
 }
 
 bool CTransactionBuilder::Commit(bilingual_str& strResult)
@@ -271,8 +271,11 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
-        return false;
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
+            return false;
+        }
     }
 
     CAmount nAmountLeft = GetAmountLeft();
@@ -306,7 +309,10 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
         return false;
     }
 
-    pwallet->CommitTransaction(tx, {}, {});
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        pwallet->CommitTransaction(tx, {}, {});
+    }
 
     fKeepKeys = true;
 

@@ -53,6 +53,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             ["-txindex"],
             ["-txindex"],
         ]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -388,9 +389,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
         # And below calls should both succeed
-        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate=0.00007000)[0]
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate='0.00007000')[0]
         assert_equal(testres['allowed'], True)
-        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate=0.00007000)
+        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.00007000')
 
 
 if __name__ == '__main__':

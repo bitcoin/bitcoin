@@ -18,10 +18,11 @@
 #include <timedata.h>
 #include <util/ranges.h>
 #include <util/validation.h> // for strMessageMagic
+#include <validation.h>
 
 #include <string>
 
-CSporkManager sporkManager;
+std::unique_ptr<CSporkManager> sporkManager;
 
 bool CSporkManager::SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const
 {

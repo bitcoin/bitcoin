@@ -11,7 +11,7 @@ Running
 For benchmarks purposes you only need to compile `dash_bench`. Beware of configuring without `--enable-debug` as this would impact
 benchmarking by unlatching log printers and lock analysis.
 
-    make -C src bench_dash
+    make -C src dash_bench
 
 After compiling Dash Core, the benchmarks can be run with:
 

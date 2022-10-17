@@ -12,7 +12,7 @@
 
 void initialize()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const ECCVerifyHandle verify_handle;
 }
 
 void test_one_input(const std::vector<uint8_t>& buffer)

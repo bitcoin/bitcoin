@@ -5,9 +5,9 @@
 #ifndef BITCOIN_WALLET_CRYPTER_H
 #define BITCOIN_WALLET_CRYPTER_H
 
-#include <keystore.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
+#include <script/signingprovider.h>
 
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
@@ -106,65 +106,8 @@ bool EncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, con
 bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, const std::string& sIV, SecureString& sPlaintext);
 
 
-/** Keystore which keeps the private keys encrypted.
- * It derives from the basic key store, which is used if no encryption is active.
- */
-class CCryptoKeyStore : public CBasicKeyStore
-{
-private:
-    CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
-
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
-
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    std::atomic<bool> fUseCrypto;
-
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
-    //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
-    bool fOnlyMixingAllowed;
-
-protected:
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
-
-    bool SetCrypted();
-
-    //! will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
-
-    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
-    bool SetCryptedHDChain(const CHDChain& chain);
-
-    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
-    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
-
-public:
-    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false)
-    {
-    }
-
-    bool IsCrypted() const { return fUseCrypto; }
-    bool IsLocked(bool fForMixing = false) const;
-    bool Lock(bool fForMixing = false);
-
-    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
-    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool HaveKey(const CKeyID &address) const override;
-    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
-    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    std::set<CKeyID> GetKeys() const override;
-
-    virtual bool GetHDChain(CHDChain& hdChainRet) const override;
-
-    /**
-     * Wallet status (encrypted, locked) changed.
-     * Note: Called without locks held.
-     */
-    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
-};
+bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
+bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
+bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key);
 
 #endif // BITCOIN_WALLET_CRYPTER_H

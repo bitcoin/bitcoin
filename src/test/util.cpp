@@ -6,11 +6,18 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <governance/governance.h>
 #include <key_io.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <miner.h>
+#include <node/context.h>
 #include <pow.h>
 #include <script/standard.h>
+#include <spork.h>
 #include <validation.h>
+#include <util/check.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -21,56 +28,58 @@ const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqq
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)
 {
-    CPubKey new_key;
-    if (!w.GetKeyFromPool(new_key, false)) assert(false);
+    CTxDestination dest;
+    std::string error;
+    if (!w.GetNewDestination("", dest, error)) assert(false);
 
-    CKeyID keyID = new_key.GetID();
-    w.SetAddressBook(keyID, /* label */ "", "receive");
-
-    return EncodeDestination(keyID);
+    return EncodeDestination(dest);
 }
 
 void importaddress(CWallet& wallet, const std::string& address)
 {
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
+    assert(spk_man != nullptr);
     LOCK(wallet.cs_wallet);
+    AssertLockHeld(spk_man->cs_wallet);
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
     const auto script = GetScriptForDestination(dest);
     wallet.MarkDirty();
-    assert(!wallet.HaveWatchOnly(script));
-    if (!wallet.AddWatchOnly(script, 0 /* nCreateTime */)) assert(false);
+    assert(!spk_man->HaveWatchOnly(script));
+    if (!spk_man->AddWatchOnly(script, 0 /* nCreateTime */)) assert(false);
     wallet.SetAddressBook(dest, /* label */ "", "receive");
 }
 #endif // ENABLE_WALLET
 
-CTxIn generatetoaddress(const std::string& address)
+CTxIn generatetoaddress(const NodeContext& node, const std::string& address)
 {
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
     const auto coinbase_script = GetScriptForDestination(dest);
 
-    return MineBlock(coinbase_script);
+    return MineBlock(node, coinbase_script);
 }
 
-CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
+CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
-    auto block = PrepareBlock(coinbase_scriptPubKey);
+    auto block = PrepareBlock(node, coinbase_scriptPubKey);
 
     while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
         ++block->nNonce;
         assert(block->nNonce);
     }
 
-    bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
+    bool processed{Assert(node.chainman)->ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
 
     return CTxIn{block->vtx[0]->GetHash(), 0};
 }
 
-std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey)
+std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
+    assert(node.mempool);
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Params()}
+        BlockAssembler{*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, *node.mempool, Params()}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 

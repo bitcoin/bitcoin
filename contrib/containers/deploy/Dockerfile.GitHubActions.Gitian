@@ -7,15 +7,15 @@ ARG USER_ID
 ARG GROUP_ID
 ARG BRANCH
 
-ENV HOME /dash
+ENV HOME /home/dash
 
 # add user with specified (or default) user/group ids
 ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
 RUN groupadd -g ${GROUP_ID} dash && \
-    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash  && \
-    mkdir /dash/.dashcore && \
-    chown dash:dash -R /dash
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash  && \
+    mkdir /home/dash/.dashcore && \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
@@ -23,23 +23,23 @@ RUN apt-get update && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY dashcore-binaries/${BRANCH}/dashcore* /dash
+COPY dashcore-binaries/${BRANCH}/dashcore* /home/dash
 
 RUN mach=$(uname -m) \
       && case $mach in aarch64) arch="aarch64-linux-gnu"; ;; x86_64) arch="x86_64-linux-gnu"; ;;  *) echo "ERROR: Machine type $mach not supported."; ;; esac \
-      && cd /dash \
+      && cd /home/dash \
       && tar xvzf dashcore*$arch.tar.gz \
-      && echo $(ls -1 /dash) \
+      && echo $(ls -1 /home/dash) \
       && cp dashcore-*/bin/* /usr/local/bin \
       && rm -rf dash*
 
 USER dash
 
-VOLUME ["/dash"]
+VOLUME ["/home/dash"]
 
 COPY dash/contrib/containers/deploy/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 9998 9999 19998 19999
 
-WORKDIR /dash
+WORKDIR /home/dash

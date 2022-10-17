@@ -5,6 +5,8 @@
 #include <test/fuzz/fuzz.h>
 
 #include <base58.h>
+#include <core_io.h>
+#include <psbt.h>
 #include <util/string.h>
 #include <util/strencodings.h>
 
@@ -18,13 +20,13 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const std::string random_encoded_string(buffer.begin(), buffer.end());
 
     std::vector<unsigned char> decoded;
-    if (DecodeBase58(random_encoded_string, decoded)) {
+    if (DecodeBase58(random_encoded_string, decoded, buffer.size())) {
         const std::string encoded_string = EncodeBase58(decoded);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    if (DecodeBase58Check(random_encoded_string, decoded)) {
+    if (DecodeBase58Check(random_encoded_string, decoded, buffer.size())) {
         const std::string encoded_string = EncodeBase58Check(decoded);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
@@ -44,4 +46,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
+
+    PartiallySignedTransaction psbt;
+    std::string error;
+    (void)DecodeBase64PSBT(psbt, random_encoded_string, error);
 }

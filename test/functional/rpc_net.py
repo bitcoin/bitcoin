@@ -50,6 +50,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
 class NetTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(3, 1, fast_dip3_enforcement=True)
+        self.supports_cli = False
 
     def run_test(self):
         # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
@@ -147,6 +148,13 @@ class NetTest(DashTestFramework):
         added_nodes = self.nodes[0].getaddednodeinfo(ip_port)
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
+        # check that node cannot be added again
+        assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
+        # check that node can be removed
+        self.nodes[0].addnode(node=ip_port, command='remove')
+        assert_equal(self.nodes[0].getaddednodeinfo(), [])
+        # check that trying to remove the node again returns an error
+        assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 

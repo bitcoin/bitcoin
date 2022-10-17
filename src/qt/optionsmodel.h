@@ -13,10 +13,6 @@ namespace interfaces {
 class Node;
 }
 
-QT_BEGIN_NAMESPACE
-class QNetworkProxy;
-QT_END_NAMESPACE
-
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
 
@@ -56,6 +52,7 @@ public:
         FontWeightBold,       // int
         Language,             // QString
         CoinControlFeatures,  // bool
+        KeepChangeAddress,    // bool
         ThreadsScriptVerif,   // int
         Prune,                // bool
         PruneSize,            // int
@@ -89,8 +86,8 @@ public:
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
-    bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getKeepChangeAddress() const { return fKeepChangeAddress; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     void emitCoinJoinEnabledChanged();
@@ -112,6 +109,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fKeepChangeAddress;
     bool fShowAdvancedCJUI;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
@@ -128,6 +126,7 @@ Q_SIGNALS:
     void coinJoinAmountChanged();
     void AdvancedCJUIChanged(bool);
     void coinControlFeaturesChanged(bool);
+    void keepChangeAddressChanged(bool);
     void hideTrayIconChanged(bool);
 };
 

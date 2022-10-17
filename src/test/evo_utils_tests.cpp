@@ -6,6 +6,7 @@
 
 #include <llmq/utils.h>
 #include <llmq/params.h>
+#include <llmq/quorums.h>
 
 #include <chainparams.h>
 
@@ -18,23 +19,24 @@ BOOST_AUTO_TEST_SUITE(evo_utils_tests)
 
 void Test()
 {
-    using namespace llmq;
+    using namespace llmq::utils;
     const auto& consensus_params = Params().GetConsensus();
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, nullptr, false, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, nullptr, true, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, nullptr, true, true), false);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, nullptr, false, false), false);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, nullptr, true, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, nullptr, true, true), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, nullptr, false, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, nullptr, false, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, nullptr, true, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, nullptr, true, false), Params().IsTestChain());
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, nullptr, true, true), Params().IsTestChain());
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, nullptr, true, true), Params().IsTestChain());
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, nullptr, true, false), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, nullptr, true, true), true);
-    BOOST_CHECK_EQUAL(CLLMQUtils::IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, nullptr, true, true), true);
+    assert(llmq::quorumManager);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, *llmq::quorumManager, nullptr, false, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, *llmq::quorumManager, nullptr, true, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, *llmq::quorumManager, nullptr, true, true), false);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, *llmq::quorumManager, nullptr, false, false), false);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, *llmq::quorumManager, nullptr, true, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, *llmq::quorumManager, nullptr, true, true), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, *llmq::quorumManager, nullptr, false, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, *llmq::quorumManager, nullptr, false, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeChainLocks, *llmq::quorumManager, nullptr, true, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, *llmq::quorumManager, nullptr, true, false), Params().IsTestChain());
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, *llmq::quorumManager, nullptr, true, true), Params().IsTestChain());
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypePlatform, *llmq::quorumManager, nullptr, true, true), Params().IsTestChain());
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, *llmq::quorumManager, nullptr, true, false), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, *llmq::quorumManager, nullptr, true, true), true);
+    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeMnhf, *llmq::quorumManager, nullptr, true, true), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(utils_IsQuorumTypeEnabled_tests_regtest, RegTestingSetup)
@@ -42,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(utils_IsQuorumTypeEnabled_tests_regtest, RegTestingSetup
     Test();
 }
 
-BOOST_FIXTURE_TEST_CASE(utils_IsQuorumTypeEnabled_tests_mainnet, BasicTestingSetup)
+BOOST_FIXTURE_TEST_CASE(utils_IsQuorumTypeEnabled_tests_mainnet, TestingSetup)
 {
     Test();
 }

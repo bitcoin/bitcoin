@@ -188,7 +188,7 @@ static bool InitHTTPAllowList()
 }
 
 /** HTTP request method as string - use for logging only */
-static std::string RequestMethodString(HTTPRequest::RequestMethod m)
+std::string RequestMethodString(HTTPRequest::RequestMethod m)
 {
     switch (m) {
     case HTTPRequest::GET:
@@ -423,7 +423,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-static std::thread threadHTTP;
+static std::thread g_thread_http;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()
@@ -431,7 +431,7 @@ void StartHTTPServer()
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    threadHTTP = std::thread(ThreadHTTP, eventBase);
+    g_thread_http = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
         g_thread_http_workers.emplace_back(HTTPWorkQueueRun, g_work_queue.get(), i);
@@ -468,7 +468,7 @@ void StopHTTPServer()
     boundSockets.clear();
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        threadHTTP.join();
+        if (g_thread_http.joinable()) g_thread_http.join();
     }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
@@ -513,10 +513,10 @@ void HTTPEvent::trigger(struct timeval* tv)
     else
         evtimer_add(ev, tv); // trigger after timeval passed
 }
-HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req),
-                                                       replySent(false)
+HTTPRequest::HTTPRequest(struct evhttp_request* _req, bool _replySent) : req(_req), replySent(_replySent)
 {
 }
+
 HTTPRequest::~HTTPRequest()
 {
     if (!replySent) {

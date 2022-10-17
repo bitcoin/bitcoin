@@ -24,6 +24,7 @@ import sys
 class HTTPBasicsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.supports_cli = False
 
     def setup_chain(self):
         super().setup_chain()
@@ -43,18 +44,15 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.password = lines[3]
 
         with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "dash.conf"), 'a', encoding='utf8') as f:
-            f.write(rpcauth+"\n")
-            f.write(rpcauth2+"\n")
-            f.write(rpcauth3+"\n")
+            f.write(rpcauth + "\n")
+            f.write(rpcauth2 + "\n")
+            f.write(rpcauth3 + "\n")
         with open(os.path.join(get_datadir_path(self.options.tmpdir, 1), "dash.conf"), 'a', encoding='utf8') as f:
-            f.write(rpcuser+"\n")
-            f.write(rpcpassword+"\n")
+            f.write(rpcuser + "\n")
+            f.write(rpcpassword + "\n")
 
     def run_test(self):
-
-        ##################################################
-        # Check correctness of the rpcauth config option #
-        ##################################################
+        self.log.info('Check correctness of the rpcauth config option')
         url = urllib.parse.urlparse(self.nodes[0].url)
 
         #Old authpair
@@ -160,9 +158,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 401)
         conn.close()
 
-        ###############################################################
-        # Check correctness of the rpcuser/rpcpassword config options #
-        ###############################################################
+        self.log.info('Check correctness of the rpcuser/rpcpassword config options')
         url = urllib.parse.urlparse(self.nodes[1].url)
 
         # rpcuser and rpcpassword authpair
@@ -202,5 +198,13 @@ class HTTPBasicsTest(BitcoinTestFramework):
         conn.close()
 
 
+        self.log.info('Check that failure to write cookie file will abort the node gracefully')
+        self.stop_node(0)
+        cookie_file = os.path.join(get_datadir_path(self.options.tmpdir, 0), self.chain, '.cookie.tmp')
+        os.mkdir(cookie_file)
+        init_error = 'Error: Unable to start HTTP server. See debug log for details.'
+        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+
+
 if __name__ == '__main__':
-    HTTPBasicsTest ().main ()
+    HTTPBasicsTest().main()

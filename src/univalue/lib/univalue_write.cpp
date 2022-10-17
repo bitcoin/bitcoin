@@ -1,9 +1,8 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <iomanip>
-#include <sstream>
 #include <stdio.h>
 #include "univalue.h"
 #include "univalue_escapes.h"
@@ -14,13 +13,13 @@ static std::string json_escape(const std::string& inS)
     outS.reserve(inS.size() * 2);
 
     for (unsigned int i = 0; i < inS.size(); i++) {
-        unsigned char ch = inS[i];
+        unsigned char ch = static_cast<unsigned char>(inS[i]);
         const char *escStr = escapes[ch];
 
         if (escStr)
             outS += escStr;
         else
-            outS += ch;
+            outS += static_cast<char>(ch);
     }
 
     return outS;

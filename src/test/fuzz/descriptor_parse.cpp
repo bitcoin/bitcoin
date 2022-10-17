@@ -4,12 +4,15 @@
 
 #include <chainparams.h>
 #include <key.h>
+#include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/standard.h>
 #include <test/fuzz/fuzz.h>
+#include <util/memory.h>
 
 void initialize()
 {
+    static const ECCVerifyHandle verify_handle;
     SelectParams(CBaseChainParams::REGTEST);
 }
 
@@ -19,6 +22,11 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FlatSigningProvider signing_provider;
     std::string error;
     for (const bool require_checksum : {true, false}) {
-        Parse(descriptor, signing_provider, error);
+        const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
+        if (desc) {
+            (void)desc->ToString();
+            (void)desc->IsRange();
+            (void)desc->IsSolvable();
+        }
     }
 }

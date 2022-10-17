@@ -12,13 +12,15 @@ class CCoinJoinServer;
 class UniValue;
 
 // The main object for accessing mixing
-extern CCoinJoinServer coinJoinServer;
+extern std::unique_ptr<CCoinJoinServer> coinJoinServer;
 
 /** Used to keep track of current status of mixing pool
  */
 class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 {
 private:
+    CConnman& connman;
+
     // Mixing uses collateral transactions to trust parties entering the pool
     // to behave honestly. If they don't it takes their money.
     std::vector<CTransactionRef> vecSessionCollaterals;
@@ -26,63 +28,64 @@ private:
     bool fUnitTest;
 
     /// Add a clients entry to the pool
-    bool AddEntry(CConnman& connman, const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet);
+    bool AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet) LOCKS_EXCLUDED(cs_coinjoin);
     /// Add signature to a txin
-    bool AddScriptSig(const CTxIn& txin);
+    bool AddScriptSig(const CTxIn& txin) LOCKS_EXCLUDED(cs_coinjoin);
 
     /// Charge fees to bad actors (Charge clients a fee if they're abusive)
-    void ChargeFees(CConnman& connman) const;
+    void ChargeFees() const LOCKS_EXCLUDED(cs_coinjoin);
     /// Rarely charge fees to pay miners
-    void ChargeRandomFees(CConnman& connman) const;
+    void ChargeRandomFees() const;
     /// Consume collateral in cases when peer misbehaved
-    void ConsumeCollateral(CConnman& connman, const CTransactionRef& txref) const;
+    void ConsumeCollateral(const CTransactionRef& txref) const;
 
     /// Check for process
-    void CheckPool(CConnman& connman);
+    void CheckPool();
 
-    void CreateFinalTransaction(CConnman& connman);
-    void CommitFinalTransaction(CConnman& connman);
+    void CreateFinalTransaction() LOCKS_EXCLUDED(cs_coinjoin);
+    void CommitFinalTransaction() LOCKS_EXCLUDED(cs_coinjoin);
 
     /// Is this nDenom and txCollateral acceptable?
     bool IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) const;
-    bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman);
+    bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) LOCKS_EXCLUDED(cs_vecqueue);
     bool AddUserToExistingSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
     /// Do we have enough users to take entries?
     bool IsSessionReady() const;
 
     /// Check that all inputs are signed. (Are all inputs signed?)
-    bool IsSignaturesComplete() const;
+    bool IsSignaturesComplete() const LOCKS_EXCLUDED(cs_coinjoin);
     /// Check to make sure a given input matches an input in the pool and its scriptSig is valid
-    bool IsInputScriptSigValid(const CTxIn& txin) const;
+    bool IsInputScriptSigValid(const CTxIn& txin) const EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
 
     /// Relay mixing Messages
-    void RelayFinalTransaction(const CTransaction& txFinal, CConnman& connman);
-    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman) const;
-    void RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID = MSG_NOERR);
-    void RelayCompletedTransaction(PoolMessage nMessageID, CConnman& connman);
+    void RelayFinalTransaction(const CTransaction& txFinal) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
+    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) const;
+    void RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID = MSG_NOERR) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
+    void RelayCompletedTransaction(PoolMessage nMessageID) LOCKS_EXCLUDED(cs_coinjoin);
 
-    void ProcessDSACCEPT(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
-    void ProcessDSQUEUE(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
-    void ProcessDSVIN(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
-    void ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessDSACCEPT(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQUEUE(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSVIN(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_coinjoin);
+    void ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_coinjoin);
 
-    void SetNull();
+    void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    CCoinJoinServer() :
+    explicit CCoinJoinServer(CConnman& _connman) :
         vecSessionCollaterals(),
-        fUnitTest(false) {}
+        fUnitTest(false),
+        connman(_connman) {};
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61);
 
     bool HasTimedOut() const;
-    void CheckTimeout(CConnman& connman);
-    void CheckForCompleteQueue(CConnman& connman);
+    void CheckTimeout();
+    void CheckForCompleteQueue();
 
-    void DoMaintenance(CConnman& connman) const;
+    void DoMaintenance() const;
 
     void GetJsonInfo(UniValue& obj) const;
 };

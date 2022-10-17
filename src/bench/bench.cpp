@@ -14,6 +14,7 @@
 #include <regex>
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
 namespace {
 
 void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const std::string& filename, const char* tpl)
@@ -52,11 +53,6 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
-        RegTestingSetup test{};
-        {
-            assert(::ChainActive().Height() == 0);
-        }
-
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
             continue;
         }

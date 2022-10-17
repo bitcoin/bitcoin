@@ -10,13 +10,15 @@
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <node/context.h>
 #include <node/transaction.h>
 
 #include <future>
 
-TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback, bool bypass_limits)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback, bool bypass_limits)
 {
-    assert(g_connman);
+    assert(node.connman);
+    assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
@@ -32,11 +34,11 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
-    if (!mempool.exists(hashTx)) {
+    if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
         CValidationState state;
         bool fMissingInputs;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
+        if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx), &fMissingInputs,
                                 bypass_limits, max_tx_fee)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);
@@ -77,7 +79,11 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     }
 
     if (relay) {
-        RelayTransaction(hashTx, *g_connman);
+        // the mempool tracks locally submitted transactions to make a
+        // best-effort of initial broadcast
+        node.mempool->AddUnbroadcastTx(hashTx);
+
+        RelayTransaction(hashTx, *node.connman);
     }
 
     return TransactionError::OK;

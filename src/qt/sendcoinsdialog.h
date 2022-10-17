@@ -67,6 +67,7 @@ private:
     bool fNewRecipientAllowed;
     void send(QList<SendCoinsRecipient> recipients);
     bool fFeeMinimized;
+    bool fKeepChangeAddress;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -96,10 +97,9 @@ private Q_SLOTS:
     void coinControlClipboardBytes();
     void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
-    void setMinimumFee();
     void updateFeeSectionControls();
-    void updateMinFeeLabel();
     void updateSmartFeeLabel();
+    void keepChangeAddressChanged(bool);
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
@@ -114,6 +114,7 @@ class SendConfirmationDialog : public QMessageBox
 
 public:
     SendConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = nullptr);
+    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = 0, QWidget* parent = nullptr);
     int exec() override;
 
 private Q_SLOTS:

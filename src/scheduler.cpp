@@ -31,8 +31,6 @@ void CScheduler::serviceQueue()
         try {
             if (!shouldStop() && taskQueue.empty()) {
                 REVERSE_LOCK(lock);
-                // Use this chance to get more entropy
-                RandAddSeedSleep();
             }
             while (!shouldStop() && taskQueue.empty()) {
                 // Wait until there is something to do.
@@ -96,6 +94,28 @@ void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::tim
 void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
     schedule(f, std::chrono::system_clock::now() + std::chrono::milliseconds(deltaMilliSeconds));
+}
+
+void CScheduler::MockForward(std::chrono::seconds delta_seconds)
+{
+    assert(delta_seconds.count() > 0 && delta_seconds < std::chrono::hours{1});
+
+    {
+        LOCK(newTaskMutex);
+
+        // use temp_queue to maintain updated schedule
+        std::multimap<std::chrono::system_clock::time_point, Function> temp_queue;
+
+        for (const auto& element : taskQueue) {
+            temp_queue.emplace_hint(temp_queue.cend(), element.first - delta_seconds, element.second);
+        }
+
+        // point taskQueue to temp_queue
+        taskQueue = std::move(temp_queue);
+    }
+
+    // notify that the taskQueue needs to be processed
+    newTaskScheduled.notify_one();
 }
 
 static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)

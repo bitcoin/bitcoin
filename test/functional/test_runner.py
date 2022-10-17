@@ -25,6 +25,7 @@ import subprocess
 import tempfile
 import re
 import logging
+import unittest
 
 # Formatting. Default colors to empty strings.
 BOLD, GREEN, RED, GREY = ("", ""), ("", ""), ("", ""), ("", "")
@@ -65,6 +66,12 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
+
+TEST_FRAMEWORK_MODULES = [
+    "muhash",
+    "script",
+    "util",
+]
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
@@ -112,7 +119,6 @@ BASE_SCRIPTS = [
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'p2p_sendheaders_compressed.py', # NOTE: needs dash_hash to pass
-    'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
@@ -123,6 +129,7 @@ BASE_SCRIPTS = [
     'feature_reindex.py',
     'feature_abortnode.py',
     # vv Tests less than 30s vv
+    'rpc_quorum.py',
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
@@ -135,15 +142,20 @@ BASE_SCRIPTS = [
     'rpc_misc.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
+    'wallet_avoidreuse.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_createwallet.py',
     'wallet_createwallet.py --usecli',
+    'wallet_reorgsrestore.py',
+    'wallet_watchonly.py',
+    'wallet_watchonly.py --usecli',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
     'rpc_users.py',
+    'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
     'p2p_addrv2_relay.py',
@@ -175,6 +187,7 @@ BASE_SCRIPTS = [
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
     'feature_txindex.py',
+    'feature_utxo_set_hash.py',
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'feature_versionbits_warning.py',
@@ -182,12 +195,14 @@ BASE_SCRIPTS = [
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py',
     'rpc_signmessage.py',
+    'rpc_generateblock.py',
     'wallet_balance.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
     'wallet_import_rescan.py',
     'wallet_import_with_label.py',
+    'wallet_upgradewallet.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
@@ -208,6 +223,7 @@ BASE_SCRIPTS = [
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
+    'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
@@ -221,10 +237,13 @@ BASE_SCRIPTS = [
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
+    'wallet_coinbase_category.py',
     'feature_filelock.py',
+    'feature_loadblock.py',
     'p2p_blockfilters.py',
     'feature_asmap.py',
     'feature_includeconf.py',
+    'mempool_unbroadcast.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
@@ -232,7 +251,9 @@ BASE_SCRIPTS = [
     'p2p_node_network_limited.py',
     'p2p_permissions.py',
     'feature_blocksdir.py',
+    'wallet_startup.py',
     'feature_config_args.py',
+    'feature_settings.py',
     'rpc_help.py',
     'feature_help.py',
     # Don't append tests at the end to avoid merge conflicts
@@ -377,7 +398,8 @@ def main():
 def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0,failfast=False, runs_ci=False):
     args = args or []
 
-    # Warn if dashd is already running (unix only)
+    # Warn if dashd is already running
+    # pidof might fail or return an empty string if bitcoind is not running
     try:
         pidof_output = subprocess.check_output(["pidof", "dashd"])
         if not (pidof_output is None or pidof_output == b''):
@@ -389,6 +411,16 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     cache_dir = "%s/test/cache" % build_dir
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
+
+    # Test Framework Tests
+    print("Running Unit Tests for Test Framework Modules")
+    test_framework_tests = unittest.TestSuite()
+    for module in TEST_FRAMEWORK_MODULES:
+        test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
+    result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
+    if not result.wasSuccessful():
+        logging.debug("Early exiting after failure in TestFramework unit tests")
+        sys.exit(False)
 
     tests_dir = src_dir + '/test/functional/'
 
@@ -615,7 +647,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("^(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:

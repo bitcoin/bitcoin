@@ -81,8 +81,8 @@ class MultiKeySporkTest(BitcoinTestFramework):
 
         self.bump_mocktime(1)
         # first and second signers set spork value
-        self.nodes[0].spork(spork_name, 1)
-        self.nodes[1].spork(spork_name, 1)
+        self.nodes[0].sporkupdate(spork_name, 1)
+        self.nodes[1].sporkupdate(spork_name, 1)
         # spork change requires at least 3 signers
         time.sleep(10)
         for node in self.nodes:
@@ -98,7 +98,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
             connect_nodes(self.nodes[0], i)
 
         # third signer set spork value
-        self.nodes[2].spork(spork_name, 1)
+        self.nodes[2].sporkupdate(spork_name, 1)
         # now spork state is changed
         for node in self.nodes:
             wait_until(lambda: self.get_test_spork_value(node, spork_name) == 1, sleep=0.1, timeout=10)
@@ -117,9 +117,9 @@ class MultiKeySporkTest(BitcoinTestFramework):
         self.bump_mocktime(1)
         # now set the spork again with other signers to test
         # old and new spork messages interaction
-        self.nodes[2].spork(spork_name, final_value)
-        self.nodes[3].spork(spork_name, final_value)
-        self.nodes[4].spork(spork_name, final_value)
+        self.nodes[2].sporkupdate(spork_name, final_value)
+        self.nodes[3].sporkupdate(spork_name, final_value)
+        self.nodes[4].sporkupdate(spork_name, final_value)
         for node in self.nodes:
             wait_until(lambda: self.get_test_spork_value(node, spork_name) == final_value, sleep=0.1, timeout=10)
 

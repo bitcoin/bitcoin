@@ -4,8 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@ consensus library
-Description: Library for the Bitcoin consensus protocol.
+Description: Library for the Dash consensus protocol.
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -ldashconsensus
 Cflags: -I${includedir}
-Requires.private: libcrypto

@@ -5,11 +5,15 @@
 #ifndef BITCOIN_LLMQ_COMMITMENT_H
 #define BITCOIN_LLMQ_COMMITMENT_H
 
-#include <llmq/utils.h>
 #include <bls/bls.h>
+#include <consensus/params.h>
+#include <primitives/transaction.h>
+#include <util/irange.h>
+#include <util/strencodings.h>
 
 #include <univalue.h>
 
+class CBlockIndex;
 class CValidationState;
 
 namespace llmq
@@ -44,11 +48,11 @@ public:
 
     int CountSigners() const
     {
-        return (int)std::count(signers.begin(), signers.end(), true);
+        return int(std::count(signers.begin(), signers.end(), true));
     }
     int CountValidMembers() const
     {
-        return (int)std::count(validMembers.begin(), validMembers.end(), true);
+        return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
     bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
@@ -100,18 +104,28 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("llmqType", (int)llmqType);
+        obj.pushKV("version", int{nVersion});
+        obj.pushKV("llmqType", int(llmqType));
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("quorumIndex", quorumIndex);
         obj.pushKV("signersCount", CountSigners());
-        obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
+        obj.pushKV("signers", BitsVectorToHexStr(signers));
         obj.pushKV("validMembersCount", CountValidMembers());
-        obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
+        obj.pushKV("validMembers", BitsVectorToHexStr(validMembers));
         obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
         obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
         obj.pushKV("quorumSig", quorumSig.ToString());
         obj.pushKV("membersSig", membersSig.ToString());
+    }
+
+private:
+    static std::string BitsVectorToHexStr(const std::vector<bool>& vBits)
+    {
+        std::vector<uint8_t> vBytes((vBits.size() + 7) / 8);
+        for (const auto i : irange::range(vBits.size())) {
+            vBytes[i / 8] |= vBits[i] << (i % 8);
+        }
+        return HexStr(vBytes);
     }
 };
 using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
@@ -135,8 +149,8 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("version", int{nVersion});
+        obj.pushKV("height", int(nHeight));
 
         UniValue qcObj;
         commitment.ToJson(qcObj);

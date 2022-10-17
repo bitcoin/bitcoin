@@ -22,7 +22,7 @@ class LLMQConnections(DashTestFramework):
         self.set_dash_llmq_test_params(5, 3)
 
     def run_test(self):
-        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
         q = self.mine_quorum()
@@ -38,7 +38,7 @@ class LLMQConnections(DashTestFramework):
         self.check_reconnects(2)
 
         self.log.info("Activating SPORK_23_QUORUM_POSE")
-        self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
+        self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 0)
         self.wait_for_sporks_same()
 
         self.log.info("mining one block and waiting for all members to connect to each other")
@@ -64,10 +64,26 @@ class LLMQConnections(DashTestFramework):
             wait_until(lambda: self.get_mn_probe_count(mn.node, q, True) == 4)
 
         self.log.info("Activating SPORK_21_QUORUM_ALL_CONNECTED")
-        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+        self.nodes[0].sporkupdate("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
         self.check_reconnects(4)
+
+        self.log.info("check that old masternode conections are dropped")
+        removed = False
+        for mn in self.mninfo:
+            if len(mn.node.quorum("memberof", mn.proTxHash)) > 0:
+                try:
+                    with mn.node.assert_debug_log(['removing masternodes quorum connections']):
+                        with mn.node.assert_debug_log(['keeping mn quorum connections']):
+                            self.mine_quorum()
+                            mn.node.mockscheduler(60) # we check for old connections via the scheduler every 60 seconds
+                    removed = True
+                except:
+                    pass # it's ok to not remove connections sometimes
+            if removed:
+                break
+        assert removed # no way we removed none
 
         self.log.info("check that inter-quorum masternode conections are added")
         added = False

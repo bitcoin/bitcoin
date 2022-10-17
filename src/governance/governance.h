@@ -17,8 +17,9 @@ class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CSporkManager;
 
-extern CGovernanceManager governance;
+extern std::unique_ptr<CGovernanceManager> governance;
 
 static constexpr int RATE_BUFFER_SIZE = 5;
 
@@ -240,7 +241,7 @@ public:
 
     // These commands are only used in RPC
     std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const;
-    std::vector<CGovernanceObject> GetAllNewerThan(int64_t nMoreThanTime) const;
+    void GetAllNewerThan(std::vector<CGovernanceObject>& objs, int64_t nMoreThanTime) const;
 
     void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, const CNode* pfrom = nullptr);
 
@@ -380,6 +381,6 @@ private:
 
 };
 
-bool AreSuperblocksEnabled();
+bool AreSuperblocksEnabled(const CSporkManager& sporkManager);
 
 #endif // BITCOIN_GOVERNANCE_GOVERNANCE_H

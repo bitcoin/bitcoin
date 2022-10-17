@@ -20,6 +20,7 @@ class AddressIndexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -35,8 +36,8 @@ class AddressIndexTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
-
         self.sync_all()
+        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         self.log.info("Test that settings can't be changed without -reindex...")

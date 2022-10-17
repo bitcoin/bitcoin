@@ -14,6 +14,9 @@
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
+
+#include <univalue.h>
 
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
@@ -66,33 +69,36 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
 
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    for (const std::string& walletFile : wallet_files) {
-        bilingual_str error_string;
-        std::vector<bilingual_str> warnings;
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error_string, warnings);
-        if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
-        if (!pwallet) {
-            chain.initError(error_string);
-            return false;
+    try {
+        for (const std::string& walletFile : wallet_files) {
+            bilingual_str error_string;
+            std::vector<bilingual_str> warnings;
+            std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error_string, warnings);
+            if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
+            if (!pwallet) {
+                chain.initError(error_string);
+                return false;
+            }
+            AddWallet(pwallet);
         }
+        return true;
+    } catch (const std::runtime_error& e) {
+        chain.initError(Untranslated(e.what()));
+        return false;
     }
-
-    return true;
 }
 
-void StartWallets(CScheduler& scheduler)
+void StartWallets(CScheduler& scheduler, const ArgsManager& args)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
-    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
-    scheduler.scheduleEvery(MaybeResendWalletTxs, 1000);
-
-    if (!fMasternodeMode && CCoinJoinClientOptions::IsEnabled()) {
-        scheduler.scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*g_connman)), 1 * 1000);
+    if (args.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
+        scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
     }
+    scheduler.scheduleEvery(MaybeResendWalletTxs, 1000);
 }
 
 void FlushWallets()
@@ -121,7 +127,8 @@ void UnloadWallets()
     while (!wallets.empty()) {
         auto wallet = wallets.back();
         wallets.pop_back();
-        RemoveWallet(wallet);
+        std::vector<bilingual_str> warnings;
+        RemoveWallet(wallet, nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

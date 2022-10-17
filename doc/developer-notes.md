@@ -277,6 +277,33 @@ configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
 `debug.log` file if inconsistencies are detected.
 
+### Assertions and Checks
+
+The util file `src/util/check.h` offers helpers to protect against coding and
+internal logic bugs. They must never be used to validate user, network or any
+other input.
+
+* `assert` or `Assert` should be used to document assumptions when any
+  violation would mean that it is not safe to continue program execution. The
+  code is always compiled with assertions enabled.
+   - For example, a nullptr dereference or any other logic bug in validation
+     code means the program code is faulty and must terminate immediately.
+* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
+  failure, it will throw an exception, which can be caught to recover from the
+  error.
+   - For example, a nullptr dereference or any other logic bug in RPC code
+     means that the RPC code is faulty and can not be executed. However, the
+     logic bug can be shown to the user and the program can continue to run.
+* `Assume` should be used to document assumptions when program execution can
+  safely continue even if the assumption is violated. In debug builds it
+  behaves like `Assert`/`assert` to notify developers and testers about
+  nonfatal errors. In production it doesn't warn or log anything, though the
+  expression is always evaluated.
+   - For example it can be assumed that a variable is only initialized once,
+     but a failed assumption does not result in a fatal bug. A failed
+     assumption may or may not result in a slightly degraded user experience,
+     but it is safe to continue program execution.
+
 ### Valgrind suppressions file
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and
@@ -418,7 +445,7 @@ reported in the `debug.log` file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained `CBasicKeyStore` class
+done by the components (e.g. see the self-contained `FillableSigningProvider` class
 and its `cs_KeyStore` lock for example).
 
 Threads
@@ -426,7 +453,7 @@ Threads
 
 - ThreadScriptCheck : Verifies block scripts.
 
-- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
+- ThreadImport : Loads blocks from `blk*.dat` files or `-loadblock=<file>`.
 
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
@@ -897,7 +924,7 @@ Current subtrees include:
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
   - Upstream at https://github.com/google/crc32c ; Maintained by Google.
 
-- src/libsecp256k1
+- src/secp256k1
   - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes
@@ -1099,7 +1126,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 - A RPC method must either be a wallet method or a non-wallet method. Do not
   introduce new methods that differ in behavior based on the presence of a wallet.
 
-  - *Rationale*: as well as complicating the implementation and interfering
+  - *Rationale*: As well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
 
@@ -1126,8 +1153,13 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: RPC methods registered with the same function pointer will be
     considered aliases and only the first method name will show up in the
-    `help` rpc command list.
+    `help` RPC command list.
 
   - *Exception*: Using RPC method aliases may be appropriate in cases where a
     new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
     showing up in the command list.
+
+- Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
+  timestamps in the documentation.
+
+  - *Rationale*: User-facing consistency.

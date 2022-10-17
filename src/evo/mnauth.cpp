@@ -55,7 +55,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 
 void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStream& vRecv, CConnman& connman)
 {
-    if (msg_type != NetMsgType::MNAUTH || !masternodeSync.IsBlockchainSynced()) {
+    if (msg_type != NetMsgType::MNAUTH || !masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
         return;
     }
@@ -139,7 +139,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStr
 
         if (pnode2->GetVerifiedProRegTxHash() == mnauth.proRegTxHash) {
             if (fMasternodeMode) {
-                const auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::CLLMQUtils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
+                const auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::utils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
                 LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
                 if (WITH_LOCK(activeMasternodeInfoCs, return deterministicOutbound == activeMasternodeInfo.proTxHash)) {
@@ -187,14 +187,14 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStr
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
 }
 
-void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
     // we're only interested in updated/removed MNs. Added MNs are of no interest for us
     if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
         return;
     }
 
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         const auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;

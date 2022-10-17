@@ -4,9 +4,10 @@
 
 #include <chainparamsbase.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <pubkey.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -17,7 +18,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-InitInterfaces* g_rpc_interfaces = nullptr;
+const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
+
 
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
@@ -172,7 +174,7 @@ std::string HelpExampleRpc(const std::string& methodname, const std::string& arg
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;'"
-        " http://127.0.0.1:" + strprintf("%d", gArgs.GetArg("-rpcport", BaseParams().RPCPort())) + "/\n";
+        " http://127.0.0.1:9998/\n";
 }
 
 // Converts a hex string to a public key if possible
@@ -188,8 +190,8 @@ CPubKey HexToPubKey(const std::string& hex_in)
     return vchPubKey;
 }
 
-// Retrieves a public key for an address from the given CKeyStore
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in)
+// Retrieves a public key for an address from the given FillableSigningProvider
+CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in)
 {
     CTxDestination dest = DecodeDestination(addr_in);
     if (!IsValidDestination(dest)) {
@@ -423,13 +425,9 @@ std::string RPCResults::ToDescriptionString() const
         } else {
             result += "\nResult (" + r.m_cond + "):\n";
         }
-        if (r.m_legacy) {
-            result += r.m_result;
-        } else {
-            Sections sections;
-            r.ToSections(sections);
-            result += sections.ToString();
-        }
+        Sections sections;
+        r.ToSections(sections);
+        result += sections.ToString();
     }
     return result;
 }
@@ -830,4 +828,42 @@ UniValue GetServicesNames(ServiceFlags services)
     }
 
     return servicesNames;
+}
+
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider)
+{
+    std::string desc_str;
+    std::pair<int64_t, int64_t> range = {0, 1000};
+    if (scanobject.isStr()) {
+        desc_str = scanobject.get_str();
+    } else if (scanobject.isObject()) {
+        UniValue desc_uni = find_value(scanobject, "desc");
+        if (desc_uni.isNull()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor needs to be provided in scan object");
+        desc_str = desc_uni.get_str();
+        UniValue range_uni = find_value(scanobject, "range");
+        if (!range_uni.isNull()) {
+            range = ParseDescriptorRange(range_uni);
+        }
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
+    }
+
+    std::string error;
+    auto desc = Parse(desc_str, provider, error);
+    if (!desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+    }
+    if (!desc->IsRange()) {
+        range.first = 0;
+        range.second = 0;
+    }
+    std::vector<CScript> ret;
+    for (int i = range.first; i <= range.second; ++i) {
+        std::vector<CScript> scripts;
+        if (!desc->Expand(i, provider, scripts, provider)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
+        }
+        std::move(scripts.begin(), scripts.end(), std::back_inserter(ret));
+    }
+    return ret;
 }

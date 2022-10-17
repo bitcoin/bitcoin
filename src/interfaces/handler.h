@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACES_HANDLER_H
 #define BITCOIN_INTERFACES_HANDLER_H
 
+#include <functional>
 #include <memory>
 
 namespace boost {
@@ -29,6 +30,9 @@ public:
 
 //! Return handler wrapping a boost signal connection.
 std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection);
+
+//! Return handler wrapping a cleanup function.
+std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup);
 
 } // namespace interfaces
 

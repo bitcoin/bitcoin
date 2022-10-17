@@ -22,7 +22,7 @@
 /// Proposal wrapper
 ///
 
-Proposal::Proposal(const CGovernanceObject _govObj, QObject* parent) :
+Proposal::Proposal(const CGovernanceObject& _govObj, QObject* parent) :
     QObject(parent),
     govObj(_govObj)
 {
@@ -64,8 +64,8 @@ QString Proposal::url() const { return m_url; }
 
 bool Proposal::isActive() const
 {
-    std::string strError;
     LOCK(cs_main);
+    std::string strError;
     return govObj.IsValidLocally(strError, false);
 }
 
@@ -312,7 +312,6 @@ GovernanceList::GovernanceList(QWidget* parent) :
 
     // Set up filtering.
     proposalModelProxy->setFilterKeyColumn(ProposalModel::Column::TITLE); // filter by title column...
-    ui->filterLineEdit->setPlaceholderText(tr("Filter by Title"));
     connect(ui->filterLineEdit, &QLineEdit::textChanged, proposalModelProxy, &QSortFilterProxyModel::setFilterFixedString);
 
     // Changes to number of rows should update proposal count display.
@@ -348,7 +347,8 @@ void GovernanceList::updateProposalList()
         const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
         proposalModel->setVotingParams(nAbsVoteReq);
 
-        const std::vector<CGovernanceObject> govObjList = clientModel->getAllGovernanceObjects();
+        std::vector<CGovernanceObject> govObjList;
+        clientModel->getAllGovernanceObjects(govObjList);
         std::vector<const Proposal*> newProposals;
         for (const auto& govObj : govObjList) {
             if (govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) {

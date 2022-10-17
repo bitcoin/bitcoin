@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+class ArgsManager;
+
 /**
  * CBaseChainParams defines the base parameters (shared between dash-cli and dashd)
  * of a given instance of the Dash system.
@@ -15,11 +17,13 @@
 class CBaseChainParams
 {
 public:
-    /** BIP70 chain name strings (main, test or regtest) */
+    ///@{
+    /** Chain name strings */
     static const std::string MAIN;
     static const std::string TESTNET;
     static const std::string DEVNET;
     static const std::string REGTEST;
+    ///@}
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
@@ -42,7 +46,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 /**
  *Set the arguments for chainparams
  */
-void SetupChainParamsBaseOptions();
+void SetupChainParamsBaseOptions(ArgsManager& argsman);
 
 /**
  * Return the currently selected parameters. This won't change after app

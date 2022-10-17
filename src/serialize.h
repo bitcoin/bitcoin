@@ -260,8 +260,7 @@ template<typename Stream> inline void Unserialize(Stream& s, Span<unsigned char>
 template<typename Stream> inline void Serialize(Stream& s, bool a)    { char f=a; ser_writedata8(s, f); }
 template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f=ser_readdata8(s); a=f; }
 
-template <typename T> size_t GetSerializeSize(const T& t, int nType, int nVersion = 0);
-template <typename S, typename T> size_t GetSerializeSize(const S& s, const T& t);
+template <typename T> size_t GetSerializeSize(const T& t, int nVersion = 0);
 
 
 
@@ -555,8 +554,8 @@ void WriteAutoBitSet(Stream& s, const autobitset_t& item)
 
     assert(vec.size() == size);
 
-    size_t size1 = ::GetSerializeSize(s, CFixedBitSet(vec, size));
-    size_t size2 = ::GetSerializeSize(s, CFixedVarIntsBitSet(vec, size));
+    size_t size1 = ::GetSerializeSize(CFixedBitSet(vec, size), s.GetVersion());
+    size_t size2 = ::GetSerializeSize(CFixedVarIntsBitSet(vec, size), s.GetVersion());
 
     assert(size1 == GetSizeOfFixedBitSet(size));
 
@@ -1390,10 +1389,9 @@ class CSizeComputer
 protected:
     size_t nSize;
 
-    const int nType;
     const int nVersion;
 public:
-    CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
+    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
 
     void write(const char *psz, size_t _nSize)
     {
@@ -1418,7 +1416,6 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
 };
 
 template<typename Stream>
@@ -1491,15 +1488,17 @@ inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t, int nType, int nVersion)
+size_t GetSerializeSize(const T& t, int nVersion)
 {
-    return (CSizeComputer(nType, nVersion) << t).size();
+    return (CSizeComputer(nVersion) << t).size();
 }
 
-template <typename S, typename T>
-size_t GetSerializeSize(const S& s, const T& t)
+template <typename... T>
+size_t GetSerializeSizeMany(int nVersion, const T&... t)
 {
-    return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
+    CSizeComputer sc(nVersion);
+    SerializeMany(sc, t...);
+    return sc.size();
 }
 
 #endif // BITCOIN_SERIALIZE_H

@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/bitcoin-config.h>
 #endif
 
 #include <interfaces/node.h>
-#include <qt/dash.h>
+#include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
@@ -18,19 +18,12 @@
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
-#ifdef ENABLE_BIP70
-#include <qt/test/paymentservertests.h>
-#endif // ENABLE_BIP70
 #include <qt/test/wallettests.h>
 #endif // ENABLE_WALLET
 
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#if USE_OPENSSL
-#include <openssl/ssl.h>
-#endif
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -49,7 +42,7 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 // This is all you need to run all the tests
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     // Initialize persistent globals with the testing setup state for sanity.
     // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
@@ -61,7 +54,8 @@ int main(int argc, char *argv[])
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    auto node = interfaces::MakeNode();
+    NodeContext node_context;
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
 
     bool fInvalid = false;
 
@@ -79,10 +73,8 @@ int main(int argc, char *argv[])
     BitcoinApplication app(*node);
     app.setApplicationName("Dash-Qt-test");
 
-#if USE_OPENSSL
-    SSL_library_init();
-#endif
-
+    node->setupServerArgs();            // Make gArgs available in the NodeContext
+    node->context()->args->ClearArgs(); // Clear added args again
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
         fInvalid = true;
@@ -91,13 +83,7 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
-    PaymentServerTests test2;
-    if (QTest::qExec(&test2) != 0) {
-        fInvalid = true;
-    }
-#endif
-    RPCNestedTests test3;
+    RPCNestedTests test3(*node);
     if (QTest::qExec(&test3) != 0) {
         fInvalid = true;
     }
@@ -106,11 +92,11 @@ int main(int argc, char *argv[])
         fInvalid = true;
     }
 #ifdef ENABLE_WALLET
-    WalletTests test5;
+    WalletTests test5(*node);
     if (QTest::qExec(&test5) != 0) {
         fInvalid = true;
     }
-    AddressBookTests test6;
+    AddressBookTests test6(*node);
     if (QTest::qExec(&test6) != 0) {
         fInvalid = true;
     }
