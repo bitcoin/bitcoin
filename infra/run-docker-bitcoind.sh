@@ -45,6 +45,16 @@ errecho() {
     >&2 echo "${@}"
 }
 
+checkPrerequisites() {
+    if ! command -v docker &> /dev/null; then
+        errecho "Please install docker (https://www.docker.com/)"
+        exit 1
+    fi
+}
+
+# Do not run if the required packages are not installed
+checkPrerequisites
+
 ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
 errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
