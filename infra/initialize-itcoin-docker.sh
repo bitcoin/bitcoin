@@ -56,6 +56,14 @@ checkPrerequisites() {
         errecho "Please install docker (https://www.docker.com/)"
         exit 1
     fi
+    if ! command -v sort &> /dev/null; then
+        errecho "The sort command is not available"
+        exit 1
+    fi
+    if ! command -v uniq &> /dev/null; then
+        errecho "The uniq command is not available"
+        exit 1
+    fi
 }
 
 # Automatically stop the container (wich will also self-remove at script exit
@@ -80,6 +88,14 @@ DESCRIPTORS=$(echo "${INIT_DATA}" | docker run --rm --interactive "${ITCOIN_IMAG
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
 mkdir "${EXTERNAL_DATADIR}"
 
+# The ZMQ topics do not need to be published on distinct ports. But Docker's
+# "--publish" parameter fails if the same port is given multiple times.
+# Thus we have to remove duplicates from the set of ZMQ_XXX_PORT variables.
+declare -a ZMQ_PARAMS
+while IFS= read -r ZMQ_PORT; do
+    ZMQ_PARAMS+=("--publish" "${ZMQ_PORT}:${ZMQ_PORT}")
+done <<<$(printf '%s\n' "${ZMQ_PUBHASHTX_PORT}" "${ZMQ_PUBRAWBLOCK_PORT}" | sort | uniq )
+
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will
 # instead be loaded afterwards, through the cli
@@ -97,8 +113,7 @@ docker run \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
-	--publish "${ZMQ_PUBHASHTX_PORT}":"${ZMQ_PUBHASHTX_PORT}" \
-	--publish "${ZMQ_PUBRAWBLOCK_PORT}":"${ZMQ_PUBRAWBLOCK_PORT}" \
+	"${ZMQ_PARAMS[@]}" \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \
