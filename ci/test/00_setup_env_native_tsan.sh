@@ -14,3 +14,7 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=thread"
 export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
 export PYZMQ=true
+
+# xenial comes with old clang versions that can not parse the sanitizer suppressions files
+# Remove unparseable lines as a hacky workaround
+sed -i '/^implicit-/d' "${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan"

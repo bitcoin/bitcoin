@@ -80,6 +80,8 @@ static const unsigned int MAX_GETDATA_SZ = 1000;
 static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
 /** Minimum time between orphan transactions expire time checks in seconds */
 static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
+/** How long to cache transactions in mapRelay for normal relay */
+static constexpr std::chrono::seconds RELAY_TX_CACHE_TIME{15 * 60};
 /** Headers download timeout expressed in microseconds
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_BASE = 15 * 60 * 1000000; // 15 minutes
@@ -1179,7 +1181,7 @@ static bool TxRelayMayResultInDisconnect(const CValidationState& state)
 /**
  * Potentially mark a node discouraged based on the contents of a CValidationState object
  *
- * @param[in] via_compact_block: this bool is passed in because net_processing should
+ * @param[in] via_compact_block this bool is passed in because net_processing should
  * punish peers differently depending on whether the data was provided in a compact
  * block message or not. If the compact block had a valid header, but contained invalid
  * txs, the peer should not be punished. See BIP 152.
@@ -1814,6 +1816,10 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
     {
+        // mempool entries added before this time have likely expired from mapRelay
+        const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
+        const std::chrono::seconds mempool_req = pfrom->m_tx_relay->m_last_mempool_req.load();
+
         LOCK(cs_main);
 
         while (it != pfrom->vRecvGetData.end() && it->IsKnownType()) {
@@ -1851,11 +1857,15 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *mi->second));
                     }
                     push = true;
-                } else if (pfrom->m_tx_relay->m_last_mempool_req.load().count()) {
+                } else {
                     auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (txinfo.tx && txinfo.m_time <= pfrom->m_tx_relay->m_last_mempool_req.load()) {
+                    // that TX couldn't have been INVed in reply to a MEMPOOL request,
+                    // or when it's too recent to have expired from mapRelay.
+                    if (txinfo.tx && (
+                         (mempool_req.count() && txinfo.m_time <= mempool_req)
+                          || (txinfo.m_time <= longlived_mempool_time)))
+                    {
                         if (dstx) {
                             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
                         } else {
@@ -4897,7 +4907,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
                             auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
                             if (ret.second) {
-                                vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
+                                vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
                             }
                         }
                         int nInvType = CCoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;

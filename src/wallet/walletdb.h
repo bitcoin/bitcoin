@@ -92,7 +92,7 @@ public:
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     KeyOriginInfo key_origin; // Key origin info with path and fingerprint
-    bool has_key_origin = false; //< Whether the key_origin is useful
+    bool has_key_origin = false; //!< Whether the key_origin is useful
 
     CKeyMetadata()
     {
