@@ -130,6 +130,7 @@ FUZZ_TARGET_MSG(pong);
 FUZZ_TARGET_MSG(sendaddrv2);
 FUZZ_TARGET_MSG(sendcmpct);
 FUZZ_TARGET_MSG(sendheaders);
+FUZZ_TARGET_MSG(sendtxrcncl);
 FUZZ_TARGET_MSG(tx);
 FUZZ_TARGET_MSG(verack);
 FUZZ_TARGET_MSG(version);
