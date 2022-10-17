@@ -33,7 +33,6 @@ class proxyType;
 struct bilingual_str;
 enum class SynchronizationState;
 struct CNodeStateStats;
-enum class WalletCreationStatus;
 struct NodeContext;
 
 namespace interfaces {

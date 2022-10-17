@@ -32,7 +32,7 @@ typedef std::set<CInputCoin> CoinSet;
 static std::vector<COutput> vCoins;
 static NodeContext testNode;
 static auto testChain = interfaces::MakeChain(testNode);
-static CWallet testWallet(testChain.get(), WalletLocation(), CreateDummyWalletDatabase());
+static CWallet testWallet(testChain.get(), "", CreateDummyWalletDatabase());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);
