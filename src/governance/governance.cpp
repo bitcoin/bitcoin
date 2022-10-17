@@ -142,8 +142,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& msg_typ
             return;
         }
 
-        LOCK2(cs_main, ::mempool.cs); // Lock mempool because of GetTransaction deep inside
-        LOCK(cs);
+        LOCK2(cs_main, cs);
 
         if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
@@ -262,8 +261,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     govobj.UpdateSentinelVariables(); //this sets local vars in object
 
-    LOCK2(cs_main, ::mempool.cs); // Lock mempool because of GetTransaction deep inside
-    LOCK(cs);
+    LOCK2(cs_main, cs);
     std::string strError;
 
     // MAKE SURE THIS OBJECT IS OK
@@ -322,8 +320,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
 
-    LOCK2(cs_main, ::mempool.cs); // Lock mempool because of GetTransaction deep inside
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     for (const uint256& nHash : vecDirtyHashes) {
         auto it = mapObjects.find(nHash);
@@ -838,8 +835,7 @@ void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
     if (!masternodeSync.IsSynced()) return;
 
-    LOCK2(cs_main, ::mempool.cs); // Lock mempool because of GetTransaction deep inside
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     // Check postponed proposals
     for (auto it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
