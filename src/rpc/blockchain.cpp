@@ -600,16 +600,18 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblocki
     return block;
 }
 
-static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblockindex)
 {
-    AssertLockHeld(::cs_main);
     CBlockUndo blockUndo;
 
     // The Genesis block does not have undo data
     if (pblockindex->nHeight == 0) return blockUndo;
 
-    if (blockman.IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+    {
+        LOCK(cs_main);
+        if (blockman.IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+        }
     }
 
     if (!UndoReadFromDisk(blockUndo, pblockindex)) {
@@ -1799,7 +1801,6 @@ static RPCHelpMan getblockstats()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
     const CBlockIndex& pindex{*CHECK_NONFATAL(ParseHashOrHeight(request.params[0], chainman))};
 
     std::set<std::string> stats;
