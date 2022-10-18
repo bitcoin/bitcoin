@@ -249,11 +249,17 @@ public:
         m_coinbase_prefix = coinbase_tx->vin[0].scriptSig;
         m_coinbase_tx_input_sequence = coinbase_tx->vin[0].nSequence;
 
-        // NOTE: Currently set to 0 values, in order to integrate with the current
-        // stratum v2 pool and proxy implementations.
-        m_coinbase_tx_value_remaining = 0;
+        // The coinbase nValue already contains the nFee + the Block Subsidy when built using CreateBlock().
+        m_coinbase_tx_value_remaining = static_cast<uint64_t>(block.vtx[0]->vout[0].nValue);
+
         m_coinbase_tx_outputs_count = 0;
-        m_coinbase_tx_outputs = coinbase_tx->vout;
+        int commitpos = GetWitnessCommitmentIndex(block);
+        if (commitpos != NO_WITNESS_COMMITMENT) {
+            m_coinbase_tx_outputs_count = 1;
+            std::vector<CTxOut> coinbase_tx_outputs{block.vtx[0]->vout[commitpos]};
+            m_coinbase_tx_outputs = coinbase_tx_outputs;
+        }
+
         m_coinbase_tx_locktime =  coinbase_tx->nLockTime;
 
         // Skip the coinbase_tx hash from the merkle path, as the downstream client
@@ -275,10 +281,18 @@ public:
           << m_coinbase_tx_value_remaining
           << m_coinbase_tx_outputs_count;
 
-        // m_coinbase_tx_outputs currently set to 0, in order to integrate
-        // with the current stratum v2 pool and proxy implementations.
-        s << static_cast<uint16_t>(0)
-          << m_coinbase_tx_locktime
+        if (m_coinbase_tx_outputs_count > 0) {
+            std::vector<uint8_t> outputs_bytes;
+            CVectorWriter{SER_NETWORK, PROTOCOL_VERSION, outputs_bytes, 0, m_coinbase_tx_outputs[0]};
+
+            s << static_cast<uint16_t>(outputs_bytes.size());
+            s.write(MakeByteSpan(outputs_bytes));
+        } else {
+            // We still need to send 2 bytes indicating an empty coinbase-tx_outputs array.
+            s << static_cast<uint16_t>(0);
+        }
+
+        s << m_coinbase_tx_locktime
           << m_merkle_path;
     }
 
