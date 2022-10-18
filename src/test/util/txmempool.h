@@ -16,16 +16,12 @@ CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
 struct TestMemPoolEntryHelper
 {
     // Default values
-    CAmount nFee;
-    int64_t nTime;
-    unsigned int nHeight;
-    bool spendsCoinbase;
-    unsigned int sigOpCost;
+    CAmount nFee{0};
+    int64_t nTime{0};
+    unsigned int nHeight{1};
+    bool spendsCoinbase{false};
+    unsigned int sigOpCost{4};
     LockPoints lp;
-
-    TestMemPoolEntryHelper() :
-        nFee(0), nTime(0), nHeight(1),
-        spendsCoinbase(false), sigOpCost(4) { }
 
     CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
     CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
