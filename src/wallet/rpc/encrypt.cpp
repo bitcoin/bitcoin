@@ -128,6 +128,10 @@ RPCHelpMan walletpassphrasechange()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
     }
 
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase.");
+    }
+
     // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make request.params[0] mlock()'d to begin with.
     SecureString strOldWalletPass;
@@ -181,6 +185,10 @@ RPCHelpMan walletlock()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
     }
 
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet.");
+    }
+
     pwallet->Lock();
     pwallet->nRelockTime = 0;
 
@@ -227,6 +235,10 @@ RPCHelpMan encryptwallet()
 
     if (pwallet->IsCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
+    }
+
+    if (pwallet->IsScanningWithPassphrase()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before encrypting the wallet.");
     }
 
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)

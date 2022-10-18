@@ -1651,7 +1651,7 @@ RPCHelpMan importdescriptors()
     }
 
     WalletRescanReserver reserver(*pwallet);
-    if (!reserver.reserve()) {
+    if (!reserver.reserve(/*with_passphrase=*/true)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
 
