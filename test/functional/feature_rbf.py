@@ -26,14 +26,16 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
+                "-mempoolfullrbf=0",
                 "-maxorphantx=1000",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
             ],
-            # second node has default mempool parameters
+            # second node has default mempool parameters with no fullrbf
             [
+                "-mempoolfullrbf=0",
             ],
         ]
         self.supports_cli = False

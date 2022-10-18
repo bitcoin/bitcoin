@@ -100,7 +100,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
         # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
         # currently not request a txid that is already in the mempool.
-        self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])
+        self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1", "-mempoolfullrbf=0"])
         p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
 
         self.log.debug("Send a tx from the wallet initially")
