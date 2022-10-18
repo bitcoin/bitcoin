@@ -193,8 +193,7 @@ void Sv2TemplateProvider::OnNewBlock() {
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
 
         try {
-            ss << Sv2Header{Sv2MsgType::NEW_TEMPLATE, m_new_template.GetMsgLen()}
-               << m_new_template;
+            ss << Sv2NetMsg<NewTemplate>{Sv2MsgType::NEW_TEMPLATE, m_new_template};
         } catch(const std::exception &e) {
             LogPrintf("Error writing m_new_template\n");
         }
@@ -203,8 +202,7 @@ void Sv2TemplateProvider::OnNewBlock() {
         ss.clear();
 
         try {
-            ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash.GetMsgLen()}
-               << m_best_prev_hash;
+            ss << Sv2NetMsg<SetNewPrevHash>{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash};
         } catch(const std::exception &e) {
             LogPrintf("Error writing m_best_prev_hash\n");
         }
@@ -238,9 +236,7 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                client->m_setup_connection_confirmed = true;
 
                SetupConnectionSuccess setup_success{2, 0};
-
-               ss << Sv2Header{Sv2MsgType::SETUP_CONNECTION_SUCCESS, setup_success.GetMsgLen()}
-                  << setup_success;
+               ss << Sv2NetMsg<SetupConnectionSuccess>{Sv2MsgType::SETUP_CONNECTION_SUCCESS, setup_success};
 
                write(client->m_sock->Get(), ss.data(), ss.size());
                ss.clear();
@@ -249,8 +245,7 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                copy_new_template.m_future_template = false;
 
                try {
-                   ss << Sv2Header{Sv2MsgType::NEW_TEMPLATE, copy_new_template.GetMsgLen()}
-                      << copy_new_template;
+                 ss << Sv2NetMsg<NewTemplate>{Sv2MsgType::NEW_TEMPLATE, copy_new_template};
                } catch(const std::exception &e) {
                    LogPrintf("Error writing copy_new_template\n");
                }
@@ -259,8 +254,7 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                ss.clear();
 
                try {
-                   ss << Sv2Header{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash.GetMsgLen()}
-                      << m_best_prev_hash;
+                 ss << Sv2NetMsg<SetNewPrevHash>{Sv2MsgType::SET_NEW_PREV_HASH, m_best_prev_hash};
                } catch(const std::exception &e) {
                    LogPrintf("Error writing prev_hash\n");
                }
