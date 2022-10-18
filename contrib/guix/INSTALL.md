@@ -167,6 +167,10 @@ For reference, the graphic below outlines Guix v1.3.0's dependency graph:
 
 ![bootstrap map](https://user-images.githubusercontent.com/6399679/125064185-a9a59880-e0b0-11eb-82c1-9b8e5dc9950d.png)
 
+#### Consider /tmp on tmpfs
+
+If you use an NVME (SSD) drive, you may encounter [cryptic build errors](#coreutils-fail-teststail-2inotify-dir-recreate). Mounting a [tmpfs at /tmp](https://ubuntu.com/blog/data-driven-analysis-tmp-on-tmpfs) should prevent this and may improve performance as a bonus.
+
 #### Guile
 
 ##### Choosing a Guile version and sticking to it
@@ -775,7 +779,7 @@ The inotify-dir-create test fails on "remote" filesystems such as overlayfs
 as non-remote.
 
 A relatively easy workaround to this is to make sure that a somewhat traditional
-filesystem is mounted at `/tmp` (where `guix-daemon` performs its builds). For
+filesystem is mounted at `/tmp` (where `guix-daemon` performs its builds), see [/tmp on tmpfs](#consider-tmp-on-tmpfs). For
 Docker users, this might mean [using a volume][docker/volumes], [binding
 mounting][docker/bind-mnt] from host, or (for those with enough RAM and swap)
 [mounting a tmpfs][docker/tmpfs] using the `--tmpfs` flag.
@@ -783,7 +787,7 @@ mounting][docker/bind-mnt] from host, or (for those with enough RAM and swap)
 Please see the following links for more details:
 
 - An upstream coreutils bug has been filed: [debbugs#47940](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=47940)
-- A Guix bug detailing the underlying problem has been filed: [guix-issues#47935](https://issues.guix.gnu.org/47935)
+- A Guix bug detailing the underlying problem has been filed: [guix-issues#47935](https://issues.guix.gnu.org/47935), [guix-issues#49985](https://issues.guix.gnu.org/49985#5)
 - A commit to skip this test in Guix has been merged into the core-updates branch:
 [savannah/guix@6ba1058](https://git.savannah.gnu.org/cgit/guix.git/commit/?id=6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
 
