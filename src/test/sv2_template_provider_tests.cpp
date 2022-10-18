@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(Sv2Header_SetupConnectionSuccess_test)
     };
 
     SetupConnectionSuccess setup_conn_success{2, 3};
-    Sv2Header sv2_header{Sv2MsgType::SETUP_CONNECTION_SUCCESS, setup_conn_success.GetMsgLen()};
+    Sv2Header sv2_header{Sv2MsgType::SETUP_CONNECTION_SUCCESS, 6};
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << sv2_header << setup_conn_success;
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(NewTemplate_test)
         0x00, 0x00, 0x00, 0x00, // cointbase_tx_outputs count
         0x00, 0x00, // coinbase_tx_ouputs
         0x00, 0x00, 0x00, 0x00, // coinbase_tx_locktime
-        0x01, 0x01, // merkle_path length
+        0x01, // merkle_path length
         0x1a, 0x62, 0x40, 0x82, 0x3d, 0xe4, 0xc8, 0xd6, 0xaa, 0xf8, 0x26, 0x85, // merkle path
         0x1b, 0xdf, 0x2b, 0x0e, 0x8d, 0x5a, 0xcf, 0x7c, 0x31, 0xe8, 0x57, 0x8c,
         0xff, 0x4c, 0x39, 0x4b, 0x5a, 0x32, 0xbd, 0x4e,
@@ -225,7 +225,6 @@ BOOST_AUTO_TEST_CASE(SetNewPrevHash_test)
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << new_prev_hash;
     BOOST_CHECK_EQUAL(ss.size(), 80);
-    BOOST_CHECK_EQUAL(new_prev_hash.GetMsgLen(), 80);
 
     std::vector<uint8_t> bytes;
     for (unsigned int i = 0; i < sizeof(expected); ++i) {
