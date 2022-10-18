@@ -493,6 +493,30 @@ public:
     }
 };
 
+/**
+ * The networked form for all stratum v2 messages, contains a header and a serialized
+ * payload from a referenced stratum v2 message.
+ */
+template <typename M>
+class Sv2NetMsg
+{
+    public:
+        Sv2Header m_sv2_header;
+        std::vector<uint8_t> m_msg;
+
+        explicit Sv2NetMsg(const Sv2MsgType msg_type, const M& msg)
+        {
+            CVectorWriter{SER_NETWORK, PROTOCOL_VERSION, m_msg, 0, msg};
+            m_sv2_header = Sv2Header{msg_type, static_cast<uint32_t>(m_msg.size())};
+        }
+
+        template <typename Stream>
+        void Serialize(Stream& s) const {
+            s << m_sv2_header;
+            s.write(MakeByteSpan(m_msg));
+        }
+};
+
 class Sv2Client
 {
 public:
