@@ -338,6 +338,8 @@ packages in Debian at the time of writing.
 |-----------------------|---------------------|
 | guile-gcrypt          | libgcrypt-dev       |
 | guile-git             | libgit2-dev         |
+| guile-gnutls          | (none)              |
+| guile-json            | (none)              |
 | guile-lzlib           | liblz-dev           |
 | guile-ssh             | libssh-dev          |
 | guile-sqlite3         | libsqlite3-dev      |
