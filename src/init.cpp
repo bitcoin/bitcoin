@@ -1159,6 +1159,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         RandAddPeriodic();
     }, std::chrono::minutes{1});
 
+    // Check disk space every 5 minutes to avoid db corruption.
+    node.scheduler->scheduleEvery([&args]{
+        constexpr uint64_t min_disk_space = 50 << 20; // 50 MB
+        if (!CheckDiskSpace(args.GetBlocksDirPath(), min_disk_space)) {
+            LogPrintf("Shutting down due to lack of disk space!\n");
+            StartShutdown();
+        }
+    }, std::chrono::minutes{5});
+
     GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
 
     // Create client interfaces for wallets that are supposed to be loaded
