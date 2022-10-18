@@ -150,19 +150,19 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
             std::stringstream ss;
 
             ss << " 3Cmns[";
-            for (auto &m: previousQuarters.quarterHMinus3C[i]) {
+            for (const auto &m: previousQuarters.quarterHMinus3C[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
             ss << " ] 2Cmns[";
-            for (auto &m: previousQuarters.quarterHMinus2C[i]) {
+            for (const auto &m: previousQuarters.quarterHMinus2C[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
             ss << " ] Cmns[";
-            for (auto &m: previousQuarters.quarterHMinusC[i]) {
+            for (const auto &m: previousQuarters.quarterHMinusC[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
             ss << " ] new[";
-            for (auto &m: newQuarterMembers[i]) {
+            for (const auto &m: newQuarterMembers[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
             ss << " ]";
@@ -172,23 +172,23 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     }
 
     for (auto i = 0; i < nQuorums; ++i) {
-        for (auto &m: previousQuarters.quarterHMinus3C[i]) {
+        for (const auto &m: previousQuarters.quarterHMinus3C[i]) {
             quorumMembers[i].push_back(std::move(m));
         }
-        for (auto &m: previousQuarters.quarterHMinus2C[i]) {
+        for (const auto &m: previousQuarters.quarterHMinus2C[i]) {
             quorumMembers[i].push_back(std::move(m));
         }
-        for (auto &m: previousQuarters.quarterHMinusC[i]) {
+        for (const auto &m: previousQuarters.quarterHMinusC[i]) {
             quorumMembers[i].push_back(std::move(m));
         }
-        for (auto &m: newQuarterMembers[i]) {
+        for (const auto &m: newQuarterMembers[i]) {
             quorumMembers[i].push_back(std::move(m));
         }
 
         if (LogAcceptCategory(BCLog::LLMQ)) {
             std::stringstream ss;
             ss << " [";
-            for (auto &m: quorumMembers[i]) {
+            for (const auto &m: quorumMembers[i]) {
                 ss << m->proTxHash.ToString().substr(0, 4) << "|";
             }
             ss << "]";
@@ -263,11 +263,11 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
             }
             try {
                 MnsUsedAtH.AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
             try {
                 MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
         }
         for (const auto& mn : previousQuarters.quarterHMinus2C[i]) {
@@ -276,11 +276,11 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
             }
             try {
                 MnsUsedAtH.AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
             try {
                 MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
         }
         for (const auto& mn : previousQuarters.quarterHMinus3C[i]) {
@@ -289,11 +289,11 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
             }
             try {
                 MnsUsedAtH.AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
             try {
                 MnsUsedAtHIndexed[i].AddMN(mn);
-            } catch (std::runtime_error& e) {
+            } catch (const std::runtime_error& e) {
             }
         }
     }
@@ -303,7 +303,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
             if (!dmn->pdmnState->IsBanned()) {
                 try {
                     MnsNotUsedAtH.AddMN(dmn);
-                } catch (std::runtime_error &e) {
+                } catch (const std::runtime_error& e) {
                 }
             }
         }
@@ -319,7 +319,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
     if (LogAcceptCategory(BCLog::LLMQ)) {
         std::stringstream ss;
         ss << " [";
-        for (auto &m: sortedCombinedMnsList) {
+        for (const auto &m: sortedCombinedMnsList) {
             ss << m->proTxHash.ToString().substr(0, 4) << "|";
         }
         ss << "]";
@@ -410,7 +410,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
     if (LogAcceptCategory(BCLog::LLMQ)) {
         std::stringstream ss;
         ss << " [";
-        for (auto &m: sortedCombinedMns) {
+        for (const auto &m: sortedCombinedMns) {
             ss << m->proTxHash.ToString().substr(0, 4) << "|";
         }
         ss << "]";
@@ -500,13 +500,13 @@ std::pair<CDeterministicMNList, CDeterministicMNList> GetMNUsageBySnapshot(Conse
         if (snapshot.activeQuorumMembers[i]) {
             try {
                 usedMNs.AddMN(dmn);
-            } catch (std::runtime_error &e) {
+            } catch (const std::runtime_error& e) {
             }
         } else {
             if (!dmn->pdmnState->IsBanned()) {
                 try {
                     nonUsedMNs.AddMN(dmn);
-                } catch (std::runtime_error &e) {
+                } catch (const std::runtime_error& e) {
                 }
             }
         }

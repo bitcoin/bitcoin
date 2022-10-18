@@ -65,12 +65,12 @@ static UniValue quorum_list(const JSONRPCRequest& request)
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return ::ChainActive().Tip());
 
-    for (auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
         auto quorums = llmq::quorumManager->ScanQuorums(type, pindexTip, count > -1 ? count : llmq_params.signingActiveQuorumCount);
-        for (auto& q : quorums) {
+        for (const auto& q : quorums) {
             v.push_back(q->qc->quorumHash.ToString());
         }
 
@@ -108,7 +108,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
     if (includeMembers) {
         UniValue membersArr(UniValue::VARR);
         for (size_t i = 0; i < quorum->members.size(); i++) {
-            auto& dmn = quorum->members[i];
+            const auto& dmn = quorum->members[i];
             UniValue mo(UniValue::VOBJ);
             mo.pushKV("proTxHash", dmn->proTxHash.ToString());
             mo.pushKV("service", dmn->pdmnState->addr.ToString());
@@ -227,7 +227,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request)
                         }
                     });
                     UniValue arr(UniValue::VARR);
-                    for (auto& ec : allConnections) {
+                    for (const auto& ec : allConnections) {
                         UniValue ecj(UniValue::VOBJ);
                         ecj.pushKV("proTxHash", ec.ToString());
                         if (foundConnections.count(ec)) {

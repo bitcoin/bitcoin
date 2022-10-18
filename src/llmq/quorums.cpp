@@ -272,7 +272,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         return;
     }
 
-    for (auto& params : Params().GetConsensus().llmqs) {
+    for (const auto& params : Params().GetConsensus().llmqs) {
         CheckQuorumConnections(params, pindexNew);
     }
 

@@ -108,7 +108,7 @@ public:
     {
         LOCK(cs);
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
-        for (auto& p : metaInfos) {
+        for (const auto& p : metaInfos) {
             tmpMetaInfo.emplace_back(*p.second);
         }
         s << SERIALIZATION_VERSION_STRING << tmpMetaInfo << nDsqCount;

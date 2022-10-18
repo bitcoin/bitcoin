@@ -21,7 +21,7 @@ struct _StatsdClientData;
 
 class StatsdClient {
     public:
-        StatsdClient(const std::string& host = DEFAULT_STATSD_HOST, int port = DEFAULT_STATSD_PORT, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
+        explicit StatsdClient(const std::string& host = DEFAULT_STATSD_HOST, int port = DEFAULT_STATSD_PORT, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
         ~StatsdClient();
 
     public:

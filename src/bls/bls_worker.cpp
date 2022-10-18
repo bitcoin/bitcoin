@@ -478,7 +478,7 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
         size_t batchIdx = 0;
         std::vector<bool> result(vvecs.size());
         for (size_t i = 0; i < vvecs.size(); i += batchSize) {
-            auto& batchState = batchStates[batchIdx++];
+            const auto& batchState = batchStates[batchIdx++];
             for (size_t j = 0; j < batchState.count; j++) {
                 result[batchState.start + j] = batchState.verifyResults[j] != 0;
             }

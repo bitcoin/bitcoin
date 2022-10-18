@@ -264,7 +264,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
     }
 
     std::string removedStr;
-    for (auto& h : removedVotes) {
+    for (const auto& h : removedVotes) {
         removedStr += strprintf("  %s\n", h.ToString());
     }
     LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
