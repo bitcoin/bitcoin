@@ -378,14 +378,15 @@ G1Point RangeProof::VerifyLoop2(
 
         //////// (67), (68)
 
-        // for all bits of input values
+        // this loop generates exponents for gi and hi generators so that
+        // when there are aggregated, they become g and h in (16)
         std::vector<Scalar> acc_xs(1 << p.num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
         for (size_t j = 1; j < p.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
-            for (size_t s = sl; s > 0; s -= 2) {
+            for (size_t s = sl - 1; s > 0; s -= 2) {
                 acc_xs[s] = acc_xs[s / 2] * p.xs[j];
                 acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[j];
             }
@@ -395,8 +396,9 @@ G1Point RangeProof::VerifyLoop2(
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar gi_exp = p.proof.a * acc_xs[i];  // from beg to end
-            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // from end to beg. y_inv_pow to turn generator to (h')
+            // g^a * h^b (16)
+            Scalar gi_exp = p.proof.a * acc_xs[i];  // g^a in (16) is distributed to each generator
+            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
 
             // gi_exp = gi_exp + p.z;  // g^(-z) (66)
 
