@@ -290,16 +290,18 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2Header& sv2_header, CDataSt
                 auto blockptr = std::make_shared<CBlock>(std::move(block));
 
                 bool new_block{true};
-                m_chainman.ProcessNewBlock(blockptr, true /* force_processing */, true /* min_pow_checked */, &new_block);
-                m_blocks_cache.erase(submit_solution.m_template_id);
+                bool res = m_chainman.ProcessNewBlock(blockptr, true /* force_processing */, true /* min_pow_checked */, &new_block);
+                if (res) {
+                    m_blocks_cache.erase(submit_solution.m_template_id);
 
-                {
-                    LOCK2(cs_main, m_mempool.cs);
-                    UpdateTemplate(true);
-                    UpdatePrevHash();
+                    {
+                        LOCK2(cs_main, m_mempool.cs);
+                        UpdateTemplate(true);
+                        UpdatePrevHash();
+                    }
+
+                    OnNewBlock();
                 }
-
-                OnNewBlock();
             }
             break;
         }
