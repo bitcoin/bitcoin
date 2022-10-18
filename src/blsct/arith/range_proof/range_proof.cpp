@@ -344,7 +344,7 @@ G1Point RangeProof::VerifyLoop2(
         //////// (65)
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
         // g^t_hat * h^(-tau_x) * V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
-
+        // LHS (65)
         h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // h^tau_x
 
         // delta(y,z) in (39)
@@ -357,22 +357,25 @@ G1Point RangeProof::VerifyLoop2(
             delta_yz = delta_yz - z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
         }
 
+        // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
-        // ... = - g^(t_hat - delta_yz)
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
 
-        // V^(z^2)
+        // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
             points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
+        // T1^x and T2^(x^2) in RHS (65)
         points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
         points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
-        // ** exponent of g and (h') are created in loop below
+        // exponent of g and (h') are created in a loop later
+
+        // A and S^x in RHS (66)
         points.Add(p.proof.A * weight_z); // A
         points.Add(p.proof.S * (p.x * weight_z));  // S^x
 
@@ -400,9 +403,9 @@ G1Point RangeProof::VerifyLoop2(
             Scalar gi_exp = p.proof.a * acc_xs[i];  // g^a in (16) is distributed to each generator
             Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
 
-            // gi_exp = gi_exp + p.z;  // g^(-z) (66)
+            // gi_exp = gi_exp + p.z;  // g^(-z) in RHS (66)
 
-            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66)
+            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             // Scalar tmp =
             //     z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
             //     m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
@@ -419,14 +422,12 @@ G1Point RangeProof::VerifyLoop2(
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
-        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds that consist the final P - P*h^mu
+        // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
         for (size_t i = 0; i < p.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
         }
 
-        // maps to (68) t_hat = <l, r>; t_hat is used for inner product argument paremeter c
-        // and (16) checks c == a * b
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
 
