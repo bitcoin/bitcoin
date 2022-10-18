@@ -2,6 +2,10 @@
 #
 # This is an EXAMPLE of how to run bitcoind in a container, with a configuration
 # dynamically generated at runtime via environment variables.
+#
+# The containers are run in host network mode, and thus the "--publish"
+# arguments are not relevant. They are kept for documentation purposes, should
+# we want to migrate to bridge networking mode.
 
 set -eu
 
@@ -85,6 +89,7 @@ docker run \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
+	--network=host \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
 	"${ZMQ_PARAMS[@]}" \

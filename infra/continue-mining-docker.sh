@@ -10,6 +10,10 @@
 # Please note that you need to pass the BLOCKSCRIPT value via command line.
 # You'll need to save it during the inizialization.
 #
+# The containers are run in host network mode, and thus the "--publish"
+# arguments are not relevant. They are kept for documentation purposes, should
+# we want to migrate to bridge networking mode.
+#
 # REQUIREMENTS:
 # - docker
 # - the itcoin docker image must be available and tagged
@@ -37,7 +41,7 @@ EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 
 BITCOIN_PORT=38333
-RPC_HOST=localhost
+RPC_HOST=127.0.0.1 # localhost would fail if the system is ipv6-only
 RPC_PORT=38332
 ZMQ_PUBHASHTX_PORT=29010
 ZMQ_PUBRAWBLOCK_PORT=29009
@@ -107,6 +111,7 @@ docker run \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
+	--network=host \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
 	"${ZMQ_PARAMS[@]}" \

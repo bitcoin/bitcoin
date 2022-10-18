@@ -6,6 +6,10 @@
 # Like bitcoind, this script shows that the container entrypoint is able to
 # dynamically configure the software components using environment variables.
 #
+# The containers are run in host network mode, and thus the "--publish"
+# arguments are not relevant. They are kept for documentation purposes, should
+# we want to migrate to bridge networking mode.
+
 # USAGE:
 #     ./run-miner.sh ADDRESS < --set-block-time -1 | --ongoing >
 #
@@ -31,7 +35,7 @@ BITCOIN_PORT=38333
 # BLOCKSCRIPT is not relevant for miner
 BLOCKSCRIPT="NOT_RELEVANT"
 
-RPC_HOST=$(hostname)
+RPC_HOST=127.0.0.1 # localhost would fail if the system is ipv6-only
 RPC_PORT=38332
 
 # ZMQ_PUBHASHTX_PORT is not relevant for miner
@@ -62,6 +66,7 @@ docker run \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
+	--network=host \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}",readonly \
 	"${ITCOIN_IMAGE}" \
