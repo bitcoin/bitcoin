@@ -616,6 +616,8 @@ systemctl enable guix-daemon
 systemctl start guix-daemon
 ```
 
+Remember to set `--no-substitute` in `$libdir/systemd/system/guix-daemon.service` and other customizations if you used them for `guix-daemon-original.service`.
+
 ##### If you installed Guix via the Debian/Ubuntu distribution packages
 
 You will need to create a `guix-daemon-latest` service which points to the new
