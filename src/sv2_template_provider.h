@@ -162,10 +162,6 @@ public:
         s << m_used_version
           << m_flags;
     }
-
-    uint32_t GetMsgLen() const {
-        return sizeof(m_used_version) + sizeof(m_flags);
-    }
 };
 
 /**
@@ -295,22 +291,6 @@ public:
         s << m_coinbase_tx_locktime
           << m_merkle_path;
     }
-
-    uint32_t GetMsgLen() const {
-        return sizeof(m_template_id)
-            +  sizeof(m_future_template)
-            +  sizeof(m_version)
-            +  sizeof(m_coinbase_tx_version)
-            + 1 // m_coinbase_prefix byte len
-            +  m_coinbase_prefix.size()
-            +  sizeof(m_coinbase_tx_input_sequence)
-            +  sizeof(m_coinbase_tx_value_remaining)
-            +  sizeof(m_coinbase_tx_outputs_count)
-            + 2 // m_coinbase_tx_outputs byte len
-            +  m_coinbase_tx_outputs.size()
-            +  sizeof(m_coinbase_tx_locktime)
-            +  m_merkle_path.size() * sizeof(uint256);
-    }
 };
 
 /**
@@ -368,14 +348,6 @@ public:
           << m_header_timestamp
           << m_nBits
           << m_target;
-    }
-
-    uint32_t GetMsgLen() const {
-        return sizeof(m_template_id)
-            + sizeof(m_prev_hash)
-            + sizeof(m_header_timestamp)
-            + sizeof(m_nBits)
-            + sizeof(m_target);
     }
 };
 
