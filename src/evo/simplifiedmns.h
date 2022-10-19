@@ -11,6 +11,7 @@
 #include <threadsafety.h>
 #include <sync.h>
 #include <bls/bls.h>
+#include <netaddress.h>
 extern RecursiveMutex cs_main;
 class UniValue;
 class CDeterministicMNList;

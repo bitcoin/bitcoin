@@ -19,6 +19,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <boost/test/unit_test.hpp>
+#include <test/util/txmempool.h>
 using SimpleUTXOVec = std::vector<std::pair<COutPoint, std::pair<int, CAmount>> >;
 
 static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)

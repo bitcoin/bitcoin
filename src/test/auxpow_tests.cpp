@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <test/util/txmempool.h>
 
 /* No space between BOOST_AUTO_TEST_SUITE and '(', so that extraction of
    the test-suite name works with grep as done in the Makefile.  */

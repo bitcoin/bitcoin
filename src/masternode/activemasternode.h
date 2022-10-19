@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <primitives/transaction.h>
 #include <validationinterface.h>
-
+#include <netaddress.h>
 class CBLSPublicKey;
 class CBLSSecretKey;
 class CConnman;
