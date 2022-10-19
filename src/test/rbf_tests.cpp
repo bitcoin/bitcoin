@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <policy/rbf.h>
 #include <random.h>
+#include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/system.h>
 #include <util/time.h>

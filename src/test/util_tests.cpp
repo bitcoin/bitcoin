@@ -26,6 +26,7 @@
 #include <util/bitdeque.h>
 
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <limits>
 #include <map>
