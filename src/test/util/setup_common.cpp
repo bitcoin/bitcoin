@@ -34,6 +34,7 @@
 #include <streams.h>
 #include <test/util/index.h>
 #include <test/util/net.h>
+#include <test/util/txmempool.h>
 #include <txdb.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -663,17 +664,6 @@ std::vector<CTransactionRef> TestChainSetup::PopulateMempool(FastRandomContext& 
         --num_transactions;
     }
     return mempool_transactions;
-}
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
-{
-    return FromTx(MakeTransactionRef(tx));
-}
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
-{
-    return CTxMemPoolEntry(tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight,
-                           spendsCoinbase, sigOpCount, lp);
 }
 
 /**
