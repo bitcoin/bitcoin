@@ -13,6 +13,7 @@
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
 #include <util/rbf.h>
 #include <validation.h>
 #include <validationinterface.h>
