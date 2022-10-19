@@ -1584,8 +1584,7 @@ bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool, const llmq::
 
     case MSG_SPORK:
         {
-            CSporkMessage spork;
-            return sporkManager->GetSporkByHash(inv.hash, spork);
+            return sporkManager->GetSporkByHash(inv.hash).has_value();
         }
 
     case MSG_GOVERNANCE_OBJECT:
@@ -1884,9 +1883,8 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             }
 
             if (!push && inv.type == MSG_SPORK) {
-                CSporkMessage spork;
-                if (sporkManager->GetSporkByHash(inv.hash, spork)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                if (auto opt_spork = sporkManager->GetSporkByHash(inv.hash)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
                     push = true;
                 }
             }
