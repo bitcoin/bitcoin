@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/data/bip324_vectors.json.h>
+
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat/compat.h>
@@ -33,6 +35,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+
+#include <univalue.h>
 
 using namespace std::literals;
 
@@ -1049,4 +1053,127 @@ BOOST_AUTO_TEST_CASE(bip324_derivation_test)
     SelectParams(CBaseChainParams::REGTEST);
 }
 
+void assert_bip324_test_vector(uint16_t in_idx,
+                               const std::string& in_priv_ours_hex,
+                               const std::string& in_ellswift_ours_hex,
+                               const std::string& in_ellswift_theirs_hex,
+                               bool in_initiating,
+                               const std::string& in_contents_hex,
+                               uint32_t in_multiply,
+                               const std::string& in_aad_hex,
+                               bool in_ignore,
+                               const std::string& mid_shared_secret_hex,
+                               const std::string& mid_initiator_L_hex,
+                               const std::string& mid_initiator_P_hex,
+                               const std::string& mid_responder_L_hex,
+                               const std::string& mid_responder_P_hex,
+                               const std::string& out_session_id_hex,
+                               const std::string& mid_send_garbage_terminator_hex,
+                               const std::string& mid_recv_garbage_terminator_hex,
+                               const std::string& out_ciphertext_hex,
+                               const std::string& out_ciphertext_endswith_hex)
+{
+    auto parsed_hex = ParseHex(in_priv_ours_hex);
+
+    CKey in_priv_ours;
+    in_priv_ours.Set(parsed_hex.begin(), parsed_hex.end(), false);
+
+    EllSwiftPubKey in_ellswift_ours, in_ellswift_theirs;
+
+    parsed_hex = ParseHex(in_ellswift_ours_hex);
+    memcpy(in_ellswift_ours.data(), parsed_hex.data(), parsed_hex.size());
+    parsed_hex = ParseHex(in_ellswift_theirs_hex);
+    memcpy(in_ellswift_theirs.data(), parsed_hex.data(), parsed_hex.size());
+
+    std::vector<std::byte> in_contents;
+    auto contents_bytes = ParseHex<std::byte>(in_contents_hex);
+    for (size_t i = 0; i < in_multiply; i++) {
+        std::copy(contents_bytes.begin(), contents_bytes.end(), std::back_inserter(in_contents));
+    }
+
+    auto in_aad = ParseHex<std::byte>(in_aad_hex);
+
+    BIP324HeaderFlags flags{BIP324_NONE};
+    if (in_ignore) {
+        flags = BIP324_IGNORE;
+    }
+
+    auto shared_secret = in_priv_ours.ComputeBIP324ECDHSecret(in_ellswift_theirs,
+                                                              in_ellswift_ours,
+                                                              in_initiating);
+    BOOST_CHECK_EQUAL(HexStr(shared_secret.value()), mid_shared_secret_hex);
+
+    BIP324Session session;
+    DeriveBIP324Session(std::move(shared_secret.value()), session);
+
+    BOOST_CHECK_EQUAL(HexStr(session.initiator_L), mid_initiator_L_hex);
+    BOOST_CHECK_EQUAL(HexStr(session.initiator_P), mid_initiator_P_hex);
+    BOOST_CHECK_EQUAL(HexStr(session.responder_L), mid_responder_L_hex);
+    BOOST_CHECK_EQUAL(HexStr(session.responder_P), mid_responder_P_hex);
+    BOOST_CHECK_EQUAL(HexStr(session.session_id), out_session_id_hex);
+
+    std::unique_ptr<BIP324CipherSuite> suite;
+    if (in_initiating) {
+        BOOST_CHECK_EQUAL(HexStr(session.initiator_garbage_terminator), mid_send_garbage_terminator_hex);
+        BOOST_CHECK_EQUAL(HexStr(session.responder_garbage_terminator), mid_recv_garbage_terminator_hex);
+        suite = std::make_unique<BIP324CipherSuite>(session.initiator_L, session.initiator_P);
+
+    } else {
+        BOOST_CHECK_EQUAL(HexStr(session.responder_garbage_terminator), mid_send_garbage_terminator_hex);
+        BOOST_CHECK_EQUAL(HexStr(session.initiator_garbage_terminator), mid_recv_garbage_terminator_hex);
+        suite = std::make_unique<BIP324CipherSuite>(session.responder_L, session.responder_P);
+    }
+
+    std::vector<std::byte> ciphertext(V2_MIN_PACKET_LENGTH + in_contents.size());
+    std::array<std::byte, V2_MIN_PACKET_LENGTH> throwaway_ct;
+
+    for (auto i = 0; i < in_idx; i++) {
+        BOOST_CHECK(suite->Crypt({}, {}, throwaway_ct, flags, true));
+    }
+
+    BOOST_CHECK(suite->Crypt(in_aad, in_contents, ciphertext, flags, true));
+    if (!out_ciphertext_hex.empty()) {
+        BOOST_CHECK_EQUAL(HexStr(ciphertext), out_ciphertext_hex);
+    }
+
+    if (!out_ciphertext_endswith_hex.empty()) {
+        auto ciphertext_endswith_hex = HexStr(
+            MakeUCharSpan(ciphertext).last(out_ciphertext_endswith_hex.size() / 2));
+        BOOST_CHECK_EQUAL(ciphertext_endswith_hex, out_ciphertext_endswith_hex);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(bip324_vectors_test)
+{
+    // BIP324 key derivation uses network magic in the HKDF derivation process.
+    SelectParams(CBaseChainParams::MAIN);
+
+    UniValue tests;
+    tests.read((const char*)json_tests::bip324_vectors, sizeof(json_tests::bip324_vectors));
+    for (const auto& vec : tests.getValues()) {
+        assert_bip324_test_vector(
+            vec["in_idx"].getInt<uint16_t>(),
+            vec["in_priv_ours"].get_str(),
+            vec["in_ellswift_ours"].get_str(),
+            vec["in_ellswift_theirs"].get_str(),
+            vec["in_initiating"].getInt<uint8_t>() == 0 ? false : true,
+            vec["in_contents"].get_str(),
+            vec["in_multiply"].getInt<uint32_t>(),
+            vec["in_aad"].get_str(),
+            vec["in_ignore"].getInt<uint8_t>() == 0 ? false : true,
+            vec["mid_shared_secret"].get_str(),
+            vec["mid_initiator_l"].get_str(),
+            vec["mid_initiator_p"].get_str(),
+            vec["mid_responder_l"].get_str(),
+            vec["mid_responder_p"].get_str(),
+            vec["out_session_id"].get_str(),
+            vec["mid_send_garbage_terminator"].get_str(),
+            vec["mid_recv_garbage_terminator"].get_str(),
+            vec["out_ciphertext"].get_str(),
+            vec["out_ciphertext_endswith"].get_str());
+    }
+
+    SelectParams(CBaseChainParams::REGTEST);
+}
 BOOST_AUTO_TEST_SUITE_END()
