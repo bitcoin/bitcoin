@@ -726,6 +726,19 @@ $ bzcat /var/log/guix/drvs/../...-foo-3.6.12.drv.bz2 | less
 times, it may be `/tmp/...drv-1` or `/tmp/...drv-2`. Always consult the build
 failure output for the most accurate, up-to-date information.
 
+### openssl-1.1.1l and openssl-1.1.1n
+
+OpenSSL includes tests that will fail once some certificate has expired. A workaround
+is to change your system clock:
+
+```sh
+sudo timedatectl set-ntp no
+sudo date --set "28 may 2022 15:00:00"
+sudo --login guix build --cores=1 /gnu/store/g9alz81w4q03ncm542487xd001s6akd4-openssl-1.1.1l.drv
+sudo --login guix build --cores=1 /gnu/store/mw6ax0gk33gh082anrdrxp2flrbskxv6-openssl-1.1.1n.drv
+sudo timedatectl set-ntp yes
+```
+
 ### python(-minimal): [Errno 84] Invalid or incomplete multibyte or wide character
 
 This error occurs when your `$TMPDIR` (default: /tmp) exists on a filesystem
