@@ -343,9 +343,10 @@ G1Point RangeProof::VerifyLoop2(
 
         //////// (65)
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
-        // g^t_hat * h^(-tau_x) * V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
+        // g^(t_hat - delta_yz) * h^(tau_x) * V^(z^2) * T1^x * T2^(x^2)
+
         // LHS (65)
-        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // h^tau_x
+        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // LHS (65)
 
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
@@ -373,7 +374,7 @@ G1Point RangeProof::VerifyLoop2(
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
-        // exponent of g and (h') are created in a loop later
+        // exponents of g and (h') are created in a loop later
 
         // A and S^x in RHS (66)
         points.Add(p.proof.A * weight_z); // A
@@ -412,8 +413,8 @@ G1Point RangeProof::VerifyLoop2(
             // // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             // hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);
-            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);
+            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // (16) g^a moved to LHS
+            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);  // (16) h^b moved to LHS
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;
