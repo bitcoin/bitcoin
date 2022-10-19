@@ -218,7 +218,7 @@ public:
         }
     }
 
-    uint256 GetSignatureHash() const;
+    [[nodiscard]] uint256 GetSignatureHash() const;
     /** Sign this mixing transaction
      *  return true if all conditions are met:
      *     1) we have an active Masternode,
@@ -228,14 +228,14 @@ public:
      */
     bool Sign();
     /// Check if we have a valid Masternode address
-    bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
+    [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     bool Relay(CConnman& connman);
 
     /// Check if a queue is too old or too far into the future
-    bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;
+    [[nodiscard]] bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;
 
-    std::string ToString() const
+    [[nodiscard]] std::string ToString() const
     {
         return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
             nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
@@ -296,14 +296,14 @@ public:
         return *this != CCoinJoinBroadcastTx();
     }
 
-    uint256 GetSignatureHash() const;
+    [[nodiscard]] uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
+    [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const;
-    bool IsValidStructure() const;
+    [[nodiscard]] bool IsValidStructure() const;
 };
 
 // base class

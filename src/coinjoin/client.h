@@ -49,9 +49,9 @@ public:
     {
     }
 
-    CService GetAddr() const { return addr; }
-    CCoinJoinAccept GetDSA() const { return dsa; }
-    bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
+    [[nodiscard]] CService GetAddr() const { return addr; }
+    [[nodiscard]] CCoinJoinAccept GetDSA() const { return dsa; }
+    [[nodiscard]] bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
     {

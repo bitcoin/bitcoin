@@ -23,7 +23,7 @@ public:
     void KeepKey();
     void ReturnKey();
 
-    CScript GetScriptForDestination() const;
+    [[nodiscard]] CScript GetScriptForDestination() const;
 };
 
 class CKeyHolderStorage
@@ -58,9 +58,9 @@ public:
     CTransactionBuilderOutput(CTransactionBuilderOutput&&) = delete;
     CTransactionBuilderOutput& operator=(CTransactionBuilderOutput&&) = delete;
     /// Get the scriptPubKey of this output
-    CScript GetScript() const { return script; }
+    [[nodiscard]] CScript GetScript() const { return script; }
     /// Get the amount of this output
-    CAmount GetAmount() const { return nAmount; }
+    [[nodiscard]] CAmount GetAmount() const { return nAmount; }
     /// Try update the amount of this output. Returns true if it was successful and false if not (e.g. insufficient amount left).
     bool UpdateAmount(CAmount nAmount);
     /// Tell the wallet to remove the key used by this output from the keypool

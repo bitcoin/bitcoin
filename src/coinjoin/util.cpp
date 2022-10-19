@@ -113,9 +113,9 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
     tallyItem(tallyItemIn)
 {
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
-    coinControl.m_discard_feerate = ::GetDiscardRate(*pwallet.get());
+    coinControl.m_discard_feerate = ::GetDiscardRate(*pwallet);
     // Generate a feerate which will be used by calculations of this class and also by CWallet::CreateTransaction
-    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee((int)pwallet->m_confirm_target, nullptr, true), pwallet->m_pay_tx_fee);
+    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee(int(pwallet->m_confirm_target), nullptr, true), pwallet->m_pay_tx_fee);
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
@@ -186,8 +186,8 @@ bool CTransactionBuilder::CouldAddOutput(CAmount nAmountOutput) const
 bool CTransactionBuilder::CouldAddOutputs(const std::vector<CAmount>& vecOutputAmounts) const
 {
     CAmount nAmountAdditional{0};
-    assert(vecOutputAmounts.size() < INT_MAX);
-    int nBytesAdditional = nBytesOutput * (int)vecOutputAmounts.size();
+    assert(vecOutputAmounts.size() < std::numeric_limits<int>::max());
+    int nBytesAdditional = nBytesOutput * int(vecOutputAmounts.size());
     for (const auto nAmountOutput : vecOutputAmounts) {
         if (nAmountOutput < 0) {
             return false;
@@ -232,7 +232,7 @@ CAmount CTransactionBuilder::GetAmountUsed() const
 CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
 {
     CAmount nFeeCalc = coinControl.m_feerate->GetFee(nBytes);
-    CAmount nRequiredFee = GetRequiredFee(*pwallet.get(), nBytes);
+    CAmount nRequiredFee = GetRequiredFee(*pwallet, nBytes);
     if (nRequiredFee > nFeeCalc) {
         nFeeCalc = nRequiredFee;
     }
@@ -246,8 +246,8 @@ int CTransactionBuilder::GetSizeOfCompactSizeDiff(size_t nAdd) const
 {
     size_t nSize = WITH_LOCK(cs_outputs, return vecOutputs.size());
     unsigned int ret = ::GetSizeOfCompactSizeDiff(nSize, nSize + nAdd);
-    assert(ret <= INT_MAX);
-    return (int)ret;
+    assert(ret <= std::numeric_limits<int>::max());
+    return int(ret);
 }
 
 bool CTransactionBuilder::IsDust(CAmount nAmount) const
