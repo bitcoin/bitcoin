@@ -34,7 +34,6 @@ static UniValue coinjoin(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
@@ -50,12 +49,12 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         }
     }
 
-    auto it = coinJoinClientManagers.find(pwallet->GetName());
+    auto it = coinJoinClientManagers.find(wallet->GetName());
 
     if (request.params[0].get_str() == "start") {
         {
-            LOCK(pwallet->cs_wallet);
-            if (pwallet->IsLocked(true))
+            LOCK(wallet->cs_wallet);
+            if (wallet->IsLocked(true))
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
@@ -156,15 +155,14 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
     obj.pushKV("queue_size", coinJoinClientQueueManager->GetQueueSize());
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!pwallet) {
+    if (!wallet) {
         return obj;
     }
 
-    coinJoinClientManagers.at(pwallet->GetName())->GetJsonInfo(obj);
+    coinJoinClientManagers.at(wallet->GetName())->GetJsonInfo(obj);
 
-    obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
-    obj.pushKV("warnings",      pwallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING
+    obj.pushKV("keys_left",     wallet->nKeysLeftSinceAutoBackup);
+    obj.pushKV("warnings",      wallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING
                                         ? "WARNING: keypool is almost depleted!" : "");
 #endif // ENABLE_WALLET
 

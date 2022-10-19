@@ -149,11 +149,10 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     gobject_prepare_help(request);
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(wallet.get());
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -200,7 +199,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK(pwallet->cs_wallet);
+    LOCK(wallet->cs_wallet);
 
     {
         LOCK(cs_main);
@@ -225,7 +224,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
 
     bool fork_active = WITH_LOCK(cs_main, return VersionBitsTipState(Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024) == ThresholdState::ACTIVE);
 
-    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(fork_active), outpoint)) {
+    if (!wallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(fork_active), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[5].isNull() && !request.params[6].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
@@ -233,14 +232,14 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
-    if (!pwallet->WriteGovernanceObject({hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
+    if (!wallet->WriteGovernanceObject({hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteGovernanceObject failed");
     }
 
     // -- send the tx to the network
     {
         LOCK(cs_main);
-        pwallet->CommitTransaction(tx, {}, {});
+        wallet->CommitTransaction(tx, {}, {});
     }
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
@@ -268,17 +267,15 @@ static UniValue gobject_list_prepared(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(wallet.get());
 
     int64_t nCount = request.params.empty() ? 10 : ParseInt64V(request.params[0], "count");
     if (nCount < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
     // Get a list of all prepared governance objects stored in the wallet
-    LOCK(pwallet->cs_wallet);
-    std::vector<const CGovernanceObject*> vecObjects = pwallet->GetGovernanceObjects();
+    LOCK(wallet->cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects = wallet->GetGovernanceObjects();
     // Sort the vector by the object creation time/hex data
     std::sort(vecObjects.begin(), vecObjects.end(), [](const CGovernanceObject* a, const CGovernanceObject* b) {
         bool fGreater = a->GetCreationTime() > b->GetCreationTime();
@@ -608,7 +605,6 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     uint256 hash = ParseHashV(request.params[0], "Object hash");
     std::string strVoteSignal = request.params[1].get_str();
@@ -626,9 +622,9 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(wallet.get());
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
     }
@@ -668,7 +664,6 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     uint256 hash = ParseHashV(request.params[0], "Object hash");
     std::string strVoteSignal = request.params[1].get_str();
@@ -686,7 +681,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(wallet.get());
 
     uint256 proTxHash = ParseHashV(request.params[3], "protx-hash");
     auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
@@ -694,7 +689,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
     }
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
     }

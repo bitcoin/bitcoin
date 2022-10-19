@@ -196,15 +196,14 @@ static UniValue masternode_outputs(const JSONRPCRequest& request)
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
     {
-        LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
+        LOCK(wallet->cs_wallet);
+        wallet->AvailableCoins(vPossibleCoins, true, &coin_control);
     }
     UniValue outputsArr(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {
