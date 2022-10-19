@@ -368,6 +368,8 @@ class PruneTest(BitcoinTestFramework):
         self.restart_node(2, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         self.log.info("Success")
 
+        assert_raises_rpc_error(-4, "Importing wallets is disabled when blocks are pruned", self.nodes[2].importwallet, "abc")
+
         # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
