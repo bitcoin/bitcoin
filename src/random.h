@@ -15,6 +15,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 /**
  * Overall design of the RNG and entropy sources.
