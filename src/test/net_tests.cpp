@@ -2,12 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/util/setup_common.h>
+
 #include <addrdb.h>
 #include <addrman.h>
 #include <clientversion.h>
-#include <test/util/setup_common.h>
-#include <string>
-#include <boost/test/unit_test.hpp>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -18,8 +17,12 @@
 #include <util/strencodings.h>
 #include <version.h>
 
+#include <cstdint>
 #include <ios>
 #include <memory>
+#include <string>
+
+#include <boost/test/unit_test.hpp>
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -84,10 +87,10 @@ BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
-    unsigned short port = GetListenPort();
+    uint16_t port = GetListenPort();
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
-    unsigned short altPort = 12345;
+    uint16_t altPort = 12345;
     BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);

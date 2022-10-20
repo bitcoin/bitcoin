@@ -29,8 +29,8 @@
 #include <consensus/params.h>
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
-#include <stdint.h>
 #include <thread>
 #include <memory>
 #include <condition_variable>
@@ -683,7 +683,7 @@ private:
     friend struct ConnmanTestMsg;
 };
 void Discover();
-unsigned short GetListenPort();
+uint16_t GetListenPort();
 
 struct CombinerAll
 {
