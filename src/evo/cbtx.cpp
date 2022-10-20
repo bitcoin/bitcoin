@@ -229,7 +229,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     int64_t nTime1 = GetTimeMicros();
 
     auto retVal = CachedGetQcHashesQcIndexedHashes(pindexPrev, quorum_block_processor);
-    if (retVal == std::nullopt) {
+    if (!retVal) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "commitment-not-found");
     }
     // The returned quorums are in reversed order, so the most recent one is at index 0

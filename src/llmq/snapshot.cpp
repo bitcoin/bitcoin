@@ -291,8 +291,8 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         response.mnListDiffAtHMinus4C = std::move(mn4c);
     } else {
         response.extraShare = false;
-        response.quorumSnapshotAtHMinus4C = std::nullopt;
-        response.mnListDiffAtHMinus4C = std::nullopt;
+        response.quorumSnapshotAtHMinus4C.reset();
+        response.mnListDiffAtHMinus4C.reset();
     }
 
     std::set<int> snapshotHeightsNeeded;

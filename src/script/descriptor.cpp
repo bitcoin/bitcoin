@@ -11,12 +11,12 @@
 
 #include <span.h>
 #include <util/bip32.h>
-#include <util/memory.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -697,7 +697,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
             CPubKey pubkey(data);
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
-                    return MakeUnique<ConstPubkeyProvider>(key_exp_index, pubkey);
+                    return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey);
                 } else {
                     error = "Uncompressed keys are not allowed";
                     return nullptr;
@@ -711,7 +711,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
                 out.keys.emplace(pubkey.GetID(), key);
-                return MakeUnique<ConstPubkeyProvider>(key_exp_index, pubkey);
+                return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey);
             } else {
                 error = "Uncompressed keys are not allowed";
                 return nullptr;
@@ -738,7 +738,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
     }
-    return MakeUnique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type);
+    return std::make_unique<BIP32PubkeyProvider>(key_exp_index, extpubkey, std::move(path), type);
 }
 
 /** Parse a public key including origin information (if enabled). */
@@ -774,7 +774,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
     if (!ParseKeyPath(slash_split, info.path, error)) return nullptr;
     auto provider = ParsePubkeyInner(key_exp_index, origin_split[1], permit_uncompressed, out, error);
     if (!provider) return nullptr;
-    return MakeUnique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider));
+    return std::make_unique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider));
 }
 
 /** Parse a script in a particular context. */
@@ -786,17 +786,17 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2SH, out, error);
         if (!pubkey) return nullptr;
-        return MakeUnique<PKDescriptor>(std::move(pubkey));
+        return std::make_unique<PKDescriptor>(std::move(pubkey));
     }
     if (Func("pkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2SH, out, error);
         if (!pubkey) return nullptr;
-        return MakeUnique<PKHDescriptor>(std::move(pubkey));
+        return std::make_unique<PKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, true, out, error);
         if (!pubkey) return nullptr;
-        return MakeUnique<ComboDescriptor>(std::move(pubkey));
+        return std::make_unique<ComboDescriptor>(std::move(pubkey));
     } else if (ctx != ParseScriptContext::TOP && Func("combo", expr)) {
         error = "Cannot have combo in non-top level";
         return nullptr;
@@ -844,12 +844,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
                 return nullptr;
             }
         }
-        return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
+        return std::make_unique<MultisigDescriptor>(thres, std::move(providers));
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
         auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
-        return MakeUnique<SHDescriptor>(std::move(desc));
+        return std::make_unique<SHDescriptor>(std::move(desc));
     } else if (ctx != ParseScriptContext::TOP && Func("sh", expr)) {
         error = "Cannot have sh in non-top level";
         return nullptr;
@@ -860,7 +860,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
             error = "Address is not valid";
             return nullptr;
         }
-        return MakeUnique<AddressDescriptor>(std::move(dest));
+        return std::make_unique<AddressDescriptor>(std::move(dest));
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
@@ -869,7 +869,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
             return nullptr;
         }
         auto bytes = ParseHex(str);
-        return MakeUnique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
+        return std::make_unique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
     }
     if (ctx == ParseScriptContext::P2SH) {
         error = "A function is needed within P2SH";
@@ -881,10 +881,10 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
 
 std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
 {
-    std::unique_ptr<PubkeyProvider> key_provider = MakeUnique<ConstPubkeyProvider>(0, pubkey);
+    std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey);
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-        return MakeUnique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
+        return std::make_unique<OriginPubkeyProvider>(0, std::move(info), std::move(key_provider));
     }
     return key_provider;
 }
@@ -897,7 +897,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     if (txntype == TX_PUBKEY) {
         CPubKey pubkey(data[0].begin(), data[0].end());
         if (pubkey.IsValid()) {
-            return MakeUnique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
+            return std::make_unique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
     }
     if (txntype == TX_PUBKEYHASH) {
@@ -905,7 +905,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         CKeyID keyid(hash);
         CPubKey pubkey;
         if (provider.GetPubKey(keyid, pubkey)) {
-            return MakeUnique<PKHDescriptor>(InferPubkey(pubkey, ctx, provider));
+            return std::make_unique<PKHDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
     }
     if (txntype == TX_MULTISIG) {
@@ -914,7 +914,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
             CPubKey pubkey(data[i].begin(), data[i].end());
             providers.push_back(InferPubkey(pubkey, ctx, provider));
         }
-        return MakeUnique<MultisigDescriptor>((int)data[0][0], std::move(providers));
+        return std::make_unique<MultisigDescriptor>((int)data[0][0], std::move(providers));
     }
     if (txntype == TX_SCRIPTHASH && ctx == ParseScriptContext::TOP) {
         uint160 hash(data[0]);
@@ -922,18 +922,18 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         CScript subscript;
         if (provider.GetCScript(scriptid, subscript)) {
             auto sub = InferScript(subscript, ParseScriptContext::P2SH, provider);
-            if (sub) return MakeUnique<SHDescriptor>(std::move(sub));
+            if (sub) return std::make_unique<SHDescriptor>(std::move(sub));
         }
     }
 
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
         if (GetScriptForDestination(dest) == script) {
-            return MakeUnique<AddressDescriptor>(std::move(dest));
+            return std::make_unique<AddressDescriptor>(std::move(dest));
         }
     }
 
-    return MakeUnique<RawDescriptor>(script);
+    return std::make_unique<RawDescriptor>(script);
 }
 
 

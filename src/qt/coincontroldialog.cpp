@@ -513,7 +513,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         if(ExtractDestination(out.txout.scriptPubKey, address))
         {
             CPubKey pubkey;
-            CKeyID *keyid = boost::get<CKeyID>(&address);
+            CKeyID *keyid = std::get_if<CKeyID>(&address);
             if (keyid && model->wallet().getPubKey(*keyid, pubkey))
             {
                 nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);

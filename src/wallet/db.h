@@ -10,10 +10,10 @@
 #include <fs.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
-#include <util/memory.h>
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct bilingual_str;
@@ -189,7 +189,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
+    std::unique_ptr<DatabaseBatch> MakeBatch(const char* mode = "r+", bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {

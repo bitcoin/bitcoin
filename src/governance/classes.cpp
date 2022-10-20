@@ -540,7 +540,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
         }
 
         if (!fAllowScript) {
-            const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+            const CScriptID *scriptID = std::get_if<CScriptID>(&dest);
             if (scriptID) {
                 std::ostringstream ostr;
                 ostr << "CSuperblock::ParsePaymentSchedule -- Script addresses are not supported yet : " << vecParsed1[i];

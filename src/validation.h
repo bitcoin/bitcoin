@@ -15,7 +15,6 @@
 #include <coins.h>
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
@@ -29,6 +28,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <utility>
@@ -884,7 +884,7 @@ public:
 
     bool IsSnapshotActive() const;
 
-    Optional<uint256> SnapshotBlockhash() const;
+    std::optional<uint256> SnapshotBlockhash() const;
 
     //! Is there a snapshot in use and has it been fully validated?
     bool IsSnapshotValidated() const { return m_snapshot_validated; }

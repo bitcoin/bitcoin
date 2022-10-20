@@ -590,8 +590,8 @@ static bool getIndexKey(const std::string& str, uint160& hashBytes, int& type)
         type = 0;
         return false;
     }
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
-    const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
+    const CScriptID *scriptID = std::get_if<CScriptID>(&dest);
     type = keyID ? 1 : 2;
     hashBytes = keyID ? *keyID : *scriptID;
     return true;

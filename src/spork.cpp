@@ -283,7 +283,7 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress)
 {
     LOCK(cs);
     CTxDestination dest = DecodeDestination(strAddress);
-    const CKeyID* keyID = boost::get<CKeyID>(&dest);
+    const CKeyID* keyID = std::get_if<CKeyID>(&dest);
     if (!keyID) {
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;

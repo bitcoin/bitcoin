@@ -338,7 +338,7 @@ void BerkeleyDatabase::Open(const char* pszMode)
 
         if (m_db == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
+            std::unique_ptr<Db> pdb_temp = std::make_unique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
@@ -469,7 +469,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(*this, "r");
-                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
+                    std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -809,7 +809,7 @@ void BerkeleyDatabase::RemoveRef()
 
 std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
 {
-    return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
+    return std::make_unique<BerkeleyBatch>(*this, mode, flush_on_close);
 }
 
 bool ExistsBerkeleyDatabase(const fs::path& path)
@@ -832,7 +832,7 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
             status = DatabaseStatus::FAILED_ALREADY_LOADED;
             return nullptr;
         }
-        db = MakeUnique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
+        db = std::make_unique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
     }
 
     if (options.verify && !db->Verify(error)) {

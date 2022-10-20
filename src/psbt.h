@@ -7,12 +7,13 @@
 
 #include <attributes.h>
 #include <node/transaction.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+
+#include <optional>
 
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
@@ -315,7 +316,7 @@ struct PSBTOutput
 /** A version of CTransaction with the PSBT format*/
 struct PartiallySignedTransaction
 {
-    Optional<CMutableTransaction> tx;
+    std::optional<CMutableTransaction> tx;
     std::vector<PSBTInput> inputs;
     std::vector<PSBTOutput> outputs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
@@ -509,9 +510,9 @@ struct PSBTInputAnalysis {
  * Holds the results of AnalyzePSBT (miscellaneous information about a PSBT)
  */
 struct PSBTAnalysis {
-    Optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
-    Optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
-    Optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
+    std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
+    std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
+    std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
     std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
     PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
 };

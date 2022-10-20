@@ -54,7 +54,7 @@ FUZZ_TARGET(system)
             // Avoid hitting:
             // util/system.cpp:425: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
             const std::string argument_name = GetArgumentName(fuzzed_data_provider.ConsumeRandomLengthString(16));
-            if (args_manager.GetArgFlags(argument_name) != nullopt) {
+            if (args_manager.GetArgFlags(argument_name)) {
                 break;
             }
             args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>(), options_category);
@@ -67,7 +67,7 @@ FUZZ_TARGET(system)
             std::vector<std::string> hidden_arguments;
             for (const std::string& name : names) {
                 const std::string hidden_argument = GetArgumentName(name);
-                if (args_manager.GetArgFlags(hidden_argument) != nullopt) {
+                if (args_manager.GetArgFlags(hidden_argument)) {
                     continue;
                 }
                 if (std::find(hidden_arguments.begin(), hidden_arguments.end(), hidden_argument) != hidden_arguments.end()) {

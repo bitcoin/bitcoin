@@ -369,7 +369,7 @@ public:
         if (mi == m_wallet->mapWallet.end()) {
             return false;
         }
-        if (Optional<int> height = m_wallet->chain().getHeight()) {
+        if (std::optional<int> height = m_wallet->chain().getHeight()) {
             block_time = m_wallet->chain().getBlockTime(*height);
         } else {
             block_time = -1;
@@ -657,11 +657,11 @@ public:
 
 } // namespace
 
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? MakeUnique<WalletImpl>(wallet) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<WalletImpl>(wallet) : nullptr; }
 
 std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
 {
-    return MakeUnique<WalletClientImpl>(chain, args);
+    return std::make_unique<WalletClientImpl>(chain, args);
 }
 
 } // namespace interfaces

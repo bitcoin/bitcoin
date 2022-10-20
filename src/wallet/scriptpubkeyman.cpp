@@ -338,7 +338,7 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     CKeyID master_id = masterKey.key.GetPubKey().GetID();
 
     LOCK(cs_KeyStore);
-    std::unique_ptr<WalletBatch> batch = MakeUnique<WalletBatch>(m_storage.GetDatabase());
+    std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(m_storage.GetDatabase());
     size_t cnt = 0;
     for (auto& meta_pair : mapKeyMetadata) {
         const CKeyID& keyid = meta_pair.first;

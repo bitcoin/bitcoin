@@ -4,12 +4,13 @@
 
 #include <wallet/coinselection.h>
 
-#include <optional.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 
 #include <llmq/instantsend.h>
 #include <coinjoin/coinjoin.h>
+
+#include <optional>
 
 // Descending order comparator
 struct {
@@ -251,7 +252,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
     nValueRet = 0;
 
     // List of values less than target
-    Optional<OutputGroup> lowest_larger;
+    std::optional<OutputGroup> lowest_larger;
     std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 

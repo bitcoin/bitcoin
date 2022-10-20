@@ -139,23 +139,23 @@ class ChainImpl : public Chain
 {
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
-    Optional<int> getHeight() override
+    std::optional<int> getHeight() override
     {
         LOCK(cs_main);
         int height = ::ChainActive().Height();
         if (height >= 0) {
             return height;
         }
-        return nullopt;
+        return std::nullopt;
     }
-    Optional<int> getBlockHeight(const uint256& hash) override
+    std::optional<int> getBlockHeight(const uint256& hash) override
     {
         LOCK(cs_main);
         CBlockIndex* block = LookupBlockIndex(hash);
         if (block && ::ChainActive().Contains(block)) {
             return block->nHeight;
         }
-        return nullopt;
+        return std::nullopt;
     }
     uint256 getBlockHash(int height) override
     {
@@ -184,7 +184,7 @@ public:
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
-    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
+    std::optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
     {
         LOCK(cs_main);
         CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
@@ -192,9 +192,9 @@ public:
             if (hash) *hash = block->GetBlockHash();
             return block->nHeight;
         }
-        return nullopt;
+        return std::nullopt;
     }
-    Optional<int> findPruned(int start_height, Optional<int> stop_height) override
+    std::optional<int> findPruned(int start_height, std::optional<int> stop_height) override
     {
         LOCK(cs_main);
         if (::fPruneMode) {
@@ -206,9 +206,9 @@ public:
                 block = block->pprev;
             }
         }
-        return nullopt;
+        return std::nullopt;
     }
-    Optional<int> findFork(const uint256& hash, Optional<int>* height) override
+    std::optional<int> findFork(const uint256& hash, std::optional<int>* height) override
     {
         LOCK(cs_main);
         const CBlockIndex* block = LookupBlockIndex(hash);
@@ -223,20 +223,20 @@ public:
         if (fork) {
             return fork->nHeight;
         }
-        return nullopt;
+        return std::nullopt;
     }
     CBlockLocator getTipLocator() override
     {
         LOCK(cs_main);
         return ::ChainActive().GetLocator();
     }
-    Optional<int> findLocatorFork(const CBlockLocator& locator) override
+    std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
         if (CBlockIndex* fork = FindForkInGlobalIndex(::ChainActive(), locator)) {
             return fork->nHeight;
         }
-        return nullopt;
+        return std::nullopt;
     }
     bool checkFinalTx(const CTransaction& tx) override
     {
@@ -341,7 +341,7 @@ public:
     }
     std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) override
     {
-        return MakeUnique<NotificationsHandlerImpl>(std::move(notifications));
+        return std::make_unique<NotificationsHandlerImpl>(std::move(notifications));
     }
     void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
@@ -353,7 +353,7 @@ public:
     }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
-        return MakeUnique<RpcHandlerImpl>(command);
+        return std::make_unique<RpcHandlerImpl>(command);
     }
     bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
     void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
@@ -392,6 +392,6 @@ public:
 };
 } // namespace
 
-std::unique_ptr<Chain> MakeChain(NodeContext& node) { return MakeUnique<ChainImpl>(node); }
+std::unique_ptr<Chain> MakeChain(NodeContext& node) { return std::make_unique<ChainImpl>(node); }
 
 } // namespace interfaces

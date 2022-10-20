@@ -6,7 +6,6 @@
 #include <script/interpreter.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
-#include <util/memory.h>
 
 #include <limits>
 

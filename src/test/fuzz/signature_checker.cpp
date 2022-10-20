@@ -6,7 +6,6 @@
 #include <script/interpreter.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 
 #include <cstdint>
 #include <limits>
@@ -15,7 +14,7 @@
 
 void initialize_signature_checker()
 {
-    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
 }
 
 namespace {

@@ -1715,7 +1715,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 
     assert(!node.scheduler);
-    node.scheduler = MakeUnique<CScheduler>();
+    node.scheduler = std::make_unique<CScheduler>();
 
     // Start the lightweight task scheduler thread
     threadGroup.create_thread([&] { TraceThread("scheduler", [&] { node.scheduler->serviceQueue(); }); });
@@ -1768,7 +1768,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // need to reindex later.
 
     assert(!node.banman);
-    node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
+    node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
 
@@ -1950,13 +1950,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         // Create and register activeMasternodeManager, will init later in ThreadImport
         activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
         RegisterValidationInterface(activeMasternodeManager.get());
-    }
-
-    uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
-    uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
-
-    if (args.IsArgSet("-maxuploadtarget")) {
-        nMaxOutboundLimit = args.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET) * 1024 * 1024;
     }
 
     // ********************************************************* Step 7a: Load sporks
@@ -2272,7 +2265,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
+        g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
         g_txindex->Start();
     }
 
@@ -2516,8 +2509,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     connOptions.nReceiveFloodSize = 1000 * args.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = args.GetArgs("-addnode");
 
-    connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
-    connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
+    connOptions.nMaxOutboundLimit = 1024 * 1024 * args.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET);
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
     for (const std::string& strBind : args.GetArgs("-bind")) {

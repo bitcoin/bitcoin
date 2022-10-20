@@ -53,6 +53,7 @@
 #include <sys/event.h>
 #endif
 
+#include <cstdint>
 #include <unordered_map>
 
 #include <math.h>
@@ -62,6 +63,22 @@ static constexpr int DUMP_PEERS_INTERVAL = 15 * 60;
 
 /** Number of DNS seeds to query when the number of connections is low. */
 static constexpr int DNSSEEDS_TO_QUERY_AT_ONCE = 3;
+
+/** How long to delay before querying DNS seeds
+ *
+ * If we have more than THRESHOLD entries in addrman, then it's likely
+ * that we got those addresses from having previously connected to the P2P
+ * network, and that we'll be able to successfully reconnect to the P2P
+ * network via contacting one of them. So if that's the case, spend a
+ * little longer trying to connect to known peers before querying the
+ * DNS seeds.
+ */
+static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11};
+static constexpr std::chrono::minutes DNSSEEDS_DELAY_MANY_PEERS{5};
+static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers
+
+/** The default timeframe for -maxuploadtarget. 1 day. */
+static constexpr std::chrono::seconds MAX_UPLOAD_TIMEFRAME{60 * 60 * 24};
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
@@ -118,9 +135,9 @@ void CConnman::AddOneShot(const std::string& strDest)
     vOneShots.push_back(strDest);
 }
 
-unsigned short GetListenPort()
+uint16_t GetListenPort()
 {
-    return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
+    return (uint16_t)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -662,7 +679,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             uint32_t out_err_raw_size{0};
-            Optional<CNetMessage> result{m_deserializer->GetMessage(nTimeMicros, out_err_raw_size)};
+            std::optional<CNetMessage> result{m_deserializer->GetMessage(nTimeMicros, out_err_raw_size)};
             if (!result) {
                 // Message deserialization failed.  Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
@@ -780,10 +797,10 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-Optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uint32_t& out_err_raw_size)
+std::optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uint32_t& out_err_raw_size)
 {
     // decompose a single CNetMessage from the TransportDeserializer
-    Optional<CNetMessage> msg(std::move(vRecv));
+    std::optional<CNetMessage> msg(std::move(vRecv));
 
     // store command string, time, and sizes
     msg->m_command = hdr.GetCommand();
@@ -804,12 +821,12 @@ Optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uint32_t
                  HexStr(Span<uint8_t>(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE)),
                  m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        msg.reset();
     } else if (!hdr.IsCommandValid()) {
         LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
                  hdr.GetCommand(), msg->m_message_size, m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        msg.reset();
     }
 
     // Always reset the network deserializer (prepare for the next message)
@@ -1992,31 +2009,72 @@ void CConnman::ThreadDNSAddressSeed()
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
         // When -forcednsseed is provided, query all.
         seeds_right_now = seeds.size();
+    } else if (addrman.size() == 0) {
+        // If we have no known peers, query all.
+        // This will occur on the first run, or if peers.dat has been
+        // deleted.
+        seeds_right_now = seeds.size();
     }
 
+    // goal: only query DNS seed if address need is acute
+    // * If we have a reasonable number of peers in addrman, spend
+    //   some time trying them first. This improves user privacy by
+    //   creating fewer identifying DNS requests, reduces trust by
+    //   giving seeds less influence on the network topology, and
+    //   reduces traffic to the seeds.
+    // * When querying DNS seeds query a few at once, this ensures
+    //   that we don't give DNS seeds the ability to eclipse nodes
+    //   that query them.
+    // * If we continue having problems, eventually query all the
+    //   DNS seeds, and if that fails too, also try the fixed seeds.
+    //   (done in ThreadOpenConnections)
+    const std::chrono::seconds seeds_wait_time = (addrman.size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
+
     for (const std::string& seed : seeds) {
-        // goal: only query DNS seed if address need is acute
-        // Avoiding DNS seeds when we don't need them improves user privacy by
-        // creating fewer identifying DNS requests, reduces trust by giving seeds
-        // less influence on the network topology, and reduces traffic to the seeds.
-        if (addrman.size() > 0 && seeds_right_now == 0) {
-            if (!interruptNet.sleep_for(std::chrono::seconds(11))) return;
-
-            LOCK(cs_vNodes);
-            int nRelevant = 0;
-            for (const CNode* pnode : vNodes) {
-                nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_masternode_probe_connection;
-            }
-            if (nRelevant >= 2) {
-                LogPrintf("P2P peers available. Skipped DNS seeding.\n");
-                return;
-            }
+        if (seeds_right_now == 0) {
             seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
+
+            if (addrman.size() > 0) {
+                LogPrintf("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
+                std::chrono::seconds to_wait = seeds_wait_time;
+                while (to_wait.count() > 0) {
+                    // if sleeping for the MANY_PEERS interval, wake up
+                    // early to see if we have enough peers and can stop
+                    // this thread entirely freeing up its resources
+                    std::chrono::seconds w = std::min(DNSSEEDS_DELAY_FEW_PEERS, to_wait);
+                    if (!interruptNet.sleep_for(w)) return;
+                    to_wait -= w;
+
+                    int nRelevant = 0;
+                    {
+                        LOCK(cs_vNodes);
+                        for (const CNode* pnode : vNodes) {
+                            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_masternode_probe_connection;
+                        }
+                    }
+                    if (nRelevant >= 2) {
+                        if (found > 0) {
+                            LogPrintf("%d addresses found from DNS seeds\n", found);
+                            LogPrintf("P2P peers available. Finished DNS seeding.\n");
+                        } else {
+                            LogPrintf("P2P peers available. Skipped DNS seeding.\n");
+                        }
+                        return;
+                    }
+                }
+            }
         }
 
-        if (interruptNet) {
-            return;
+        if (interruptNet) return;
+
+        // hold off on querying seeds if P2P network deactivated
+        if (!fNetworkActive) {
+            LogPrintf("Waiting for network to be reactivated before querying DNS seeds.\n");
+            do {
+                if (!interruptNet.sleep_for(std::chrono::seconds{1})) return;
+            } while (!fNetworkActive);
         }
+
         LogPrintf("Loading addresses from DNS seed %s\n", seed);
         if (HaveNameProxy()) {
             AddOneShot(seed);
@@ -2164,6 +2222,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             return;
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
+        // Note that we only do this if we started with an empty peers.dat,
+        // (in which case we will query DNS seeds immediately) *and* the DNS
+        // seeds have not returned any results.
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
             if (!done) {
@@ -2951,7 +3012,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         LOCK(cs_totalBytesSent);
         nTotalBytesSent = 0;
         nMaxOutboundTotalBytesSentInCycle = 0;
-        nMaxOutboundCycleStartTime = 0;
+        nMaxOutboundCycleStartTime = 0s;
     }
 
 #ifdef USE_KQUEUE
@@ -3009,11 +3070,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (semOutbound == nullptr) {
         // initialize semaphore
-        semOutbound = MakeUnique<CSemaphore>(std::min(m_max_outbound, nMaxConnections));
+        semOutbound = std::make_unique<CSemaphore>(std::min(m_max_outbound, nMaxConnections));
     }
     if (semAddnode == nullptr) {
         // initialize semaphore
-        semAddnode = MakeUnique<CSemaphore>(nMaxAddnode);
+        semAddnode = std::make_unique<CSemaphore>(nMaxAddnode);
     }
 
     //
@@ -3613,8 +3674,8 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     statsClient.count("bandwidth.bytesSent", bytes, 0.01f);
     statsClient.gauge("bandwidth.totalBytesSent", nTotalBytesSent, 0.01f);
 
-    uint64_t now = GetTime();
-    if (nMaxOutboundCycleStartTime + nMaxOutboundTimeframe < now)
+    const auto now = GetTime<std::chrono::seconds>();
+    if (nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME < now)
     {
         // timeframe expired, reset cycle
         nMaxOutboundCycleStartTime = now;
@@ -3625,48 +3686,29 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
-void CConnman::SetMaxOutboundTarget(uint64_t limit)
-{
-    LOCK(cs_totalBytesSent);
-    nMaxOutboundLimit = limit;
-}
-
 uint64_t CConnman::GetMaxOutboundTarget()
 {
     LOCK(cs_totalBytesSent);
     return nMaxOutboundLimit;
 }
 
-uint64_t CConnman::GetMaxOutboundTimeframe()
+std::chrono::seconds CConnman::GetMaxOutboundTimeframe()
 {
-    LOCK(cs_totalBytesSent);
-    return nMaxOutboundTimeframe;
+    return MAX_UPLOAD_TIMEFRAME;
 }
 
-uint64_t CConnman::GetMaxOutboundTimeLeftInCycle()
+std::chrono::seconds CConnman::GetMaxOutboundTimeLeftInCycle()
 {
     LOCK(cs_totalBytesSent);
     if (nMaxOutboundLimit == 0)
-        return 0;
+        return 0s;
 
-    if (nMaxOutboundCycleStartTime == 0)
-        return nMaxOutboundTimeframe;
+    if (nMaxOutboundCycleStartTime.count() == 0)
+        return MAX_UPLOAD_TIMEFRAME;
 
-    uint64_t cycleEndTime = nMaxOutboundCycleStartTime + nMaxOutboundTimeframe;
-    uint64_t now = GetTime();
-    return (cycleEndTime < now) ? 0 : cycleEndTime - GetTime();
-}
-
-void CConnman::SetMaxOutboundTimeframe(uint64_t timeframe)
-{
-    LOCK(cs_totalBytesSent);
-    if (nMaxOutboundTimeframe != timeframe)
-    {
-        // reset measure-cycle in case of changing
-        // the timeframe
-        nMaxOutboundCycleStartTime = GetTime();
-    }
-    nMaxOutboundTimeframe = timeframe;
+    const std::chrono::seconds cycleEndTime = nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME;
+    const auto now = GetTime<std::chrono::seconds>();
+    return (cycleEndTime < now) ? 0s : cycleEndTime - now;
 }
 
 bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit)
@@ -3678,8 +3720,8 @@ bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit)
     if (historicalBlockServingLimit)
     {
         // keep a large enough buffer to at least relay each block once
-        uint64_t timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
-        uint64_t buffer = timeLeftInCycle / 600 * MaxBlockSize(fDIP0001ActiveAtTip);
+        const std::chrono::seconds timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
+        const uint64_t buffer = timeLeftInCycle / std::chrono::minutes{10} * MaxBlockSize(fDIP0001ActiveAtTip);
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }
@@ -3743,7 +3785,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     hashContinue = uint256();
-    m_tx_relay = MakeUnique<TxRelay>();
+    m_tx_relay = std::make_unique<TxRelay>();
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
@@ -3755,8 +3797,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 
-    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
-    m_serializer = MakeUnique<V1TransportSerializer>(V1TransportSerializer());
+    m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
+    m_serializer = std::make_unique<V1TransportSerializer>(V1TransportSerializer());
 }
 
 CNode::~CNode()

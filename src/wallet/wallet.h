@@ -52,12 +52,12 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, Optional<bool> load_on_start);
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, Optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
-std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, Optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
+std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
@@ -978,7 +978,7 @@ public:
         //! Unset if no blocks were scanned due to read errors or the chain
         //! being empty.
         uint256 last_scanned_block;
-        Optional<int> last_scanned_height;
+        std::optional<int> last_scanned_height;
 
         //! Height of the most recent block that could not be scanned due to
         //! read errors or pruning. Will be set if status is FAILURE, unset if
@@ -1280,7 +1280,7 @@ public:
 
     // Temporary LegacyScriptPubKeyMan accessors and aliases.
     friend class LegacyScriptPubKeyMan;
-    std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man = MakeUnique<LegacyScriptPubKeyMan>(*this);
+    std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man = std::make_unique<LegacyScriptPubKeyMan>(*this);
     CCriticalSection& cs_KeyStore = m_spk_man->cs_KeyStore;
     LegacyScriptPubKeyMan::KeyMap& mapKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapKeys;
     LegacyScriptPubKeyMan::ScriptMap& mapScripts GUARDED_BY(cs_KeyStore) = m_spk_man->mapScripts;

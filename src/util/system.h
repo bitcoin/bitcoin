@@ -20,10 +20,8 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
-#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/memory.h>
 #include <util/settings.h>
 #include <util/threadnames.h>
 #include <util/time.h>
@@ -31,6 +29,7 @@
 
 #include <exception>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -345,7 +344,7 @@ public:
      * Return Flags for known arg.
      * Return nullopt for unknown arg.
      */
-    Optional<unsigned int> GetArgFlags(const std::string& name) const;
+    std::optional<unsigned int> GetArgFlags(const std::string& name) const;
 
     /**
      * Read and update settings file with saved settings. This needs to be

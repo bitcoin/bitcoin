@@ -11,9 +11,10 @@
 #include <random.h>
 #include <set>
 #include <sync.h>
+#include <versionbits.h>
+
 #include <optional>
 #include <vector>
-#include <versionbits.h>
 
 class CConnman;
 class CBlockIndex;

@@ -258,7 +258,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
         } else if(index.column() == Address) {
             CTxDestination newAddress = DecodeDestination(value.toString().toStdString());
             // Refuse to set invalid address, set error status and return false
-            if(boost::get<CNoDestination>(&newAddress))
+            if(std::get_if<CNoDestination>(&newAddress))
             {
                 editStatus = INVALID_ADDRESS;
                 return false;

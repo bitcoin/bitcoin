@@ -12,7 +12,6 @@
 #include <test/util.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
-#include <util/memory.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -45,7 +44,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
     for (int i = 0; i < num_peers_to_add; ++i) {
         const ServiceFlags service_flags = ServiceFlags(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
         const bool inbound{fuzzed_data_provider.ConsumeBool()};
-        peers.push_back(MakeUnique<CNode>(i, service_flags, 0, INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, inbound).release());
+        peers.push_back(std::make_unique<CNode>(i, service_flags, 0, INVALID_SOCKET, CAddress{CService{in_addr{0x0100007f}, 7777}, NODE_NETWORK}, 0, 0, CAddress{}, std::string{}, inbound).release());
         CNode& p2p_node = *peers.back();
 
         p2p_node.fSuccessfullyConnected = true;

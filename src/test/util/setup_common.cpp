@@ -34,7 +34,6 @@
 #include <streams.h>
 #include <spork.h>
 #include <txdb.h>
-#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -131,7 +130,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     evoDb.reset(new CEvoDB(1 << 20, true, true));
-    connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    connman = std::make_unique<CConnman>(0x1337, 0x1337);
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *connman));
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
     static bool noui_connected = false;
@@ -162,7 +161,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.scheduler = MakeUnique<CScheduler>();
+    m_node.scheduler = std::make_unique<CScheduler>();
 
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
@@ -184,9 +183,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.mempool = &::mempool;
     m_node.mempool->setSanityCheck(1.0);
-    m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    m_node.peer_logic = MakeUnique<PeerLogicValidation>(
+    m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.peer_logic = std::make_unique<PeerLogicValidation>(
         m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool,
         llmq::quorumBlockProcessor, llmq::quorumDKGSessionManager, llmq::quorumManager,
         llmq::quorumSigSharesManager, llmq::quorumSigningManager, llmq::chainLocksHandler,
@@ -267,7 +266,7 @@ TestChainSetup::TestChainSetup(int blockCount)
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 
-    g_txindex = MakeUnique<TxIndex>(1 << 20, true);
+    g_txindex = std::make_unique<TxIndex>(1 << 20, true);
     g_txindex->Start();
 
     // Allow tx index to catch up with the block index.

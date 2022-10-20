@@ -15,7 +15,6 @@
 #include <test/fuzz/fuzz.h>
 #include <test/util.h>
 #include <test/util/setup_common.h>
-#include <util/memory.h>
 #include <validationinterface.h>
 #include <version.h>
 

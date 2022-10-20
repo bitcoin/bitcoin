@@ -147,7 +147,7 @@ static RPCArg GetRpcArg(const std::string& strParamName)
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
     CTxDestination dest = DecodeDestination(strAddress);
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
+    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
     if (!keyID) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
     }
@@ -562,7 +562,7 @@ static UniValue protx_register(const JSONRPCRequest& request)
         }
         CTxDestination txDest;
         ExtractDestination(coin.out.scriptPubKey, txDest);
-        const CKeyID *keyID = boost::get<CKeyID>(&txDest);
+        const CKeyID *keyID = std::get_if<CKeyID>(&txDest);
         if (!keyID) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
         }
@@ -943,7 +943,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
-        if ((boost::get<CKeyID>(&dest) && spk_man->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && spk_man->HaveCScript(*boost::get<CScriptID>(&dest)))) {
+        if ((std::get_if<CKeyID>(&dest) && spk_man->HaveKey(*std::get_if<CKeyID>(&dest))) || (std::get_if<CScriptID>(&dest) && spk_man->HaveCScript(*std::get_if<CScriptID>(&dest)))) {
             return true;
         }
     }

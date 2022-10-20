@@ -21,7 +21,6 @@
 #include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
-#include <optional.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -62,6 +61,7 @@
 
 #include <statsd_client.h>
 
+#include <optional>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1128,7 +1128,7 @@ CoinsViews::CoinsViews(
 
 void CoinsViews::InitCache()
 {
-    m_cacheview = MakeUnique<CCoinsViewCache>(&m_catcherview);
+    m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
 }
 
 CChainState::CChainState(BlockManager& blockman,
@@ -1152,7 +1152,7 @@ void CChainState::InitCoinsDB(
         leveldb_name += "_" + m_from_snapshot_blockhash.ToString();
     }
 
-    m_coins_views = MakeUnique<CoinsViews>(
+    m_coins_views = std::make_unique<CoinsViews>(
         leveldb_name, cache_size_bytes, in_memory, should_wipe);
 }
 
@@ -5527,7 +5527,7 @@ public:
 };
 static CMainCleanup instance_of_cmaincleanup;
 
-Optional<uint256> ChainstateManager::SnapshotBlockhash() const {
+std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
     if (m_active_chainstate != nullptr) {
         // If a snapshot chainstate exists, it will always be our active.
         return m_active_chainstate->m_from_snapshot_blockhash;

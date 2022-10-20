@@ -7,7 +7,6 @@
 #include <logging.h>
 #include <noui.h>
 #include <tinyformat.h>
-#include <util/memory.h>
 
 #include <stdexcept>
 
