@@ -221,6 +221,11 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([16, 5])
         spent_utxo = self.wallet.listunspent()[0]
 
+        # fails on out of bounds vout
+        assert_raises_rpc_error(-8,
+                "Input not found. UTXO ({}:{}) is not part of wallet.".format(spent_utxo["txid"], 1000),
+                self.wallet.sendall, recipients=[self.remainder_target], options={"inputs": [{"txid": spent_utxo["txid"], "vout": 1000}]})
+
         # fails on unconfirmed spent UTXO
         self.wallet.sendall(recipients=[self.remainder_target])
         assert_raises_rpc_error(-8,
