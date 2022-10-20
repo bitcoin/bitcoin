@@ -231,6 +231,7 @@ static RPCHelpMan syscoincreatenevmblob()
         "\nCreate NEVM blob data used by rollups\n",
         {
             {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data"},
+            {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -254,6 +255,10 @@ static RPCHelpMan syscoincreatenevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     std::string strData(request.params[0].get_str());
+    bool bOverwrite{false};
+    if(request.params.size() > 0) {
+        bOverwrite = request.params[1].get_bool();
+    }
     std::vector<unsigned char> vchData(strData.data(), strData.data() + strData.size());
     // how many 0 bytes are we going to add to each field element?
     int numMultiples = vchData.size() / 31;
@@ -291,15 +296,21 @@ static RPCHelpMan syscoincreatenevmblob()
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
+    int64_t mpt = -1;
+    if(pnevmdatadb->ReadMTP(nevmDataPayload.vchVersionHash, mpt) && !bOverwrite) {
+        UniValue resObj(UniValue::VOBJ);
+        resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
+        return resObj;
+    }
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
     paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
     std::vector<uint8_t> vchVersionHash = nevmDataPayload.vchVersionHash;
     size_t nSizeData = nevmDataPayload.vchNEVMData->size();
     nevmDataPayload.ClearData();
-    paramsSend.push_back(request.params[1]);
     paramsSend.push_back(request.params[2]);
     paramsSend.push_back(request.params[3]);
+    paramsSend.push_back(request.params[4]);
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
