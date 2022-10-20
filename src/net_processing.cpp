@@ -2559,14 +2559,22 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
 
             // Now a HeadersSyncState object for tracking this synchronization is created,
             // process the headers using it as normal.
-            return IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers);
+            if (!IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers)) {
+                // Something went wrong, reset the headers sync.
+                peer.m_headers_sync.reset(nullptr);
+                LOCK(m_headers_presync_mutex);
+                m_headers_presync_stats.erase(peer.m_id);
+            }
         } else {
             LogPrint(BCLog::NET, "Ignoring low-work chain (height=%u) from peer=%d\n", chain_start_header->nHeight + headers.size(), pfrom.GetId());
-            // Since this is a low-work headers chain, no further processing is required.
-            headers = {};
-            return true;
         }
+
+        // The peer has not yet given us a chain that meets our work threshold,
+        // so we want to prevent further processing of the headers in any case.
+        headers = {};
+        return true;
     }
+
     return false;
 }
 
