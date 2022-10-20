@@ -145,10 +145,9 @@ class MaxUploadTest(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-        #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
-        self.log.info("Restarting nodes with -whitelist=127.0.0.1")
+        self.log.info("Restarting node 0 with noban permission and 1MB maxuploadtarget")
         self.stop_node(0)
-        self.start_node(0, ["-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000", "-maxtipage="+str(2*60*60*24*7), "-mocktime="+str(current_mocktime)])
+        self.start_node(0, ["-whitelist=noban@127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000", "-maxtipage="+str(2*60*60*24*7), "-mocktime="+str(current_mocktime)])
 
         # Reconnect to self.nodes[0]
         self.nodes[0].add_p2p_connection(TestP2PConn())

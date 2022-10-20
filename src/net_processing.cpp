@@ -1168,17 +1168,6 @@ bool IsBanned(NodeId pnode)
 }
 
 /**
- * Returns true if the given validation state result may result in a peer
- * banning/disconnecting us. We use this to determine which unaccepted
- * transactions from a whitelisted peer that we can safely relay.
- */
-static bool TxRelayMayResultInDisconnect(const CValidationState& state)
-{
-    assert(IsTransactionReason(state.GetReason()));
-    return state.GetReason() == ValidationInvalidReason::CONSENSUS;
-}
-
-/**
  * Potentially mark a node discouraged based on the contents of a CValidationState object
  *
  * @param[in] via_compact_block this bool is passed in because net_processing should
@@ -1187,10 +1176,9 @@ static bool TxRelayMayResultInDisconnect(const CValidationState& state)
  * txs, the peer should not be punished. See BIP 152.
  *
  * @return Returns true if the peer was punished (probably disconnected)
- *
- * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
  */
-static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool via_compact_block, const std::string& message = "") {
+static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool via_compact_block, const std::string& message = "")
+{
     switch (state.GetReason()) {
     case ValidationInvalidReason::NONE:
         break;
@@ -1252,12 +1240,6 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     }
     return false;
 }
-
-
-
-
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -3469,14 +3451,11 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
             if (pfrom->HasPermission(PF_FORCERELAY)) {
                 // Always relay transactions received from whitelisted peers, even
-                // if they were already in the mempool or rejected from it due
-                // to policy, allowing the node to function as a gateway for
+                // if they were already in the mempool,
+                // allowing the node to function as a gateway for
                 // nodes hidden behind it.
-                //
-                // Never relay transactions that might result in being
-                // disconnected (or banned).
-                if (state.IsInvalid() && TxRelayMayResultInDisconnect(state)) {
-                    LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->GetId(), FormatStateMessage(state));
+                if (!mempool.exists(tx.GetHash())) {
+                    LogPrintf("Not relaying non-mempool transaction %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->GetId());
                     RelayTransaction(tx.GetHash(), *connman);
