@@ -144,8 +144,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_master.createwallet(wallet_name="w2", disable_private_keys=True)
         wallet = node_master.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
-        assert info['private_keys_enabled'] == False
-        assert info['keypoolsize'] == 0
+        assert_equal(info['private_keys_enabled'], False)
+        assert_equal(info['keypoolsize'], 0)
 
         # w3: blank wallet, created on master: update this
         #     test when default blank wallets can no longer be opened by older versions.
@@ -153,7 +153,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         wallet = node_master.get_wallet_rpc("w3")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
-        assert info['keypoolsize'] == 0
+        assert_equal(info['keypoolsize'], 0)
 
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = os.path.join(node_master.datadir, "regtest/wallets")
@@ -187,26 +187,26 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     wallet = node.get_wallet_rpc(wallet_name)
                     info = wallet.getwalletinfo()
                     if wallet_name == "w1":
-                        assert info['private_keys_enabled'] == True
+                        assert_equal(info['private_keys_enabled'], True)
                         assert info['keypoolsize'] > 0
                         txs = wallet.listtransactions()
                         assert_equal(len(txs), 5)
                         assert_equal(txs[1]["txid"], tx1_id)
                         assert_equal(txs[2]["walletconflicts"], [tx1_id])
                         assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-                        assert not(txs[1]["abandoned"])
+                        assert not txs[1]["abandoned"]
                         assert_equal(txs[1]["confirmations"], -1)
                         assert_equal(txs[2]["blockindex"], 1)
                         assert txs[3]["abandoned"]
                         assert_equal(txs[4]["walletconflicts"], [tx3_id])
                         assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-                        assert not(hasattr(txs[3], "blockindex"))
+                        assert not hasattr(txs[3], "blockindex")
                     elif wallet_name == "w2":
-                        assert(info['private_keys_enabled'] == False)
-                        assert info['keypoolsize'] == 0
+                        assert_equal(info['private_keys_enabled'], False)
+                        assert_equal(info['keypoolsize'], 0)
                     else:
-                        assert(info['private_keys_enabled'] == True)
-                        assert info['keypoolsize'] == 0
+                        assert_equal(info['private_keys_enabled'], True)
+                        assert_equal(info['keypoolsize'], 0)
         else:
             for node in legacy_nodes:
                 # Descriptor wallets appear to be corrupted wallets to old software
@@ -236,7 +236,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             self.restart_node(node_v16.index, extra_args=["-wallet=w2"])
             wallet = node_v16.get_wallet_rpc("w2")
             info = wallet.getwalletinfo()
-            assert info['keypoolsize'] == 1
+            assert_equal(info['keypoolsize'], 1)
 
         # Create upgrade wallet in v0.16
         self.restart_node(node_v16.index, extra_args=["-wallet=u1_v16"])

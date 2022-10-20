@@ -45,6 +45,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_is_hex_string,
     assert_raises_rpc_error,
     try_rpc,
@@ -221,16 +222,16 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[0], "non-mandatory-script-verify-flag (Witness program was passed an empty witness)", p2sh_ids[NODE_0][P2WSH][0], sign=False, redeem_script=witness_script(True, self.pubkey[0]))
 
         self.log.info("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
-        assert self.nodes[2].getblock(blockhash, False) != self.nodes[0].getblock(blockhash, False)
-        assert self.nodes[1].getblock(blockhash, False) == self.nodes[2].getblock(blockhash, False)
+        assert_not_equal(self.nodes[2].getblock(blockhash, False), self.nodes[0].getblock(blockhash, False))
+        assert_equal(self.nodes[1].getblock(blockhash, False), self.nodes[2].getblock(blockhash, False))
 
         for tx_id in segwit_tx_list:
             tx = tx_from_hex(self.nodes[2].gettransaction(tx_id)["hex"])
-            assert self.nodes[2].getrawtransaction(tx_id, False, blockhash) != self.nodes[0].getrawtransaction(tx_id, False, blockhash)
-            assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].getrawtransaction(tx_id, False, blockhash)
-            assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) != self.nodes[2].gettransaction(tx_id)["hex"]
-            assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].gettransaction(tx_id)["hex"]
-            assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) == tx.serialize_without_witness().hex()
+            assert_not_equal(self.nodes[2].getrawtransaction(tx_id, False, blockhash), self.nodes[0].getrawtransaction(tx_id, False, blockhash))
+            assert_equal(self.nodes[1].getrawtransaction(tx_id, False, blockhash), self.nodes[2].getrawtransaction(tx_id, False, blockhash))
+            assert_not_equal(self.nodes[0].getrawtransaction(tx_id, False, blockhash), self.nodes[2].gettransaction(tx_id)["hex"])
+            assert_equal(self.nodes[1].getrawtransaction(tx_id, False, blockhash), self.nodes[2].gettransaction(tx_id)["hex"])
+            assert_equal(self.nodes[0].getrawtransaction(tx_id, False, blockhash), tx.serialize_without_witness().hex())
 
         # Coinbase contains the witness commitment nonce, check that RPC shows us
         coinbase_txid = self.nodes[2].getblock(blockhash)['tx'][0]
@@ -256,7 +257,7 @@ class SegWitTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         raw_tx = self.nodes[0].getrawtransaction(txid, True)
         tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert_greater_than_or_equal(tmpl['sizelimit'], 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
+        assert_greater_than_or_equal(tmpl['sizelimit'], 3999577) # actual maximum size is lower due to minimum mandatory non-witness data
         assert_equal(tmpl['weightlimit'], 4000000)
         assert_equal(tmpl['sigoplimit'], 80000)
         assert_equal(tmpl['transactions'][0]['txid'], txid)
