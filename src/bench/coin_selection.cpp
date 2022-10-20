@@ -121,5 +121,5 @@ static void BnBExhaustion(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(CoinSelection);
-BENCHMARK(BnBExhaustion);
+BENCHMARK(CoinSelection, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BnBExhaustion, benchmark::PriorityLevel::HIGH);

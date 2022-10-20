@@ -32,5 +32,5 @@ static void Bech32Decode(benchmark::Bench& bench)
 }
 
 
-BENCHMARK(Bech32Encode);
-BENCHMARK(Bech32Decode);
+BENCHMARK(Bech32Encode, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Bech32Decode, benchmark::PriorityLevel::HIGH);
