@@ -7,48 +7,67 @@ on:
 jobs:
   release:
     name: Release to Docker Hub
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
+      uses: docker/setup-qemu-action@v2
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v2
 
     - name: Login to DockerHub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Docker meta
+    - name: Set raw tag
+      id: get_tag
+      run: |
+        TAG=${{ github.event.release.tag_name }}
+        echo "build_tag=${TAG#v}" >> $GITHUB_OUTPUT
+
+    - name: Set suffix
+      uses: actions/github-script@v6
+      id: suffix
+      with:
+        result-encoding: string
+        script: |
+          const fullTag = '${{ github.event.release.tag_name }}';
+          if (fullTag.includes('-')) {
+            const [, fullSuffix] = fullTag.split('-');
+            const [suffix] = fullSuffix.split('.');
+            return `-${suffix}`;
+          } else {
+            return '';
+          }
+
+    - name: Set Docker tags and labels
       id: docker_meta
-      uses: crazy-max/ghaction-docker-meta@v2
+      uses: docker/metadata-action@v4
       with:
         images: dashpay/dashd
         tags: |
-          type=match,pattern=v(\d+.\d+.\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
-          type=match,pattern=v(\d+.\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
-          type=match,pattern=v(\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
-          type=raw,value=latest,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
-          type=match,pattern=v(.*),group=1,latest=false,enable=${{ contains(github.event.release.tag_name, '-rc') }}
-          type=raw,value=latest-dev,enable=${{ contains(github.event.release.tag_name, '-rc') }}
+          type=match,pattern=v(\d+),group=1
+          type=match,pattern=v(\d+.\d+),group=1
+          type=match,pattern=v(\d+.\d+.\d+),group=1
+          type=match,pattern=v(.*),group=1,suffix=
         flavor: |
-          latest=false
+          suffix=${{ steps.suffix.outputs.result }},onlatest=true
 
     - name: Build and push
       id: docker_build
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: ./contrib/containers/deploy
         file: ./contrib/containers/deploy/Dockerfile.GitHubActions.Release
         push: true
         tags: ${{ steps.docker_meta.outputs.tags }}
         labels: ${{ steps.docker_meta.outputs.labels }}
-        build-args: TAG=${{ steps.docker_meta.outputs.version }}
+        build-args: TAG=${{ steps.get_tag.outputs.build_tag }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         platforms: linux/amd64,linux/arm64
