@@ -79,4 +79,13 @@ enum class ConnectionType {
 /** Convert ConnectionType enum to a string value */
 std::string ConnectionTypeAsString(ConnectionType conn_type);
 
+/** Transport layer version */
+enum class TransportProtocolType {
+    V1, // unencrypted, plaintext protocol
+    V2, // BIP324 protocol
+};
+
+/** Convert TransportProtocolType enum to a string value */
+std::string TransportTypeAsString(TransportProtocolType transport_type);
+
 #endif // BITCOIN_NODE_CONNECTION_TYPES_H

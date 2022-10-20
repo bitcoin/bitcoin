@@ -35,6 +35,7 @@ class P2PV2Test(BitcoinTestFramework):
         # sync_all() verifies that the block tips match
         self.sync_all(self.nodes[0:2])
         assert_equal(self.nodes[1].getblockcount(), 5)
+        assert_equal(self.nodes[1].getpeerinfo()[0]["transport_protocol_type"], "v2")
 
         # V1 nodes can sync with each other
         assert_equal(self.nodes[2].getblockcount(), 0)
@@ -48,6 +49,7 @@ class P2PV2Test(BitcoinTestFramework):
         self.sync_all(self.nodes[2:4])
         assert_equal(self.nodes[3].getblockcount(), 8)
         assert self.nodes[0].getbestblockhash() != self.nodes[2].getbestblockhash()
+        assert_equal(self.nodes[2].getpeerinfo()[0]["transport_protocol_type"], "v1")
 
         # V1 nodes can sync with V2 nodes
         self.disconnect_nodes(0, 1)
@@ -58,6 +60,7 @@ class P2PV2Test(BitcoinTestFramework):
         self.sync_all(self.nodes[1:3])
         assert_equal(self.nodes[1].getblockcount(), 8)
         assert self.nodes[0].getbestblockhash() != self.nodes[1].getbestblockhash()
+        assert_equal(self.nodes[2].getpeerinfo()[0]["transport_protocol_type"], "v1")
 
         # V2 nodes can sync with V1 nodes
         self.disconnect_nodes(1, 2)
@@ -66,6 +69,7 @@ class P2PV2Test(BitcoinTestFramework):
             self.connect_nodes(0, 3, False)
         self.sync_all([self.nodes[0], self.nodes[3]])
         assert_equal(self.nodes[0].getblockcount(), 8)
+        assert_equal(self.nodes[0].getpeerinfo()[0]["transport_protocol_type"], "v1")
 
         # V2 node mines another block and everyone gets it
         self.connect_nodes(0, 1, True)
@@ -85,6 +89,7 @@ class P2PV2Test(BitcoinTestFramework):
             self.connect_nodes(1, 4, True)
         self.sync_all()
         assert_equal(self.nodes[4].getblockcount(), 11)
+        assert_equal(self.nodes[4].getpeerinfo()[0]["transport_protocol_type"], "v1")
 
 
 if __name__ == '__main__':
