@@ -50,6 +50,6 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     }
 }*/
 
-BENCHMARK(DeserializeBlockTest);
+BENCHMARK(DeserializeBlockTest, benchmark::PriorityLevel::HIGH);
 // SYSCOIN
-//BENCHMARK(DeserializeAndCheckBlockTest);
+//BENCHMARK(DeserializeAndCheckBlockTest, benchmark::PriorityLevel::HIGH);

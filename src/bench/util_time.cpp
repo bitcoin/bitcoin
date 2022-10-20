@@ -36,7 +36,7 @@ static void BenchTimeMillisSys(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BenchTimeDeprecated);
-BENCHMARK(BenchTimeMillis);
-BENCHMARK(BenchTimeMillisSys);
-BENCHMARK(BenchTimeMock);
+BENCHMARK(BenchTimeDeprecated, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMillis, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMillisSys, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeMock, benchmark::PriorityLevel::HIGH);

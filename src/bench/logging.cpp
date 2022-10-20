@@ -41,8 +41,8 @@ static void LoggingNoFile(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(LoggingYoThreadNames);
-BENCHMARK(LoggingNoThreadNames);
-BENCHMARK(LoggingYoCategory);
-BENCHMARK(LoggingNoCategory);
-BENCHMARK(LoggingNoFile);
+BENCHMARK(LoggingYoThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoThreadNames, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingYoCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoCategory, benchmark::PriorityLevel::HIGH);
+BENCHMARK(LoggingNoFile, benchmark::PriorityLevel::HIGH);

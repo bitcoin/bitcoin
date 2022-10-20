@@ -40,4 +40,4 @@ static void RpcMempool(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RpcMempool);
+BENCHMARK(RpcMempool, benchmark::PriorityLevel::HIGH);

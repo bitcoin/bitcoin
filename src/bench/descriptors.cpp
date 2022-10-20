@@ -33,4 +33,4 @@ static void ExpandDescriptor(benchmark::Bench& bench)
     ECC_Stop();
 }
 
-BENCHMARK(ExpandDescriptor);
+BENCHMARK(ExpandDescriptor, benchmark::PriorityLevel::HIGH);

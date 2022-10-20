@@ -26,7 +26,7 @@ static void PrePadded(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(PrePadded);
+BENCHMARK(PrePadded, benchmark::PriorityLevel::HIGH);
 
 static void RegularPadded(benchmark::Bench& bench)
 {
@@ -44,4 +44,4 @@ static void RegularPadded(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RegularPadded);
+BENCHMARK(RegularPadded, benchmark::PriorityLevel::HIGH);
