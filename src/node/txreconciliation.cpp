@@ -39,7 +39,8 @@ public:
      * the following commits.
      *
      * Reconciliation protocol assumes using one role consistently: either a reconciliation
-     * initiator (requesting sketches), or responder (sending sketches). This defines our role.
+     * initiator (requesting sketches), or responder (sending sketches). This defines our role,
+     * based on the direction of the p2p connection.
      *
      */
     bool m_we_initiate;
@@ -93,9 +94,8 @@ public:
         return local_salt;
     }
 
-    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, bool is_peer_recon_initiator,
-                                     bool is_peer_recon_responder, uint32_t peer_recon_version,
-                                     uint64_t remote_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version,
+                                              uint64_t remote_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
@@ -116,24 +116,11 @@ public:
         // v1 is the lowest version, so suggesting something below must be a protocol violation.
         if (recon_version < 1) return PROTOCOL_VIOLATION;
 
-        // Must match SENDTXRCNCL logic.
-        const bool they_initiate = is_peer_recon_initiator && is_peer_inbound;
-        const bool we_initiate = !is_peer_inbound && is_peer_recon_responder;
-
-        // If we ever announce support for both requesting and responding, this will need
-        // tie-breaking. For now, this is mutually exclusive because both are based on the
-        // inbound flag.
-        assert(!(they_initiate && we_initiate));
-
-        // The peer set both flags to false, we treat it as a protocol violation.
-        if (!(they_initiate || we_initiate)) return PROTOCOL_VIOLATION;
-
-        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Register peer=%d with the following params: " /* Continued */
-                                                                    "we_initiate=%i, they_initiate=%i.\n",
-                      peer_id, we_initiate, they_initiate);
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Register peer=%d (inbound=%i)\n",
+                      peer_id, is_peer_inbound);
 
         const uint256 full_salt{ComputeSalt(*local_salt, remote_salt)};
-        recon_state->second = TxReconciliationState(we_initiate, full_salt.GetUint64(0), full_salt.GetUint64(1));
+        recon_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
         return SUCCESS;
     }
 
@@ -166,11 +153,9 @@ uint64_t TxReconciliationTracker::PreRegisterPeer(NodeId peer_id)
 }
 
 ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound,
-                                                          bool is_peer_recon_initiator, bool is_peer_recon_responder,
                                                           uint32_t peer_recon_version, uint64_t remote_salt)
 {
-    return m_impl->RegisterPeer(peer_id, is_peer_inbound, is_peer_recon_initiator, is_peer_recon_responder,
-                                peer_recon_version, remote_salt);
+    return m_impl->RegisterPeer(peer_id, is_peer_inbound, peer_recon_version, remote_salt);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)

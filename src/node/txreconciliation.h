@@ -72,8 +72,8 @@ public:
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
      * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
      */
-    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, bool is_peer_recon_initiator,
-                                     bool is_peer_recon_responder, uint32_t peer_recon_version, uint64_t remote_salt);
+    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound,
+                                              uint32_t peer_recon_version, uint64_t remote_salt);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).

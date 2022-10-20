@@ -3279,11 +3279,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // - we are not in -blocksonly mode.
             if (pfrom.m_relays_txs && !m_ignore_incoming_txs) {
                 const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
-                // We suggest our txreconciliation role (initiator/responder) based on
-                // the connection direction.
                 m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDTXRCNCL,
-                                                             !pfrom.IsInboundConn(),
-                                                             pfrom.IsInboundConn(),
                                                              TXRECONCILIATION_VERSION, recon_salt));
             }
         }
@@ -3514,11 +3510,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        bool is_peer_initiator, is_peer_responder;
-        uint32_t peer_txreconcl_version;
-        uint64_t remote_salt;
-        vRecv >> is_peer_initiator >> is_peer_responder >> peer_txreconcl_version >> remote_salt;
-
         if (m_txreconciliation->IsPeerRegistered(pfrom.GetId())) {
             // A peer is already registered, meaning we already received SENDTXRCNCL from them.
             LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d (sendtxrcncl received from already registered peer); disconnecting\n", pfrom.GetId());
@@ -3526,10 +3517,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
+        uint32_t peer_txreconcl_version;
+        uint64_t remote_salt;
+        vRecv >> peer_txreconcl_version >> remote_salt;
+
         const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
-                                                                                is_peer_initiator, is_peer_responder,
-                                                                                peer_txreconcl_version,
-                                                                                remote_salt);
+                                                                                     peer_txreconcl_version, remote_salt);
 
         // If it's a protocol violation, disconnect.
         // If the peer was not found (but something unexpected happened) or it was registered,
