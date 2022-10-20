@@ -35,7 +35,12 @@ class P2PV2Test(BitcoinTestFramework):
         # sync_all() verifies that the block tips match
         self.sync_all(self.nodes[0:2])
         assert_equal(self.nodes[1].getblockcount(), 5)
-        assert_equal(self.nodes[1].getpeerinfo()[0]["transport_protocol_type"], "v2")
+        peerinfo_0 = self.nodes[0].getpeerinfo()
+        peerinfo_1 = self.nodes[1].getpeerinfo()
+        assert_equal(peerinfo_0[0]["transport_protocol_type"], "v2")
+        assert_equal(peerinfo_1[0]["transport_protocol_type"], "v2")
+        assert_equal(len(peerinfo_0[0]["v2_session_id"]), 64)
+        assert_equal(peerinfo_0[0]["v2_session_id"], peerinfo_1[0]["v2_session_id"])
 
         # V1 nodes can sync with each other
         assert_equal(self.nodes[2].getblockcount(), 0)
@@ -49,7 +54,9 @@ class P2PV2Test(BitcoinTestFramework):
         self.sync_all(self.nodes[2:4])
         assert_equal(self.nodes[3].getblockcount(), 8)
         assert self.nodes[0].getbestblockhash() != self.nodes[2].getbestblockhash()
-        assert_equal(self.nodes[2].getpeerinfo()[0]["transport_protocol_type"], "v1")
+        peerinfo_2 = self.nodes[2].getpeerinfo()
+        assert_equal(peerinfo_2[0]["transport_protocol_type"], "v1")
+        assert "v2_session_id" not in peerinfo_2[0]
 
         # V1 nodes can sync with V2 nodes
         self.disconnect_nodes(0, 1)

@@ -235,6 +235,7 @@ public:
     uint32_t m_mapped_as;
     ConnectionType m_conn_type;
     TransportProtocolType m_transport_type;
+    std::string m_v2_session_id;
 };
 
 
@@ -470,6 +471,7 @@ struct BIP324NodeState {
     std::array<std::byte, BIP324_GARBAGE_TERMINATOR_LEN> recv_garbage_terminator;
     std::vector<std::byte> garbage_bytes_recd;
     bool keys_derived{false};
+    std::string session_id;
 };
 
 void DeriveBIP324Session(ECDHSecret&& ecdh_secret, BIP324Session& session);

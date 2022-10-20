@@ -705,6 +705,9 @@ void CNode::CopyStats(CNodeStats& stats)
 
     X(m_conn_type);
     X(m_transport_type);
+    if (m_transport_type == TransportProtocolType::V2) {
+        stats.m_v2_session_id = m_bip324_node_state->session_id;
+    }
 }
 #undef X
 
@@ -730,6 +733,7 @@ void CNode::InitV2P2P(const Span<const std::byte> their_ellswift, const Span<con
     }
     // Both peers must keep around a copy of the garbage terminator for the BIP324 shapable handshake
     m_bip324_node_state->keys_derived = true;
+    m_bip324_node_state->session_id = HexStr(v2_keys.session_id);
 }
 
 void CNode::EnsureInitV2Key(bool initiating)

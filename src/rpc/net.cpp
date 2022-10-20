@@ -168,6 +168,7 @@ static RPCHelpMan getpeerinfo()
                                                               "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
                                                               "best capture connection behaviors."},
                     {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
+                    {RPCResult::Type::STR, "v2_session_id", /* optional */ true, "BIP324 session id for an encrypted v2 connection.\n"},
                 }},
             }},
         },
@@ -273,6 +274,9 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bytesrecv_per_msg", recvPerMsgType);
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
         obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
+        if (stats.m_transport_type == TransportProtocolType::V2) {
+            obj.pushKV("v2_session_id", stats.m_v2_session_id);
+        }
 
         ret.push_back(obj);
     }
