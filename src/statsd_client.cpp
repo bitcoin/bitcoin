@@ -57,7 +57,7 @@ inline bool should_send(float sample_rate)
         return true;
     }
 
-    float p = ((float)insecure_rand(std::numeric_limits<int>::max()) / std::numeric_limits<int>::max());
+    float p = float(insecure_rand(std::numeric_limits<uint32_t>::max())) / float(std::numeric_limits<uint32_t>::max());
     return sample_rate > p;
 }
 
