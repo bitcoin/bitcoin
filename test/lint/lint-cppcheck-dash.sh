@@ -81,10 +81,10 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/qt/governancelist.*" \
                         "src/qt/masternodelist.*" \
                         "src/rpc/coinjoin.cpp" \
+                        "src/rpc/evo.cpp" \
                         "src/rpc/governance.cpp" \
                         "src/rpc/masternode.cpp" \
-                        "src/rpc/rpcevo.cpp" \
-                        "src/rpc/rpcquorums.cpp" \
+                        "src/rpc/quorums.cpp" \
                         "src/spork.*" \
                         "src/saltedhasher.*" \
                         "src/stacktraces.*" \
