@@ -215,6 +215,9 @@ public:
     //! Get balance.
     virtual CAmount getBalance() = 0;
 
+    //! Get effective balance at conf target 3 blocks.
+    virtual CAmount getEffectiveBalance() = 0;
+
     //! Get available balance.
     virtual CAmount getAvailableBalance(const wallet::CCoinControl& coin_control) = 0;
 

@@ -400,6 +400,7 @@ public:
         return true;
     }
     CAmount getBalance() override { return GetBalance(*m_wallet).m_mine_trusted; }
+    CAmount getEffectiveBalance() override { return GetEffectiveBalance(*m_wallet); }
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         return GetAvailableBalance(*m_wallet, &coin_control);
