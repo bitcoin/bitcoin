@@ -221,6 +221,11 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([16, 5])
         spent_utxo = self.wallet.listunspent()[0]
 
+        # fails on out of bounds vout
+        assert_raises_rpc_error(-8,
+                "Input not found. UTXO ({}:{}) is not part of wallet.".format(spent_utxo["txid"], 1000),
+                self.wallet.sendall, recipients=[self.remainder_target], options={"inputs": [{"txid": spent_utxo["txid"], "vout": 1000}]})
+
         # fails on unconfirmed spent UTXO
         self.wallet.sendall(recipients=[self.remainder_target])
         assert_raises_rpc_error(-8,
@@ -275,6 +280,33 @@ class SendallTest(BitcoinTestFramework):
                 self.wallet.sendall,
                 recipients=[self.remainder_target],
                 fee_rate=100000)
+
+    @cleanup
+    def sendall_watchonly_specific_inputs(self):
+        self.log.info("Test sendall with a subset of UTXO pool in a watchonly wallet")
+        self.add_utxos([17, 4])
+        utxo = self.wallet.listunspent()[0]
+
+        self.nodes[0].createwallet(wallet_name="watching", disable_private_keys=True)
+        watchonly = self.nodes[0].get_wallet_rpc("watching")
+
+        import_req = [{
+            "desc": utxo["desc"],
+            "timestamp": 0,
+        }]
+        if self.options.descriptors:
+            watchonly.importdescriptors(import_req)
+        else:
+            watchonly.importmulti(import_req)
+
+        sendall_tx_receipt = watchonly.sendall(recipients=[self.remainder_target], options={"inputs": [utxo]})
+        psbt = sendall_tx_receipt["psbt"]
+        decoded = self.nodes[0].decodepsbt(psbt)
+        assert_equal(len(decoded["inputs"]), 1)
+        assert_equal(len(decoded["outputs"]), 1)
+        assert_equal(decoded["tx"]["vin"][0]["txid"], utxo["txid"])
+        assert_equal(decoded["tx"]["vin"][0]["vout"], utxo["vout"])
+        assert_equal(decoded["tx"]["vout"][0]["scriptPubKey"]["address"], self.remainder_target)
 
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
@@ -340,6 +372,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when providing a fee that is too high
         self.sendall_fails_on_high_fee()
+
+        # Sendall succeeds with watchonly wallets spending specific UTXOs
+        self.sendall_watchonly_specific_inputs()
 
         # Sendall fails when many inputs result to too large transaction
         self.sendall_fails_with_transaction_too_large()
