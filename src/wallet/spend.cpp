@@ -361,6 +361,38 @@ CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinContr
     ).total_amount;
 }
 
+CAmount GetEffectiveBalance(const CWallet& wallet, const CCoinControl* coincontrol)
+{
+    LOCK(wallet.cs_wallet);
+
+    const bool rbf{wallet.m_signal_rbf};
+
+    FeeCalculation fee_calc_out;
+    CFeeRate fee_rate{GetMinimumFeeRate(wallet, *coincontrol, &fee_calc_out)};
+
+    CMutableTransaction rawTx;
+    CAmount total_input_value(0);
+    {
+        LOCK(wallet.cs_wallet);
+        for (const COutput& output : AvailableCoins(wallet, coincontrol, fee_rate, /*nMinimumAmount=*/0).All()) {
+            CHECK_NONFATAL(output.input_bytes > 0);
+            if (fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
+                continue;
+            }
+            CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
+            rawTx.vin.push_back(input);
+            total_input_value += output.txout.nValue;
+        }
+    }
+
+    // estimate final size of tx
+    const TxSize tx_size{CalculateMaximumSignedTxSize(CTransaction(rawTx), &wallet)};
+    const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
+    const CAmount effective_value{total_input_value - fee_from_size};
+
+    return effective_value;
+}
+
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output)
 {
     AssertLockHeld(wallet.cs_wallet);

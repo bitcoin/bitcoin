@@ -74,6 +74,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
+CAmount GetEffectiveBalance(const CWallet& wallet, const CCoinControl* coinControl = nullptr);
 
 /**
  * Find non-change parent output.

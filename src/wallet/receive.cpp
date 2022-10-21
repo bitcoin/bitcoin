@@ -4,9 +4,14 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
+#include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
+#include <util/check.h>
+#include <util/rbf.h>
 
 namespace wallet {
 isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin)
