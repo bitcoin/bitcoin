@@ -933,7 +933,6 @@ libbitcoinkernel_la_SOURCES = \
   support/cleanse.cpp \
   support/lockedpool.cpp \
   sync.cpp \
-  threadinterrupt.cpp \
   txdb.cpp \
   txmempool.cpp \
   uint256.cpp \
