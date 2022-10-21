@@ -86,8 +86,8 @@ def do_createpsbt(block, signme, spendme):
 def do_decode_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
-    assert len(psbt.tx.vin) == 1
-    assert len(psbt.tx.vout) == 1
+    assert len(psbt.i) == 1
+    assert len(psbt.i) == 1
     assert PSBT_SIGNET_BLOCK in psbt.g.map
 
     scriptSig = psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTSIG, b"")
