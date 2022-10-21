@@ -22,7 +22,7 @@ FALSE_POSITIVES = [
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/qt/networkstyle.cpp", "strprintf(appName, gArgs.GetDevNetName())"),
     ("src/qt/networkstyle.cpp", "strprintf(titleAddText, gArgs.GetDevNetName())"),
-    ("src/rpc/rpcevo.cpp", "strprintf(it->second, nParamNum)"),
+    ("src/rpc/evo.cpp", "strprintf(it->second, nParamNum)"),
     ("src/stacktraces.cpp", "strprintf(fmtStr, i, si.pc, lstr, fstr)"),
     ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"could not create socket, err=%m\")"),
     ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"sendto server fail, host=%s:%d, err=%m\", d->host.c_str(), d->port)"),
