@@ -788,6 +788,7 @@ RPCHelpMan restorewallet();
 RPCHelpMan getreceivedbyaddress();
 RPCHelpMan getreceivedbylabel();
 RPCHelpMan getbalance();
+RPCHelpMan geteffectivebalance();
 RPCHelpMan getunconfirmedbalance();
 RPCHelpMan lockunspent();
 RPCHelpMan listlockunspent();
@@ -844,6 +845,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},
         {"wallet", &getbalance},
+        {"wallet", &geteffectivebalance},
         {"wallet", &getnewaddress},
         {"wallet", &getrawchangeaddress},
         {"wallet", &getreceivedbyaddress},

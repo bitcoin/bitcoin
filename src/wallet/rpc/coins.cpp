@@ -213,6 +213,59 @@ RPCHelpMan getbalance()
     };
 }
 
+RPCHelpMan geteffectivebalance()
+{
+    return RPCHelpMan{"geteffectivebalance",
+                "\nReturns the total effective balance.\n"
+                "The effective balance is what the wallet considers currently spendable at a\n"
+                "confirmation target of 3 blocks at current feerate.\n",
+                {
+                    {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Only include transactions confirmed at least this many times."},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also include balance in watch-only addresses (see 'importaddress')"},
+                    {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
+                },
+                RPCResult{
+                    RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " effective spendable balance for this wallet."
+                },
+                RPCExamples{
+            "\nThe effective balance in the wallet at 3 block conf target\n"
+            + HelpExampleCli("geteffectivebalance", "") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("geteffectivebalance", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+
+    CCoinControl coin_control;
+    const unsigned int target = 3;
+
+    int min_depth = 0;
+    if (!request.params[1].isNull()) {
+        min_depth = request.params[1].getInt<int>();
+    }
+    // TODO: implement if desired
+    // bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
+    bool avoid_reuse = GetAvoidReuseFlag(*pwallet, request.params[3]);
+
+    coin_control.m_min_depth = min_depth;
+     coin_control.m_confirm_target = target;
+    coin_control.m_avoid_address_reuse = avoid_reuse;
+
+    const auto bal = GetEffectiveBalance(*pwallet, &coin_control);
+
+    return ValueFromAmount(bal);
+},
+    };
+}
+
 RPCHelpMan getunconfirmedbalance()
 {
     return RPCHelpMan{"getunconfirmedbalance",
