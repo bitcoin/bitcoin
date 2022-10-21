@@ -178,16 +178,34 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
             }
 
             // if redeemScript and private keys were given, add redeemScript to the keystore so it can be signed
-            if (keystore && scriptPubKey.IsPayToScriptHash()) {
+            const bool is_p2sh = scriptPubKey.IsPayToScriptHash();
+            if (keystore && is_p2sh) {
                 RPCTypeCheckObj(prevOut,
                 {
                     {"redeemScript", UniValueType(UniValue::VSTR)},
                 });
-                UniValue v = find_value(prevOut, "redeemScript");
-                if (!v.isNull()) {
-                    std::vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
-                    CScript redeemScript(rsData.begin(), rsData.end());
-                    keystore->AddCScript(redeemScript);
+                UniValue rs = find_value(prevOut, "redeemScript");
+                if (rs.isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript");
+                }
+
+                std::vector<unsigned char> scriptData(ParseHexV(rs, "redeemScript"));
+                CScript script(scriptData.begin(), scriptData.end());
+                keystore->AddCScript(script);
+
+                if (is_p2sh) {
+                    const CTxDestination p2sh{CScriptID(script)};
+                    if (scriptPubKey == GetScriptForDestination(p2sh)) {
+                        // traditional p2sh; arguably an error if
+                        // we got here with rs.IsNull(), because
+                        // that means the p2sh script was specified
+                        // via witnessScript param, but for now
+                        // we'll just quietly accept it
+                    } else {
+                        // otherwise, can't generate scriptPubKey from
+                        // either script, so we got unusable parameters
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript does not match scriptPubKey");
+                    }
                 }
             }
         }
