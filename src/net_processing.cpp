@@ -1249,7 +1249,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     if (fRegTest && gArgs.IsArgSet("-pushversion")) {
         nProtocolVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
-    const bool tx_relay = !m_ignore_incoming_txs && !pnode.IsBlockOnlyConn() && !pnode.IsFeelerConn();
+    const bool tx_relay{!RejectIncomingTxs(pnode)};
     // SYSCOIN
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, my_services, nTime,
             your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
@@ -5543,6 +5543,7 @@ bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
     if (peer.IsBlockOnlyConn()) return true;
+    if (peer.IsFeelerConn()) return true;
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
     if (m_ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
     return false;
