@@ -15,6 +15,7 @@
 #include <univalue.h>
 #include <util/ranges.h>
 #include <util/translation.h>
+#include <version.h>
 
 #include <utility>
 
@@ -105,7 +106,7 @@ public:
     SERIALIZE_METHODS(CCoinJoinStatusUpdate, obj)
     {
         READWRITE(obj.nSessionID, obj.nState);
-        if (s.GetVersion() <= 702015) {
+        if (s.GetVersion() <= COINJOIN_SU_PROTO_VERSION) {
             READWRITE(obj.nEntriesCount);
         }
         READWRITE(obj.nStatusUpdate, obj.nMessageID);
