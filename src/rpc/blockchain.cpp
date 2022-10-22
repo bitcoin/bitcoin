@@ -593,12 +593,16 @@ static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblo
 {
     AssertLockHeld(::cs_main);
     CBlockUndo blockUndo;
-    if (blockman.IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
-    }
 
-    if (!UndoReadFromDisk(blockUndo, pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Can't read undo data from disk");
+    // Ignore genesis block
+    if (pblockindex->nHeight > 0) {
+        if (blockman.IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+        }
+
+        if (!UndoReadFromDisk(blockUndo, pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Can't read undo data from disk");
+        }
     }
 
     return blockUndo;
