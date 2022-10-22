@@ -2157,7 +2157,7 @@ bool BlobExistsInCache(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
 bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
-        // use previous chainlock because pruning involves previous as well
+        // use previous chainlock because chain can technically rollback up to previous lock
         const auto& clsig = llmq::chainLocksHandler->GetPreviousChainLock();
         if (!clsig.IsNull()) {
             const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
