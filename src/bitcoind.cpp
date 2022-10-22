@@ -17,7 +17,7 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util/ref.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -79,7 +79,7 @@ static bool AppInit(int argc, char* argv[])
         return true;
     }
 
-    util::Ref context{node};
+    CoreContext context{node};
     try
     {
         if (!CheckDataDirOption()) {

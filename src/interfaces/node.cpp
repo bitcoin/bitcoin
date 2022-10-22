@@ -34,7 +34,6 @@
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <util/check.h>
-#include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -440,13 +439,13 @@ public:
     {
         m_context = context;
         if (context) {
-            m_context_ref.Set(*context);
+            m_context_ref = *context;
         } else {
-            m_context_ref.Clear();
+            m_context_ref = std::nullopt;
         }
     }
     NodeContext* m_context{nullptr};
-    util::Ref m_context_ref;
+    CoreContext m_context_ref{std::nullopt};
 };
 
 } // namespace

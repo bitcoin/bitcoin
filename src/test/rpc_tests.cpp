@@ -6,11 +6,11 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 
+#include <context.h>
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
-#include <util/ref.h>
 #include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
@@ -32,7 +32,7 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    util::Ref context{m_node};
+    CoreContext context{m_node};
     JSONRPCRequest request(context);
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);

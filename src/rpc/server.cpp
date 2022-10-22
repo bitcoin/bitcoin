@@ -90,7 +90,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
         vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));
     sort(vCommands.begin(), vCommands.end());
 
-    JSONRPCRequest jreq(helpreq);
+    JSONRPCRequest jreq = helpreq;
     jreq.fHelp = true;
     jreq.params = UniValue();
 

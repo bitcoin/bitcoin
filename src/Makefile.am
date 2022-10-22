@@ -152,6 +152,7 @@ BITCOIN_CORE_H = \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
+  context.h \
   consensus/consensus.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
@@ -304,7 +305,6 @@ BITCOIN_CORE_H = \
   util/message.h \
   util/moneystr.h \
   util/ranges.h \
-  util/ref.h \
   util/serfloat.h \
   util/settings.h \
   util/string.h \

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_RPCWALLET_H
 #define BITCOIN_WALLET_RPCWALLET_H
 
+#include <context.h>
 #include <span.h>
 
 #include <memory>
@@ -21,10 +22,6 @@ struct WalletContext;
 
 static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
-namespace util {
-class Ref;
-} // namespace util
-
 Span<const CRPCCommand> GetWalletRPCCommands();
 
 /**
@@ -36,7 +33,7 @@ Span<const CRPCCommand> GetWalletRPCCommands();
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
 void EnsureWalletIsUnlocked(const CWallet*);
-WalletContext& EnsureWalletContext(const util::Ref& context);
+WalletContext& EnsureWalletContext(const CoreContext& context);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);

@@ -28,7 +28,6 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <undo.h>
-#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <util/system.h>
@@ -63,15 +62,16 @@ static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
-NodeContext& EnsureNodeContext(const util::Ref& context)
+NodeContext& EnsureNodeContext(const CoreContext& context)
 {
-    if (!context.Has<NodeContext>()) {
+    auto* node_context = GetContext<NodeContext>(context);
+    if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
-    return context.Get<NodeContext>();
+    return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const util::Ref& context)
+CTxMemPool& EnsureMemPool(const CoreContext& context)
 {
     NodeContext& node = EnsureNodeContext(context);
     if (!node.mempool) {
@@ -80,7 +80,7 @@ CTxMemPool& EnsureMemPool(const util::Ref& context)
     return *node.mempool;
 }
 
-ChainstateManager& EnsureChainman(const util::Ref& context)
+ChainstateManager& EnsureChainman(const CoreContext& context)
 {
     NodeContext& node = EnsureNodeContext(context);
     if (!node.chainman) {

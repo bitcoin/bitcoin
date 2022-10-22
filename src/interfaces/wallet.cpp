@@ -17,7 +17,6 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
-#include <util/ref.h>
 #include <validation.h>
 #include <wallet/context.h>
 #include <wallet/fees.h>

@@ -6,6 +6,8 @@
 #ifndef BITCOIN_INIT_H
 #define BITCOIN_INIT_H
 
+#include <context.h>
+
 #include <memory>
 #include <string>
 
@@ -17,9 +19,6 @@ struct BlockAndHeaderTipInfo;
 namespace boost {
 class thread_group;
 } // namespace boost
-namespace util {
-class Ref;
-} // namespace util
 
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
@@ -61,7 +60,7 @@ bool AppInitInterfaces(NodeContext& node);
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
+bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 void PrepareShutdown(NodeContext& node);
 
 /**

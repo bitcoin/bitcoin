@@ -21,7 +21,6 @@
 #include <util/fees.h>
 #include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
-#include <util/ref.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -130,12 +129,13 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
     }
 }
 
-WalletContext& EnsureWalletContext(const util::Ref& context)
+WalletContext& EnsureWalletContext(const CoreContext& context)
 {
-    if (!context.Has<WalletContext>()) {
+    auto* wallet_context = GetContext<WalletContext>(context);
+    if (!wallet_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet context not found");
     }
-    return context.Get<WalletContext>();
+    return *wallet_context;
 }
 
 static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniValue& entry)

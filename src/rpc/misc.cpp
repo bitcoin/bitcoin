@@ -21,7 +21,6 @@
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/message.h> // For MessageSign(), MessageVerify()
-#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
@@ -523,8 +522,8 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VNUM});
     int64_t time = request.params[0].get_int64();
     SetMockTime(time);
-    if (request.context.Has<NodeContext>()) {
-        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
+    if (auto* node_context = GetContext<NodeContext>(request.context)) {
+        for (const auto& chain_client : node_context->chain_clients) {
             chain_client->setMockTime(time);
         }
     }
@@ -1082,11 +1081,11 @@ static UniValue mockscheduler(const JSONRPCRequest& request)
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }
 
+    auto* node_context = GetContext<NodeContext>(request.context);
     // protect against null pointer dereference
-    CHECK_NONFATAL(request.context.Has<NodeContext>());
-    NodeContext& node = request.context.Get<NodeContext>();
-    CHECK_NONFATAL(node.scheduler);
-    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
+    CHECK_NONFATAL(node_context);
+    CHECK_NONFATAL(node_context->scheduler);
+    node_context->scheduler->MockForward(std::chrono::seconds(delta_seconds));
 
     return NullUniValue;
 }
