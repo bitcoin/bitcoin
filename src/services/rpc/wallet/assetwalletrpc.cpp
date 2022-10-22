@@ -256,7 +256,7 @@ static RPCHelpMan syscoincreatenevmblob()
     EnsureWalletIsUnlocked(*pwallet);
     std::string strData(request.params[0].get_str());
     bool bOverwrite{false};
-    if(request.params.size() > 0) {
+    if(request.params.size() > 1) {
         bOverwrite = request.params[1].get_bool();
     }
     std::vector<unsigned char> vchData(strData.data(), strData.data() + strData.size());

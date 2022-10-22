@@ -110,7 +110,8 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
 		}
 	}
     uint32_t index = 0;
-    for (auto const& [key, val] : pnevmdatadb.GetMapCache()) {
+    const auto & mapCache = pnevmdatadb.GetMapCache();
+    for (auto const& [key, val] :mapCache) {
         UniValue oBlob(UniValue::VOBJ);
         oBlob.__pushKV("versionhash",  HexStr(key));
         oBlob.__pushKV("mpt", val.second);
@@ -133,9 +134,9 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
 		try {
             key.first.clear();
 			if (pcursor->GetKey(key)) {
-                UniValue oBlob(UniValue::VOBJ);
                 // MTP
-                if(key.second == false) {
+                if(key.second == false && mapCache.find(key.first) == mapCache.end()) {
+                    UniValue oBlob(UniValue::VOBJ);
                     uint64_t nMedianTime;
                     if(pcursor->GetValue(nMedianTime)) {
                         oBlob.__pushKV("versionhash",  HexStr(key.first));
@@ -151,7 +152,8 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                                 pnevmdatadb.ReadData(key.first, vchData);
                             }
                             oBlob.__pushKV("data", HexStr(vchData));
-                        }    
+                        }
+                        oRes.push_back(oBlob); 
                     }
                 } else {
            			pcursor->Next();
@@ -162,7 +164,6 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
 					pcursor->Next();
 					continue;
 				}
-				oRes.push_back(oBlob);
 				if (index >= count + from)
 					break;
 			}

@@ -1164,11 +1164,15 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, const int64_t& 
     if(mapPoDA.empty()) {
         return;
     }
-    std::vector<uint8_t> emptyVec{};
     for (auto const& [key, val] : mapPoDA) {
+        // Could be null if we are reindexing blocks from disk and we get the VH without data (because data wasn't provided in payload).
+        // This is OK because we still want to provide the VH's to NEVM for indexing into DB (lookup via precompile).
+        if(!val) {
+            continue;
+        }
         // mapPoDA has a pointer of data back to tx vout and we copy it here because the block will lose its memory soon as its
         // stored to disk we create a copy here in our cache (which later gets written to disk in FlushStateToDisk)
-        auto inserted = mapCache.try_emplace(key, /* data */ val? *val: emptyVec, /* MTP */ nMedianTime);
+        auto inserted = mapCache.try_emplace(key, /* data */ *val, /* MTP */ nMedianTime);
         // for duplicate blobs, allow to update median time
         if(!inserted.second) {
             inserted.first->second.second = nMedianTime;

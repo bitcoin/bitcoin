@@ -2186,9 +2186,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment\n");
             return false;   
         }
-        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty())
-            mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, nevmDataPayload.vchNEVMData);
-  
+        mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, nevmDataPayload.vchNEVMData);
     }
     if(fNEVMConnection && !vecNEVMDataToProcess.empty()) {
         // process new vector in batch checking the blobs
