@@ -8,12 +8,15 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-Scalar RangeProof::m_one;
-Scalar RangeProof::m_two;
-Scalars RangeProof::m_two_pows;
+Scalar* RangeProof::m_one;
+Scalar* RangeProof::m_two;
+Scalars* RangeProof::m_two_pows;
+Scalar* RangeProof::m_inner_prod_ones_and_two_pows;
+GeneratorsFactory RangeProof::m_gf;
 
 RangeProof::RangeProof()
 {
+/*
     if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
 
@@ -26,7 +29,7 @@ RangeProof::RangeProof()
     RangeProof::m_two_pows = Scalars::FirstNPow(m_two, Config::m_input_value_bits);
     auto ones = Scalars::RepeatN(RangeProof::m_one, Config::m_input_value_bits);
     RangeProof::m_inner_prod_ones_and_two_pows = (ones * RangeProof::m_two_pows).Sum();
-
+*/
     m_is_initialized = true;
 }
 
@@ -84,7 +87,7 @@ bool RangeProof::InnerProductArgument(
 
 size_t RangeProof::GetInnerProdArgRounds(const size_t& num_input_values) const
 {
-    const size_t num_input_values_power_of_2 = GetFirstPowerOf2GreaterOrEqTo(num_input_values);
+    const size_t num_input_values_power_of_2 = Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
     const size_t rounds = std::log2(num_input_values_power_of_2) + std::log2(Config::m_input_value_bits);
     return rounds;
 }
@@ -105,7 +108,7 @@ Proof RangeProof::Prove(
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
 
-    const size_t num_input_values_power_2 = GetFirstPowerOf2GreaterOrEqTo(vs.Size());
+    const size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
     const size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
     ////////////// Proving steps
@@ -146,7 +149,7 @@ Proof RangeProof::Prove(
     // TODO fill bits if aL.size < concat_input_values_in_bits
     assert(false);
 
-    auto one_value_concat_bits = Scalars::FirstNPow(m_one, concat_input_values_in_bits);
+    auto one_value_concat_bits = Scalars::FirstNPow(*m_one, concat_input_values_in_bits);
 
     // aR is aL - 1
     Scalars aR = aL - one_value_concat_bits;
@@ -217,7 +220,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
         auto base_z = z_pows[i];  // change base Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
-            z_n_times_two_n.Add(base_z * m_two_pows[bit_idx]);
+            //z_n_times_two_n.Add(base_z * m_two_pows[bit_idx]);
         }
     }
 
@@ -352,7 +355,7 @@ G1Point RangeProof::VerifyLoop2(
         delta_yz = (z_pows[0] * y_pows_sum).Negate(); // (2)
         for (size_t i = 1; i <= Config::m_input_value_bits; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
-            delta_yz = delta_yz - z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
+            delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
         }
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS

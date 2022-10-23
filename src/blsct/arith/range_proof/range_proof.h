@@ -52,8 +52,6 @@ class RangeProof
 public:
     RangeProof();
 
-    void Init();
-
     G1Point GenerateBaseG1PointH(
         const G1Point& p,
         size_t index,
@@ -72,12 +70,6 @@ public:
         Proof& proof,
         CHashWriter& transcript_gen
     );
-
-    /**
-     * Returns power of 2 that is greater or equal to input_value_len
-     * throws exception if such a number exceeds the maximum
-     */
-    size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_len) const;
 
     /**
      * Take a log2 of the size of concatinated input values in bits
@@ -117,10 +109,10 @@ public:
 private:
     static GeneratorsFactory m_gf;
 
-    static Scalar m_one;
-    static Scalar m_two;
-    static Scalars m_two_pows;
-    static Scalar m_inner_prod_ones_and_two_pows;
+    static Scalar* m_one;
+    static Scalar* m_two;
+    static Scalars* m_two_pows;
+    static Scalar* m_inner_prod_ones_and_two_pows;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
