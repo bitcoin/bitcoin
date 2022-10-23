@@ -24,6 +24,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <util/enumerate.h>
+#include <util/irange.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -164,19 +165,17 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     {
         // Mine non-signalling blocks
         gArgs.ForceSetArg("-blockversion", "536870912");
-        for (int i = 0; i < window - num_blocks; ++i) {
+        for ([[maybe_unused]] auto _ : irange::range(window - num_blocks)) {
             CreateAndProcessBlock({}, coinbaseKey);
             LOCK(cs_main);
             deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         }
         gArgs.ForceRemoveArg("blockversion");
-        if (num_blocks > 0) {
-            // Mine signalling blocks
-            for (int i = 0; i < num_blocks; ++i) {
-                CreateAndProcessBlock({}, coinbaseKey);
-                LOCK(cs_main);
-                deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-            }
+        // Mine signalling blocks
+        for ([[maybe_unused]] auto _ : irange::range(num_blocks)) {
+            CreateAndProcessBlock({}, coinbaseKey);
+            LOCK(cs_main);
+            deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         }
         LOCK(cs_main);
         if (expected_lockin) {
@@ -258,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(VersionBitsTipState(consensus_params, deployment_id), ThresholdState::LOCKED_IN);
     }
 
-    for (int i = 0; i < 499; ++i) {
+    for ([[maybe_unused]] auto _ : irange::range(499)) {
         // Still LOCKED_IN at height = 2498
         CreateAndProcessBlock({}, coinbaseKey);
         LOCK(cs_main);
@@ -288,7 +287,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
     }
 
-    for (int i = 0; i < 9; ++i) {
+    for ([[maybe_unused]] auto _ : irange::range(9)) {
         CreateAndProcessBlock({}, coinbaseKey);
     }
 
@@ -303,9 +302,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
 
     // Reallocation should kick-in with the superblock mined at height = 2010,
     // there will be 19 adjustments, 3 superblocks long each
-    for (int i = 0; i < 19; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            for (int k = 0; k < 10; ++k) {
+    for ([[maybe_unused]] auto i : irange::range(19)) {
+        for ([[maybe_unused]] auto j : irange::range(3)) {
+            for ([[maybe_unused]] auto k : irange::range(10)) {
                 CreateAndProcessBlock({}, coinbaseKey);
             }
             LOCK(cs_main);
@@ -327,8 +326,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
 
     // Reward split should stay ~60/40 after reallocation is done,
     // check 10 next superblocks
-    for (int i = 0; i < 10; ++i) {
-        for (int k = 0; k < 10; ++k) {
+    for ([[maybe_unused]] auto i : irange::range(10)) {
+        for ([[maybe_unused]] auto k : irange::range(10)) {
             CreateAndProcessBlock({}, coinbaseKey);
         }
         LOCK(cs_main);
