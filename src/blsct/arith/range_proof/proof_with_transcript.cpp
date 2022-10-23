@@ -6,10 +6,7 @@
 #include <blsct/arith/range_proof/proof.h>
 #include <blsct/arith/range_proof/proof_with_transcript.h>
 
-ProofWithTranscript ProofWithTranscript::Build(
-  const Proof& proof,
-  const size_t& num_rounds
-) {
+ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
     // build transcript from proof in the same way it was built in Prove function
     CHashWriter transcript_gen(0,0);
 
@@ -35,12 +32,12 @@ ProofWithTranscript ProofWithTranscript::Build(
     transcript_gen << proof.mu;
     transcript_gen << proof.t_hat;
 
-    Scalar x_ip = transcript_gen.GetHash();
+    Scalar cx_factor = transcript_gen.GetHash();
 
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars xs;
     Scalars inv_xs;
-    for (size_t i = 0; i < num_rounds; ++i) {
+    for (size_t i = 0; i < proof.num_rounds; ++i) {
         transcript_gen << proof.Ls[i];
         transcript_gen << proof.Rs[i];
         Scalar x(transcript_gen.GetHash());
@@ -56,11 +53,10 @@ ProofWithTranscript ProofWithTranscript::Build(
         x,
         y,
         z,
-        x_ip,
+        cx_factor,
         xs,
         inv_xs,
         num_input_values_power_2,
-        concat_input_values_in_bits,
-        num_rounds
+        concat_input_values_in_bits
     );
 }

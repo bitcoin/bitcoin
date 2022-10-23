@@ -26,12 +26,12 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     BOOST_CHECK(gens1.G.get() == G1Point::GetBasePoint());
 
     // size of Gi and Hi should be the same and equal to max_input_value_vec_len in config
-    BOOST_CHECK(gens1.Hi.get().Size() == gens1.Gi.get().Size());
-    BOOST_CHECK(gens1.Hi.get().Size() == Config::m_max_input_value_vec_len);
+    BOOST_CHECK(gens1.GetHi().Size() == gens1.GetGi().Size());
+    BOOST_CHECK(gens1.GetHi().Size() == Config::m_max_input_value_vec_len);
 
     // same Gi and Hi should always be returned
-    BOOST_CHECK(gens1.Hi.get() == gens2.Hi.get());
-    BOOST_CHECK(gens1.Gi.get() == gens2.Gi.get());
+    BOOST_CHECK(gens1.GetHi() == gens2.GetHi());
+    BOOST_CHECK(gens1.GetGi() == gens2.GetGi());
 
     // H should differ if token_id differs
     BOOST_CHECK(gens1.H != gens2.H);
@@ -39,6 +39,11 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     // H should be identical if Generator is created from the same token_id
     Generators gens3 = gf.GetInstance(token_id_1);
     BOOST_CHECK(gens1.H == gens3.H);
+}
+
+BOOST_AUTO_TEST_CASE(test_generators_get_gihi_subset)
+{
+    BOOST_CHECK(false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

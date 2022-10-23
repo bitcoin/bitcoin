@@ -260,7 +260,8 @@ BOOST_AUTO_TEST_CASE(test_elements_operator_assign)
 {
     {
         Scalars a(std::vector<Scalar> { Scalar{2}, Scalar{3} });
-        auto b = a;
+        Scalars b;
+        b = a;
         BOOST_CHECK(b.Size() == 2);
         BOOST_CHECK(b[0].GetUint64() == 2);
         BOOST_CHECK(b[1].GetUint64() == 3);
@@ -269,7 +270,8 @@ BOOST_AUTO_TEST_CASE(test_elements_operator_assign)
         auto g = G1Point::GetBasePoint();
         auto g2 = g + g;
         G1Points gs(std::vector<G1Point> { g, g2 });
-        auto gs2 = gs;
+        G1Points gs2;
+        gs2 = gs;
         BOOST_CHECK(gs2.Size() == 2);
         BOOST_CHECK(gs2[0] == g);
         BOOST_CHECK(gs2[1] == g2);
@@ -487,6 +489,51 @@ BOOST_AUTO_TEST_CASE(test_elements_invert)
         auto ss_inv = ss.Invert();
         BOOST_CHECK(ss_inv[0] == ss[0].Invert());
         BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_elements_negate)
+{
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        auto ss_inv = ss.Negate();
+        BOOST_CHECK(ss_inv[0] == ss[0].Negate());
+        BOOST_CHECK(ss_inv[1] == ss[1].Negate());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_elements_get_via_index_operator)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+        Scalars xs(std::vector<Scalar> { one, two });
+        BOOST_CHECK(xs[0] == one);
+        BOOST_CHECK(xs[1] == two);
+        BOOST_CHECK_THROW(xs[2], std::runtime_error);
+    }
+    {
+        auto g = G1Point::GetBasePoint();
+        auto g2 = g + g;
+        G1Points xs(std::vector<G1Point> { g, g2 });
+        BOOST_CHECK(xs[0] == g);
+        BOOST_CHECK(xs[1] == g2);
+        BOOST_CHECK_THROW(xs[2], std::runtime_error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_elements_set_via_index_operator)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+        Scalar three(3);
+        Scalars xs(2, Scalar(0));
+        xs[0] = one;
+        xs[1] = two;
+        BOOST_CHECK_NO_THROW(xs[0] = one);
+        BOOST_CHECK_NO_THROW(xs[1] = two);
+        BOOST_CHECK_THROW(xs[2] = three, std::runtime_error);
     }
 }
 

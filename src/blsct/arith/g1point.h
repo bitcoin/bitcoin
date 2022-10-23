@@ -35,7 +35,9 @@ public:
     G1Point(const uint256& b);
     G1Point(const mclBnG1& p);
 
+    // used as static initializer/disposer
     static void Init();
+    static void Dispose(); // exists for the sake of completeness. not actually used.
 
     G1Point operator=(const mclBnG1& p);
     G1Point operator+(const G1Point& p) const;
@@ -54,12 +56,6 @@ public:
     static G1Point MapToG1(const std::string& s, const Endianness e = Endianness::Little);
     static G1Point HashAndMap(const std::vector<uint8_t>& vec);
 
-    /**
-     * Multiply G1Points by Scalars element by element and then get the sum of all resulting points
-     * [g_1*s_1, g_2*s_2, ..., g_n*s_n].Sum()
-     */
-    static G1Point MulVec(const std::vector<mclBnG1>& g_vec, const std::vector<mclBnFr>& s_vec);
-
     static G1Point Rand();
 
     bool operator==(const G1Point& b) const;
@@ -71,7 +67,7 @@ public:
     std::vector<uint8_t> GetVch() const;
     void SetVch(const std::vector<uint8_t>& b);
 
-    std::string GetString(const int& radix = 16) const;
+    std::string GetString(const uint8_t& radix = 16) const;
     Scalar GetHashWithSalt(const uint64_t salt) const;
 
     unsigned int GetSerializeSize() const;
@@ -93,7 +89,7 @@ public:
     mclBnG1 m_p;
 
 private:
-    static mclBnG1 m_g; // Using mclBnG1 instead of G1Point to get around chiken-and-egg issue
+    static mclBnG1* m_g; // Using mclBnG1 instead of G1Point to get around chiken-and-egg issue
     static boost::mutex m_init_mutex;
 };
 

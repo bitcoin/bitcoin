@@ -11,7 +11,25 @@ BOOST_FIXTURE_TEST_SUITE(config_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_config_get_first_power_of_2_greater_or_eq_to)
 {
-    BOOST_CHECK(1 != 1);
+    // 2^0 = 1
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(0) == 1);
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(1) == 1);
+
+    // 2^1 = 2
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(2) == 2);
+
+    // 2^2 = 4
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(3) == 4);
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(4) == 4);
+
+    // 2^3 = 8
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(5) == 8);
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(6) == 8);
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(7) == 8);
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(8) == 8);
+
+    // check boundary of 8
+    BOOST_CHECK(Config::GetFirstPowerOf2GreaterOrEqTo(9) == 16);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -22,10 +22,17 @@ struct Proof
     G1Points Ls;
     G1Points Rs;
 
+    // values used to recover amounts
+    Scalar x;
+    Scalar z;
+
     // proof results
     Scalar t_hat;   // inner product of l and r
     Scalar a;       // result of inner product argument
     Scalar b;       // result of inner product argument
+
+    // others
+    size_t num_rounds;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_H

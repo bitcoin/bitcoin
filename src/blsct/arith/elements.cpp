@@ -5,6 +5,7 @@
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/scalar.h>
+#include <boost/format.hpp>
 
 template <typename T>
 Elements<T>::Elements(const size_t& size, const T& default_value)
@@ -28,12 +29,32 @@ template Scalar Elements<Scalar>::Sum() const;
 template G1Point Elements<G1Point>::Sum() const;
 
 template <typename T>
-T Elements<T>::operator[](int index) const
+void Elements<T>::ConfirmIndexInsideRange(const uint32_t& index) const {
+    if (index >= m_vec.size()) {
+        auto s = boost::format("index %1% is out of range [0..%2%]") % index % (m_vec.size() - 1ul);
+        throw std::runtime_error(s.str());
+    }
+}
+template void Elements<Scalar>::ConfirmIndexInsideRange(const uint32_t&) const;
+template void Elements<G1Point>::ConfirmIndexInsideRange(const uint32_t&) const;
+
+template <typename T>
+T& Elements<T>::operator[](const uint32_t& index)
 {
+    ConfirmIndexInsideRange(index);
     return m_vec[index];
 }
-template Scalar Elements<Scalar>::operator[](int) const;
-template G1Point Elements<G1Point>::operator[](int) const;
+template Scalar& Elements<Scalar>::operator[](const uint32_t&);
+template G1Point& Elements<G1Point>::operator[](const uint32_t&);
+
+template <typename T>
+T Elements<T>::operator[](const uint32_t& index) const
+{
+    ConfirmIndexInsideRange(index);
+    return m_vec[index];
+}
+template Scalar Elements<Scalar>::operator[](const uint32_t&) const;
+template G1Point Elements<G1Point>::operator[](const uint32_t&) const;
 
 template <typename T>
 size_t Elements<T>::Size() const
@@ -52,12 +73,12 @@ template bool Elements<Scalar>::Empty() const;
 template bool Elements<G1Point>::Empty() const;
 
 template <typename T>
-void Elements<T>::Add(const T x)
+void Elements<T>::Add(const T& x)
 {
     m_vec.push_back(x);
 }
-template void Elements<Scalar>::Add(const Scalar);
-template void Elements<G1Point>::Add(const G1Point);
+template void Elements<Scalar>::Add(const Scalar&);
+template void Elements<G1Point>::Add(const G1Point&);
 
 template <typename T>
 inline void Elements<T>::ConfirmSizesMatch(const size_t& other_size) const
@@ -195,32 +216,26 @@ template Elements<Scalar> Elements<Scalar>::operator-(const Elements<Scalar>& ot
 template Elements<G1Point> Elements<G1Point>::operator-(const Elements<G1Point>& other) const;
 
 template <typename T>
-Elements<T> Elements<T>::operator=(const Elements<T>& other) const
+void Elements<T>::operator=(const Elements<T>& other)
 {
-    ConfirmSizesMatch(other.Size());
-
     if constexpr (std::is_same_v<T, Scalar>) {
-        Elements<T> ret;
-        for (size_t i = 0; i < m_vec.size(); ++i) {
+        m_vec.clear();
+        for (size_t i = 0; i < other.m_vec.size(); ++i) {
             auto copy = Scalar(other.m_vec[i]);
-            ret.m_vec.push_back(copy);
+            m_vec.push_back(copy);
         }
-        return ret;
-
     } else if constexpr (std::is_same_v<T, G1Point>) {
-        Elements<T> ret;
-        for (size_t i = 0; i < m_vec.size(); ++i) {
+        m_vec.clear();
+        for (size_t i = 0; i < other.m_vec.size(); ++i) {
             auto copy = G1Point(other.m_vec[i]);
-            ret.m_vec.push_back(copy);
+            m_vec.push_back(copy);
         }
-        return ret;
-
     } else {
         throw std::runtime_error("Not implemented");
     }
 }
-template Elements<Scalar> Elements<Scalar>::operator=(const Elements<Scalar>& other) const;
-template Elements<G1Point> Elements<G1Point>::operator=(const Elements<G1Point>& other) const;
+template void Elements<Scalar>::operator=(const Elements<Scalar>& other);
+template void Elements<G1Point>::operator=(const Elements<G1Point>& other);
 
 template <typename T>
 bool Elements<T>::operator==(const Elements<T>& other) const
@@ -318,3 +333,19 @@ Elements<T> Elements<T>::Invert() const
     }
 }
 template Elements<Scalar> Elements<Scalar>::Invert() const;
+
+template <typename T>
+Elements<T> Elements<T>::Negate() const
+{
+    if constexpr (std::is_same_v<T, Scalar>) {
+        Scalars ret;
+        for(auto& x: m_vec) {
+            ret.Add(x.Negate());
+        }
+        return ret;
+
+    } else {
+        throw std::runtime_error("Not implemented");
+    }
+}
+template Elements<Scalar> Elements<Scalar>::Negate() const;
