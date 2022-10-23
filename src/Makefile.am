@@ -293,6 +293,7 @@ BITCOIN_CORE_H = \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
+  util/enumerate.h \
   util/error.h \
   util/fees.h \
   util/golombrice.h \

@@ -23,6 +23,7 @@
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
+#include <util/enumerate.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -48,10 +49,9 @@ struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {
     SimpleUTXOMap utxos;
-    for (size_t i = 0; i < txs.size(); i++) {
-        auto& tx = txs[i];
-        for (size_t j = 0; j < tx->vout.size(); j++) {
-            utxos.try_emplace(COutPoint(tx->GetHash(), j), std::make_pair((int)i + 1, tx->vout[j].nValue));
+    for (auto [i, tx] : enumerate(txs)) {
+        for (auto [j, output] : enumerate(tx->vout)) {
+            utxos.try_emplace(COutPoint(tx->GetHash(), j), std::make_pair((int)i + 1, output.nValue));
         }
     }
     return utxos;
@@ -104,9 +104,9 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
     FillableSigningProvider tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
-    for (size_t i = 0; i < tx.vin.size(); i++) {
+    for (auto [i, input] : enumerate(tx.vin)) {
         uint256 hashBlock;
-        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash, Params().GetConsensus(), hashBlock);
+        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, input.prevout.hash, Params().GetConsensus(), hashBlock);
         BOOST_ASSERT(txFrom);
         BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
