@@ -35,6 +35,7 @@ public:
     G1Point(const uint256& b);
     G1Point(const mclBnG1& p);
 
+    // used as static initializer/disposer
     static void Init();
     static void Dispose(); // exists for the sake of completeness. not actually used.
 
