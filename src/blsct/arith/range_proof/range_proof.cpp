@@ -340,9 +340,10 @@ G1Point RangeProof::VerifyLoop2(
 
         //////// (65)
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
-        // g^t_hat * h^(-tau_x) * V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
+        // g^(t_hat - delta_yz) * h^(tau_x) * V^(z^2) * T1^x * T2^(x^2)
 
-        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // h^tau_x
+        // LHS (65)
+        h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // LHS (65)
 
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
@@ -354,28 +355,32 @@ G1Point RangeProof::VerifyLoop2(
             delta_yz = delta_yz - z_pows[i] * RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
         }
 
+        // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
-        // ... = - g^(t_hat - delta_yz)
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
 
-        // V^(z^2)
+        // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
             points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
+        // T1^x and T2^(x^2) in RHS (65)
         points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
         points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
-        // ** exponent of g and (h') are created in loop below
+        // exponents of g and (h') are created in a loop later
+
+        // A and S^x in RHS (66)
         points.Add(p.proof.A * weight_z); // A
         points.Add(p.proof.S * (p.x * weight_z));  // S^x
 
         //////// (67), (68)
 
-        // for all bits of input values
+        // this loop generates exponents for gi and hi generators so that
+        // when there are aggregated, they become g and h in (16)
         std::vector<Scalar> acc_xs(1 << p.num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
@@ -392,20 +397,21 @@ G1Point RangeProof::VerifyLoop2(
         Scalar y_inv_pow(1);
         Scalar y_pow(1);
         for (size_t i = 0; i < p.concat_input_values_in_bits; ++i) {
-            Scalar gi_exp = p.proof.a * acc_xs[i];  // from beg to end
-            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // from end to beg. y_inv_pow to turn generator to (h')
+            // g^a * h^b (16)
+            Scalar gi_exp = p.proof.a * acc_xs[i];  // g^a in (16) is distributed to each generator
+            Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
 
-            // gi_exp = gi_exp + p.z;  // g^(-z) (66)
+            // gi_exp = gi_exp + p.z;  // g^(-z) in RHS (66)
 
-            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) (66)
+            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             // Scalar tmp =
             //     z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
             //     m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
             // // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             // hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);
-            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);
+            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // (16) g^a moved to LHS
+            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);  // (16) h^b moved to LHS
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;
@@ -414,15 +420,12 @@ G1Point RangeProof::VerifyLoop2(
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
-        // adds L^(x^2) * R^(x-1)^2 ... (4) for all rounds that consist the final P - P*h^mu
+        // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
         for (size_t i = 0; i < p.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
         }
 
-        // maps to (68) t_hat = <l, r>; t_hat is used for inner product argument paremeter c
-        // l anr r had been aggregated to a and b respectively
-        // and (16) checks c == a * b
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
 
