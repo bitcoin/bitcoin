@@ -58,6 +58,7 @@ cmake_dependent_option(CXX20 "Enable compilation in C++20 mode." OFF "NOT MSVC" 
 option(THREADLOCAL "Enable features that depend on the C++ thread_local keyword (currently just thread names in debug logs)." ON)
 option(HARDENING "Attempt to harden the resulting executables." ON)
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
+option(WERROR "Treat compiler warnings as errors." OFF)
 
 tristate_option(CCACHE "Use ccache for compiling." "if ccache is found." AUTO)
 tristate_option(WITH_NATPMP "Enable NAT-PMP." "if libnatpmp is found." AUTO)
@@ -271,6 +272,29 @@ if(REDUCE_EXPORTS)
   endif()
 endif()
 
+if(WERROR)
+  if(MSVC)
+    add_compile_options(/WX)
+  else()
+    set(error_cxx_flags "")
+    try_append_cxxflag(error_cxx_flags "-Werror")
+    if(NOT CXX_SUPPORTS_WERROR)
+      message(FATAL_ERROR "WERROR set but -Werror is not usable.")
+    endif()
+
+    # -Wreturn-type is broken in GCC for MinGW-w64.
+    # https://sourceforge.net/p/mingw-w64/bugs/306/
+    try_append_cxxflag(error_cxx_flags "-Werror=return-type"
+      CHECK_PASSED_FLAG ""
+      CHECK_FAILED_FLAG "-Wno-error=return-type"
+      SOURCE "#include <cassert>\nint f(){ assert(false); }"
+    )
+
+    separate_arguments(error_cxx_flags)
+    add_compile_options(${error_cxx_flags})
+  endif()
+endif()
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   include(CheckPIESupported)
   check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
@@ -359,6 +383,7 @@ else()
   message(" - LDFLAGS for shared libraries ....... ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 endif()
 message("Use assembly routines ................. ${ASM}")
+message("Treat compiler warnings as errors ..... ${WERROR}")
 message("Use ccache for compiling .............. ${CCACHE}")
 message("\n")
 if(configure_warnings)
