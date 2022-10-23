@@ -8,28 +8,27 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-Scalar* RangeProof::m_one;
-Scalar* RangeProof::m_two;
-Scalars* RangeProof::m_two_pows;
-Scalar* RangeProof::m_inner_prod_ones_and_two_pows;
-GeneratorsFactory RangeProof::m_gf;
+Scalar* RangeProof::m_one = nullptr;
+Scalar* RangeProof::m_two = nullptr;
+Scalars* RangeProof::m_two_pows = nullptr;
+Scalar* RangeProof::m_inner_prod_ones_and_two_pows = nullptr;
+GeneratorsFactory* RangeProof::m_gf;
 
 RangeProof::RangeProof()
 {
-/*
     if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
 
     MclInitializer::Init();
     G1Point::Init();
-
+    /*
     //RangeProof::m_gens = Generators();
-    RangeProof::m_one = Scalar(1);
-    RangeProof::m_two = Scalar(2);
-    RangeProof::m_two_pows = Scalars::FirstNPow(m_two, Config::m_input_value_bits);
-    auto ones = Scalars::RepeatN(RangeProof::m_one, Config::m_input_value_bits);
-    RangeProof::m_inner_prod_ones_and_two_pows = (ones * RangeProof::m_two_pows).Sum();
-*/
+    RangeProof::m_one = new Scalar(1);
+    RangeProof::m_two = new Scalar(2);
+    //RangeProof::m_two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+    auto ones = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
+    RangeProof::m_inner_prod_ones_and_two_pows = new Scalar((ones * *RangeProof::m_two_pows).Sum());
+    */
     m_is_initialized = true;
 }
 
@@ -122,7 +121,7 @@ Proof RangeProof::Prove(
     }
 
     // Get Generators for the token_id
-    Generators gens = m_gf.GetInstance(token_id);
+    Generators gens = m_gf->GetInstance(token_id);
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
@@ -468,7 +467,7 @@ bool RangeProof::Verify(
 
 
     const size_t max_mn = 1u << max_num_rounds;
-    const Generators gens = m_gf.GetInstance(token_id);
+    const Generators gens = m_gf->GetInstance(token_id);
 
     G1Point point_sum = VerifyLoop2(
         proof_derivs,
@@ -482,7 +481,7 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
     const std::vector<AmountRecoveryReq>& reqs,
     const TokenId& token_id
 ) const {
-    const Generators gens = m_gf.GetInstance(token_id);
+    const Generators gens = m_gf->GetInstance(token_id);
     std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
 
     for (const AmountRecoveryReq& req: reqs) {

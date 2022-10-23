@@ -107,7 +107,7 @@ public:
     ) const;
 
 private:
-    static GeneratorsFactory m_gf;
+    static GeneratorsFactory* m_gf;
 
     static Scalar* m_one;
     static Scalar* m_two;

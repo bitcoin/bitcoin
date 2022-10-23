@@ -93,7 +93,7 @@ public:
     mclBnG1 m_p;
 
 private:
-    static mclBnG1 m_g; // Using mclBnG1 instead of G1Point to get around chiken-and-egg issue
+    static mclBnG1* m_g; // Using mclBnG1 instead of G1Point to get around chiken-and-egg issue
     static boost::mutex m_init_mutex;
 };
 

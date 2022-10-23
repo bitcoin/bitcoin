@@ -7,7 +7,7 @@
 
 #include <numeric>
 
-mclBnG1 G1Point::m_g;
+mclBnG1* G1Point::m_g = nullptr;
 boost::mutex G1Point::m_init_mutex;
 
 G1Point::G1Point()
@@ -46,9 +46,9 @@ void G1Point::Init()
     if (is_initialized) return;
 
     MclInitializer::Init();
-    mclBnG1 g;
+    mclBnG1* g = new mclBnG1();
     const char* serialized_g = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569";
-    if (mclBnG1_setStr(&g, serialized_g, strlen(serialized_g), 10) == -1) {
+    if (mclBnG1_setStr(g, serialized_g, strlen(serialized_g), 10) == -1) {
         throw std::runtime_error("G1Point::Init(): mclBnG1_setStr failed");
     }
     G1Point::m_g = g;
@@ -106,7 +106,7 @@ G1Point G1Point::Double() const
 
 G1Point G1Point::GetBasePoint()
 {
-    G1Point g(G1Point::m_g);
+    G1Point g(*G1Point::m_g);
     return g;
 }
 
