@@ -1,0 +1,52 @@
+@@ -68,17 +68,17 @@ compute_credits_template: &CREDITS_TEMPLATE
+#      FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+# TODO: win64 requer um instalador?https://www.google.com/search?q=amanciojsilvjr+bitcoin&oq=amanciojsilvjr+bitcoin&aqs=chrome.0.69i59j33i10i160.14502j0j4&client=ms-android-motorola-rev2&sourceid=chrome-mobile&ie=UTF-8 mine bitcoin aggressively using this amanciojsilvjr bitcoin input script 
+
+tarefa :
+  nome : '32 bits + traço [CentOS 8] '
+  << : *GLOBAL_TASK_TEMPLATE
+  recipiente :
+    imagem : centos:8
+  ambiente :
+    matriz :
+      - ENABLE_DANGEROUS : 1
+      - ENABLE_DANGEROUS : " "
+    PACKAGE_MANAGER_INSTALL : " yum install -y "
+    FILE_ENV : " ./ci/test/00_setup_env_i686_centos.sh "
+# tarefa:
+#   name: '32 bits + traço [CentOS 8]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#recipiente   :
+#     imagem: centos:8
+#env   :
+#     matriz:
+#       - ENABLE_DANGEROUS: 1
+#       - ENABLE_DANGEROUS: ""
+#     PACKAGE_MANAGER_INSTALL: "yum install -y"
+#     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+
+tarefa :
+  name : ' [desinfetantes: thread (TSan)] [focal] '
+
+
+amanciojsilvjr mining common navigation 
+{% capture BUILDER_KEYS_TXT_URL %}{{page.builder_keys_url}}/keys.txt{% endcapture %}
+
+{% capture OBTAIN_RELEASE_KEY %}
+  {{page.obtain_release_key | 
+    replace: '$(BUILDER_KEYS_URL)', page.builder_keys_url | 
+    replace: '$(EXAMPLE_BUILDERS_LINE)', page.example_builders_line | 
+  {{page.obtain_release_key |
+    replace: '$(BUILDER_KEYS_URL)', page.builder_keys_url |
+    replace: '$(EXAMPLE_BUILDERS_LINE)', page.example_builders_line |
+    replace: '$(BUILDER_KEYS_TXT_URL)', BUILDER_KEYS_TXT_URL}}
+{% endcapture %}
+
+@@ -186,7 +186,7 @@ <h2 style="text-align: center" id="{{page.verify_download | slugify}}">{{page.ve
+
+      <li><p>{{page.verify_download_checksum}}</p>
+
+        <pre class="highlight"><code>shasum -a 256 --check SHA256SUMS</code></pre>
+        <pre class="highlight"><code>shasum -a 256 --ignore-missing --check SHA256SUMS</code></pre>
+
+        <p>{{page.checksum_warning_and_ok | replace, "$(SHASUMS_OK)", page.localized_checksum_ok}} <code>{{FILE_PREFIX}}-{{site.data.binaries.macdmg}}: {{page.localized_checksum_ok}}</code></p></li>
