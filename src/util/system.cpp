@@ -428,9 +428,9 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
 
     path /= fs::PathFromString(BaseParams().DataDir());
     path /= "blocks";
-    // fs::create_directories(path);
+    fs::create_directories(path);
     // SYSCOIN
-    TryCreateDirectories(path);
+    //TryCreateDirectories(path);
     return path;
 }
 
@@ -1214,11 +1214,6 @@ bool TryCreateDirectories(const fs::path& p)
     return false;
 }
 // SYSCOIN
-bool ExistsOldAssetDir()
-{
-    const fs::path p =  gArgs.GetDataDirNet() / "assets";
-    return (fs::exists(p) && fs::is_directory(p));
-}
 bool ExistsOldEthDir()
 {
     const fs::path p =  gArgs.GetDataDirNet() / "ethereumtxroots";
@@ -1233,10 +1228,6 @@ void DeleteOldEthDir()
         fs::remove_all(p);
     if(fs::exists(p1) && fs::is_directory(p1))
         fs::remove_all(p1);
-}
-void DeleteOldAssetDir()
-{
-    fs::remove_all(gArgs.GetDataDirNet() / "assets");
 }
 
 bool FileCommit(FILE *file)

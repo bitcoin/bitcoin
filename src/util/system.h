@@ -110,9 +110,7 @@ std::streampos GetFileSize(const char* path, std::streamsize max = std::numeric_
 void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
-bool ExistsOldAssetDir();
 bool ExistsOldEthDir();
-void DeleteOldAssetDir();
 void DeleteOldEthDir();
 fs::path GetDefaultDataDir();
 // SYSCOIN
