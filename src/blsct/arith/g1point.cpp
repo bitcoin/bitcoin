@@ -55,6 +55,11 @@ void G1Point::Init()
     is_initialized = true;
 }
 
+void G1Point::Dispose()
+{
+    if (G1Point::m_g != nullptr) delete G1Point::m_g;
+}
+
 G1Point G1Point::operator=(const mclBnG1& q)
 {
     m_p = q;

@@ -36,6 +36,7 @@ public:
     G1Point(const mclBnG1& p);
 
     static void Init();
+    static void Dispose(); // exists for the sake of completeness. not actually used.
 
     G1Point operator=(const mclBnG1& p);
     G1Point operator+(const G1Point& p) const;
