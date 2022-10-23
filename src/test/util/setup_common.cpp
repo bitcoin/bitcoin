@@ -170,6 +170,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
 BasicTestingSetup::~BasicTestingSetup()
 {
     // SYSCOIN
+    passetdb.reset();
+    passetnftdb.reset();
+    pnevmtxrootsdb.reset();
+    pnevmtxmintdb.reset();
+    pblockindexdb.reset();
+    pnevmdatadb.reset();
     deterministicMNManager.reset();
     evoDb.reset();
     SetMockTime(0s); // Reset mocktime for following tests
