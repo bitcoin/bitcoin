@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_getvch)
         BOOST_CHECK(vec == a_vec);
     }
     {
-        // the first 0 of vec should have been removed in act
+        // with trim option on, the first 0 should have been removed in act
         auto act = a.GetVch(true);
         std::vector<uint8_t> exp(vec.size() - 1);
         std::copy(vec.begin() + 1, vec.end(), exp.begin());

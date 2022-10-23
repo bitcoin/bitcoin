@@ -264,7 +264,7 @@ std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
     std::vector<uint8_t> trimmed_vec;
 
     bool take_char = false;
-    for (auto c: trimmed_vec) {
+    for (auto c: vec) {
         if (!take_char && c != '\0') take_char = true;
         if (take_char) trimmed_vec.push_back(c);
     }
