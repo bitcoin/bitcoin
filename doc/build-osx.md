@@ -6,7 +6,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on m
 
 ## Preparation
 
-The commands in this guide should be executed in a Terminal application.
+The commands in this guide should be executed in a Terminal application.\\
 macOS comes with a built-in Terminal located in:
 
 ```
@@ -15,7 +15,7 @@ macOS comes with a built-in Terminal located in:
 
 ### 1. Xcode Command Line Tools
 
-The Xcode Command Line Tools are a collection of build tools for macOS.
+The Xcode Command Line Tools (CLT) are a collection of build tools for macOS.\\
 These tools must be installed in order to build Bitcoin Core from source.
 
 To install, run the following command from your terminal:
@@ -24,37 +24,87 @@ To install, run the following command from your terminal:
 xcode-select --install
 ```
 
-Upon running the command, you should see a popup appear.
+Upon running the command, you should see a popup appear.\\
 Click on `Install` to continue the installation process.
 
-### 2. Homebrew Package Manager
+Verify CLT installation:
 
-Homebrew is a package manager for macOS that allows one to install packages from the command line easily.
+To view installed CLT version number, run this command : `pkgutil –pkg-info=com.apple.pkg.CLTools_Executables`\\
+If output is not-showing verison number or if output is showing msg that “… No receipt …” then CLT is not installed, or its bundled inside/with Xcode.\\
+To view pre-installed all pkgs you may run : `pkgutil –pkgs`
+
+You may also run command : `xcrun clang`\\
+and see what it outputs:
+
+``` bash
+UserMacBook:~ username$  xcrun clang
+clang: error: no input files
+```
+  If output of above command is NOT this message ''clang: error: no input files'', then either installation has error or executable build files are not in PATH environment variable correctly.
+
+Note: CLT installer download is under/near 300 MB, and may need around ~ 2 GB space in your storage.
+
+### 2. Package Manager
+
+There are few package manager (pkg-mngr) options for macOS:\\
+2a: homebrew.\\
+2b: MacPorts.
+
+#### 2a. Homebrew Package Manager
+
+Homebrew is an opensource & free //(3rd party)// package manager (pkg-mngr) for macOS, that allows one to install packages from the command line easily. Homebrew was built 7yrs after MacPorts pkg-mngr, initially MacPorts was known as DarwinPorts.
 While several package managers are available for macOS, this guide will focus on Homebrew as it is the most popular.
 Since the examples in this guide which walk through the installation of a package will use Homebrew, it is recommended that you install it to follow along.
 Otherwise, you can adapt the commands to your package manager of choice.
 
 To install the Homebrew package manager, see: https://brew.sh
 
+Notice / WARNING / CAUTION : Though homebrew is an opensource pkg-mngr but this tool uses Google Analytics to collect usage telemetry data from your homebrew inside your computer.\\
+If you want this anti-privacy bahavior stopped, use OPT OUT option/command:
+
+``` bash
+brew analytics off
+```
+
+or by setting:
+
+``` bash
+export HOMEBREW_NO_ANALYTICS=1
+```
+
 Note: If you run into issues while installing Homebrew or pulling packages, refer to [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
+
+#### 2b. MacPorts Package Manager
+
+[MacPorts](https://www.MacPorts.org/) is an opensource & free //(3rd party)// pkg-mngr //(package manager)// for macOS, etc, & it does not steal your usage/private data by-default. MacPorts [guide](https://guide.macports.org/). It can obtain source or binary or both //(for most)// package. After downloading source, it can auto compile in your OS/distro to create/build trustworthy binary files. MacPorts was known as DarwinPorts, and it was created 7yrs before homebrew.
+
+Download/obtain MacPorts installer dmg/pkg file, install it. More info [here](https://www.macports.org/install.php).
+
+If you need more information related to PATH variable, or other info on MacPorts pkg-mngr: goto MacPorts [guide](https://guide.macports.org/)
 
 ### 3. Install Required Dependencies
 
-The first step is to download the required dependencies.
+The first step is to download the required dependencies.\\
 These dependencies represent the packages required to get a barebones installation up and running.
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-To install, run the following from your terminal:
+To install, run the following from your terminal, if you use homebrew:
 
 ``` bash
 brew install automake libtool boost pkg-config libevent
 ```
 
+To install, run the following from your terminal, if you use MacPorts:
+
+``` bash
+sudo port install automake libtool boost176 pkgconfig libevent
+```
+
 ### 4. Clone Bitcoin repository
 
-`git` should already be installed by default on your system.
-Now that all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory.
+`git` should already be installed by default on your system.\\
+Now that all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory.\\
 All build scripts and commands will run from this directory.
 
 ``` bash
@@ -76,61 +126,91 @@ install anything.
 
 ###### Legacy Wallet Support
 
-`berkeley-db@4` is only required to support for legacy wallets.
+if you use homebrew, get `berkeley-db@4`.\\
+if you use MacPorts, get `db48`.\\
+It is only required to support for legacy wallets.\\
 Skip if you don't intend to use legacy wallets.
 
 ``` bash
 brew install berkeley-db@4
 ```
+
+or
+
+``` bash
+sudo port install db48
+```
+
 ---
 
 #### GUI Dependencies
 
 ###### Qt
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework.
-To compile the GUI, we need to install `qt@5`.
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework.\\
+To compile the GUI, we need to install `qt@5` via homebrew, or we need to install `qt5` via MacPorts.\\
 Skip if you don't intend to use the GUI.
 
 ``` bash
 brew install qt@5
 ```
 
-Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
+or
+
+``` bash
+sudo port install qt5
+```
+
+Note: Building with Qt binaries downloaded from the Qt website is not officially supported.\\
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
 ###### qrencode
 
-The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `qrencode`.
+The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `qrencode`.\\
 Skip if not using the GUI or don't want QR code functionality.
 
 ``` bash
 brew install qrencode
 ```
+or
+
+``` bash
+sudo port install qrencode
+```
+
 ---
 
 #### Port Mapping Dependencies
 
 ###### miniupnpc
 
-miniupnpc may be used for UPnP port mapping.
+miniupnpc may be used for UPnP port mapping.\\
 Skip if you do not need this functionality.
 
 ``` bash
 brew install miniupnpc
 ```
 
+or
+
+``` bash
+sudo port install miniupnpc
+```
+
+Note: The `miniupnpc` also includes some parts of NAT-PMP.
+
 ###### libnatpmp
 
-libnatpmp may be used for NAT-PMP port mapping.
+libnatpmp may be used for NAT-PMP port mapping.\\
 Skip if you do not need this functionality.
 
 ``` bash
 brew install libnatpmp
 ```
 
-Note: UPnP and NAT-PMP support will be compiled in and disabled by default.
-Check out the [further configuration](#further-configuration) section for more information.
+Note: UPnP and NAT-PMP support will be compiled in and disabled by default.\\
+Check out the [further configuration](#further-configuration) section for more information.\\
+(The `gupnp-igd` pkg, in MacPorts, has UPnP-IGD spec & support, which is concurrent to NAT-PMP, but not used by current bitcoin core source code. So unless bitcoin-core devs recommend to load it, do not load/use it now).
 
 ---
 
@@ -141,6 +221,12 @@ Skip if you do not need ZMQ functionality.
 
 ``` bash
 brew install zeromq
+```
+
+or
+
+``` bash
+sudo port install zmq
 ```
 
 ZMQ is automatically compiled in and enabled if the dependency is detected.
@@ -157,6 +243,12 @@ To run the test suite (recommended), you will need to have Python 3 installed:
 
 ``` bash
 brew install python
+```
+
+or
+
+``` bash
+suod port install python38
 ```
 
 ---
@@ -180,8 +272,8 @@ There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Wallet (BDB + SQlite) Support, No GUI:
 
-If `berkeley-db@4` is installed, then legacy wallet support will be built.
-If `berkeley-db@4` is not installed, then this will throw an error.
+If `berkeley-db@4` or `db48` is installed, then legacy wallet support will be built.
+If `berkeley-db@4` or `db48` is not installed, then this will throw an error.
 If `sqlite` is installed, then descriptor wallet support will also be built.
 Additionally, this explicitly disables the GUI.
 
