@@ -284,10 +284,16 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[i])["tx"][0])
 
         # If we do a simple invalidate we announce the disconnected coinbase
+        # and announce the previous fork tip
         self.nodes[0].invalidateblock(connect_blocks[1])
+        assert_equal(hashblock.receive().hex(), disconnect_block)
         assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[1])["tx"][0])
         # And the current tip
         assert_equal(hashtx.receive().hex(), self.nodes[1].getblock(connect_blocks[0])["tx"][0])
+
+        # Reconsider block to make sure we receive the block announcements again
+        self.nodes[0].reconsiderblock(connect_blocks[1])
+        assert_equal(hashblock.receive().hex(), connect_blocks[1])
 
     def test_sequence(self):
         """
