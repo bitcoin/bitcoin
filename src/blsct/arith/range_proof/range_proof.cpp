@@ -21,14 +21,15 @@ RangeProof::RangeProof()
 
     MclInitializer::Init();
     G1Point::Init();
-    /*
+
     //RangeProof::m_gens = Generators();
     RangeProof::m_one = new Scalar(1);
     RangeProof::m_two = new Scalar(2);
-    //RangeProof::m_two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+    auto two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+    RangeProof::m_two_pows = new Scalars(two_pows);
     auto ones = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
     RangeProof::m_inner_prod_ones_and_two_pows = new Scalar((ones * *RangeProof::m_two_pows).Sum());
-    */
+
     m_is_initialized = true;
 }
 
