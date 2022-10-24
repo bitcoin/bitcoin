@@ -38,12 +38,12 @@ RangeProof::RangeProof()
 
 bool RangeProof::InnerProductArgument(
     const size_t input_value_vec_len,
-    const G1Points& Gi,
-    const G1Points& Hi,
+    G1Points& Gi,
+    G1Points& Hi,
     const G1Point& u,
     const Scalar& cx_factor,  // factor to multiply to cL and cR
-    const Scalars& a,
-    const Scalars& b,
+    Scalars& a,
+    Scalars& b,
     const Scalar& y,
     Proof& proof,
     CHashWriter& transcript_gen
@@ -110,7 +110,6 @@ Proof RangeProof::Prove(
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
-
     const size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
     const size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
@@ -129,12 +128,21 @@ Proof RangeProof::Prove(
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
-
+printf("size of vs=%ld\n", vs.Size());
+printf("size of gammas=%ld\n", gammas.Size());
     // Calculate value commitments and add them to transcript
+    G1Points a1(gens.H * gammas.m_vec);
+    G1Points b1(gens.G.get() * vs.m_vec);
+printf("size of a1=%ld\n", a1.Size());
+printf("size of b1=%ld\n", b1.Size());
+    auto c = a1 + b1;
+printf("6.3 c=%ld\n", c.Size());
     proof.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
+printf("6.5 proof.Vs=%ld\n", proof.Vs.Size());
     for (size_t i = 0; i < vs.Size(); ++i) {
         transcript_gen << proof.Vs[i];
     }
+printf("7\n");
 
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
@@ -149,8 +157,10 @@ Proof RangeProof::Prove(
             aL.Add(false);
         }
     }
+printf("8\n");
     // TODO fill bits if aL.size < concat_input_values_in_bits
     assert(false);
+printf("9\n");
 
     auto one_value_concat_bits = Scalars::FirstNPow(*m_one, concat_input_values_in_bits);
 
@@ -163,6 +173,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     if (++num_tries > Config::m_max_prove_tries) {
         throw std::runtime_error(strprintf("%s: exceeded maxinum number of tries", __func__));
     }
+printf("10\n");
 
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)

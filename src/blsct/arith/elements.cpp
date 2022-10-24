@@ -195,30 +195,26 @@ template Elements<Scalar> Elements<Scalar>::operator-(const Elements<Scalar>& ot
 template Elements<G1Point> Elements<G1Point>::operator-(const Elements<G1Point>& other) const;
 
 template <typename T>
-Elements<T> Elements<T>::operator=(const Elements<T>& other) const
+void Elements<T>::operator=(const Elements<T>& other)
 {
     if constexpr (std::is_same_v<T, Scalar>) {
-        Elements<T> ret;
-        for (size_t i = 0; i < m_vec.size(); ++i) {
+        m_vec.clear();
+        for (size_t i = 0; i < other.m_vec.size(); ++i) {
             auto copy = Scalar(other.m_vec[i]);
-            ret.m_vec.push_back(copy);
+            m_vec.push_back(copy);
         }
-        return ret;
-
     } else if constexpr (std::is_same_v<T, G1Point>) {
-        Elements<T> ret;
-        for (size_t i = 0; i < m_vec.size(); ++i) {
+        m_vec.clear();
+        for (size_t i = 0; i < other.m_vec.size(); ++i) {
             auto copy = G1Point(other.m_vec[i]);
-            ret.m_vec.push_back(copy);
+            m_vec.push_back(copy);
         }
-        return ret;
-
     } else {
         throw std::runtime_error("Not implemented");
     }
 }
-template Elements<Scalar> Elements<Scalar>::operator=(const Elements<Scalar>& other) const;
-template Elements<G1Point> Elements<G1Point>::operator=(const Elements<G1Point>& other) const;
+template void Elements<Scalar>::operator=(const Elements<Scalar>& other);
+template void Elements<G1Point>::operator=(const Elements<G1Point>& other);
 
 template <typename T>
 bool Elements<T>::operator==(const Elements<T>& other) const

@@ -71,7 +71,7 @@ public:
      */
     Elements<T> operator-(const Elements<T>& other) const;
 
-    Elements<T> operator=(const Elements<T>& other) const;
+    void operator=(const Elements<T>& other);
 
     bool operator==(const Elements<T>& other) const;
 

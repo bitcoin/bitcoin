@@ -60,12 +60,12 @@ public:
 
     bool InnerProductArgument(
         const size_t input_value_vec_len,
-        const G1Points& Gi,
-        const G1Points& Hi,
+        G1Points& Gi,
+        G1Points& Hi,
         const G1Point& u,
         const Scalar& cx_factor,  // factor to multiply to cL and cR
-        const Scalars& l,
-        const Scalars& r,
+        Scalars& a,
+        Scalars& b,
         const Scalar& y,
         Proof& proof,
         CHashWriter& transcript_gen
