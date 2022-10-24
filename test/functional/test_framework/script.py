@@ -12,7 +12,7 @@ import struct
 import unittest
 from typing import List, Dict
 
-from .key import TaggedHash, tweak_add_pubkey
+from .key import TaggedHash, tweak_add_pubkey, compute_xonly_pubkey
 
 from .messages import (
     CTransaction,
@@ -872,7 +872,7 @@ TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tw
 # - merklebranch: the merkle branch to use for this leaf (32*N bytes)
 TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch,leaf_hash")
 
-def taproot_construct(pubkey, scripts=None):
+def taproot_construct(pubkey, scripts=None, treat_internal_as_infinity=False):
     """Construct a tree of Taproot spending conditions
 
     pubkey: a 32-byte xonly pubkey for the internal pubkey (bytes)
@@ -891,7 +891,10 @@ def taproot_construct(pubkey, scripts=None):
 
     ret, h = taproot_tree_helper(scripts)
     tweak = TaggedHash("TapTweak", pubkey + h)
-    tweaked, negated = tweak_add_pubkey(pubkey, tweak)
+    if treat_internal_as_infinity:
+        tweaked, negated = compute_xonly_pubkey(tweak)
+    else:
+        tweaked, negated = tweak_add_pubkey(pubkey, tweak)
     leaves = dict((name, TaprootLeafInfo(script, version, merklebranch, leaf)) for name, version, script, merklebranch, leaf in ret)
     return TaprootInfo(CScript([OP_1, tweaked]), pubkey, negated + 0, tweak, leaves, h, tweaked)
 

@@ -96,7 +96,14 @@ from test_framework.util import (
     assert_equal,
     random_bytes,
 )
-from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
+from test_framework.key import (
+    generate_privkey,
+    compute_xonly_pubkey,
+    sign_schnorr,
+    tweak_add_privkey,
+    ECKey,
+    SECP256K1
+)
 from test_framework.address import (
     hash160,
     program_to_witness,
@@ -660,6 +667,44 @@ def spenders_taproot_active():
     add_spender(spenders, "sig/flip_p", tap=tap, key=secs[0], failure={"flag_flip_p": True}, **ERR_SIG_SCHNORR)
     # Test with signature with bit flipped.
     add_spender(spenders, "sig/bitflip", tap=tap, key=secs[0], failure={"signature": bitflipper(default_signature)}, **ERR_SIG_SCHNORR)
+
+    # == Test involving an internal public key not on the curve ==
+
+    # X-only public keys are 32 bytes, but not every 32-byte array is a valid public key; only
+    # around 50% of them are. This does not affect users using correct software; these "keys" have
+    # no corresponding private key, and thus will never appear as output of key
+    # generation/derivation/tweaking.
+    #
+    # Using an invalid public key as P2TR output key makes the UTXO unspendable. Revealing an
+    # invalid public key as internal key in a P2TR script path spend also makes the spend invalid.
+    # These conditions are explicitly spelled out in BIP341.
+    #
+    # It is however hard to create test vectors for this, because it involves "guessing" how a
+    # hypothetical incorrect implementation deals with an obviously-invalid condition, and making
+    # sure that guessed behavior (accepting it in certain condition) doesn't occur.
+    #
+    # The test case added here tries to detect a very specific bug a verifier could have: if they
+    # don't verify whether or not a revealed internal public key in a script path spend is valid,
+    # and (correctly) implement output_key == tweak(internal_key, tweakval) but (incorrectly) treat
+    # tweak(invalid_key, tweakval) as equal the public key corresponding to private key tweakval.
+    # This may seem like a far-fetched edge condition to test for, but in fact, the BIP341 wallet
+    # pseudocode did exactly that (but obviously only triggerable by someone invoking the tweaking
+    # function with an invalid public key, which shouldn't happen).
+
+    # Generate an invalid public key
+    while True:
+        invalid_pub = random_bytes(32)
+        if not SECP256K1.is_x_coord(int.from_bytes(invalid_pub, 'big')):
+            break
+
+    # Implement a test case that detects validation logic which maps invalid public keys to the
+    # point at infinity in the tweaking logic.
+    tap = taproot_construct(invalid_pub, [("true", CScript([OP_1]))], treat_internal_as_infinity=True)
+    add_spender(spenders, "output/invalid_x", tap=tap, key_tweaked=tap.tweak, failure={"leaf": "true", "inputs": []}, **ERR_WITNESS_PROGRAM_MISMATCH)
+
+    # Do the same thing without invalid point, to make sure there is no mistake in the test logic.
+    tap = taproot_construct(pubs[0], [("true", CScript([OP_1]))])
+    add_spender(spenders, "output/invalid_x_mock", tap=tap, key=secs[0], leaf="true", inputs=[])
 
     # == Tests for signature hashing ==
 
