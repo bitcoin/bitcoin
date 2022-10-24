@@ -11,8 +11,48 @@ BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
 {
+    Scalar one(1);
+    Scalar two(2);
+    Scalar twoPow64 = two << 63; // = 2^64
+
+    // valid range is [0, 2**64)
+    Scalar lower_bound(0);
+    Scalar upper_bound = twoPow64 - one;
+
+    std::vector<Scalar> in_range {
+        lower_bound,
+        lower_bound + one,
+        upper_bound - one,
+        upper_bound
+    };
+    std::vector<Scalar> out_of_range {
+        upper_bound + one,
+        upper_bound + two,
+        upper_bound * two,
+        one.Negate()
+    };
+
+    std::string nonce_str("nonce");
+    G1Point nonce = G1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
+
+    std::string msg_str("covid is over");
+    std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
+
+    TokenId token_id(uint256(123));
     RangeProof rp;
-    
+
+    // test each valid value individually
+    for (Scalar v: in_range) {
+        Scalars vs;
+        vs.Add(v);
+        auto proof = rp.Prove(vs, nonce, message, token_id);
+        auto is_valid = rp.Verify(std::vector<Proof> { proof }, token_id);
+        BOOST_CHECK(is_valid);
+    }
+
+    // test each invalid value individually
+    // test all valid values as a batch
+    // test all invalid values as a batch
 }
 
 BOOST_AUTO_TEST_CASE(test_range_proof_inner_product_argument)

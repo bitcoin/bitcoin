@@ -79,8 +79,8 @@ public:
     size_t GetInnerProdArgRounds(const size_t& num_input_values) const;
 
     Proof Prove(
-        Scalars vs,
-        G1Point nonce,
+        Scalars& vs,
+        G1Point& nonce,
         const std::vector<uint8_t>& message,
         const TokenId& token_id
     );
@@ -107,6 +107,7 @@ public:
     ) const;
 
 private:
+    // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
     static GeneratorsFactory* m_gf;
 
     static Scalar* m_one;

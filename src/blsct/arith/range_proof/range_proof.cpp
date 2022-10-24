@@ -96,8 +96,8 @@ size_t RangeProof::GetInnerProdArgRounds(const size_t& num_input_values) const
 }
 
 Proof RangeProof::Prove(
-    Scalars vs,
-    G1Point nonce,
+    Scalars& vs,
+    G1Point& nonce,
     const std::vector<uint8_t>& message,
     const TokenId& token_id
 ) {
