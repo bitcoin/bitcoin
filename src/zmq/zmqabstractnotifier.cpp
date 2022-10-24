@@ -13,7 +13,7 @@ CZMQAbstractNotifier::~CZMQAbstractNotifier()
     assert(!psocket);
 }
 
-bool CZMQAbstractNotifier::NotifyBlock(const CBlockIndex * /*CBlockIndex*/)
+bool CZMQAbstractNotifier::NotifyBlock(const std::shared_ptr<const CBlock>& /*CBlock*/)
 {
     return true;
 }

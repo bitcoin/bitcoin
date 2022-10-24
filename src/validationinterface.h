@@ -89,7 +89,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload, const std::shared_ptr<const CBlock>& block) {}
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -196,7 +196,7 @@ public:
     size_t CallbacksPending();
 
 
-    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload, const std::shared_ptr<const CBlock>&);
     void TransactionAddedToMempool(const CTransactionRef&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);

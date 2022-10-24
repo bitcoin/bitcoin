@@ -431,7 +431,7 @@ public:
     {
         m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
     }
-    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
+    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd, const std::shared_ptr<const CBlock>& block) override
     {
         m_notifications->updatedBlockTip();
     }

@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 
+class CBlock;
 class CBlockIndex;
 class CTransaction;
 
@@ -35,7 +36,7 @@ public:
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex) override;
+    bool NotifyBlock(const std::shared_ptr<const CBlock>& block) override;
 };
 
 class CZMQPublishHashTransactionNotifier : public CZMQAbstractPublishNotifier
@@ -47,7 +48,7 @@ public:
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex) override;
+    bool NotifyBlock(const std::shared_ptr<const CBlock>& block) override;
 };
 
 class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier

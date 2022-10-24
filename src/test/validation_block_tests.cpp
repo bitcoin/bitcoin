@@ -38,9 +38,10 @@ struct TestSubscriber final : public CValidationInterface {
 
     explicit TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
 
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload, const std::shared_ptr<const CBlock>& block) override
     {
         BOOST_CHECK_EQUAL(m_expected_tip, pindexNew->GetBlockHash());
+        BOOST_CHECK_EQUAL(m_expected_tip, block->GetHash());
     }
 
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
