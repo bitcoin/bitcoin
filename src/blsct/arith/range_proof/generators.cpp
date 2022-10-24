@@ -11,8 +11,7 @@
 
 GeneratorsFactory::GeneratorsFactory()
 {
-    /*
-    printf("1\n");
+    printf("Initializing GeneratorsFactory...\n");  // TODO drop this
     boost::lock_guard<boost::mutex> lock(GeneratorsFactory::m_init_mutex);
     if (GeneratorsFactory::m_is_initialized) return;
 
@@ -34,7 +33,7 @@ GeneratorsFactory::GeneratorsFactory()
         m_Hi.value().Add(hi);
         m_Gi.value().Add(gi);
     }
-*/
+    printf("Initialized GeneratorsFactory\n");
     m_is_initialized = true;
 }
 

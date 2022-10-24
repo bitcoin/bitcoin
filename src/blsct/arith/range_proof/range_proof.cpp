@@ -12,25 +12,29 @@ Scalar* RangeProof::m_one = nullptr;
 Scalar* RangeProof::m_two = nullptr;
 Scalars* RangeProof::m_two_pows = nullptr;
 Scalar* RangeProof::m_inner_prod_ones_and_two_pows = nullptr;
-GeneratorsFactory* RangeProof::m_gf;
+GeneratorsFactory* RangeProof::m_gf = nullptr;
 
 RangeProof::RangeProof()
 {
+    printf("Initializing RangeProof...\n");  // TODO drop this
     if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
 
     MclInitializer::Init();
     G1Point::Init();
 
-    //RangeProof::m_gens = Generators();
-    RangeProof::m_one = new Scalar(1);
+    auto t1 = new Scalar(1);
+    RangeProof::m_one = t1; //new Scalar(1);
     RangeProof::m_two = new Scalar(2);
     auto two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
     RangeProof::m_two_pows = new Scalars(two_pows);
     auto ones = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
     RangeProof::m_inner_prod_ones_and_two_pows = new Scalar((ones * *RangeProof::m_two_pows).Sum());
 
+    RangeProof::m_gf = new GeneratorsFactory();
+
     m_is_initialized = true;
+    printf("Initialized RangeProof\n");
 }
 
 bool RangeProof::InnerProductArgument(

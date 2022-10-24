@@ -12,6 +12,7 @@ BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
 {
     RangeProof rp;
+    
 }
 
 BOOST_AUTO_TEST_CASE(test_range_proof_inner_product_argument)
