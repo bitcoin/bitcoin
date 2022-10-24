@@ -37,7 +37,7 @@ Note: libbitcoin_kernel is a subject to be backported & dashified.
 
 ```mermaid
 
-%%{ init : { "flowchart" : { "curve" : "linear" }}}%%
+%%{ init : { "flowchart" : { "curve" : "basis" }}}%%
 
 graph TD;
 
@@ -53,18 +53,19 @@ dash-qt[dash-qt]-->libbitcoin_wallet;
 dash-wallet[dash-wallet]-->libbitcoin_wallet;
 dash-wallet[dash-wallet]-->libbitcoin_wallet_tool;
 
-libbitcoin_cli-->libbitcoin_common;
 libbitcoin_cli-->libbitcoin_util;
+libbitcoin_cli-->libbitcoin_common;
 
-libbitcoin_common-->libbitcoin_util;
 libbitcoin_common-->libdash_consensus;
+libbitcoin_common-->libbitcoin_util;
 
 libbitcoin_kernel-->libdash_consensus;
 libbitcoin_kernel-->libbitcoin_util;
 
-libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libdash_consensus;
+libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_kernel;
+libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_util;
 
 libbitcoinqt-->libbitcoin_common;
@@ -73,8 +74,8 @@ libbitcoinqt-->libbitcoin_util;
 libbitcoin_wallet-->libbitcoin_common;
 libbitcoin_wallet-->libbitcoin_util;
 
-libbitcoin_wallet_tool-->libbitcoin_util;
 libbitcoin_wallet_tool-->libbitcoin_wallet;
+libbitcoin_wallet_tool-->libbitcoin_util;
 
 classDef bold stroke-width:2px, font-weight:bold, font-size: smaller;
 class dash-qt,dashd,dash-cli,dash-wallet bold
