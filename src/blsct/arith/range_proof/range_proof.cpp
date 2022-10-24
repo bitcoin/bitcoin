@@ -23,8 +23,7 @@ RangeProof::RangeProof()
     MclInitializer::Init();
     G1Point::Init();
 
-    auto t1 = new Scalar(1);
-    RangeProof::m_one = t1; //new Scalar(1);
+    RangeProof::m_one = new Scalar(1);
     RangeProof::m_two = new Scalar(2);
     auto two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
     RangeProof::m_two_pows = new Scalars(two_pows);
