@@ -368,36 +368,36 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n Sekunde(n)</numerusform>
+            <numerusform>%n Sekunde(n)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n Minute(n)</numerusform>
+            <numerusform>%n Minute(n)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%nStunde(n)</numerusform>
+            <numerusform>%nStunde(n)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%nTag(e)</numerusform>
+            <numerusform>%nTag(e)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n Woche(n)</numerusform>
+            <numerusform>%n Woche(n)</numerusform>
         </translation>
     </message>
     <message>
@@ -407,8 +407,8 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%nJahr(e)</numerusform>
+            <numerusform>%nJahr(e)</numerusform>
         </translation>
     </message>
     </context>
@@ -662,6 +662,10 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     <message>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
         <translation type="unfinished">Fehler beim Laden von %s: Externe Unterzeichner-Brieftasche wird geladen, ohne dass die Unterstützung für externe Unterzeichner kompiliert wurde</translation>
+    </message>
+    <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fehler: Adressbuchdaten im Wallet können nicht als zum migrierten Wallet zugehörig identifiziert werden</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -2010,15 +2014,15 @@ Verifikations-Error: %s</translation>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(von %n GB benötigt)</numerusform>
+            <numerusform>(von %n GB benötigt)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB benötigt für komplette Blockchain)</numerusform>
+            <numerusform>(%n GB benötigt für komplette Blockchain)</numerusform>
         </translation>
     </message>
     <message>
@@ -2033,8 +2037,8 @@ Verifikations-Error: %s</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(ausreichend um %n Tag(e) alte Backups wiederherzustellen)</numerusform>
+            <numerusform>(ausreichend um %n Tag(e) alte Backups wiederherzustellen)</numerusform>
         </translation>
     </message>
     <message>
@@ -3818,8 +3822,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform>
+            <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform>
         </translation>
     </message>
     <message>

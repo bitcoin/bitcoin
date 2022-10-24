@@ -307,6 +307,10 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
         <translation type="unfinished">Saisir une adresse Bitcoin (p. ex. %1)</translation>
     </message>
     <message>
+        <source>Ctrl+W</source>
+        <translation type="unfinished">Ctrl-W</translation>
+    </message>
+    <message>
         <source>Unroutable</source>
         <translation type="unfinished">Non routable</translation>
     </message>
@@ -368,36 +372,36 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second</numerusform>
+            <numerusform>%n secondes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute</numerusform>
+            <numerusform>%n minutes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n heure</numerusform>
+            <numerusform>%n heures</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n jour</numerusform>
+            <numerusform>%n jours</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n semaine</numerusform>
+            <numerusform>%n semaines</numerusform>
         </translation>
     </message>
     <message>
@@ -407,8 +411,8 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n année</numerusform>
+            <numerusform>%n années</numerusform>
         </translation>
     </message>
     <message>
@@ -1994,8 +1998,8 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n Go d’espace disponible</numerusform>
+            <numerusform>%n Go d’espace disponible</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -4084,8 +4088,8 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>matures dans %n bloc supplémentaire</numerusform>
+            <numerusform>matures dans %n blocs supplémentaires</numerusform>
         </translation>
     </message>
     <message>

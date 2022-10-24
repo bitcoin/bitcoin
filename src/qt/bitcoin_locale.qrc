@@ -44,6 +44,7 @@
         <file alias="kl">locale/bitcoin_kl.qm</file>
         <file alias="km">locale/bitcoin_km.qm</file>
         <file alias="ko">locale/bitcoin_ko.qm</file>
+        <file alias="ku">locale/bitcoin_ku.qm</file>
         <file alias="ku_IQ">locale/bitcoin_ku_IQ.qm</file>
         <file alias="ky">locale/bitcoin_ky.qm</file>
         <file alias="la">locale/bitcoin_la.qm</file>
