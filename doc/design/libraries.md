@@ -35,7 +35,7 @@
 
 ```mermaid
 
-%%{ init : { "flowchart" : { "curve" : "linear" }}}%%
+%%{ init : { "flowchart" : { "curve" : "basis" }}}%%
 
 graph TD;
 
@@ -51,18 +51,18 @@ syscoin-qt[syscoin-qt]-->libsyscoin_wallet;
 syscoin-wallet[syscoin-wallet]-->libsyscoin_wallet;
 syscoin-wallet[syscoin-wallet]-->libsyscoin_wallet_tool;
 
-libsyscoin_cli-->libsyscoin_common;
 libsyscoin_cli-->libsyscoin_util;
+libsyscoin_cli-->libsyscoin_common;
 
-libsyscoin_common-->libsyscoin_util;
 libsyscoin_common-->libsyscoin_consensus;
+libsyscoin_common-->libsyscoin_util;
 
 libsyscoin_kernel-->libsyscoin_consensus;
 libsyscoin_kernel-->libsyscoin_util;
 
-libsyscoin_node-->libsyscoin_common;
 libsyscoin_node-->libsyscoin_consensus;
 libsyscoin_node-->libsyscoin_kernel;
+libsyscoin_node-->libsyscoin_common;
 libsyscoin_node-->libsyscoin_util;
 
 libsyscoinqt-->libsyscoin_common;
@@ -71,8 +71,8 @@ libsyscoinqt-->libsyscoin_util;
 libsyscoin_wallet-->libsyscoin_common;
 libsyscoin_wallet-->libsyscoin_util;
 
-libsyscoin_wallet_tool-->libsyscoin_util;
 libsyscoin_wallet_tool-->libsyscoin_wallet;
+libsyscoin_wallet_tool-->libsyscoin_util;
 
 classDef bold stroke-width:2px, font-weight:bold, font-size: smaller;
 class syscoin-qt,syscoind,syscoin-cli,syscoin-wallet bold
