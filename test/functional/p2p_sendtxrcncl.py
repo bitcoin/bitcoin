@@ -132,12 +132,10 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer.wait_for_disconnect()
 
         self.log.info('sending SENDTXRCNCL after sending VERACK triggers a disconnect')
-        # We use PeerNoVerack even though verack is sent right after, to make sure it was actually
-        # sent before sendtxrcncl is sent.
-        peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
-        peer.send_and_ping(msg_verack())
-        peer.send_message(create_sendtxrcncl_msg())
-        peer.wait_for_disconnect()
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(["sendtxrcncl received after verack"]):
+            peer.send_message(create_sendtxrcncl_msg())
+            peer.wait_for_disconnect()
 
         self.log.info('SENDTXRCNCL without WTXIDRELAY is ignored (recon state is erased after VERACK)')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(wtxidrelay=False), send_version=True, wait_for_verack=False)
