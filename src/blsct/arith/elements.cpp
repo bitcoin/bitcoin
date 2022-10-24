@@ -197,8 +197,6 @@ template Elements<G1Point> Elements<G1Point>::operator-(const Elements<G1Point>&
 template <typename T>
 Elements<T> Elements<T>::operator=(const Elements<T>& other) const
 {
-    ConfirmSizesMatch(other.Size());
-
     if constexpr (std::is_same_v<T, Scalar>) {
         Elements<T> ret;
         for (size_t i = 0; i < m_vec.size(); ++i) {
