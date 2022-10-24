@@ -35,18 +35,18 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
     std::string nonce_str("nonce");
     G1Point nonce = G1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
 
-    std::string msg_str("covid is over");
+    std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
 
     TokenId token_id(uint256(123));
-    RangeProof rp;
+    RangeProof range_proof;
 
     // test each valid value individually
     for (Scalar v: in_range) {
         Scalars vs;
         vs.Add(v);
-        auto proof = rp.Prove(vs, nonce, message, token_id);
-        auto is_valid = rp.Verify(std::vector<Proof> { proof }, token_id);
+        auto proof = range_proof.Prove(vs, nonce, message, token_id);
+        auto is_valid = range_proof.Verify(std::vector<Proof> { proof }, token_id);
         BOOST_CHECK(is_valid);
     }
 
