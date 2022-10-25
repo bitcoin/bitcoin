@@ -168,9 +168,10 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.log.info('SENDTXRCNCL with initiator=1 and responder=0 from outbound triggers a disconnect')
         sendtxrcncl_wrong_role = create_sendtxrcncl_msg(initiator=True)
         peer = self.nodes[0].add_outbound_p2p_connection(
-            P2PInterface(), wait_for_verack=False, p2p_idx=4, connection_type="outbound-full-relay")
-        peer.send_message(sendtxrcncl_wrong_role)
-        peer.wait_for_disconnect()
+            PeerNoVerack(), wait_for_verack=False, p2p_idx=4, connection_type="outbound-full-relay")
+        with self.nodes[0].assert_debug_log(["txreconciliation protocol violation"]):
+            peer.send_message(sendtxrcncl_wrong_role)
+            peer.wait_for_disconnect()
 
         self.log.info('SENDTXRCNCL not sent if -txreconciliation flag is not set')
         self.restart_node(0, [])
