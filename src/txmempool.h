@@ -11,6 +11,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -565,6 +566,26 @@ public:
     util::Result<setEntries> CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
                                    const Limits& limits,
                                    bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /**
+     * Same as CalculateMemPoolAncestors, but always returns a (non-optional) setEntries.
+     * Should only be used when it is assumed CalculateMemPoolAncestors would not fail. If
+     * CalculateMemPoolAncestors does unexpectedly fail, an empty setEntries is returned and the
+     * error is logged to BCLog::MEMPOOL with level BCLog::Level::Error. In debug builds, failure
+     * of CalculateMemPoolAncestors will lead to shutdown due to assertion failure.
+     *
+     * @param[in]   calling_fn_name     Name of calling function so we can properly log the call site
+     *
+     * @return a setEntries corresponding to the result of CalculateMemPoolAncestors or an empty
+     *         setEntries if it failed
+     *
+     * @see CTXMemPool::CalculateMemPoolAncestors()
+     */
+    setEntries AssumeCalculateMemPoolAncestors(
+        std::string_view calling_fn_name,
+        const CTxMemPoolEntry &entry,
+        const Limits& limits,
+        bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
      * check ancestor and descendant limits. Heuristics are used to estimate the ancestor and
