@@ -110,8 +110,11 @@ Proof RangeProof::Prove(
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
-    const size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
-    const size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
+    // this value is power of 2 since m_input_value_bits is power of 2 as well
+    const size_t num_input_values_power_of_2 =
+        Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
+    const size_t concat_input_values_in_bits =
+        num_input_values_power_of_2 * Config::m_input_value_bits;
 
     ////////////// Proving steps
     Proof proof;
@@ -125,29 +128,26 @@ Proof RangeProof::Prove(
 
     // Get Generators for the token_id
     Generators gens = m_gf->GetInstance(token_id);
+    auto Gi = gens.GetGi(concat_input_values_in_bits);
+    auto Hi = gens.GetHi(concat_input_values_in_bits);
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
-printf("size of vs=%ld\n", vs.Size());
-printf("size of gammas=%ld\n", gammas.Size());
+
     // Calculate value commitments and add them to transcript
     G1Points a1(gens.H * gammas.m_vec);
     G1Points b1(gens.G.get() * vs.m_vec);
-printf("size of a1=%ld\n", a1.Size());
-printf("size of b1=%ld\n", b1.Size());
     auto c = a1 + b1;
-printf("6.3 c=%ld\n", c.Size());
     proof.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
-printf("6.5 proof.Vs=%ld\n", proof.Vs.Size());
+
     for (size_t i = 0; i < vs.Size(); ++i) {
         transcript_gen << proof.Vs[i];
     }
-printf("7\n");
 
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
     Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
-    for(Scalar& v: vs.m_vec) {  // for each input value
+    for (Scalar& v: vs.m_vec) {  // for each input value
         auto bits = v.GetBits();  // gets the value in binary
         for(bool bit: bits) {
             aL.Add(bit);
@@ -157,10 +157,10 @@ printf("7\n");
             aL.Add(false);
         }
     }
-printf("8\n");
-    // TODO fill bits if aL.size < concat_input_values_in_bits
-    assert(false);
-printf("9\n");
+    // pad 0 bits at the end if aL.size < concat_input_values_in_bits
+    while (aL.Size() < concat_input_values_in_bits) {
+        aL.Add(false);
+    }
 
     auto one_value_concat_bits = Scalars::FirstNPow(*m_one, concat_input_values_in_bits);
 
@@ -173,7 +173,6 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     if (++num_tries > Config::m_max_prove_tries) {
         throw std::runtime_error(strprintf("%s: exceeded maxinum number of tries", __func__));
     }
-printf("10\n");
 
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
@@ -191,7 +190,7 @@ printf("10\n");
     alpha = alpha + msg1_v0;
 
     // Using generator H for alpha following the paper
-    proof.A = (gens.H * alpha) + (gens.Gi.get() * aL).Sum() + (gens.Hi.get() * aR).Sum();
+    proof.A = (gens.H * alpha) + (Gi * aL).Sum() + (Hi * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -200,7 +199,7 @@ printf("10\n");
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (gens.H * rho) + (gens.Gi.get() * sL).Sum() + (gens.Hi.get() * sR).Sum();
+    proof.S = (gens.H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
 
     // (48)-(50)
     transcript_gen << proof.A;
@@ -230,11 +229,11 @@ printf("10\n");
     Scalars z_pows = Scalars::FirstNPow(z, concat_input_values_in_bits, 2);  // z_pows excludes 1 and z
 
     // The last term of r(X) on page 19
-    for (size_t i = 0; i < concat_input_values_in_bits; ++i) {
-        auto base_z = z_pows[i];  // change base Scalar for each input value
+    for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
+        auto base_z = z_pows[i];  // use different Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
-            //z_n_times_two_n.Add(base_z * m_two_pows[bit_idx]);
+            z_n_times_two_n.Add(base_z * (*m_two_pows)[bit_idx]);
         }
     }
 
@@ -285,7 +284,8 @@ printf("10\n");
     if (proof.t_hat != t_of_x)
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
-    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows * gammas).Sum();  // (61)
+    // resize z_pows so that the length matches with gammas
+    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows.To(gammas.Size()) * gammas).Sum();  // (61)
     proof.mu = alpha + (rho * x);  // (62)
 
     // (63)
@@ -299,8 +299,8 @@ printf("10\n");
 
     if (!InnerProductArgument(  // fails if x == 0 is generated from transcript_gen
         concat_input_values_in_bits,
-        gens.Gi,
-        gens.Hi,
+        Gi,
+        Hi,
         gens.G,    // u
         cx_factor,
         l,         // a
@@ -450,9 +450,12 @@ G1Point RangeProof::VerifyLoop2(
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
     points.Add(gens.H * (h_pos_exp - h_neg_exp));
 
+    auto Gi = gens.GetGi(max_mn);
+    auto Hi = gens.GetHi(max_mn);
+
     for (size_t i = 0; i < max_mn; ++i) {
-        points.Add(gens.Gi.get()[i] * gi_exps[i]);
-        points.Add(gens.Hi.get()[i] * hi_exps[i]);
+        points.Add(Gi[i] * gi_exps[i]);
+        points.Add(Hi[i] * hi_exps[i]);
     }
 
     // should be aggregated to zero if proofs are all valid
@@ -496,10 +499,11 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
     const std::vector<AmountRecoveryReq>& reqs,
     const TokenId& token_id
 ) const {
-    const Generators gens = m_gf->GetInstance(token_id);
     std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
 
     for (const AmountRecoveryReq& req: reqs) {
+        const Generators gens = m_gf->GetInstance(token_id);
+
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {

@@ -15,8 +15,15 @@
 #include <ctokens/tokenid.h>
 
 struct Generators {
+public:
+    Generators(G1Point& G, G1Point&H, G1Points& Gi, G1Points& Hi): G{G}, H{H}, Gi{Gi}, Hi{Hi} {}
+    G1Points GetGi(const size_t& size) const;
+    G1Points GetHi(const size_t& size) const;
+
     std::reference_wrapper<G1Point> G;
     G1Point H;
+
+private:
     std::reference_wrapper<G1Points> Gi;
     std::reference_wrapper<G1Points> Hi;
 };

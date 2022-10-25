@@ -9,6 +9,16 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
+G1Points Generators::GetGi(const size_t& size) const
+{
+    return Gi.get().To(size);
+}
+
+G1Points Generators::GetHi(const size_t& size) const
+{
+    return Hi.get().To(size);
+}
+
 GeneratorsFactory::GeneratorsFactory()
 {
     printf("Initializing GeneratorsFactory...\n");  // TODO drop this
@@ -74,6 +84,6 @@ Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
     }
     G1Point H = GeneratorsFactory::m_H_cache[token_id];
 
-    Generators gens { m_G.value(), H, m_Gi.value(), m_Hi.value() };
+    Generators gens(m_G.value(), H, m_Gi.value(), m_Hi.value());
     return gens;
 }
