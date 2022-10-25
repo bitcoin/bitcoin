@@ -1791,6 +1791,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     ::governance = std::make_unique<CGovernanceManager>();
     assert(!::sporkManager);
     ::sporkManager = std::make_unique<CSporkManager>();
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman);
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -2316,7 +2317,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 10a: Setup CoinJoin
 
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman);
     ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.connman);
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman);
