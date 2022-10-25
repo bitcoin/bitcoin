@@ -155,6 +155,18 @@ class SendTxRcnclTest(BitcoinTestFramework):
             peer.send_message(sendtxrcncl_higher_version)
         self.nodes[0].disconnect_p2ps()
 
+        self.log.info('unexpected SENDTXRCNCL is ignored')
+        peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=False, wait_for_verack=False)
+        old_version_msg = msg_version()
+        old_version_msg.nVersion = 70015
+        old_version_msg.strSubVer = P2P_SUBVERSION
+        old_version_msg.nServices = P2P_SERVICES
+        old_version_msg.relay = 1
+        peer.send_message(old_version_msg)
+        with self.nodes[0].assert_debug_log(['Ignore unexpected txreconciliation signal from peer=2']):
+            peer.send_message(create_sendtxrcncl_msg())
+        self.nodes[0].disconnect_p2ps()
+
         self.log.info('sending SENDTXRCNCL after sending VERACK triggers a disconnect')
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
         with self.nodes[0].assert_debug_log(["sendtxrcncl received after verack"]):
