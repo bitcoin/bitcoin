@@ -59,11 +59,11 @@ bool RangeProof::InnerProductArgument(
 
         G1Point L =
             (Gi.From(n) * a.To(n)).Sum() +
-            (Hi.To(n) * (proof.Ls.Size() == 0 ? b * y_inv_pows.To(n) : b.From(n))).Sum() +
+            (Hi.To(n) * (proof.Ls.Size() == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n))).Sum() +
             (u * cL * cx_factor);
         G1Point R =
             (Gi.To(n) * a.From(n)).Sum() +
-            (Hi.From(n) * (proof.Rs.Size() == 0 ? b * y_inv_pows.From(n) : b.To(n))).Sum() +
+            (Hi.From(n) * (proof.Rs.Size() == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n))).Sum() +
             (u * cR * cx_factor);
         proof.Ls.Add(L);
         proof.Rs.Add(R);
@@ -76,11 +76,12 @@ bool RangeProof::InnerProductArgument(
             return false;
         Scalar x_inv = x.Invert();
 
-        // update Gi, Hi, a and b
+        // update Gi, Hi, a, b and y_inv_pows
         Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * x);
-        Hi = (Hi.To(n) * y_inv_pows * x) + (Hi.From(n) * y_inv_pows * x_inv);
+        Hi = (Hi.To(n) * y_inv_pows.To(n) * x) + (Hi.From(n) * y_inv_pows.From(n) * x_inv);
         a = (a.To(n) * x) + (a.From(n) * x_inv);
         b = (b.To(n) * x_inv) + (b.From(n) * x);
+        y_inv_pows = y_inv_pows.To(n);
     }
     proof.a = a[0];
     proof.b = b[0];
