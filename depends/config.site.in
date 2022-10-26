@@ -145,7 +145,7 @@ if test -n "@CFLAGS@"; then
   CFLAGS="@CFLAGS@ ${CFLAGS}"
 fi
 if test -n "@CXXFLAGS@"; then
-  CXXFLAGS="@CXXFLAGS@ ${CXXFLAGS}"
+  DEPENDS_CXXFLAGS="@CXXFLAGS@ ${CXXFLAGS}"
 fi
 if test -n "@CPPFLAGS@"; then
   CPPFLAGS="@CPPFLAGS@ ${CPPFLAGS}"
