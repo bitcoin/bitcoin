@@ -146,7 +146,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     return true;
 }
 
-bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, BlockFilter& filter) const
+bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256& hash, const uint256& block_hash, BlockFilter& filter) const
 {
     AutoFile filein{m_filter_fileseq->Open(pos, true)};
     if (filein.IsNull()) {
@@ -154,10 +154,11 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256&
     }
 
     // Check that the hash of the encoded_filter matches the one stored in the db.
-    uint256 block_hash;
+    uint256 read_block_hash;
     std::vector<uint8_t> encoded_filter;
     try {
-        filein >> block_hash >> encoded_filter;
+        filein >> read_block_hash >> encoded_filter;
+        if (read_block_hash != block_hash) return error("Checksum mismatch in filter decode.");
         if (Hash(encoded_filter) != hash) return error("Checksum mismatch in filter decode.");
         filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), /*skip_decode_check=*/true);
     }
@@ -326,7 +327,7 @@ static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVa
 }
 
 static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
-                        const CBlockIndex* stop_index, std::vector<DBVal>& results)
+                        const CBlockIndex* stop_index, std::vector<std::pair<uint256, DBVal>>& results)
 {
     if (start_height < 0) {
         return error("%s: start height (%d) is negative", __func__, start_height);
@@ -367,14 +368,16 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 
         size_t i = static_cast<size_t>(block_index->nHeight - start_height);
         if (block_hash == values[i].first) {
-            results[i] = std::move(values[i].second);
+            results[i].second = std::move(values[i].second);
+            results[i].first = std::move(block_hash);
             continue;
         }
 
-        if (!db.Read(DBHashKey(block_hash), results[i])) {
+        if (!db.Read(DBHashKey(block_hash), results[i].second)) {
             return error("%s: unable to read value in %s at key (%c, %s)",
                          __func__, index_name, DB_BLOCK_HASH, block_hash.ToString());
         }
+        results[i].first = std::move(block_hash);
     }
 
     return true;
@@ -387,7 +390,7 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
         return false;
     }
 
-    return ReadFilterFromDisk(entry.pos, entry.hash, filter_out);
+    return ReadFilterFromDisk(entry.pos, entry.hash, block_index->GetBlockHash(), filter_out);
 }
 
 bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
@@ -423,7 +426,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
 bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* stop_index,
                                          std::vector<BlockFilter>& filters_out) const
 {
-    std::vector<DBVal> entries;
+    std::vector<std::pair<uint256, DBVal>> entries;
     if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
         return false;
     }
@@ -431,7 +434,7 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
     filters_out.resize(entries.size());
     auto filter_pos_it = filters_out.begin();
     for (const auto& entry : entries) {
-        if (!ReadFilterFromDisk(entry.pos, entry.hash, *filter_pos_it)) {
+        if (!ReadFilterFromDisk(entry.second.pos, entry.second.hash, entry.first, *filter_pos_it)) {
             return false;
         }
         ++filter_pos_it;
@@ -444,7 +447,7 @@ bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex
                                              std::vector<uint256>& hashes_out) const
 
 {
-    std::vector<DBVal> entries;
+    std::vector<std::pair<uint256, DBVal>> entries;
     if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
         return false;
     }
@@ -452,7 +455,7 @@ bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex
     hashes_out.clear();
     hashes_out.reserve(entries.size());
     for (const auto& entry : entries) {
-        hashes_out.push_back(entry.hash);
+        hashes_out.push_back(entry.second.hash);
     }
     return true;
 }
