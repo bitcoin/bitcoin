@@ -90,7 +90,7 @@ RPCHelpMan walletpassphrase()
     std::weak_ptr<CWallet> weak_wallet = wallet;
     pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet, relock_time] {
         if (auto shared_wallet = weak_wallet.lock()) {
-            LOCK(shared_wallet->cs_wallet);
+            LOCK2(shared_wallet->m_relock_mutex, shared_wallet->cs_wallet);
             // Skip if this is not the most recent rpcRunLater callback.
             if (shared_wallet->nRelockTime != relock_time) return;
             shared_wallet->Lock();
@@ -122,8 +122,6 @@ RPCHelpMan walletpassphrasechange()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (!pwallet->IsCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
     }
@@ -131,6 +129,8 @@ RPCHelpMan walletpassphrasechange()
     if (pwallet->IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase.");
     }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
     // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make request.params[0] mlock()'d to begin with.
@@ -179,8 +179,6 @@ RPCHelpMan walletlock()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (!pwallet->IsCrypted()) {
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
     }
@@ -188,6 +186,8 @@ RPCHelpMan walletlock()
     if (pwallet->IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet.");
     }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
     pwallet->Lock();
     pwallet->nRelockTime = 0;
@@ -227,8 +227,6 @@ RPCHelpMan encryptwallet()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    LOCK(pwallet->cs_wallet);
-
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.");
     }
@@ -240,6 +238,8 @@ RPCHelpMan encryptwallet()
     if (pwallet->IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before encrypting the wallet.");
     }
+
+    LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
     // Alternately, find a way to make request.params[0] mlock()'d to begin with.

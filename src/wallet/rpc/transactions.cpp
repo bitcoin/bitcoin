@@ -880,6 +880,7 @@ RPCHelpMan rescanblockchain()
     std::optional<int> stop_height;
     uint256 start_block;
 
+    LOCK(pwallet->m_relock_mutex);
     {
         LOCK(pwallet->cs_wallet);
         EnsureWalletIsUnlocked(*pwallet);
