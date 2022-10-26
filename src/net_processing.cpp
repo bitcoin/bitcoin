@@ -2562,14 +2562,10 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
                 chain_start_header, minimum_chain_work));
 
-            // Now a HeadersSyncState object for tracking this synchronization is created,
-            // process the headers using it as normal.
-            if (!IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers)) {
-                // Something went wrong, reset the headers sync.
-                peer.m_headers_sync.reset(nullptr);
-                LOCK(m_headers_presync_mutex);
-                m_headers_presync_stats.erase(peer.m_id);
-            }
+            // Now a HeadersSyncState object for tracking this synchronization
+            // is created, process the headers using it as normal. Failures are
+            // handled inside of IsContinuationOfLowWorkHeadersSync.
+            (void)IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers);
         } else {
             LogPrint(BCLog::NET, "Ignoring low-work chain (height=%u) from peer=%d\n", chain_start_header->nHeight + headers.size(), pfrom.GetId());
         }
