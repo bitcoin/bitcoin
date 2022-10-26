@@ -199,11 +199,12 @@ public:
         WITH_LOCK(m_mutex, m_request_stop = false);
     }
 
+    bool HasThreads() const { return !m_worker_threads.empty(); }
+
     ~CCheckQueue()
     {
         assert(m_worker_threads.empty());
     }
-
 };
 
 /**

@@ -209,15 +209,14 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     // We must be at the tip already, let's move to the next asset.
                     SwitchToNextAsset(connman);
                     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
-                    if (gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL)) {
-                        // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
-                        for (auto pNodeTmp : vNodesCopy) {
-                            bool fRequestedEarlier = netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                            if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
-                                netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                                connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
-                                LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
-                            }
+                    
+                    // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
+                    for (auto pNodeTmp : vNodesCopy) {
+                        bool fRequestedEarlier = netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                        if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
+                            netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                            connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
+                            LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                         }
                     }
                 }
