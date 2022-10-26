@@ -378,7 +378,7 @@ G1Point RangeProof::VerifyLoop2(
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_max_input_values, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
+        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_max_input_values + 1, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits).Sum(); // VectorPowerSum(p.y, MN);
 
         //////// (65)
