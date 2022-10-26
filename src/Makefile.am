@@ -198,6 +198,7 @@ BITCOIN_CORE_H = \
   node/blockstorage.h \
   node/caches.h \
   node/chainstate.h \
+  node/chainstatemanager_args.h \
   node/coin.h \
   node/connection_types.h \
   node/context.h \
@@ -381,6 +382,7 @@ libbitcoin_node_a_SOURCES = \
   node/blockstorage.cpp \
   node/caches.cpp \
   node/chainstate.cpp \
+  node/chainstatemanager_args.cpp \
   node/coin.cpp \
   node/connection_types.cpp \
   node/context.cpp \

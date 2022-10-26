@@ -45,6 +45,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/init"\
           " src/kernel"\
           " src/node/chainstate.cpp"\
+          " src/node/chainstatemanager_args.cpp"\
           " src/node/mempool_args.cpp"\
           " src/node/validation_cache_args.cpp"\
           " src/policy/feerate.cpp"\
