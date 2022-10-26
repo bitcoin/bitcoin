@@ -2645,14 +2645,24 @@ const WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
 
 const std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
 {
+    return GetScriptPubKeys(0);
+}
+
+const std::unordered_set<CScript, SaltedSipHasher> DescriptorScriptPubKeyMan::GetScriptPubKeys(int32_t minimum_index) const
+{
     LOCK(cs_desc_man);
     std::unordered_set<CScript, SaltedSipHasher> script_pub_keys;
     script_pub_keys.reserve(m_map_script_pub_keys.size());
 
-    for (auto const& script_pub_key: m_map_script_pub_keys) {
-        script_pub_keys.insert(script_pub_key.first);
+    for (auto const& [script_pub_key, index] : m_map_script_pub_keys) {
+        if (index >= minimum_index) script_pub_keys.insert(script_pub_key);
     }
     return script_pub_keys;
+}
+
+int32_t DescriptorScriptPubKeyMan::GetEndRange() const
+{
+    return m_max_cached_index + 1;
 }
 
 bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool priv) const

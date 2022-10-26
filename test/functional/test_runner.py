@@ -136,6 +136,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
+    'wallet_fast_rescan.py --descriptors',
     'feature_fee_estimation.py',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
