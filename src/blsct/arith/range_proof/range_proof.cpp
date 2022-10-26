@@ -304,11 +304,16 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
     // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
     Scalar y_pows_sum = Scalars::FirstNPow(y, concat_input_values_in_bits).Sum();
+    Scalars z_pows2 = Scalars::FirstNPow(z, num_input_values_power_of_2, 3);
+    Scalar one(1);
+    Scalar two(2);
+    Scalars ones = Scalars::FirstNPow(one, num_input_values_power_of_2);
+    Scalars twos = Scalars::FirstNPow(two, num_input_values_power_of_2);
+    Scalar ip12 = (ones * twos).Sum();
     Scalar delta_yz = z * y_pows_sum;  // (1)
-    delta_yz = z_pows[0] * y_pows_sum; // (2)
-    for (size_t i = 1; i <= num_input_values_power_of_2; ++i) {
-        // multiply z^3, z^4, ..., z^(mn+3)
-        delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
+    delta_yz = z.Square() * y_pows_sum; // (2)
+    for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
+        delta_yz = delta_yz - z_pows2[i] * ip12; //*RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
     }
 
     auto lhs_65 = gens.G.get() * proof.t_hat + gens.H * proof.tau_x;
