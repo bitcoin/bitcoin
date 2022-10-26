@@ -9,6 +9,7 @@
 #include <netbase.h>
 #include <net.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <crypto/hmac_sha256.h>
 
 #include <vector>

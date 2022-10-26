@@ -308,6 +308,7 @@ BITCOIN_CORE_H = \
   util/ranges.h \
   util/serfloat.h \
   util/settings.h \
+  util/sock.h \
   util/string.h \
   util/time.h \
   util/threadnames.h \
@@ -708,6 +709,7 @@ libbitcoin_util_a_SOURCES = \
   util/error.cpp \
   util/fees.cpp \
   util/getuniquepath.cpp \
+  util/sock.cpp \
   util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
