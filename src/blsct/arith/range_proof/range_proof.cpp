@@ -227,7 +227,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     // Calculation of r(0) and r(1) on page 19
     Scalars z_n_times_two_n;
-    Scalars z_pows = Scalars::FirstNPow(z, concat_input_values_in_bits, 2);  // z_pows excludes 1 and z
+    Scalars z_pows = Scalars::FirstNPow(z, num_input_values_power_of_2, 2);  // z_pows excludes 1 and z
 
     // The last term of r(X) on page 19
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
@@ -286,7 +286,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
     // resize z_pows so that the length matches with gammas
-    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows.To(gammas.Size()) * gammas).Sum();  // (61)
+    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows * gammas).Sum();  // (61)
     proof.mu = alpha + (rho * x);  // (62)
 
     // (63)
@@ -297,6 +297,26 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     Scalar cx_factor = transcript_gen.GetHash();
     if (cx_factor == 0) goto retry;
+
+    //////////// added for debugging
+
+    // delta(y,z) in (39)
+    // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
+    // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
+    Scalar y_pows_sum = Scalars::FirstNPow(y, concat_input_values_in_bits).Sum();
+    Scalar delta_yz = z * y_pows_sum;  // (1)
+    delta_yz = z_pows[0] * y_pows_sum; // (2)
+    for (size_t i = 1; i <= num_input_values_power_of_2; ++i) {
+        // multiply z^3, z^4, ..., z^(mn+3)
+        delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
+    }
+
+    auto lhs_65 = gens.G.get() * proof.t_hat + gens.H * proof.tau_x;
+    auto rhs_65 = (proof.Vs * z_pows).Sum() + gens.G.get() * delta_yz + proof.T2 * x.Square() + proof.T1 * x;
+    if (lhs_65 != rhs_65)
+         throw std::runtime_error(strprintf("%s: (65) failed", __func__));
+
+    ////////////
 
     if (!InnerProductArgument(  // fails if x == 0 is generated from transcript_gen
         concat_input_values_in_bits,
@@ -353,8 +373,8 @@ G1Point RangeProof::VerifyLoop2(
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_input_value_bits, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
-        Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits - 1).Sum(); // VectorPowerSum(p.y, MN);
+        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_max_input_values, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
+        Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits).Sum(); // VectorPowerSum(p.y, MN);
 
         //////// (65)
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
@@ -366,8 +386,9 @@ G1Point RangeProof::VerifyLoop2(
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
         // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
-        Scalar delta_yz = p.z * y_pows_sum;  // (1)
-        delta_yz = (z_pows[0] * y_pows_sum).Negate(); // (2)
+        Scalar delta_yz =
+            p.z * y_pows_sum  // (1)
+            - (z_pows[0] * y_pows_sum);  // (2)
         for (size_t i = 1; i <= Config::m_input_value_bits; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
             delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
