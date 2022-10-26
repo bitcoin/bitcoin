@@ -39,6 +39,12 @@ class SendTxrcnclReceiver(P2PInterface):
     def on_sendtxrcncl(self, message):
         self.sendtxrcncl_msg_received = message
 
+
+class P2PFeelerReceiver(SendTxrcnclReceiver):
+    def on_version(self, message):
+        pass  # feeler connections can not send any message other than their own version
+
+
 class PeerTrackMsgOrder(P2PInterface):
     def __init__(self):
         super().__init__()
@@ -160,6 +166,11 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.log.info('SENDTXRCNCL should not be sent if block-relay-only')
         peer = self.nodes[0].add_outbound_p2p_connection(
             SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=2, connection_type="block-relay-only")
+        assert not peer.sendtxrcncl_msg_received
+        peer.peer_disconnect()
+
+        self.log.info("SENDTXRCNCL should not be sent if feeler")
+        peer = self.nodes[0].add_outbound_p2p_connection(P2PFeelerReceiver(), p2p_idx=2, connection_type="feeler")
         assert not peer.sendtxrcncl_msg_received
         peer.peer_disconnect()
 
