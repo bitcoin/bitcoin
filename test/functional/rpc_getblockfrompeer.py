@@ -5,7 +5,12 @@
 """Test the getblockfrompeer RPC."""
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.messages import NODE_WITNESS
+from test_framework.messages import (
+    CBlock,
+    from_hex,
+    msg_headers,
+    NODE_WITNESS,
+)
 from test_framework.p2p import (
     P2P_SERVICES,
     P2PInterface,
@@ -15,6 +20,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+
 
 class GetBlockFromPeerTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -80,6 +86,30 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
 
         self.log.info("Don't fetch blocks we already have")
         assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
+
+        self.log.info("Don't fetch blocks while the node has not synced past it yet")
+        # For this test we need node 1 in prune mode and as a side effect this also disconnects
+        # the nodes which is also necessary for the rest of the test.
+        self.restart_node(1, ["-prune=550"])
+
+        # Generate a block on the disconnected node that the pruning node is not connected to
+        blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+        block_hex = self.nodes[0].getblock(blockhash=blockhash, verbosity=0)
+        block = from_hex(CBlock(), block_hex)
+
+        # Connect a P2PInterface to the pruning node and have it submit only the header of the
+        # block that the pruning node has not seen
+        node1_interface = self.nodes[1].add_p2p_connection(P2PInterface())
+        node1_interface.send_message(msg_headers([block]))
+
+        # Get the peer id of the P2PInterface from the pruning node
+        node1_peers = self.nodes[1].getpeerinfo()
+        assert_equal(len(node1_peers), 1)
+        node1_interface_id = node1_peers[0]["id"]
+
+        # Trying to fetch this block from the P2PInterface should not be possible
+        error_msg = "In prune mode, only blocks that the node has already synced previously can be fetched from a peer"
+        assert_raises_rpc_error(-1, error_msg, self.nodes[1].getblockfrompeer, blockhash, node1_interface_id)
 
 
 if __name__ == '__main__':
