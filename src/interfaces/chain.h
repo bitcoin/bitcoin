@@ -5,6 +5,7 @@
 #ifndef SYSCOIN_INTERFACES_CHAIN_H
 #define SYSCOIN_INTERFACES_CHAIN_H
 
+#include <blockfilter.h>
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/settings.h>          // For util::SettingsValue
 
@@ -148,6 +149,12 @@ public:
     // SYSCOIN
     //! Get masternode list for a specific block height.
     virtual CDeterministicMNList getMNList(int height) = 0;
+    //! Returns whether a block filter index is available.
+    virtual bool hasBlockFilterIndex(BlockFilterType filter_type) = 0;
+
+    //! Returns whether any of the elements match the block via a BIP 157 block filter
+    //! or std::nullopt if the block filter for this block couldn't be found.
+    virtual std::optional<bool> blockFilterMatchesAny(BlockFilterType filter_type, const uint256& block_hash, const GCSFilter::ElementSet& filter_set) = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.

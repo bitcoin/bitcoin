@@ -643,6 +643,8 @@ public:
 
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+    const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
+    int32_t GetEndRange() const;
 
     bool GetDescriptorString(std::string& out, const bool priv) const;
 

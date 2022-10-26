@@ -839,7 +839,9 @@ RPCHelpMan rescanblockchain()
 {
     return RPCHelpMan{"rescanblockchain",
                 "\nRescan the local blockchain for wallet related transactions.\n"
-                "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
+                "Note: Use \"getwalletinfo\" to query the scanning progress.\n"
+                "The rescan is significantly faster when used on a descriptor wallet\n"
+                "and block filters are available (using startup option \"-blockfilterindex=1\").\n",
                 {
                     {"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "block height where the rescan should start"},
                     {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
