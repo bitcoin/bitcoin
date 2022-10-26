@@ -399,9 +399,7 @@ private:
     Mutex m_tx_relay_mutex;
 
     /** Transaction relay data.
-     * (Bitcoin) Will be a nullptr if we're not relaying transactions with this peer
-     *           (e.g. if it's a block-relay-only peer). Users should access this with
-     *           the GetTxRelay() getter.
+     * (Bitcoin) Transaction relay data. May be a nullptr.
      * (Dash)    Always initialized but selectively available through GetTxRelay()
      *           (non-transaction relay should use GetInvRelay(), which will provide
      *           unconditional access) */
@@ -3523,9 +3521,11 @@ void PeerManagerImpl::ProcessMessage(
 
         // We only initialize the m_tx_relay data structure if:
         // - this isn't an outbound block-relay-only connection; and
+        // - this isn't an outbound feeler connection, and
         // - fRelay=true or we're offering NODE_BLOOM to this peer
         //   (NODE_BLOOM means that the peer may turn on tx relay later)
         if (!pfrom.IsBlockOnlyConn() &&
+            !pfrom.IsFeelerConn() &&
             (fRelay || (peer->m_our_services & NODE_BLOOM))) {
             auto* const tx_relay = peer->SetTxRelay();
             {
