@@ -75,6 +75,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listsinceblock", 2, "include_watchonly" },
     { "listsinceblock", 3, "include_removed" },
     { "listsinceblock", 4, "include_change" },
+    { "addpermissionflags", 0, "flags"},
     { "sendmany", 1, "amounts" },
     { "sendmany", 2, "minconf" },
     { "sendmany", 4, "subtractfeefrom" },

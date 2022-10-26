@@ -560,8 +560,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              pszDest ? pszDest : "",
                              conn_type,
                              /*inbound_onion=*/false,
-                             CNodeOptions{ .i2p_sam_session = std::move(i2p_transient_session),
-                                           .permission_flags = permission_flags });
+                             CNodeOptions{ .permission_flags = permission_flags,
+                                           .i2p_sam_session = std::move(i2p_transient_session) });
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)

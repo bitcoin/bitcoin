@@ -272,6 +272,61 @@ static RPCHelpMan getpeerinfo()
     };
 }
 
+static RPCHelpMan addpermissionflags()
+{
+    return RPCHelpMan{"addpermissionflags",
+                "\nAdd permission flags to the peers using the given IP address (e.g. 1.2.3.4) or\n"
+                "CIDR-notated network (e.g. 1.2.3.0/24). Uses the same permissions as -whitebind.\n"
+                "Additional flags \"in\" and \"out\" control whether permissions apply to incoming and/or outgoing connections (default: incoming only).\n",
+                {
+                    {"flags", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The permission flags",
+                        {
+                            {"flag", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Permission flag"},
+                        }
+                    },
+                    {"ip|network", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address or network"}
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("addpermissionflags", "[\"noban\", \"mempool\", \"in\", \"out\"] \"127.0.0.1\"")
+            + HelpExampleRpc("addpermissionflags", "[\"noban\", \"mempool\", \"in\", \"out\"], \"127.0.0.1\" }")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    CConnman& connman = EnsureConnman(node);
+
+    const std::vector<UniValue>& flags = request.params[0].get_array().getValues();
+    const std::string ip_network = request.params[1].get_str();
+
+    std::string permissions;
+    if (flags.empty()) {
+        permissions = ip_network;
+    } else {
+        for (size_t i = 0; i < flags.size(); i++) {
+            if (i < flags.size() - 1) permissions = permissions + flags[i].get_str() + ',';
+            else permissions = permissions + flags[i].get_str() + '@' + ip_network;
+        }
+    }
+
+    NetWhitelistPermissions whitelist_permissions;
+    ConnectionDirection connection_direction;
+    bilingual_str error;
+    if (!NetWhitelistPermissions::TryParse(permissions, whitelist_permissions, connection_direction, error)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid permissions");
+    }
+    if (connection_direction & ConnectionDirection::In) {
+        connman.vWhitelistedRange.push_back(whitelist_permissions);
+    }
+    if (connection_direction & ConnectionDirection::Out) {
+        connman.vWhitelistedRangeOutgoing.push_back(whitelist_permissions);
+    }
+
+    return UniValue::VNULL;
+},
+    };
+}
+
 static RPCHelpMan addnode()
 {
     return RPCHelpMan{"addnode",
@@ -985,6 +1040,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &clearbanned},
         {"network", &setnetworkactive},
         {"network", &getnodeaddresses},
+        {"network", &addpermissionflags},
         {"hidden", &addconnection},
         {"hidden", &addpeeraddress},
     };
