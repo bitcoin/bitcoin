@@ -98,7 +98,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # )
         # self.clear_mock_result(self.nodes[1])
 
-        assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
+        assert_equal(hww.getwalletinfo()["keypoolsize"], 40)
 
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
@@ -121,6 +121,13 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
         assert_equal(address_info['hdkeypath'], "m/44'/1'/0'/0/0")
 
+        address4 = hww.getnewaddress(address_type="bech32m")
+        assert_equal(address4, "bcrt1phw4cgpt6cd30kz9k4wkpwm872cdvhss29jga2xpmftelhqll62ms4e9sqj")
+        address_info = hww.getaddressinfo(address4)
+        assert_equal(address_info['solvable'], True)
+        assert_equal(address_info['ismine'], True)
+        assert_equal(address_info['hdkeypath'], "m/86'/1'/0'/0/0")
+
         self.log.info('Test walletdisplayaddress')
         result = hww.walletdisplayaddress(address1)
         assert_equal(result, {"address": address1})
@@ -133,7 +140,7 @@ class WalletSignerTest(BitcoinTestFramework):
         self.clear_mock_result(self.nodes[1])
 
         self.log.info('Prepare mock PSBT')
-        self.nodes[0].sendtoaddress(address1, 1)
+        self.nodes[0].sendtoaddress(address4, 1)
         self.generate(self.nodes[0], 1)
 
         # Load private key into wallet to generate a signed PSBT for the mock
@@ -142,14 +149,14 @@ class WalletSignerTest(BitcoinTestFramework):
         assert mock_wallet.getwalletinfo()['private_keys_enabled']
 
         result = mock_wallet.importdescriptors([{
-            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0",
+            "desc": "tr([00000001/86'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#0jtt2jc9",
             "timestamp": 0,
             "range": [0,1],
             "internal": False,
             "active": True
         },
         {
-            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#j6uzqvuh",
+            "desc": "tr([00000001/86'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#7xw2h8ga",
             "timestamp": 0,
             "range": [0, 0],
             "internal": True,

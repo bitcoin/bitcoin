@@ -81,6 +81,9 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         for (const auto& entry : input.hd_keypaths) {
             if (parsed_m_fingerprint == MakeUCharSpan(entry.second.fingerprint)) return true;
         }
+        for (const auto& entry : input.m_tap_bip32_paths) {
+            if (parsed_m_fingerprint == MakeUCharSpan(entry.second.second.fingerprint)) return true;
+        }
         return false;
     };
 
