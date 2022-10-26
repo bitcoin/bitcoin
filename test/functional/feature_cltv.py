@@ -102,7 +102,7 @@ class BIP65Test(BitcoinTestFramework):
 
     def run_test(self):
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
-        wallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_OP_TRUE)
+        wallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_OP_2)
 
         self.test_cltv_info(is_active=False)
 

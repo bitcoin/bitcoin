@@ -37,6 +37,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     LEAF_VERSION_TAPSCRIPT,
+    OP_2,
     OP_NOP,
     OP_RETURN,
     OP_TRUE,
@@ -65,18 +66,18 @@ class MiniWalletMode(Enum):
     witness stack of OP_TRUE, i.e. following an anyone-can-spend policy.
     However, if the transactions need to be modified by the user (e.g. prepending
     scriptSig for testing opcodes that are activated by a soft-fork), or the txs
-    should contain an actual signature, the raw modes RAW_OP_TRUE and RAW_P2PK
+    should contain an actual signature, the raw modes RAW_OP_2 and RAW_P2PK
     can be useful. Summary of modes:
 
                     |      output       |           |  tx is   | can modify |  needs
          mode       |    description    |  address  | standard | scriptSig  | signing
     ----------------+-------------------+-----------+----------+------------+----------
     ADDRESS_OP_TRUE | anyone-can-spend  |  bech32m  |   yes    |    no      |   no
-    RAW_OP_TRUE     | anyone-can-spend  |  - (raw)  |   no     |    yes     |   no
+    RAW_OP_2        | anyone-can-spend  |  - (raw)  |   no     |    yes     |   no
     RAW_P2PK        | pay-to-public-key |  - (raw)  |   yes    |    yes     |   yes
     """
     ADDRESS_OP_TRUE = 1
-    RAW_OP_TRUE = 2
+    RAW_OP_2 = 2
     RAW_P2PK = 3
 
 
@@ -87,8 +88,8 @@ class MiniWallet:
         self._mode = mode
 
         assert isinstance(mode, MiniWalletMode)
-        if mode == MiniWalletMode.RAW_OP_TRUE:
-            self._scriptPubKey = bytes(CScript([OP_TRUE]))
+        if mode == MiniWalletMode.RAW_OP_2:
+            self._scriptPubKey = bytes(CScript([OP_2]))
         elif mode == MiniWalletMode.RAW_P2PK:
             # use simple deterministic private key (k=1)
             self._priv_key = ECKey()
@@ -175,7 +176,7 @@ class MiniWallet:
                 sign_input_legacy(tx, 0, self._scriptPubKey, self._priv_key)
                 if not fixed_length:
                     break
-        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
+        elif self._mode == MiniWalletMode.RAW_OP_2:
             for i in tx.vin:
                 i.scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
         elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
@@ -341,7 +342,7 @@ class MiniWallet:
         assert fee_rate >= 0
         assert fee >= 0
         # calculate fee
-        if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
+        if self._mode in (MiniWalletMode.RAW_OP_2, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(104)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)

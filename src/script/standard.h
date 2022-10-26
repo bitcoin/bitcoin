@@ -51,6 +51,7 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 enum class TxoutType {
     NONSTANDARD,
     // 'standard' transaction types:
+    ANCHOR, //!< anyonecanspendable script
     PUBKEY,
     PUBKEYHASH,
     SCRIPTHASH,

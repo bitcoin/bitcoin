@@ -128,6 +128,12 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
+    // TxoutType::ANCHOR
+    s.clear();
+    s << OP_1;
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::ANCHOR);
+    BOOST_CHECK_EQUAL(solutions.size(), 0);
+
     // TxoutType::NONSTANDARD
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
@@ -187,6 +193,16 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     // TxoutType::WITNESS_UNKNOWN with incorrect program size
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
+
+    // TxoutType::ANCHOR with extra push
+    s.clear();
+    s << OP_1 << OP_1;
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
+
+    // TxoutType::ANCHOR but wrong truth-y opcode
+    s.clear();
+    s << OP_2;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
 }
 
