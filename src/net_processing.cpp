@@ -2714,7 +2714,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
             // This peer has too little work on their headers chain to help
             // us sync -- disconnect if it is an outbound disconnection
             // candidate.
-            // Note: We compare their tip to the minumum chain work (rather than
+            // Note: We compare their tip to the minimum chain work (rather than
             // m_chainman.ActiveChain().Tip()) because we won't start block download
             // until we have a headers chain that has at least
             // the minimum chain work, even if a peer has a chain past our tip,
@@ -3901,7 +3901,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Note that if we were to be on a chain that forks from the checkpointed
         // chain, then serving those headers to a peer that has seen the
         // checkpointed chain would cause that peer to disconnect us. Requiring
-        // that our chainwork exceed the mimimum chain work is a protection against
+        // that our chainwork exceed the minimum chain work is a protection against
         // being fed a bogus chain when we started up for the first time and
         // getting partitioned off the honest network for serving that chain to
         // others.
