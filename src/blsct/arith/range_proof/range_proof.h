@@ -71,13 +71,6 @@ public:
         CHashWriter& transcript_gen
     );
 
-    /**
-     * Take a log2 of the size of concatinated input values in bits
-     * to get to the number of rounds required to get a single element
-     * by halving the size in each round
-     */
-    size_t GetInnerProdArgRounds(const size_t& num_input_values) const;
-
     Proof Prove(
         Scalars& vs,
         G1Point& nonce,
@@ -91,8 +84,7 @@ public:
     ) const;
 
     bool ValidateProofsBySizes(
-        const std::vector<Proof>& proofs,
-        const size_t& num_rounds
+        const std::vector<Proof>& proofs
     ) const;
 
     G1Point VerifyLoop2(

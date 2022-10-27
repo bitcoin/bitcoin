@@ -50,8 +50,10 @@ bool RangeProof::InnerProductArgument(
 ) {
     Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
     size_t n = input_value_vec_len;
+    size_t num_rounds = 0;
 
     while (n > 1) {
+        ++num_rounds;
         n /= 2;
 
         Scalar cL = (a.To(n) * b.From(n)).Sum();
@@ -83,17 +85,12 @@ bool RangeProof::InnerProductArgument(
         b = (b.To(n) * x_inv) + (b.From(n) * x);
         y_inv_pows = y_inv_pows.To(n);
     }
+
     proof.a = a[0];
     proof.b = b[0];
+    proof.num_rounds = num_rounds;
 
     return true;
-}
-
-size_t RangeProof::GetInnerProdArgRounds(const size_t& num_input_values) const
-{
-    const size_t num_input_values_power_of_2 = Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
-    const size_t rounds = std::log2(num_input_values_power_of_2) + std::log2(Config::m_input_value_bits);
-    return rounds;
 }
 
 Proof RangeProof::Prove(
@@ -111,9 +108,11 @@ Proof RangeProof::Prove(
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
-    // this value is power of 2 since m_input_value_bits is power of 2 as well
+
     const size_t num_input_values_power_of_2 =
         Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
+
+    // this is power of 2 as well since m_input_value_bits is power of 2
     const size_t concat_input_values_in_bits =
         num_input_values_power_of_2 * Config::m_input_value_bits;
 
@@ -136,13 +135,10 @@ Proof RangeProof::Prove(
     CHashWriter transcript_gen(0, 0);
 
     // Calculate value commitments and add them to transcript
-    G1Points a1(gens.H * gammas.m_vec);
-    G1Points b1(gens.G.get() * vs.m_vec);
-    auto c = a1 + b1;
-    proof.Vs = G1Points(gens.H * gammas.m_vec) + G1Points(gens.G.get() * vs.m_vec);
-
     for (size_t i = 0; i < vs.Size(); ++i) {
-        transcript_gen << proof.Vs[i];
+        auto V = gens.G.get() * vs[i] + gens.H * gammas[i];
+        proof.Vs.Add(V);
+        transcript_gen << V;
     }
 
     // (41)-(42)
@@ -153,7 +149,7 @@ Proof RangeProof::Prove(
         for(bool bit: bits) {
             aL.Add(bit);
         }
-        // fill the remaining bits if needed
+        // pad the remaining bits with false if exist
         for(size_t i = 0; i < Config::m_input_value_bits - bits.size(); ++i) {
             aL.Add(false);
         }
@@ -195,12 +191,12 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
-    auto sL = Scalars::RandVec(Config::m_input_value_bits, true);
-    auto sR = Scalars::RandVec(Config::m_input_value_bits, true);
+    auto sL = Scalars::RandVec(concat_input_values_in_bits, true);
+    auto sR = Scalars::RandVec(concat_input_values_in_bits, true);
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (gens.H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
+    proof.S = (Gi * sL).Sum() + (Hi * sR).Sum() + (gens.H * rho);
 
     // (48)-(50)
     transcript_gen << proof.A;
@@ -218,29 +214,28 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     // AFTER (50)
 
     // l(x) = (aL - z 1^n) + sL X
-    // aL is a concatination of all input value bits, so mn bits (= input_value_total_bits) are needed
-    Scalars z_value_total_bits = Scalars::FirstNPow(z, concat_input_values_in_bits);
-    Scalars l0 = aL - z_value_total_bits;
+    Scalars zs = Scalars::RepeatN(z, concat_input_values_in_bits);
+    Scalars l0 = aL - zs;
 
     // l(1) is (aL - z 1^n) + sL, but this is reduced to sL
     Scalars l1 = sL;
 
     // Calculation of r(0) and r(1) on page 19
-    Scalars z_n_times_two_n;
-    Scalars z_pows = Scalars::FirstNPow(z, num_input_values_power_of_2, 2);  // z_pows excludes 1 and z
+    Scalars z_pow_twos;
+    Scalars z_pows_from_2 = Scalars::FirstNPow(z, num_input_values_power_of_2, 2);  // z_pows excludes z^0 and z^1
 
     // The last term of r(X) on page 19
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
-        auto base_z = z_pows[i];  // use different Scalar for each input value
+        auto base_z_pow = z_pows_from_2[i];  // use different Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
-            z_n_times_two_n.Add(base_z * (*m_two_pows)[bit_idx]);
+            z_pow_twos.Add(base_z_pow * (*m_two_pows)[bit_idx]);
         }
     }
 
-    Scalars y_value_total_bits = Scalars::FirstNPow(y, concat_input_values_in_bits);
-    Scalars r0 = (y_value_total_bits * (aR + z_value_total_bits)) + z_n_times_two_n;
-    Scalars r1 = y_value_total_bits * sR;
+    Scalars y_pows = Scalars::FirstNPow(y, concat_input_values_in_bits);
+    Scalars r0 = (y_pows * (aR + zs)) + z_pow_twos;
+    Scalars r1 = y_pows * sR;
 
     // Polynomial construction before (51)
     Scalar t1 = (l0 * r1).Sum() + (l1 * r0).Sum();
@@ -286,7 +281,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
         throw std::runtime_error(strprintf("%s: equality didn't hold in (60)", __func__));
 
     // resize z_pows so that the length matches with gammas
-    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows * gammas).Sum();  // (61)
+    proof.tau_x = (tau2 * x.Square()) + (tau1 * x) + (z_pows_from_2 * gammas).Sum();  // (61)
     proof.mu = alpha + (rho * x);  // (62)
 
     // (63)
@@ -317,9 +312,9 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     }
 
     auto lhs_65 = gens.G.get() * proof.t_hat + gens.H * proof.tau_x;
-    auto rhs_65 = (proof.Vs * z_pows).Sum() + gens.G.get() * delta_yz + proof.T2 * x.Square() + proof.T1 * x;
-    if (lhs_65 != rhs_65)
-         throw std::runtime_error(strprintf("%s: (65) failed", __func__));
+    auto rhs_65 = (proof.Vs * z_pows_from_2).Sum() + gens.G.get() * delta_yz + proof.T2 * x.Square() + proof.T1 * x;
+    // if (lhs_65 != rhs_65)
+    //      throw std::runtime_error(strprintf("%s: (65) failed", __func__));
 
     ////////////
 
@@ -341,8 +336,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 }
 
 bool RangeProof::ValidateProofsBySizes(
-    const std::vector<Proof>& proofs,
-    const size_t& num_rounds
+    const std::vector<Proof>& proofs
 ) const {
     for (const Proof& proof: proofs) {
         // proof must contain input values
@@ -352,7 +346,7 @@ bool RangeProof::ValidateProofsBySizes(
         if (proof.Vs.Size() > Config::m_max_input_values) return false;
 
         // L,R keep track of aggregation history and the size should equal to # of rounds
-        if (proof.Ls.Size() != num_rounds)
+        if (proof.Ls.Size() != proof.num_rounds)
             return false;
 
         // if Ls and Rs should have the same size
@@ -378,15 +372,20 @@ G1Point RangeProof::VerifyLoop2(
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
+    G1Points point65;
+
         Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_max_input_values + 1, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits).Sum(); // VectorPowerSum(p.y, MN);
 
         //////// (65)
         // g^t_hat * h^tau_x = V^(z^2) * g^delta_yz * T1^x * T2^(x^2)
-        // g^(t_hat - delta_yz) * h^(tau_x) * V^(z^2) * T1^x * T2^(x^2)
+        // g^(t_hat - delta_yz) = h^(-tau_x) * V^(z^2) * T1^x * T2^(x^2)
 
         // LHS (65)
         h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // LHS (65)
+
+    // debug
+    point65.Add(gens.H * p.proof.tau_x.Negate());
 
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
@@ -404,14 +403,32 @@ G1Point RangeProof::VerifyLoop2(
         // g^(t_hat - delta_yz) = ...
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
 
+    // debug
+    point65.Add(gens.G.get() * (p.proof.t_hat - delta_yz).Negate());
+
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
             points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
+    // debug
+    for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
+        point65.Add(p.proof.Vs[i] * z_pows[i]);
+    }
+
         // T1^x and T2^(x^2) in RHS (65)
         points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
         points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
+
+    // debug
+    point65.Add(p.proof.T1 * p.x);
+    point65.Add(p.proof.T2 * p.x.Square());
+
+    if (!point65.Sum().IsUnity()) {
+        throw std::runtime_error(strprintf("%s: (65) not balancing", __func__));
+    } else {
+        printf("=========================> (65) is working!!!!\n");
+    }
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
@@ -425,10 +442,10 @@ G1Point RangeProof::VerifyLoop2(
 
         // this loop generates exponents for gi and hi generators so that
         // when there are aggregated, they become g and h in (16)
-        std::vector<Scalar> acc_xs(1 << p.num_rounds, 1);  // initialize all elems to 1
+        std::vector<Scalar> acc_xs(1 << p.proof.num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
-        for (size_t j = 1; j < p.num_rounds; ++j) {
+        for (size_t j = 1; j < p.proof.num_rounds; ++j) {
             const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
 
             for (size_t s = sl - 1; s > 0; s -= 2) {
@@ -465,7 +482,7 @@ G1Point RangeProof::VerifyLoop2(
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
         // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
-        for (size_t i = 0; i < p.num_rounds; ++i) {
+        for (size_t i = 0; i < p.proof.num_rounds; ++i) {
             points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
             points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
         }
@@ -493,10 +510,8 @@ bool RangeProof::Verify(
     const std::vector<Proof>& proofs,
     const TokenId& token_id
 ) const {
-    const size_t num_rounds = GetInnerProdArgRounds(Config::m_input_value_bits);
-    if (!ValidateProofsBySizes(proofs, num_rounds)) return false;
-
-    std::vector<ProofWithTranscript> proof_derivs;
+    if (!ValidateProofsBySizes(proofs)) return false;
+    std::vector<ProofWithTranscript> proof_transcripts;
     size_t max_num_rounds = 0;
     size_t Vs_size_sum = 0;
 
@@ -505,9 +520,9 @@ bool RangeProof::Verify(
         max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
         Vs_size_sum += proof.Vs.Size();
 
-        // derive required Scalars from proof
-        auto proof_deriv = ProofWithTranscript::Build(proof, num_rounds);
-        proof_derivs.push_back(proof_deriv);
+        // derive transcript from the proof
+        auto proof_transcript = ProofWithTranscript::Build(proof);
+        proof_transcripts.push_back(proof_transcript);
     }
 
 
@@ -515,7 +530,7 @@ bool RangeProof::Verify(
     const Generators gens = m_gf->GetInstance(token_id);
 
     G1Point point_sum = VerifyLoop2(
-        proof_derivs,
+        proof_transcripts,
         gens,
         max_mn
     );

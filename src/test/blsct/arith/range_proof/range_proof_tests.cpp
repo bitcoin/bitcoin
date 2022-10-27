@@ -40,7 +40,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
 
     TokenId token_id(uint256(123));
     RangeProof range_proof;
-
     // test each valid value individually
     for (Scalar v: in_range) {
         Scalars vs;
@@ -60,10 +59,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_inner_product_argument)
 }
 
 BOOST_AUTO_TEST_CASE(test_range_proof_get_first_power_of_2_greater_or_eq_to)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_get_inner_prod_arg_rounds)
 {
 }
 

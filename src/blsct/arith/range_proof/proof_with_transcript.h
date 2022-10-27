@@ -21,18 +21,13 @@ public:
         const Scalars& xs,
         const Scalars& inv_xs,
         const size_t& num_input_values_power_2,
-        const size_t& concat_input_values_in_bits,
-        const size_t& num_rounds
+        const size_t& concat_input_values_in_bits
     ): proof{proof}, x{x}, y{y}, z{z}, cx_factor{cx_factor}, xs(xs),
         inv_xs{inv_xs}, inv_y(y.Invert()),
         num_input_values_power_2(num_input_values_power_2),
-        concat_input_values_in_bits(concat_input_values_in_bits),
-        num_rounds(num_rounds) {}
+        concat_input_values_in_bits(concat_input_values_in_bits) {}
 
-    static ProofWithTranscript Build(
-      const Proof& proof,
-      const size_t& num_rounds
-    );
+    static ProofWithTranscript Build(const Proof& proof);
 
     const Proof proof;
 
@@ -47,7 +42,6 @@ public:
 
     const size_t num_input_values_power_2;  // M in old impl
     const size_t concat_input_values_in_bits;  // MN is old impl
-    const size_t num_rounds;  // log2 M + log2 N in old impl
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
