@@ -312,7 +312,6 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     assert(!m_splash);
     m_splash = new SplashScreen(networkStyle);
     m_splash->show();
-    connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
 }
 
 void BitcoinApplication::createNode(interfaces::Init& init)
