@@ -30,7 +30,7 @@ void inline Round(uint64_t a, uint64_t b, uint64_t c, uint64_t& d, uint64_t e, u
     h = t1 + t2;
 }
 
-/** Initialize SHA-256 state. */
+/** Initialize SHA-512 state. */
 void inline Initialize(uint64_t* s)
 {
     s[0] = 0x6a09e667f3bcc908ull;
