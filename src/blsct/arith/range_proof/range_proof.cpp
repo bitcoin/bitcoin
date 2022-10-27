@@ -295,26 +295,52 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     //////////// added for debugging
 
+    auto lhs_65_h = gens.H * proof.tau_x;
+    auto rhs_65_h = (proof.Vs * z_pows_from_2).Sum() + proof.T2 * x.Square() + proof.T1 * x;
+    rhs_65_h = rhs_65_h
+        - (gens.G.get() * t1 * x)
+        - (gens.G.get() * t2 * x.Square());
+    for (size_t i=0; i<vs.Size(); ++i) {
+        rhs_65_h = rhs_65_h - (gens.G.get() * vs[i]);
+    }
+    if (lhs_65_h != rhs_65_h)
+         throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
+    else
+        printf("==============> (65) H worked\n");
+
     // delta(y,z) in (39)
-    // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
-    // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
+    // = (z - z^2)*<1^n, y^n> - z^3<1^n, 2^n>
+    // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n, 2^n> (3)
     Scalar y_pows_sum = Scalars::FirstNPow(y, concat_input_values_in_bits).Sum();
-    Scalars z_pows2 = Scalars::FirstNPow(z, num_input_values_power_of_2, 3);
+    Scalars z_pows2 = Scalars::FirstNPow(z, concat_input_values_in_bits, 2);
     Scalar one(1);
     Scalar two(2);
-    Scalars ones = Scalars::FirstNPow(one, num_input_values_power_of_2);
-    Scalars twos = Scalars::FirstNPow(two, num_input_values_power_of_2);
-    Scalar ip12 = (ones * twos).Sum();
+    Scalars ones = Scalars::FirstNPow(one, concat_input_values_in_bits);
+    Scalars two_pows = Scalars::FirstNPow(two, concat_input_values_in_bits);
+    Scalar ip12 = (ones * two_pows).Sum();
+
     Scalar delta_yz = z * y_pows_sum;  // (1)
     delta_yz = z.Square() * y_pows_sum; // (2)
-    for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
+    for (size_t i = 0; i < concat_input_values_in_bits; ++i) {
         delta_yz = delta_yz - z_pows2[i] * ip12; //*RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
     }
 
-    auto lhs_65 = gens.G.get() * proof.t_hat + gens.H * proof.tau_x;
-    auto rhs_65 = (proof.Vs * z_pows_from_2).Sum() + gens.G.get() * delta_yz + proof.T2 * x.Square() + proof.T1 * x;
-    // if (lhs_65 != rhs_65)
-    //      throw std::runtime_error(strprintf("%s: (65) failed", __func__));
+    auto lhs_65_g = gens.G.get() * proof.t_hat;
+    auto rhs_65_g =
+        gens.G.get() * delta_yz
+        + (proof.Vs * z_pows_from_2).Sum()
+        + (proof.T2 * x.Square())
+        + (proof.T1 * x);
+    rhs_65_g = rhs_65_g
+        - (gens.H * tau1)
+        - (gens.H * tau2);
+    for (size_t i=0; i<vs.Size(); ++i) {
+        rhs_65_g = rhs_65_g - (gens.H * gammas[i]);
+    }
+    // if (lhs_65_g != rhs_65_g)
+    //      throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
+    // else
+    //     printf("==============> (65) G worked\n");
 
     ////////////
 
@@ -372,9 +398,7 @@ G1Point RangeProof::VerifyLoop2(
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
-    G1Points point65;
-
-        Scalars z_pows = Scalars::FirstNPow(p.z, Config::m_max_input_values + 1, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
+        Scalars z_pows = Scalars::FirstNPow(p.z, p.num_input_values_power_2 + 1, 2); // z^2, z^3, ... // VectorPowers(pd.z, M+3);
         Scalar y_pows_sum = Scalars::FirstNPow(p.y, p.concat_input_values_in_bits).Sum(); // VectorPowerSum(p.y, MN);
 
         //////// (65)
@@ -384,16 +408,13 @@ G1Point RangeProof::VerifyLoop2(
         // LHS (65)
         h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // LHS (65)
 
-    // debug
-    point65.Add(gens.H * p.proof.tau_x.Negate());
-
         // delta(y,z) in (39)
         // = (z - z^2)*<1^n, y^n> - z^3<1^n,2^n>
         // = z*<1^n, y^n> (1) - z^2*<1^n, y^n> (2) - z^3<1^n,2^n> (3)
         Scalar delta_yz =
             p.z * y_pows_sum  // (1)
             - (z_pows[0] * y_pows_sum);  // (2)
-        for (size_t i = 1; i <= Config::m_input_value_bits; ++i) {
+        for (size_t i = 1; i <= p.num_input_values_power_2; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
             delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
         }
@@ -403,32 +424,14 @@ G1Point RangeProof::VerifyLoop2(
         // g^(t_hat - delta_yz) = ...
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
 
-    // debug
-    point65.Add(gens.G.get() * (p.proof.t_hat - delta_yz).Negate());
-
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
             points.Add(p.proof.Vs[i] * (z_pows[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
-    // debug
-    for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-        point65.Add(p.proof.Vs[i] * z_pows[i]);
-    }
-
         // T1^x and T2^(x^2) in RHS (65)
         points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
         points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
-
-    // debug
-    point65.Add(p.proof.T1 * p.x);
-    point65.Add(p.proof.T2 * p.x.Square());
-
-    if (!point65.Sum().IsUnity()) {
-        throw std::runtime_error(strprintf("%s: (65) not balancing", __func__));
-    } else {
-        printf("=========================> (65) is working!!!!\n");
-    }
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
