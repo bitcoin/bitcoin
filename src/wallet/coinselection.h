@@ -308,6 +308,7 @@ public:
     void Clear();
 
     void AddInput(const OutputGroup& group);
+    void AddInputs(const std::set<COutput>& inputs, bool subtract_fee_outputs);
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
