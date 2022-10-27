@@ -346,7 +346,7 @@ bool SeenLocal(const CService& addr)
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     if (it == mapLocalHost.end()) return false;
-    ++it->second.nScore;
+    ++reinterpret_cast<unsigned&> (it->second.nScore); // nScore is signed
     return true;
 }
 
