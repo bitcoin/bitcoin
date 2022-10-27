@@ -40,6 +40,16 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
 
     TokenId token_id(uint256(123));
     RangeProof range_proof;
+
+    // test one
+    {
+        Scalars vs;
+        vs.Add(one);
+        auto proof = range_proof.Prove(vs, nonce, message, token_id);
+        auto is_valid = range_proof.Verify(std::vector<Proof> { proof }, token_id);
+        BOOST_CHECK(is_valid);
+    }
+
     // test each valid value individually
     for (Scalar v: in_range) {
         Scalars vs;
