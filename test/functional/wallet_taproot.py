@@ -317,8 +317,10 @@ class WalletTaprootTest(BitcoinTestFramework):
         wallet_uuid = uuid.uuid4().hex
         self.nodes[0].createwallet(wallet_name=f"psbt_online_{wallet_uuid}", descriptors=True, disable_private_keys=True, blank=True)
         self.nodes[1].createwallet(wallet_name=f"psbt_offline_{wallet_uuid}", descriptors=True, blank=True)
+        self.nodes[1].createwallet(f"key_only_wallet_{wallet_uuid}", descriptors=True, blank=True)
         psbt_online = self.nodes[0].get_wallet_rpc(f"psbt_online_{wallet_uuid}")
         psbt_offline = self.nodes[1].get_wallet_rpc(f"psbt_offline_{wallet_uuid}")
+        key_only_wallet = self.nodes[1].get_wallet_rpc(f"key_only_wallet_{wallet_uuid}")
 
         desc_pay = self.make_desc(pattern, privmap, keys_pay, False)
         desc_change = self.make_desc(pattern, privmap, keys_change, False)
@@ -334,6 +336,9 @@ class WalletTaprootTest(BitcoinTestFramework):
         assert(result[0]['success'])
         result = psbt_offline.importdescriptors([{"desc": desc_change, "active": True, "timestamp": "now", "internal": True}])
         assert(result[0]['success'])
+        for key in keys_pay + keys_change:
+            result = key_only_wallet.importdescriptors([{"desc": descsum_create(f"wpkh({key['xprv']}/*)"), "timestamp":"now"}])
+            assert(result[0]["success"])
         address_type = "bech32m" if "tr" in pattern else "bech32"
         for i in range(4):
             addr_g = psbt_online.getnewaddress(address_type=address_type)
@@ -349,20 +354,25 @@ class WalletTaprootTest(BitcoinTestFramework):
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
             psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['psbt']
             res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
+            for wallet in [psbt_offline, key_only_wallet]:
+                res = wallet.walletprocesspsbt(psbt=psbt, finalize=False)
 
-            decoded = psbt_offline.decodepsbt(res["psbt"])
-            if pattern.startswith("tr("):
-                for psbtin in decoded["inputs"]:
-                    assert "non_witness_utxo" not in psbtin
-                    assert "witness_utxo" in psbtin
-                    assert "taproot_internal_key" in psbtin
-                    assert "taproot_bip32_derivs" in psbtin
-                    assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
-                    if "taproot_script_path_sigs" in psbtin:
-                        assert "taproot_merkle_root" in psbtin
-                        assert "taproot_scripts" in psbtin
+                decoded = wallet.decodepsbt(res["psbt"])
+                if pattern.startswith("tr("):
+                    for psbtin in decoded["inputs"]:
+                        assert "non_witness_utxo" not in psbtin
+                        assert "witness_utxo" in psbtin
+                        assert "taproot_internal_key" in psbtin
+                        assert "taproot_bip32_derivs" in psbtin
+                        assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
+                        if "taproot_script_path_sigs" in psbtin:
+                            assert "taproot_merkle_root" in psbtin
+                            assert "taproot_scripts" in psbtin
 
-            rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
+                rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
+                res = self.nodes[0].testmempoolaccept([rawtx])
+                assert res[0]["allowed"]
+
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert(psbt_online.gettransaction(txid)['confirmations'] > 0)
