@@ -493,7 +493,14 @@ class BlockchainTest(BitcoinTestFramework):
         fee_per_kb = 1000 * fee_per_byte
 
         self.wallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
-        blockhash = self.generate(node, 1)[0]
+
+        maxHeight = 1
+        blockhash = self.generate(node, maxHeight)[0]
+
+        def assert_hexblock_hashes_from_height(blockheight,verbosity):
+            block = node.getblock(str(blockheight), verbosity)
+            blockhash_height = node.getblockhash(blockheight)
+            assert_equal(blockhash_height, hash256(bytes.fromhex(block[:160]))[::-1].hex())
 
         def assert_hexblock_hashes(verbosity):
             block = node.getblock(blockhash, verbosity)
@@ -532,6 +539,10 @@ class BlockchainTest(BitcoinTestFramework):
             else:
                 for vin in tx["vin"]:
                     assert "prevout" not in vin
+
+        self.log.info("Test that getblock with height and verbosity 0 hashes to the expected value")
+        assert_hexblock_hashes_from_height(1,0)
+        assert_hexblock_hashes_from_height(1,False)
 
         self.log.info("Test that getblock with verbosity 0 hashes to expected value")
         assert_hexblock_hashes(0)

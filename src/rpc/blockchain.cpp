@@ -642,7 +642,7 @@ static RPCHelpMan getblock()
                 "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction.\n"
                 "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction, including prevout information for inputs (only for unpruned blocks in the current best chain).\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"blockhash|blockheight", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash or height", RPCArgOptions{.type_str={"", "string or numeric"}}},
                     {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{1}, "0 for hex-encoded data, 1 for a JSON object, 2 for JSON object with transaction data, and 3 for JSON object with transaction data including prevout information for inputs"},
                 },
                 {
@@ -704,7 +704,22 @@ static RPCHelpMan getblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    int32_t blockHeight = -1;
+    switch(request.params[0].getType()){
+        case UniValue::VType::VSTR:
+            if((request.params[0].get_str().length() != 64) && (!ParseInt32(request.params[0].get_str(),&blockHeight))){
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block height invalid");
+            }
+            break;
+        case UniValue::VType::VNUM:
+            blockHeight = request.params[0].getInt<int32_t>();
+            break;
+        default:
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "height or hash input univalue type is not VSTR or VNUM");
+    }
+    uint256 hash = *(blockHeight >= 0 ? ParseHashOrHeight(blockHeight,chainman) : ParseHashOrHeight(request.params[0], chainman))->phashBlock;
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
@@ -718,7 +733,6 @@ static RPCHelpMan getblock()
     CBlock block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
         LOCK(cs_main);
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
