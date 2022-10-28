@@ -96,19 +96,19 @@ std::string CMasternodeSync::GetSyncStatus() const
     }
 }
 
-void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) const
+void CMasternodeSync::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const
 {
-    if (msg_type == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
+    //Sync status count
+    if (msg_type != NetMsgType::SYNCSTATUSCOUNT) return;
 
-        //do not care about stats if sync process finished
-        if (IsSynced()) return;
+    //do not care about stats if sync process finished
+    if (IsSynced()) return;
 
-        int nItemID;
-        int nCount;
-        vRecv >> nItemID >> nCount;
+    int nItemID;
+    int nCount;
+    vRecv >> nItemID >> nCount;
 
-        LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->GetId());
-    }
+    LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, peer.GetId());
 }
 
 void CMasternodeSync::ProcessTick()
@@ -262,7 +262,7 @@ void CMasternodeSync::ProcessTick()
         if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
             continue; // to early for this node
         }
-        int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(pnode, connman);
+        int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(*pnode, connman);
         // check for data
         if(nObjsLeftToAsk == 0) {
             static int64_t nTimeNoObjectsLeft = 0;

@@ -32,7 +32,7 @@ std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinCli
 std::unique_ptr<CCoinJoinClientQueueManager> coinJoinClientQueueManager;
 
 
-void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61)
+void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -44,11 +44,11 @@ void CCoinJoinClientQueueManager::ProcessMessage(CNode* pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        CCoinJoinClientQueueManager::ProcessDSQueue(pfrom, msg_type, vRecv, enable_bip61);
+        CCoinJoinClientQueueManager::ProcessDSQueue(peer, vRecv);
     }
 }
 
-void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, bool enable_bip61)
+void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
 {
     CCoinJoinQueue dsq;
     vRecv >> dsq;
@@ -64,7 +64,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string
             }
             if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
                 // no way the same mn can send another dsq with the same readiness this soon
-                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", peer.GetLogString(), dsq.masternodeOutpoint.ToStringShort());
                 return;
             }
         }
@@ -80,7 +80,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string
 
     if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
         LOCK(cs_main);
-        Misbehaving(pfrom->GetId(), 10);
+        Misbehaving(peer.GetId(), 10);
         return;
     }
 
@@ -113,7 +113,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(CNode* pfrom, const std::string
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -132,12 +132,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode* pfrom, const std::string& msg
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(pfrom, msg_type, vRecv, connman, enable_bip61);
+            session.ProcessMessage(peer, msg_type, vRecv, connman, enable_bip61);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -145,7 +145,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg
 
     if (msg_type == NetMsgType::DSSTATUSUPDATE) {
         if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
+        if (mixingMasternode->pdmnState->addr != peer.addr) {
             return;
         }
 
@@ -156,7 +156,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg
 
     } else if (msg_type == NetMsgType::DSFINALTX) {
         if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
+        if (mixingMasternode->pdmnState->addr != peer.addr) {
             return;
         }
 
@@ -172,12 +172,12 @@ void CCoinJoinClientSession::ProcessMessage(CNode* pfrom, const std::string& msg
         LogPrint(BCLog::COINJOIN, "DSFINALTX -- txNew %s", txNew.ToString()); /* Continued */
 
         // check to see if input is spent already? (and probably not confirmed)
-        SignFinalTransaction(txNew, pfrom, connman);
+        SignFinalTransaction(txNew, peer, connman);
 
     } else if (msg_type == NetMsgType::DSCOMPLETE) {
         if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
-            LogPrint(BCLog::COINJOIN, "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", mixingMasternode->pdmnState->addr.ToString(), pfrom->addr.ToString());
+        if (mixingMasternode->pdmnState->addr != peer.addr) {
+            LogPrint(BCLog::COINJOIN, "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", mixingMasternode->pdmnState->addr.ToString(), peer.addr.ToString());
             return;
         }
 
@@ -518,11 +518,11 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
-bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman)
+bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
-    if (fMasternodeMode || pnode == nullptr) return false;
+    if (fMasternodeMode) return false;
     if (!mixingMasternode) return false;
 
     LOCK(mixingWallet.cs_wallet);
@@ -624,8 +624,8 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
 
     // push all of our signatures to the Masternode
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- pushing sigs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
-    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
+    CNetMsgMaker msgMaker(peer.GetSendVersion());
+    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
     nTimeLastSuccessfulStep = GetTime();
 

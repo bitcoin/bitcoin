@@ -2837,7 +2837,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
 
         if (!pfrom->m_masternode_probe_connection) {
-            CMNAuth::PushMNAUTH(pfrom, *connman);
+            CMNAuth::PushMNAUTH(*pfrom, *connman);
         }
 
         // Tell our peer we prefer to receive headers rather than inv's
@@ -4156,17 +4156,17 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        coinJoinClientQueueManager->ProcessMessage(pfrom, msg_type, vRecv, enable_bip61);
+        coinJoinClientQueueManager->ProcessMessage(*pfrom, msg_type, vRecv);
         for (auto& pair : coinJoinClientManagers) {
-            pair.second->ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
+            pair.second->ProcessMessage(*pfrom, msg_type, vRecv, *connman, enable_bip61);
         }
 #endif // ENABLE_WALLET
-        coinJoinServer->ProcessMessage(pfrom, msg_type, vRecv, enable_bip61);
-        sporkManager->ProcessSporkMessages(pfrom, msg_type, vRecv, *connman);
-        masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
-        governance->ProcessMessage(pfrom, msg_type, vRecv, *connman, enable_bip61);
-        CMNAuth::ProcessMessage(pfrom, msg_type, vRecv, *connman);
-        quorum_block_processor.ProcessMessage(pfrom, msg_type, vRecv);
+        coinJoinServer->ProcessMessage(*pfrom, msg_type, vRecv);
+        sporkManager->ProcessSporkMessages(*pfrom, msg_type, vRecv, *connman);
+        masternodeSync->ProcessMessage(*pfrom, msg_type, vRecv);
+        governance->ProcessMessage(*pfrom, msg_type, vRecv, *connman);
+        CMNAuth::ProcessMessage(*pfrom, msg_type, vRecv, *connman);
+        quorum_block_processor.ProcessMessage(*pfrom, msg_type, vRecv);
         qdkgsman.ProcessMessage(pfrom, qman, msg_type, vRecv);
         qman.ProcessMessage(pfrom, msg_type, vRecv);
         shareman.ProcessMessage(pfrom, msg_type, vRecv, *sporkManager);

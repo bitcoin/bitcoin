@@ -41,7 +41,7 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CEvoDB &_evoDb, CConnman& _connman)
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
 
-void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv)
+void CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::QFCOMMITMENT) {
         return;
@@ -50,18 +50,18 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_
     CFinalCommitment qc;
     vRecv >> qc;
 
-    WITH_LOCK(cs_main, EraseObjectRequest(pfrom->GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc))));
+    WITH_LOCK(cs_main, EraseObjectRequest(peer.GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc))));
 
     if (qc.IsNull()) {
-        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->GetId());
-        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+        LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, peer.GetId());
+        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
         return;
     }
 
     if (!Params().HasLLMQ(qc.llmqType)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
-                 uint8_t(qc.llmqType), pfrom->GetId());
-        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+                 uint8_t(qc.llmqType), peer.GetId());
+        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
         return;
     }
     auto type = qc.llmqType;
@@ -73,22 +73,22 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_
         pQuorumBaseBlockIndex = LookupBlockIndex(qc.quorumHash);
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
-                     qc.quorumHash.ToString(), pfrom->GetId());
+                     qc.quorumHash.ToString(), peer.GetId());
             // can't really punish the node here, as we might simply be the one that is on the wrong chain or not
             // fully synced
             return;
         }
         if (::ChainActive().Tip()->GetAncestor(pQuorumBaseBlockIndex->nHeight) != pQuorumBaseBlockIndex) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
-                     qc.quorumHash.ToString(), pfrom->GetId());
+                     qc.quorumHash.ToString(), peer.GetId());
             // same, can't punish
             return;
         }
         int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % GetLLMQParams(type).dkgInterval) + int(qc.quorumIndex);
         if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
-                     qc.quorumHash.ToString(), pfrom->GetId());
-            Misbehaving(pfrom->GetId(), 100);
+                     qc.quorumHash.ToString(), peer.GetId());
+            Misbehaving(peer.GetId(), 100);
             return;
         }
     }
@@ -110,13 +110,13 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& msg_
     if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid quorumIndex[%d] nversion[%d], peer=%d\n",
                  __func__, qc.quorumHash.ToString(),
-                 uint8_t(qc.llmqType), qc.quorumIndex, qc.nVersion, pfrom->GetId());
-        WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+                 uint8_t(qc.llmqType), qc.quorumIndex, qc.nVersion, peer.GetId());
+        WITH_LOCK(cs_main, Misbehaving(peer.GetId(), 100));
         return;
     }
 
     LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
-             qc.quorumHash.ToString(), uint8_t(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
+             qc.quorumHash.ToString(), uint8_t(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), peer.GetId());
 
     AddMineableCommitment(qc);
 }

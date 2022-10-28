@@ -230,10 +230,10 @@ public:
      */
     bool ConfirmInventoryRequest(const CInv& inv);
 
-    void SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncObjects(CNode* pnode, CConnman& connman) const;
+    void SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
+    void SyncObjects(CNode& peer, CConnman& connman) const;
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
 
     void DoMaintenance(CConnman& connman);
 
@@ -346,7 +346,7 @@ public:
 
     void InitOnLoad();
 
-    int RequestGovernanceObjectVotes(CNode* pnode, CConnman& connman);
+    int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman);
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman);
 
 private:

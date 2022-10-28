@@ -111,7 +111,7 @@ private:
     void CompletedTransaction(PoolMessage nMessageID);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman) LOCKS_EXCLUDED(cs_coinjoin);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman) LOCKS_EXCLUDED(cs_coinjoin);
 
     void RelayIn(const CCoinJoinEntry& entry, CConnman& connman) const;
 
@@ -123,7 +123,7 @@ public:
     {
     }
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
+    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
 
     void UnlockCoins();
 
@@ -157,8 +157,8 @@ public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman) :
         connman(_connman) {};
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQueue(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61);
+    void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQueue(const CNode& peer, CDataStream& vRecv);
     void DoMaintenance();
 };
 
@@ -201,7 +201,7 @@ public:
     explicit CCoinJoinClientManager(CWallet& wallet) :
         mixingWallet(wallet) {}
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_deqsessions);
+    void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();

@@ -68,7 +68,7 @@ public:
     void Reset(bool fForce = false, bool fNotifyReset = true);
     void SwitchToNextAsset();
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) const;
+    void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const;
     void ProcessTick();
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);

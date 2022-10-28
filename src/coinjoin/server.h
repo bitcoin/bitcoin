@@ -62,14 +62,14 @@ private:
 
     /// Relay mixing Messages
     void RelayFinalTransaction(const CTransaction& txFinal) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
-    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) const;
+    void PushStatus(CNode& peer, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) const;
     void RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID = MSG_NOERR) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
     void RelayCompletedTransaction(PoolMessage nMessageID) LOCKS_EXCLUDED(cs_coinjoin);
 
-    void ProcessDSACCEPT(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQUEUE(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSVIN(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_coinjoin);
-    void ProcessDSSIGNFINALTX(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61) LOCKS_EXCLUDED(cs_coinjoin);
+    void ProcessDSACCEPT(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    void ProcessDSVIN(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
+    void ProcessDSSIGNFINALTX(CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
 
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
@@ -79,7 +79,7 @@ public:
         fUnitTest(false),
         connman(_connman) {};
 
-    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, bool enable_bip61);
+    void ProcessMessage(CNode& pfrom, std::string_view msg_type, CDataStream& vRecv);
 
     bool HasTimedOut() const;
     void CheckTimeout();

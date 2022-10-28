@@ -44,8 +44,8 @@ public:
         READWRITE(obj.proRegTxHash, obj.sig);
     }
 
-    static void PushMNAUTH(CNode* pnode, CConnman& connman);
-    static void ProcessMessage(CNode* pnode, const std::string& msg_type, CDataStream& vRecv, CConnman& connman);
+    static void PushMNAUTH(CNode& peer, CConnman& connman);
+    static void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 
