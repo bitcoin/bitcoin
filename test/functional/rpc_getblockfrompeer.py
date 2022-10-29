@@ -100,7 +100,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         # Connect a P2PInterface to the pruning node and have it submit only the header of the
         # block that the pruning node has not seen
         node1_interface = self.nodes[1].add_p2p_connection(P2PInterface())
-        node1_interface.send_message(msg_headers([block]))
+        node1_interface.send_and_ping(msg_headers([block]))
 
         # Get the peer id of the P2PInterface from the pruning node
         node1_peers = self.nodes[1].getpeerinfo()
