@@ -8,7 +8,6 @@ export LC_ALL=C.UTF-8
 
 export HOST=arm64-apple-darwin
 export PIP_PACKAGES="zmq"
-export PACKAGES="libgmp3-dev"
 export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --with-miniupnpc --with-natpmp --enable-reduce-exports"
 export CI_OS_NAME="macos"
