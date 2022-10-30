@@ -85,8 +85,8 @@ class ScanblocksTest(SyscoinTestFramework):
         genesis_coinbase_spk = list(genesis_spks)[0]
         false_positive_spk = bytes.fromhex("001400000000000000000000000000000000000cadcb")
 
-        genesis_coinbase_hash = bip158_basic_element_hash(genesis_coinbase_spk, 1, genesis_blockhash)
-        false_positive_hash = bip158_basic_element_hash(false_positive_spk, 1, genesis_blockhash)
+        # genesis_coinbase_hash = bip158_basic_element_hash(genesis_coinbase_spk, 1, genesis_blockhash)
+        # false_positive_hash = bip158_basic_element_hash(false_positive_spk, 1, genesis_blockhash)
         # SYSCOIN
         # assert_equal(genesis_coinbase_hash, false_positive_hash)
 
