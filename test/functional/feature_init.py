@@ -128,7 +128,7 @@ class InitTest(BitcoinTestFramework):
                 'startup_args': ['-txindex=1'],
             },
             # Removing these files does not result in a startup error:
-            # 'indexes/blockfilter/basic/*.dat', 'indexes/blockfilter/basic/db/*.*', 'indexes/coinstats/db/*.*',
+            # 'indexes/blockfilter/basic/*.dat', 'indexes/blockfilter/basic/db/*.*', 'indexes/coinstatsindex/db/*.*',
             # 'indexes/txindex/*.log', 'indexes/txindex/CURRENT', 'indexes/txindex/LOCK'
         ]
 
@@ -154,7 +154,7 @@ class InitTest(BitcoinTestFramework):
                 'startup_args': ['-blockfilterindex=1'],
             },
             {
-                'filepath_glob': 'indexes/coinstats/db/*.*',
+                'filepath_glob': 'indexes/coinstatsindex/db/*.*',
                 'error_message': 'LevelDB error: Corruption',
                 'startup_args': ['-coinstatsindex=1'],
             },
