@@ -55,7 +55,7 @@ macos_native_task_template: &MACOS_NATIVE_TASK_TEMPLATE
   check_clang_script:
     - clang --version
   brew_install_script:
-    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt libgmp3-dev
+    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt gmp
   << : *MAIN_TEMPLATE
 
 compute_credits_template: &CREDITS_TEMPLATE
