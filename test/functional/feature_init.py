@@ -117,7 +117,7 @@ class InitTest(BitcoinTestFramework):
             'chainstate/*.ldb': 'Error opening coins database.',
             'blocks/blk*.dat': 'Corrupted block database detected.',
             'indexes/blockfilter/basic/db/*.*': 'LevelDB error: Corruption',
-            'indexes/coinstats/db/*.*': 'LevelDB error: Corruption',
+            'indexes/coinstatsindex/db/*.*': 'LevelDB error: Corruption',
             'indexes/txindex/*.log': 'LevelDB error: Corruption',
             'indexes/txindex/CURRENT': 'LevelDB error: Corruption',
             # Perturbing these files does not result in a startup error:
