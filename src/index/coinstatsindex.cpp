@@ -31,15 +31,15 @@ struct DBVal {
     uint64_t transaction_output_count;
     uint64_t bogo_size;
     CAmount total_amount;
-    CAmount total_subsidy;
+    CAmount block_subsidy;
     CAmount total_unspendable_amount;
-    CAmount total_prevout_spent_amount;
-    CAmount total_new_outputs_ex_coinbase_amount;
-    CAmount total_coinbase_amount;
-    CAmount total_unspendables_genesis_block;
-    CAmount total_unspendables_bip30;
-    CAmount total_unspendables_scripts;
-    CAmount total_unspendables_unclaimed_rewards;
+    CAmount block_prevout_spent_amount;
+    CAmount block_new_outputs_ex_coinbase_amount;
+    CAmount block_coinbase_amount;
+    CAmount block_unspendables_genesis_block;
+    CAmount block_unspendables_bip30;
+    CAmount block_unspendables_scripts;
+    CAmount block_unspendables_unclaimed_rewards;
 
     SERIALIZE_METHODS(DBVal, obj)
     {
@@ -47,15 +47,15 @@ struct DBVal {
         READWRITE(obj.transaction_output_count);
         READWRITE(obj.bogo_size);
         READWRITE(obj.total_amount);
-        READWRITE(obj.total_subsidy);
+        READWRITE(obj.block_subsidy);
         READWRITE(obj.total_unspendable_amount);
-        READWRITE(obj.total_prevout_spent_amount);
-        READWRITE(obj.total_new_outputs_ex_coinbase_amount);
-        READWRITE(obj.total_coinbase_amount);
-        READWRITE(obj.total_unspendables_genesis_block);
-        READWRITE(obj.total_unspendables_bip30);
-        READWRITE(obj.total_unspendables_scripts);
-        READWRITE(obj.total_unspendables_unclaimed_rewards);
+        READWRITE(obj.block_prevout_spent_amount);
+        READWRITE(obj.block_new_outputs_ex_coinbase_amount);
+        READWRITE(obj.block_coinbase_amount);
+        READWRITE(obj.block_unspendables_genesis_block);
+        READWRITE(obj.block_unspendables_bip30);
+        READWRITE(obj.block_unspendables_scripts);
+        READWRITE(obj.block_unspendables_unclaimed_rewards);
     }
 };
 
@@ -106,7 +106,17 @@ std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
 CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
     : BaseIndex(std::move(chain), "coinstatsindex")
 {
-    fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstats"};
+    // An earlier version of the index used "indexes/coinstats" but it contained
+    // a bug and is superseded by a fixed version at "indexes/coinstatsindex".
+    // The original index is kept around until the next release in case users
+    // decide to downgrade their node.
+    auto old_path = gArgs.GetDataDirNet() / "indexes" / "coinstats";
+    if (fs::exists(old_path)) {
+        // TODO: Change this to deleting the old index with v31.
+        LogWarning("Old version of coinstatsindex found at %s. This folder can be safely deleted unless you " \
+            "plan to downgrade your node to version 29 or lower.", fs::PathToString(old_path));
+    }
+    fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstatsindex"};
     fs::create_directories(path);
 
     m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
@@ -115,7 +125,9 @@ CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t 
 bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     const CAmount block_subsidy{GetBlockSubsidy(block.height, Params().GetConsensus())};
+    CAmount block_unspendable{0};
     std::pair<uint256, DBVal> read_out;
+    std::pair<uint256, DBVal> new_value;
 
     // Ignore genesis block
     if (block.height > 0) {
@@ -135,6 +147,11 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
             }
         }
 
+        new_value.second.total_amount = read_out.second.total_amount;
+        new_value.second.total_unspendable_amount = read_out.second.total_unspendable_amount;
+        new_value.second.transaction_output_count = read_out.second.transaction_output_count;
+        new_value.second.bogo_size = read_out.second.bogo_size;
+
         // Add the new utxos created from the block
         assert(block.data);
         for (size_t i = 0; i < block.data->vtx.size(); ++i) {
@@ -143,8 +160,8 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
             // Skip duplicate txid coinbase transactions (BIP30).
             if (is_coinbase && IsBIP30Unspendable(block.hash, block.height)) {
-                read_out.second.total_unspendable_amount += block_subsidy;
-                read_out.second.total_unspendables_bip30 += block_subsidy;
+                block_unspendable += block_subsidy;
+                new_value.second.block_unspendables_bip30 += block_subsidy;
                 continue;
             }
 
@@ -155,22 +172,22 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
-                    read_out.second.total_unspendable_amount += coin.out.nValue;
-                    read_out.second.total_unspendables_scripts += coin.out.nValue;
+                    block_unspendable += coin.out.nValue;
+                    new_value.second.block_unspendables_scripts += coin.out.nValue;
                     continue;
                 }
 
                 ApplyCoinHash(m_muhash, outpoint, coin);
 
                 if (is_coinbase) {
-                    read_out.second.total_coinbase_amount += coin.out.nValue;
+                    new_value.second.block_coinbase_amount += coin.out.nValue;
                 } else {
-                    read_out.second.total_new_outputs_ex_coinbase_amount += coin.out.nValue;
+                    new_value.second.block_new_outputs_ex_coinbase_amount += coin.out.nValue;
                 }
 
-                ++read_out.second.transaction_output_count;
-                read_out.second.total_amount += coin.out.nValue;
-                read_out.second.bogo_size += GetBogoSize(coin.out.scriptPubKey);
+                ++new_value.second.transaction_output_count;
+                new_value.second.total_amount += coin.out.nValue;
+                new_value.second.bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
 
             // The coinbase tx has no undo data since no former output is spent
@@ -183,39 +200,39 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                     RemoveCoinHash(m_muhash, outpoint, coin);
 
-                    read_out.second.total_prevout_spent_amount += coin.out.nValue;
+                    new_value.second.block_prevout_spent_amount += coin.out.nValue;
 
-                    --read_out.second.transaction_output_count;
-                    read_out.second.total_amount -= coin.out.nValue;
-                    read_out.second.bogo_size -= GetBogoSize(coin.out.scriptPubKey);
+                    --new_value.second.transaction_output_count;
+                    new_value.second.total_amount -= coin.out.nValue;
+                    new_value.second.bogo_size -= GetBogoSize(coin.out.scriptPubKey);
                 }
             }
         }
     } else {
         // genesis block
-        read_out.second.total_unspendable_amount += block_subsidy;
-        read_out.second.total_unspendables_genesis_block += block_subsidy;
+        block_unspendable += block_subsidy;
+        new_value.second.block_unspendables_genesis_block += block_subsidy;
     }
 
-    read_out.second.total_subsidy += block_subsidy;
+    new_value.second.block_subsidy += block_subsidy;
 
     // If spent prevouts + block subsidy are still a higher amount than
     // new outputs + coinbase + current unspendable amount this means
     // the miner did not claim the full block reward. Unclaimed block
     // rewards are also unspendable.
-    const CAmount unclaimed_rewards{(read_out.second.total_prevout_spent_amount + read_out.second.total_subsidy) - (read_out.second.total_new_outputs_ex_coinbase_amount + read_out.second.total_coinbase_amount + read_out.second.total_unspendable_amount)};
-    read_out.second.total_unspendable_amount += unclaimed_rewards;
-    read_out.second.total_unspendables_unclaimed_rewards += unclaimed_rewards;
+    const CAmount unclaimed_rewards{(new_value.second.block_prevout_spent_amount + new_value.second.block_subsidy) - (new_value.second.block_new_outputs_ex_coinbase_amount + new_value.second.block_coinbase_amount + block_unspendable)};
+    new_value.second.block_unspendables_unclaimed_rewards += unclaimed_rewards;
+    new_value.second.total_unspendable_amount += (unclaimed_rewards + block_unspendable);
 
-    read_out.first = block.hash;
+    new_value.first = block.hash;
 
     uint256 out;
     m_muhash.Finalize(out);
-    read_out.second.muhash = out;
+    new_value.second.muhash = out;
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
-    return m_db->Write(DBHeightKey(block.height), read_out);
+    return m_db->Write(DBHeightKey(block.height), new_value);
 }
 
 [[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
@@ -294,15 +311,17 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
     stats.nTransactionOutputs = entry.transaction_output_count;
     stats.nBogoSize = entry.bogo_size;
     stats.total_amount = entry.total_amount;
-    stats.total_subsidy = entry.total_subsidy;
     stats.total_unspendable_amount = entry.total_unspendable_amount;
-    stats.total_prevout_spent_amount = entry.total_prevout_spent_amount;
-    stats.total_new_outputs_ex_coinbase_amount = entry.total_new_outputs_ex_coinbase_amount;
-    stats.total_coinbase_amount = entry.total_coinbase_amount;
-    stats.total_unspendables_genesis_block = entry.total_unspendables_genesis_block;
-    stats.total_unspendables_bip30 = entry.total_unspendables_bip30;
-    stats.total_unspendables_scripts = entry.total_unspendables_scripts;
-    stats.total_unspendables_unclaimed_rewards = entry.total_unspendables_unclaimed_rewards;
+
+    stats.block_subsidy = entry.block_subsidy;
+    stats.block_prevout_spent_amount = entry.block_prevout_spent_amount;
+    stats.block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount;
+    stats.block_coinbase_amount = entry.block_coinbase_amount;
+
+    stats.block_unspendables_genesis_block = entry.block_unspendables_genesis_block;
+    stats.block_unspendables_bip30 = entry.block_unspendables_bip30;
+    stats.block_unspendables_scripts = entry.block_unspendables_scripts;
+    stats.block_unspendables_unclaimed_rewards = entry.block_unspendables_unclaimed_rewards;
 
     return stats;
 }
