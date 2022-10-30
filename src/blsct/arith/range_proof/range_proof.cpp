@@ -457,12 +457,11 @@ if (!p65.Sum().IsUnity()) {
         std::vector<Scalar> acc_xs(1 << p.proof.num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
-        for (size_t j = 1; j < p.proof.num_rounds; ++j) {
-            const size_t sl = 1 << (j + 1);  // 4, 8, 16 ...
-
-            for (size_t s = sl - 1; s > 0; s -= 2) {
-                acc_xs[s] = acc_xs[s / 2] * p.xs[j];
-                acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[j];
+        for (size_t i = 1; i < p.proof.num_rounds; ++i) {
+            const size_t sl = 1 << (i + 1);  // 4, 8, 16 ...
+            for (long signed int s = sl - 1; s > 0; s -= 2) {
+                acc_xs[s] = acc_xs[s / 2] * p.xs[i];
+                acc_xs[s - 1] = acc_xs[s / 2] * p.inv_xs[i];
             }
         }
 
@@ -474,21 +473,21 @@ if (!p65.Sum().IsUnity()) {
             Scalar gi_exp = p.proof.a * acc_xs[i];  // g^a in (16) is distributed to each generator
             Scalar hi_exp = p.proof.b * y_inv_pow * acc_xs[p.concat_input_values_in_bits - 1 - i];  // h^b in (16) is distributed to each generator. y_inv_pow to turn generator to (h')
 
-            // gi_exp = gi_exp + p.z;  // g^(-z) in RHS (66)
+            gi_exp = gi_exp + p.z;  // g^(-z) in RHS (66)
 
-            // // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
-            // Scalar tmp =
-            //     z_pows[2 + i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
-            //     m_two_pows[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
-            // // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
-            // hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
+            // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
+            Scalar tmp =
+                z_pows[i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
+                (*m_two_pows)[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
+            // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
+            hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
             gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // (16) g^a moved to LHS
             hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);  // (16) h^b moved to LHS
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;
-            // y_pow = y_pow * p.y;
+            y_pow = y_pow * p.y;
         }
 
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
@@ -501,7 +500,6 @@ if (!p65.Sum().IsUnity()) {
 
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
-
     // generate points from aggregated exponents from G, H, Gi and Hi generators
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
     points.Add(gens.H * (h_pos_exp - h_neg_exp));
