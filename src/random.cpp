@@ -39,7 +39,6 @@
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
-#include <util/strencodings.h> // for ARRAYLEN
 #include <sys/sysctl.h>
 #endif
 
@@ -334,7 +333,7 @@ void GetOSRand(unsigned char *ent32)
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
-        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, nullptr, 0) != 0) {
+        if (sysctl(name, std::size(name), ent32 + have, &len, nullptr, 0) != 0) {
             RandFailure();
         }
         have += len;

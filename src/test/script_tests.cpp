@@ -100,18 +100,22 @@ static ScriptErrorDesc script_errors[]={
 
 static const char *FormatScriptError(ScriptError_t err)
 {
-    for (unsigned int i=0; i<ARRAYLEN(script_errors); ++i)
-        if (script_errors[i].err == err)
-            return script_errors[i].name;
+    for (const auto& script_error : script_errors) {
+        if (script_error.err == err) {
+            return script_error.name;
+        }
+    }
     BOOST_ERROR("Unknown scripterror enumeration value, update script_errors in script_tests.cpp.");
     return "";
 }
 
 static ScriptError_t ParseScriptError(const std::string& name)
 {
-    for (unsigned int i=0; i<ARRAYLEN(script_errors); ++i)
-        if (script_errors[i].name == name)
-            return script_errors[i].err;
+    for (const auto& script_error : script_errors) {
+        if (script_error.name == name) {
+            return script_error.err;
+        }
+    }
     BOOST_ERROR("Unknown scripterror \"" << name << "\" in test description");
     return SCRIPT_ERR_UNKNOWN_ERROR;
 }
