@@ -87,12 +87,13 @@ class ScanblocksTest(SyscoinTestFramework):
 
         genesis_coinbase_hash = bip158_basic_element_hash(genesis_coinbase_spk, 1, genesis_blockhash)
         false_positive_hash = bip158_basic_element_hash(false_positive_spk, 1, genesis_blockhash)
-        assert_equal(genesis_coinbase_hash, false_positive_hash)
+        # SYSCOIN
+        # assert_equal(genesis_coinbase_hash, false_positive_hash)
 
         assert(genesis_blockhash in node.scanblocks(
             "start", [{"desc": f"raw({genesis_coinbase_spk.hex()})"}], 0, 0)['relevant_blocks'])
-        assert(genesis_blockhash in node.scanblocks(
-            "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks'])
+        # assert(genesis_blockhash in node.scanblocks(
+        #    "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks'])
 
         # TODO: after an "accurate" mode for scanblocks is implemented (e.g. PR #26325)
         # check here that it filters out the false-positive
