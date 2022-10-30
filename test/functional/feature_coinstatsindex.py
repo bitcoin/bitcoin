@@ -129,7 +129,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
             # Test an older block height that included a normal tx
             res5 = index_node.gettxoutsetinfo(hash_option, 102)
-            assert_equal(res5['total_unspendable_amount'], 50)
+            assert_equal(res5['total_unspendable_amount'], 0)
             assert_equal(res5['block_info'], {
                 'unspendable': 0,
                 'prevout_spent': 50,
@@ -166,7 +166,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
             res6 = index_node.gettxoutsetinfo(hash_option, 108)
-            assert_equal(res6['total_unspendable_amount'], Decimal('70.99000000'))
+            assert_equal(res6['total_unspendable_amount'], Decimal('20.99000000'))
             assert_equal(res6['block_info'], {
                 'unspendable': Decimal('20.99000000'),
                 'prevout_spent': 71,
@@ -197,7 +197,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for hash_option in index_hash_options:
             res7 = index_node.gettxoutsetinfo(hash_option, 109)
-            assert_equal(res7['total_unspendable_amount'], Decimal('80.99000000'))
+            assert_equal(res7['total_unspendable_amount'], Decimal('10.00000000'))
             assert_equal(res7['block_info'], {
                 'unspendable': 10,
                 'prevout_spent': 0,

@@ -877,7 +877,7 @@ static RPCHelpMan gettxoutsetinfo()
                         {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
                         {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
                         {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of coins in the UTXO set"},
-                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_amount", /*optional=*/true, "The total amount of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
+                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_amount", /*optional=*/true, "The amount of coins permanently excluded from the UTXO set from this block onwards (only available if coinstatsindex is used)"},
                         {RPCResult::Type::OBJ, "block_info", /*optional=*/true, "Info on amounts in the block at this block height (only available if coinstatsindex is used)",
                         {
                             {RPCResult::Type::STR_AMOUNT, "prevout_spent", "Total amount of all prevouts spent in this block"},
@@ -974,26 +974,17 @@ static RPCHelpMan gettxoutsetinfo()
         } else {
             ret.pushKV("total_unspendable_amount", ValueFromAmount(stats.total_unspendable_amount));
 
-            CCoinsStats prev_stats{};
-            if (pindex->nHeight > 0) {
-                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, *blockman, hash_type, node.rpc_interruption_point, pindex->pprev, index_requested);
-                if (!maybe_prev_stats) {
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
-                }
-                prev_stats = maybe_prev_stats.value();
-            }
-
             UniValue block_info(UniValue::VOBJ);
-            block_info.pushKV("prevout_spent", ValueFromAmount(stats.total_prevout_spent_amount - prev_stats.total_prevout_spent_amount));
-            block_info.pushKV("coinbase", ValueFromAmount(stats.total_coinbase_amount - prev_stats.total_coinbase_amount));
-            block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.total_new_outputs_ex_coinbase_amount - prev_stats.total_new_outputs_ex_coinbase_amount));
-            block_info.pushKV("unspendable", ValueFromAmount(stats.total_unspendable_amount - prev_stats.total_unspendable_amount));
+            block_info.pushKV("prevout_spent", ValueFromAmount(stats.total_prevout_spent_amount));
+            block_info.pushKV("coinbase", ValueFromAmount(stats.total_coinbase_amount));
+            block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.total_new_outputs_ex_coinbase_amount));
+            block_info.pushKV("unspendable", ValueFromAmount(stats.total_unspendable_amount));
 
             UniValue unspendables(UniValue::VOBJ);
-            unspendables.pushKV("genesis_block", ValueFromAmount(stats.total_unspendables_genesis_block - prev_stats.total_unspendables_genesis_block));
-            unspendables.pushKV("bip30", ValueFromAmount(stats.total_unspendables_bip30 - prev_stats.total_unspendables_bip30));
-            unspendables.pushKV("scripts", ValueFromAmount(stats.total_unspendables_scripts - prev_stats.total_unspendables_scripts));
-            unspendables.pushKV("unclaimed_rewards", ValueFromAmount(stats.total_unspendables_unclaimed_rewards - prev_stats.total_unspendables_unclaimed_rewards));
+            unspendables.pushKV("genesis_block", ValueFromAmount(stats.total_unspendables_genesis_block));
+            unspendables.pushKV("bip30", ValueFromAmount(stats.total_unspendables_bip30));
+            unspendables.pushKV("scripts", ValueFromAmount(stats.total_unspendables_scripts));
+            unspendables.pushKV("unclaimed_rewards", ValueFromAmount(stats.total_unspendables_unclaimed_rewards));
             block_info.pushKV("unspendables", unspendables);
 
             ret.pushKV("block_info", block_info);
