@@ -655,8 +655,54 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Fout bij laden %s: Externe signer wallet wordt geladen zonder gecompileerde ondersteuning voor externe signers</translation>
     </message>
     <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fout: adresboekgegevens in portemonnee kunnen niet worden geïdentificeerd als behorend tot gemigreerde portemonnees</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Fout: dubbele beschrijvingen gemaakt tijdens migratie. Uw portemonnee is mogelijk corrupt.</translation>
+    </message>
+    <message>
+        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fout: transactie %s in portemonnee kan niet worden geïdentificeerd als behorend tot gemigreerde portemonnees</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
+        <translation type="unfinished">Fout: kan descriptors voor deze verouderde portemonnee niet produceren. Zorg ervoor dat de portemonnee eerst is ontgrendeld</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Kan de naam van het ongeldige peers.dat bestand niet hernoemen. Verplaats of verwijder het en probeer het opnieuw.</translation>
+    </message>
+    <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Incompatibele opties: -dnsseed=1 is expliciet gespecificeerd, maar -onlynet verbiedt verbindingen met IPv4/IPv6</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation type="unfinished">Uitgaande verbindingen beperkt tot Tor (-onlynet=onion) maar de proxy voor het bereiken van het Tor-netwerk is expliciet verboden: -onion=0</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation type="unfinished">Uitgaande verbindingen beperkt tot Tor (-onlynet=onion) maar de proxy voor het bereiken van het Tor netwerk is niet verstrekt (geen -proxy= en geen -onion= opgegeven) of het is expliciet verboden (-onion=0)</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Niet-herkende descriptor gevonden. Portemonnee laden %s
+
+De portemonnee is mogelijk gemaakt op een nieuwere versie.
+Probeer de nieuwste softwareversie uit te voeren.
+</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Kan mislukte migratie niet opschonen</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -739,6 +785,14 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Fout bij het lezen van het volgende record in de walletdatabase</translation>
     </message>
     <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Fout: kan watchonly tx niet toevoegen aan watchonly-portemonnee</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions</source>
+        <translation type="unfinished">Fout: kan alleen-kijken-transacties niet verwijderen</translation>
+    </message>
+    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Fout: Kan geen cursor in de database maken</translation>
     </message>
@@ -749,6 +803,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
         <translation type="unfinished">Fout: Checksum van dumpbestand komt niet overeen. Berekend %s, verwacht %s</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Fout: kan geen nieuwe watchonly-portemonnee maken</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -771,8 +829,36 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Fout: Geen %s adressen beschikbaar</translation>
     </message>
     <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Fout: niet alle watchonly tx's kunnen worden verwijderd</translation>
+    </message>
+    <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Fout: deze portemonnee gebruikt SQLite al</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Fout: deze portemonnee is al een descriptorportefeuille</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Fout: Kan niet beginnen met het lezen van alle records in de database</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">Fout: kan geen back-up van uw portemonnee maken</translation>
+    </message>
+    <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
         <translation type="unfinished">Fout: Kan versie %u niet als een uint32_t verwerken</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Fout: kan niet alle records in de database lezen</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Fout: kan adresboekgegevens voor alleen kijken niet verwijderen</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -1059,6 +1145,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Niet mogelijk ok HTTP-server te starten. Zie debuglogboek voor details.</translation>
     </message>
     <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Kan de portemonnee niet verwijderen voordat deze wordt gemigreerd</translation>
+    </message>
+    <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation type="unfinished">Onbekende -blokfilterindexwaarde %s.</translation>
     </message>
@@ -1077,6 +1167,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Niet-ondersteund globaal logniveau -loglevel= %s. Geldige waarden: %s .</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -2038,6 +2132,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Deze initiële synchronisatie is heel veeleisend, en kan hardware problemen met uw computer blootleggen die voorheen onopgemerkt bleven. Elke keer dat %1 gebruikt word, zal verdergegaan worden waar gebleven is.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Als u op OK klikt, dan zal %1 beginnen met downloaden en verwerken van de volledige %4 blokketen (%2 GB) startend met de eerste transacties in %3 toen %4 initeel werd gestart.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>

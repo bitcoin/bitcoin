@@ -55,6 +55,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">1%1 সেটিংস ফাইল টি সম্ভবত নষ্ট বা করাপ্ট</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">পলাতক ব্যতিক্রম</translation>
     </message>
@@ -77,6 +81,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished">আপনি কি সেটিংস পুনরায় ডিফল্ট করতে,অথবা কোনো পরিবর্তন ছাড়াই ফিরে যেতে চান? </translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">একটি জটিল ত্রুটি হয়েছে। সেটিং ফাইল টি রাইটেবল কিনা চেক করুন, অথবা -nosettings দিয়ে রান করার চেষ্টা করুন</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>

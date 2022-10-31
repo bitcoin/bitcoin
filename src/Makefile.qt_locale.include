@@ -43,6 +43,7 @@ QT_TS = \
   qt/locale/bitcoin_kl.ts \
   qt/locale/bitcoin_km.ts \
   qt/locale/bitcoin_ko.ts \
+  qt/locale/bitcoin_ku.ts \
   qt/locale/bitcoin_ku_IQ.ts \
   qt/locale/bitcoin_ky.ts \
   qt/locale/bitcoin_la.ts \

@@ -575,7 +575,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">Сумма транзакции за вычетом комиссии слишком мала</translation>
+        <translation type="unfinished">Сумма транзакции за вычетом комиссии слишком мала для отправки</translation>
     </message>
     <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>

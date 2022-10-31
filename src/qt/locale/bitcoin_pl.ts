@@ -246,6 +246,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Plik ustawień 1%1 może być uszkodzony lub nieprawidłowy</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Błąd zapisu do portfela</translation>
     </message>
@@ -330,6 +334,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>Manual</source>
         <extracomment>Peer connection type established manually through one of several methods.</extracomment>
         <translation type="unfinished">Ręczny</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Szczelinomierz</translation>
+    </message>
+    <message>
+        <source>Address Fetch</source>
+        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
+        <translation type="unfinished">Pobieranie adresu</translation>
     </message>
     <message>
         <source>None</source>
@@ -423,6 +437,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Nie można uzyskać blokady na katalogu z danymi %s. %s najprawdopodobniej jest już uruchomiony.</translation>
     </message>
     <message>
+        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
+        <translation type="unfinished">Nie można zaktualizować portfela dzielonego innego niż HD z wersji 1%i do wersji 1%i bez aktualizacji w celu obsługi wstępnie podzielonej puli kluczy. Użyj wersji 1%i lub nie określono wersji.</translation>
+    </message>
+    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Rozprowadzane na licencji MIT, zobacz dołączony plik %s lub %s</translation>
     </message>
@@ -431,12 +449,52 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Błąd odczytu %s! Wszystkie klucze zostały odczytane poprawnie, ale może brakować  danych transakcji lub wpisów w książce adresowej, lub mogą one być nieprawidłowe.</translation>
     </message>
     <message>
+        <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
+        <translation type="unfinished">Błąd odczytu 1%s! Może brakować danych transakcji lub mogą być one nieprawidłowe. Ponowne skanowanie portfela.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
+        <translation type="unfinished">Błąd: rekord formatu pliku zrzutu jest nieprawidłowy. Otrzymano „1%s”, oczekiwany „format”.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation type="unfinished">Błąd: rekord identyfikatora pliku zrzutu jest nieprawidłowy. Otrzymano „1%s”, oczekiwano „1%s”.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">Błąd: wersja pliku zrzutu nie jest obsługiwana. Ta wersja bitcoin-wallet obsługuje tylko pliki zrzutów w wersji 1. Mam plik zrzutu w wersji 1%s</translation>
+    </message>
+    <message>
+        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
+        <translation type="unfinished">Błąd: starsze portfele obsługują tylko typy adresów „legacy”, „p2sh-segwit” i „bech32”</translation>
+    </message>
+    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation type="unfinished">Estymacja opłat nieudana. Domyślna opłata jest wyłączona. Poczekaj kilka bloków lub włącz  -fallbackfee.</translation>
     </message>
     <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation type="unfinished">Plik 1%s już istnieje. Jeśli jesteś pewien, że tego chcesz, najpierw usuń to z drogi.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished">Niewłaściwa ilość dla -maxtxfee=&lt;ilość&gt;: '%s' (musi wynosić przynajmniej minimalną wielkość %s aby zapobiec utknięciu transakcji)</translation>
+    </message>
+    <message>
+        <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
+        <translation type="unfinished">Nieprawidłowy lub uszkodzony plik peers.dat (1%s). Jeśli uważasz, że to błąd, zgłoś go do 1%s. Jako obejście, możesz przenieść plik (1%s) z drogi (zmień nazwę, przenieś lub usuń), aby przy następnym uruchomieniu utworzyć nowy.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=1.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=1.</translation>
+    </message>
+    <message>
+        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
+        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=1.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -461,6 +519,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">Baza bloków zawiera blok, który wydaje się pochodzić z przyszłości. Może to wynikać z nieprawidłowego ustawienia daty i godziny Twojego komputera. Bazę danych bloków dobuduj tylko, jeśli masz pewność, że data i godzina twojego komputera są poprawne</translation>
+    </message>
+    <message>
+        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
+        <translation type="unfinished">Baza danych indeksu bloku zawiera odziedziczony „txindex”. Aby wyczyścić zajęte miejsce na dysku, uruchom pełną indeksację, w przeciwnym razie zignoruj ten błąd. Ten komunikat o błędzie nie zostanie ponownie wyświetlony.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -1110,9 +1172,9 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>Przetworzono %n blok historii transakcji.</numerusform>
+            <numerusform>Przetworzono 1%n bloków historii transakcji.</numerusform>
+            <numerusform>Przetworzono 1%n bloków historii transakcji.</numerusform>
         </translation>
     </message>
     <message>
@@ -1192,6 +1254,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Zamknij portfel</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Przywróć Portfel…</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Przywróć portfel z pliku kopii zapasowej</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Zamknij wszystkie portfele</translation>
     </message>
@@ -1219,6 +1291,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Informacje portfela</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Załaduj kopię zapasową portfela</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Przywróć portfel</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1577,6 +1659,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
 </context>
 <context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Przywróć portfel</translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
@@ -1929,6 +2019,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
         <translation type="unfinished">%1 jest w trakcie synchronizacji. Trwa pobieranie i weryfikacja nagłówków oraz bloków z sieci w celu uzyskania aktualnego stanu łańcucha.</translation>
     </message>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">nieznany, Synchronizowanie nagłówków (1%1, 2%2%)</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -1959,6 +2053,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>&amp;Start %1 on system login</source>
         <translation type="unfinished">Uruchamiaj %1 wraz z zalogowaniem do &amp;systemu</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">Włączenie czyszczenia znacznie zmniejsza ilość miejsca na dysku wymaganego do przechowywania transakcji. Wszystkie bloki są nadal w pełni zweryfikowane. Przywrócenie tego ustawienia wymaga ponownego pobrania całego łańcucha bloków.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -2009,6 +2107,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Cofnięcie tego ustawienia wymaga ponownego załadowania całego łańcucha bloków.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maksymalny rozmiar pamięci podręcznej bazy danych. Większa pamięć podręczna może przyczynić się do szybszej synchronizacji, po której korzyści są mniej widoczne w większości przypadków użycia. Zmniejszenie rozmiaru pamięci podręcznej zmniejszy zużycie pamięci. Nieużywana pamięć mempool jest współdzielona dla tej pamięci podręcznej.</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Ustaw liczbę wątków weryfikacji skryptu. Wartości ujemne odpowiadają liczbie rdzeni, które chcesz pozostawić systemowi.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = automatycznie, &lt;0 = zostaw tyle wolnych rdzeni)</translation>
     </message>
@@ -2025,6 +2133,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">Portfel</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Czy ustawić opłatę odejmowaną od kwoty jako domyślną, czy nie.</translation>
     </message>
     <message>
         <source>Subtract &amp;fee from amount by default</source>
@@ -2060,6 +2173,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
         <translation type="unfinished">Zewnętrzny sygnatariusz (np. portfel sprzętowy) </translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;Ścieżka zewnętrznego skryptu podpisującego</translation>
+    </message>
+    <message>
+        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Pełna ścieżka do skryptu zgodnego z Bitcoin Core (np. C:\Downloads\hwi.exe lub /Users/you/Downloads/hwi.py). Uwaga: złośliwe oprogramowanie może ukraść Twoje monety!</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2148,6 +2269,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation type="unfinished">Wybierz podział jednostki pokazywany w interfejsie  oraz podczas wysyłania monet</translation>
+    </message>
+    <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">Adresy URL stron trzecich (np. eksplorator bloków), które pojawiają się na karcie transakcji jako pozycje menu kontekstowego. %s w adresie URL jest zastępowane hashem transakcji. Wiele adresów URL jest oddzielonych pionową kreską |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">&amp;Adresy URL transakcji stron trzecich</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -2346,6 +2475,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Nie udało się podpisać transakcji: %1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Nie można podpisywać danych wejściowych, gdy portfel jest zablokowany.</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Nie udało się podpisać więcej wejść.</translation>
     </message>
@@ -2372,6 +2505,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">Zapisz dane transakcji</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Częściowo podpisana transakcja (binarna)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
@@ -2664,6 +2802,11 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Zmapowany autonomiczny system (ang. asmap)</translation>
     </message>
     <message>
+        <source>Whether we relay addresses to this peer.</source>
+        <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation type="unfinished">Czy przekazujemy adresy do tego peera.</translation>
+    </message>
+    <message>
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">Adres Przekaźnika</translation>
@@ -2719,6 +2862,18 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Usługi</translation>
     </message>
     <message>
+        <source>Whether the peer requested us to relay transactions.</source>
+        <translation type="unfinished">Czy peer poprosił nas o przekazanie transakcji.</translation>
+    </message>
+    <message>
+        <source>Wants Tx Relay</source>
+        <translation type="unfinished">Chce przekaźnik Tx</translation>
+    </message>
+    <message>
+        <source>High bandwidth BIP152 compact block relay: %1</source>
+        <translation type="unfinished">Kompaktowy przekaźnik blokowy BIP152 o dużej przepustowości: 1 %1</translation>
+    </message>
+    <message>
         <source>High Bandwidth</source>
         <translation type="unfinished">Wysoka Przepustowość</translation>
     </message>
@@ -2729,6 +2884,11 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Last Block</source>
         <translation type="unfinished">Ostatni Blok</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
+        <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
+        <translation type="unfinished">Czas, który upłynął od otrzymania nowej transakcji przyjętej do naszej pamięci od tego partnera.</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -2798,6 +2958,39 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <source>Inbound: initiated by peer</source>
         <extracomment>Explanatory text for an inbound peer connection.</extracomment>
         <translation type="unfinished">Przychodzące: zainicjowane przez węzeł</translation>
+    </message>
+    <message>
+        <source>Outbound Full Relay: default</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays all network information. This is the default behavior for outbound connections.</extracomment>
+        <translation type="unfinished">Pełny przekaźnik wychodzący: domyślnie</translation>
+    </message>
+    <message>
+        <source>Outbound Block Relay: does not relay transactions or addresses</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation type="unfinished">Outbound Block Relay: nie przekazuje transakcji ani adresów</translation>
+    </message>
+    <message>
+        <source>Outbound Manual: added using RPC %1 or %2/%3 configuration options</source>
+        <extracomment>Explanatory text for an outbound peer connection that was established manually through one of several methods. The numbered arguments are stand-ins for the methods available to establish manual connections.</extracomment>
+        <translation type="unfinished">Outbound Manual: dodano przy użyciu opcji konfiguracyjnych RPC 1%1 lub 2%2/3%3</translation>
+    </message>
+    <message>
+        <source>Outbound Feeler: short-lived, for testing addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to test the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Outbound Feeler: krótkotrwały, do testowania adresów</translation>
+    </message>
+    <message>
+        <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
+        <translation type="unfinished">Pobieranie adresu wychodzącego: krótkotrwałe, do pozyskiwania adresów</translation>
+    </message>
+    <message>
+        <source>we selected the peer for high bandwidth relay</source>
+        <translation type="unfinished">wybraliśmy peera dla przekaźnika o dużej przepustowości</translation>
+    </message>
+    <message>
+        <source>the peer selected us for high bandwidth relay</source>
+        <translation type="unfinished">peer wybrał nas do przekaźnika o dużej przepustowości</translation>
     </message>
     <message>
         <source>no high bandwidth relay selected</source>
@@ -3025,6 +3218,10 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Zweryfikuj</translation>
     </message>
     <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Zweryfikuj ten adres np. na ekranie portfela sprzętowego</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation type="unfinished">Zapi&amp;sz Obraz...</translation>
     </message>
@@ -3160,6 +3357,10 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Wyczyść wszystkie pola formularza.</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation type="unfinished">Wejścia…</translation>
+    </message>
+    <message>
         <source>Dust:</source>
         <translation type="unfinished">Pył:</translation>
     </message>
@@ -3172,12 +3373,24 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Ukryj ustawienia opłat transakcyjnych</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation type="unfinished">Określ niestandardową opłatę za kB (1000 bajtów) wirtualnego rozmiaru transakcji.
+
+Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za kB" w przypadku transakcji o wielkości 500 bajtów (połowa 1 kB) ostatecznie da opłatę w wysokości tylko 50 satoshi.</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation type="unfinished">Gdy ilość transakcji jest mniejsza niż ilość miejsca w bloku, górnicy i węzły przekazujące wymagają minimalnej opłaty. Zapłata tylko tej wartości jest dopuszczalna, lecz może skutkować transakcją która nigdy nie zostanie potwierdzona w sytuacji, gdy ilość transakcji przekroczy przepustowość sieci.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
         <translation type="unfinished">Zbyt niska opłata może spowodować, że transakcja nigdy nie zostanie zatwierdzona (przeczytaj podpowiedź)</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation type="unfinished">(Sprytne opłaty nie są jeszcze zainicjowane. Trwa to zwykle kilka bloków...)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -3249,6 +3462,11 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Najpierw podłącz swój sprzętowy portfel.</translation>
     </message>
     <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Ustaw ścieżkę zewnętrznego skryptu podpisującego w Opcje -&gt; Portfel</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">&amp;Utwórz niepodpisaną transakcję</translation>
     </message>
@@ -3291,6 +3509,11 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Zapisz dane transakcji</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Częściowo podpisana transakcja (binarna)</translation>
+    </message>
+    <message>
         <source>PSBT saved</source>
         <translation type="unfinished">Zapisano PSBT</translation>
     </message>
@@ -3315,6 +3538,11 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation type="unfinished">Czy chcesz utworzyć tę transakcję?</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
+        <translation type="unfinished">Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -4118,6 +4346,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
     <message>
         <source>New fee:</source>
         <translation type="unfinished">Nowa opłata:</translation>
+    </message>
+    <message>
+        <source>Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy.</source>
+        <translation type="unfinished">Ostrzeżenie: Może to spowodować uiszczenie dodatkowej opłaty poprzez zmniejszenie zmian wyjść lub dodanie danych wejściowych, jeśli jest to konieczne. Może dodać nowe wyjście zmiany, jeśli jeszcze nie istnieje. Te zmiany mogą potencjalnie spowodować utratę prywatności.</translation>
     </message>
     <message>
         <source>Confirm fee bump</source>

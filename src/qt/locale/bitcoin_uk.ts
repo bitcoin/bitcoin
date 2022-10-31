@@ -717,6 +717,34 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Не вдалося перейменувати недійсний файл peers.dat. Будь ласка, перемістіть його та повторіть спробу </translation>
     </message>
     <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Несумісні параметри: чітко вказано -dnsseed=1, але -onlynet забороняє IPv4/IPv6 з'єднання</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation type="unfinished">Вихідні з'єднання обмежені мережею Tor (-onlynet=onion), але проксі-сервер для доступу до мережі Tor повністю заборонений: -onion=0</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation type="unfinished">Вихідні з'єднання обмежені мережею Tor (-onlynet=onion), але проксі-сервер для доступу до мережі Tor не призначено: не вказано ні -proxy, ні -onion, ані -listenonion</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Виявлено нерозпізнаний дескриптор. Завантаження гаманця %s
+
+Можливо, гаманець було створено новішою версією.
+Спробуйте найновішу версію програми.
+</translation>
+    </message>
+    <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation type="unfinished">Непідтримуваний категорійний рівень журналювання -loglevel=%s. Очікується -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Припустимі категорії: %s. Припустимі рівні: %s.</translation>
+    </message>
+    <message>
         <source>
 Unable to cleanup failed migration</source>
         <translation type="unfinished">
@@ -851,6 +879,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error: No %s addresses available.</source>
         <translation type="unfinished">Помилка:  Немає доступних %s адрес.</translation>
+    </message>
+    <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Помилка: Не всі транзакції "тільки перегляд" вдалося видалити</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -1187,6 +1219,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Активовані невідомі нові правила (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Непідтримуваний глобальний рівень журналювання -loglevel=%s. Припустимі значення: %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -1544,7 +1580,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
-        <translation type="unfinished">Назва Гаманця</translation>
+        <translation type="unfinished">Назва гаманця</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1968,7 +2004,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Wallet Name</source>
-        <translation type="unfinished">Назва Гаманця</translation>
+        <translation type="unfinished">Назва гаманця</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -1976,7 +2012,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation type="unfinished">Зашифруйте гаманець. Гаманець буде зашифрований за допомогою пароля на ваш вибір.</translation>
+        <translation type="unfinished">Зашифрувати гаманець. Гаманець буде зашифрований за допомогою обраного вами пароля.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
@@ -1988,7 +2024,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation type="unfinished">Вимкнути приватні ключі для цього гаманця. Гаманці з вимкнутими приватними ключами не матимуть приватних ключів і не можуть мати набір HD або імпортовані приватні ключі. Це ідеально підходить для гаманців-для-перегляду.</translation>
+        <translation type="unfinished">Вимкнути приватні ключі для цього гаманця. Гаманці з вимкнутими приватними ключами не матимуть приватних ключів і не можуть мати набір HD-генератор або імпортовані приватні ключі. Це ідеально підходить для гаманців-для-перегляду.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
@@ -1996,7 +2032,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Зробіть порожній гаманець. Порожні гаманці спочатку не мають приватних ключів або сценаріїв. Пізніше можна імпортувати приватні ключі та адреси або встановити HD-насіння.</translation>
+        <translation type="unfinished">Створити пустий гаманець. Пусті гаманці спочатку не мають приватних ключів або скриптів. Пізніше можна імпортувати приватні ключі та адреси або встановити HD-генератор.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -2004,7 +2040,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Використовуйте дескриптори для управління scriptPubKey</translation>
+        <translation type="unfinished">Використовувати дескриптори для управління scriptPubKey</translation>
     </message>
     <message>
         <source>Descriptor Wallet</source>
@@ -2248,7 +2284,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Нещодавні транзакції ще не відображаються, тому баланс вашого гаманця може бути неточним. Ця інформація буде вірною після того, як ваш гаманець завершить синхронізацію з мережею Біткоїн, враховуйте показники нижче.</translation>
+        <translation type="unfinished">Нещодавні транзакції ще не відображаються, тому баланс вашого гаманця може бути неточним. Ця інформація буде вірною після того, як ваш гаманець завершить синхронізацію з мережею Біткоїн (дивіться нижче).</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -2272,11 +2308,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Progress</source>
-        <translation type="unfinished">Прогрес</translation>
+        <translation type="unfinished">Перебіг синхронізації</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation type="unfinished">Прогрес за годину</translation>
+        <translation type="unfinished">Прогрес синхронізації за годину</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -2327,7 +2363,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation type="unfinished">&amp;Запускати %1 при вході в систему</translation>
+        <translation type="unfinished">Запускати %1 при в&amp;ході в систему</translation>
     </message>
     <message>
         <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
@@ -2335,7 +2371,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished">Розмір &amp;кешу бази даних</translation>
+        <translation type="unfinished">Розмір ке&amp;шу бази даних</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -2415,7 +2451,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Enable R&amp;PC server</source>
         <extracomment>An Options window setting to enable the RPC server.</extracomment>
-        <translation type="unfinished">Увімкнути RPC &amp;сервер</translation>
+        <translation type="unfinished">Увімкнути RPC се&amp;рвер</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -2437,7 +2473,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Ввімкнути &amp;керування входами</translation>
+        <translation type="unfinished">Ввімкнути керування в&amp;ходами</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -2445,12 +2481,12 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished">&amp;Витрачати непідтверджену решту</translation>
+        <translation type="unfinished">Витрачати непідтверджену &amp;решту</translation>
     </message>
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">Увімкнути елементи керування &amp;PSBT</translation>
+        <translation type="unfinished">Увімкнути функції &amp;частково підписаних біткоїн-транзакцій (PSBT)</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
@@ -2463,7 +2499,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;External signer script path</source>
-        <translation type="unfinished">Шлях до скрипту &amp;зовнішнього підписувача</translation>
+        <translation type="unfinished">&amp;Шлях до скрипту зовнішнього підписувача</translation>
     </message>
     <message>
         <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
@@ -2527,7 +2563,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Show tray icon</source>
-        <translation type="unfinished">&amp;Показувати піктограму у системному треї</translation>
+        <translation type="unfinished">Показувати &amp;піктограму у системному треї</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -2535,11 +2571,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished">Мінімізувати &amp;у трей</translation>
+        <translation type="unfinished">Мінімізувати у &amp;трей</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished">Згортати замість закритт&amp;я</translation>
+        <translation type="unfinished">Зго&amp;ртати замість закриття</translation>
     </message>
     <message>
         <source>&amp;Display</source>

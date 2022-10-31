@@ -241,6 +241,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">ملف الاعدادات %1 قد يكون تالف او غير صالح</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">استثناء هارب</translation>
     </message>
@@ -353,12 +357,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>%nثانية</numerusform>
+            <numerusform>%nثانية </numerusform>
+            <numerusform>%nثانية</numerusform>
+            <numerusform>%n ثواني</numerusform>
+            <numerusform>%nثواني </numerusform>
+            <numerusform>%n ثواني</numerusform>
         </translation>
     </message>
     <message numerus="yes">

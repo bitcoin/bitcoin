@@ -3403,6 +3403,11 @@ Para mais informação acerca da utilização desta consola, escreva %6.
         <translation type="unfinished">Por favor conecte a sua wallet física primeiro.</translation>
     </message>
     <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Defina o caminho do script do assinante externo em Opções -&gt; Carteira</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Criar não assinado</translation>
     </message>
