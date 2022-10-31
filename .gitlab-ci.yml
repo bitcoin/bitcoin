@@ -18,7 +18,8 @@ builder-image:
   stage: builder-image
   image: docker:19.03.5
   services:
-    - docker:19.03.5-dind
+    - name: docker:19.03.5-dind
+      command: ["--tls=false"]
   variables:
     DOCKER_HOST: "tcp://docker:2375"
     DOCKER_DRIVER: overlay2
