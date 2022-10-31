@@ -70,6 +70,7 @@ class NetTest(BitcoinTestFramework):
         self.test_service_flags()
         self.test_getnodeaddresses()
         self.test_addpeeraddress()
+        self.test_addpermissionflags()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -279,6 +280,24 @@ class NetTest(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=["CheckAddrman: new 1, tried 1, total 2 started"]):
             addrs = node.getnodeaddresses(count=0)  # getnodeaddresses re-runs the addrman checks
             assert_equal(len(addrs), 2)
+
+    def test_addpermissionflags(self):
+        self.log.info("Test addpermissionflags")
+
+        inputs = [
+            { "ip_or_network": "127.0.0.1", "flags": [], "result": ["noban", "relay", "mempool", "download"]},
+            { "ip_or_network": "127.0.0.1", "flags": ["forcerelay", "in", "out"], "result": ["forcerelay", "relay"]},
+            { "ip_or_network": "127.0.0.1/24", "flags": [], "result": ["noban", "relay", "mempool", "download"]}
+        ]
+
+        for input in inputs:
+            self.restart_node(1)
+            self.nodes[1].addpermissionflags(input['flags'], input['ip_or_network'])
+            self.connect_nodes(0, 1)
+            peerinfo = self.nodes[1].getpeerinfo()[0]
+            assert_equal(input['result'], peerinfo["permissions"])
+
+        assert_raises_rpc_error(-8, "Invalid permissions", self.nodes[1].addpermissionflags, ['abc123'], '127.0.0.1')
 
 
 if __name__ == '__main__':
