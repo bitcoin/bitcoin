@@ -92,8 +92,6 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& argsman, con
         return strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString());
     }
 
-    mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
-
     ApplyArgsManOptions(argsman, mempool_opts.limits);
 
     return std::nullopt;

@@ -574,7 +574,6 @@ public:
     const bool m_permit_bare_multisig;
     const std::optional<unsigned> m_max_datacarrier_bytes;
     const bool m_require_standard;
-    const bool m_full_rbf;
 
     using Limits = kernel::MemPoolLimits;
 
