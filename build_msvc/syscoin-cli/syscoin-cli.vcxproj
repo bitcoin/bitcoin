@@ -15,6 +15,9 @@
     <ProjectReference Include="..\libsyscoin_cli\libsyscoin_cli.vcxproj">
       <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libsyscoin_common\libsyscoin_common.vcxproj">
+      <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\libsyscoin_crypto\libsyscoin_crypto.vcxproj">
       <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
     </ProjectReference>

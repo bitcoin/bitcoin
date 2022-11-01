@@ -180,6 +180,7 @@ SYSCOIN_CORE_H = \
   coins.h \
   common/bloom.h \
   common/run_command.h \
+  common/url.h \
   compat/assumptions.h \
   compat/byteswap.h \
   compat/compat.h \
@@ -367,7 +368,6 @@ SYSCOIN_CORE_H = \
   util/translation.h \
   util/types.h \
   util/ui_change_type.h \
-  util/url.h \
   util/vector.h \
   validation.h \
   validationinterface.h \
@@ -847,6 +847,12 @@ libsyscoin_common_a_SOURCES = \
   warnings.cpp \
   $(SYSCOIN_CORE_H)
 
+if USE_LIBEVENT
+libsyscoin_common_a_CPPFLAGS += $(EVENT_CFLAGS)
+libsyscoin_common_a_SOURCES += common/url.cpp
+endif
+#
+
 # util #
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -891,10 +897,6 @@ libsyscoin_util_a_SOURCES = \
   util/time.cpp \
   util/tokenpipe.cpp \
   $(SYSCOIN_CORE_H)
-
-if USE_LIBEVENT
-libsyscoin_util_a_SOURCES += util/url.cpp
-endif
 #
 
 # cli #
@@ -963,6 +965,7 @@ endif
 syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CLI) \
   $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 

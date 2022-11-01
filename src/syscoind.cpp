@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <init.h>
 #include <interfaces/chain.h>
@@ -25,7 +26,6 @@
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
 #include <util/translation.h>
-#include <util/url.h>
 
 #include <any>
 #include <functional>
