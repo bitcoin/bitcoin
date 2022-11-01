@@ -37,7 +37,7 @@ RangeProof::RangeProof()
 }
 
 bool RangeProof::InnerProductArgument(
-    const size_t input_value_vec_len,
+    const size_t concat_input_values_in_bits,
     G1Points& Gi,
     G1Points& Hi,
     const G1Point& u,
@@ -48,12 +48,11 @@ bool RangeProof::InnerProductArgument(
     Proof& proof,
     CHashWriter& transcript_gen
 ) {
-    Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), input_value_vec_len);
-    size_t n = input_value_vec_len;
-    size_t num_rounds = 0;
+    const Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), concat_input_values_in_bits);
+    size_t n = concat_input_values_in_bits;
+    size_t num_rounds = 1;
 
     while (n > 1) {
-        ++num_rounds;
         n /= 2;
 
         Scalar cL = (a.To(n) * b.From(n)).Sum();
@@ -61,11 +60,11 @@ bool RangeProof::InnerProductArgument(
 
         G1Point L =
             (Gi.From(n) * a.To(n)).Sum() +
-            (Hi.To(n) * (proof.Ls.Size() == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n))).Sum() +
+            (Hi.To(n) * (num_rounds == 1 ? b.From(n) * y_inv_pows.From(n) : b.From(n))).Sum() +
             (u * cL * cx_factor);
         G1Point R =
             (Gi.To(n) * a.From(n)).Sum() +
-            (Hi.From(n) * (proof.Rs.Size() == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n))).Sum() +
+            (Hi.From(n) * (num_rounds == 1 ? b.To(n) * y_inv_pows.To(n) : b.To(n))).Sum() +
             (u * cR * cx_factor);
         proof.Ls.Add(L);
         proof.Rs.Add(R);
@@ -79,11 +78,18 @@ bool RangeProof::InnerProductArgument(
         Scalar x_inv = x.Invert();
 
         // update Gi, Hi, a, b and y_inv_pows
-        Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * x);
-        Hi = (Hi.To(n) * y_inv_pows.To(n) * x) + (Hi.From(n) * y_inv_pows.From(n) * x_inv);
+        if (n > 1) {  // if the last loop, there is no need to update Gi and Hi
+            Gi = (Gi.To(n) * x_inv) + (Gi.From(n) * x);
+            if (num_rounds == 1) {
+                Hi = (Hi.To(n) * y_inv_pows.To(n) * x) + (Hi.From(n) * y_inv_pows.From(n) * x_inv);
+            } else {
+                Hi = (Hi.To(n) * x) + (Hi.From(n) * x_inv);
+            }
+        }
         a = (a.To(n) * x) + (a.From(n) * x_inv);
         b = (b.To(n) * x_inv) + (b.From(n) * x);
-        y_inv_pows = y_inv_pows.To(n);
+
+        ++num_rounds;
     }
 
     proof.a = a[0];
