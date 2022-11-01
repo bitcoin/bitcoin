@@ -260,8 +260,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->hashPrevBlock = pblock->GetHash();
     };
 
-    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo) - 1; ++i)
-    {
+    for ([[maybe_unused]] const auto& _ : blockinfo) {
         createAndProcessEmptyBlock();
     }
 

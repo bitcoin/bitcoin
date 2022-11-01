@@ -12,11 +12,11 @@
 #include <attributes.h>
 #include <span.h>
 
+#include <charconv>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
-
-#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
 /** Used by SanitizeString() */
 enum SafeChars
@@ -67,7 +67,7 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
  */
 std::string EncodeBase32(const std::string& str, bool pad = true);
 
-void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
+void SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut);
 std::string i64tostr(int64_t n);
 std::string itostr(int n);
 int64_t atoi64(const char* psz);
@@ -100,6 +100,24 @@ constexpr inline bool IsSpace(char c) noexcept {
 }
 
 /**
+ * Convert string to integral type T.
+ *
+ * @returns std::nullopt if the entire string could not be parsed, or if the
+ *   parsed value is not in the range representable by the type T.
+ */
+template <typename T>
+std::optional<T> ToIntegral(const std::string& str)
+{
+    static_assert(std::is_integral<T>::value);
+    T result;
+    const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
+    if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
+        return std::nullopt;
+    }
+    return {result};
+}
+
+/**
  * Convert string to signed 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
@@ -119,6 +137,13 @@ constexpr inline bool IsSpace(char c) noexcept {
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 [[nodiscard]] bool ParseUInt8(const std::string& str, uint8_t *out);
+
+/**
+ * Convert decimal string to unsigned 16-bit integer with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if the entire string could not be parsed or if overflow or underflow occurred.
+ */
+[[nodiscard]] bool ParseUInt16(const std::string& str, uint16_t* out);
 
 /**
  * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.

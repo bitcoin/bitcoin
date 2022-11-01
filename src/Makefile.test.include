@@ -141,6 +141,7 @@ BITCOIN_TESTS =\
   test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
+  test/sock_tests.cpp \
   test/specialtx_tests.cpp \
   test/streams_tests.cpp \
   test/subsidy_tests.cpp \
@@ -253,6 +254,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/net.cpp \
   test/fuzz/net_permissions.cpp \
   test/fuzz/netaddress.cpp \
+  test/fuzz/netbase_dns_lookup.cpp \
   test/fuzz/p2p_transport_deserializer.cpp \
   test/fuzz/parse_hd_keypath.cpp \
   test/fuzz/parse_iso8601.cpp \
@@ -281,6 +283,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/secp256k1_ec_seckey_import_export_der.cpp \
   test/fuzz/secp256k1_ecdsa_signature_parse_der_lax.cpp \
   test/fuzz/signature_checker.cpp \
+  test/fuzz/socks5.cpp \
   test/fuzz/span.cpp \
   test/fuzz/spanparsing.cpp \
   test/fuzz/string.cpp \

@@ -702,6 +702,7 @@ static const CRPCCommand commands[] =
 // clang-format on
 void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
+    for (const auto& command : commands) {
+        t.appendCommand(command.name, &command);
+    }
 }

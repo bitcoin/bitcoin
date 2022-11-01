@@ -26,7 +26,6 @@ static const struct {
     {"devnet", QAPP_APP_NAME_DEVNET, 190, 20, "[devnet: %s]"},
     {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, "[regtest]"}
 };
-static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 void NetworkStyle::rotateColor(QColor& col, const int iconColorHueShift, const int iconColorSaturationReduction)
 {
@@ -89,12 +88,12 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 
 const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
 {
-    for (unsigned x=0; x<network_styles_count; ++x)
+    for (const auto& network_style : network_styles)
     {
-        if (networkId == network_styles[x].networkId)
+        if (networkId == network_style.networkId)
         {
-            std::string appName = network_styles[x].appName;
-            std::string titleAddText = network_styles[x].titleAddText;
+            std::string appName = network_style.appName;
+            std::string titleAddText = network_style.titleAddText;
 
             if (networkId == QString(CBaseChainParams::DEVNET.c_str())) {
                 appName = strprintf(appName, gArgs.GetDevNetName());
@@ -103,8 +102,8 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
 
             return new NetworkStyle(
                     appName.c_str(),
-                    network_styles[x].iconColorHueShift,
-                    network_styles[x].iconColorSaturationReduction,
+                    network_style.iconColorHueShift,
+                    network_style.iconColorSaturationReduction,
                     titleAddText.c_str());
         }
     }

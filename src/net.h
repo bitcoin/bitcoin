@@ -761,7 +761,7 @@ extern std::string strSubVersion;
 
 struct LocalServiceInfo {
     int nScore;
-    int nPort;
+    uint16_t nPort;
 };
 
 extern CCriticalSection cs_mapLocalHost;

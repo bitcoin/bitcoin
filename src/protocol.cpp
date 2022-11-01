@@ -5,7 +5,6 @@
 
 #include <protocol.h>
 
-#include <util/strencodings.h>
 #include <util/system.h>
 
 static std::atomic<bool> g_initial_block_download_completed(false);
@@ -172,7 +171,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETHEADERS2,
     NetMsgType::SENDHEADERS2,
     NetMsgType::HEADERS2};
-const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
+const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 /** Message types that are not allowed by blocks-relay-only policy.
  *  We do not want most of CoinJoin, DKG or LLMQ signing messages to be relayed
@@ -206,7 +205,7 @@ const static std::string netMessageTypesViolateBlocksOnly[] = {
     NetMsgType::QWATCH,
     NetMsgType::TX,
 };
-const static std::set<std::string> netMessageTypesViolateBlocksOnlySet(netMessageTypesViolateBlocksOnly, netMessageTypesViolateBlocksOnly+ARRAYLEN(netMessageTypesViolateBlocksOnly));
+const static std::set<std::string> netMessageTypesViolateBlocksOnlySet(std::begin(netMessageTypesViolateBlocksOnly), std::end(netMessageTypesViolateBlocksOnly));
 
 CMessageHeader::CMessageHeader()
 {
