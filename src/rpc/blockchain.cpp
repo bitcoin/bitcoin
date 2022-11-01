@@ -335,6 +335,11 @@ static RPCHelpMan getchainlocks()
     UniValue activeChainlock(UniValue::VOBJ);
     UniValue activeChainlockShares(UniValue::VARR);
 
+    llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
+    recentChainlock.pushKV("blockhash", clsigPrev.blockHash.GetHex());
+    recentChainlock.pushKV("height", clsigPrev.nHeight);
+    result.pushKV("previous_chainlock", recentChainlock);
+
     llmq::CChainLockSig clsigRecent = llmq::chainLocksHandler->GetMostRecentChainLock();
     recentChainlock.pushKV("blockhash", clsigRecent.blockHash.GetHex());
     recentChainlock.pushKV("height", clsigRecent.nHeight);
