@@ -20,8 +20,6 @@ class CBlockPolicyEstimator;
 static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
-/** Default for -mempoolfullrbf, if the transaction replaceability signaling is ignored */
-static constexpr bool DEFAULT_MEMPOOL_FULL_RBF{false};
 
 namespace kernel {
 /**
@@ -52,7 +50,6 @@ struct MemPoolOptions {
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
-    bool full_rbf{DEFAULT_MEMPOOL_FULL_RBF};
     MemPoolLimits limits{};
 };
 } // namespace kernel
