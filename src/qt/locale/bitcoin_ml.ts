@@ -966,6 +966,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation type="unfinished">ഇടപാട് വിജയകരമായി ഒപ്പിട്ടു.  ഇടപാട് പ്രക്ഷേപണത്തിന് തയ്യാറാണ്</translation>
+    </message>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>URI handling</source>
@@ -1029,6 +1036,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Node window</source>
         <translation type="unfinished">നോഡ് വിൻഡോ</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation type="unfinished">അനുവാത്തംനൽകൾ</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1168,6 +1179,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation type="unfinished">%1 സ്ഥിരീകരണങ്ങൾ</translation>
     </message>
     <message>
         <source>Date</source>

@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Экспортдлох</translation>
+        <translation>&amp;Экспорт</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -163,6 +163,10 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Алдаа: %1</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation type="unfinished">үл мэдэгдэх</translation>
     </message>
@@ -244,12 +248,37 @@
         <translation>Клиентийн тухай мэдээллийг харуул</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Хэтэвч:</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
     <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Илгээх
+ </translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Хүлээж авах</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Харуул / Нуу</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Баталгаажуулах мэссэж</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Хэтэвч хаах…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Хэтэвч үүсгэх…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -275,6 +304,10 @@
         <translation>Алдаа</translation>
     </message>
     <message>
+        <source>Warning</source>
+        <translation>Анхааруулга</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Мэдээллэл</translation>
     </message>
@@ -289,6 +322,10 @@
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Алдаа: %1</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -582,6 +619,10 @@
     <message>
         <source>Message:</source>
         <translation type="unfinished">Зурвас:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Хэтэвч:</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>

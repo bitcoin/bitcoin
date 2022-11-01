@@ -91,6 +91,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Eksporti Adresliston</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Perkome disigita dosiero</translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
@@ -2027,6 +2032,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Min amount</source>
         <translation type="unfinished">Minimuma sumo</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Perkome disigita dosiero</translation>
     </message>
     <message>
         <source>Confirmed</source>

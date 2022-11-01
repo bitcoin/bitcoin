@@ -1,390 +1,393 @@
-<TS version="2.1" language="sk">
+<TS version="2.1" language="sl">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliknutím pravého tlačidla upraviť adresu alebo popis</translation>
+        <translation type="unfinished">Desni klik za urejanje naslova ali oznake</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Vytvoriť novú adresu</translation>
+        <translation>Ustvari nov naslov</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Nový</translation>
+        <translation type="unfinished">&amp;Novo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Zkopírovať práve zvolenú adresu</translation>
+        <translation>Kopiraj trenutno izbrani naslov v odložišče</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Kopírovať</translation>
+        <translation type="unfinished">&amp;Kopiraj</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Z&amp;atvoriť</translation>
+        <translation type="unfinished">&amp;Zapri</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Vymazať vybranú adresu zo zoznamu</translation>
+        <translation>Izbriši trenutno označeni naslov s seznama</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Zadajte adresu alebo popis pre hľadanie</translation>
+        <translation type="unfinished">Iščite po naslovu ali oznaki</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportovať dáta v aktuálnej karte do súboru</translation>
+        <translation>Izvozi podatke iz trenutnega zavihka v datoteko</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportovať...</translation>
+        <translation>&amp;Izvozi</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Zmazať</translation>
+        <translation>I&amp;zbriši</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Zvoľte adresu kam poslať mince</translation>
+        <translation type="unfinished">Izberi naslov prejemnika</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Zvoľte adresu na ktorú chcete prijať mince</translation>
+        <translation type="unfinished">Izberite naslov, na katerega želite prejeti sredstva</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">Vy&amp;brať</translation>
+        <translation type="unfinished">&amp;Izberi</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Odosielajúce adresy</translation>
+        <translation type="unfinished">Imenik naslovov za pošiljanje</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Prijímajúce adresy</translation>
+        <translation type="unfinished">Imenik prejemnih naslovov</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Toto sú Vaše Bitcoin adresy pre posielanie platieb. Vždy skontrolujte sumu a prijímaciu adresu pred poslaním mincí.</translation>
+        <translation type="unfinished">To so vaši bitcoin-naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Toto sú vaše Bitcoin adresy pre prijímanie platieb. Pre vytvorenie nových adries kliknite na "Vytvoriť novú prijímaciu adresu" na karte "Prijať". Podpisovanie je možné iba s adresami typu "legacy".</translation>
+        <translation type="unfinished">To so vaši bitcoin-naslovi, ki jih uporabljate za prejemanje plačil. Za tvorbo novega naslova uporabite gumb "Ustvari nov prejemni naslov" v zavihku Prejmi.
+Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;Kopírovať adresu</translation>
+        <translation type="unfinished">&amp;Kopiraj naslov</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">Kopírovať &amp;popis</translation>
+        <translation type="unfinished">Kopiraj &amp;oznako</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;Upraviť</translation>
+        <translation type="unfinished">&amp;Uredi</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Exportovať zoznam adries</translation>
+        <translation type="unfinished">Izvozi seznam naslovov</translation>
     </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
-        <translation type="unfinished">Čiarkou oddelený súbor</translation>
+        <translation type="unfinished">Vrednosti ločene z vejicami</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">Nastala chyba pri pokuse uložiť zoznam adries do %1. Skúste znovu.</translation>
+        <translation type="unfinished">Poskus shranjevanja seznama naslovov v %1 je spodletel. Prosimo, poskusite znova.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Export zlyhal</translation>
+        <translation type="unfinished">Izvoz je spodletel.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Popis</translation>
+        <translation type="unfinished">Oznaka</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Naslov</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(bez popisu)</translation>
+        <translation type="unfinished">(brez oznake)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Dialóg hesla</translation>
+        <translation>Pogovorno okno za geslo</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Zadajte heslo</translation>
+        <translation>Vnesite geslo</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nové heslo</translation>
+        <translation>Novo geslo</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Zopakujte nové heslo</translation>
+        <translation>Ponovite geslo</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Zobraziť frázu</translation>
+        <translation type="unfinished">Pokaži geslo</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Zašifrovať peňaženku</translation>
+        <translation type="unfinished">Šifriraj denarnico</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Táto operácia potrebuje heslo k vašej peňaženke aby ju mohla odomknúť.</translation>
+        <translation type="unfinished">To dejanje zahteva geslo za odklepanje vaše denarnice.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">Odomknúť peňaženku</translation>
+        <translation type="unfinished">Odkleni denarnico</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Zmena hesla</translation>
+        <translation type="unfinished">Spremeni &amp;geslo...</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Potvrďte zašifrovanie peňaženky</translation>
+        <translation type="unfinished">Potrdi šifriranje denarnice</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Varovanie: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE BITCOINY&lt;/b&gt;!</translation>
+        <translation type="unfinished">Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BITCOINE&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished">Ste si istí, že si želáte zašifrovať peňaženku?</translation>
+        <translation type="unfinished">Ali ste prepričani, da želite šifrirati svojo denarnico?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Peňaženka zašifrovaná</translation>
+        <translation type="unfinished">Denarnica šifrirana</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Zadajte novú prístupovú frázu pre peňaženku.&lt;br/&gt;Prosím použite frázu dlhú &lt;b&gt;desať či viac náhodných znakov&lt;/b&gt;, alebo &lt;b&gt;osem či viac slov&lt;/b&gt;.</translation>
+        <translation type="unfinished">Vnesite novo geslo za denarnico. &lt;br/&gt;Prosimo, uporabite geslo z vsaj &lt;b&gt;10 ali več naključnimi simboli&lt;/b&gt; ali vsaj osmimi besedami.&lt;b&gt;</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Zadajte starú a novú frázu pre túto peňaženku.</translation>
+        <translation type="unfinished">Vnesite staro geslo in novo geslo za denarnico.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Pamätajte, že zašifrovanie peňaženky neochráni úplne vaše bitcoiny pred ukradnutím škodlivými programami vo vašom počítači.</translation>
+        <translation type="unfinished">Pomnite, da šifriranje denarnice ne more preprečiti morebitnim virusom na vašem računalniku, da bi ukradli vaše bitcoine.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Peňaženka na zašifrovanie</translation>
+        <translation type="unfinished">Denarnica, ki naj bo šifrirana</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">Vaša peňaženka bude zašifrovaná.</translation>
+        <translation type="unfinished">Vaša denarnica bo zašifrirana.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">Vaša peňaženka je zašifrovaná.</translation>
+        <translation type="unfinished">Vaša denarnica je sedaj šifrirana.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished">DÔLEŽITÉ: Všetky predchádzajúce zálohy vašej peňaženky, ktoré ste vykonali by mali byť nahradené novo vytvorenou, zašifrovanou peňaženkou. Z bezpečnostných dôvodov bude predchádzajúca záloha nezašifrovanej peňaženky k ničomu, akonáhle začnete používať novú, zašifrovanú peňaženku.</translation>
+        <translation type="unfinished">POMEMBNO: Vse starejše varnostne kopije denarnice je potrebno zamenjati z novo, šifrirano datoteko denarnice. Zaradi varnosti bodo stare varnostne kopije postale neuporabne takoj, ko začnete uporabljati novo, šifrirano denarnico.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">Šifrovanie peňaženky zlyhalo</translation>
+        <translation type="unfinished">Šifriranje denarnice je spodletelo</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Šifrovanie peňaženky zlyhalo kôli internej chybe. Vaša peňaženka nebola zašifrovaná.</translation>
+        <translation type="unfinished">Šifriranje denarnice je spodletelo zaradi notranje napake. Vaša denarnica ni bila šifrirana.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Zadané heslá nesúhlasia.</translation>
+        <translation type="unfinished">Navedeni gesli se ne ujemata.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">Odomykanie peňaženky zlyhalo</translation>
+        <translation type="unfinished">Denarnice ni bilo mogoče odkleniti</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Zadané heslo pre dešifrovanie peňaženky bolo nesprávne.</translation>
+        <translation type="unfinished">Geslo za dešifriranje denarnice, ki ste ga vnesli, ni pravilno.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">Heslo k peňaženke bolo úspešne zmenené.</translation>
+        <translation type="unfinished">Geslo za dostop do denarnice je bilo uspešno spremenjeno.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished">Upozornenie: Máte zapnutý Caps Lock!</translation>
+        <translation type="unfinished">Opozorilo: Vključena je tipka Caps Lock!</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
     <message>
-        <source>IP/Netmask</source>
-        <translation type="unfinished">IP/Maska stiete</translation>
-    </message>
-    <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Blokovaný do</translation>
+        <translation type="unfinished">Blokiran do</translation>
     </message>
 </context>
 <context>
     <name>BitcoinApplication</name>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">Nezachytená výnimka</translation>
+        <translation type="unfinished">Pobegla izjema</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished">Kritická chyba. %1  nemôže ďalej bezpečne pokračovať a ukončí sa.</translation>
+        <translation type="unfinished">Prišlo je do usodne napake. %1 ne more več varno nadaljevati s tekom in se bo ustavil.</translation>
     </message>
     <message>
         <source>Internal error</source>
-        <translation type="unfinished">Interná chyba</translation>
+        <translation type="unfinished">Interna napaka</translation>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <translation type="unfinished">Nastala interná chyba. %1 sa pokúsi bezpečne pokračovať. Toto je neočakávaná chyba, ktorú môžete nahlásiť podľa postupu nižšie.</translation>
+        <translation type="unfinished">Prišlo je do interne napake. %1 bo skušal varno nadaljevati. To je nepričakovana napaka, ki jo lahko prijavite, kot je opisano spodaj.</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Chyba: Zadaný adresár pre dáta „%1“ neexistuje.</translation>
+        <translation type="unfinished">Napaka: Vnešena podatkovna mapa "%1" ne obstaja.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Chyba: Konfiguračný súbor sa nedá spracovať: %1.</translation>
+        <translation type="unfinished">Napaka: Ne morem razčleniti konfiguracijske datoteke: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Chyba: %1</translation>
+        <translation type="unfinished">Napaka: %1</translation>
     </message>
     <message>
         <source>Error initializing settings: %1</source>
-        <translation type="unfinished">Chyba pri inicializácii nastavení: %1</translation>
+        <translation type="unfinished">Napaka pri inicializaciji nastavitev: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">%1 ešte nebol bezpečne ukončený…</translation>
+        <translation type="unfinished">%1 se še ni varno zaključil...</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">neznámy</translation>
+        <translation type="unfinished">neznano</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Suma</translation>
+        <translation type="unfinished">Znesek</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Zadajte bitcoin adresu (napr. %1)</translation>
-    </message>
-    <message>
-        <source>Unroutable</source>
-        <translation type="unfinished">Nesmerovateľné</translation>
+        <translation type="unfinished">Vnesite bitcoin-naslov (npr. %1)</translation>
     </message>
     <message>
         <source>Internal</source>
-        <translation type="unfinished">Interné</translation>
+        <translation type="unfinished">Notranji</translation>
     </message>
     <message>
         <source>Inbound</source>
-        <translation type="unfinished">Prichádzajúce</translation>
+        <translation type="unfinished">Dohodna</translation>
     </message>
     <message>
         <source>Outbound</source>
-        <translation type="unfinished">Odchádzajúce</translation>
+        <translation type="unfinished">Odhodna</translation>
     </message>
     <message>
         <source>Full Relay</source>
-        <translation type="unfinished">Plné preposielanie</translation>
+        <translation type="unfinished">Polno posredovanje</translation>
     </message>
     <message>
         <source>Block Relay</source>
-        <translation type="unfinished">Preposielanie blokov</translation>
+        <translation type="unfinished">Posredovanje blokov</translation>
     </message>
     <message>
         <source>Manual</source>
-        <translation type="unfinished">Manuálne</translation>
+        <translation type="unfinished">Ročno</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <translation type="unfinished">Tipalka</translation>
     </message>
     <message>
         <source>Address Fetch</source>
-        <translation type="unfinished">Získanie adries</translation>
+        <translation type="unfinished">Pridobitev naslovov</translation>
     </message>
     <message>
         <source>None</source>
-        <translation type="unfinished">Žiadne</translation>
+        <translation type="unfinished">Jih ni</translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation type="unfinished">nie je k dispozícii</translation>
+        <translation type="unfinished">Neznano</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
             <numerusform>%n sekunda</numerusform>
-            <numerusform>%n sekundy</numerusform>
-            <numerusform>%n sekúnd</numerusform>
+            <numerusform>%n sekundi</numerusform>
+            <numerusform>%n sekunde</numerusform>
+            <numerusform>%n sekund</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform>%n minúta</numerusform>
-            <numerusform>%n minúty</numerusform>
-            <numerusform>%n minút</numerusform>
+            <numerusform>%n minuta</numerusform>
+            <numerusform>%n minuti</numerusform>
+            <numerusform>%n minute</numerusform>
+            <numerusform>%n minut</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform>%n hodina</numerusform>
-            <numerusform>%n hodiny</numerusform>
-            <numerusform>%n hodín</numerusform>
+            <numerusform>%n ura</numerusform>
+            <numerusform>%n uri</numerusform>
+            <numerusform>%n ure</numerusform>
+            <numerusform>%n ur</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform>%n deň</numerusform>
+            <numerusform>%n dan</numerusform>
             <numerusform>%n dni</numerusform>
-            <numerusform>%n dní</numerusform>
+            <numerusform>%n dni</numerusform>
+            <numerusform>%n dni</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform>%n týždeň</numerusform>
-            <numerusform>%n týždne</numerusform>
-            <numerusform>%n týždňov</numerusform>
+            <numerusform>%n teden</numerusform>
+            <numerusform>%n tedna</numerusform>
+            <numerusform>%n tedni</numerusform>
+            <numerusform>%n tedov</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation type="unfinished">%1 a  %2</translation>
+        <translation type="unfinished">%1 in %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform>%n rok</numerusform>
-            <numerusform>%n roky</numerusform>
-            <numerusform>%n rokov</numerusform>
+            <numerusform>%n leto</numerusform>
+            <numerusform>%n leti</numerusform>
+            <numerusform>%n leta</numerusform>
+            <numerusform>%n let</numerusform>
         </translation>
     </message>
     </context>
@@ -392,35 +395,35 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Prehľad</translation>
+        <translation>Pre&amp;gled</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Zobraziť celkový prehľad o peňaženke</translation>
+        <translation>Oglejte si splošne informacije o svoji denarnici</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transakcie</translation>
+        <translation>&amp;Transakcije</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Prechádzať históriu transakcií</translation>
+        <translation>Brskajte po zgodovini transakcij</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>U&amp;končiť</translation>
+        <translation>I&amp;zhod</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Ukončiť program</translation>
+        <translation>Izhod iz programa</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;O %1</translation>
+        <translation type="unfinished">&amp;O nas%1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">Ukázať informácie o %1</translation>
+        <translation type="unfinished">Prikaži informacije o %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -428,869 +431,864 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Zobrazit informácie o Qt</translation>
+        <translation>Oglejte si informacije o Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">Upraviť nastavenia pre %1</translation>
+        <translation type="unfinished">Spremeni možnosti konfiguracije za %1</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Vytvoriť novú peňaženku</translation>
+        <translation type="unfinished">Ustvari novo denarnico</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Peňaženka:</translation>
+        <translation type="unfinished">Denarnica:</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
-        <translation type="unfinished">Sieťová aktivita zakázaná.</translation>
+        <translation type="unfinished">Omrežna aktivnost onemogočena.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation type="unfinished">Proxy sú &lt;b&gt;zapnuté&lt;/b&gt;: %1</translation>
+        <translation type="unfinished">Posredniški strežnik je &lt;b&gt;omogočen&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Poslať bitcoins na adresu</translation>
+        <translation>Pošljite novce na bitcoin-naslov</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Zálohovať peňaženku na iné miesto</translation>
+        <translation>Shranite varnostno kopijo svoje denarnice na drugo mesto</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Zmeniť heslo použité na šifrovanie peňaženky</translation>
+        <translation>Spremenite geslo za šifriranje denarnice</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Odoslať</translation>
+        <translation>&amp;Pošlji</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Prijať</translation>
+        <translation>P&amp;rejmi</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
-        <translation type="unfinished">M&amp;ožnosti…</translation>
+        <translation type="unfinished">&amp;Možnosti ...</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Zobraziť / Skryť</translation>
+        <translation>&amp;Prikaži / Skrij</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Zobraziť alebo skryť hlavné okno</translation>
+        <translation>Prikaži ali skrij glavno okno</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">Zašifrovať p&amp;eňaženku…</translation>
+        <translation type="unfinished">Ši&amp;friraj denarnico...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Zašifruj súkromné kľúče ktoré patria do vašej peňaženky</translation>
+        <translation>Šifrirajte zasebne ključe, ki se nahajajo v denarnici</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;Zálohovať peňaženku…</translation>
+        <translation type="unfinished">Naredi &amp;varnostno kopijo denarnice...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase…</source>
-        <translation type="unfinished">&amp;Zmeniť heslo…</translation>
+        <translation type="unfinished">Spremeni &amp;geslo...</translation>
     </message>
     <message>
         <source>Sign &amp;message…</source>
-        <translation type="unfinished">Podpísať &amp;správu…</translation>
+        <translation type="unfinished">&amp;Podpiši sporočilo...</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Podpísať správu s vašou Bitcoin adresou, aby ste preukázali, že ju vlastníte</translation>
+        <translation>Podpišite poljubno sporočilo z enim svojih bitcoin-naslovov, da prejemniku sporočila dokažete, da je ta naslov v vaši lasti.</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
-        <translation type="unfinished">O&amp;veriť správu…</translation>
+        <translation type="unfinished">P&amp;reveri podpis...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Overiť, či boli správy podpísané uvedenou Bitcoin adresou</translation>
+        <translation>Preverite, če je bilo prejeto sporočilo podpisano z določenim bitcoin-naslovom.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">&amp;Načítať PSBT zo súboru…</translation>
+        <translation type="unfinished">&amp;Naloži DPBT iz datoteke...</translation>
     </message>
     <message>
         <source>Load PSBT from clipboard…</source>
-        <translation type="unfinished">Načítať PSBT zo schránky…</translation>
+        <translation type="unfinished">Naloži DPBT z odložišča...</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
-        <translation type="unfinished">Otvoriť &amp;URI…</translation>
+        <translation type="unfinished">Odpri &amp;URI...</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Zatvoriť Peňaženku...</translation>
+        <translation type="unfinished">Zapri denarnico...</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Vytvoriť Peňaženku...</translation>
+        <translation type="unfinished">Ustvari denarnico...</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">Zatvoriť všetky Peňaženky...</translation>
+        <translation type="unfinished">Zapri vse denarnice...</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Súbor</translation>
+        <translation>&amp;Datoteka</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Nastavenia</translation>
+        <translation>&amp;Nastavitve</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Pomoc</translation>
+        <translation>&amp;Pomoč</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Lišta nástrojov</translation>
+        <translation>Orodna vrstica zavihkov</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronizujú sa hlavičky (%1%)…</translation>
+        <translation type="unfinished">Sinhroniziram zaglavja (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
-        <translation type="unfinished">Synchronizácia so sieťou…</translation>
+        <translation type="unfinished">Dohitevam omrežje ...</translation>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
-        <translation type="unfinished">Indexujem bloky na disku…</translation>
+        <translation type="unfinished">Izdelujem kazalo blokov na disku...</translation>
     </message>
     <message>
         <source>Processing blocks on disk…</source>
-        <translation type="unfinished">Spracovávam bloky na disku…</translation>
+        <translation type="unfinished">Procesiram bloke na disku...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Pre-indexujem bloky na disku…</translation>
+        <translation type="unfinished">Ponovno izdelujem kazala blokov na disku...</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Pripája sa k partnerom…</translation>
+        <translation type="unfinished">Povezujem se s soležniki...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Vyžiadať platby (vygeneruje QR kódy a bitcoin: URI)</translation>
+        <translation type="unfinished">Zahtevajte plačilo (ustvarite zahtevek s QR-kodo in URI tipa bitcoin:)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Zobraziť zoznam použitých adries odosielateľa a ich popisy</translation>
+        <translation type="unfinished">Prikaži seznam naslovov in oznak, na katere ste kdaj poslali plačila</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Zobraziť zoznam použitých prijímacích adries a ich popisov</translation>
+        <translation type="unfinished">Prikaži seznam naslovov in oznak, na katere ste kdaj prejeli plačila</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Možnosti príkazového riadku</translation>
+        <translation type="unfinished">Možnosti &amp;ukazne vrstice</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform>Spracovaný %n blok transakčnej histórie.</numerusform>
-            <numerusform>Spracované %n bloky transakčnej histórie.</numerusform>
-            <numerusform>Spracovaných %n blokov transakčnej histórie.</numerusform>
+            <numerusform>Obdelan je %n blok zgodovine transakcij.</numerusform>
+            <numerusform>Obdelana sta %n bloka zgodovine transakcij.</numerusform>
+            <numerusform>Obdelani so %n bloki zgodovine transakcij.</numerusform>
+            <numerusform>Obdelanih je %n blokov zgodovine transakcij.</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 pozadu</translation>
+        <translation>%1 zaostanka</translation>
     </message>
     <message>
         <source>Catching up…</source>
-        <translation type="unfinished">Sťahujem…</translation>
+        <translation type="unfinished">Dohitevam...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Posledný prijatý blok bol vygenerovaný pred: %1.</translation>
+        <translation>Zadnji prejeti blok je star %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transakcie po tomto čase ešte nebudú viditeľné.</translation>
+        <translation>Novejše transakcije še ne bodo vidne.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Chyba</translation>
+        <translation>Napaka</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Upozornenie</translation>
+        <translation>Opozorilo</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Informácie</translation>
+        <translation>Informacije</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Aktualizovaný</translation>
+        <translation>Ažurno</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Načítať sčasti podpísanú Bitcoin transakciu</translation>
+        <translation type="unfinished">Naloži delno podpisano bitcoin-transakcijo</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Načítať čiastočne podpísanú Bitcoin transakciu, ktorú ste skopírovali</translation>
+        <translation type="unfinished">Naloži delno podpisano bitcoin-transakcijo z odložišča</translation>
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Okno uzlov</translation>
+        <translation type="unfinished">Okno vozlišča</translation>
     </message>
     <message>
         <source>Open node debugging and diagnostic console</source>
-        <translation type="unfinished">Otvor konzolu pre ladenie a diagnostiku uzlu</translation>
+        <translation type="unfinished">Odpri konzolo za razhroščevanje in diagnostiko</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">&amp;Odosielajúce adresy</translation>
+        <translation type="unfinished">Naslovi za &amp;pošiljanje ...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Prijímajúce adresy</translation>
+        <translation type="unfinished">&amp;Naslovi za prejemanje</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Otvoriť bitcoin: URI</translation>
+        <translation type="unfinished">Odpri URI tipa bitcoin:</translation>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">Otvoriť peňaženku</translation>
+        <translation type="unfinished">Odpri denarnico</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">Otvoriť peňaženku</translation>
+        <translation type="unfinished">Odpri denarnico</translation>
     </message>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Zatvoriť peňaženku</translation>
+        <translation type="unfinished">Zapri denarnico</translation>
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">Zatvoriť všetky peňaženky</translation>
+        <translation type="unfinished">Zapri vse denarnice</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Ukáž %1 zoznam možných nastavení Bitcoinu pomocou príkazového riadku</translation>
+        <translation type="unfinished">Pokaži sporočilo %1 za pomoč s seznamom vseh možnosti v ukazni vrstici</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation type="unfinished">&amp;Skryť hodnoty</translation>
+        <translation type="unfinished">Za&amp;maskiraj vrednosti</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation type="unfinished">Skryť hodnoty v karte "Prehľad"</translation>
+        <translation type="unfinished">Zamaskiraj vrednosti v zavihku Pregled</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">predvolená peňaženka</translation>
+        <translation type="unfinished">privzeta denarnica</translation>
     </message>
     <message>
         <source>No wallets available</source>
-        <translation type="unfinished">Nie je dostupná žiadna peňaženka</translation>
+        <translation type="unfinished">Ni denarnic na voljo</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">&amp;Okno</translation>
+        <translation type="unfinished">O&amp;kno</translation>
     </message>
     <message>
         <source>Minimize</source>
-        <translation type="unfinished">Minimalizovať</translation>
+        <translation type="unfinished">Pomanjšaj</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">Priblížiť</translation>
+        <translation type="unfinished">Povečaj</translation>
     </message>
     <message>
         <source>Main Window</source>
-        <translation type="unfinished">Hlavné okno</translation>
+        <translation type="unfinished">Glavno okno</translation>
     </message>
     <message>
         <source>%1 client</source>
-        <translation type="unfinished">%1 klient</translation>
+        <translation type="unfinished">Odjemalec %1</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n aktívne pripojenie do siete Bitcoin</numerusform>
-            <numerusform>%n aktívne pripojenia do siete Bitcoin</numerusform>
-            <numerusform>%n aktívnych pripojení do siete Bitcoin</numerusform>
+            <numerusform>%n aktivna povezava v omrežje bitcoin</numerusform>
+            <numerusform>%n aktivni povezavi v omrežje bitcoin</numerusform>
+            <numerusform>%n aktivne povezave v omrežje bitcoin</numerusform>
+            <numerusform>%n aktivnih povezav v omrežje bitcoin</numerusform>
         </translation>
     </message>
     <message>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
-        <translation type="unfinished">Kliknite pre viac akcií.</translation>
+        <translation type="unfinished">Kliknite za več dejanj.</translation>
     </message>
     <message>
         <source>Show Peers tab</source>
         <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
-        <translation type="unfinished">Zobraziť kartu Partneri</translation>
+        <translation type="unfinished">Prikaži zavihek Soležniki</translation>
     </message>
     <message>
         <source>Disable network activity</source>
         <extracomment>A context menu item.</extracomment>
-        <translation type="unfinished">Zakázať sieťovú aktivitu</translation>
+        <translation type="unfinished">Onemogoči omrežno aktivnost</translation>
     </message>
     <message>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
-        <translation type="unfinished">Povoliť sieťovú aktivitu</translation>
+        <translation type="unfinished">Omogoči omrežno aktivnost</translation>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished">Chyba: %1</translation>
+        <translation type="unfinished">Napaka: %1</translation>
     </message>
     <message>
         <source>Warning: %1</source>
-        <translation type="unfinished">Upozornenie: %1</translation>
+        <translation type="unfinished">Opozorilo: %1</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">Dátum: %1
+        <translation type="unfinished">Datum: %1
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Suma: %1
+        <translation type="unfinished">Znesek: %1
 </translation>
     </message>
     <message>
         <source>Wallet: %1
 </source>
-        <translation type="unfinished">Peňaženka: %1
+        <translation type="unfinished">Denarnica: %1
 </translation>
     </message>
     <message>
         <source>Type: %1
 </source>
-        <translation type="unfinished">Typ: %1
+        <translation type="unfinished">Vrsta: %1
 </translation>
     </message>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">Popis: %1
+        <translation type="unfinished">Oznaka: %1
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">Adresa: %1
+        <translation type="unfinished">Naslov: %1
 </translation>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Odoslané transakcie</translation>
+        <translation>Odliv</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Prijatá transakcia</translation>
+        <translation>Priliv</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation type="unfinished">Generovanie HD kľúčov je &lt;b&gt;zapnuté&lt;/b&gt;</translation>
+        <translation type="unfinished">HD-tvorba ključev je &lt;b&gt;omogočena&lt;/b&gt;</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">Generovanie HD kľúčov je &lt;b&gt;vypnuté&lt;/b&gt;</translation>
+        <translation type="unfinished">HD-tvorba ključev je &lt;b&gt;onemogočena&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">Súkromný kľúč &lt;b&gt;vypnutý&lt;/b&gt;</translation>
+        <translation type="unfinished">Zasebni ključ &lt;b&gt;onemogočen&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;odomknutá&lt;/b&gt;</translation>
+        <translation>Denarnica je &lt;b&gt;šifrirana&lt;/b&gt; in trenutno &lt;b&gt;odklenjena&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Peňaženka je &lt;b&gt;zašifrovaná&lt;/b&gt; a momentálne &lt;b&gt;zamknutá&lt;/b&gt;</translation>
+        <translation>Denarnica je &lt;b&gt;šifrirana&lt;/b&gt; in trenutno &lt;b&gt;zaklenjena&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Original message:</source>
-        <translation type="unfinished">Pôvodná správa:</translation>
+        <translation type="unfinished">Izvorno sporočilo:</translation>
     </message>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation type="unfinished">Jednotka pre zobrazovanie súm. Kliknite pre zvolenie inej jednotky.</translation>
+        <translation type="unfinished">Merska enota za prikaz zneskov. Kliknite za izbiro druge enote.</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation type="unfinished">Výber mince</translation>
+        <translation type="unfinished">Izbira vhodnih kovancev</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Množstvo:</translation>
+        <translation type="unfinished">Št. vhodov:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Bajtov:</translation>
+        <translation type="unfinished">Število bajtov:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Suma:</translation>
+        <translation type="unfinished">Znesek:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Poplatok:</translation>
+        <translation type="unfinished">Provizija:</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">Prach:</translation>
+        <translation type="unfinished">Prah:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Po poplatku:</translation>
+        <translation type="unfinished">Po proviziji:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Zmena:</translation>
+        <translation type="unfinished">Vračilo:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished">(ne)vybrať všetko</translation>
+        <translation type="unfinished">izberi vse/nič</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished">Stromový režim</translation>
+        <translation type="unfinished">Drevesni prikaz</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished">Zoznamový režim</translation>
+        <translation type="unfinished">Seznam</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Suma</translation>
+        <translation type="unfinished">Znesek</translation>
     </message>
     <message>
         <source>Received with label</source>
-        <translation type="unfinished">Prijaté s označením</translation>
+        <translation type="unfinished">Oznaka priliva</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation type="unfinished">Prijaté s adresou</translation>
+        <translation type="unfinished">Naslov priliva</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dátum</translation>
+        <translation type="unfinished">Datum</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished">Potvrdenia</translation>
+        <translation type="unfinished">Potrditve</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Potvrdené</translation>
+        <translation type="unfinished">Potrjeno</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Kopírovať sumu</translation>
+        <translation type="unfinished">Kopiraj znesek</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;Kopírovať adresu</translation>
+        <translation type="unfinished">&amp;Kopiraj naslov</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopírovať &amp;popis</translation>
+        <translation type="unfinished">Kopiraj &amp;oznako</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopírovať &amp;sumu</translation>
+        <translation type="unfinished">Kopiraj &amp;znesek</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
-        <translation type="unfinished">Kopírovať &amp;ID transakcie</translation>
+        <translation type="unfinished">Kopiraj &amp;ID transakcije</translation>
     </message>
     <message>
         <source>L&amp;ock unspent</source>
-        <translation type="unfinished">U&amp;zamknúť neminuté</translation>
+        <translation type="unfinished">&amp;Zakleni nepotrošene</translation>
     </message>
     <message>
         <source>&amp;Unlock unspent</source>
-        <translation type="unfinished">&amp;Odomknúť neminuté</translation>
+        <translation type="unfinished">&amp;Odkleni nepotrošene</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Kopírovať množstvo</translation>
+        <translation type="unfinished">Kopiraj količino</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Kopírovať poplatok</translation>
+        <translation type="unfinished">Kopiraj provizijo</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Kopírovať po poplatkoch</translation>
+        <translation type="unfinished">Kopiraj znesek po proviziji</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Kopírovať bajty</translation>
+        <translation type="unfinished">Kopiraj bajte</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">Kopírovať prach</translation>
+        <translation type="unfinished">Kopiraj prah</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Kopírovať zmenu</translation>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 zamknutých)</translation>
+        <translation type="unfinished">Kopiraj vračilo</translation>
     </message>
     <message>
         <source>yes</source>
-        <translation type="unfinished">áno</translation>
+        <translation type="unfinished">da</translation>
     </message>
     <message>
         <source>no</source>
-        <translation type="unfinished">nie</translation>
+        <translation type="unfinished">ne</translation>
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Tento popis sčervenie ak ktorýkoľvek príjemca dostane sumu menšiu ako súčasný limit pre "prach".</translation>
+        <translation type="unfinished">Ta oznaka postane rdeča, če kateri od prejemnikov prejme znesek, nižji od trenutne meje prahu.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation type="unfinished">Môže sa líšiť o +/- %1 satoshi(s) pre každý vstup.</translation>
+        <translation type="unfinished">Lahko se razlikuje za +/- %1 sat na vhod.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(bez popisu)</translation>
+        <translation type="unfinished">(brez oznake)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished">zmeniť z %1 (%2)</translation>
+        <translation type="unfinished">vračilo od %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation type="unfinished">(zmena)</translation>
+        <translation type="unfinished">(vračilo)</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletActivity</name>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
-        <translation type="unfinished">Vytvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;…</translation>
+        <translation type="unfinished">Ustvarjam denarnico &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
-        <translation type="unfinished">Vytvorenie peňaženky zlyhalo</translation>
+        <translation type="unfinished">Ustvarjanje denarnice je spodletelo</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
-        <translation type="unfinished">Varovanie vytvárania peňaženky</translation>
+        <translation type="unfinished">Opozorilo pri ustvarjanju denarnice</translation>
     </message>
     <message>
         <source>Can't list signers</source>
-        <translation type="unfinished">Nemôžem zobraziť podpisovateľov</translation>
+        <translation type="unfinished">Ne morem našteti podpisnikov</translation>
     </message>
 </context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
-        <translation type="unfinished">Otvorenie peňaženky zlyhalo</translation>
+        <translation type="unfinished">Odpiranje denarnice je spodletelo</translation>
     </message>
     <message>
         <source>Open wallet warning</source>
-        <translation type="unfinished">Varovanie otvárania peňaženky</translation>
+        <translation type="unfinished">Opozorilo pri odpiranju denarnice</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">predvolená peňaženka</translation>
+        <translation type="unfinished">privzeta denarnica</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
-        <translation type="unfinished">Otvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;…</translation>
+        <translation type="unfinished">Odpiram denarnico &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
 <context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Zatvoriť peňaženku</translation>
+        <translation type="unfinished">Zapri denarnico</translation>
     </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation type="unfinished">Naozaj chcete zavrieť peňaženku &lt;i&gt;%1&lt;/i&gt;?</translation>
+        <translation type="unfinished">Ste prepričani, da želite zapreti denarnico &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation type="unfinished">Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý reťazec blokov (blockchain) v prípade, že je aktivované redukovanie blokov.</translation>
+        <translation type="unfinished">Če denarnica ostane zaprta predolgo in je obrezovanje vklopljeno, boste morda morali ponovno prenesti celotno verigo blokov.</translation>
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">Zatvoriť všetky peňaženky</translation>
+        <translation type="unfinished">Zapri vse denarnice</translation>
     </message>
     <message>
         <source>Are you sure you wish to close all wallets?</source>
-        <translation type="unfinished">Naozaj si želáte zatvoriť všetky peňaženky?</translation>
+        <translation type="unfinished">Ste prepričani, da želite zapreti vse denarnice?</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
-        <translation type="unfinished">Vytvoriť peňaženku</translation>
+        <translation type="unfinished">Ustvari denarnico</translation>
     </message>
     <message>
         <source>Wallet Name</source>
-        <translation type="unfinished">Názov peňaženky</translation>
+        <translation type="unfinished">Ime denarnice</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Peňaženka</translation>
+        <translation type="unfinished">Denarnica</translation>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation type="unfinished">Zašifrovať peňaženku. Peňaženka bude zašifrovaná frázou, ktoré si zvolíte.</translation>
+        <translation type="unfinished">Šifriraj denarnico. Denarnica bo šifrirana z geslom, ki ga izberete.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
-        <translation type="unfinished">Zašifrovať peňaženku</translation>
+        <translation type="unfinished">Šifriraj denarnico</translation>
     </message>
     <message>
         <source>Advanced Options</source>
-        <translation type="unfinished">Rozšírené nastavenia</translation>
+        <translation type="unfinished">Napredne možnosti</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation type="unfinished">Vypnúť súkromné kľúče pre túto peňaženku. Peňaženky s vypnutými súkromnými kľúčmi nebudú mať súkromné kľúče a nemôžu mať HD inicializáciu ani importované súkromné kľúče. Toto je ideálne pre peňaženky iba na sledovanie.</translation>
+        <translation type="unfinished">Onemogoči zasebne ključe za to denarnico. Denarnice z onemogočenimi zasebnimi ključi ne bodo imele zasebnih ključev in ne morejo imeti HD-semena ali uvoženih zasebnih ključev. To je primerno za opazovane denarnice.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
-        <translation type="unfinished">Vypnúť súkromné kľúče</translation>
+        <translation type="unfinished">Onemogoči zasebne ključe</translation>
     </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Vytvoriť prázdnu peňaženku. Prázdne peňaženky na začiatku nemajú žiadne súkromné kľúče ani skripty. Neskôr môžu byť importované súkromné kľúče a adresy alebo nastavená HD inicializácia.</translation>
+        <translation type="unfinished">Ustvari prazno denarnico. Prazne denarnice ne vključujejo zasebnih ključev ali skript. Pozneje lahko uvozite zasebne ključe ali vnesete HD-seme.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
-        <translation type="unfinished">Vytvoriť prázdnu peňaženku</translation>
+        <translation type="unfinished">Ustvari prazno denarnico</translation>
     </message>
     <message>
         <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Na správu scriptPubKey používajte deskriptory</translation>
+        <translation type="unfinished">Uporabi deskriptorje za upravljanje s scriptPubKey</translation>
     </message>
     <message>
         <source>Descriptor Wallet</source>
-        <translation type="unfinished">Peňaženka deskriptora</translation>
+        <translation type="unfinished">Denarnica z deskriptorji</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
-        <translation type="unfinished">Použiť externé podpisovacie zariadenie ako napr. hardvérová peňaženka. Nastavte najprv externý skript podpisovateľa v nastaveniach peňaženky.</translation>
+        <translation type="unfinished">Za podpisovanje uporabite zunanjo napravo, kot je n.pr. hardverska denarnica. Najprej nastavite zunanjega podpisnika v nastavitvah denarnice.</translation>
     </message>
     <message>
         <source>External signer</source>
-        <translation type="unfinished">Externý podpisovateľ</translation>
+        <translation type="unfinished">Zunanji podpisni</translation>
     </message>
     <message>
         <source>Create</source>
-        <translation type="unfinished">Vytvoriť</translation>
+        <translation type="unfinished">Ustvari</translation>
     </message>
     <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Zostavené bez podpory sqlite (povinné pre peňaženky deskriptorov)</translation>
+        <translation type="unfinished">Prevedeno brez podpore za SQLite (potrebna za deskriptorske denarnice)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Skompilované bez podpory externého podpisovania (potrebné pre externé podpisovanie)</translation>
+        <translation type="unfinished">Prevedeno brez podpore za zunanje podpisovanje</translation>
     </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Upraviť adresu</translation>
+        <translation>Uredi naslov</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Popis</translation>
+        <translation>&amp;Oznaka</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished">Popis spojený s týmto záznamom v adresári</translation>
+        <translation type="unfinished">Oznaka tega naslova</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished">Adresa spojená s týmto záznamom v adresári. Možno upravovať len pre odosielajúce adresy.</translation>
+        <translation type="unfinished">Oznaka tega naslova. Urejate jo lahko le pri naslovih za pošiljanje.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Adresa</translation>
+        <translation>&amp;Naslov</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation type="unfinished">Nová adresa pre odoslanie</translation>
+        <translation type="unfinished">Nov naslov za pošiljanje</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation type="unfinished">Upraviť prijímajúcu adresu</translation>
+        <translation type="unfinished">Uredi prejemni naslov</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation type="unfinished">Upraviť odosielaciu adresu</translation>
+        <translation type="unfinished">Uredi naslov za pošiljanje</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Vložená adresa "%1" nieje platnou adresou Bitcoin.</translation>
+        <translation type="unfinished">Vnešeni naslov "%1" ni veljaven bitcoin-naslov.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
-        <translation type="unfinished">Adresa "%1" už existuje ako prijímacia adresa s označením "%2" .Nemôže tak byť pridaná ako odosielacia adresa.</translation>
+        <translation type="unfinished">Naslov "%1" že obstaja kot naslov za prejemanje z oznako "%2", zato ga ne morete dodati kot naslov za pošiljanje.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
-        <translation type="unfinished">Zadaná adresa "%1" sa už nachádza v zozname adries s označením "%2".</translation>
+        <translation type="unfinished">Vnešeni naslov "%1" je že v imeniku, in sicer z oznako "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Nepodarilo sa odomknúť peňaženku.</translation>
+        <translation type="unfinished">Denarnice ni bilo mogoče odkleniti.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation type="unfinished">Generovanie nového kľúča zlyhalo.</translation>
+        <translation type="unfinished">Generiranje novega ključa je spodletelo.</translation>
     </message>
 </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Bude vytvorený nový dátový adresár.</translation>
+        <translation>Ustvarjena bo nova podatkovna mapa.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>názov</translation>
+        <translation>ime</translation>
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Priečinok už existuje. Pridajte "%1", ak tu chcete vytvoriť nový priečinok.</translation>
+        <translation>Mapa že obstaja. Dodajte %1, če želite tu ustvariti novo mapo.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Cesta už existuje a nie je to adresár.</translation>
+        <translation>Pot že obstaja, vendar ni mapa.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Tu nemôžem vytvoriť dátový adresár.</translation>
+        <translation>Na tem mestu ni mogoče ustvariti nove mape.</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
     <message>
         <source>%1 GB of free space available</source>
-        <translation type="unfinished">%1 GB voľného miesta</translation>
+        <translation type="unfinished">Na voljo je %1 GB prostora.</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
-        <translation type="unfinished">(z %1 GB potrebných)</translation>
-    </message>
-    <message>
-        <source>(%1 GB needed for full chain)</source>
-        <translation type="unfinished">(%1 GB potrebných pre plný reťazec)</translation>
+        <translation type="unfinished">(od potrebnih %1 GB)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation type="unfinished">V tejto zložke bude uložených aspoň %1 GB dát a postupom času sa bude zväčšovať.</translation>
+        <translation type="unfinished">V  tem direktoriju bo shranjenih vsaj %1 GB podatkov, količina podatkov pa bo s časom naraščala.</translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Približne %1 GB dát bude uložených v tejto zložke.</translation>
+        <translation type="unfinished">V tem direktoriju bo shranjenih približno %1 GB podatkov.</translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform>(dostatočné pre obnovenie záloh %n deň starých)</numerusform>
-            <numerusform>(dostatočné pre obnovenie záloh %n dni staré)</numerusform>
-            <numerusform>(dostatočné pre obnovenie záloh %n dní starých)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dan)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
+            <numerusform>(dovolj za obnovitev varnostnih kopij, starih %n dni)</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 bude sťahovať kopiu reťazca blokov.</translation>
+        <translation type="unfinished">%1 bo prenesel in shranil kopijo verige blokov.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation type="unfinished">Tvoja peňaženka bude uložena tiež v tomto adresári.</translation>
+        <translation type="unfinished">Tudi denarnica bo shranjena v tem direktoriju.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation type="unfinished">Chyba: Zadaný priečinok pre dáta "%1" nemôže byť vytvorený.</translation>
+        <translation type="unfinished">Napaka: Ni mogoče ustvariti mape "%1".</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Chyba</translation>
+        <translation>Napaka</translation>
     </message>
     <message>
         <source>Welcome</source>
-        <translation>Vitajte</translation>
+        <translation>Dobrodošli</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation type="unfinished">Vitajte v %1</translation>
+        <translation type="unfinished">Dobrodošli v %1</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Keďže toto je prvé spustenie programu, môžete si vybrať, kam %1 bude ukladať vaše údaje.</translation>
+        <translation type="unfinished">Ker ste program zagnali prvič, lahko izberete, kje bo %1 shranil podatke.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Hneď po stlačení OK, začne %1 sťahovať a spracovávať celý %4 blockchain (%2G B), začínajúc najaktuálnejšími transakciami z roku %3, kedy bol %4 spustený.</translation>
+        <translation type="unfinished">Ko kliknete OK, bo %1 začel prenašati podatke in procesirati celotno verigo blokov %4 (%2 GB), začenši z najstarejšo transakcijo iz %3 ob prvotnem začetku %4.</translation>
     </message>
     <message>
         <source>Limit block chain storage to</source>
-        <translation type="unfinished">Obmedziť veľkosť reťazca blokov na</translation>
+        <translation type="unfinished">Omeji velikost shrambe verige blokov na </translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Zvrátenie tohto nastavenia vyžaduje opätovné stiahnutie celého reťazca blokov. Je rýchlejšie najprv stiahnuť celý reťazec blokov a potom ho redukovať neskôr. Vypne niektoré pokročilé funkcie.</translation>
+        <translation type="unfinished">Če spremenite to nastavitev, boste morali ponovno naložiti celotno verigo blokov. Hitreje je najprej prenesti celotno verigo in jo obrezati pozneje. Ta nastavitev onemogoči nekatere napredne funkcije.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Prvá synchronizácia je veľmi náročná a môžu sa tak vďaka nej začat na Vašom počítači prejavovať doteraz skryté hardwarové problémy. Vždy, keď spustíte %1, bude sťahovanie pokračovať tam, kde naposledy skončilo.</translation>
+        <translation type="unfinished">Začetna sinhronizacija je zelo zahtevna in lahko odkrije probleme s strojno opremo v vašem računalniku, ki so prej bili neopaženi. Vsakič, ko zaženete %1, bo le-ta nadaljeval s prenosom, kjer je prejšnjič ostal.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Ak ste obmedzili úložný priestor pre reťazec blokov (t.j. redukovanie), tak sa historické dáta síce stiahnu a spracujú, ale následne sa zasa zmažú, aby nezaberali na disku miesto.</translation>
+        <translation type="unfinished">Če ste se odločili omejiti shranjevanje blokovnih verig (obrezovanje), je treba zgodovinske podatke še vedno prenesti in obdelati, vendar bodo kasneje izbrisani, da bo poraba prostora nizka.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Použiť predvolený dátový adresár</translation>
+        <translation>Uporabi privzeto podatkovno mapo</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Použiť vlastný dátový adresár:</translation>
+        <translation>Uporabi to podatkovno mapo:</translation>
     </message>
 </context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
-        <translation type="unfinished">verzia</translation>
+        <translation type="unfinished">različica</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1298,84 +1296,80 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation type="unfinished">Voľby príkazového riadku</translation>
+        <translation type="unfinished">Možnosti ukazne vrstice</translation>
     </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
         <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 sa vypína…</translation>
+        <translation type="unfinished">%1 se zaustavlja...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Nevypínajte počítač kým toto okno nezmizne.</translation>
+        <translation type="unfinished">Ne zaustavljajte računalnika, dokler to okno ne izgine.</translation>
     </message>
 </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished">Formulár</translation>
+        <translation type="unfinished">Obrazec</translation>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Nedávne transakcie nemusia byť ešte viditeľné preto môže byť zostatok vo vašej peňaženke nesprávny. Táto informácia bude správna keď sa dokončí synchronizovanie peňaženky so sieťou bitcoin, ako je rozpísané nižšie.</translation>
+        <translation type="unfinished">Zadnje transakcije morda še niso vidne, zato je prikazano dobroimetje v denarnici lahko napačno. Pravilni podatki bodo prikazani, ko bo vaša denarnica končala s sinhronizacijo z omrežjem bitcoin; glejte podrobnosti spodaj.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Pokus o minutie bitcoinov, ktoré sú ovplyvnené ešte nezobrazenými transakciami, nebude sieťou akceptovaný.</translation>
+        <translation type="unfinished">Poskusa pošiljanja bitcoinov, na katere vplivajo še ne prikazane transakcije, omrežje ne bo sprejelo.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
-        <translation type="unfinished">Počet zostávajúcich blokov</translation>
+        <translation type="unfinished">Preostalo število blokov</translation>
     </message>
     <message>
         <source>Unknown…</source>
-        <translation type="unfinished">Neznámy…</translation>
+        <translation type="unfinished">Neznano...</translation>
     </message>
     <message>
         <source>calculating…</source>
-        <translation type="unfinished">počíta sa…</translation>
+        <translation type="unfinished">računam...</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished">Čas posledného bloku</translation>
+        <translation type="unfinished">Čas zadnjega bloka</translation>
     </message>
     <message>
         <source>Progress</source>
-        <translation type="unfinished">Postup synchronizácie</translation>
+        <translation type="unfinished">Napredek</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation type="unfinished">Prírastok postupu za hodinu</translation>
+        <translation type="unfinished">Napredek na uro</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished">Odhadovaný čas do ukončenia synchronizácie</translation>
+        <translation type="unfinished">Ocenjeni čas do sinhronizacije</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Skryť</translation>
-    </message>
-    <message>
-        <source>Esc</source>
-        <translation type="unfinished">Esc - úniková klávesa</translation>
+        <translation type="unfinished">Skrij</translation>
     </message>
     <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation type="unfinished">%1 sa práve synchronizuje. Sťahujú sa hlavičky a bloky od partnerov. Tie sa budú sa overovať až sa kompletne overí celý reťazec blokov (blockchain).</translation>
+        <translation type="unfinished">%1 trenutno dohiteva omrežje. Od soležnikov bodo preneseni in preverjeni zaglavja in bloki do vrha verige.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
-        <translation type="unfinished">Neznámy. Synchronizujú sa hlavičky (%1, %2%)…</translation>
+        <translation type="unfinished">Neznano. Sinhroniziram zaglavja (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation type="unfinished">Otvoriť bitcoin URI</translation>
+        <translation type="unfinished">Odpri URI tipa bitcoin:</translation>
     </message>
     </context>
 <context>
@@ -1386,510 +1380,526 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Hlavné</translation>
+        <translation>&amp;Glavno</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation type="unfinished">Automaticky spustiť %1 pri spustení systému.</translation>
+        <translation type="unfinished">Avtomatsko zaženi %1 po prijavi v sistem.</translation>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation type="unfinished">&amp;Spustiť %1 pri prihlásení</translation>
+        <translation type="unfinished">&amp;Zaženi %1 ob prijavi v sistem</translation>
     </message>
     <message>
         <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation type="unfinished">Zapnutie redukovania rapídne zníži priestor potrebný pre uloženie transakcií. Všetky bloky sú plne overované. Zvrátenie tohto nastavenia vyžaduje následné stiahnutie celého reťazca blokov.</translation>
+        <translation type="unfinished">Obrezovanje močno zniža potrebo po prostoru za shranjevanje transakcij. Še vedno pa se bodo v celoti preverjali vsi bloki. Če to nastavitev odstranite, bo potrebno ponovno prenesti celotno verigo blokov.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished">Veľkosť vyrovnávacej pamäti &amp;databázy</translation>
+        <translation type="unfinished">Velikost &amp;predpomnilnika podatkovne baze:</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished">Počet &amp;vlákien overujúcich skript</translation>
+        <translation type="unfinished">Število programskih &amp;niti za preverjanje:</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished">IP adresy proxy (napr. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation type="unfinished">IP naslov posredniškega strežnika (npr. IPv4: 127.0.0.1 ali IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation type="unfinished">Ukazuje, či sa zadaná východzia SOCKS5 proxy používa k pripojovaniu k peerom v rámci tohto typu siete.</translation>
+        <translation type="unfinished">Prikaže, če je nastavljeni privzeti proxy SOCKS5 uporabljen za doseganje soležnikov prek te vrste omrežja.</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation type="unfinished">Minimalizovať namiesto ukončenia aplikácie keď sa okno zavrie. Keď je zvolená táto možnosť, aplikácia sa zavrie len po zvolení Ukončiť v menu.</translation>
+        <translation type="unfinished">Ko zaprete glavno okno programa, bo program tekel še naprej, okno pa bo zgolj minimirano. Program v tem primeru ustavite tako, da v meniju izberete ukaz Izhod.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">URL tretích strán (napr. prehliadač blockchain) ktoré sa zobrazujú v záložke transakcií ako položky kontextového menu. %s v URL je nahradené hash-om transakcie. Viaceré URL sú oddelené zvislou čiarou |.</translation>
+        <translation type="unfinished">Naslovi URL-jev tretjih oseb (npr. raziskovalec blokov), ki bodo navedeni v kontekstnem meniju seznama transakcij. Niz %s v nastavljenem URL-naslovu bo zamenjan z identifikatorjem transakcije. Več zaporednih naslovov URL lahko med seboj ločite z navpičnico |.</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
-        <translation type="unfinished">Otvorte konfiguračný súbor %1 s pracovného adresára.</translation>
+        <translation type="unfinished">Odpri %1 konfiguracijsko datoteko iz delovne podatkovne mape.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation type="unfinished">Otvoriť konfiguračný súbor</translation>
+        <translation type="unfinished">Odpri konfiguracijsko datoteko</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Vynulovať všetky voľby klienta na predvolené.</translation>
+        <translation>Ponastavi vse nastavitve programa na privzete vrednosti.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Vynulovať voľby</translation>
+        <translation>&amp;Ponastavi nastavitve</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Sieť</translation>
+        <translation>&amp;Omrežje</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
-        <translation type="unfinished">Redukovať priestor pre &amp;bloky na</translation>
+        <translation type="unfinished">Obreži velikost podatkovne &amp;baze na</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation type="unfinished">Obnovenie tohto nastavenia vyžaduje opätovné stiahnutie celého blockchainu.</translation>
+        <translation type="unfinished">Če spremenite to nastavitev, boste morali ponovno naložiti celotno verigo blokov.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished">(0 = auto, &lt;0 = toľko jadier nechať  voľných)</translation>
+        <translation type="unfinished">(0 = samodejno, &lt;0 = toliko procesorskih jeder naj ostane prostih)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished">&amp;Peňaženka</translation>
+        <translation type="unfinished">&amp;Denarnica</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation type="unfinished">Za strokovnjake</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Povoliť možnosti &amp;kontroly mincí</translation>
+        <translation type="unfinished">Omogoči &amp;upravljanje s kovanci</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished">Ak vypnete míňanie nepotvrdeného výdavku, tak výdavok z transakcie bude možné použiť, až keď daná transakcia bude mať aspoň jedno potvrdenie. Toto má vplyv aj na výpočet vášho zostatku.</translation>
+        <translation type="unfinished">Če onemogočite trošenje vračila iz še nepotrjenih transakcij, potem vračila ne morete uporabiti, dokler plačilo ni vsaj enkrat potrjeno. Ta opcija vpliva tudi na izračun dobroimetja.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished">&amp;Minúť nepotvrdený výdavok</translation>
+        <translation type="unfinished">Omogoči &amp;trošenje vračila iz še nepotrjenih plačil</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
-        <translation type="unfinished">Externý podpisovateľ (napr. hardvérová peňaženka)</translation>
+        <translation type="unfinished">Zunanji podpisnik (n.pr. hardverska denarnica)</translation>
     </message>
     <message>
         <source>&amp;External signer script path</source>
-        <translation type="unfinished">Cesta k &amp;externému skriptu podpisovateľa</translation>
+        <translation type="unfinished">&amp;Pot do zunanjega podpisnika</translation>
     </message>
     <message>
         <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Plná cesta k skriptu kompatibilnému s Bitcoin Core (napr. C:\Downloads\hwi.exe alebo /Users/Vy/Stahovania/hwi.py). Pozor: škodlivé programy môžu ukradnúť vaše mince!</translation>
+        <translation type="unfinished">Polna pot do datoteke s skripto, združljivo z Bitcoin Core (n.pr. C:\Downloads\hwi.exe ali /Users/jaz/Downloads/hwi.py). Previdno: zlonamerna programska oprema vam lahko ukrade novce!</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automaticky otvoriť port pre Bitcoin na routeri. Toto funguje len ak router podporuje UPnP a je táto podpora aktivovaná.</translation>
+        <translation>Samodejno odpiranje vrat za bitcoin-odjemalec na usmerjevalniku (routerju). To deluje le, če usmerjevalnik podpira UPnP in je ta funkcija na usmerjevalniku omogočena.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Mapovať port pomocou &amp;UPnP</translation>
+        <translation>Preslikaj vrata z uporabo &amp;UPnP</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Automaticky otvoriť port pre Bitcoin na routeri. Toto funguje len ak router podporuje NAT-PMP a je táto podpora aktivovaná. Externý port môže byť náhodný.</translation>
+        <translation type="unfinished">Samodejno odpiranje vrat za bitcoin-odjemalec na usmerjevalniku. To deluje le, če usmerjevalnik podpira NAT-PMP in je ta funkcija na usmerjevalniku omogočena. Zunanja številka vrat je lahko naključna.</translation>
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">Mapovať port pomocou NA&amp;T-PMP</translation>
+        <translation type="unfinished">Preslikaj vrata z uporabo NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation type="unfinished">Prijať spojenia zvonku.</translation>
+        <translation type="unfinished">Sprejmi povezave od zunaj.</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation type="unfinished">Povoliť prichá&amp;dzajúce spojenia</translation>
+        <translation type="unfinished">Dovoli &amp;dohodne povezave</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Pripojiť do siete Bitcoin cez proxy server SOCKS5.</translation>
+        <translation type="unfinished">Poveži se v omrežje Bitcoin preko posredniškega strežnika SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
-        <translation type="unfinished">&amp;Pripojiť cez proxy server SOCKS5 (predvolený proxy):</translation>
+        <translation type="unfinished">&amp;Poveži se preko posredniškega strežnika SOCKS5 (privzeti strežnik):</translation>
+    </message>
+    <message>
+        <source>Proxy &amp;IP:</source>
+        <translation>&amp;IP-naslov posredniškega strežnika:</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation>&amp;Vrata:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Port proxy (napr. 9050)</translation>
+        <translation>Vrata posredniškega strežnika (npr. 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
-        <translation type="unfinished">Použité pre získavanie peerov cez:</translation>
+        <translation type="unfinished">Uporabljano za povezovanje s soležniki preko:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Okno</translation>
+        <translation>O&amp;kno</translation>
     </message>
     <message>
         <source>Show the icon in the system tray.</source>
-        <translation type="unfinished">Zobraziť ikonu v systémovej lište.</translation>
+        <translation type="unfinished">Prikaži ikono na sistemskem pladnju.</translation>
     </message>
     <message>
         <source>&amp;Show tray icon</source>
-        <translation type="unfinished">Zobraziť ikonu v obla&amp;sti oznámení</translation>
+        <translation type="unfinished">&amp;Prikaži ikono na pladnju</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Zobraziť len ikonu na lište po minimalizovaní okna.</translation>
+        <translation>Po minimiranju okna le prikaži ikono programa na pladnju.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Zobraziť len ikonu na lište po minimalizovaní okna.</translation>
+        <translation>&amp;Minimiraj na pladenj namesto na opravilno vrstico</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimalizovať pri zatvorení</translation>
+        <translation>Ob zapiranju okno zgolj m&amp;inimiraj</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Zobrazenie</translation>
+        <translation>&amp;Prikaz</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Jazyk užívateľského rozhrania:</translation>
+        <translation>&amp;Jezik uporabniškega vmesnika:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation type="unfinished">Jazyk uživateľského rozhrania sa dá nastaviť tu. Toto nastavenie sa uplatní až po reštarte %1.</translation>
+        <translation type="unfinished">Tukaj je mogoče nastaviti jezik uporabniškega vmesnika. Ta nastavitev bo udejanjena šele, ko boste znova zagnali %1.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Zobrazovať hodnoty v jednotkách:</translation>
+        <translation>&amp;Enota za prikaz zneskov:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Zvoľte ako deliť bitcoin pri zobrazovaní pri platbách a užívateľskom rozhraní.</translation>
+        <translation>Izberite privzeto mersko enoto za prikaz v uporabniškem vmesniku in pri pošiljanju.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished">Či zobrazovať možnosti kontroly mincí alebo nie.</translation>
+        <translation type="unfinished">Omogoči dodatne možnosti podrobnega nadzora nad  kovanci v transakcijah.</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Pripojiť k Bitcoin sieti skrz samostatnú SOCKS5 proxy pre službu Tor.</translation>
+        <translation type="unfinished">Poveži se v omrežje Bitcoin prek ločenega posredniškega strežnika SOCKS5 za storitve onion (Tor).</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
-        <translation type="unfinished">Použiť samostatný SOCKS&amp;5 proxy server na nadviazanie spojenia s peer-mi cez službu Tor:</translation>
+        <translation type="unfinished">Uporabi ločen posredniški strežik SOCKS5 za povezavo s soležniki prek storitev onion (Tor):</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
-        <translation type="unfinished">URL transakcií tretích strán</translation>
+        <translation type="unfinished">URL za nakazila &amp;tretjih oseb:</translation>
     </message>
     <message>
         <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Písmo s pevnou šírkou na karte Prehľad:</translation>
+        <translation type="unfinished">Pisava enakomerne širine v zavihku Pregled:</translation>
     </message>
     <message>
         <source>embedded "%1"</source>
-        <translation type="unfinished">zabudovaný "%1"</translation>
+        <translation type="unfinished">vdelan "%1"</translation>
     </message>
     <message>
         <source>closest matching "%1"</source>
-        <translation type="unfinished">najbližší zodpovedajúci "%1"</translation>
+        <translation type="unfinished">najboljše ujemanje "%1"</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation type="unfinished">Voľby nastavené v tomto dialógovom okne sú prepísané príkazovým riadkom alebo konfiguračným súborom:</translation>
+        <translation type="unfinished">Možnosti, nastavljene v tem pogovornem oknu, ki so bile preglašene v ukazni vrstici ali konfiguracijski datoteki:</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation>&amp;V redu</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Zrušiť</translation>
+        <translation>&amp;Prekliči</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Skompilované bez podpory externého podpisovania (potrebné pre externé podpisovanie)</translation>
+        <translation type="unfinished">Prevedeno brez podpore za zunanje podpisovanje</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>predvolené</translation>
+        <translation>privzeto</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished">žiadne</translation>
+        <translation type="unfinished">jih ni</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Potvrdiť obnovenie možností</translation>
+        <translation>Potrdi ponastavitev</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished">Reštart klienta potrebný pre aktivovanie zmien.</translation>
+        <translation type="unfinished">Za udejanjenje sprememb je potreben ponoven zagon programa.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
-        <translation type="unfinished">Klient bude vypnutý, chcete pokračovať?</translation>
+        <translation type="unfinished">Program bo zaustavljen. Želite nadaljevati z izhodom?</translation>
     </message>
     <message>
         <source>Configuration options</source>
-        <translation type="unfinished">Možnosti nastavenia</translation>
+        <translation type="unfinished">Možnosti konfiguracije</translation>
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation type="unfinished">Konfiguračný súbor slúži k nastavovaniu užívateľsky pokročilých možností, ktoré majú prednosť pred konfiguráciou z grafického rozhrania. Parametre z príkazového riadka však majú pred konfiguračným súborom prednosť.</translation>
+        <translation type="unfinished">Konfiguracijska datoteka se uporablja za določanje naprednih uporabniških možnosti, ki preglasijo nastavitve v uporabniškem vmesniku. Poleg tega bodo vse možnosti ukazne vrstice preglasile to konfiguracijsko datoteko.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Chyba</translation>
+        <translation type="unfinished">Napaka</translation>
     </message>
     <message>
         <source>The configuration file could not be opened.</source>
-        <translation type="unfinished">Konfiguračný súbor nejde otvoriť.</translation>
+        <translation type="unfinished">Konfiguracijske datoteke ni bilo moč odpreti.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished">Táto zmena by vyžadovala reštart klienta.</translation>
+        <translation type="unfinished">Ta sprememba bi zahtevala ponoven zagon programa.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Zadaná proxy adresa je neplatná.</translation>
+        <translation>Vnešeni naslov posredniškega strežnika ni veljaven.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formulár</translation>
+        <translation>Obrazec</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Zobrazené informácie môžu byť neaktuálne. Vaša peňaženka sa automaticky synchronizuje so sieťou Bitcoin po nadviazaní spojenia, ale tento proces ešte nie je ukončený.</translation>
+        <translation>Prikazani podatki so morda zastareli. Program ob vzpostavitvi povezave samodejno sinhronizira denarnico z omrežjem Bitcoin, a trenutno ta proces še ni zaključen.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation type="unfinished">Iba sledované:</translation>
+        <translation type="unfinished">Opazovano:</translation>
     </message>
     <message>
         <source>Available:</source>
-        <translation type="unfinished">Dostupné:</translation>
+        <translation type="unfinished">Na voljo:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Váš aktuálny disponibilný zostatok</translation>
+        <translation>Skupno dobroimetje na razpolago</translation>
     </message>
     <message>
         <source>Pending:</source>
-        <translation type="unfinished">Čakajúce potvrdenie:</translation>
+        <translation type="unfinished">Nepotrjeno:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Suma transakcií ktoré ešte neboli potvrdené a ešte sa nepočítajú do disponibilného zostatku</translation>
+        <translation>Skupni znesek sredstev, s katerimi še ne razpolagate prosto, ker so del še nepotrjenih transakcij.</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Nezrelé:</translation>
+        <translation>Nedozorelo:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Vytvorený zostatok ktorý ešte nedosiahol zrelosť</translation>
+        <translation>Nedozorelo narudarjeno dobroimetje</translation>
     </message>
     <message>
         <source>Balances</source>
-        <translation type="unfinished">Stav účtu</translation>
+        <translation type="unfinished">Stanje sredstev</translation>
     </message>
     <message>
         <source>Total:</source>
-        <translation>Celkovo:</translation>
+        <translation>Skupaj:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Váš súčasný celkový zostatok</translation>
+        <translation>Trenutno skupno dobroimetje</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Váš celkový zostatok pre adresy ktoré sa iba sledujú</translation>
+        <translation type="unfinished">Trenutno dobroimetje sredstev na opazovanih naslovih</translation>
     </message>
     <message>
         <source>Spendable:</source>
-        <translation type="unfinished">Použiteľné:</translation>
+        <translation type="unfinished">Na voljo za pošiljanje:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation type="unfinished">Nedávne transakcie</translation>
+        <translation type="unfinished">Zadnje transakcije</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Nepotvrdené transakcie pre adresy ktoré sa iba sledujú</translation>
+        <translation type="unfinished">Nepotrjene transakcije na opazovanih naslovih</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Vyťažená suma pre adresy ktoré sa iba sledujú ale ešte nie je dozretá</translation>
+        <translation type="unfinished">Nedozorelo narudarjeno dobroimetje na opazovanih naslovih</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Aktuálny celkový zostatok pre adries ktoré sa iba sledujú</translation>
+        <translation type="unfinished">Trenutno skupno dobroimetje na opazovanih naslovih</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation type="unfinished">Na karte "Prehľad" je aktivovaný súkromný mód, pre odkrytie hodnôt odškrtnite v nastaveniach "Skryť hodnoty"</translation>
+        <translation type="unfinished">V zavihku Pregled je vklopljen zasebni način. Za prikaz vrednosti odstranite kljukico na mestu Nastavitve &gt; Zamaskiraj vrednosti.</translation>
     </message>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Dialog</source>
-        <translation type="unfinished">Dialóg</translation>
+        <translation type="unfinished">Pogovorno okno</translation>
     </message>
     <message>
         <source>Sign Tx</source>
-        <translation type="unfinished">Podpísať transakciu</translation>
+        <translation type="unfinished">Podpiši transakcijo</translation>
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">Odoslať transakciu</translation>
+        <translation type="unfinished">Oddaj transakcijo v omrežje</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
-        <translation type="unfinished">Skopírovať</translation>
+        <translation type="unfinished">Kopiraj v odložišče</translation>
     </message>
     <message>
         <source>Save…</source>
-        <translation type="unfinished">Uložiť…</translation>
+        <translation type="unfinished">Shrani...</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Zatvoriť</translation>
+        <translation type="unfinished">Zapri</translation>
     </message>
     <message>
         <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">Nepodarilo sa načítať transakciu: %1</translation>
+        <translation type="unfinished">Nalaganje transakcije je spodletelo: %1</translation>
     </message>
     <message>
         <source>Failed to sign transaction: %1</source>
-        <translation type="unfinished">Nepodarilo sa podpísať transakciu: %1</translation>
+        <translation type="unfinished">Podpisovanje transakcije je spodletelo: %1</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
-        <translation type="unfinished">Nie je možné podpísať žiadne ďalšie vstupy.</translation>
+        <translation type="unfinished">Ne morem podpisati več kot toliko vhodov.</translation>
     </message>
     <message>
         <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Podpísaných %1 vstupov, no ešte sú požadované ďalšie podpisy.</translation>
+        <translation type="unfinished">%1 vhodov podpisanih, a potrebnih je več podpisov.</translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">Transakcia bola úspešne podpísaná a je pripravená na odoslanie.</translation>
+        <translation type="unfinished">Transakcija je uspešno podpisana in pripravljena na oddajo v omrežje.</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
-        <translation type="unfinished">Neznáma chyba pri spracovávaní transakcie</translation>
+        <translation type="unfinished">Neznana napaka pri obdelavi transakcije.</translation>
     </message>
     <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">Transakcia bola úspešne odoslaná! ID transakcie: %1</translation>
+        <translation type="unfinished">Transakcija uspešno oddana v omrežje. ID transakcije: %1</translation>
     </message>
     <message>
         <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">Odosielanie transakcie zlyhalo: %1</translation>
+        <translation type="unfinished">Oddaja transakcije v omrežje je spodletela: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
-        <translation type="unfinished">PSBT bola skopírovaná.</translation>
+        <translation type="unfinished">DPBT kopirana v odložišče.</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">Uložiť údaje z transakcie</translation>
+        <translation type="unfinished">Shrani podatke transakcije</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">Čiastočne podpísaná transakcia (binárna)</translation>
+        <translation type="unfinished">Delno podpisana transakcija (binarno)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
-        <translation type="unfinished">PSBT bola uložená na disk.</translation>
+        <translation type="unfinished">DPBT shranjena na disk.</translation>
     </message>
     <message>
         <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* Pošle %1 do %2</translation>
+        <translation type="unfinished">* Pošlje %1 na %2</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
-        <translation type="unfinished">Nepodarilo sa vypočítať poplatok za transakciu alebo celkovú sumu transakcie.</translation>
+        <translation type="unfinished">Ne morem izračunati transakcijske provizije ali skupnega zneska transakcije.</translation>
     </message>
     <message>
         <source>Pays transaction fee: </source>
-        <translation type="unfinished">Zaplatí poplatok za transakciu:</translation>
+        <translation type="unfinished">Vsebuje transakcijsko provizijo:</translation>
     </message>
     <message>
         <source>Total Amount</source>
-        <translation type="unfinished">Celková suma</translation>
+        <translation type="unfinished">Skupni znesek</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished">alebo</translation>
+        <translation type="unfinished">ali</translation>
     </message>
     <message>
         <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Transakcia má %1 nepodpísaných vstupov.</translation>
+        <translation type="unfinished">Transakcija ima toliko nepodpisanih vhodov: %1.</translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
-        <translation type="unfinished">Transakcii chýbajú niektoré informácie o vstupoch.</translation>
+        <translation type="unfinished">Transakciji manjkajo nekateri podatki o vhodih.</translation>
     </message>
     <message>
         <source>Transaction still needs signature(s).</source>
-        <translation type="unfinished">Transakcii stále chýbajú podpis(y).</translation>
+        <translation type="unfinished">Transakcija potrebuje nadaljnje podpise.</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
-        <translation type="unfinished">(Ale táto peňaženka nemôže podpisovať transakcie)</translation>
+        <translation type="unfinished">(Ta denarnica pa ne more podpisovati transakcij.)</translation>
     </message>
     <message>
         <source>(But this wallet does not have the right keys.)</source>
-        <translation type="unfinished">(Ale táto peňaženka nemá správne kľúče)</translation>
+        <translation type="unfinished">(Ta denarnica pa nima pravih ključev.)</translation>
     </message>
     <message>
         <source>Transaction is fully signed and ready for broadcast.</source>
-        <translation type="unfinished">Transakcia je plne podpísaná a je pripravená na odoslanie.</translation>
+        <translation type="unfinished">Transakcija je v celoti podpisana in pripravljena za oddajo v omrežje.</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
-        <translation type="unfinished">Status transakcie je neznámy.</translation>
+        <translation type="unfinished">Status transakcije ni znan.</translation>
     </message>
 </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
-        <translation type="unfinished">Chyba pri vyžiadaní platby</translation>
+        <translation type="unfinished">Napaka pri zahtevku za plačilo</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Nemôžeme spustiť Bitcoin: obsluha click-to-pay</translation>
+        <translation type="unfinished">Ni mogoče zagnati rokovalca plačilnih povezav tipa bitcoin:.</translation>
     </message>
     <message>
         <source>URI handling</source>
-        <translation type="unfinished">URI manipulácia</translation>
+        <translation type="unfinished">Rokovanje z URI</translation>
     </message>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">'bitcoin://' je neplatná URI. Použite 'bitcoin:'</translation>
+        <translation type="unfinished">'bitcoin://' ni veljaven URI. Namesto tega uporabite 'bitcoin:' .</translation>
     </message>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.
 Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
 If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
-        <translation type="unfinished">Nemôžem spracovať platbu pretože BIP70 nie je podporovaný.
-Kvôli bezpečnostným chybám v BIP70 sa odporúča ignorovať pokyny obchodníka na prepnutie peňaženky.
-Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibilné s BIP21.</translation>
+        <translation type="unfinished">Zahtevka za plačilo ne morem obdelati, ker BIP70 ni podprt.
+Zaradi široko razširjenih varnostih hib v BIP70 vam toplo priporočamo, da morebitnih navodil prodajalcev po zamenjavi denarnice ne upoštevate.
+Svetujemo, da prodajalca prosite, naj vam priskrbi URI na podlagi BIP21.</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI sa nedá analyzovať! To môže byť spôsobené neplatnou Bitcoin adresou alebo zle nastavenými vlastnosťami URI.</translation>
+        <translation type="unfinished">URI je nerazumljiv. Možno je, da je bitcoin-naslov neveljaven ali pa so parametri URI-ja napačno oblikovani.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished">Obsluha súboru s požiadavkou na platbu</translation>
+        <translation type="unfinished">Rokovanje z datoteko z zahtevkom za plačilo</translation>
     </message>
 </context>
 <context>
@@ -1897,313 +1907,313 @@ Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibiln�
     <message>
         <source>User Agent</source>
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
-        <translation type="unfinished">Aplikácia</translation>
+        <translation type="unfinished">Ime agenta</translation>
     </message>
     <message>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
-        <translation type="unfinished">Odozva</translation>
+        <translation type="unfinished">Odzivni čas (Ping)</translation>
     </message>
     <message>
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
-        <translation type="unfinished">Partneri</translation>
+        <translation type="unfinished">Soležnik</translation>
     </message>
     <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
-        <translation type="unfinished">Odoslané</translation>
+        <translation type="unfinished">Poslano</translation>
     </message>
     <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">Prijaté</translation>
+        <translation type="unfinished">Prejeto</translation>
     </message>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Naslov</translation>
     </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
-        <translation type="unfinished">Typ</translation>
+        <translation type="unfinished">Vrsta</translation>
     </message>
     <message>
         <source>Network</source>
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
-        <translation type="unfinished">Sieť</translation>
+        <translation type="unfinished">Omrežje</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image…</source>
-        <translation type="unfinished">&amp;Uložiť obrázok…</translation>
+        <translation type="unfinished">&amp;Shrani sliko ...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished">&amp;Kopírovať obrázok</translation>
+        <translation type="unfinished">&amp;Kopiraj sliko</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished">Výsledné URI je príliš dlhé, skúste skrátiť text pre popis alebo správu.</translation>
+        <translation type="unfinished">Nastali URI je predolg. Skušajte skrajšati besedilo v oznaki/sporočilu.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished">Chyba kódovania URI do QR Code.</translation>
+        <translation type="unfinished">Napaka pri kodiranju URI naslova v QR kodo.</translation>
     </message>
     <message>
         <source>QR code support not available.</source>
-        <translation type="unfinished">Nie je dostupná podpora QR kódov.</translation>
+        <translation type="unfinished">Podpora za QR kode ni na voljo.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation type="unfinished">Uložiť QR Code</translation>
+        <translation type="unfinished">Shrani QR kodo</translation>
     </message>
     <message>
         <source>PNG Image</source>
         <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
-        <translation type="unfinished">PNG obrázok</translation>
+        <translation type="unfinished">Slika PNG</translation>
     </message>
 </context>
 <context>
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>nie je k dispozícii</translation>
+        <translation>Neznano</translation>
     </message>
     <message>
         <source>Client version</source>
-        <translation>Verzia klienta</translation>
+        <translation>Različica odjemalca</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Informácie</translation>
+        <translation>&amp;Informacije</translation>
     </message>
     <message>
         <source>General</source>
-        <translation type="unfinished">Všeobecné</translation>
+        <translation type="unfinished">Splošno</translation>
     </message>
     <message>
         <source>Datadir</source>
-        <translation type="unfinished">Priečinok s dátami</translation>
+        <translation type="unfinished">Podatkovna mapa</translation>
     </message>
     <message>
         <source>To specify a non-default location of the data directory use the '%1' option.</source>
-        <translation type="unfinished">Ak chcete zadať miesto dátového adresára, ktoré nie je predvolené, použite voľbu '%1'.</translation>
+        <translation type="unfinished">Za izbiranje ne-privzete lokacije podatkovne mape uporabite možnost '%1'.</translation>
     </message>
     <message>
         <source>Blocksdir</source>
-        <translation type="unfinished">Priečinok s blokmi</translation>
+        <translation type="unfinished">Podatkovna mapa blokov</translation>
     </message>
     <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation type="unfinished">Ak chcete zadať miesto adresára pre bloky, ktoré nie je predvolené, použite voľbu '%1'.</translation>
+        <translation type="unfinished">Če želite določiti neprivzeto lokacijo podatkovne mape blokov, uporabite možnost '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Čas spustenia</translation>
+        <translation>Čas zagona</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Sieť</translation>
+        <translation>Omrežje</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Názov</translation>
+        <translation type="unfinished">Ime</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Počet pripojení</translation>
+        <translation>Število povezav</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Reťazec blokov</translation>
+        <translation>Veriga blokov</translation>
     </message>
     <message>
         <source>Memory Pool</source>
-        <translation type="unfinished">Pamäť Poolu</translation>
+        <translation type="unfinished">Čakalna vrsta transakcij</translation>
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation type="unfinished">Aktuálny počet transakcií</translation>
+        <translation type="unfinished">Trenutno število transakcij</translation>
     </message>
     <message>
         <source>Memory usage</source>
-        <translation type="unfinished">Využitie pamäte</translation>
+        <translation type="unfinished">Raba pomnilnika</translation>
     </message>
     <message>
         <source>Wallet: </source>
-        <translation type="unfinished">Peňaženka:</translation>
+        <translation type="unfinished">Denarnica:</translation>
     </message>
     <message>
         <source>(none)</source>
-        <translation type="unfinished">(žiadne)</translation>
+        <translation type="unfinished">(jih ni)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation type="unfinished">&amp;Vynulovať</translation>
+        <translation type="unfinished">&amp;Ponastavi</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation type="unfinished">Prijaté</translation>
+        <translation type="unfinished">Prejeto</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished">Odoslané</translation>
+        <translation type="unfinished">Poslano</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation type="unfinished">&amp;Partneri</translation>
+        <translation type="unfinished">&amp;Soležniki</translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation type="unfinished">Zablokovaní partneri</translation>
+        <translation type="unfinished">Blokirani soležniki</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation type="unfinished">Vyberte počítač partnera pre zobrazenie podrobností.</translation>
+        <translation type="unfinished">Izberite soležnika, o katerem si želite ogledati podrobnejše informacije.</translation>
     </message>
     <message>
         <source>Version</source>
-        <translation type="unfinished">Verzia</translation>
+        <translation type="unfinished">Različica</translation>
     </message>
     <message>
         <source>Starting Block</source>
-        <translation type="unfinished">Počiatočný blok</translation>
+        <translation type="unfinished">Začetni blok</translation>
     </message>
     <message>
         <source>Synced Headers</source>
-        <translation type="unfinished">Zosynchronizované hlavičky</translation>
+        <translation type="unfinished">Sinhronizirana zaglavja</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
-        <translation type="unfinished">Zosynchronizované bloky</translation>
+        <translation type="unfinished">Sinhronizirani bloki</translation>
     </message>
     <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
-        <translation type="unfinished">Mapovaný nezávislý - Autonómny Systém používaný na rozšírenie vzájomného výberu peerov.</translation>
+        <translation type="unfinished">Preslikani avtonomni sistem, uporabljan za raznoliko izbiro soležnikov.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
-        <translation type="unfinished">Mapovaný AS</translation>
+        <translation type="unfinished">Preslikani AS</translation>
     </message>
     <message>
         <source>User Agent</source>
-        <translation type="unfinished">Aplikácia</translation>
+        <translation type="unfinished">Ime agenta</translation>
     </message>
     <message>
         <source>Node window</source>
-        <translation type="unfinished">Okno uzlov</translation>
+        <translation type="unfinished">Okno vozlišča</translation>
     </message>
     <message>
         <source>Current block height</source>
-        <translation type="unfinished">Aktuálne číslo bloku</translation>
+        <translation type="unfinished">Višina trenutnega bloka</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished">Otvoriť %1 ladiaci výpis z aktuálnej zložky. Pre veľké súbory to môže chvíľu trvať.</translation>
+        <translation type="unfinished">Odpre %1 razhroščevalni dnevnik debug.log, ki se nahaja v trenutni podatkovni mapi. Če je datoteka velika, lahko postopek traja nekaj sekund.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
-        <translation type="unfinished">Zmenšiť písmo</translation>
+        <translation type="unfinished">Zmanjšaj velikost pisave</translation>
     </message>
     <message>
         <source>Increase font size</source>
-        <translation type="unfinished">Zväčšiť písmo</translation>
+        <translation type="unfinished">Povečaj velikost pisave</translation>
     </message>
     <message>
         <source>Permissions</source>
-        <translation type="unfinished">Povolenia</translation>
+        <translation type="unfinished">Pooblastila</translation>
     </message>
     <message>
         <source>The direction and type of peer connection: %1</source>
-        <translation type="unfinished">Smer a typ spojenia s partnerom: %1</translation>
+        <translation type="unfinished">Smer in vrsta povezave s soležnikom: %1</translation>
     </message>
     <message>
         <source>Direction/Type</source>
-        <translation type="unfinished">Smer/Typ</translation>
+        <translation type="unfinished">Smer/vrsta</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
-        <translation type="unfinished">Sieťový protokol, ktorým je pripojený tento partner: IPv4, IPv6, Onion, I2P, alebo CJDNS.</translation>
+        <translation type="unfinished">Protokol, po katerem je soležnik povezan: IPv4, IPv6, Onion, I2p ali CJDNS.</translation>
     </message>
     <message>
         <source>Services</source>
-        <translation type="unfinished">Služby</translation>
+        <translation type="unfinished">Storitve</translation>
     </message>
     <message>
         <source>Whether the peer requested us to relay transactions.</source>
-        <translation type="unfinished">Či nás partner požiadal o preposielanie transakcií.</translation>
+        <translation type="unfinished">Ali nas je soležnik zaprosil za posredovanje transakcij.</translation>
     </message>
     <message>
         <source>Wants Tx Relay</source>
-        <translation type="unfinished">Požaduje preposielanie transakcií</translation>
+        <translation type="unfinished">Želi posredovanje</translation>
     </message>
     <message>
         <source>High bandwidth BIP152 compact block relay: %1</source>
-        <translation type="unfinished">Preposielanie kompaktných blokov vysokou rýchlosťou podľa BIP152: %1</translation>
+        <translation type="unfinished">Posredovanje zgoščenih blokov po BIP152 prek visoke pasovne širine: %1</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
-        <translation type="unfinished">Vysoká rýchlosť</translation>
+        <translation type="unfinished">Visoka pasovna širina</translation>
     </message>
     <message>
         <source>Connection Time</source>
-        <translation type="unfinished">Dĺžka spojenia</translation>
+        <translation type="unfinished">Trajanje povezave</translation>
     </message>
     <message>
         <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
-        <translation type="unfinished">Uplynutý čas odkedy bol od tohto partnera prijatý nový blok s overenou platnosťou.</translation>
+        <translation type="unfinished">Čas, ki je pretekel, odkar smo od tega soležnika prejeli nov blok, ki je prestal začetno preverjanje veljavnosti.</translation>
     </message>
     <message>
         <source>Last Block</source>
-        <translation type="unfinished">Posledný blok</translation>
+        <translation type="unfinished">Zadnji blok</translation>
     </message>
     <message>
         <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
-        <translation type="unfinished">Uplynutý čas odkedy bola od tohto partnera prijatá nová transakcia do pamäte.</translation>
+        <translation type="unfinished">Čas, ki je pretekel, odkar smo od tega soležnika prejeli novo nepotrjeno transakcijo.</translation>
     </message>
     <message>
         <source>Last Tx</source>
-        <translation type="unfinished">Posledná transakcia</translation>
+        <translation type="unfinished">Zadnja tx</translation>
     </message>
     <message>
         <source>Last Send</source>
-        <translation type="unfinished">Posledné odoslanie</translation>
+        <translation type="unfinished">Nazadje oddano</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation type="unfinished">Posledné prijatie</translation>
+        <translation type="unfinished">Nazadnje prejeto</translation>
     </message>
     <message>
         <source>Ping Time</source>
-        <translation type="unfinished">Čas odozvy</translation>
+        <translation type="unfinished">Odzivni čas</translation>
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation type="unfinished">Trvanie aktuálnej požiadavky na odozvu.</translation>
+        <translation type="unfinished">Trajanje trenutnega pinga.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation type="unfinished">Čakanie na odozvu</translation>
+        <translation type="unfinished">Čakanje pinga</translation>
     </message>
     <message>
         <source>Min Ping</source>
-        <translation type="unfinished">Minimálna odozva</translation>
+        <translation type="unfinished">Min ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
-        <translation type="unfinished">Časový posun</translation>
+        <translation type="unfinished">Časovni odklon</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Čas posledného bloku</translation>
+        <translation>Čas zadnjega bloka</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Otvoriť</translation>
+        <translation>&amp;Odpri</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -2211,828 +2221,808 @@ Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibiln�
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished">&amp;Sieťová prevádzka</translation>
+        <translation type="unfinished">&amp;Omrežni promet</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished">Celkovo:</translation>
+        <translation type="unfinished">Skupaj</translation>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Súbor záznamu ladenia</translation>
+        <translation>Razhroščevalni dnevnik</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Vymazať konzolu</translation>
+        <translation>Počisti konzolo</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished">Dnu:</translation>
+        <translation type="unfinished">Dohodnih:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation type="unfinished">Von:</translation>
+        <translation type="unfinished">Odhodnih:</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
-        <translation type="unfinished">Prichádzajúce: iniciované partnerom</translation>
+        <translation type="unfinished">Dohodna: sprožil jo je soležnik</translation>
     </message>
     <message>
         <source>Outbound Full Relay: default</source>
-        <translation type="unfinished">Odchádzajúce plné preposielanie: predvolené</translation>
+        <translation type="unfinished">Odhodno polno posredovanje: privzeto</translation>
     </message>
     <message>
         <source>Outbound Block Relay: does not relay transactions or addresses</source>
-        <translation type="unfinished">Odchádzajúce preposielanie blokov: nepreposiela transakcie alebo adresy</translation>
+        <translation type="unfinished">Odhodno posredovanje blokov: ne posreduje transakcij in naslovov</translation>
     </message>
     <message>
         <source>Outbound Manual: added using RPC %1 or %2/%3 configuration options</source>
-        <translation type="unfinished">Odchádzajúce manuálne: pridané pomocou RPC %1 alebo konfiguračnými voľbami %2/%3</translation>
+        <translation type="unfinished">Odhodna ročna: dodana po RPC s konfiguracijskimi možnostmi %1 ali %2/%3</translation>
     </message>
     <message>
         <source>Outbound Feeler: short-lived, for testing addresses</source>
-        <translation type="unfinished">Odchádzajúci Feeler: krátkodobé, pre testovanie adries</translation>
+        <translation type="unfinished">Odhodna tipalka: kratkoživa, za testiranje naslovov</translation>
     </message>
     <message>
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
-        <translation type="unfinished">Odchádzajúce získavanie adries: krátkodobé, pre dohodnutie adries</translation>
+        <translation type="unfinished">Odhodna dostavljalka naslovov: krakoživa, zaproša za naslove</translation>
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
-        <translation type="unfinished">zvolili sme partnera pre rýchle preposielanie</translation>
+        <translation type="unfinished">soležnika smo izbrali za posredovanje na visoki pasovni širini</translation>
     </message>
     <message>
         <source>the peer selected us for high bandwidth relay</source>
-        <translation type="unfinished">partner nás zvolil pre rýchle preposielanie</translation>
+        <translation type="unfinished">soležnik nas je izbral za posredovanje na visoki pasovni širini</translation>
     </message>
     <message>
         <source>no high bandwidth relay selected</source>
-        <translation type="unfinished">nebolo zvolené rýchle preposielanie</translation>
+        <translation type="unfinished">ni posredovanja na visoki pasovni širini</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation type="unfinished">&amp;Odpojiť</translation>
+        <translation type="unfinished">&amp;Prekini povezavo</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
-        <translation type="unfinished">1 &amp;hodinu</translation>
+        <translation type="unfinished">1 &amp;ura</translation>
     </message>
     <message>
         <source>1 d&amp;ay</source>
-        <translation type="unfinished">1 &amp;deň</translation>
+        <translation type="unfinished">1 d&amp;an</translation>
     </message>
     <message>
         <source>1 &amp;week</source>
-        <translation type="unfinished">1 &amp;týždeň</translation>
+        <translation type="unfinished">1 &amp;teden</translation>
     </message>
     <message>
         <source>1 &amp;year</source>
-        <translation type="unfinished">1 &amp;rok</translation>
+        <translation type="unfinished">1 &amp;leto</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
-        <translation type="unfinished">&amp;Zrušiť zákaz</translation>
+        <translation type="unfinished">&amp;Odblokiraj</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation type="unfinished">Sieťová aktivita zakázaná</translation>
+        <translation type="unfinished">Omrežna aktivnost onemogočena.</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
-        <translation type="unfinished">Príkaz sa vykonáva bez peňaženky</translation>
+        <translation type="unfinished">Izvajam ukaz brez denarnice</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
-        <translation type="unfinished">Príkaz sa vykonáva s použitím peňaženky "%1"</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.
-Use up and down arrows to navigate history, and %2 to clear screen.
-Use %3 and %4 to increase or decrease the font size.
-Type %5 for an overview of available commands.
-For more information on using this console, type %6.
-
-%7WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.%8</source>
-        <extracomment>RPC console welcome message. Placeholders %7 and %8 are style tags for the warning content, and they are not space separated from the rest of the text intentionally.</extracomment>
-        <translation type="unfinished">Vitajte v RPC konzole %1.
-Použite šípky hore a dolu pre posun v histórii, a %2 pre výmaz obrazovky.
-Použite %3 a %4 pre zväčenie alebo zmenšenie veľkosti písma.
-Napíšte %5 pre prehľad dostupných príkazov.
-Pre viac informácií o používaní tejto konzoly napíšte %6.
-
-%7Varovanie: Podvodníci sú aktívni, nabádajú používateľov písať sem príkazy, čím ukradnú obsah ich peňaženky. Nepoužívajte túto konzolu ak plne nerozumiete dôsledkom príslušného príkazu.%8</translation>
+        <translation type="unfinished">Izvajam ukaz v denarnici "%1"</translation>
     </message>
     <message>
         <source>Executing…</source>
         <extracomment>A console message indicating an entered command is currently being executed.</extracomment>
-        <translation type="unfinished">Vykonáva sa…</translation>
+        <translation type="unfinished">Izvajam...</translation>
     </message>
     <message>
         <source>(peer: %1)</source>
-        <translation type="unfinished">(partner: %1)</translation>
+        <translation type="unfinished">(soležnik: %1)</translation>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">cez %1</translation>
+        <translation type="unfinished">preko %1</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation type="unfinished">Áno</translation>
+        <translation type="unfinished">Da</translation>
     </message>
     <message>
         <source>No</source>
-        <translation type="unfinished">Nie</translation>
+        <translation type="unfinished">Ne</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Do</translation>
+        <translation type="unfinished">Prejemnik</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Od</translation>
+        <translation type="unfinished">Pošiljatelj</translation>
     </message>
     <message>
         <source>Ban for</source>
-        <translation type="unfinished">Zákaz pre</translation>
+        <translation type="unfinished">Blokiraj za</translation>
     </message>
     <message>
         <source>Never</source>
-        <translation type="unfinished">Nikdy</translation>
+        <translation type="unfinished">Nikoli</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation type="unfinished">neznámy</translation>
+        <translation type="unfinished">Neznano</translation>
     </message>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished">&amp;Suma:</translation>
+        <translation type="unfinished">&amp;Znesek:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation type="unfinished">&amp;Popis:</translation>
+        <translation type="unfinished">&amp;Oznaka:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation type="unfinished">&amp;Správa:</translation>
+        <translation type="unfinished">&amp;Sporočilo:</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Pridať voliteľnú správu k výzve na zaplatenie, ktorá sa zobrazí keď bude výzva otvorená. Poznámka: Správa nebude poslaná s platbou cez sieť Bitcoin.</translation>
+        <translation type="unfinished">Neobvezno sporočilo kot priponka zahtevku za plačilo, ki bo prikazano, ko bo zahtevek odprt. Opomba: Opravljeno plačilo v omrežju bitcoin tega sporočila ne bo vsebovalo.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished">Voliteľný popis ktorý sa pridá k tejto novej prijímajúcej adrese.</translation>
+        <translation type="unfinished">Neobvezna oznaka novega sprejemnega naslova.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished">Použite tento formulár pre vyžiadanie platby. Všetky polia sú &lt;b&gt;voliteľné&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished">Voliteľná požadovaná suma. Nechajte prázdne alebo nulu ak nepožadujete určitú sumu.</translation>
+        <translation type="unfinished">S tem obrazcem ustvarite nov zahtevek za plačilo. Vsa polja so &lt;b&gt;neobvezna&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
-        <translation type="unfinished">Voliteľný popis ktorý sa pridá k tejto novej prijímajúcej adrese (pre jednoduchšiu identifikáciu). Tento popis je taktiež pridaný do výzvy k platbe.</translation>
+        <translation type="unfinished">Neobvezna oznaka, povezana z novim prejemnim naslovom. Uporabite jo lahko za prepoznavo plačila. Zapisana bo tudi v zahtevek za plačilo.</translation>
     </message>
     <message>
         <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
-        <translation type="unfinished">Voliteľná správa ktorá bude pridaná k tejto platobnej výzve a môže byť zobrazená odosielateľovi.</translation>
+        <translation type="unfinished">Neobvezna oznaka, ki se shrani v zahtevek za plačilo in se lahko prikaže plačniku.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
-        <translation type="unfinished">&amp;Vytvoriť novú prijímaciu adresu</translation>
+        <translation type="unfinished">&amp;Ustvari nov prejemni naslov</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Vyčistiť všetky polia formulára.</translation>
+        <translation type="unfinished">Počisti vsa polja v obrazcu.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation type="unfinished">Vyčistiť</translation>
+        <translation type="unfinished">Počisti</translation>
     </message>
     <message>
         <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation type="unfinished">Natívne segwit adresy (Bech32 or BIP-173) znižujú Vaše budúce transakčné poplatky a ponúkajú lepšiu ochranu pred preklepmi, avšak staré peňaženky ich nepodporujú. Ak je toto pole nezaškrtnuté, bude vytvorená adresa kompatibilná so staršími peňaženkami.</translation>
+        <translation type="unfinished">Lastni naslovi segwit (Bech32 ali BIP-173) znižajo vaše prihodnje transakcijske stroške in nudijo boljšo zaščito pred tipkarskimi škrati, vendar jih stare denarnice ne podpirajo. Če polja ne označite, bo namesto tega ustvarjen naslov, združljiv s starejšimi denarnicami.</translation>
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
-        <translation type="unfinished">Generovať natívnu segwit adresu (Bech32)</translation>
+        <translation type="unfinished">Ustvari lastni segwit (Bech32) naslov</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished">História vyžiadaných platieb</translation>
+        <translation type="unfinished">Zgodovina zahtevkov za plačilo</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished">Zobraz zvolenú požiadavku (urobí to isté ako dvoj-klik na záznam)</translation>
+        <translation type="unfinished">Prikaz izbranega zahtevka. (Isto funkcijo opravi dvojni klik na zapis.)</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation type="unfinished">Zobraziť</translation>
+        <translation type="unfinished">Prikaži</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished">Odstrániť zvolené záznamy zo zoznamu</translation>
+        <translation type="unfinished">Odstrani označene vnose iz seznama</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished">Odstrániť</translation>
+        <translation type="unfinished">Odstrani</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">Kopírovať &amp;URI</translation>
+        <translation type="unfinished">Kopiraj &amp;URl</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;Kopírovať adresu</translation>
+        <translation type="unfinished">&amp;Kopiraj naslov</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopírovať &amp;popis</translation>
+        <translation type="unfinished">Kopiraj &amp;oznako</translation>
     </message>
     <message>
         <source>Copy &amp;message</source>
-        <translation type="unfinished">Kopírovať &amp;správu</translation>
+        <translation type="unfinished">Kopiraj &amp;sporočilo</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopírovať &amp;sumu</translation>
+        <translation type="unfinished">Kopiraj &amp;znesek</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Nepodarilo sa odomknúť peňaženku.</translation>
+        <translation type="unfinished">Denarnice ni bilo mogoče odkleniti.</translation>
     </message>
     <message>
         <source>Could not generate new %1 address</source>
-        <translation type="unfinished">Nepodarilo sa vygenerovať novú %1 adresu</translation>
+        <translation type="unfinished">Ne morem ustvariti novega %1 naslova</translation>
     </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Request payment to …</source>
-        <translation type="unfinished">Požiadať o platbu pre …</translation>
+        <translation type="unfinished">Zahtevaj plačilo prejmeniku ...</translation>
     </message>
     <message>
         <source>Address:</source>
-        <translation type="unfinished">Adresa:</translation>
+        <translation type="unfinished">Naslov:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Suma:</translation>
+        <translation type="unfinished">Znesek:</translation>
     </message>
     <message>
         <source>Label:</source>
-        <translation type="unfinished">Popis:</translation>
+        <translation type="unfinished">Oznaka:</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">Správa:</translation>
+        <translation type="unfinished">Sporočilo:</translation>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">Peňaženka:</translation>
+        <translation type="unfinished">Denarnica:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">Kopírovať &amp;URI</translation>
+        <translation type="unfinished">Kopiraj &amp;URl</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished">Kopírovať &amp;adresu</translation>
+        <translation type="unfinished">Kopiraj &amp;naslov</translation>
     </message>
     <message>
         <source>&amp;Verify</source>
-        <translation type="unfinished">O&amp;veriť</translation>
+        <translation type="unfinished">Pre&amp;veri</translation>
     </message>
     <message>
         <source>Verify this address on e.g. a hardware wallet screen</source>
-        <translation type="unfinished">Overiť túto adresu napr. na obrazovke hardvérovej peňaženky</translation>
+        <translation type="unfinished">Preveri ta naslov, n.pr. na zaslonu hardverske naprave</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
-        <translation type="unfinished">&amp;Uložiť obrázok…</translation>
+        <translation type="unfinished">&amp;Shrani sliko ...</translation>
     </message>
     <message>
         <source>Payment information</source>
-        <translation type="unfinished">Informácia o platbe</translation>
+        <translation type="unfinished">Informacije o plačilu</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
-        <translation type="unfinished">Vyžiadať platbu pre %1</translation>
+        <translation type="unfinished">Zaprosi za plačilo na naslov %1</translation>
     </message>
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dátum</translation>
+        <translation type="unfinished">Datum</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Popis</translation>
+        <translation type="unfinished">Oznaka</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Správa</translation>
+        <translation type="unfinished">Sporočilo</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(bez popisu)</translation>
+        <translation type="unfinished">(brez oznake)</translation>
     </message>
     <message>
         <source>(no message)</source>
-        <translation type="unfinished">(žiadna správa)</translation>
+        <translation type="unfinished">(brez sporočila)</translation>
     </message>
     <message>
         <source>(no amount requested)</source>
-        <translation type="unfinished">(nepožadovaná žiadna suma)</translation>
+        <translation type="unfinished">(brez zneska)</translation>
     </message>
     <message>
         <source>Requested</source>
-        <translation type="unfinished">Požadované</translation>
+        <translation type="unfinished">Zahtevan znesek</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Poslať mince</translation>
+        <translation>Pošlji kovance</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished">Možnosti kontroly mincí</translation>
+        <translation type="unfinished">Upravljanje s kovanci</translation>
     </message>
     <message>
         <source>automatically selected</source>
-        <translation type="unfinished">automaticky vybrané</translation>
+        <translation type="unfinished">samodejno izbrani</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Nedostatok prostriedkov!</translation>
+        <translation type="unfinished">Premalo sredstev!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation type="unfinished">Množstvo:</translation>
+        <translation type="unfinished">Št. vhodov:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation type="unfinished">Bajtov:</translation>
+        <translation type="unfinished">Število bajtov:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation type="unfinished">Suma:</translation>
+        <translation type="unfinished">Znesek:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation type="unfinished">Poplatok:</translation>
+        <translation type="unfinished">Provizija:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation type="unfinished">Po poplatku:</translation>
+        <translation type="unfinished">Po proviziji:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Zmena:</translation>
+        <translation type="unfinished">Vračilo:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished">Ak aktivované ale adresa pre výdavok je prázdna alebo neplatná, výdavok bude poslaný na novovytvorenú adresu.</translation>
+        <translation type="unfinished">Če to vključite, nato pa vnesete neveljaven naslov za vračilo ali pa pustite polje prazno, bo vračilo poslano na novoustvarjen naslov.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation type="unfinished">Vlastná adresa zmeny</translation>
+        <translation type="unfinished">Naslov za vračilo drobiža po meri</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation type="unfinished">Poplatok za transakciu:</translation>
+        <translation type="unfinished">Provizija:</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation type="unfinished">Použitie núdzového poplatku („fallbackfee“) môže vyústiť v transakciu, ktoré bude trvat hodiny nebo dny (prípadne večnosť), kým bude potvrdená. Zvážte preto ručné nastaveníe poplatku, prípadne počkajte, až sa Vám kompletne zvaliduje reťazec blokov.</translation>
+        <translation type="unfinished">Uporaba nadomestne provizije lahko povzroči, da bo transakcija potrjena šele po več urah ali dneh (ali morda sploh nikoli). Razmislite o ročni nastavitvi provizije ali počakajte, da se preveri celotna veriga.</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
-        <translation type="unfinished">Upozornenie: teraz nie je možné poplatok odhadnúť.</translation>
+        <translation type="unfinished">Opozorilo: ocena provizije trenutno ni mogoča.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
-        <translation type="unfinished">za kilobajt</translation>
+        <translation type="unfinished">na kilobajt</translation>
     </message>
     <message>
         <source>Hide</source>
-        <translation type="unfinished">Skryť</translation>
+        <translation type="unfinished">Skrij</translation>
     </message>
     <message>
         <source>Recommended:</source>
-        <translation type="unfinished">Odporúčaný:</translation>
+        <translation type="unfinished">Priporočena:</translation>
     </message>
     <message>
         <source>Custom:</source>
-        <translation type="unfinished">Vlastný:</translation>
+        <translation type="unfinished">Po meri:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Poslať viacerým príjemcom naraz</translation>
+        <translation>Pošlji več prejemnikom hkrati</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>&amp;Pridať príjemcu</translation>
+        <translation>Dodaj &amp;prejemnika</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished">Vyčistiť všetky polia formulára.</translation>
+        <translation type="unfinished">Počisti vsa polja v obrazcu.</translation>
     </message>
     <message>
         <source>Inputs…</source>
-        <translation type="unfinished">Vstupy…</translation>
+        <translation type="unfinished">Vhodi ...</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation type="unfinished">Prach:</translation>
+        <translation type="unfinished">Prah:</translation>
     </message>
     <message>
         <source>Choose…</source>
-        <translation type="unfinished">Zvoliť…</translation>
+        <translation type="unfinished">Izberi ...</translation>
     </message>
     <message>
         <source>Hide transaction fee settings</source>
-        <translation type="unfinished">Skryť nastavenie poplatkov transakcie</translation>
+        <translation type="unfinished">Skrij nastavitve transakcijske provizije</translation>
     </message>
     <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
 
 Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
-        <translation type="unfinished">Špecifikujte vlastný poplatok za kB (1000 bajtov) virtuálnej veľkosti transakcie.
+        <translation type="unfinished">Določite poljubno provizijo na kB (1000 bajtov) navidezne velikosti transakcije.
 
-Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 satoshi za kB" pri veľkosti transakcie 500 bajtov (polovica z 1 kB) by stál len 50 satoshi.</translation>
+Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB" za transakcijo velikosti 500 navideznih bajtov (polovica enega kvB) znašala le 50 satošijev.</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation type="unfinished">Ak je v blokoch menej objemu transakcií ako priestoru, ťažiari ako aj vysielacie uzly, môžu uplatniť minimálny poplatok. Platiť iba minimálny poplatok je v poriadku, ale uvedomte si, že to môže mať za následok transakciu, ktorá sa nikdy nepotvrdí, akonáhle je väčší dopyt po bitcoinových transakciách, než dokáže sieť spracovať.</translation>
+        <translation type="unfinished">Kadar je v blokih manj prostora, kot je zahtev po transakcijah, lahko rudarji in posredovalna vozlišča zahtevajo minimalno provizijo. V redu, če plačate samo to minimalno provizijo, vendar se zavedajte, da se potem transakcija lahko nikoli ne potrdi, če bo povpraševanje po transakcijah večje, kot ga omrežje lahko obdela.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
-        <translation type="unfinished">Príliš nízky poplatok môže mať za následok nikdy nepotvrdenú transakciu (prečítajte si popis)</translation>
+        <translation type="unfinished">Transakcija s prenizko provizijo se lahko nikoli ne potrdi (preberite namig)</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
-        <translation type="unfinished">(Smart poplatok ešte nie je inicializovaný. Toto zvyčajne vyžaduje niekoľko blokov…)</translation>
+        <translation type="unfinished">(Samodejni obračun provizije še ni pripravljen. Izračun običajno traja nekaj blokov ...)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
-        <translation type="unfinished">Cieľový čas potvrdenia:</translation>
+        <translation type="unfinished">Ciljni čas do potrditve:</translation>
     </message>
     <message>
         <source>Enable Replace-By-Fee</source>
-        <translation type="unfinished">Povoliť dodatočné navýšenie poplatku (tzv. „Replace-By-Fee“)</translation>
+        <translation type="unfinished">Omogoči Replace-By-Fee</translation>
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation type="unfinished">S dodatočným navýšením poplatku (BIP-125, tzv. „Replace-By-Fee“), môžete zvýšiť poplatok aj po odoslaní. Bez toho, by mohol byť navrhnutý väčší transakčný poplatok, aby kompenzoval zvýšené riziko omeškania transakcie.</translation>
+        <translation type="unfinished">"Replace-By-Fee" (RBF, BIP-125, "Povozi s provizijo") omogoča, da povečate provizijo za transakcijo po tem, ko je bila transakcija že poslana. Če tega ne izberete, se lahko priporoči višja provizija, ker je potem tveganje zamude pri potrjevanju večje.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Zmazať všetko</translation>
+        <translation>Počisti &amp;vse</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Zostatok:</translation>
+        <translation>Dobroimetje:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Potvrďte odoslanie</translation>
+        <translation>Potrdi pošiljanje</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>&amp;Odoslať</translation>
+        <translation>&amp;Pošlji</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Kopírovať množstvo</translation>
+        <translation type="unfinished">Kopiraj količino</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Kopírovať sumu</translation>
+        <translation type="unfinished">Kopiraj znesek</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation type="unfinished">Kopírovať poplatok</translation>
+        <translation type="unfinished">Kopiraj provizijo</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Kopírovať po poplatkoch</translation>
+        <translation type="unfinished">Kopiraj znesek po proviziji</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Kopírovať bajty</translation>
+        <translation type="unfinished">Kopiraj bajte</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation type="unfinished">Kopírovať prach</translation>
+        <translation type="unfinished">Kopiraj prah</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Kopírovať zmenu</translation>
+        <translation type="unfinished">Kopiraj vračilo</translation>
     </message>
     <message>
         <source>%1 (%2 blocks)</source>
-        <translation type="unfinished">%1 (%2 bloky(ov))</translation>
+        <translation type="unfinished">%1 (%2 blokov)</translation>
     </message>
     <message>
         <source>Sign on device</source>
         <extracomment>"device" usually means a hardware wallet</extracomment>
-        <translation type="unfinished">Podpísať na zariadení</translation>
+        <translation type="unfinished">Podpiši na napravi</translation>
     </message>
     <message>
         <source>Connect your hardware wallet first.</source>
-        <translation type="unfinished">Najprv pripojte hardvérovú peňaženku.</translation>
+        <translation type="unfinished">Najprej povežite svojo hardversko denarnico.</translation>
     </message>
     <message>
         <source>Set external signer script path in Options -&gt; Wallet</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Nastavte cestu ku skriptu externého podpisovateľa v Možnosti -&gt; Peňaženka</translation>
+        <translation type="unfinished">Mesto skripte zunanjega podpisnika nastavite v Možnosti &gt; Denarnica.</translation>
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>
-        <translation type="unfinished">Vy&amp;tvoriť bez podpisu</translation>
+        <translation type="unfinished">Ustvari n&amp;epodpisano</translation>
     </message>
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Vytvorí čiastočne podpísanú Bitcoin transakciu (Partially Signed Bitcoin Transaction - PSBT) na použitie napríklad s offline %1 peňaženkou alebo v hardvérovej peňaženke kompatibilnej s PSBT.</translation>
+        <translation type="unfinished">Ustvari delno podpisano bitcoin-transakcijo (DPBT, angl. PSBT), ki jo lahko kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
     </message>
     <message>
         <source> from wallet '%1'</source>
-        <translation type="unfinished"> z peňaženky '%1'</translation>
+        <translation type="unfinished"> iz denarnice '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
-        <translation type="unfinished">%1 do '%2'</translation>
+        <translation type="unfinished">%1 v '%2'</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation type="unfinished">%1 do %2</translation>
+        <translation type="unfinished">%1 v %2</translation>
     </message>
     <message>
         <source>Do you want to draft this transaction?</source>
-        <translation type="unfinished">Chcete naplánovať túto transakciu?</translation>
+        <translation type="unfinished">Želite shraniti to transakcijo kot osnutek?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished">Určite chcete odoslať transakciu?</translation>
+        <translation type="unfinished">Ali ste prepričani, da želite poslati sredstva?</translation>
     </message>
     <message>
         <source>To review recipient list click "Show Details…"</source>
-        <translation type="unfinished">Pre kontrolu zoznamu príjemcov kliknite "Zobraziť detaily…"</translation>
+        <translation type="unfinished">Za pregled sezama prejemnikov kliknite na "Pokaži podrobnosti..."</translation>
     </message>
     <message>
         <source>Create Unsigned</source>
-        <translation type="unfinished">Vytvoriť bez podpisu</translation>
+        <translation type="unfinished">Ustvari nepodpisano</translation>
     </message>
     <message>
         <source>Sign and send</source>
-        <translation type="unfinished">Podpísať a odoslať</translation>
+        <translation type="unfinished">Podpiši in pošlji</translation>
     </message>
     <message>
         <source>Sign failed</source>
-        <translation type="unfinished">Podpisovanie neúspešné</translation>
+        <translation type="unfinished">Podpisovanje spodletelo</translation>
     </message>
     <message>
         <source>External signer not found</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Externý podpisovateľ sa nenašiel</translation>
+        <translation type="unfinished">Ne najdem zunanjega podpisnika</translation>
     </message>
     <message>
         <source>External signer failure</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Externý podpisovateľ zlyhal</translation>
+        <translation type="unfinished">Težava pri zunanjem podpisniku</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">Uložiť údaje z transakcie</translation>
+        <translation type="unfinished">Shrani podatke transakcije</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">Čiastočne podpísaná transakcia (binárna)</translation>
+        <translation type="unfinished">Delno podpisana transakcija (binarno)</translation>
     </message>
     <message>
         <source>PSBT saved</source>
-        <translation type="unfinished">PSBT uložená</translation>
+        <translation type="unfinished">DPBT shranjena</translation>
     </message>
     <message>
         <source>External balance:</source>
-        <translation type="unfinished">Externý zostatok:</translation>
+        <translation type="unfinished">Zunanje dobroimetje:</translation>
     </message>
     <message>
         <source>or</source>
-        <translation type="unfinished">alebo</translation>
+        <translation type="unfinished">ali</translation>
     </message>
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation type="unfinished">Poplatok môžete navýšiť neskôr (vysiela sa "Replace-By-Fee" - nahradenie poplatkom, BIP-125).</translation>
+        <translation type="unfinished">Provizijo lahko zvišate kasneje (vsebuje Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Prečítajte si prosím svoj návrh transakcie. Výsledkom bude čiastočne podpísaná bitcoinová transakcia (PSBT), ktorú môžete uložiť alebo skopírovať a potom podpísať napr. cez offline peňaženku %1 alebo hardvérovú peňaženku kompatibilnú s PSBT.</translation>
+        <translation type="unfinished">Prosimo, preglejte predlog za transakcijo. Ustvarjena bo delno podpisana bitcoin-transakcija (DPBT), ki jo lahko shranite ali kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
-        <translation type="unfinished">Prosím, skontrolujte Vašu transakciu.</translation>
+        <translation type="unfinished">Prosimo, preglejte svojo transakcijo.</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Transakčný poplatok</translation>
+        <translation type="unfinished">Provizija transakcije</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
-        <translation type="unfinished">Nevysiela sa "Replace-By-Fee" - nahradenie poplatkom, BIP-125.</translation>
+        <translation type="unfinished">Ne vsebuje Replace-By-Fee, BIP-125</translation>
     </message>
     <message>
         <source>Total Amount</source>
-        <translation type="unfinished">Celková suma</translation>
+        <translation type="unfinished">Skupni znesek</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">Potvrďte odoslanie mincí</translation>
+        <translation type="unfinished">Potrdi pošiljanje</translation>
     </message>
     <message>
         <source>Confirm transaction proposal</source>
-        <translation type="unfinished">Potvrdiť návrh transakcie</translation>
+        <translation type="unfinished">Potrdi predlog transakcije</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
-        <translation type="unfinished">Iba sledovaný zostatok:</translation>
+        <translation type="unfinished">Opazovano dobroimetje:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation type="unfinished">Adresa príjemcu je neplatná. Prosím, overte ju.</translation>
+        <translation type="unfinished">Naslov prejemnika je neveljaven. Prosimo, preverite.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished">Suma na úhradu musí byť väčšia ako 0.</translation>
+        <translation type="unfinished">Znesek plačila mora biti večji od 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished">Suma je vyššia ako Váš zostatok.</translation>
+        <translation type="unfinished">Znesek presega vaše dobroimetje.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Celková suma prevyšuje Váš zostatok ak sú započítané aj transakčné poplatky %1.</translation>
+        <translation type="unfinished">Celotni znesek z vključeno provizijo %1 je višji od vašega dobroimetja.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation type="unfinished">Našla sa duplicitná adresa: každá adresa by sa mala použiť len raz.</translation>
+        <translation type="unfinished">Naslov je že bil uporabljen. Vsak naslov naj bi se uporabil samo enkrat.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished">Vytvorenie transakcie zlyhalo!</translation>
+        <translation type="unfinished">Transakcije ni bilo mogoče ustvariti!</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation type="unfinished">Poplatok vyšší ako %1 sa považuje za neprimerane vysoký.</translation>
+        <translation type="unfinished">Provizija, ki je večja od %1, velja za nesmiselno veliko.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation type="unfinished">Vypršala platnosť požiadavky na platbu.</translation>
+        <translation type="unfinished">Zahtevek za plačilo je potekel.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform>Odhadované potvrdenie za %n blok.</numerusform>
-            <numerusform>Odhadované potvrdenie za %n bloky.</numerusform>
-            <numerusform>Odhadované potvrdenie za %n blokov.</numerusform>
+            <numerusform>Ocenjen pričetek potrjevanja v naslednjem bloku.</numerusform>
+            <numerusform>Ocenjen pričetek potrjevanja v naslednjih dveh blokih.</numerusform>
+            <numerusform>Ocenjen pričetek potrjevanja v naslednjih %n blokih.</numerusform>
+            <numerusform>Ocenjen pričetek potrjevanja v naslednjih %n blokih.</numerusform>
         </translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Varovanie: Neplatná Bitcoin adresa</translation>
+        <translation type="unfinished">Opozorilo: Neveljaven bitcoin-naslov</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished">UPOZORNENIE: Neznáma výdavková adresa</translation>
+        <translation type="unfinished">Opozorilo: Neznan naslov za vračilo drobiža</translation>
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation type="unfinished">Potvrďte vlastnú výdavkovú adresu</translation>
+        <translation type="unfinished">Potrdi naslov za vračilo drobiža po meri</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation type="unfinished">Zadaná adresa pre výdavok nie je súčasťou tejto peňaženky. Časť alebo všetky peniaze z peňaženky môžu byť odoslané na túto adresu. Ste si istý?</translation>
+        <translation type="unfinished">Naslov, ki ste ga izbrali za vračilo, ne pripada tej denarnici. Na ta naslov bodo lahko poslana katerakoli ali vsa sredstva v vaši denarnici. Ali ste prepričani?</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(bez popisu)</translation>
+        <translation type="unfinished">(brez oznake)</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>Su&amp;ma:</translation>
+        <translation>&amp;Znesek:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Zapla&amp;tiť:</translation>
+        <translation>&amp;Prejemnik plačila:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Popis:</translation>
+        <translation>&amp;Oznaka:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Vybrať predtým použitú adresu</translation>
+        <translation type="unfinished">Izberite enega od že uporabljenih naslovov</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Zvoľte adresu kam poslať platbu</translation>
+        <translation type="unfinished">Bitcoin-naslov, na katerega bo plačilo poslano</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Vložiť adresu zo schránky</translation>
+        <translation>Prilepite naslov iz odložišča</translation>
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation type="unfinished">Odstrániť túto položku</translation>
+        <translation type="unfinished">Odstrani ta vnos</translation>
     </message>
     <message>
         <source>The amount to send in the selected unit</source>
-        <translation type="unfinished">Suma na odoslanie vo vybranej mene</translation>
+        <translation type="unfinished">Znesek za pošiljanje v izbrani enoti</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Poplatok sa odpočíta od čiastky, ktorú odosielate. Príjemca dostane menej bitcoinov ako zadáte. Ak je vybraných viacero príjemcov, poplatok je rozdelený rovným dielom.</translation>
+        <translation type="unfinished">Znesek plačila bo zmanjšan za znesek provizije. Prejemnik bo prejel manjši znesek, kot je bil vnešen. Če je prejemnikov več, bo provizija med njih enakomerno porazdeljena.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation type="unfinished">Odpočítať poplatok od s&amp;umy</translation>
+        <translation type="unfinished">O&amp;dštej provizijo od zneska</translation>
     </message>
     <message>
         <source>Use available balance</source>
-        <translation type="unfinished">Použiť dostupné zdroje</translation>
+        <translation type="unfinished">Uporabi celotno razpoložljivo dobroimetje</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation type="unfinished">Správa:</translation>
+        <translation type="unfinished">Sporočilo:</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation type="unfinished">Toto je neoverená výzva k platbe.</translation>
+        <translation type="unfinished">Ta zahtevek za plačilo je neoverjen.</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
-        <translation type="unfinished">Toto je overená výzva k platbe.</translation>
+        <translation type="unfinished">Ta zahtevek za plačilo je overjen.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished">Vložte popis pre túto adresu aby sa uložila do zoznamu použitých adries</translation>
+        <translation type="unfinished">Če vnesete oznako za zgornji naslov, se bo skupaj z naslovom shranila v imenik že uporabljenih naslovov</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Správa ktorá bola pripojená k bitcoin: URI a ktorá bude uložená s transakcou pre Vaše potreby. Poznámka: Táto správa nebude poslaná cez sieť Bitcoin.</translation>
+        <translation type="unfinished">Sporočilo, ki je bilo pripeto na URI tipa bitcoin: in bo shranjeno skupaj s podatki o transakciji. Opomba: Sporočilo ne bo poslano preko omrežja Bitcoin.</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation type="unfinished">Platba pre:</translation>
+        <translation type="unfinished">Prejemnik:</translation>
     </message>
     <message>
         <source>Memo:</source>
-        <translation type="unfinished">Poznámka:</translation>
+        <translation type="unfinished">Opomba:</translation>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Podpisy - Podpísať / Overiť správu</translation>
+        <translation>Podpiši / preveri sporočilo</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Podpísať Správu</translation>
+        <translation>&amp;Podpiši sporočilo</translation>
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Môžete podpísať správy svojou adresou a dokázať, že viete prijímať mince zaslané na túto adresu. Buďte však opatrní a podpíšte len podrobné prehlásenia, s ktorými plne súhlasíte, nakoľko útoky typu "phishing" Vás môžu lákať k podpísaniu nejasných alebo príliš všeobecných tvrdení čím prevezmú vašu identitu.</translation>
+        <translation type="unfinished">S svojimi naslovi lahko podpisujete sporočila ali dogovore in s tem dokazujete, da na teh naslovih lahko prejemate kovance. Bodite previdni in ne podpisujte ničesar nejasnega ali naključnega, ker vas zlikovci preko ribarjenja (phishing) lahko prelisičijo, da na njih prepišete svojo identiteto. Podpisujte samo podrobno opisane izjave, s katerimi se strinjate.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Bitcoin adresa pre podpísanie správy s</translation>
+        <translation type="unfinished">Bitcoin-naslov, s katerim podpisujete sporočilo</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation type="unfinished">Vybrať predtým použitú adresu</translation>
+        <translation type="unfinished">Izberite enega od že uporabljenih naslovov</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Vložiť adresu zo schránky</translation>
+        <translation>Prilepite naslov iz odložišča</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Sem vložte správu ktorú chcete podpísať</translation>
+        <translation>Vnesite sporočilo, ki ga želite podpisati</translation>
     </message>
     <message>
         <source>Signature</source>
@@ -3040,111 +3030,111 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Kopírovať tento podpis do systémovej schránky</translation>
+        <translation>Kopirj trenutni podpis v sistemsko odložišče.</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Podpíšte správu aby ste dokázali že vlastníte túto adresu</translation>
+        <translation>Podpišite sporočilo, da dokažete lastništvo zgornjega naslova.</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Podpísať &amp;správu</translation>
+        <translation>Podpiši &amp;sporočilo</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Vynulovať všetky polia podpisu správy</translation>
+        <translation>Počisti vsa vnosna polja v obrazcu za podpisovanje</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>&amp;Zmazať všetko</translation>
+        <translation>Počisti &amp;vse</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>O&amp;veriť správu...</translation>
+        <translation>&amp;Preveri sporočilo</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation type="unfinished">Vložte adresu príjemcu, správu (uistite sa, že presne kopírujete ukončenia riadkov, medzery, odrážky, atď.) a podpis pre potvrdenie správy. Buďte opatrní a nedomýšľajte si viac než je uvedené v samotnej podpísanej správe a môžete sa tak vyhnúť podvodu MITM útokom. Toto len potvrdzuje, že podpisujúca strana môže prijímať na tejto adrese, nepotvrdzuje to vlastníctvo žiadnej transakcie!</translation>
+        <translation type="unfinished">Da preverite verodostojnost sporočila, spodaj vnesite: prejemnikov naslov, prejeto sporočilo (pazljivo skopirajte vse prelome vrstic, presledke, tabulatorje itd.) ter prejeti podpis. Da se izognete napadom tipa man-in-the-middle, vedite, da iz veljavnega podpisa ne sledi nič drugega, kot tisto, kar je navedeno v sporočilu. Podpis samo potrjuje dejstvo, da ima podpisnik v lasti prejemni naslov, ne more pa dokazati pošiljanja nobene transakcije!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Adresa Bitcoin, ktorou bola podpísaná správa</translation>
+        <translation type="unfinished">Bitcoin-naslov, s katerim je bilo sporočilo podpisano</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
-        <translation type="unfinished">Podpísaná správa na overenie</translation>
+        <translation type="unfinished">Podpisano sporočilo, ki ga želite preveriti</translation>
     </message>
     <message>
         <source>The signature given when the message was signed</source>
-        <translation type="unfinished">Poskytnutý podpis pri podpísaní správy</translation>
+        <translation type="unfinished">Podpis, ustvarjen ob podpisovanju sporočila</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Overím správy sa uistiť že bola podpísaná označenou Bitcoin adresou</translation>
+        <translation>Preverite, ali je bilo sporočilo v resnici podpisano z navedenim bitcoin-naslovom.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>&amp;Overiť správu</translation>
+        <translation>Preveri &amp;sporočilo</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Obnoviť všetky polia v overiť správu</translation>
+        <translation>Počisti vsa polja za vnos v obrazcu za preverjanje</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation type="unfinished">Kliknite "Podpísať správu" pre vytvorenie podpisu</translation>
+        <translation type="unfinished">Kliknite "Podpiši sporočilo", da se ustvari podpis</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished">Zadaná adresa je neplatná.</translation>
+        <translation type="unfinished">Vnešen naslov je neveljaven.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished">Prosím skontrolujte adresu a skúste znova.</translation>
+        <translation type="unfinished">Prosimo, preverite naslov in poskusite znova.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Vložená adresa nezodpovedá žiadnemu kľúču.</translation>
+        <translation type="unfinished">Vnešeni naslov se ne nanaša na ključ.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished">Odomknutie peňaženky bolo zrušené.</translation>
+        <translation type="unfinished">Odklepanje denarnice je bilo preklicano.</translation>
     </message>
     <message>
         <source>No error</source>
-        <translation type="unfinished">Bez chyby</translation>
+        <translation type="unfinished">Ni napak</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished">Súkromný kľúč pre zadanú adresu nieje k dispozícii.</translation>
+        <translation type="unfinished">Zasebni ključ vnešenega naslova ni na voljo.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation type="unfinished">Podpísanie správy zlyhalo.</translation>
+        <translation type="unfinished">Podpisovanje sporočila je spodletelo.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation type="unfinished">Správa podpísaná.</translation>
+        <translation type="unfinished">Sporočilo podpisano.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished">Podpis nie je možné dekódovať.</translation>
+        <translation type="unfinished">Podpisa ni bilo mogoče dešifrirati.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished">Prosím skontrolujte podpis a skúste znova.</translation>
+        <translation type="unfinished">Prosimo, preverite podpis in poskusite znova.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished">Podpis sa nezhoduje so zhrnutím správy.</translation>
+        <translation type="unfinished">Podpis ne ustreza zgoščeni vrednosti sporočila.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation type="unfinished">Overenie správy zlyhalo.</translation>
+        <translation type="unfinished">Preverjanje sporočila je spodletelo.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation type="unfinished">Správa overená.</translation>
+        <translation type="unfinished">Sporočilo je preverjeno.</translation>
     </message>
 </context>
 <context>
@@ -3152,448 +3142,455 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform>Otvorená pre ďalší %n blok</numerusform>
-            <numerusform>Otvorená pre ďalšie %n bloky</numerusform>
-            <numerusform>Otvorená pre ďalších %n blokov</numerusform>
+            <numerusform>Odprto še za naslednji blok</numerusform>
+            <numerusform>Odprto še za naslednja %n bloka</numerusform>
+            <numerusform>Odprto še za naslednje %n bloke</numerusform>
+            <numerusform>Odprto še za naslednjih %n blokov</numerusform>
         </translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Otvorené do %1</translation>
+        <translation type="unfinished">Odprto do %1</translation>
     </message>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
-        <translation type="unfinished">koliduje s transakciou s %1 potvrdeniami</translation>
+        <translation type="unfinished">v sporu s transakcijo z %1 potrditvami</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
-        <translation type="unfinished">0/nepotvrdené, %1</translation>
+        <translation type="unfinished">0/nepotrjeno, %1</translation>
     </message>
     <message>
         <source>in memory pool</source>
-        <translation type="unfinished">v transakčnom zásobníku</translation>
+        <translation type="unfinished">v čakalni vrsti</translation>
     </message>
     <message>
         <source>not in memory pool</source>
-        <translation type="unfinished">nie je v transakčnom zásobníku</translation>
+        <translation type="unfinished">ni v čakalni vrsti</translation>
     </message>
     <message>
         <source>abandoned</source>
-        <translation type="unfinished">zanechaná</translation>
+        <translation type="unfinished">opuščena</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished">%1/nepotvrdené</translation>
+        <translation type="unfinished">%1/nepotrjena</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
-        <translation type="unfinished">%1 potvrdení</translation>
+        <translation type="unfinished">%1 potrditev</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Stav</translation>
+        <translation type="unfinished">Stanje</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dátum</translation>
+        <translation type="unfinished">Datum</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished">Zdroj</translation>
+        <translation type="unfinished">Vir</translation>
     </message>
     <message>
         <source>Generated</source>
-        <translation type="unfinished">Vygenerované</translation>
+        <translation type="unfinished">Ustvarjeno</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">Od</translation>
+        <translation type="unfinished">Pošiljatelj</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">neznámy</translation>
+        <translation type="unfinished">neznano</translation>
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Do</translation>
+        <translation type="unfinished">Prejemnik</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation type="unfinished">vlastná adresa</translation>
+        <translation type="unfinished">lasten naslov</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">Iba sledovanie</translation>
+        <translation type="unfinished">opazovano</translation>
     </message>
     <message>
         <source>label</source>
-        <translation type="unfinished">popis</translation>
+        <translation type="unfinished">oznaka</translation>
     </message>
     <message>
         <source>Credit</source>
-        <translation type="unfinished">Kredit</translation>
+        <translation type="unfinished">V dobro</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform>dozrie o ďalší %n blok</numerusform>
-            <numerusform>dozrie o ďalšie %n bloky</numerusform>
-            <numerusform>dozrie o ďalších %n blokov</numerusform>
+            <numerusform>dozori v naslednjem bloku</numerusform>
+            <numerusform>dozori v naslednjih %n blokih</numerusform>
+            <numerusform>dozori v naslednjih %nblokih</numerusform>
+            <numerusform>dozori v naslednjih %n blokih</numerusform>
         </translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation type="unfinished">neprijaté</translation>
+        <translation type="unfinished">ni sprejeto</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation type="unfinished">Debet</translation>
+        <translation type="unfinished">V breme</translation>
     </message>
     <message>
         <source>Total debit</source>
-        <translation type="unfinished">Celkový debet</translation>
+        <translation type="unfinished">Skupaj v breme</translation>
     </message>
     <message>
         <source>Total credit</source>
-        <translation type="unfinished">Celkový kredit</translation>
+        <translation type="unfinished">Skupaj v dobro</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation type="unfinished">Transakčný poplatok</translation>
+        <translation type="unfinished">Provizija transakcije</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation type="unfinished">Suma netto</translation>
+        <translation type="unfinished">Neto znesek</translation>
     </message>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Správa</translation>
+        <translation type="unfinished">Sporočilo</translation>
     </message>
     <message>
         <source>Comment</source>
-        <translation type="unfinished">Komentár</translation>
+        <translation type="unfinished">Opomba</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation type="unfinished">ID transakcie</translation>
+        <translation type="unfinished">ID transakcije</translation>
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation type="unfinished">Celková veľkosť transakcie</translation>
+        <translation type="unfinished">Skupna velikost transakcije</translation>
     </message>
     <message>
         <source>Transaction virtual size</source>
-        <translation type="unfinished">Virtuálna veľkosť transakcie</translation>
+        <translation type="unfinished">Navidezna velikost transakcije</translation>
     </message>
     <message>
         <source>Output index</source>
-        <translation type="unfinished">Index výstupu</translation>
+        <translation type="unfinished">Indeks izhoda</translation>
     </message>
     <message>
         <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Certifikát nebol overený)</translation>
+        <translation type="unfinished">(Certifikat ni bil preverjen)</translation>
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished">Kupec</translation>
+        <translation type="unfinished">Trgovec</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished">Vytvorené coins musia dospieť %1 blokov kým môžu byť minuté. Keď vytvoríte tento blok, bude rozoslaný do siete aby bol akceptovaný do reťaze blokov. Ak sa nedostane reťaze, jeho stav sa zmení na "zamietnutý" a nebude sa dať minúť. Toto sa môže občas stať ak iná nóda vytvorí blok približne v tom istom čase.</translation>
+        <translation type="unfinished">Ustvarjeni kovanci morajo zoreti %1 blokov, preden jih lahko porabite. Ko ste ta blok ustvarili, je bil posredovan v omrežje, bi se vključil v verigo blokov. Če se bloku ne bo uspelo uvrstiti v verigo, se bo njegovo stanje spremenilo v "ni sprejeto" in kovancev ne bo mogoče porabiti. To se občasno zgodi, kadar kak drug rudar ustvari drug blok znotraj roka nekaj sekund od vašega.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation type="unfinished">Ladiace informácie</translation>
+        <translation type="unfinished">Informacije za razhroščanje</translation>
     </message>
     <message>
         <source>Transaction</source>
-        <translation type="unfinished">Transakcie</translation>
+        <translation type="unfinished">Transakcija</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation type="unfinished">Vstupy</translation>
+        <translation type="unfinished">Vhodi</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Suma</translation>
+        <translation type="unfinished">Znesek</translation>
     </message>
     <message>
         <source>true</source>
-        <translation type="unfinished">pravda</translation>
+        <translation type="unfinished">je</translation>
     </message>
     <message>
         <source>false</source>
-        <translation type="unfinished">nepravda</translation>
+        <translation type="unfinished">ni</translation>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Táto časť obrazovky zobrazuje detailný popis transakcie</translation>
+        <translation>V tem podoknu so prikazane podrobnosti o transakciji</translation>
     </message>
     <message>
         <source>Details for %1</source>
-        <translation type="unfinished">Podrobnosti pre %1</translation>
+        <translation type="unfinished">Podrobnosti za %1</translation>
     </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dátum</translation>
+        <translation type="unfinished">Datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Typ</translation>
+        <translation type="unfinished">Vrsta</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Popis</translation>
+        <translation type="unfinished">Oznaka</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform>Otvorená pre ďalší %n blok</numerusform>
-            <numerusform>Otvorená pre ďalšie %n bloky</numerusform>
-            <numerusform>Otvorená pre ďalších %n blokov</numerusform>
+            <numerusform>Odprto še za naslednji blok</numerusform>
+            <numerusform>Odprto še naslednja %n bloka</numerusform>
+            <numerusform>Odprto še naslednje %n bloke</numerusform>
+            <numerusform>Odprto še naslednjih %n blokov</numerusform>
         </translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation type="unfinished">Otvorené do %1</translation>
+        <translation type="unfinished">Odprto do %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation type="unfinished">Nepotvrdené</translation>
+        <translation type="unfinished">Nepotrjena</translation>
     </message>
     <message>
         <source>Abandoned</source>
-        <translation type="unfinished">Zanechaná</translation>
+        <translation type="unfinished">Opuščena</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished">Potvrdzujem (%1 z %2 odporúčaných potvrdení)</translation>
+        <translation type="unfinished">Se potrjuje (%1 od %2 priporočenih potrditev)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished">Potvrdené (%1 potvrdení)</translation>
+        <translation type="unfinished">Potrjena (%1 potrditev)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished">V rozpore</translation>
+        <translation type="unfinished">Sporna</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished">Nezrelé (%1 potvrdení, bude dostupné po %2)</translation>
+        <translation type="unfinished">Nedozorelo (št. potrditev: %1, na voljo šele po %2)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">Vypočítané ale neakceptované</translation>
+        <translation type="unfinished">Generirano, toda ne sprejeto</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Prijaté s</translation>
+        <translation type="unfinished">Prejeto z</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation type="unfinished">Prijaté od</translation>
+        <translation type="unfinished">Prejeto od</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Odoslané na</translation>
+        <translation type="unfinished">Poslano na </translation>
     </message>
     <message>
         <source>Payment to yourself</source>
-        <translation type="unfinished">Platba sebe samému</translation>
+        <translation type="unfinished">Plačilo sebi</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Vyťažené</translation>
+        <translation type="unfinished">Narudarjeno</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">Iba sledovanie</translation>
+        <translation type="unfinished">opazovan</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation type="unfinished">(ni na voljo)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(bez popisu)</translation>
+        <translation type="unfinished">(brez oznake)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished">Stav transakcie. Prejdite ponad toto pole pre zobrazenie počtu potvrdení.</translation>
+        <translation type="unfinished">Stanje transakcije. Podržite miško nad tem poljem za prikaz števila potrditev.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished">Dátum a čas prijatia transakcie.</translation>
+        <translation type="unfinished">Datum in čas prejema transakcije.</translation>
     </message>
     <message>
         <source>Type of transaction.</source>
-        <translation type="unfinished">Typ transakcie.</translation>
+        <translation type="unfinished">Vrsta transakcije</translation>
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Či je v tejto transakcii adresy iba na sledovanie.</translation>
+        <translation type="unfinished">Ali je v transakciji udeležen opazovan naslov.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation type="unfinished">Užívateľsky určený účel transakcie.</translation>
+        <translation type="unfinished">Uporabniško določen namen transakcije.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished">Suma pridaná alebo odobraná k zostatku.</translation>
+        <translation type="unfinished">Višina spremembe dobroimetja.</translation>
     </message>
 </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Všetky</translation>
+        <translation type="unfinished">Vse</translation>
     </message>
     <message>
         <source>Today</source>
-        <translation type="unfinished">Dnes</translation>
+        <translation type="unfinished">Danes</translation>
     </message>
     <message>
         <source>This week</source>
-        <translation type="unfinished">Tento týždeň</translation>
+        <translation type="unfinished">Ta teden</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation type="unfinished">Tento mesiac</translation>
+        <translation type="unfinished">Ta mesec</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation type="unfinished">Minulý mesiac</translation>
+        <translation type="unfinished">Prejšnji mesec</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation type="unfinished">Tento rok</translation>
+        <translation type="unfinished">Letos</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation type="unfinished">Prijaté s</translation>
+        <translation type="unfinished">Prejeto z</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Odoslané na</translation>
+        <translation type="unfinished">Poslano na </translation>
     </message>
     <message>
         <source>To yourself</source>
-        <translation type="unfinished">Ku mne</translation>
+        <translation type="unfinished">Sebi</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation type="unfinished">Vyťažené</translation>
+        <translation type="unfinished">Narudarjeno</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation type="unfinished">Iné</translation>
+        <translation type="unfinished">Drugo</translation>
     </message>
     <message>
         <source>Enter address, transaction id, or label to search</source>
-        <translation type="unfinished">Pre vyhľadávanie vložte adresu, id transakcie, alebo popis.</translation>
+        <translation type="unfinished">Vnesi naslov, ID transakcije ali oznako za iskanje</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation type="unfinished">Minimálna suma</translation>
+        <translation type="unfinished">Najmanjši znesek</translation>
     </message>
     <message>
         <source>Range…</source>
-        <translation type="unfinished">Rozsah…</translation>
+        <translation type="unfinished">Razpon…</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;Kopírovať adresu</translation>
+        <translation type="unfinished">&amp;Kopiraj naslov</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopírovať &amp;popis</translation>
+        <translation type="unfinished">Kopiraj &amp;oznako</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopírovať &amp;sumu</translation>
+        <translation type="unfinished">Kopiraj &amp;znesek</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
-        <translation type="unfinished">Kopírovať &amp;ID transakcie</translation>
+        <translation type="unfinished">Kopiraj &amp;ID transakcije</translation>
     </message>
     <message>
         <source>Copy &amp;raw transaction</source>
-        <translation type="unfinished">Skopírovať neup&amp;ravenú transakciu</translation>
+        <translation type="unfinished">Kopiraj su&amp;rovo transkacijo</translation>
     </message>
     <message>
         <source>Copy full transaction &amp;details</source>
-        <translation type="unfinished">Skopírovať plné &amp;detaily transakcie</translation>
+        <translation type="unfinished">Kopiraj vse po&amp;drobnosti o transakciji</translation>
     </message>
     <message>
         <source>&amp;Show transaction details</source>
-        <translation type="unfinished">&amp;Zobraziť podrobnosti transakcie</translation>
+        <translation type="unfinished">Prikaži podrobno&amp;sti o transakciji</translation>
     </message>
     <message>
         <source>Increase transaction &amp;fee</source>
-        <translation type="unfinished">Zvýšiť transakčný &amp;poplatok</translation>
+        <translation type="unfinished">Povečaj transakcijsko provi&amp;zijo</translation>
     </message>
     <message>
         <source>A&amp;bandon transaction</source>
-        <translation type="unfinished">Z&amp;amietnuť transakciu</translation>
+        <translation type="unfinished">O&amp;pusti transakcijo</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
-        <translation type="unfinished">&amp;Upraviť popis transakcie</translation>
+        <translation type="unfinished">&amp;Uredi oznako naslova</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished">Exportovať históriu transakcií</translation>
+        <translation type="unfinished">Izvozi zgodovino transakcij</translation>
     </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
-        <translation type="unfinished">Čiarkou oddelený súbor</translation>
+        <translation type="unfinished">Datoteka CSV (podatki ločeni z vejicami)</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Potvrdené</translation>
+        <translation type="unfinished">Potrjeno</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation type="unfinished">Iba sledovanie</translation>
+        <translation type="unfinished">Opazovano</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dátum</translation>
+        <translation type="unfinished">Datum</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Typ</translation>
+        <translation type="unfinished">Vrsta</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Popis</translation>
+        <translation type="unfinished">Oznaka</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresa</translation>
+        <translation type="unfinished">Naslov</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Export zlyhal</translation>
+        <translation type="unfinished">Izvoz je spodletel.</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished">Vyskytla sa chyba pri pokuse o uloženie histórie transakcií do %1.</translation>
+        <translation type="unfinished">Prišlo je do napake med shranjevanjem zgodovine transakcij v datoteko %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished">Export úspešný</translation>
+        <translation type="unfinished">Izvoz uspešen</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished">História transakciá bola úspešne uložená do %1.</translation>
+        <translation type="unfinished">Zgodovina transakcij je bila uspešno shranjena v datoteko %1.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation type="unfinished">Rozsah:</translation>
+        <translation type="unfinished">Razpon:</translation>
     </message>
     <message>
         <source>to</source>
@@ -3606,759 +3603,755 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
         <source>No wallet has been loaded.
 Go to File &gt; Open Wallet to load a wallet.
 - OR -</source>
-        <translation type="unfinished">Nie je načítaná žiadna peňaženka.
-Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
-- ALEBO -</translation>
+        <translation type="unfinished">Odprta ni nobena denarnica.
+Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
+- ali -</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Vytvoriť novú peňaženku</translation>
+        <translation type="unfinished">Ustvari novo denarnico</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Poslať mince</translation>
+        <translation type="unfinished">Pošlji kovance</translation>
     </message>
     <message>
         <source>Fee bump error</source>
-        <translation type="unfinished">Chyba pri navyšovaní poplatku</translation>
+        <translation type="unfinished">Napaka pri poviševanju provizije</translation>
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
-        <translation type="unfinished">Nepodarilo sa navýšiť poplatok</translation>
+        <translation type="unfinished">Povečanje provizije transakcije je spodletelo</translation>
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
-        <translation type="unfinished">Chcete navýšiť poplatok?</translation>
+        <translation type="unfinished">Ali želite povišati provizijo?</translation>
     </message>
     <message>
         <source>Do you want to draft a transaction with fee increase?</source>
-        <translation type="unfinished">Chcete naplánovať túto transakciu s navýšením poplatkov.</translation>
+        <translation type="unfinished">Želite shraniti osnutek transakcije s povečano provizijo?</translation>
     </message>
     <message>
         <source>Current fee:</source>
-        <translation type="unfinished">Momentálny poplatok:</translation>
+        <translation type="unfinished">Trenutna provizija:</translation>
     </message>
     <message>
         <source>Increase:</source>
-        <translation type="unfinished">Navýšenie:</translation>
+        <translation type="unfinished">Povečanje:</translation>
     </message>
     <message>
         <source>New fee:</source>
-        <translation type="unfinished">Nový poplatok:</translation>
+        <translation type="unfinished">Nova provizija:</translation>
     </message>
     <message>
         <source>Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy.</source>
-        <translation type="unfinished">Varovanie: Toto môže zaplatiť ďalší poplatok znížením výstupov alebo pridaním vstupov, ak to bude potrebné. Môže pridať nový výstup ak ešte žiadny neexistuje. Tieto zmeny by mohli ohroziť súkromie.</translation>
+        <translation type="unfinished">Opozorilo: za dodatno provizijo je včasih potrebno odstraniti izhode za vračilo ali dodati vhode. Lahko se tudi doda izhod za vračilo, če ga še ni. Te spremembe lahko okrnijo zasebnost.</translation>
     </message>
     <message>
         <source>Confirm fee bump</source>
-        <translation type="unfinished">Potvrď navýšenie poplatku</translation>
+        <translation type="unfinished">Potrdi povečanje provizije</translation>
     </message>
     <message>
         <source>Can't draft transaction.</source>
-        <translation type="unfinished">Nemožno naplánovať túto transakciu.</translation>
+        <translation type="unfinished">Ne morem shraniti osnutka transakcije</translation>
     </message>
     <message>
         <source>PSBT copied</source>
-        <translation type="unfinished">PSBT skopírovaná</translation>
+        <translation type="unfinished">DPBT kopirana</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
-        <translation type="unfinished">Nemôzeme podpíaať transakciu.</translation>
+        <translation type="unfinished">Ne morem podpisati transakcije.</translation>
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation type="unfinished">Nemôzeme uložiť transakciu do peňaženky</translation>
+        <translation type="unfinished">Transakcije ni bilo mogoče zaključiti</translation>
     </message>
     <message>
         <source>Can't display address</source>
-        <translation type="unfinished">Nemôžem zobraziť adresu</translation>
+        <translation type="unfinished">Ne morem prikazati naslova</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">predvolená peňaženka</translation>
+        <translation type="unfinished">privzeta denarnica</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Exportovať...</translation>
+        <translation type="unfinished">&amp;Izvozi</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Exportovať dáta v aktuálnej karte do súboru</translation>
+        <translation type="unfinished">Izvozi podatke iz trenutnega zavihka v datoteko</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Chyba</translation>
+        <translation type="unfinished">Napaka</translation>
     </message>
     <message>
         <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation type="unfinished">Nepodarilo sa dekódovať skopírovanú PSBT (invalid base64)</translation>
+        <translation type="unfinished">Ne morem dekodirati DPBT z odložišča (neveljaven format base64)</translation>
     </message>
     <message>
         <source>Load Transaction Data</source>
-        <translation type="unfinished">Načítať údaje o transakcii</translation>
+        <translation type="unfinished">Naloži podatke transakcije</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (*.psbt)</source>
-        <translation type="unfinished">Čiastočne podpísaná transakcia (*.psbt)</translation>
+        <translation type="unfinished">Delno podpisana transakcija (*.psbt)</translation>
     </message>
     <message>
         <source>PSBT file must be smaller than 100 MiB</source>
-        <translation type="unfinished">Súbor PSBT musí byť menší než 100 MiB</translation>
+        <translation type="unfinished">Velikost DPBT ne sme presegati 100 MiB.</translation>
     </message>
     <message>
         <source>Unable to decode PSBT</source>
-        <translation type="unfinished">Nepodarilo sa dekódovať PSBT</translation>
+        <translation type="unfinished">Ne morem dekodirati DPBT</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation type="unfinished">Zálohovanie peňaženky</translation>
+        <translation type="unfinished">Izdelava varnostne kopije denarnice</translation>
     </message>
     <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
-        <translation type="unfinished">Dáta peňaženky</translation>
+        <translation type="unfinished">Podatki o denarnici</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation type="unfinished">Zálohovanie zlyhalo</translation>
+        <translation type="unfinished">Varnostno kopiranje je spodeltelo</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished">Vyskytla sa chyba pri pokuse o uloženie dát peňaženky do %1.</translation>
+        <translation type="unfinished">Prišlo je do napake pri shranjevanju podatkov denarnice v datoteko %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation type="unfinished">Záloha úspešná</translation>
+        <translation type="unfinished">Varnostno kopiranje je uspelo</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished">Dáta peňaženky boli úspešne uložené do %1.</translation>
+        <translation type="unfinished">Podatki denarnice so bili uspešno shranjeni v %1.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušiť</translation>
+        <translation type="unfinished">Prekliči</translation>
     </message>
 </context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>The %s developers</source>
-        <translation type="unfinished">Vývojári %s</translation>
+        <translation type="unfinished">Razvijalci %s</translation>
     </message>
     <message>
         <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s je poškodený. Skúste použiť nástroj peňaženky bitcoin-wallet na záchranu alebo obnovu zálohy.</translation>
+        <translation type="unfinished">%s je okvarjena. Lahko jo poskusite popraviti z orodjem bitcoin-wallet ali pa jo obnovite iz varnostne kopije.</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee je nastavené veľmi vysoko! Takto vysoký poplatok môže byť zaplatebý v jednej transakcii.</translation>
+        <translation type="unfinished">-maxtxfee je nastavljen zelo visoko! Tako visoka provizija bi se lahko plačala na posamezni transakciji.</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
-        <translation type="unfinished">Nie je možné degradovať peňaženku z verzie %i na verziu %i. Verzia peňaženky nebola zmenená.</translation>
+        <translation type="unfinished">Različice denarnice ne morem znižati z %i na %i. Različica denarnice ostaja nespremenjena.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Nemožné uzamknúť zložku %s. %s pravdepodobne už beží.</translation>
+        <translation type="unfinished">Ne morem zakleniti podatkovne mape %s. %s je verjetno že zagnan.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation type="unfinished">Nemôžete zadať konkrétne spojenia a zároveň mať nastavený addrman pre hľadanie odchádzajúcich spojení.</translation>
+        <translation type="unfinished">Izrecne povezave ne morejo biti nastavljene hkrati z iskanjem izhodnih povezav z addrman.</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">Nie je možné vylepšiť peňaženku bez rozdelenia HD z verzie %i na verziu %i bez upgradovania na podporu kľúčov pred rozdelením. Prosím použite verziu %i alebo nezadávajte verziu.</translation>
+        <translation type="unfinished">Ne morem nadgraditi nerazcepljene ne-HD denarnice z verzije %i na verzijo %i brez nadgradnje za podporo za ključe pred razcepitvijo. Prosim, uporabite verzijo %i ali pa ne izberite nobene verzije.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">Distribuované pod softvérovou licenciou MIT, pozri sprievodný súbor %s alebo %s</translation>
+        <translation type="unfinished">Distribuirano v okviru programske licence MIT. Podrobnosti so navedene v  priloženi datoteki %s ali %s</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Nastala chyba pri čítaní súboru %s! Všetkz kľúče sa prečítali správne, ale dáta o transakcíách alebo záznamy v adresári môžu chýbať alebo byť nesprávne.</translation>
+        <translation type="unfinished">Napaka pri branju %s! Vsi ključi so bili prebrani pravilno, vendar so lahko vnosi o transakcijah ali vnosi naslovov nepravilni ali manjkajo.</translation>
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
-        <translation type="unfinished">Chyba: Formát záznamu v súbore dumpu je nesprávny. Obdržaný "%s", očakávaný "format".</translation>
+        <translation type="unfinished">Napaka: oblika izvožene (dump) datoteke je napačna. Vsebuje "%s", pričakovano "format".</translation>
     </message>
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
-        <translation type="unfinished">Chyba: Záznam identifikátora v súbore dumpu je nesprávny. Obdržaný "%s", očakávaný "%s".</translation>
+        <translation type="unfinished">Napaka: identifikator zapisa v izvozni (dump) datoteki je napačen. Vsebuje "%s", pričakovano "%s".</translation>
     </message>
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">Chyba: Verzia súboru dumpu nie je podporovaná. Táto verzia peňaženky bitcoin podporuje iba súbory dumpu verzie 1. Obdržal som súbor s verziou %s</translation>
+        <translation type="unfinished">Napaka: verzija izvozne (dump) datoteke ni podprta. Ta verzija ukaza bitcoin-wallet podpira le izvozne datoteke verzije 1, ta datoteka pa ima verzijo %s.</translation>
     </message>
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">Chyba: Staršie peňaženky podporujú len adresy typu "legacy", "p2sh-segwit", a "bech32"</translation>
+        <translation type="unfinished">Napaka: podedovane denarnice podpirajo le naslove vrst "legacy", "p2sh-segwit" in "bech32".</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Chyba: Počúvanie prichádzajúcich spojení zlyhalo (vrátená chyba je %s)</translation>
+        <translation type="unfinished">Napaka: ni mogoče biti odprt za dohodne povezave (vrnjena napaka: %s)</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Odhad poplatku sa nepodaril. Fallbackfee je zakázaný. Počkajte niekoľko blokov alebo povoľte -fallbackfee.</translation>
+        <translation type="unfinished">Ocena provizije ni uspela. Uporaba nadomestne provizije (fallback fee) je onemogočena. Počakajte nekaj blokov ali omogočite -fallbackfee.</translation>
     </message>
     <message>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
-        <translation type="unfinished">Súbor %s už existuje. Ak si nie ste istý, že toto chcete, presuňte ho najprv preč.</translation>
+        <translation type="unfinished">Datoteka %s že obstaja. Če stre prepričani, da to želite, obstoječo datoteko najprej odstranite oz. premaknite.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">Neplatná suma pre -maxtxfee=&lt;amount&gt;: '%s' (aby sa transakcia nezasekla, minimálny prenosový poplatok musí byť aspoň %s)</translation>
+        <translation type="unfinished">Neveljaven znesek za -maxtxfee=&lt;amount&gt;: '%s' (biti mora najmanj %s, da transakcije ne obtičijo)</translation>
     </message>
     <message>
         <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
-        <translation type="unfinished">K dispozícii je viac ako jedna adresa onion. Použitie %s pre automaticky vytvorenú službu Tor.</translation>
+        <translation type="unfinished">Nastavljen je več kot en onion-naslov. Za samodejno ustvarjeno storitev na Toru uporabljam %s.</translation>
     </message>
     <message>
         <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Nezadaný žiadny súbor dumpu. Pre použitie createfromdump musíte zadať -dumpfile=&lt;filename&gt;.</translation>
+        <translation type="unfinished">Potrebno je določiti izvozno (dump) datoteko. Z ukazom createfromdump morate uporabiti možnost -dumpfile=&lt;filename&gt;.</translation>
     </message>
     <message>
         <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Nezadaný žiadny súbor dumpu. Pre použitie dump musíte zadať -dumpfile=&lt;filename&gt;.</translation>
+        <translation type="unfinished">Potrebno je določiti izvozno (dump) datoteko. Z ukazom dump morate uporabiti možnost -dumpfile=&lt;filename&gt;.</translation>
     </message>
     <message>
         <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
-        <translation type="unfinished">Nezadaný formát súboru peňaženky. Pre použitie createfromdump musíte zadať -format=&lt;format&gt;.</translation>
+        <translation type="unfinished">Potrebno je določiti obliko izvozne (dump) datoteke. Z ukazom createfromdump morate uporabiti možnost -format=&lt;format&gt;.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Prosím skontrolujte systémový čas a dátum. Keď je váš čas nesprávny, %s nebude fungovať správne.</translation>
+        <translation type="unfinished">Opozorilo: Preverite, če sta datum in ura na vašem računalniku točna! %s ne bo deloval pravilno, če je nastavljeni čas nepravilen.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">Keď si myslíte, že %s je užitočný, podporte nás. Pre viac informácií o software navštívte %s.</translation>
+        <translation type="unfinished">Prosimo, prispevajte, če se vam zdi %s uporaben. Za dodatne informacije o programski opremi obiščite %s.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">Redukcia nastavená pod minimálnu hodnotu %d MiB. Prosím použite vyššiu hodnotu.</translation>
+        <translation type="unfinished">Obrezovanje ne sme biti nastavljeno pod %d miB. Prosimo, uporabite večjo številko.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Redukovanie: posledná synchronizácia peňaženky prebehla pred časmi blokov v redukovaných dátach. Je potrebné vykonať -reindex (v prípade redukovaného režimu stiahne znovu celý reťazec blokov)</translation>
+        <translation type="unfinished">Obrezovanje: zadnja sinhronizacija denarnice je izven obrezanih podatkov. Izvesti morate -reindex (v primeru obrezanega načina delovanja bo potrebno znova prenesti celotno verigo blokov).</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
-        <translation type="unfinished">SQLiteDatabase: Neznáma verzia schémy peňaženky sqlite %d. Podporovaná je iba verzia %d</translation>
+        <translation type="unfinished">Baza SQLite: Neznana verzija sheme SQLite denarnice %d. Podprta je le verzija %d.</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation type="unfinished">Databáza blokov obsahuje blok, ktorý vyzerá byť z budúcnosti. Toto môže byť spôsobené nesprávnym systémovým časom vášho počítača. Obnovujte databázu blokov len keď ste si istý, že systémový čas je nastavený správne.</translation>
+        <translation type="unfinished">Baza podatkov blokov vsebuje blok, ki naj bi bil iz prihodnosti. To je lahko posledica napačne nastavitve datuma in časa vašega računalnika. Znova zgradite bazo podatkov samo, če ste prepričani, da sta datum in čas računalnika pravilna.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">Suma je príliš malá pre odoslanie transakcie</translation>
+        <translation type="unfinished">Znesek transakcije po odbitku provizije je premajhen za pošiljanje.</translation>
     </message>
     <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">K tejto chybe môže dôjsť, ak nebola táto peňaženka správne vypnutá a bola naposledy načítaná pomocou zostavy s novšou verziou Berkeley DB. Ak je to tak, použite softvér, ktorý naposledy načítal túto peňaženku</translation>
+        <translation type="unfinished">Ta napaka se lahko pojavi, če denarnica ni bila pravilno zaprta in je bila nazadnje naložena s programsko opremo z novejšo verzijo Berkely DB. Če je temu tako, prosimo uporabite programsko opremo, s katero je bila ta denarnica nazadnje naložena.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">Toto je predbežná testovacia zostava - používate na vlastné riziko - nepoužívajte na ťaženie alebo obchodné aplikácie</translation>
+        <translation type="unfinished">To je preizkusna različica še neizdanega programa. Uporabljate jo na lastno odgovornost. Programa ne uporabljajte za rudarjenje ali trgovske aplikacije.</translation>
     </message>
     <message>
         <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
-        <translation type="unfinished">Toto je maximálny transakčný poplatok, ktorý zaplatíte (okrem bežného poplatku), aby ste uprednostnili čiastočné vyhýbanie sa výdavkom pred pravidelným výberom mincí.</translation>
+        <translation type="unfinished">To je najvišja transakcijska provizija, ki jo plačate (poleg običajne provizije), da dobi izogibanje delni porabi prednost pred običajno izbiro kovancev.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation type="unfinished">Toto je transakčný poplatok, ktorý môžete škrtnúť, ak je zmena na tejto úrovni menšia ako prach</translation>
+        <translation type="unfinished">To je transakcijska provizija, ki jo lahko zavržete, če je znesek vračila manjši od prahu na tej ravni</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">Toto je poplatok za transakciu keď odhad poplatkov ešte nie je k dispozícii.</translation>
+        <translation type="unfinished">To je transakcijska provizija, ki jo lahko plačate, kadar ocene provizij niso na voljo.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Celková dĺžka verzie sieťového reťazca (%i) prekračuje maximálnu dĺžku (%i). Znížte počet a veľkosť komentárov.</translation>
+        <translation type="unfinished">Skupna dolžina niza različice omrežja (%i) presega največjo dovoljeno dolžino (%i). Zmanjšajte število ali velikost nastavitev uacomments.</translation>
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation type="unfinished">Nedarí sa znovu aplikovať bloky. Budete musieť prestavať databázu použitím -reindex-chainstate.</translation>
+        <translation type="unfinished">Ne morem ponovno obdelati blokov. Podatkovno bazo boste morali ponovno zgraditi z uporabo ukaza -reindex-chainstate.</translation>
     </message>
     <message>
         <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
-        <translation type="unfinished">Poskytnutý neznámy formát peňaženky "%s". Prosím použite "bdb" alebo "sqlite".</translation>
+        <translation type="unfinished">Nastavljena je neznana oblika datoteke denarnice "%s". Prosimo, uporabite "bdb" ali "sqlite".</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
-        <translation type="unfinished">Varovanie: Formát peňaženky súboru dumpu "%s" nesúhlasí s formátom zadaným na príkazovom riadku "%s".</translation>
+        <translation type="unfinished">Opozorilo: oblika izvozne (dump) datoteke "%s" ne ustreza obliki "%s", izbrani v ukazni vrstici.</translation>
     </message>
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Upozornenie: Boli zistené súkromné kľúče v peňaženke {%s} so zakázanými súkromnými kľúčmi.</translation>
+        <translation type="unfinished">Opozorilo: v denarnici {%s} z onemogočenimi zasebnimi ključi so prisotni zasebni ključi.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Varovanie: Zjavne sa úplne nezhodujeme s našimi peer-mi! Možno potrebujete prejsť na novšiu verziu alebo ostatné uzly potrebujú vyššiu verziu.</translation>
+        <translation type="unfinished">Opozorilo: Trenutno se s soležniki ne strinjamo v popolnosti! Morda morate posodobiti programsko opremo ali pa morajo to storiti vaši soležniki.</translation>
     </message>
     <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
-        <translation type="unfinished">Svedecké údaje pre bloky za výškou %d vyžadujú overenie. Prosím reštartujte s parametrom -reindex.</translation>
+        <translation type="unfinished">Podatke o priči (witness) za bloke nad višino %d je potrebno preveriti. Ponovno zaženite program z možnostjo -reindex.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished">K návratu k neredukovanému režimu je potrebné prestavať databázu použitím -reindex. Tiež sa znova stiahne celý reťazec blokov</translation>
+        <translation type="unfinished">Za vrnitev v neobrezan način morate obnoviti bazo z uporabo -reindex. Potreben bo prenos celotne verige blokov.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
-        <translation type="unfinished">Hodnota %s je nastavená veľmi vysoko!</translation>
+        <translation type="unfinished">%s je postavljen zelo visoko!</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-maxmempool musí byť najmenej %d MB</translation>
+        <translation type="unfinished">-maxmempool mora biti vsaj %d MB</translation>
     </message>
     <message>
         <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Nastala fatálna interná chyba, pre viac informácií pozrite debug.log</translation>
+        <translation type="unfinished">Prišlo je do usodne notranje napake. Za podrobnosti glejte datoteko debug.log.</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">Nedá preložiť -%s adresu: '%s'</translation>
+        <translation type="unfinished">Naslova -%s ni mogoče razrešiti: '%s'</translation>
     </message>
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation type="unfinished">Nepodarilo sa určiť -peerblockfilters bez -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Nie je možné zapísať do adresára ' %s'. Skontrolujte povolenia.</translation>
+        <translation type="unfinished">Nastavitev -peerblockfilters ni veljavna brez nastavitve -blockfilterindex.</translation>
     </message>
     <message>
         <source>Change index out of range</source>
-        <translation type="unfinished">Menný index mimo rozsah</translation>
+        <translation type="unfinished">Indeks vračila izven dovoljenega območja</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
-        <translation type="unfinished">Nastavenie konfigurácie pre %s platí iba v sieti %s a v sekcii [%s].</translation>
+        <translation type="unfinished">Konfiguracijske nastavitve za %s se na omrežju %s upoštevajo le, če so zapisane v odseku [%s].</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished">Zistená poškodená databáza blokov</translation>
+        <translation type="unfinished">Podatkovna baza blokov je okvarjena</translation>
     </message>
     <message>
         <source>Could not find asmap file %s</source>
-        <translation type="unfinished">Nepodarilo sa nájsť asmap súbor %s</translation>
+        <translation type="unfinished">Ne najdem asmap-datoteke %s</translation>
     </message>
     <message>
         <source>Could not parse asmap file %s</source>
-        <translation type="unfinished">Nepodarilo sa analyzovať asmap súbor %s</translation>
+        <translation type="unfinished">Razčlenjevanje asmap-datoteke %s je spodletelo</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
-        <translation type="unfinished">Nedostatok miesta na disku!</translation>
+        <translation type="unfinished">Prostora na disku je premalo!</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Chcete znovu zostaviť databázu blokov?</translation>
+        <translation type="unfinished">Želite zdaj obnoviti podatkovno bazo blokov?</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation type="unfinished">Dokončené načítavanie</translation>
+        <translation type="unfinished">Nalaganje končano</translation>
     </message>
     <message>
         <source>Dump file %s does not exist.</source>
-        <translation type="unfinished">Súbor dumpu %s neexistuje.</translation>
+        <translation type="unfinished">Izvozna (dump) datoteka %s ne obstaja.</translation>
     </message>
     <message>
         <source>Error creating %s</source>
-        <translation type="unfinished">Chyba pri vytváraní %s</translation>
+        <translation type="unfinished">Napaka pri tvorbi %s</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation type="unfinished">Chyba inicializácie databázy blokov</translation>
+        <translation type="unfinished">Napaka pri inicializaciji podatkovne baze blokov</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Chyba spustenia databázového prostredia peňaženky %s!</translation>
+        <translation type="unfinished">Napaka pri inicializaciji okolja podatkovne baze denarnice %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
-        <translation type="unfinished">Chyba načítania %s</translation>
+        <translation type="unfinished">Napaka pri nalaganju %s</translation>
     </message>
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Chyba pri načítaní %s: Súkromné kľúče môžu byť zakázané len počas vytvárania</translation>
+        <translation type="unfinished">Napaka pri nalaganju %s: Zasebni ključi se lahko onemogočijo samo ob tvorbi.</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">Chyba načítania %s: Peňaženka je poškodená</translation>
+        <translation type="unfinished">Napaka pri nalaganju %s: Denarnica ovkarjena</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">Chyba načítania %s: Peňaženka vyžaduje novšiu verziu %s</translation>
+        <translation type="unfinished">Napaka pri nalaganju %s: denarnica zahteva novejšo različico %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation type="unfinished">Chyba načítania databázy blokov</translation>
+        <translation type="unfinished">Napaka pri nalaganju podatkovne baze blokov</translation>
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation type="unfinished">Chyba otvárania databázy blokov</translation>
+        <translation type="unfinished">Napaka pri odpiranju podatkovne baze blokov</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">Chyba pri načítaní z databázy, ukončuje sa.</translation>
+        <translation type="unfinished">Napaka pri branju iz podarkovne baze, zapiram.</translation>
     </message>
     <message>
         <source>Error reading next record from wallet database</source>
-        <translation type="unfinished">Chyba pri čítaní ďalšieho záznamu z databázy peňaženky</translation>
+        <translation type="unfinished">Napaka pri branju naslednjega zapisa v podatkovni bazi denarnice.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
-        <translation type="unfinished">Chyba pri vylepšení databáze reťzcov blokov</translation>
+        <translation type="unfinished">Napaka pri nadgradnji baze podatkov stanja verige.</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
-        <translation type="unfinished">Chyba: Nepodarilo sa vytvoriť kurzor do databázy</translation>
+        <translation type="unfinished">Napaka: ne morem ustvariti kurzorja v bazo</translation>
     </message>
     <message>
         <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Chyba: Málo miesta na disku pre %s</translation>
+        <translation type="unfinished">Opozorilo: premalo prostora na disku za %s</translation>
     </message>
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
-        <translation type="unfinished">Chyba: Kontrolný súčet súboru dumpu nesúhlasí. Vypočítaný %s, očakávaný %s</translation>
+        <translation type="unfinished">Napaka: kontrolna vsota izvozne (dump) datoteke se ne ujema. Izračunano %s, pričakovano %s</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
-        <translation type="unfinished">Chyba: Obdržaný kľúč nebol v hex tvare: %s</translation>
+        <translation type="unfinished">Napaka: ključ ni heksadecimalen: %s</translation>
     </message>
     <message>
         <source>Error: Got value that was not hex: %s</source>
-        <translation type="unfinished">Chyba: Obdržaná hodnota nebola v hex tvare: : %s</translation>
+        <translation type="unfinished">Napaka: vrednost ni heksadecimalna: %s</translation>
     </message>
     <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished">Chyba: Keypool došiel, zavolajte najskôr keypoolrefill</translation>
+        <translation type="unfinished">Napaka: zaloga ključev je prazna -- najprej uporabite keypoolrefill</translation>
     </message>
     <message>
         <source>Error: Missing checksum</source>
-        <translation type="unfinished">Chyba: Chýba kontrolný súčet</translation>
+        <translation type="unfinished">Napaka: kontrolna vsota manjka</translation>
     </message>
     <message>
         <source>Error: No %s addresses available.</source>
-        <translation type="unfinished">Chyba: Žiadne adresy %s.</translation>
+        <translation type="unfinished">Napaka: na voljo ni nobenega naslova '%s'</translation>
     </message>
     <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
-        <translation type="unfinished">Chyba: Nepodarilo sa prečítať verziu %u ako uint32_t</translation>
+        <translation type="unfinished">Napaka: verzije %u ne morem prebrati kot uint32_t</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
-        <translation type="unfinished">Chyba: Nepodarilo sa zapísať záznam do novej peňaženky</translation>
+        <translation type="unfinished">Napaka: zapisa ni mogoče zapisati v novo denarnico</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Chyba počúvania na ktoromkoľvek porte. Použi -listen=0 ak toto chcete.</translation>
+        <translation type="unfinished">Poslušanje ni uspelo na nobenih vratih. Če to želite, uporabite -listen=0</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Počas inicializácie sa nepodarila pre-skenovať peňaženka</translation>
+        <translation type="unfinished">Med inicializacijo denarnice ni bilo mogoče preveriti zgodovine (rescan failed).</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
-        <translation type="unfinished">Nepodarilo sa overiť databázu</translation>
+        <translation type="unfinished">Preverba podatkovne baze je spodletela.</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
-        <translation type="unfinished">Zvolený poplatok (%s)  je nižší ako nastavený minimálny poplatok (%s)</translation>
+        <translation type="unfinished">Stopnja provizije (%s) je nižja od nastavljenega minimuma (%s)</translation>
     </message>
     <message>
         <source>Ignoring duplicate -wallet %s.</source>
-        <translation type="unfinished">Ignorujú sa duplikátne -wallet %s.</translation>
+        <translation type="unfinished">Podvojen -wallet %s -- ne upoštevam.</translation>
     </message>
     <message>
         <source>Importing…</source>
-        <translation type="unfinished">Prebieha import…</translation>
+        <translation type="unfinished">Uvažam ...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Nesprávny alebo žiadny genesis blok nájdený. Nesprávny dátový priečinok alebo sieť?</translation>
+        <translation type="unfinished">Izvornega bloka ni mogoče najti ali pa je neveljaven. Preverite, če ste izbrali pravo podatkovno mapo za izbrano omrežje.</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished">Kontrola čistoty pri inicializácií zlyhala. %s sa vypína.</translation>
+        <translation type="unfinished">Začetno preverjanje smiselnosti je spodletelo. %s se zaustavlja.</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Nedostatok prostriedkov</translation>
+        <translation type="unfinished">Premalo sredstev</translation>
     </message>
     <message>
         <source>Invalid -i2psam address or hostname: '%s'</source>
-        <translation type="unfinished">Neplatná adresa alebo názov počítača pre -i2psam: '%s'</translation>
+        <translation type="unfinished">Neveljaven naslov ali ime gostitelja -i2psam: '%s'</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Neplatná -onion adresa alebo hostiteľ: '%s'</translation>
+        <translation type="unfinished">Neveljaven naslov ali ime gostitelja -onion: '%s'</translation>
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">Neplatná -proxy adresa alebo hostiteľ: '%s'</translation>
+        <translation type="unfinished">Neveljaven naslov ali ime gostitelja -proxy: '%s'</translation>
     </message>
     <message>
         <source>Invalid P2P permission: '%s'</source>
-        <translation type="unfinished">Neplatné oprávnenie P2P: '%s'</translation>
+        <translation type="unfinished">Neveljavna pooblastila P2P: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Neplatná suma pre -%s=&lt;amount&gt;: '%s'</translation>
+        <translation type="unfinished">Neveljavna vrednost za -%s=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Neplatná čiastka pre -discardfee=&lt;čiastka&gt;: '%s'</translation>
+        <translation type="unfinished">Neveljavna vrednost za -discardfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Neplatná suma pre -fallbackfee=&lt;amount&gt;: '%s'</translation>
+        <translation type="unfinished">Neveljavna vrednost za -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Neplatná suma pre -paytxfee=&lt;amount&gt;: '%s' (musí byť aspoň %s)</translation>
+        <translation type="unfinished">Neveljavna vrednost za -paytxfee=&lt;amount&gt;: '%s' (biti mora vsaj %s)</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">Nadaná neplatná netmask vo -whitelist: '%s'</translation>
+        <translation type="unfinished">V -whitelist je navedena neveljavna omrežna maska '%s'</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
-        <translation type="unfinished">Načítavam P2P adresy…</translation>
+        <translation type="unfinished">Nalagam P2P naslove ...</translation>
     </message>
     <message>
         <source>Loading banlist…</source>
-        <translation type="unfinished">Načítavam zoznam zákazov…</translation>
+        <translation type="unfinished">Nalaganje seznam blokiranih ...</translation>
     </message>
     <message>
         <source>Loading block index…</source>
-        <translation type="unfinished">Načítavam zoznam blokov…</translation>
+        <translation type="unfinished">Nalagam kazalo blokov ...</translation>
     </message>
     <message>
         <source>Loading wallet…</source>
-        <translation type="unfinished">Načítavam peňaženku…</translation>
+        <translation type="unfinished">Nalagam denarnico ...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">Je potrebné zadať port s -whitebind: '%s'</translation>
+        <translation type="unfinished">Pri opciji -whitebind morate navesti vrata: %s</translation>
     </message>
     <message>
         <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation type="unfinished">Nie je špecifikovaný proxy server. Použite -proxy=&lt;ip&gt; alebo -proxy=&lt;ip:port&gt;.</translation>
+        <translation type="unfinished">Posredniški strežnik (proxy) ni nastavljen. Uporabite -proxy=&lt;ip&gt; ali -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Nedostatok kľúčových slov súboru.</translation>
+        <translation type="unfinished">Na voljo ni dovolj deskriptorjev datotek.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">Redukovanie nemôže byť nastavené na zápornú hodnotu.</translation>
+        <translation type="unfinished">Negativne vrednosti parametra funkcije obrezovanja niso sprejemljive.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -coinstatsindex.</source>
-        <translation type="unfinished">Režim redukovania je nekompatibilný s -coinstatsindex.</translation>
+        <translation type="unfinished">Funkcija obrezovanja ni združljiva z opcijo -coinstatsindex.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">Režim redukovania je nekompatibilný s -txindex.</translation>
+        <translation type="unfinished">Funkcija obrezovanja ni združljiva z opcijo -txindex.</translation>
     </message>
     <message>
         <source>Pruning blockstore…</source>
-        <translation type="unfinished">Redukuje sa úložisko blokov…</translation>
+        <translation type="unfinished">Obrezujem ...</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Obmedzuje sa -maxconnections z %d na %d kvôli systémovým obmedzeniam.</translation>
+        <translation type="unfinished">Zmanjšujem maksimalno število povezav (-maxconnections) iz %d na %d zaradi sistemskih omejitev.</translation>
     </message>
     <message>
         <source>Replaying blocks…</source>
-        <translation type="unfinished">Preposielam bloky…</translation>
+        <translation type="unfinished">Ponovno obdelujem bloke ...</translation>
     </message>
     <message>
         <source>Rescanning…</source>
-        <translation type="unfinished">Nové prehľadávanie…</translation>
+        <translation type="unfinished">Ponovno obdelujem ...</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Nepodarilo sa vykonať príkaz na overenie databázy: %s</translation>
+        <translation type="unfinished">Baza SQLite: Izvršitev stavka za preverbo baze je spodletela: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Nepodarilo sa pripraviť príkaz na overenie databázy: %s</translation>
+        <translation type="unfinished">Baza SQLite: priprava stavka za preverbo baze je spodletela: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Nepodarilo sa prečítať chybu overenia databázy: %s</translation>
+        <translation type="unfinished">Baza SQLite: branje napake pri preverjanju baze je spodletelo: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation type="unfinished">SQLiteDatabase: Neočakávané ID aplikácie: %u. Očakávané:  %u</translation>
+        <translation type="unfinished">Baza SQLite: nepričakovan identifikator aplikacije. Pričakovana vrednost je %u, dobljena vrednost je %u.</translation>
     </message>
     <message>
         <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Sekcia [%s] nie je rozpoznaná.</translation>
+        <translation type="unfinished">Neznan odsek [%s].</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation type="unfinished">Podpísanie správy zlyhalo</translation>
+        <translation type="unfinished">Podpisovanje transakcije je spodletelo.</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Uvedená -walletdir "%s" neexistuje</translation>
+        <translation type="unfinished">Navedeni direktorij -walletdir "%s" ne obstaja</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Uvedená -walletdir "%s" je relatívna cesta</translation>
+        <translation type="unfinished">Navedeni -walletdir "%s" je relativna pot</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Uvedený -walletdir "%s" nie je priečinok</translation>
+        <translation type="unfinished">Navedena pot -walletdir "%s" ni direktorij</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Zadaný adresár blokov "%s" neexistuje.</translation>
+        <translation type="unfinished">Navedeni podatkovni direktorij za bloke "%s" ne obstaja.</translation>
     </message>
     <message>
         <source>Starting network threads…</source>
-        <translation type="unfinished">Spúšťajú sa sieťové vlákna…</translation>
+        <translation type="unfinished">Zaganjam omrežne niti ...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
-        <translation type="unfinished">Zdrojový kód je dostupný z %s</translation>
+        <translation type="unfinished">Izvorna koda je dosegljiva na %s.</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">Zadaný konfiguračný súbor %s neexistuje</translation>
+        <translation type="unfinished">Navedena konfiguracijska datoteka %s ne obstaja</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Suma transakcie je príliš malá na zaplatenie poplatku</translation>
+        <translation type="unfinished">Znesek transakcije je prenizek za plačilo provizije</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Peňaženka zabráni zaplateniu menšej sumy ako je minimálny poplatok.</translation>
+        <translation type="unfinished">Denarnica se bo izognila plačilu proviziji, manjši od minimalne provizije za posredovanje (relay fee).</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
-        <translation type="unfinished">Toto je experimentálny softvér.</translation>
+        <translation type="unfinished">Program je eksperimentalne narave.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Toto je minimálny poplatok za transakciu pri každej transakcii.</translation>
+        <translation type="unfinished">To je minimalna transakcijska provizija, ki jo plačate za vsako transakcijo.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Toto je poplatok za transakciu pri odoslaní transakcie.</translation>
+        <translation type="unfinished">To je provizija, ki jo boste plačali, ko pošljete transakcijo.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation type="unfinished">Suma transakcie príliš malá</translation>
+        <translation type="unfinished">Znesek transakcije je prenizek</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Sumy transakcií nesmú byť záporné</translation>
+        <translation type="unfinished">Znesek transakcije ne sme biti negativen</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transakcia má v transakčnom zásobníku príliš dlhý reťazec</translation>
+        <translation type="unfinished">Transakcija je del predolge verige nepotrjenih transakcij</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Transakcia musí mať aspoň jedného príjemcu</translation>
+        <translation type="unfinished">Transakcija mora imeti vsaj enega prejemnika.</translation>
     </message>
     <message>
         <source>Transaction needs a change address, but we can't generate it. %s</source>
-        <translation type="unfinished">Transakcia potrebuje adresu na zmenu, ale nemôžeme ju vygenerovať. %s</translation>
+        <translation type="unfinished">Transakcija potrebuje naslov za vračilo, ki pa ga ne moremo ustvariti. %s</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation type="unfinished">Transakcia príliš veľká</translation>
+        <translation type="unfinished">Transkacija je prevelika</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">Na tomto počítači sa nedá vytvoriť väzba %s (vytvorenie väzby vrátilo chybu %s)</translation>
+        <translation type="unfinished">Na tem računalniku ni bilo mogoče vezati naslova %s (vrnjena napaka: %s)</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">Nemožné pripojiť k %s na tomto počíťači. %s už pravdepodobne beží.</translation>
+        <translation type="unfinished">Na tem računalniku ni bilo mogoče vezati naslova %s. %s je verjetno že zagnan.</translation>
     </message>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">Nepodarilo sa vytvoriť súbor PID '%s': %s</translation>
+        <translation type="unfinished">Ne morem ustvariti PID-datoteke '%s': %s</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Nepodarilo sa vygenerovať úvodné kľúče</translation>
+        <translation type="unfinished">Ne morem ustvariti začetnih ključev</translation>
     </message>
     <message>
         <source>Unable to generate keys</source>
-        <translation type="unfinished">Nepodarilo sa vygenerovať kľúče</translation>
+        <translation type="unfinished">Ne morem ustvariti ključev</translation>
     </message>
     <message>
         <source>Unable to open %s for writing</source>
-        <translation type="unfinished">Nepodarilo sa otvoriť %s pre zapisovanie</translation>
+        <translation type="unfinished">Ne morem odpreti %s za pisanje</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">Nepodarilo sa spustiť HTTP server. Pre viac detailov zobrazte debug log.</translation>
+        <translation type="unfinished">Zagon HTTP strežnika neuspešen. Poglejte razhroščevalni dnevnik za podrobnosti (debug.log).</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">Neznáma -blockfilterindex hodnota %s.</translation>
+        <translation type="unfinished">Neznana vrednost -blockfilterindex %s.</translation>
     </message>
     <message>
         <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Neznámy typ adresy '%s'</translation>
+        <translation type="unfinished">Neznana vrsta naslova '%s'</translation>
     </message>
     <message>
         <source>Unknown change type '%s'</source>
-        <translation type="unfinished">Neznámy typ zmeny '%s'</translation>
+        <translation type="unfinished">Neznana vrsta vračila '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Neznáma sieť upresnená v -onlynet: '%s'</translation>
+        <translation type="unfinished">V nastavitvi -onlynet je podano neznano omrežje '%s'.</translation>
     </message>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished">Aktivované neznáme nové pravidlá (bit verzie %i)</translation>
+        <translation type="unfinished">Aktivirana so neznana nova pravila (versionbit %i)</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Nepodporovaná logovacia kategória %s=%s.</translation>
+        <translation type="unfinished">Nepodprta kategorija beleženja %s=%s.</translation>
     </message>
     <message>
         <source>Upgrading UTXO database</source>
-        <translation type="unfinished">Vylepšuje sa databáza neminutých výstupov (UTXO)</translation>
+        <translation type="unfinished">Nadgrajujem podatkovno bazo UTXO (nepotrošenih kovancev)</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
-        <translation type="unfinished">Inovuje sa txindex databáza</translation>
+        <translation type="unfinished">Nadgrajujem podatkovno bazo txindex</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">Komentár u typu klienta (%s) obsahuje riskantné znaky.</translation>
+        <translation type="unfinished">Komentar uporabniškega agenta (%s) vsebuje nevarne znake.</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
-        <translation type="unfinished">Overujem bloky…</translation>
+        <translation type="unfinished">Preverjam celovitost blokov ...</translation>
     </message>
     <message>
         <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Kontrolujem peňaženku(y)…</translation>
+        <translation type="unfinished">Preverjam denarnice ...</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Peňaženka musí byť prepísaná: pre dokončenie reštartujte %s</translation>
+        <translation type="unfinished">Denarnica mora biti prepisana. Za zaključek ponovno zaženite %s.</translation>
     </message>
 </context>
 </TS>

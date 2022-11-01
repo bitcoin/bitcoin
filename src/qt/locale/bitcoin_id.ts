@@ -50,10 +50,6 @@
         <translation type="unfinished">Pilih alamat untuk mengirim koin</translation>
     </message>
     <message>
-        <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Piih alamat untuk menerima koin</translation>
-    </message>
-    <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">&amp;Pilih</translation>
     </message>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">לחיצה על הלחצן הימני בעכבר לעריכת הכתובת או התווית</translation>
+        <translation type="unfinished">לחץ על הלחצן הימני בעכבר לעריכת הכתובת או התווית</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>העתקת את הכתובת המסומנת ללוח</translation>
+        <translation>העתק את הכתובת המסומנת ללוח</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -90,6 +90,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">יצוא רשימת הכתובות</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">קובץ מופרד בפסיקים</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -237,10 +242,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">חריגת בריחה</translation>
+    </message>
+    <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">אירעה שגיאה חמורה, %1 לא יכול להמשיך בבטחון ולכן יופסק.</translation>
     </message>
-    </context>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">שגיאה פנימית</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">אירעה שגיאה פנימית. יתבצע ניסיון נוסף על ידי %1 להמשיך בבטחה. זאת תקלה בלתי צפויה וניתן לדווח עליה כמפורט להלן.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -258,6 +275,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error initializing settings: %1</source>
         <translation type="unfinished">שגיאה בהגדרות הראשוניות: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">לא התבצעה יציאה בטוחה מ־%1 עדיין…</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -358,6 +379,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 ב׳</translation>
     </message>
     <message>
+        <source>%1 kB</source>
+        <translation type="unfinished">%1 ק״ב</translation>
+    </message>
+    <message>
         <source>%1 MB</source>
         <translation type="unfinished">%1 מ״ב</translation>
     </message>
@@ -450,6 +475,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>&amp;קבלה</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;אפשרויות…</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>ה&amp;צגה / הסתרה</translation>
     </message>
@@ -458,8 +487,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>הצגה או הסתרה של החלון הראשי</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;הצפנת ארנק</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>הצפנת המפתחות הפרטיים ששייכים לארנק שלך</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">גיבוי הארנק</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">ה&amp;חלפת מילת צופן…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -865,7 +906,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>default wallet</source>
         <translation type="unfinished">ארנק בררת מחדל</translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">פותח ארנק&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1081,8 +1126,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">בעת לחיצה על אישור, %1 יחל בהורדה ועיבוד מלאים של שרשרת המקטעים %4 (%2 ג״ב) החל מההעברות הראשונות ב־%3 עם ההשקה הראשונית של %4.</translation>
     </message>
     <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">הגבלת אחסון בלוקצ'יין ל</translation>
+    </message>
+    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">חזרה לאחור מהגדרות אלו מחייב הורדה מחדש של כל שרשרת הבלוקים. מהיר יותר להוריד את השרשרת המלאה ולקטום אותה מאוחר יותר. הדבר מנטרל כמה תכונות מתקדמות.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">ג״ב</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1140,6 +1193,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of blocks left</source>
         <translation type="unfinished">מספר מקטעים שנותרו</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">בתהליך חישוב...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1520,6 +1577,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy to Clipboard</source>
         <translation type="unfinished">העתקה ללוח הגזירים</translation>
+    </message>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">שמירה…</translation>
     </message>
     <message>
         <source>Close</source>
@@ -3025,6 +3086,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">יצוא היסטוריית העברה</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">קובץ מופרד בפסיקים</translation>
     </message>
     <message>
         <source>Confirmed</source>

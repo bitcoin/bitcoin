@@ -809,6 +809,10 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Creación de monedero&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Fallo al crear la billetera</translation>
     </message>
@@ -1666,6 +1670,10 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">Actividad de red desactivada</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation type="unfinished">Ejecutando comando con cualquier cartera</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -2650,6 +2658,10 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">¿Desea incrementar la cuota?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation type="unfinished">¿Desea redactar una transacción con aumento de tarifa?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation type="unfinished">Comisión actual:</translation>
     </message>
@@ -2758,6 +2770,10 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     <message>
         <source>Change index out of range</source>
         <translation type="unfinished">Cambio de indice fuera de rango</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished">Configurar ajustes para %s solo aplicados en %s en red cuando [%s] sección.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>

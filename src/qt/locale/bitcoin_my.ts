@@ -22,6 +22,10 @@
         <translation type="unfinished">&amp;ကူးမယ်</translation>
     </message>
     <message>
+        <source>C&amp;lose</source>
+        <translation type="unfinished">ပိတ်မည်</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို ဖျက်မယ်။</translation>
     </message>
@@ -44,6 +48,14 @@
     <message>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">လိပ်စာကိုပေးပို့ဖို့လိပ်စာရွေးချယ်ပါ</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">ဒင်္ဂါးများလက်ခံရယူမည့်လိပ်စာကို​​ရွေးပါ</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">​ရွေးပါ</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -246,6 +258,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Other</source>
+        <translation type="unfinished">အခြား</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">နေ့စွဲ</translation>

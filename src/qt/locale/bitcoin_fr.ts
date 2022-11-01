@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Clic droit pour modifier l’adresse ou l’étiquette</translation>
+        <translation type="unfinished">‎Cliquez avec le bouton droit de la souris pour modifier l’adresse ou l’étiquette‎</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Saisir une adresse ou une étiquette à rechercher</translation>
+        <translation type="unfinished">Saisissez une adresse ou une étiquette à rechercher</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Choisir l’adresse avec laquelle recevoir des pîèces</translation>
+        <translation type="unfinished">Choisir l’adresse avec laquelle recevoir des pièces</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Adresses d’envoi</translation>
+        <translation type="unfinished">Adresses d’envoi </translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -68,6 +68,12 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Ce sont vos adresses Bitcoin pour envoyer des paiements. Vérifiez toujours le montant et l’adresse du destinataire avant d’envoyer des pièces.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Il s'agit de vos adresses Bitcoin pour la réception des paiements. Utilisez le bouton "Créer une nouvelle adresse de réception" dans l'onglet "Recevoir" pour créer de nouvelles adresses.
+La signature n'est possible qu'avec les adresses de type "patrimoine".</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -240,6 +246,10 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Exception fugitive</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">erreur interne</translation>
     </message>
@@ -279,12 +289,36 @@
         <translation type="unfinished">Saisir une adresse Bitcoin (p. ex. %1)</translation>
     </message>
     <message>
+        <source>Unroutable</source>
+        <translation type="unfinished">Non routable</translation>
+    </message>
+    <message>
+        <source>Internal</source>
+        <translation type="unfinished">Interne</translation>
+    </message>
+    <message>
         <source>Inbound</source>
         <translation type="unfinished">Entrant</translation>
     </message>
     <message>
         <source>Outbound</source>
         <translation type="unfinished">Sortant</translation>
+    </message>
+    <message>
+        <source>Full Relay</source>
+        <translation type="unfinished">Relai entier</translation>
+    </message>
+    <message>
+        <source>Block Relay</source>
+        <translation type="unfinished">Relai bloc</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation type="unfinished">Manuel</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <translation type="unfinished">Senseur</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -305,36 +339,36 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n seconde</numerusform>
+            <numerusform>%n secondes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute</numerusform>
+            <numerusform>%n minutes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n heure</numerusform>
+            <numerusform>%n heures</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n jour</numerusform>
+            <numerusform>%n jours</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n semaine</numerusform>
+            <numerusform>%n semaines</numerusform>
         </translation>
     </message>
     <message>
@@ -344,8 +378,8 @@
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n année</numerusform>
+            <numerusform>%n années</numerusform>
         </translation>
     </message>
     <message>
@@ -449,20 +483,48 @@
         <translation>Afficher ou cacher la fenêtre principale</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;Crypter le Portefeuille</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Chiffrer les clés privées qui appartiennent à votre porte-monnaie</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;Sauvegarder le Portefeuille</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;Changer la phrase de passe…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">Signer un &amp;message</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>Signer les messages avec vos adresses Bitcoin pour prouver que vous les détenez</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">&amp;Vérifier un message…</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>Vérifier les messages pour s’assurer qu’ils ont été signés avec les adresses Bitcoin indiquées</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">&amp;Charger un fichier PSBT...</translation>
+    </message>
+    <message>
         <source>Load PSBT from clipboard…</source>
         <translation type="unfinished">Charger la TBSP à partir du presse-papiers...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Ouvrir une &amp;URL</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -493,6 +555,30 @@
         <translation>Barre d’outils des onglets</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Synchronisation des en-têtes (%1)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Synchronisation avec le réseau…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Indexation des blocs sur le disque…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Traitement des blocs sur le disque…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation type="unfinished">Réindexation des blocs sur le disque…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Connexion aux pairs…</translation>
+    </message>
+    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation type="unfinished">Demander des paiements (génère des codes QR et des URI bitcoin:)</translation>
     </message>
@@ -511,13 +597,17 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>%n blocs d’historique transactionnel ont été traités.</numerusform>
+            <numerusform>%n blocs d’historique transactionnel ont été traités.</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
         <translation>en retard de %1</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">Rattrapage en cours…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -611,9 +701,29 @@
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n connexion(s) actives sur le réseau Bitcoin.</numerusform>
+            <numerusform>%n connexion(s) actives sur le réseau Bitcoin.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">Cliquer pour afficher plus d'actions.</translation>
+    </message>
+    <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">Afficher l'onglet Pairs</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">Désactiver l'activité réseau</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">Activer l'activité réseau</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -778,6 +888,14 @@
         <translation type="unfinished">Copier l’&amp;ID de la transaction</translation>
     </message>
     <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">Barrer dépenser</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">Débarrer non-dépenser</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Copier la quantité</translation>
     </message>
@@ -837,6 +955,10 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Création d'un portefeuille&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Échec de création du porte-monnaie</translation>
     </message>
@@ -844,7 +966,11 @@
         <source>Create wallet warning</source>
         <translation type="unfinished">Avertissement de création du porte-monnaie</translation>
     </message>
-    </context>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Impossible de lister les signataires</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -859,7 +985,11 @@
         <source>default wallet</source>
         <translation type="unfinished">porte-monnaie par défaut</translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Ouverture d'un portefeuille &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -922,10 +1052,23 @@
         <translation type="unfinished">Créer un porte-monnaie vide</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Utilisez un périphérique de signature externe tel qu'un portefeuille physique. Configurez d'abord le script de signataire externe dans les préférences du portefeuille.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">Signataire externe</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation type="unfinished">Créer</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Compilé sans support de signature externe (requis pour la signature externe)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1007,6 +1150,18 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>%1 GB of free space available</source>
+        <translation type="unfinished">%1 GB d'espace libre disponible</translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation type="unfinished">(besoin de %1 GO) </translation>
+    </message>
+    <message>
+        <source>(%1 GB needed for full chain)</source>
+        <translation type="unfinished">(besoin de 1%1 GO pour la chaîne entière)</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Au moins %1 Go de données seront stockés dans ce répertoire et sa taille augmentera avec le temps.</translation>
     </message>
@@ -1018,8 +1173,8 @@
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -1055,8 +1210,16 @@
         <translation type="unfinished">Quand vous cliquerez sur Valider, %1 commencera à télécharger et à traiter l’intégralité de la chaîne de blocs %4 (%2 Go) en débutant avec les transactions les plus anciennes de %3, quand %4 a été lancé initialement.</translation>
     </message>
     <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Limiter l'entreposage de chaîne de blocs à</translation>
+    </message>
+    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation type="unfinished">Rétablir ce paramètre à sa valeur antérieure exige de retélécharger la chaîne de blocs dans son intégralité. Il est plus rapide de télécharger la chaîne complète dans un premier temps et de l’élaguer ultérieurement. Désactive certaines fonctions avancées.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">Go</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1089,6 +1252,10 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 s'éteint</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation type="unfinished">Ne pas éteindre l’ordinateur jusqu’à la disparition de cette fenêtre.</translation>
     </message>
@@ -1112,6 +1279,14 @@
         <translation type="unfinished">Nombre de blocs restants</translation>
     </message>
     <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">Inconnu…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">calcul en cours…</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation type="unfinished">Estampille temporelle du dernier bloc</translation>
     </message>
@@ -1128,10 +1303,6 @@
         <translation type="unfinished">Temps estimé avant la fin de la synchronisation</translation>
     </message>
     <message>
-        <source>Hide</source>
-        <translation type="unfinished">Cacher</translation>
-    </message>
-    <message>
         <source>Esc</source>
         <translation type="unfinished">Échap</translation>
     </message>
@@ -1139,7 +1310,12 @@
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
         <translation type="unfinished">%1 est en cours de synchronisation. Il téléchargera les en-têtes et les blocs des pairs et les validera jusqu’à ce qu’il atteigne la fin de la chaîne de blocs.</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Inconnu. Titre de synchronisation (%1, %2
+%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1164,6 +1340,10 @@
     <message>
         <source>&amp;Start %1 on system login</source>
         <translation type="unfinished">&amp;Démarrer %1 lors de l’ouverture d’une session</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">Rendre l'émondage possible, réduit considérablement l'espace requise pour entreposer les transactions. Tous les blocs sont complètement validés. Faire marche arrière avec ce paramètre requiert de télécharger à nouveau l'entière chaîne de blocs.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1246,12 +1426,32 @@
         <translation type="unfinished">&amp;Dépenser la monnaie non confirmée</translation>
     </message>
     <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">Signataire Externe (ex. portefeuille de matériel)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;Accès externe du script du signataire</translation>
+    </message>
+    <message>
+        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Chemin complet vers un script compatible Bitcoin Core (par exemple C:\Downloads\hwi.exe ou /Users/you/Downloads/hwi.py). Attention : des malwares peuvent voler vos coins!</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Ouvrir automatiquement le port du client Bitcoin sur le routeur. Cela ne fonctionne que si votre routeur prend en charge l’UPnP et si la fonction est activée.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapper le port avec l’&amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Ouvrir automatiquement le port de client sur le routeur. Cela fonctionne seulement lorsque votre routeur supporte NAT-PMP et qu'il soit activé. Le port externe peut-être aléatoire.</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished">Port de mappe utilise NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1288,6 +1488,14 @@
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Fenêtre</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">Affichez l'icône dans la barre d'état système.</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">&amp;Montrer l'icône barre</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1340,6 +1548,11 @@
     <message>
         <source>&amp;Cancel</source>
         <translation>A&amp;nnuler</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Compilé sans support de signature externe (requis pour la signature externe)</translation>
     </message>
     <message>
         <source>default</source>
@@ -1464,12 +1677,25 @@
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">Sauvegarder...</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Transaction Partiellement Signé (Binaire)</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">Montant total</translation>
     </message>
     <message>
         <source>or</source>
         <translation type="unfinished">ou</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation type="unfinished">L'opération a %1 entrées non saisie </translation>
     </message>
     </context>
 <context>
@@ -1505,6 +1731,11 @@
         <source>User Agent</source>
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation type="unfinished">Agent utilisateur</translation>
+    </message>
+    <message>
+        <source>Peer</source>
+        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
+        <translation type="unfinished">Pair</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1553,7 +1784,12 @@
         <source>Save QR Code</source>
         <translation type="unfinished">Enregistrer le code QR</translation>
     </message>
-    </context>
+    <message>
+        <source>PNG Image</source>
+        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <translation type="unfinished">Image PNG</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1693,8 +1929,28 @@
         <translation type="unfinished">Augmenter la taille de police</translation>
     </message>
     <message>
+        <source>Wants Tx Relay</source>
+        <translation type="unfinished">Veut Tx relai</translation>
+    </message>
+    <message>
+        <source>High Bandwidth</source>
+        <translation type="unfinished">Bande passante élevée</translation>
+    </message>
+    <message>
         <source>Connection Time</source>
         <translation type="unfinished">Temps de connexion</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
+        <translation type="unfinished">Temps écoulé depuis qu'un nouveau bloc passant le contrôle de validité a été reçu par ce pair.</translation>
+    </message>
+    <message>
+        <source>Last Block</source>
+        <translation type="unfinished">Dernier bloc</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
+        <translation type="unfinished">Temps écoulé depuis qu'une nouvelle transaction accepté dans notre mempool soit reçu par ce pair.</translation>
     </message>
     <message>
         <source>Last Tx</source>
@@ -1761,6 +2017,18 @@
         <translation type="unfinished">Sortant :</translation>
     </message>
     <message>
+        <source>Inbound: initiated by peer</source>
+        <translation type="unfinished">Entrant: initié par pair</translation>
+    </message>
+    <message>
+        <source>Outbound Full Relay: default</source>
+        <translation type="unfinished">Relai Entier Sortant: défaut</translation>
+    </message>
+    <message>
+        <source>Outbound Block Relay: does not relay transactions or addresses</source>
+        <translation type="unfinished">Relai Bloc Sortant: ne relie pas les transactions ou les adresses</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">&amp;Déconnecter</translation>
     </message>
@@ -1815,6 +2083,10 @@
     <message>
         <source>Ban for</source>
         <translation type="unfinished">Bannir pendant</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation type="unfinished">Jamais</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1923,6 +2195,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to …</source>
+        <translation type="unfinished">Demander le paiement à …</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation type="unfinished">Montant :</translation>
     </message>
@@ -1941,6 +2217,14 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">Copier l’&amp;adresse</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Vérifier</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">Vérifiez cette adresse avec  par ex. un écran de portefeuille physique</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2093,6 +2377,10 @@
         <translation type="unfinished">Si les frais sont trop bas, cette transaction pourrait n’être jamais confirmée (lire l’infobulle)</translation>
     </message>
     <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation type="unfinished">(Frais intelligents pas encore initialisés. Cela prend généralement quelques blocs…)</translation>
+    </message>
+    <message>
         <source>Confirmation time target:</source>
         <translation type="unfinished">Estimation du délai de confirmation :</translation>
     </message>
@@ -2162,6 +2450,12 @@
         <translation type="unfinished">Connecter le porte-monnaie hardware en premier lieu.</translation>
     </message>
     <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Régler chemin du script externe dans Options -»
+Porte-monnaie</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Cr&amp;éer une transaction non signée</translation>
     </message>
@@ -2190,12 +2484,35 @@
         <translation type="unfinished">Voulez-vous vraiment envoyer ?</translation>
     </message>
     <message>
+        <source>To review recipient list click "Show Details…"</source>
+        <translation type="unfinished">Pour réviser la liste du receveur cliquer ''Montrer détails...''</translation>
+    </message>
+    <message>
         <source>Sign and send</source>
         <translation type="unfinished">Signer et envoyer</translation>
     </message>
     <message>
         <source>Sign failed</source>
         <translation type="unfinished">Échec de la signature</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Signataire externe introuvable</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Échec du signataire externe</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Transaction Partiellement Signé (Binaire)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation type="unfinished">Solde extérieur</translation>
     </message>
     <message>
         <source>or</source>
@@ -2268,8 +2585,8 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block.</numerusform>
+            <numerusform>Estimated to begin confirmation within %n blocks.</numerusform>
         </translation>
     </message>
     <message>
@@ -2512,8 +2829,8 @@
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Open for %n more block</numerusform>
+            <numerusform>Open for %n more blocks</numerusform>
         </translation>
     </message>
     <message>
@@ -2583,8 +2900,8 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>matures in %n more block</numerusform>
+            <numerusform>matures in %n more blocks</numerusform>
         </translation>
     </message>
     <message>
@@ -2684,8 +3001,8 @@
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
-            <numerusform />
+            <numerusform>Open for %n more block</numerusform>
+            <numerusform>Open for %n more blocks</numerusform>
         </translation>
     </message>
     <message>
@@ -2832,6 +3149,10 @@
         <translation type="unfinished">Montant min.</translation>
     </message>
     <message>
+        <source>Range…</source>
+        <translation type="unfinished">plage</translation>
+    </message>
+    <message>
         <source>&amp;Copy address</source>
         <translation type="unfinished">&amp;Copier l’adresse</translation>
     </message>
@@ -2850,6 +3171,10 @@
     <message>
         <source>A&amp;bandon transaction</source>
         <translation type="unfinished">A&amp;bandonner la transaction</translation>
+    </message>
+    <message>
+        <source>&amp;Edit address label</source>
+        <translation type="unfinished">Modifier l'adresse de l'étiquette. </translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -3316,6 +3641,10 @@
     <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation type="unfinished">L’élagage ne peut pas être configuré avec une valeur négative.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -coinstatsindex.</source>
+        <translation type="unfinished">Le mode élagué est incompatible avec -coinstatsindex.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>

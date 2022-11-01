@@ -70,6 +70,11 @@
         <translation type="unfinished">Tai yra jūsų Bitcoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Tai jūsų Bitcoin mokėjimų gavimo adresai. Naudokite 'Sukurti naują gavimo adresą' mygtuką gavimų skirtuke kad sukurtumėte naują adresą.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">&amp;Kopijuoti adresą</translation>
     </message>
@@ -167,6 +172,18 @@
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">Įveskite seną ir naują slaptažodį.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Piniginė kurią užšifruosite</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Jūsų piniginė netrukus bus užšifruota</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Jūsų piniginė užšifruota.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -492,6 +509,18 @@
     <message>
         <source>Up to date</source>
         <translation>Atnaujinta</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation type="unfinished">Užkraukite dalinai pasirašytą Bitcoin transakciją</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation type="unfinished">Užkraukite dalinai pasirašytas Bitcoin transakcijas iš iškarpinės...</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation type="unfinished">Mazgo langas</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
@@ -1614,6 +1643,10 @@
         <translation type="unfinished">Vartotojo atstovas</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation type="unfinished">Mazgo langas</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation type="unfinished">Atidarykite %1 derinimo žurnalo failą iš dabartinio duomenų katalogo. Tai gali užtrukti kelias sekundes dideliems žurnalo failams.</translation>
     </message>
@@ -2507,6 +2540,10 @@
         <translation type="unfinished">Sandorio ID</translation>
     </message>
     <message>
+        <source>Transaction total size</source>
+        <translation type="unfinished">Bendras transakcijos dydis</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation type="unfinished">Prekybininkas</translation>
     </message>
@@ -2934,6 +2971,10 @@
     <message>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished">Nėra pakankamai failų aprašų.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Transakcijos pasirašymas nepavyko</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
