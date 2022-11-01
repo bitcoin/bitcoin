@@ -79,8 +79,11 @@ Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
 {
     // if H for the token_id hasn't been created, create it and store it to the cache
     if (GeneratorsFactory::m_H_cache.count(token_id) == 0) {
+        printf("Created new H\n");
         const G1Point H = GetGenerator(GeneratorsFactory::m_G.value(), 0, token_id);
         GeneratorsFactory::m_H_cache.emplace(token_id, H);
+    } else {
+        printf("Reusing existing H\n");
     }
     G1Point H = GeneratorsFactory::m_H_cache[token_id];
 

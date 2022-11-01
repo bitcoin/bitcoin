@@ -83,7 +83,7 @@ public:
         const TokenId& token_id
     ) const;
 
-    bool ValidateProofsBySizes(
+    void ValidateProofsBySizes(
         const std::vector<Proof>& proofs
     ) const;
 
