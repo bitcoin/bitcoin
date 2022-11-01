@@ -98,6 +98,11 @@ public:
      */
     Elements<T> Invert() const;
 
+    /**
+     * Negate each contained elements
+     */
+    Elements<T> Negate() const;
+
     std::vector<T> m_vec;
 };
 

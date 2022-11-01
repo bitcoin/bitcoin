@@ -104,8 +104,8 @@ private:
 
     static Scalar* m_one;
     static Scalar* m_two;
-    static Scalars* m_two_pows;
-    static Scalar* m_inner_prod_ones_and_two_pows;
+    static Scalars* m_two_pows_64;
+    static Scalar* m_inner_prod_1x2_pows_64;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;

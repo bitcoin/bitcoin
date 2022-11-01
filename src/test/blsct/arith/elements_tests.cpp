@@ -492,4 +492,14 @@ BOOST_AUTO_TEST_CASE(test_elements_invert)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_elements_negate)
+{
+    {
+        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        auto ss_inv = ss.Negate();
+        BOOST_CHECK(ss_inv[0] == ss[0].Negate());
+        BOOST_CHECK(ss_inv[1] == ss[1].Negate());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

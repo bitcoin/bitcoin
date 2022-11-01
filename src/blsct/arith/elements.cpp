@@ -312,3 +312,19 @@ Elements<T> Elements<T>::Invert() const
     }
 }
 template Elements<Scalar> Elements<Scalar>::Invert() const;
+
+template <typename T>
+Elements<T> Elements<T>::Negate() const
+{
+    if constexpr (std::is_same_v<T, Scalar>) {
+        Scalars ret;
+        for(auto& x: m_vec) {
+            ret.Add(x.Negate());
+        }
+        return ret;
+
+    } else {
+        throw std::runtime_error("Not implemented");
+    }
+}
+template Elements<Scalar> Elements<Scalar>::Negate() const;

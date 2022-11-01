@@ -10,8 +10,8 @@
 
 Scalar* RangeProof::m_one = nullptr;
 Scalar* RangeProof::m_two = nullptr;
-Scalars* RangeProof::m_two_pows = nullptr;
-Scalar* RangeProof::m_inner_prod_ones_and_two_pows = nullptr;
+Scalars* RangeProof::m_two_pows_64 = nullptr;
+Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
 RangeProof::RangeProof()
@@ -25,10 +25,10 @@ RangeProof::RangeProof()
 
     RangeProof::m_one = new Scalar(1);
     RangeProof::m_two = new Scalar(2);
-    auto two_pows = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
-    RangeProof::m_two_pows = new Scalars(two_pows);
-    auto ones = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
-    RangeProof::m_inner_prod_ones_and_two_pows = new Scalar((ones * *RangeProof::m_two_pows).Sum());
+    auto two_pows_64 = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+    RangeProof::m_two_pows_64 = new Scalars(two_pows_64);
+    auto ones_64 = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
+    RangeProof::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProof::m_two_pows_64).Sum());
 
     RangeProof::m_gf = new GeneratorsFactory();
 
@@ -159,7 +159,7 @@ Proof RangeProof::Prove(
         aL.Add(false);
     }
 
-    auto one_value_concat_bits = Scalars::FirstNPow(*m_one, concat_input_values_in_bits);
+    auto one_value_concat_bits = Scalars::RepeatN(*m_one, concat_input_values_in_bits);
 
     // aR is aL - 1
     Scalars aR = aL - one_value_concat_bits;
@@ -180,7 +180,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
             std::vector<uint8_t>(message.begin(), message.begin() + 23) :
             message
     );
-    // first part of message + 64-byte vs[0]
+    // first part of message + 64-bit vs[0]
     Scalar msg1_v0 = (msg1_scalar << Config::m_input_value_bits) | vs[0];
 
     Scalar alpha = nonce.GetHashWithSalt(1);
@@ -196,7 +196,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (Gi * sL).Sum() + (Hi * sR).Sum() + (gens.H * rho);
+    proof.S = (gens.H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
 
     // (48)-(50)
     transcript_gen << proof.A;
@@ -229,7 +229,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
         auto base_z_pow = z_pows_from_2[i];  // use different Scalar for each input value
 
         for (size_t bit_idx = 0; bit_idx < Config::m_input_value_bits; ++bit_idx) {
-            z_pow_twos.Add(base_z_pow * (*m_two_pows)[bit_idx]);
+            z_pow_twos.Add(base_z_pow * (*m_two_pows_64)[bit_idx]);
         }
     }
 
@@ -315,7 +315,7 @@ Scalar delta_yz =
     z * y_pows_sum  // (1)
     - (z_pows[0] * y_pows_sum); // (2)
 for (size_t i = 1; i <= num_input_values_power_of_2; ++i) {
-    delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
+    delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
 }
 
 auto lhs_65_g = gens.G.get() * proof.t_hat;
@@ -334,6 +334,22 @@ if (lhs_65_g != rhs_65_g)
     throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
 else
     printf("==============> (65) G worked\n");
+
+/// (66), (67)
+auto y_inv_pows = Scalars::FirstNPow(y.Invert(), concat_input_values_in_bits);
+auto HiPrime = Hi * y_inv_pows;
+
+/// (66)
+auto hp_exp = (y_pows * z) + z_pow_twos;
+auto P66 = proof.A + (proof.S * x) + (Gi * zs.Negate()).Sum() + (HiPrime * hp_exp).Sum();
+
+/// (67)
+auto P67 = (gens.H * proof.mu) + (Gi * l).Sum() + (HiPrime * r).Sum();
+
+if (P66 != P67)
+    throw std::runtime_error(strprintf("%s: (66) != (67)", __func__));
+else
+    printf("==============> (66) == (67)!!\n");
 
 /////
 
@@ -409,7 +425,7 @@ G1Point RangeProof::VerifyLoop2(
             - (z_pows[0] * y_pows_sum);  // (2)
         for (size_t i = 1; i <= p.num_input_values_power_2; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
-            delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_ones_and_two_pows;  // (3)
+            delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
         }
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
@@ -428,12 +444,12 @@ G1Point RangeProof::VerifyLoop2(
 
 ///// debug
 G1Points p65;
-p65.Add(gens.H * p.proof.tau_x.Negate());
-p65.Add(gens.G.get() * (p.proof.t_hat - delta_yz).Negate());
-p65.Add(p.proof.T1 * p.x);
-p65.Add(p.proof.T2 * p.x.Square());
+p65.Add(gens.H * p.proof.tau_x.Negate() * weight_y);
+p65.Add(gens.G.get() * (p.proof.t_hat - delta_yz).Negate() * weight_y);
+p65.Add(p.proof.T1 * p.x * weight_y);
+p65.Add(p.proof.T2 * p.x.Square() * weight_y);
 for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-    p65.Add(p.proof.Vs[i] * z_pows[i]);
+    p65.Add(p.proof.Vs[i] * z_pows[i] * weight_y);
 }
 if (!p65.Sum().IsUnity()) {
     throw std::runtime_error(strprintf("%s: (65) is not balancing", __func__));
@@ -478,7 +494,7 @@ if (!p65.Sum().IsUnity()) {
             // ** z^2 * 2^n in (h')^(z * y^n + z^2 * 2^n) in RHS (66)
             Scalar tmp =
                 z_pows[i / Config::m_input_value_bits] *  // skipping the first 2 powers, different z_pow is assigned to each number
-                (*m_two_pows)[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
+                (*m_two_pows_64)[i % Config::m_input_value_bits];   // power of 2 corresponding to i-th bit of the number being processed
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
