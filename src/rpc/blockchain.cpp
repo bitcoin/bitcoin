@@ -299,6 +299,11 @@ static RPCHelpMan getchainlocks()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
+                    {RPCResult::Type::OBJ, "previous_chainlock", "previous chainlock information", 
+                    {
+                        {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
+                        {RPCResult::Type::NUM, "height", "Block Height"},
+                    }},
                     {RPCResult::Type::OBJ, "recent_chainlock", "Most recent chainlock information", 
                     {
                         {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
