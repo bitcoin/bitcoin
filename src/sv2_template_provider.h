@@ -277,15 +277,15 @@ public:
           << m_coinbase_tx_value_remaining
           << m_coinbase_tx_outputs_count;
 
-        if (m_coinbase_tx_outputs_count > 0) {
-            std::vector<uint8_t> outputs_bytes;
-            CVectorWriter{SER_NETWORK, PROTOCOL_VERSION, outputs_bytes, 0, m_coinbase_tx_outputs[0]};
+       // coinbase_tx_outputs needs to satisfy the serialized type Seq064K[B0_64K]
+       // https://github.com/stratum-mining/sv2-spec/blob/main/03-Protocol-Overview.md#31-data-types-mapping
+       s << static_cast<uint16_t>(m_coinbase_tx_outputs_count);
+       for (auto& output : m_coinbase_tx_outputs) {
+           std::vector<uint8_t> output_bytes;
+           CVectorWriter{SER_NETWORK, PROTOCOL_VERSION, output_bytes, 0, output};
 
-            s << static_cast<uint16_t>(outputs_bytes.size());
-            s.write(MakeByteSpan(outputs_bytes));
-        } else {
-            // We still need to send 2 bytes indicating an empty coinbase-tx_outputs array.
-            s << static_cast<uint16_t>(0);
+           s << static_cast<uint16_t>(output_bytes.size());
+           s.write(MakeByteSpan(output_bytes));
         }
 
         s << m_coinbase_tx_locktime
