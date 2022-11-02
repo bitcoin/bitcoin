@@ -355,7 +355,7 @@ public:
         // ITCOIN_SPECIFIC END
 
         consensus.fPowAllowMinDifficultyBlocks = false;
-        consensus.fPowNoRetargeting = false;
+        consensus.fPowNoRetargeting = true; // ITCOIN_SPECIFIC
         consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
 
         // ITCOIN_SPECIFIC
