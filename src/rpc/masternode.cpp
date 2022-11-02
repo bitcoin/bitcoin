@@ -263,7 +263,7 @@ static RPCHelpMan masternode_sign()
     return RPCHelpMan{"masternode_sign",
         "\nSign BLS message against previous CL + msghash using MN operator BLS key. Must be in winners list as well.\n",
         {         
-            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "msg hash."}, 
+            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "msg hash."}, 
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
@@ -332,9 +332,9 @@ static RPCHelpMan masternode_verify()
     return RPCHelpMan{"masternode_verify",
         "\nVerify BLS message signed against previous CL + msghash using MN operator BLS key. Must be in winners list as well.\n",
         {         
-            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "msg hash"},
-            {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "signature"},
-            {"blspubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "BLS MN operator pubkey"},
+            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "msg hash"},
+            {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "signature"},
+            {"blspubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "BLS MN operator pubkey"},
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
