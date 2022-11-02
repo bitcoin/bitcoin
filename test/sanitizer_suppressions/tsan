@@ -23,4 +23,6 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
-race:epoll_ctl  # https://github.com/bitcoin/bitcoin/pull/20218
+
+# https://github.com/bitcoin/bitcoin/pull/20218, https://github.com/bitcoin/bitcoin/pull/20745
+race:epoll_ctl
