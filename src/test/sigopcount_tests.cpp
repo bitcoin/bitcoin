@@ -285,6 +285,36 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(redeemScript.GetStandardSigOpCount()==4+MAX_PUBKEYS_PER_MULTISIG);
     }
 
+    // Invalid script ENDIF and a 7 OP_CHECKMULTISIGVERIFY (revert back to old computations)
+    {
+        CScript redeemScript = CScript() <<
+         OP_ENDIF <<
+         7 <<
+         OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==7);
+    }
+
+    // Invalid script ENDIF and OP_RETURN OP_CHECKMULTISIGVERIFY (revert back to old computations)
+    {
+        CScript redeemScript = CScript() <<
+         OP_ENDIF <<
+         OP_RETURN <<
+         OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==MAX_PUBKEYS_PER_MULTISIG);
+    }
+    // Invalid script ENDIF followed by IF/ELSE/ENDIF. Should not use path-related counting.
+    {
+        CScript redeemScript = CScript() <<
+         OP_ENDIF <<
+         OP_NOTIF << 4 <<
+         OP_ELSE  << 1 <<
+         OP_ENDIF << OP_CHECKMULTISIGVERIFY;
+
+        assert(redeemScript.GetStandardSigOpCount()==MAX_PUBKEYS_PER_MULTISIG);
+    }
+
     // Last opcode of ENDIF is not a push
     {
         CScript redeemScript = CScript() <<

@@ -167,22 +167,21 @@ unsigned int CScript::GetStandardSigOpCount() const
     unsigned int else_n = MAX_PUBKEYS_PER_MULTISIG;
     unsigned int nesting =0;
     bool  elseFound = false;
+    bool  validScript = true;
     const_iterator pc = begin();
     opcodetype lastOpcode = OP_INVALIDOPCODE;
-    while (pc < end())
-    {
+    while (pc < end()) {
         opcodetype opcode;
         if (!GetOp(pc, opcode))
             break;
-        switch (opcode)
-            {
+        switch (opcode) {
              case OP_CHECKSIG:
              case OP_CHECKSIGVERIFY:
                 n++;
                 break;
              case OP_CHECKMULTISIG:
              case OP_CHECKMULTISIGVERIFY:
-                if ((lastOpcode==OP_ENDIF) && (nesting==0)) {
+                if ((validScript) && (lastOpcode==OP_ENDIF) && (nesting==0)) {
                         n +=std::max(endif_n,else_n);
                         endif_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
                         elseFound = false;
@@ -190,34 +189,45 @@ unsigned int CScript::GetStandardSigOpCount() const
                     else
                     n += GetStandardSigOpCount(lastOpcode);
                 break;
-            case OP_IF:
-            case OP_NOTIF:
-                if (nesting==0) {
-                   endif_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
-                   elseFound = false;
-                }
-                nesting++;
-                break;
-            case OP_ELSE:
-                if (nesting==1) {
-                    // Avoid considering scripts with multiple OP_ELSE as standard.
-                    // IF ELSE ELSE ENDIF is allowed by Bitcoin script
-                    if (elseFound)
-                        else_n = MAX_PUBKEYS_PER_MULTISIG;
-                    else {
-                        else_n = GetStandardSigOpCount(lastOpcode);
-                        elseFound = true;
-                    }
-                }
-                break;
-            case OP_ENDIF:
-                if (nesting==1)
-                    endif_n = GetStandardSigOpCount(lastOpcode);
-                nesting--;
-                break;
             default:
                 break;
-            }
+        }
+
+        if (validScript) {
+          switch (opcode) {
+                case OP_IF:
+                case OP_NOTIF:
+                    if (nesting==0) {
+                       endif_n = else_n = MAX_PUBKEYS_PER_MULTISIG;
+                       elseFound = false;
+                    }
+                    nesting++;
+                    break;
+                case OP_ELSE:
+                    if (nesting==1) {
+                        // Avoid considering scripts with multiple OP_ELSE as standard.
+                        // IF ELSE ELSE ENDIF is allowed by Bitcoin script
+                        if (elseFound)
+                            else_n = MAX_PUBKEYS_PER_MULTISIG;
+                        else {
+                            else_n = GetStandardSigOpCount(lastOpcode);
+                            elseFound = true;
+                        }
+                    }
+                    break;
+                case OP_ENDIF:
+                    if (nesting==0)
+                       validScript = false;
+                    else {
+                      if (nesting==1)
+                          endif_n = GetStandardSigOpCount(lastOpcode);
+                      nesting--;
+                    }
+                    break;
+                default:
+                    break;
+         }
+        }
         lastOpcode = opcode;
     }
     return n;
