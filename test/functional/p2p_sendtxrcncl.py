@@ -67,6 +67,8 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.extra_args = [['-txreconciliation']]
 
     def run_test(self):
+        # Check everything concerning *sending* SENDTXRCNCL
+        # First, *sending* to *inbound*.
         self.log.info('SENDTXRCNCL sent to an inbound')
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
         assert peer.sendtxrcncl_msg_received
@@ -119,8 +121,46 @@ class SendTxRcnclTest(BitcoinTestFramework):
         assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 
-        self.restart_node(0, ["-txreconciliation"])
+        # Now, *sending* to *outbound*.
+        self.log.info('SENDTXRCNCL sent to an outbound')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
+        assert peer.sendtxrcncl_msg_received
+        assert_equal(peer.sendtxrcncl_msg_received.version, 1)
+        self.nodes[0].disconnect_p2ps()
 
+        self.log.info('SENDTXRCNCL should not be sent if block-relay-only')
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="block-relay-only")
+        assert not peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info("SENDTXRCNCL should not be sent if feeler")
+        peer = self.nodes[0].add_outbound_p2p_connection(P2PFeelerReceiver(), p2p_idx=0, connection_type="feeler")
+        assert not peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info("SENDTXRCNCL should not be sent if addrfetch")
+        peer = self.nodes[0].add_outbound_p2p_connection(
+            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="addr-fetch")
+        assert not peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('SENDTXRCNCL not sent if -txreconciliation flag is not set')
+        self.restart_node(0, [])
+        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
+        assert not peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info('SENDTXRCNCL not sent if blocksonly is set')
+        self.restart_node(0, ["-txreconciliation", "-blocksonly"])
+        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
+        assert not peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
+        # Check everything concerning *receiving* SENDTXRCNCL
+        # First, receiving from *inbound*.
+        self.restart_node(0, ["-txreconciliation"])
         self.log.info('valid SENDTXRCNCL received')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
         with self.nodes[0].assert_debug_log(["received: sendtxrcncl"]):
@@ -163,7 +203,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         old_version_msg.nServices = P2P_SERVICES
         old_version_msg.relay = 1
         peer.send_message(old_version_msg)
-        with self.nodes[0].assert_debug_log(['Ignore unexpected txreconciliation signal from peer=2']):
+        with self.nodes[0].assert_debug_log(['Ignore unexpected txreconciliation signal']):
             peer.send_message(create_sendtxrcncl_msg())
         self.nodes[0].disconnect_p2ps()
 
@@ -180,48 +220,13 @@ class SendTxRcnclTest(BitcoinTestFramework):
             peer.send_message(msg_verack())
         self.nodes[0].disconnect_p2ps()
 
-        self.log.info('SENDTXRCNCL sent to an outbound')
-        peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
-        assert peer.sendtxrcncl_msg_received
-        assert_equal(peer.sendtxrcncl_msg_received.version, 1)
-        self.nodes[0].disconnect_p2ps()
-
-        self.log.info('SENDTXRCNCL should not be sent if block-relay-only')
-        peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="block-relay-only")
-        assert not peer.sendtxrcncl_msg_received
-        self.nodes[0].disconnect_p2ps()
-
-        self.log.info("SENDTXRCNCL should not be sent if feeler")
-        peer = self.nodes[0].add_outbound_p2p_connection(P2PFeelerReceiver(), p2p_idx=0, connection_type="feeler")
-        assert not peer.sendtxrcncl_msg_received
-        self.nodes[0].disconnect_p2ps()
-
-        self.log.info("SENDTXRCNCL should not be sent if addrfetch")
-        peer = self.nodes[0].add_outbound_p2p_connection(
-            SendTxrcnclReceiver(), wait_for_verack=True, p2p_idx=0, connection_type="addr-fetch")
-        assert not peer.sendtxrcncl_msg_received
-        self.nodes[0].disconnect_p2ps()
-
+        # Now, *receiving* from *outbound*.
         self.log.info('SENDTXRCNCL if block-relay-only triggers a disconnect')
         peer = self.nodes[0].add_outbound_p2p_connection(
             PeerNoVerack(), wait_for_verack=False, p2p_idx=0, connection_type="block-relay-only")
         with self.nodes[0].assert_debug_log(["we indicated no tx relay; disconnecting"]):
             peer.send_message(create_sendtxrcncl_msg())
             peer.wait_for_disconnect()
-
-        self.log.info('SENDTXRCNCL not sent if -txreconciliation flag is not set')
-        self.restart_node(0, [])
-        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
-        assert not peer.sendtxrcncl_msg_received
-        self.nodes[0].disconnect_p2ps()
-
-        self.log.info('SENDTXRCNCL not sent if blocksonly is set')
-        self.restart_node(0, ["-txreconciliation", "-blocksonly"])
-        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=True, wait_for_verack=True)
-        assert not peer.sendtxrcncl_msg_received
-        self.nodes[0].disconnect_p2ps()
 
 
 if __name__ == '__main__':
