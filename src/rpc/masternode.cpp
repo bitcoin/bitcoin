@@ -348,29 +348,25 @@ static RPCHelpMan masternode_verify()
     uint256 msgHash = ParseHashV(request.params[0], "msgHash");
     CBLSSignature sig;
     if (!sig.SetHexStr(request.params[1].get_str())) {
-        return false;
-        // throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
     CBLSPublicKey blsPubKeyOperator;
     if (!blsPubKeyOperator.SetHexStr(request.params[2].get_str())) {
-        return false;
-        // throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid operator pubkey");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid operator pubkey");
     }
     if(!sig.VerifyInsecure(blsPubKeyOperator, msgHash)) {
-        return false;
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Signature validation failed");
     }
     const CBlockIndex* pindexTip{nullptr};
     llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
     if (clsigPrev.IsNull()) {
-        return false;
-        //throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
     }
     {
         LOCK(cs_main);
         pindexTip = node.chainman->ActiveChain()[clsigPrev.nHeight];
         if(pindexTip->GetBlockHash() != clsigPrev.blockHash) {
-            return false;
-            //throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
         }
     }
     int nCount = 10;
@@ -396,10 +392,9 @@ static RPCHelpMan masternode_verify()
         }
     }
     if(!bFoundActiveMN) {
-        return false;
-        //throw JSONRPCError(RPC_INTERNAL_ERROR, "MN operator not in winners list");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "MN operator not in winners list");
     }
-    return true;
+    return "success";
 },
     };
 }
