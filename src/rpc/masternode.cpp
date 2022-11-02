@@ -441,101 +441,19 @@ static RPCHelpMan masternode_winners()
     UniValue obj(UniValue::VOBJ);
     int nChainTipHeight = pindexTip->nHeight;
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
-    auto dmnToStatus = [&](auto &mn_List, auto& dmn) {
-        if (mn_List.IsMNValid(*dmn)) {
-            return "ENABLED";
-        }
-        if (mn_List.IsMNPoSeBanned(*dmn)) {
-            return "POSE_BANNED";
-        }
-        return "UNKNOWN";
-    };
-    auto dmnToLastPaidTime = [&](auto& dmn) {
-        if (dmn->pdmnState->nLastPaidHeight == 0) {
-            return (int)0;
-        }
 
-        LOCK(cs_main);
-        const CBlockIndex* pindex = node.chainman->ActiveChain()[dmn->pdmnState->nLastPaidHeight];
-        return (int)pindex->nTime;
-    };
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1));
-        auto payee = mnList.GetMNPayee();
+        auto payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
         std::string strPayments = GetRequiredPaymentsString(h, payee);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
-        if(strFilter == "full") {
-            std::string strOutpoint = payee->collateralOutpoint.ToStringShort();
-            std::string collateralAddressStr = "UNKNOWN";
-            std::map<COutPoint, Coin> coins;
-            coins[payee->collateralOutpoint]; 
-            node.chain->findCoins(coins);
-            const Coin &coin = coins.at(payee->collateralOutpoint);
-            if (!coin.IsSpent()) {
-                CTxDestination collateralDest;
-                if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                    collateralAddressStr = EncodeDestination(collateralDest);
-                }
-            }
-
-            CScript payeeScript = payee->pdmnState->scriptPayout;
-            CTxDestination payeeDest;
-            std::string payeeStr = "UNKNOWN";
-            if (ExtractDestination(payeeScript, payeeDest)) {
-                payeeStr = EncodeDestination(payeeDest);
-            }
-            std::ostringstream streamFull;
-            streamFull << std::setw(18) <<
-                        dmnToStatus(mnList, payee) << " " <<
-                        payeeStr << " " << std::setw(10) <<
-                        dmnToLastPaidTime(payee) << " "  << std::setw(6) <<
-                        payee->pdmnState->nLastPaidHeight << " " <<
-                        payee->pdmnState->addr.ToString();
-            std::string strFull = streamFull.str();
-            obj.pushKV(strOutpoint, strFull); 
-        } else {
-            obj.pushKV(strprintf("%d", h), strPayments);
-        }
+        obj.pushKV(strprintf("%d", h), strPayments);
     }
-    auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
-    auto projection = mnList.GetProjectedMNPayees(20);
+    auto projection = deterministicMNManager->GetListForBlock(pindexTip).GetProjectedMNPayees(20);
     for (size_t i = 0; i < projection.size(); i++) {
         int h = nChainTipHeight + 1 + i;
         std::string strPayments = GetRequiredPaymentsString(h, projection[i]);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
-        if(strFilter == "full") {
-            auto payee = projection[i];
-            std::string strOutpoint = payee->collateralOutpoint.ToStringShort();
-            std::string collateralAddressStr = "UNKNOWN";
-            std::map<COutPoint, Coin> coins;
-            coins[payee->collateralOutpoint]; 
-            node.chain->findCoins(coins);
-            const Coin &coin = coins.at(payee->collateralOutpoint);
-            if (!coin.IsSpent()) {
-                CTxDestination collateralDest;
-                if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                    collateralAddressStr = EncodeDestination(collateralDest);
-                }
-            }
-
-            CScript payeeScript = payee->pdmnState->scriptPayout;
-            CTxDestination payeeDest;
-            std::string payeeStr = "UNKNOWN";
-            if (ExtractDestination(payeeScript, payeeDest)) {
-                payeeStr = EncodeDestination(payeeDest);
-            }
-            std::ostringstream streamFull;
-            streamFull << std::setw(18) <<
-                        dmnToStatus(mnList, payee) << " " <<
-                        payeeStr << " " << std::setw(10) <<
-                        dmnToLastPaidTime(payee) << " "  << std::setw(6) <<
-                        payee->pdmnState->nLastPaidHeight << " " <<
-                        payee->pdmnState->addr.ToString();
-            std::string strFull = streamFull.str();
-            obj.pushKV(strOutpoint, strFull); 
-        } else {
-            obj.pushKV(strprintf("%d", h), strPayments);
-        }
+        obj.pushKV(strprintf("%d", h), strPayments);
     }
     return obj;
 },
