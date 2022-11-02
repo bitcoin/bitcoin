@@ -16,9 +16,9 @@ stages:
 
 builder-image:
   stage: builder-image
-  image: docker:19.03.5
+  image: docker:20.10.20
   services:
-    - name: docker:19.03.5-dind
+    - name: docker:20.10.20-dind
       command: ["--tls=false"]
   variables:
     DOCKER_HOST: "tcp://docker:2375"
