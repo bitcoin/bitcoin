@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Seçili adesi listeden silin</translation>
+        <translation>Seçili adresi listeden silin</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Bitcoinleri alacağınız adresi seçin</translation>
+        <translation type="unfinished">Coinleri alacağınız adresi seçin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -150,7 +150,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Bu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
+        <translation type="unfinished">kilidi açmakparolaBu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
 Cüzdan kilidini aç.</translation>
     </message>
     <message>
@@ -297,6 +297,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Outbound</source>
         <translation type="unfinished">yurt dışı</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation type="unfinished">Manuel</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -496,7 +500,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Load PSBT from clipboard…</source>
-        <translation type="unfinished">PBT'yi panodan yükle...</translation>
+        <translation type="unfinished">PSBT'yi panodan yükle...</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
@@ -531,6 +535,10 @@ Cüzdan kilidini aç.</translation>
         <translation>Araç çubuğu sekmeleri</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Başlıklar senkronize ediliyor (%1%)...</translation>
+    </message>
+    <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished">Ağ ile senkronize ediliyor...</translation>
     </message>
@@ -557,7 +565,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
-            <numerusform />
+            <numerusform>Processed %n block of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -672,13 +680,23 @@ Cüzdan kilidini aç.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
     </message>
     <message>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
         <translation type="unfinished">daha fazla seçenek için tıklayın.</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">Ağ etkinliğini devre dışı bırak</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">Ağ etkinliğini etkinleştir</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -767,10 +785,6 @@ Cüzdan kilidini aç.</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Selection</source>
-        <translation type="unfinished">Koin Seçimi</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation type="unfinished">Miktar</translation>
     </message>
@@ -839,6 +853,18 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Miktar kopyala</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;miktarı kopyala</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Miktarı kopyala</translation>
     </message>
@@ -899,6 +925,10 @@ Cüzdan kilidini aç.</translation>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Cüzdan oluşturuluyor&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">Cüzdan oluşturma başarısız</translation>
     </message>
@@ -921,7 +951,11 @@ Cüzdan kilidini aç.</translation>
         <source>default wallet</source>
         <translation type="unfinished">varsayılan cüzdan</translation>
     </message>
-    </context>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Cüzdan açılıyor&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1084,7 +1118,7 @@ Cüzdan kilidini aç.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -1335,6 +1369,10 @@ Cüzdan kilidini aç.</translation>
         <translation>&amp;Pencere</translation>
     </message>
     <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">Simgeyi &amp;Göster </translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Küçültüldükten sonra sadece tepsi simgesi göster.</translation>
     </message>
@@ -1549,6 +1587,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
     </message>
     <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">İşlem sürerken bilinmeyen bir hata oluştu.</translation>
+    </message>
+    <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
         <translation type="unfinished">İşlem ağa duyuruldu! İşlem kodu: %1</translation>
     </message>
@@ -1565,6 +1607,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">PSBT diske kaydedildi.</translation>
     </message>
     <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation type="unfinished">İşlem ücretini veya toplam işlem miktarını hesaplayamıyor.</translation>
+    </message>
+    <message>
         <source>Pays transaction fee: </source>
         <translation type="unfinished">İşlem ücreti:&lt;br&gt;</translation>
     </message>
@@ -1573,8 +1619,20 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">veya</translation>
     </message>
     <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation type="unfinished">İşlem girdileri hakkında bazı bilgiler eksik. </translation>
+    </message>
+    <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">İşlemin hala imza(lar)a ihtiyacı var.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation type="unfinished">(Ancak bu cüzdan işlemleri imzalayamaz.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation type="unfinished">İşlem tamamen imzalandı ve yayın için hazır.</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -2032,6 +2090,22 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">&amp;URI'yi Kopyala</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation type="unfinished">&amp;mesajı kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;miktarı kopyala</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Cüzdanın kilidi açılamadı.</translation>
     </message>
@@ -2065,6 +2139,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Copy &amp;Address</source>
         <translation type="unfinished">&amp;Adresi Kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">&amp;Onayla</translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -2270,8 +2348,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">%1 den %2'ye</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation type="unfinished">Bu işlemi taslak yapmak ister misiniz?</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Göndermek istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>Create Unsigned</source>
+        <translation type="unfinished">İmzasız Oluştur</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -2300,6 +2386,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Confirm send coins</source>
         <translation type="unfinished">Bitcoin gönderimini onaylayın</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation type="unfinished">İşlem teklifini onaylayın</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2336,7 +2426,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block.</numerusform>
         </translation>
     </message>
     <message>
@@ -2498,6 +2588,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İletinin imzalanmasında kullanılan Bitcoin adresi</translation>
     </message>
     <message>
+        <source>The signed message to verify</source>
+        <translation type="unfinished">Doğrulamak için imzalanmış mesaj</translation>
+    </message>
+    <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Belirtilen Bitcoin adresi ile imzalandığını doğrulamak için iletiyi kontrol et</translation>
     </message>
@@ -2571,7 +2665,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>Open for %n more block</numerusform>
         </translation>
     </message>
     <message>
@@ -2653,7 +2747,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>matures in %n more block</numerusform>
         </translation>
     </message>
     <message>
@@ -2695,6 +2789,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Transaction total size</source>
         <translation type="unfinished">İşlemin toplam boyutu</translation>
+    </message>
+    <message>
+        <source>Transaction virtual size</source>
+        <translation type="unfinished">İşlemin sanal boyutu</translation>
     </message>
     <message>
         <source>Output index</source>
@@ -2765,7 +2863,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation>
-            <numerusform />
+            <numerusform>Open for %n more block</numerusform>
         </translation>
     </message>
     <message>
@@ -2916,6 +3014,18 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Aralık...</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Adresi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">&amp;etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">&amp;miktarı kopyala</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">İşlem Tarihçesini Dışarı Aktar</translation>
     </message>
@@ -2987,6 +3097,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Bitcoini Gönder</translation>
     </message>
     <message>
+        <source>Fee bump error</source>
+        <translation type="unfinished">Ücret yükselişi hatası</translation>
+    </message>
+    <message>
         <source>Increasing transaction fee failed</source>
         <translation type="unfinished">İşlem ücreti artırma başarısız oldu</translation>
     </message>
@@ -3036,6 +3150,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Error</source>
         <translation type="unfinished">Hata</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation type="unfinished">İşlem Verilerini Yükle</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3224,6 +3342,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">Başlatma sırasında cüzdanı yeniden tarama işlemi başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation type="unfinished">Veritabanı doğrulanamadı</translation>
     </message>
     <message>
         <source>Importing…</source>

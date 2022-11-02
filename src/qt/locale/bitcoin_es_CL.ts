@@ -35,8 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>
-Exportar los datos en la pestaña actual a un archivo</translation>
+        <translation>Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -242,10 +241,18 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
 <context>
     <name>BitcoinApplication</name>
     <message>
-        <source>Internal error</source>
-        <translation type="unfinished">error interno</translation>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Se ha producido un error garrafal. %1Ya no podrá continuar de manera segura y abandonará.</translation>
     </message>
-    </context>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Error interno</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Se ha producido un error interno. 1%1 Se intentará continuar de manera segura. Este es un error inesperado que se puede reportar como se describe a continuación.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>

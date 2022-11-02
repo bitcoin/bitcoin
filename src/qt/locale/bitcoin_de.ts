@@ -1268,7 +1268,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Diese initiale Synchronisation führt zur hohen Last und kann Harewareprobleme, die bisher nicht aufgetreten sind, mit ihrem Computer verursachen. Jedes Mal, wenn Sie %1 ausführen, wird der Download zum letzten Synchronisationspunkt fortgesetzt.</translation>
+        <translation type="unfinished">Diese initiale Synchronisation führt zur hohen Last und kann Hardwareprobleme, die bisher nicht aufgetreten sind, mit ihrem Computer verursachen. Jedes Mal, wenn Sie %1 ausführen, wird der Download zum letzten Synchronisationspunkt fortgesetzt.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -3774,7 +3774,7 @@ Gehen Sie zu Datei &gt; Öffnen Sie die Brieftasche, um eine Brieftasche zu lade
     </message>
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">Fehler: Legacy Brieftaschen unterstützen nur die Adresstypen "legacy", "p2sh-segwit" und "bech32".</translation>
+        <translation type="unfinished">Fehler: Althergebrachte Brieftaschen unterstützen nur die Adresstypen "legacy", "p2sh-segwit" und "bech32".</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -4161,7 +4161,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>Replaying blocks…</source>
-        <translation type="unfinished">Spiele alle Blocks durch…</translation>
+        <translation type="unfinished">Spiele alle Blocks erneut ein…</translation>
     </message>
     <message>
         <source>Rescanning…</source>
@@ -4214,7 +4214,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
-        <translation type="unfinished">Der Quellcode ist von %s verfügbar.</translation>
+        <translation type="unfinished">Der Quellcode ist auf %s verfügbar.</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist</source>
@@ -4286,7 +4286,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">Kann HTTP Server nicht starten. Siehe debug log für Details.</translation>
+        <translation type="unfinished">Kann HTTP-Server nicht starten. Siehe Debug-Log für Details.</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

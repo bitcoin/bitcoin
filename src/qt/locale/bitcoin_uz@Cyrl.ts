@@ -70,6 +70,12 @@
         <translation type="unfinished">Улар тўловларни жўнатиш учун сизнинг Bitcoin манзилларингиз. Доимо тангаларни жўнатишдан олдин сумма ва қабул қилувчи манзилни текшириб кўринг. </translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Улар тўловларни қабул қилиш учун сизнинг Bitcoin манзилларингиз. Янги манзилларни яратиш учун қабул қилиш варағидаги "Янги қабул қилиш манзилини яратиш" устига босинг. 
+Фақат 'legacy' туридаги манзиллар билан ҳисобга кириш мумкин.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">Манзилдан &amp;нусха олиш</translation>
     </message>
@@ -84,6 +90,11 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">Манзил рўйхатини экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Вергул билан ажратилган файл</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -118,23 +129,27 @@
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Махфий сузни киритинг</translation>
+        <translation>Махфий сўзни киритинг</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Янги махфий суз</translation>
+        <translation>Янги махфий сўз</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Янги махфий сузни такрорланг</translation>
+        <translation>Янги махфий сўзни такрорланг</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">Махфий сўзни кўрсатиш</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Ҳамённи қодлаш</translation>
+        <translation type="unfinished">Ҳамённи шифрлаш</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">Ушбу операцияни амалга ошириш учун ҳамённи қулфдан чиқариш парол сўзини талаб қилади.</translation>
+        <translation type="unfinished">Ушбу операцияни амалга ошириш учун ҳамённи қулфдан чиқариш махфий сўзини талаб қилади.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -158,7 +173,19 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Ҳамёни кодланган</translation>
+        <translation type="unfinished">Ҳамён шифрланган</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Шифрланадиган ҳамён</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Ҳамёнингиз шифрланиш арафасида.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Ҳамёнингиз энди шифрланади.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -1638,6 +1665,11 @@
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Ўтказмалар тарихини экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Вергул билан ажратилган файл</translation>
     </message>
     <message>
         <source>Confirmed</source>

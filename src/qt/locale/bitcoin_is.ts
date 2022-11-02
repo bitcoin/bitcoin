@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Smelltu á hægri músatakka til að breyta færslugildi eða merkingu</translation>
+        <translation type="unfinished">Smelltu á hægri músatakka til að velja veski eða merkingu</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Búa til nýtt færslugildi</translation>
+        <translation>Búa til nýtt veski</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Afrita valið færslugildi í klemmuspjald</translation>
+        <translation>Afrita valið veski í klemmuspjald</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Eyða völdu færslugildi úr listanum</translation>
+        <translation>Eyða völdu veski úr listanum</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">Veldu veski eða merkingu fyrir leit</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -43,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Veldu færslugildi sem greiða skal til</translation>
+        <translation type="unfinished">Veldu veski sem greiða skal til</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Veldu færslugildi sem á að taka við mynt</translation>
+        <translation type="unfinished">Veldu veski til að taka við rafmynt</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -55,15 +59,15 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">Færslugildi sem senda frá sér</translation>
+        <translation type="unfinished">Veski sem senda frá sér</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">Færslugildi sem þiggja til sín</translation>
+        <translation type="unfinished">Veski sem þiggja til sín</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Þetta eru Bitcoin færslugildin sem senda greiðslur. Skoðið ævinlega vel upphæðina og færslugildin sem þiggja greiðslur áður en mynt er send.</translation>
+        <translation type="unfinished">Þetta eru Bitcoin veskin sem senda greiðslur. Skoðið ævinlega vel upphæðina og veskin sem þiggja greiðslur áður en rafmynt er send.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>

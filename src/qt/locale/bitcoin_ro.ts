@@ -946,10 +946,18 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Inchide portofel</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Esti sigur ca doresti sa inchizi portofelul&lt;b&gt;%1&lt;b&gt;?</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Închideți toate portofelele</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation type="unfinished">Esti sigur ca doresti sa inchizi toate portofelele?</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -1139,6 +1147,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Revenirea la această setare necesită re-descărcarea întregului blockchain. Este mai rapid să descărcați mai întâi rețeaua complet și să o fragmentați  mai târziu. Dezactivează unele funcții avansate.</translation>
     </message>
     <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Sincronizarea initiala necesita foarte multe resurse, si poate releva probleme de hardware ale computerului care anterior au trecut neobservate. De fiecare data cand rulati %1, descarcarea va continua de unde a fost intrerupta.</translation>
     </message>
@@ -1210,6 +1222,13 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Hide</source>
         <translation type="unfinished">Ascunde</translation>
+    </message>
+    </context>
+<context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation type="unfinished">DeschidețI Bitcoin URI</translation>
     </message>
     </context>
 <context>
@@ -1375,6 +1394,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Arată controlul caracteristicilor monedei sau nu.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Conectați-vă la rețeaua Bitcoin printr-un proxy SOCKS5 separat pentru serviciile Tor (onion).</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation type="unfinished">URL-uri tranzacţii &amp;terţe părţi</translation>
     </message>
@@ -1497,8 +1520,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Copy to Clipboard</source>
+        <translation type="unfinished">Copiați în clipboard</translation>
+    </message>
+    <message>
         <source>Close</source>
         <translation type="unfinished">Inchide</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">Salvați datele tranzacției</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1508,7 +1539,11 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <source>or</source>
         <translation type="unfinished">sau</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation type="unfinished">Starea tranzacției este necunoscută.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1582,6 +1617,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Error encoding URI into QR Code.</source>
         <translation type="unfinished">Eroare la codarea URl-ului în cod QR.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation type="unfinished">Suportul pentru codurile QR nu este disponibil.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1905,6 +1944,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address:</source>
+        <translation type="unfinished">Adresa:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation type="unfinished">Sumă:</translation>
     </message>
@@ -2129,6 +2172,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">Sigur doriţi să trimiteţi?</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">Salvați datele tranzacției</translation>
     </message>
     <message>
         <source>or</source>
@@ -2383,6 +2430,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Deblocarea portofelului a fost anulata.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation type="unfinished">Fara Eroare</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3016,6 +3067,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">Bloc defect din baza de date detectat</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">Spatiul de stocare insuficient!</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>

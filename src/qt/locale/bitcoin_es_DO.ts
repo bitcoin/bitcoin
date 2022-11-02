@@ -162,6 +162,14 @@
         <translation type="unfinished">Monedero cifrado</translation>
     </message>
     <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Tu monedero va a ser cifrado</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Tu monedero está ahora cifrado</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation type="unfinished">IMPORTANTE: Cualquier copia de seguridad que haya realizado previamente de su archivo de monedero debe reemplazarse con el nuevo archivo de monedero cifrado. Por razones de seguridad, las copias de seguridad previas del archivo de monedero no cifradas serán inservibles en cuanto comience a usar el nuevo monedero cifrado.</translation>
     </message>
@@ -194,6 +202,13 @@
         <translation type="unfinished">Aviso: ¡La tecla de bloqueo de mayúsculas está activada!</translation>
     </message>
 </context>
+<context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Error interno</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -294,6 +309,10 @@
         <translation>Mostrar información acerca de Qt</translation>
     </message>
     <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Crear monedero nuevo</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
@@ -320,6 +339,10 @@
     <message>
         <source>Show or hide the main Window</source>
         <translation>Mostar u ocultar la ventana principal</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp;Cifrar monedero</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -1686,6 +1709,13 @@
     <message>
         <source>to</source>
         <translation type="unfinished">para</translation>
+    </message>
+</context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Crear monedero nuevo</translation>
     </message>
 </context>
 <context>

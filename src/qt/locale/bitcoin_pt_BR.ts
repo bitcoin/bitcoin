@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Clique com o botão direito para editar endereço ou rótulo</translation>
+        <translation type="unfinished">Clique com o botão direito para editar endereço ou etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportar os dados na aba atual para um arquivo</translation>
+        <translation>Exportar os dados do separador atual para um ficheiro</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -73,7 +73,7 @@
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Estes são seus endereços Bitcoin para receber pagamentos. Use o botão 'Criar novos endereços de recebimento' na barra receber para criar novos endereços.
-Somente é possível acessar com endereços do tipo 'legado'.</translation>
+Somente é possível assinar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -110,7 +110,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Rótulo</translation>
+        <translation type="unfinished">Etiqueta</translation>
     </message>
     <message>
         <source>Address</source>
@@ -332,7 +332,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
         <source>%n week(s)</source>
         <translation type="unfinished">
             <numerusform>%n week</numerusform>
-            <numerusform>%n weeks</numerusform>
+            <numerusform>%n semanas</numerusform>
         </translation>
     </message>
     <message>
@@ -343,7 +343,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
         <source>%n year(s)</source>
         <translation type="unfinished">
             <numerusform>%n year</numerusform>
-            <numerusform>%n years</numerusform>
+            <numerusform>%n anos</numerusform>
         </translation>
     </message>
     </context>
@@ -607,7 +607,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>Open node debugging and diagnostic console</source>
-        <translation type="unfinished">Abrir console de diagnóstico e depuração de Nó</translation>
+        <translation type="unfinished">Abrir console de diagnóstico e depuração de nó</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
@@ -693,7 +693,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
     <message>
         <source>Show Peers tab</source>
         <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
-        <translation type="unfinished">Mostrar abas De pares.</translation>
+        <translation type="unfinished">Mostra aba de Pares</translation>
     </message>
     <message>
         <source>Disable network activity</source>
@@ -1476,6 +1476,10 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
         <translation type="unfinished">&amp;URLs de transação de terceiros</translation>
     </message>
     <message>
+        <source>Monospaced font in the Overview tab:</source>
+        <translation type="unfinished">Fonte no painel de visualização:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
         <translation type="unfinished">Opções nesta tela foram sobreescritas por comandos ou no arquivo de configuração:</translation>
     </message>
@@ -1489,7 +1493,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>none</source>
-        <translation type="unfinished">nenhum</translation>
+        <translation type="unfinished">Nenhum</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1754,7 +1758,7 @@ Somente é possível acessar com endereços do tipo 'legado'.</translation>
     <message>
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
-        <translation type="unfinished">&amp;Nós</translation>
+        <translation type="unfinished">Nós</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -2945,7 +2949,7 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation type="unfinished">Tamanho tota da transação</translation>
+        <translation type="unfinished">Tamanho total da transação</translation>
     </message>
     <message>
         <source>Transaction virtual size</source>
@@ -3170,6 +3174,11 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">Exportar histórico de transações</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation type="unfinished">Arquivo separado por vírgula</translation>
     </message>
     <message>
         <source>Confirmed</source>

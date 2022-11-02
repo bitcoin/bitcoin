@@ -650,7 +650,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet குறியாக்கப்பட்டு தற்போது பூட்டப்பட்டுள்ளது</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">முதல் செய்தி:</translation>
+    </message>
+</context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1085,6 +1089,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Hide</source>
         <translation type="unfinished">மறை</translation>
+    </message>
+    </context>
+<context>
+    <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation type="unfinished">பிட்காயின் யூ. ஆர். ஐ.யை திர</translation>
     </message>
     </context>
 <context>
@@ -2067,6 +2078,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 இருந்து %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation type="unfinished">இந்தப் பரிவர்த்தனையை வரைய விரும்புகிறீர்களா</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation type="unfinished">நீங்கள் நிச்சயமாக அனுப்ப விரும்புகிறீர்களா?</translation>
     </message>
@@ -2286,6 +2301,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation type="unfinished">செய்தி கையொப்பமிடப்பட்ட பிட்காயின் முகவரி</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation type="unfinished">சரிபார்க்க கையொப்பமிடப்பட்ட செய்தி</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
