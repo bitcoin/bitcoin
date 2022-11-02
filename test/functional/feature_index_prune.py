@@ -138,6 +138,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             self.connect_nodes(i, 3)
 
         self.sync_blocks(timeout=300)
+        self.sync_index(height=2500)
 
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 2489']):
