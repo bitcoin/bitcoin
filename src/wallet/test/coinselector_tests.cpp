@@ -954,6 +954,53 @@ BOOST_AUTO_TEST_CASE(waste_test)
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(bump_fee_test)
+{
+    const CAmount fee{100};
+    const CAmount min_viable_change{200};
+    const CAmount change_cost{125};
+    const CAmount change_fee{35};
+    const CAmount fee_diff{40};
+    const CAmount target{2 * COIN};
+
+    {
+        SelectionResult selection{target, SelectionAlgorithm::MANUAL};
+        add_coin(1 * COIN, 1, selection, /*fee=*/fee, /*long_term_fee=*/fee + fee_diff);
+        add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+        const std::vector<std::shared_ptr<COutput>> inputs = selection.GetShuffledInputVector();
+
+        for (size_t i = 0; i < inputs.size(); ++i) {
+            inputs[i]->ApplyBumpFee(20*(i+1));
+        }
+
+        selection.ComputeAndSetWaste(min_viable_change, change_cost, change_fee);
+        CAmount expected_waste = fee_diff * -2 + change_cost + /*bump_fees=*/60;
+        BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+    }
+
+    {
+        // Test with changeless transaction
+        //
+        // Bump fees and excess both contribute fully to the waste score,
+        // therefore, a bump fee group discount will not change the waste
+        // score as long as we do not create change in both instances.
+        CAmount changeless_target = 3 * COIN - 2 * fee - 100;
+        SelectionResult selection{changeless_target, SelectionAlgorithm::MANUAL};
+        add_coin(1 * COIN, 1, selection, /*fee=*/fee, /*long_term_fee=*/fee + fee_diff);
+        add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
+        const std::vector<std::shared_ptr<COutput>> inputs = selection.GetShuffledInputVector();
+
+        for (size_t i = 0; i < inputs.size(); ++i) {
+            inputs[i]->ApplyBumpFee(20*(i+1));
+        }
+
+        selection.ComputeAndSetWaste(min_viable_change, change_cost, change_fee);
+        CAmount expected_waste = fee_diff * -2 + /*bump_fees=*/60 + /*excess = 100 - bump_fees*/40;
+        BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(effective_value_test)
 {
     const int input_bytes = 148;

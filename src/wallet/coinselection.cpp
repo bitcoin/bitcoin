@@ -514,6 +514,12 @@ CAmount SelectionResult::GetSelectedEffectiveValue() const
     return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->GetEffectiveValue(); });
 }
 
+
+CAmount SelectionResult::GetTotalBumpFees() const
+{
+    return std::accumulate(m_selected_inputs.cbegin(), m_selected_inputs.cend(), CAmount{0}, [](CAmount sum, const auto& coin) { return sum + coin->ancestor_bump_fees; });
+}
+
 void SelectionResult::Clear()
 {
     m_selected_inputs.clear();

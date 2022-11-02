@@ -63,7 +63,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTransaction& mtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -80,7 +80,19 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& new
         return feebumper::Result::WALLET_ERROR;
     }
 
-    CAmount new_total_fee = newFeerate.GetFee(maxTxSize);
+    std::vector<COutPoint> reused_inputs;
+    reused_inputs.reserve(mtx.vin.size());
+    for (const CTxIn& txin : mtx.vin) {
+        reused_inputs.push_back(txin.prevout);
+    }
+
+    std::map<COutPoint, CAmount> bump_fees = wallet.chain().CalculateIndividualBumpFees(reused_inputs, newFeerate);
+    CAmount total_bump_fees = 0;
+    for (auto& [_, bump_fee] : bump_fees) {
+        total_bump_fees += bump_fee;
+    }
+
+    CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + total_bump_fees;
 
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
@@ -283,7 +295,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
         temp_mtx.vout = txouts;
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
-        Result res = CheckFeeRate(wallet, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
+        Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }

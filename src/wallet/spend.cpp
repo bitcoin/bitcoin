@@ -162,6 +162,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 {
     PreSelectedInputs result;
     const bool can_grind_r = wallet.CanGrindR();
+    std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().CalculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
     for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int input_bytes = -1;
         CTxOut txout;
@@ -197,6 +198,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
+        output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
         result.Insert(output, coin_selection_params.m_subtract_fee_outputs);
     }
     return result;
@@ -217,6 +219,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
     const bool can_grind_r = wallet.CanGrindR();
+    std::vector<COutPoint> outpoints;
 
     std::set<uint256> trusted_parents;
     for (const auto& entry : wallet.mapWallet)
@@ -334,6 +337,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             result.Add(GetOutputType(type, is_from_p2sh),
                        COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
 
+            outpoints.push_back(outpoint);
+
             // Checks the sum amount of all UTXO's.
             if (params.min_sum_amount != MAX_MONEY) {
                 if (result.GetTotalAmount() >= params.min_sum_amount) {
@@ -344,6 +349,16 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // Checks the maximum number of UTXO's.
             if (params.max_count > 0 && result.Size() >= params.max_count) {
                 return result;
+            }
+        }
+    }
+
+    if (feerate.has_value()) {
+        std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().CalculateIndividualBumpFees(outpoints, feerate.value());
+
+        for (auto& [_, outputs] : result.coins) {
+            for (auto& output : outputs) {
+                output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
             }
         }
     }
@@ -1021,7 +1036,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (nBytes == -1) {
         return util::Error{_("Missing solving data for estimating transaction size")};
     }
-    CAmount fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+    CAmount fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes) + result.GetTotalBumpFees();
     const CAmount output_value = CalculateOutputValue(txNew);
     Assume(recipients_sum + change_amount == output_value);
     CAmount current_fee = result.GetSelectedValue() - output_value;

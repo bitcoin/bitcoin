@@ -17,6 +17,7 @@
 
 #include <optional>
 
+
 namespace wallet {
 //! lower bound for randomly-chosen target change amount
 static constexpr CAmount CHANGE_LOWER{50000};
@@ -26,10 +27,10 @@ static constexpr CAmount CHANGE_UPPER{1000000};
 /** A UTXO under consideration for use in funding a new transaction. */
 struct COutput {
 private:
-    /** The output's value minus fees required to spend it.*/
+    /** The output's value minus fees required to spend it and bump its unconfirmed ancestors to the target feerate. */
     std::optional<CAmount> effective_value;
 
-    /** The fee required to spend this output at the transaction's target feerate. */
+    /** The fee required to spend this output at the transaction's target feerate and to bump its unconfirmed ancestors to the target feerate. */
     std::optional<CAmount> fee;
 
 public:
@@ -71,6 +72,9 @@ public:
     /** The fee required to spend this output at the consolidation feerate. */
     CAmount long_term_fee{0};
 
+    /** The fee necessary to bump this UTXO's ancestor transactions to the target feerate */
+    CAmount ancestor_bump_fees{0};
+
     COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
@@ -83,6 +87,7 @@ public:
           from_me{from_me}
     {
         if (feerate) {
+            // base fee without considering potential unconfirmed ancestors
             fee = input_bytes < 0 ? 0 : feerate.value().GetFee(input_bytes);
             effective_value = txout.nValue - fee.value();
         }
@@ -102,6 +107,16 @@ public:
     bool operator<(const COutput& rhs) const
     {
         return outpoint < rhs.outpoint;
+    }
+
+    void ApplyBumpFee(CAmount bump_fee)
+    {
+        assert(bump_fee >= 0);
+        ancestor_bump_fees = bump_fee;
+        assert(fee);
+        *fee += bump_fee;
+        // Note: assert(effective_value - bump_fee == nValue - fee.value());
+        effective_value = txout.nValue - fee.value();
     }
 
     CAmount GetFee() const
@@ -354,6 +369,8 @@ public:
     [[nodiscard]] CAmount GetSelectedValue() const;
 
     [[nodiscard]] CAmount GetSelectedEffectiveValue() const;
+
+    [[nodiscard]] CAmount GetTotalBumpFees() const;
 
     void Clear();
 
