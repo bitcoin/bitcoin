@@ -14,6 +14,7 @@
 #include <validation.h>
 #include <node/transaction.h>
 #include <rpc/server_util.h>
+#include <llmq/quorums_chainlocks.h>
 using node::ReadBlockFromDisk;
 using node::GetTransaction;
 RPCHelpMan masternodelist();
@@ -255,13 +256,161 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
     }
     return strPayments;
 }
+
+
+static RPCHelpMan masternode_sign()
+{
+    return RPCHelpMan{"masternode_sign",
+        "\nSign BLS message against previous CL + msghash using MN operator BLS key. Must be in winners list as well.\n",
+        {         
+            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "msg hash."}, 
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
+        RPCExamples{
+            HelpExampleCli("masternode_sign", "")
+    + HelpExampleRpc("masternode_sign", "")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    uint256 msgHash = ParseHashV(request.params[0], "msgHash");
+    CBLSSignature sig;
+    const CBlockIndex* pindexTip{nullptr};
+    llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
+    if (clsigPrev.IsNull()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
+    }
+    {
+        LOCK(cs_main);
+        pindexTip = node.chainman->ActiveChain()[clsigPrev.nHeight];
+        if(pindexTip->GetBlockHash() != clsigPrev.blockHash) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
+        }
+    }
+    int nCount = 10;
+    int nChainTipHeight = pindexTip->nHeight;
+    int nStartHeight = std::max(nChainTipHeight - nCount, 1);
+    bool bFoundActiveMN{false};
+    for (int h = nStartHeight; h <= nChainTipHeight; h++) {
+        const auto &payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
+        if(payee->pdmnState->pubKeyOperator.Get() == *(activeMasternodeInfo.blsPubKeyOperator.get())) {
+            bFoundActiveMN = true;
+            break;
+        }
+    }
+    if(!bFoundActiveMN) {
+        const auto &mnList = deterministicMNManager->GetListForBlock(pindexTip);
+        const auto &projection = mnList.GetProjectedMNPayees(nCount*2);
+        for (size_t i = 0; i < projection.size(); i++) {
+            const auto &payee = projection[i];
+            if(payee->pdmnState->pubKeyOperator.Get() == *(activeMasternodeInfo.blsPubKeyOperator.get())) {
+                bFoundActiveMN = true;
+                break;
+            }
+        }
+    }
+    if(!bFoundActiveMN) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "MN operator not in winners list");
+    }
+    {
+        LOCK(activeMasternodeInfoCs);
+        if (!activeMasternodeInfo.blsKeyOperator) {
+             throw JSONRPCError(RPC_INTERNAL_ERROR, "No MN operator BLS operator key found");
+        }
+        if (activeMasternodeInfo.blsKeyOperator) {
+            sig = activeMasternodeInfo.blsKeyOperator->Sign(msgHash);
+        }
+    }
+    return sig.ToString();
+},
+    };
+}
+
+static RPCHelpMan masternode_verify()
+{
+    return RPCHelpMan{"masternode_verify",
+        "\nVerify BLS message signed against previous CL + msghash using MN operator BLS key. Must be in winners list as well.\n",
+        {         
+            {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "msg hash"},
+            {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "signature"},
+            {"blspubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "BLS MN operator pubkey"},
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
+        RPCExamples{
+            HelpExampleCli("masternode_verify", "")
+    + HelpExampleRpc("masternode_verify", "")
+        },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    uint256 msgHash = ParseHashV(request.params[0], "msgHash");
+    CBLSSignature sig;
+    if (!sig.SetHexStr(request.params[1].get_str())) {
+        return false;
+        // throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+    CBLSPublicKey blsPubKeyOperator;
+    if (!blsPubKeyOperator.SetHexStr(request.params[2].get_str())) {
+        return false;
+        // throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid operator pubkey");
+    }
+    if(!sig.VerifyInsecure(blsPubKeyOperator, msgHash)) {
+        return false;
+    }
+    const CBlockIndex* pindexTip{nullptr};
+    llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
+    if (clsigPrev.IsNull()) {
+        return false;
+        //throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
+    }
+    {
+        LOCK(cs_main);
+        pindexTip = node.chainman->ActiveChain()[clsigPrev.nHeight];
+        if(pindexTip->GetBlockHash() != clsigPrev.blockHash) {
+            return false;
+            //throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
+        }
+    }
+    int nCount = 10;
+    int nChainTipHeight = pindexTip->nHeight;
+    int nStartHeight = std::max(nChainTipHeight - nCount, 1);
+    bool bFoundActiveMN{false};
+    for (int h = nStartHeight; h <= nChainTipHeight; h++) {
+        const auto &payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
+        if(payee->pdmnState->pubKeyOperator.Get() == blsPubKeyOperator) {
+            bFoundActiveMN = true;
+            break;
+        }
+    }
+    if(!bFoundActiveMN) {
+        const auto &mnList = deterministicMNManager->GetListForBlock(pindexTip);
+        const auto &projection = mnList.GetProjectedMNPayees(nCount*2);
+        for (size_t i = 0; i < projection.size(); i++) {
+            const auto &payee = projection[i];
+            if(payee->pdmnState->pubKeyOperator.Get() == blsPubKeyOperator) {
+                bFoundActiveMN = true;
+                break;
+            }
+        }
+    }
+    if(!bFoundActiveMN) {
+        return false;
+        //throw JSONRPCError(RPC_INTERNAL_ERROR, "MN operator not in winners list");
+    }
+    return true;
+},
+    };
+}
+
 static RPCHelpMan masternode_winners()
 {
     return RPCHelpMan{"masternode_winners",
         "\nPrint list of masternode winners\n",
         {         
             {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Number of last winners to return."}, 
-            {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter for returned winners."},    
+            {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter for returned winners."},
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -685,6 +834,8 @@ void RegisterMasternodeRPCCommands(CRPCTable &t)
         {"masternode", &masternode_winner},
         {"masternode", &masternode_status},
         {"masternode", &masternode_current},
+        {"masternode", &masternode_sign},
+        {"masternode", &masternode_verify},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
