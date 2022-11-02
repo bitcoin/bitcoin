@@ -242,9 +242,7 @@ struct Peer {
 private:
     Mutex m_tx_relay_mutex;
 
-    /** Transaction relay data. Will be a nullptr if we're not relaying
-     *  transactions with this peer (e.g. if it's a block-relay-only peer or
-     *  the peer has sent us fRelay=false with bloom filters disabled). */
+    /** Transaction relay data. May be a nullptr. */
     std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex);
 };
 
