@@ -648,6 +648,10 @@ static RPCHelpMan getnevmblobdata()
     oNEVM.__pushKV("versionhash", HexStr(vchVH));
     oNEVM.__pushKV("mpt", mpt);
     oNEVM.__pushKV("datasize", nSize);
+    if(pblockindex != nullptr) {
+        oNEVM.__pushKV("blockhash", pblockindex->GetBlockHash().GetHex());
+        oNEVM.__pushKV("height", pblockindex->nHeight);
+    }
     if(bGetData) {
         if(!pnevmdatadb->ReadData(vchVH, vchData)) {
             throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("Could not find payload for versionhash %s", HexStr(vchVH)));
