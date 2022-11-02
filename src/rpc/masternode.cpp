@@ -265,8 +265,7 @@ static RPCHelpMan masternode_sign()
         {         
             {"msghash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "msg hash."}, 
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
             HelpExampleCli("masternode_sign", "")
     + HelpExampleRpc("masternode_sign", "")
@@ -322,7 +321,10 @@ static RPCHelpMan masternode_sign()
             sig = activeMasternodeInfo.blsKeyOperator->Sign(msgHash);
         }
     }
-    return sig.ToString();
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("signature", sig.ToString());
+    obj.pushKV("blspubkey", activeMasternodeInfo.blsPubKeyOperator->ToString());
+    return obj;
 },
     };
 }
@@ -336,8 +338,7 @@ static RPCHelpMan masternode_verify()
             {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "signature"},
             {"blspubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "BLS MN operator pubkey"},
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "", "signature, hex-encoded"},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
             HelpExampleCli("masternode_verify", "")
     + HelpExampleRpc("masternode_verify", "")
