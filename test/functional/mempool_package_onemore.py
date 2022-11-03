@@ -55,14 +55,20 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_tx, [chain[0], second_chain])
         # ...especially if its > 40k weight
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_tx, [chain[0]], num_outputs=350)
+        # ...not if it's submitted with other transactions
+        replacable_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=[chain[0]])
+        txns = [replacable_tx["hex"], self.wallet.create_self_transfer_multi(utxos_to_spend=replacable_tx["new_utxos"])["hex"]]
+        assert_equal(self.nodes[0].testmempoolaccept(txns)[0]["reject-reason"], "too-long-mempool-chain")
+        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.nodes[0].submitpackage, txns)
         # But not if it chains directly off the first transaction
-        replacable_tx = self.wallet.send_self_transfer_multi(from_node=self.nodes[0], utxos_to_spend=[chain[0]])['tx']
+        self.nodes[0].sendrawtransaction(replacable_tx["hex"])
         # and the second chain should work just fine
         self.chain_tx([second_chain])
 
         # Make sure we can RBF the chain which used our carve-out rule
-        replacable_tx.vout[0].nValue -= 1000000
-        self.nodes[0].sendrawtransaction(replacable_tx.serialize().hex())
+        replacement_tx = replacable_tx["tx"]
+        replacement_tx.vout[0].nValue -= 1000000
+        self.nodes[0].sendrawtransaction(replacement_tx.serialize().hex())
 
         # Finally, check that we added two transactions
         assert_equal(len(self.nodes[0].getrawmempool()), DEFAULT_ANCESTOR_LIMIT + 3)
