@@ -138,6 +138,9 @@ The second part of the ZMQ message is 40 bytes long and has to be parsed accordi
 
 The fields are of fixed width: there are no separators.
 
+Differently from the other ones, the itcoinblock topic sends notifications for
+new blocks even if the `bitcoind` process is in Initial Block Download mode.
+
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).
 

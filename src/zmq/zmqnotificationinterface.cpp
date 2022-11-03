@@ -132,10 +132,25 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
 
 void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
+    // ITCOIN_SPECIFIC: removed the check for fInitialDownload from the next if clause. It was moved inside TryForEachAndRemoveFailed()
+    if (/*fInitialDownload || */ pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
         return;
 
-    TryForEachAndRemoveFailed(notifiers, [pindexNew](CZMQAbstractNotifier* notifier) {
+    TryForEachAndRemoveFailed(notifiers, [fInitialDownload, pindexNew](CZMQAbstractNotifier* notifier) { // ITCOIN_SPECIFIC: added capturing of fInitialDownload
+        // ITCOIN_SPECIFIC - START
+        if ((dynamic_cast<CZMQPublishItcoinBlockNotifier*>(notifier) == nullptr) && fInitialDownload) {
+            /*
+             * If the current notifier is not of type
+             * CZMQPublishItcoinBlockNotifier and we are in initial block
+             * download mode, do not send messages for this notifier.
+             *
+             * On the other hand, if the current notifier is of type
+             * CZMQPublishItcoinBlockNotifier, then a notification message will
+             * be sent whether fInitialDownload is true or not.
+             */
+            return true;
+        }
+        // ITCOIN_SPECIFIC - END
         return notifier->NotifyBlock(pindexNew);
     });
 }

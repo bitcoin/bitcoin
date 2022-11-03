@@ -6,6 +6,10 @@ This test is in addition to the itcoin specific modifications that have been
 done in interface_zmq.py. In particular:
 - blocks are created in itcoin's signet via the python miner, whereas
   interface_zmq.py uses regtest
+- there is a verification that itcoinblock sends notifications even when
+  bitcoind is in initial block download mode, while the other topics (for
+  example blockhash) do not send notifications when initial block download is
+  true.
 """
 import datetime
 from typing import Any, Dict
@@ -51,7 +55,7 @@ class ZMQItcoinblockIBD(BaseItcoinTest):
         try:
             address = 'tcp://127.0.0.1:28332'
             subs = self.setup_zmq_test([(topic, address) for topic in ["hashblock", "itcoinblock"]])
-            self.log.info("Check that itcoinblock notifications are sent and verify their content")
+            self.log.info("Check that itcoinblock notifications are sent even in IBD and verify their content")
 
             # Verify initial state
             self.assert_blockchaininfo_property_forall_nodes("blocks", 0)
@@ -70,11 +74,14 @@ class ZMQItcoinblockIBD(BaseItcoinTest):
             assert_equal(blockchaininfo["time"], blocktime)
             assert_equal(blockchaininfo["initialblockdownload"], True)
             # On zmq:
-            # - no itcoinblock message for block at height 1 will be received,
-            #   because we are in initial block download
+            # - an itcoinblock message for block at height 1 will be received, even
+            #   if we are in initial block download
             # - no hashblock message will be received, because we are in initial
             #   block download
-            assert_raises(zmq.Again, itcoinblock.receive)
+            msg_itcoinblock = MsgItcoinblock.from_bin_buf(itcoinblock.receive())
+            assert_equal(msg_itcoinblock.blockhash_hex(), blockchaininfo["bestblockhash"])
+            assert_equal(msg_itcoinblock.height, 1)
+            assert_equal(msg_itcoinblock.nTime, blocktime)
             assert_raises(zmq.Again, hashblock.receive)
 
             # =============================
