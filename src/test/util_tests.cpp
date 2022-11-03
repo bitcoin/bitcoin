@@ -124,6 +124,11 @@ BOOST_AUTO_TEST_CASE(util_check)
 
     // Check nested Asserts
     BOOST_CHECK_EQUAL(Assert((Assert(x).test() ? 3 : 0)), 3);
+
+    // Check -Wdangling-gsl does not trigger when copying the int. (It would
+    // trigger on "const int&")
+    const int nine{*Assert(std::optional<int>{9})};
+    BOOST_CHECK_EQUAL(9, nine);
 }
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
