@@ -430,55 +430,6 @@ used.
 If you start `guix-daemon` using an init script, you can edit said script to
 supply this flag.
 
-
-# Purging/Uninstalling Guix
-
-In the extraordinarily rare case where you messed up your Guix installation in
-an irreversible way, you may want to completely purge Guix from your system and
-start over.
-
-1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
-   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
-2. Remove all build users and groups
-
-   You may check for relevant users and groups using:
-
-   ```
-   getent passwd | grep guix
-   getent group | grep guix
-   ```
-
-   Then, you may remove users and groups using:
-
-   ```
-   sudo userdel <user>
-   sudo groupdel <group>
-   ```
-
-3. Remove all possible Guix-related directories
-    - `/var/guix/`
-    - `/var/log/guix/`
-    - `/gnu/`
-    - `/etc/guix/`
-    - `/home/*/.config/guix/`
-    - `/home/*/.cache/guix/`
-    - `/home/*/.guix-profile/`
-    - `/root/.config/guix/`
-    - `/root/.cache/guix/`
-    - `/root/.guix-profile/`
-
 [b17e]: https://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
-
-[guix/install.sh]: https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
-[guix/bin-install]: https://www.gnu.org/software/guix/manual/en/html_node/Binary-Installation.html
-[guix/env-setup]: https://www.gnu.org/software/guix/manual/en/html_node/Build-Environment-Setup.html
-[guix/substitutes]: https://www.gnu.org/software/guix/manual/en/html_node/Substitutes.html
-[guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
-[guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
-
-[debian/guix-bullseye]: https://packages.debian.org/bullseye/guix
-[ubuntu/guix-hirsute]: https://packages.ubuntu.com/hirsute/guix
-[fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
-
 [env-vars-list]: #recognized-environment-variables
