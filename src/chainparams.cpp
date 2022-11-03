@@ -349,9 +349,10 @@ public:
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
 
-        // ITCOIN_SPECIFIC
+        // ITCOIN_SPECIFIC START
         consensus.nPowTargetTimespan = 24 * 60 * 60; // every day
         consensus.nPowTargetSpacing = 60; // one minute
+        // ITCOIN_SPECIFIC END
 
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
