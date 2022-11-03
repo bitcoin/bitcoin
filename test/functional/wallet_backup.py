@@ -87,10 +87,10 @@ class WalletBackupTest(BitcoinTestFramework):
         self.sync_blocks()
 
     # As above, this mirrors the original bash test.
-    def start_three(self, args=()):
-        self.start_node(0, self.extra_args[0] + list(args))
-        self.start_node(1, self.extra_args[1] + list(args))
-        self.start_node(2, self.extra_args[2] + list(args))
+    def start_three(self):
+        self.start_node(0)
+        self.start_node(1)
+        self.start_node(2)
         self.connect_nodes(0, 3)
         self.connect_nodes(1, 3)
         self.connect_nodes(2, 3)
@@ -105,11 +105,6 @@ class WalletBackupTest(BitcoinTestFramework):
         os.remove(os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename))
         os.remove(os.path.join(self.nodes[1].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename))
         os.remove(os.path.join(self.nodes[2].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename))
-
-    def init_three(self):
-        self.init_wallet(0)
-        self.init_wallet(1)
-        self.init_wallet(2)
 
     def run_test(self):
         self.log.info("Generating initial blockchain")
@@ -195,8 +190,7 @@ class WalletBackupTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'evodb'))
         shutil.rmtree(os.path.join(self.nodes[2].datadir, self.chain, 'llmq'))
 
-        self.start_three(["-nowallet"])
-        self.init_three()
+        self.start_three()
 
         assert_equal(self.nodes[0].getbalance(), 0)
         assert_equal(self.nodes[1].getbalance(), 0)
