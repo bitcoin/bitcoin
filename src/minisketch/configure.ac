@@ -124,9 +124,6 @@ if test "x$use_ccache" != "xno"; then
   fi
   AC_MSG_RESULT($use_ccache)
 fi
-if test "x$use_ccache" = "xyes"; then
-    AX_CHECK_COMPILE_FLAG([-Qunused-arguments],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Qunused-arguments"],,[[$CXXFLAG_WERROR]])
-fi
 
 VERIFY_DEFINES=-DMINISKETCH_VERIFY
 RELEASE_DEFINES=
