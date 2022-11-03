@@ -9,6 +9,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <attributes.h>
 #include <tinyformat.h>
 
 #include <stdexcept>
@@ -24,7 +25,7 @@ class NonFatalCheckError : public std::runtime_error
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
-T&& inline_check_non_fatal(T&& val, const char* file, int line, const char* func, const char* assertion)
+T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, const char* func, const char* assertion)
 {
     if (!(val)) {
         throw NonFatalCheckError(
@@ -56,7 +57,7 @@ void assertion_fail(const char* file, int line, const char* func, const char* as
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-T&& inline_assertion_check(T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
+T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
     if constexpr (IS_ASSERT
 #ifdef ABORT_ON_FAILED_ASSUME
