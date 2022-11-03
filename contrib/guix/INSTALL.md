@@ -821,3 +821,39 @@ Please see the following links for more details:
 [docker/volumes]: https://docs.docker.com/storage/volumes/
 [docker/bind-mnt]: https://docs.docker.com/storage/bind-mounts/
 [docker/tmpfs]: https://docs.docker.com/storage/tmpfs/
+
+# Purging/Uninstalling Guix
+
+In the extraordinarily rare case where you messed up your Guix installation in
+an irreversible way, you may want to completely purge Guix from your system and
+start over.
+
+1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
+   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
+2. Remove all build users and groups
+
+   You may check for relevant users and groups using:
+
+   ```
+   getent passwd | grep guix
+   getent group | grep guix
+   ```
+
+   Then, you may remove users and groups using:
+
+   ```
+   sudo userdel <user>
+   sudo groupdel <group>
+   ```
+
+3. Remove all possible Guix-related directories
+    - `/var/guix/`
+    - `/var/log/guix/`
+    - `/gnu/`
+    - `/etc/guix/`
+    - `/home/*/.config/guix/`
+    - `/home/*/.cache/guix/`
+    - `/home/*/.guix-profile/`
+    - `/root/.config/guix/`
+    - `/root/.cache/guix/`
+    - `/root/.guix-profile/`
