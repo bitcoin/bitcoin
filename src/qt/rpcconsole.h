@@ -105,6 +105,8 @@ private Q_SLOTS:
     void showOrHideBanTableIfRequired();
     /** clear the selected node */
     void clearSelectedNode();
+    /** reset all fields in UI detailed information to N/A */
+    void resetDetailWidget();
     /** show detailed information on ui about selected node */
     void updateDetailWidget();
 
