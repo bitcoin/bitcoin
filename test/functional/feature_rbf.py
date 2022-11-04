@@ -59,9 +59,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test spends of conflicting outputs...")
         self.test_spends_of_conflicting_outputs()
 
-        self.log.info("Running test new unconfirmed inputs...")
-        self.test_new_unconfirmed_inputs()
-
         self.log.info("Running test too many replacements...")
         self.test_too_many_replacements()
 
@@ -316,27 +313,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # This will raise an exception
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
-    def test_new_unconfirmed_inputs(self):
-        """Replacements that add new unconfirmed inputs are rejected"""
-        confirmed_utxo = self.make_utxo(self.nodes[0], int(1.1 * COIN))
-        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.1 * COIN), confirmed=False)
-
-        self.wallet.send_self_transfer(
-            from_node=self.nodes[0],
-            utxo_to_spend=confirmed_utxo,
-            sequence=0,
-            fee=Decimal("0.1"),
-        )
-
-        tx2_hex = self.wallet.create_self_transfer_multi(
-            utxos_to_spend=[confirmed_utxo, unconfirmed_utxo],
-            sequence=0,
-            amount_per_output=1 * COIN,
-        )["hex"]
-
-        # This will raise an exception
-        assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, tx2_hex, 0)
-
     def test_too_many_replacements(self):
         """Replacements that evict too many transactions are rejected"""
         # Try directly replacing more than MAX_REPLACEMENT_LIMIT
@@ -355,6 +331,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             num_outputs=MAX_REPLACEMENT_LIMIT + 1,
             amount_per_output=split_value,
         )["new_utxos"]
+
+        # Confirm the initial transaction, so that we aren't dealing with the
+        # feerate implications of transaction chains in this test (just looking
+        # at the max number of replacements).
+        self.generate(self.nodes[0], 1)
 
         # Now spend each of those outputs individually
         for utxo in splitting_tx_utxos:

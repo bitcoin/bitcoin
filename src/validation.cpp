@@ -922,30 +922,53 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
-    CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
-    // Enforce Rule #6. The replacement transaction must have a higher feerate than its direct conflicts.
-    // - The motivation for this check is to ensure that the replacement transaction is preferable for
-    //   block-inclusion, compared to what would be removed from the mempool.
-    // - This logic predates ancestor feerate-based transaction selection, which is why it doesn't
-    //   consider feerates of descendants.
-    // - Note: Ancestor feerate-based transaction selection has made this comparison insufficient to
-    //   guarantee that this is incentive-compatible for miners, because it is possible for a
-    //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
-    //   might replace them, under these rules.
-    if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+    // Calculate the worst case, minimum possible mining score of the new
+    // transaction. We'll start with the transaction itself, and continue
+    // adding low-feerate ancestors as long as it drags our feerate down.
+    int64_t ancestor_size{ws.m_vsize};
+    CAmount ancestor_modified_fees{ws.m_modified_fees};
+
+    // Gather all ancestor fees/sizes into a sorted vector.
+    std::vector<std::pair<int64_t, CAmount>> size_fee_table;
+    for (CTxMemPool::txiter it : ws.m_ancestors) {
+        size_fee_table.emplace_back(it->GetTxSize(), it->GetModifiedFee());
     }
+    std::sort(size_fee_table.begin(), size_fee_table.end(), [](std::pair<int64_t, CAmount> a, std::pair<int64_t, CAmount> b) {
+        // Sort based on feerate (a.size * b.fee > a.fee * b.size implies
+        // a.feerate < b.feerate)
+        return a.first * b.second > a.second * b.first;
+    });
+
+    // Update the worst-case ancestor fee for the transaction.
+    for (auto &element : size_fee_table) {
+        // If the feerate that we're working with now is lower than that of the
+        // next ancestor in our table, stop -- this is the worst case feerate
+        // the transaction could be mined at. Otherwise, include the next
+        // ancestor because it will drag our feerate down further.
+        if (ancestor_size * element.second > ancestor_modified_fees * element.first) {
+            break;
+        }
+        ancestor_size += element.first;
+        ancestor_modified_fees += element.second;
+    }
+
+    CFeeRate newFeeRate(ancestor_modified_fees, ancestor_size);
 
     // Calculate all conflicting entries and enforce Rule #5.
     if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "too many potential replacements", *err_string);
     }
-    // Enforce Rule #2.
-    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                             "replacement-adds-unconfirmed", *err_string);
+
+    // Enforce feerate incentive compatibility. The replacement transaction
+    // must have a higher mining score (= min(feerate, ancestor feerate)) than
+    // the highest possible mining score of all its conflicts.
+    // - The motivation for this check is to ensure that the replacement transaction is preferable for
+    //   block-inclusion, compared to what would be removed from the mempool.
+    if (const auto err_string{PaysMoreThanConflicts(ws.m_all_conflicting, newFeeRate, hash)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
     }
+
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
     for (CTxMemPool::txiter it : ws.m_all_conflicting) {
