@@ -3,7 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/util/setup_common.h>
-#include <blsct/arith/range_proof/range_proof.h>
+//#include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/arith/range_proof/range_proof_orig.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -38,16 +39,20 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
     std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
 
+    std::vector gammas = { Scalar(1234) };
     TokenId token_id(uint256(123));
-    RangeProof range_proof;
+
+    std::vector<Scalar> vs;
+    vs.push_back(one);
+
+    //RangeProof range_proof;
+    BulletproofsRangeproof range_proof;
 
     // test one
     {
-        Scalars vs;
-        vs.Add(one);
-        auto proof = range_proof.Prove(vs, nonce, message, token_id);
-        auto is_valid = range_proof.Verify(std::vector<Proof> { proof }, token_id);
-        BOOST_CHECK(is_valid);
+        range_proof.Prove(vs, nonce, message, token_id, gammas);
+        // auto is_valid = range_proof.Verify(std::vector<Proof> { proof }, token_id);
+        // BOOST_CHECK(is_valid);
     }
 
     // // test each valid value individually

@@ -58,6 +58,18 @@ public:
         TokenId token_id
     ) const;
 
+    bool InnerProductArgument_Orig(
+        const size_t input_value_vec_len,
+        G1Points& Gi,
+        G1Points& Hi,
+        const G1Point& u,
+        const Scalar& cx_factor,  // factor to multiply to cL and cR
+        Scalars& a,
+        Scalars& b,
+        const Scalar& y,
+        Proof& proof,
+        CHashWriter& transcript_gen
+    );
     bool InnerProductArgument(
         const size_t input_value_vec_len,
         G1Points& Gi,

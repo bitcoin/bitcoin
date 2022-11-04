@@ -9,12 +9,22 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-G1Points Generators::GetGi(const size_t& size) const
+G1Points Generators::GetGi() const
+{
+    return Gi.get();
+}
+
+G1Points Generators::GetHi() const
+{
+    return Hi.get();
+}
+
+G1Points Generators::GetGiSubset(const size_t& size) const
 {
     return Gi.get().To(size);
 }
 
-G1Points Generators::GetHi(const size_t& size) const
+G1Points Generators::GetHiSubset(const size_t& size) const
 {
     return Hi.get().To(size);
 }

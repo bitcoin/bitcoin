@@ -134,8 +134,8 @@ Proof RangeProof::Prove(
 
     // Get Generators for the token_id
     Generators gens = m_gf->GetInstance(token_id);
-    auto Gi = gens.GetGi(concat_input_values_in_bits);
-    auto Hi = gens.GetHi(concat_input_values_in_bits);
+    auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
+    auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
@@ -534,8 +534,8 @@ if (!p65.Sum().IsUnity()) {
     points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
     points.Add(gens.H * (h_pos_exp - h_neg_exp));
 
-    auto Gi = gens.GetGi(max_mn);
-    auto Hi = gens.GetHi(max_mn);
+    auto Gi = gens.GetGiSubset(max_mn);
+    auto Hi = gens.GetHiSubset(max_mn);
 
     for (size_t i = 0; i < max_mn; ++i) {
         points.Add(Gi[i] * gi_exps[i]);
