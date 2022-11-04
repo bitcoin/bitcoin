@@ -39,7 +39,8 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
     std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
 
-    std::vector gammas = { Scalar(1234) };
+    Scalar gamma(1234);
+    std::vector gammas = { gamma };
     TokenId token_id(uint256(123));
 
     std::vector<Scalar> vs;
@@ -55,16 +56,21 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
         std::vector<G1Point> nonces { nonce };
         std::pair<int, BulletproofsRangeproof> proof1(1, range_proof);
         std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
-        std::vector<RangeproofEncodedData> data; // will not be used
+        RangeproofEncodedData red;
+        std::vector<RangeproofEncodedData> data { red };
 
         auto is_valid = VerifyBulletproof(
             proofs,
             data,
             nonces,
-            false,
+            true,
             token_id
         );
         BOOST_CHECK(is_valid);
+
+        BOOST_CHECK(data.size() == 1);
+        printf("data gamma=%ld\n", data[0].gamma.GetUint64());
+        BOOST_CHECK(data[0].gamma == gamma);
     }
 
     // // test each valid value individually
