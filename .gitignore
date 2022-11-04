@@ -154,5 +154,6 @@ dist/
 # itcoin
 target
 infra/datadir
+.vscode
 .vscode/
 *.code-workspace
