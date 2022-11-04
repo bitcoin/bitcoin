@@ -142,7 +142,7 @@ public Q_SLOTS:
 private:
     struct TranslatedStrings {
         const QString yes{tr("Yes")}, no{tr("No")}, to{tr("To")}, from{tr("From")},
-            ban_for{tr("Ban for")}, na{tr("N/A")}, unknown{tr("Unknown")};
+            ban_for{tr("Ban for")}, na{tr("N/A")}, unknown{tr("Unknown")}, no_permissions{tr("None")};
     } const ts;
 
     void startExecutor();
