@@ -146,6 +146,16 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
 
 static bool CreateTaprootScriptSig(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const XOnlyPubKey& pubkey, const uint256& leaf_hash, SigVersion sigversion)
 {
+    KeyOriginInfo info;
+    if (provider.GetKeyOriginByXOnly(pubkey, info)) {
+        auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
+        if (it == sigdata.taproot_misc_pubkeys.end()) {
+            sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
+        } else {
+            it->second.first.insert(leaf_hash);
+        }
+    }
+
     auto lookup_key = std::make_pair(pubkey, leaf_hash);
     auto it = sigdata.taproot_script_sigs.find(lookup_key);
     if (it != sigdata.taproot_script_sigs.end()) {
@@ -170,17 +180,6 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     // <xonly pubkey> OP_CHECKSIG
     if (script.size() == 34 && script[33] == OP_CHECKSIG && script[0] == 0x20) {
         XOnlyPubKey pubkey{Span{script}.subspan(1, 32)};
-
-        KeyOriginInfo info;
-        if (provider.GetKeyOriginByXOnly(pubkey, info)) {
-            auto it = sigdata.taproot_misc_pubkeys.find(pubkey);
-            if (it == sigdata.taproot_misc_pubkeys.end()) {
-                sigdata.taproot_misc_pubkeys.emplace(pubkey, std::make_pair(std::set<uint256>({leaf_hash}), info));
-            } else {
-                it->second.first.insert(leaf_hash);
-            }
-        }
-
         std::vector<unsigned char> sig;
         if (CreateTaprootScriptSig(creator, sigdata, provider, sig, pubkey, leaf_hash, sigversion)) {
             result = Vector(std::move(sig));
