@@ -21,17 +21,17 @@ static std::vector<Scalar> VectorPowers(const Scalar &x, size_t n);
 static std::vector<Scalar> VectorDup(const Scalar &x, size_t n);
 static Scalar InnerProduct(const std::vector<Scalar> &a, const std::vector<Scalar> &b);
 
-Scalar BulletproofsRangeproof::one;
-Scalar BulletproofsRangeproof::two;
+Scalar* BulletproofsRangeproof::one;
+Scalar* BulletproofsRangeproof::two;
 
 std::vector<G1Point> BulletproofsRangeproof::Hi, BulletproofsRangeproof::Gi;
 std::vector<Scalar> BulletproofsRangeproof::oneN;
 std::vector<Scalar> BulletproofsRangeproof::twoN;
-Scalar BulletproofsRangeproof::ip12;
+Scalar* BulletproofsRangeproof::ip12;
 
 boost::mutex BulletproofsRangeproof::init_mutex;
 
-G1Point BulletproofsRangeproof::G;
+G1Point* BulletproofsRangeproof::G;
 std::map<TokenId, G1Point> BulletproofsRangeproof::H;
 
 // Calculate base point
@@ -63,8 +63,7 @@ static G1Point GetBaseG1Element(const G1Point &base, size_t idx, std::string tok
     //G1Point e = tokId == "" ? G1Point::FromMessage(std::vector<unsigned char>(hash.begin(), hash.end()), dest, 1) : G1Point::SetVch(vMcl);
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
     auto e = G1Point::MapToG1(vec_hash);
-
-    CHECK_AND_ASSERT_THROW_MES(e.IsUnity(), "Exponent is point at infinity");
+    CHECK_AND_ASSERT_THROW_MES(!e.IsUnity(), "GetBaseG1Element: Exponent is point at infinity");
 
     return e;
 }
@@ -84,11 +83,12 @@ bool BulletproofsRangeproof::Init()
     // Fp::setETHserialization(true);
     // Fr::setETHserialization(true);
 
-    BulletproofsRangeproof::one = 1;
-    BulletproofsRangeproof::two = 2;
+    BulletproofsRangeproof::one = new Scalar(1);
+    BulletproofsRangeproof::two = new Scalar(2);
 
-    BulletproofsRangeproof::G = G1Point::GetBasePoint();
-    BulletproofsRangeproof::H[TokenId()] = GetBaseG1Element(BulletproofsRangeproof::G, 0);
+    auto G = G1Point::GetBasePoint();
+    BulletproofsRangeproof::G = &G;
+    BulletproofsRangeproof::H[TokenId()] = GetBaseG1Element(*BulletproofsRangeproof::G, 0);
 
     BulletproofsRangeproof::Hi.resize(maxMN);
     BulletproofsRangeproof::Gi.resize(maxMN);
@@ -99,9 +99,10 @@ bool BulletproofsRangeproof::Init()
         BulletproofsRangeproof::Gi[i] = GetBaseG1Element(BulletproofsRangeproof::H[TokenId()], i * 2 + 2);
     }
 
-    BulletproofsRangeproof::oneN = VectorDup(BulletproofsRangeproof::one, maxN);
-    BulletproofsRangeproof::twoN = VectorPowers(BulletproofsRangeproof::two, maxN);
-    BulletproofsRangeproof::ip12 = InnerProduct(BulletproofsRangeproof::oneN, BulletproofsRangeproof::twoN);
+    BulletproofsRangeproof::oneN = VectorDup(*BulletproofsRangeproof::one, maxN);
+    BulletproofsRangeproof::twoN = VectorPowers(*BulletproofsRangeproof::two, maxN);
+    auto ip12 = InnerProduct(BulletproofsRangeproof::oneN, BulletproofsRangeproof::twoN);
+    BulletproofsRangeproof::ip12 = &ip12;
 
     fInit = true;
 
@@ -112,12 +113,12 @@ Generators BulletproofsRangeproof::GetGenerators(const TokenId& tokenId)
 {
     if (BulletproofsRangeproof::H.count(tokenId))
     {
-        return {BulletproofsRangeproof::G, BulletproofsRangeproof::H[tokenId], BulletproofsRangeproof::Gi, BulletproofsRangeproof::Hi};
+        return {*BulletproofsRangeproof::G, BulletproofsRangeproof::H[tokenId], BulletproofsRangeproof::Gi, BulletproofsRangeproof::Hi};
     }
 
-    BulletproofsRangeproof::H[tokenId] = GetBaseG1Element(BulletproofsRangeproof::G, 0, tokenId.token.ToString(), tokenId.subid);
+    BulletproofsRangeproof::H[tokenId] = GetBaseG1Element(*BulletproofsRangeproof::G, 0, tokenId.token.ToString(), tokenId.subid);
 
-    return {BulletproofsRangeproof::G, BulletproofsRangeproof::H[tokenId], BulletproofsRangeproof::Gi, BulletproofsRangeproof::Hi};
+    return {*BulletproofsRangeproof::G, BulletproofsRangeproof::H[tokenId], BulletproofsRangeproof::Gi, BulletproofsRangeproof::Hi};
 }
 
 // Todo multi-exp optimization
@@ -967,7 +968,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
 
         for (size_t j = 1; j <= M; ++j)
         {
-            k = k - (zpow[j+2]*BulletproofsRangeproof::ip12);
+            k = k - (zpow[j+2] * *BulletproofsRangeproof::ip12);
         }
 
         tmp = k + (pd.z*ip1y);

@@ -51,8 +51,20 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
     // test one
     {
         range_proof.Prove(vs, nonce, message, token_id, gammas);
-        // auto is_valid = range_proof.Verify(std::vector<Proof> { proof }, token_id);
-        // BOOST_CHECK(is_valid);
+
+        std::vector<G1Point> nonces { nonce };
+        std::pair<int, BulletproofsRangeproof> proof1(1, range_proof);
+        std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
+        std::vector<RangeproofEncodedData> data; // will not be used
+
+        auto is_valid = VerifyBulletproof(
+            proofs,
+            data,
+            nonces,
+            false,
+            token_id
+        );
+        BOOST_CHECK(is_valid);
     }
 
     // // test each valid value individually

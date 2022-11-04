@@ -178,16 +178,16 @@ public:
 
     static const size_t logN = 6;
 
-    static G1Point G;
+    static G1Point* G;
     static std::map<TokenId, G1Point> H;
 
-    static Scalar one;
-    static Scalar two;
+    static Scalar* one;
+    static Scalar* two;
 
     static std::vector<G1Point> Hi, Gi;  // hh, gg
     static std::vector<Scalar> oneN;  // one_n
     static std::vector<Scalar> twoN;  // tow_n
-    static Scalar ip12;
+    static Scalar* ip12;
 
     static boost::mutex init_mutex;
 
