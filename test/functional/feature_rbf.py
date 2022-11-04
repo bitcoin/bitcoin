@@ -59,6 +59,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement ancestorfeeperkb")
         self.test_replacement_ancestorfeeperkb()
 
+        self.log.info("Running test new unconfirmed inputs...")
+        self.test_new_unconfirmed_inputs()
+
         self.log.info("Running test spends of conflicting outputs...")
         self.test_spends_of_conflicting_outputs()
 
@@ -362,6 +365,27 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+
+    def test_new_unconfirmed_inputs(self):
+        """Replacements that add new unconfirmed inputs are permitted"""
+        confirmed_utxo = self.make_utxo(self.nodes[0], int(1.1 * COIN))
+        unconfirmed_utxo = self.make_utxo(self.nodes[0], int(0.1 * COIN), confirmed=False)
+
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=confirmed_utxo,
+            sequence=0,
+            fee=Decimal("0.000002"),
+        )
+
+        tx2_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[confirmed_utxo, unconfirmed_utxo],
+            sequence=0,
+            amount_per_output=1 * COIN,
+        )["hex"]
+
+        tx2_txid = self.nodes[0].sendrawtransaction(tx2_hex, 0)
+        assert tx2_txid in self.nodes[0].getrawmempool()
 
     def test_too_many_replacements(self):
         """Replacements that evict too many transactions are rejected"""
