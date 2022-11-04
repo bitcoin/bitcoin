@@ -56,6 +56,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement feeperkb...")
         self.test_replacement_feeperkb()
 
+        self.log.info("Running test replacement ancestorfeeperkb")
+        self.test_replacement_ancestorfeeperkb()
+
         self.log.info("Running test spends of conflicting outputs...")
         self.test_spends_of_conflicting_outputs()
 
@@ -273,6 +276,53 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+
+    def test_replacement_ancestorfeeperkb(self):
+        """Replacement requires ancestor feeperkb to be greater than individual
+        feerates of all evicted transactions"""
+        tx0_outpoint = self.make_utxo(self.nodes[0], int(1.1 * COIN))
+
+        # Create a small low feerate transaction, with a small high feerate child.
+        tx1_utxo = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("0.0001"),
+        )["new_utxo"]
+
+        self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1_utxo,
+            sequence=0,
+            fee=Decimal("0.005"),
+        )
+
+        # Create a large transaction that conflicts with the parent and has
+        # slightly higher feerate (but lower than the combined feerate of the
+        # two transactions that would be evicted).
+        tx1b_hex = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[tx0_outpoint],
+            sequence=0,
+            num_outputs=100,
+            fee_per_output=20000,
+        )["hex"]
+
+        # This will raise an exception due to insufficient fee
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+
+        # Increasing the fee_per_output sufficiently should cause the
+        # transaction to succeed. We have to exceed the individual feerates of
+        # both transactions.
+        tx1c_hex = self.wallet.create_self_transfer_multi(
+                utxos_to_spend=[tx0_outpoint],
+                sequence=0,
+                num_outputs=100,
+                fee_per_output=220000,
+        )["hex"]
+
+        tx1c_txid = self.nodes[0].sendrawtransaction(tx1c_hex)
+
+        assert tx1c_txid in self.nodes[0].getrawmempool()
 
     def test_spends_of_conflicting_outputs(self):
         """Replacements that spend conflicting tx outputs are rejected"""
