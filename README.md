@@ -76,3 +76,10 @@ Translations are periodically pulled from Transifex and merged into the git repo
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+
+Our valuable Contributors
+-------------------------
+
+<p align="center"><a href="https://github.com/bitcoin/bitcoin/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=bitcoin/bitcoin" />
+</a></p>
