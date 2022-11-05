@@ -3,19 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">დააჭირეთ მარჯვენა ღილაკს მისამართის ან იარლიყის ჩასასწორებლად</translation>
+        <translation type="unfinished">დააჭირეთ მარჯვენა ღილაკს მისამართის ან ლეიბლის ჩასასწორებლად</translation>
     </message>
     <message>
         <source>Create a new address</source>
         <translation type="unfinished">ახალი მისამართის შექმნა</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">შექმ&amp;ნა</translation>
-    </message>
-    <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">მონიშნული მისამართის კოპირება სისტემურ კლიპბორდში</translation>
+        <translation type="unfinished">მონიშნული მისამართის კოპირება სისტემის მეხსიერების ბუფერში</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -31,11 +27,11 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">შეიყვანეთ საძებნი მისამართი ან ნიშნული</translation>
+        <translation type="unfinished"> მოსაძებნად შეიყვანეთ მისამართი ან მოსანიშნი</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+        <translation type="unfinished">დანართში არსებული მონაცემების ექსპორტი ფაილში</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,11 +43,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">აირჩიეთ კოინების გამგზავნი მისამართი</translation>
+        <translation type="unfinished">აირჩიეთ მისამართი კოინების გასაგზავნად</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">აირჩიეთ კოინების მიმღები მისამართი</translation>
+        <translation type="unfinished">აირჩიეთ კოინების მიღების მისამართი</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,19 +55,25 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation type="unfinished">გამმგზავნი მისამართ</translation>
+        <translation type="unfinished">გასაგზავნი მისამართები</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation type="unfinished">მიმღები მისამართი</translation>
+        <translation type="unfinished">მიმღები მისამართები</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">ეს არის თქვენი ბიტკოინ-მისამართები, რომელთაგანაც შეგიძლიათ გადახდა. აუცილებლად შეამოწმეთ თანხა და მიმღები მისამართი გაგზავნამდე.</translation>
+        <translation type="unfinished">ეს არის თქვენი ბიტკოინ-მისამართები გადარიცხვებისათვის. აუცილებლად შეამოწმეთ მითითებული თანხა და მიმღები მისამართი კოინების გადარიცხვამდე.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">ეს თქვენი ბიტკოინის მიმღები მიმსამართებია. ისარგებლეთ ღილაკით "შექმენით ახალი მიმღები მისამართები", როემლიც მოცემულია მიმღების ჩანართში ახალი მისამართების შესაქმნელად.
+ხელმოწერა მხოლოდ "მემკვიდრეობის" ტიპის მისამართებთანაა შესაძლებელი.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">მისამართის კოპირება</translation>
+        <translation type="unfinished">&amp;მისამართის კოპირება</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -86,9 +88,14 @@
         <translation type="unfinished">მისამართების სიის ექსპორტი</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">CSV (სპეციალური ტექსტური ფაილი)</translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">მისამართების სიის %1 შენახვა ვერ მოხერხდა. გაიმეორეთ მცდელობა.</translation>
+        <translation type="unfinished">მისამართების სიის %1 შენახვა ვერ მოხერხდა. თავიდან სცადეთ.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -114,19 +121,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished">ფრაზა-პაროლის დიალოგი</translation>
+        <translation type="unfinished">საიდუმლო ფრაზის მიმოცვლა</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished">შეიყვანეთ ფრაზა-პაროლი</translation>
+        <translation type="unfinished">შეიყვანეთ საიდუმლო ფრაზა</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation type="unfinished">ახალი ფრაზა-პაროლი</translation>
+        <translation type="unfinished">ახალი საიდუმლო ფრაზა</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished">გაიმეორეთ ახალი ფრაზა-პაროლი</translation>
+        <translation type="unfinished">გაიმეორეთ ახალი საიდუმლო ფრაზა</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -1961,6 +1968,11 @@
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">ტრანსაქციების ისტორიის ექსპორტი</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">CSV (სპეციალური ტექსტური ფაილი)</translation>
     </message>
     <message>
         <source>Confirmed</source>

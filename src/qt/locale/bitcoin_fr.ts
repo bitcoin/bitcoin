@@ -1060,7 +1060,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">La valeur -blockfilterindex %s est inconnue</translation>
+        <translation type="unfinished">La valeur -blockfilterindex %s est inconnue.</translation>
     </message>
     <message>
         <source>Unknown address type '%s'</source>
@@ -1220,7 +1220,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">&amp;Charger une TBSP d’un fichier…</translation>
+        <translation type="unfinished">&amp;Charger la TBSP d’un fichier…</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
@@ -2049,7 +2049,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     </message>
     <message>
         <source>Unknown…</source>
-        <translation type="unfinished">Inconnus…</translation>
+        <translation type="unfinished">Inconnu…</translation>
     </message>
     <message>
         <source>calculating…</source>
@@ -3951,7 +3951,7 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     </message>
     <message>
         <source>press q to shutdown</source>
-        <translation type="unfinished">appuyer sur q pour fermer</translation>
+        <translation type="unfinished">Appuyer sur q pour fermer</translation>
     </message>
 </context>
 <context>

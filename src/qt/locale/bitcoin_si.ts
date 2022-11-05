@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ලිපිනය හෝ ලේබලය සංස්කරණය කිරීමට දකුණු මූසික බොත්තම  ක්ලික් කරන්න</translation>
+        <translation type="unfinished">ලිපිනය හෝ නම්පත සංශෝධනයට දකුණු බොත්තම  ඔබන්න</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,11 +15,11 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">දැනට තෝරාගෙන ඇති ලිපිනය පද්ධති පසුරු පුවරුවට (clipboard) පිටපත් කරන්න</translation>
+        <translation type="unfinished">තෝරාගෙන ඇති ලිපිනය පද්ධතියේ පසුරු පුවරුවට පිටපත් කරන්න</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;පිටපත් කරන්න</translation>
+        <translation type="unfinished">&amp;පිටපත්</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,15 +27,23 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">දැනට තෝරාගත් ලිපිනය ලැයිස්තුවෙන් ඉවත් කරන්න</translation>
+        <translation type="unfinished">තේරූ ලිපිනය ලේඛනයෙන් මකන්න</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">සෙවීමට ලිපිනය හෝ ලේබලය ඇතුළත් කරන්න</translation>
+        <translation type="unfinished">සෙවීමට ලිපිනය හෝ නම්පත යොදන්න</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">වත්මන් පටියෙයි දත්ත ගොනුවකට නිර්යාත කරන්න</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;නිර්යාත කරන්න</translation>
+        <translation type="unfinished">&amp;නිර්යාතය</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;මකන්න</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -47,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">තෝරන්න</translation>
+        <translation type="unfinished">තෝ&amp;රන්න</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -59,11 +67,15 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">මේවා ඔබගේ ගෙවීම් යැවීම සඳහා වන බිට්කොයින් ලිපින වේ. කාසි යැවීමට පෙර සෑම විටම මුදල සහ ලැබීමේ ලිපිනය පරීක්ෂා කරන්න.</translation>
+        <translation type="unfinished">මේ ඔබගේ ගෙවීම් යැවීම සඳහා වන බිට්කොයින් ලිපින වේ. කාසි යැවීමට පෙර සෑම විටම මුදල සහ ලැබීමේ ලිපිනය පරීක්‍ෂා කරන්න.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;ලිපිනය පිටපත්</translation>
+        <translation type="unfinished">&amp;ලිපිනයෙහි පිටපතක්</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">නම්පතෙහි &amp;පිටපතක්</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -72,7 +84,7 @@
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">අල්පවිරාම වලින් වෙන්වූ ගොනුව</translation>
+        <translation type="unfinished">අල්පවිරාම යෙදූ ගොනුව</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -81,14 +93,14 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">නිර්යාත වීමට අසමත් විය</translation>
+        <translation type="unfinished">නිර්යාතයට අසමත් විය</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">ලේබලය</translation>
+        <translation type="unfinished">නම්පත</translation>
     </message>
     <message>
         <source>Address</source>
@@ -96,7 +108,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(ලේබලයක් නැත)</translation>
+        <translation type="unfinished">(නම්පතක් නැත)</translation>
     </message>
 </context>
 <context>
@@ -123,7 +135,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">පසුම්බිය සංකේතනය කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය සංකේතනය</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -151,7 +163,7 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">පසුම්බිය සංකේතනය කර ඇත</translation>
+        <translation type="unfinished">පසුම්බිය සංකේතිතයි</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -171,11 +183,11 @@
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">ඔබේ මුදල් පසුම්බිය සංකේතනය කිරීමට ආසන්නයි.</translation>
+        <translation type="unfinished">පසුම්බිය සංකේතනය කිරීමට ආසන්නයි.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation type="unfinished">ඔබගේ මුදල් පසුම්බිය දැන් සංකේතනය කර ඇත.</translation>
+        <translation type="unfinished">ඔබගේ මුදල් පසුම්බිය දැන් සංකේතිතයි.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -183,7 +195,7 @@
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished">පසුම්බි සංකේතනය අසාර්ථක විය</translation>
+        <translation type="unfinished">පසුම්බිය සංකේතනයට අසමත්!</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -234,43 +246,43 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n second(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute(s)</numerusform>
+            <numerusform>%n minute(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hour(s)</numerusform>
+            <numerusform>%n hour(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n day(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n week(s)</numerusform>
+            <numerusform>%n week(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n year(s)</numerusform>
+            <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
     </context>
@@ -325,7 +337,7 @@
     </message>
     <message>
         <source>Quit application</source>
-        <translation type="unfinished">යෙදුමෙන් පිටවන්න</translation>
+        <translation type="unfinished">යෙදුම වසන්න</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -333,7 +345,7 @@
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">%1 පිළිබඳව තොරතුරු පෙන්වන්න</translation>
+        <translation type="unfinished">%1 ගැන තොරතුරු පෙන්වන්න</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -341,11 +353,15 @@
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation type="unfinished">කියුටී පිළිබඳව තොරතුරු පෙන්වන්න</translation>
+        <translation type="unfinished">කියුටී ගැන තොරතුරු පෙන්වන්න</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">නව පසුම්බියක් සාදන්න</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;හකුළන්න</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -358,7 +374,7 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">බිට්කොයින් ලිපිනයට කාසි යවන්න</translation>
+        <translation type="unfinished">බිට්කොයින් ලිපිනයකට කාසි යවන්න</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -378,7 +394,7 @@
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;පසුම්බිය උපස්ථකරන්න…</translation>
+        <translation type="unfinished">&amp;පසුම්බිය උපස්ථය…</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -406,7 +422,7 @@
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">(%1%) ශීර්ෂ සමමුහූර්ත වෙමින්…</translation>
+        <translation type="unfinished">(%1%) ශ්‍රීර්ෂ සමමුහූර්ත වෙමින්…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
@@ -415,8 +431,8 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -432,6 +448,10 @@
         <translation type="unfinished">තොරතුර</translation>
     </message>
     <message>
+        <source>Up to date</source>
+        <translation type="unfinished">යාවත්කාලීනයි</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation type="unfinished">&amp;යවන ලිපින</translation>
     </message>
@@ -441,11 +461,11 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය බලන්න</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">පසුම්බියක් විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බියක් බලන්න</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -465,7 +485,7 @@
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">විශාල කරන්න</translation>
+        <translation type="unfinished">විශාලනය</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -475,12 +495,20 @@
         <source>%1 client</source>
         <translation type="unfinished">%1 අනුග්‍රාහකය</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;සඟවන්න</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">පෙ&amp;න්වන්න</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -513,6 +541,12 @@
 </translation>
     </message>
     <message>
+        <source>Amount: %1
+</source>
+        <translation type="unfinished">ගණන: %1
+</translation>
+    </message>
+    <message>
         <source>Wallet: %1
 </source>
         <translation type="unfinished">පසුම්බිය: %1
@@ -522,6 +556,12 @@
         <source>Type: %1
 </source>
         <translation type="unfinished">වර්ගය: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation type="unfinished">නම්පත: %1
 </translation>
     </message>
     <message>
@@ -575,7 +615,7 @@
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;ලිපිනය පිටපත්</translation>
+        <translation type="unfinished">&amp;ලිපිනයෙහි පිටපතක්</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -700,8 +740,8 @@
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -971,8 +1011,8 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -1023,8 +1063,8 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>matures in %n more block(s)</numerusform>
+            <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
     <message>

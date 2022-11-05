@@ -1404,7 +1404,7 @@ Indien dit het geval is, gelieve de software te gebruiken waarmee deze portefeui
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">T&amp;oon</translation>
+        <translation type="unfinished">&amp;Toon</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -3470,7 +3470,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Sign on device</source>
         <extracomment>"device" usually means a hardware wallet.</extracomment>
-        <translation type="unfinished">Inlog apparaat</translation>
+        <translation type="unfinished">Onderteken op apparaat</translation>
     </message>
     <message>
         <source>Connect your hardware wallet first.</source>

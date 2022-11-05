@@ -528,6 +528,10 @@
         <translation type="unfinished">Ajakohane</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation type="unfinished">Ava Rahakott</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Aken</translation>
     </message>
@@ -701,6 +705,14 @@
         <translation type="unfinished">(vahetusraha)</translation>
     </message>
 </context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Ava Rahakott</translation>
+    </message>
+    </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>

@@ -92,6 +92,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">முகவரி பட்டியல் ஏக்ஸ்போர்ட் செய்க </translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">கமா பிரிக்கப்பட்ட கோப்பு</translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">முகவரி பட்டியலை %1 க்கு சேமிக்க முயற்சிக்கும் ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.</translation>
@@ -235,6 +240,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">ரனவே எக்ஸெப்ஷன்</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">ஒரு அபாயகரமான ஏரற் ஏற்பட்டது. %1 இனி பாதுகாப்பாக தொடர முடியாது மற்றும் வெளியேறும்</translation>
+    </message>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">உள் எறர்</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
@@ -247,6 +267,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">பிழை: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1இன்னும் பாதுகாப்பாக வெளியேரவில்லை ...</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -398,6 +422,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">தீர்க்க முடியாது -%s முகவரி: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">-blockfiltersindex இல்லாத -peerblockfilters அமைப்பு முடியாது </translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -655,6 +683,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">புதிய வாலட்டை உருவாக்கு</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;குறைத்தல்</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">கைப்பை:</translation>
     </message>
@@ -692,12 +724,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">உங்கள் பணப்பைச் சேர்ந்த தனிப்பட்ட விசைகளை குறியாக்குக</translation>
     </message>
     <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">&amp;பேக்கப் வாலட்...</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">உங்கள் பிட்டினின் முகவரியுடன் செய்திகளை உங்களிடம் வைத்திருப்பதை நிரூபிக்க</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">குறிப்பிடப்பட்ட விக்கிபீடியா முகவர்களுடன் கையொப்பமிடப்பட்டதை உறுதிப்படுத்த, செய்திகளை சரிபார்க்கவும்</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">திறந்த &amp;URI...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -1697,6 +1737,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Sign Tx</source>
+        <translation type="unfinished">கையெழுத்து Tx</translation>
+    </message>
+    <message>
         <source>Close</source>
         <translation type="unfinished">நெருக்கமான</translation>
     </message>
@@ -2665,6 +2709,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <source>press q to shutdown</source>
+        <translation type="unfinished">ஷட்டவுன் செய்ய, "q" ஐ அழுத்தவும்</translation>
+    </message>
+</context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <source>conflicted with a transaction with %1 confirmations</source>
@@ -2981,6 +3032,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export Transaction History</source>
         <translation type="unfinished">பரிவர்த்தனையின் வரலாற்றை எக்ஸ்போர்ட் செய்</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">கமா பிரிக்கப்பட்ட கோப்பு</translation>
     </message>
     <message>
         <source>Confirmed</source>

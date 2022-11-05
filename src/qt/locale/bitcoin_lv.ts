@@ -185,10 +185,18 @@
         <translation type="unfinished">Maciņa šifrēšana neizdevās</translation>
     </message>
     <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation type="unfinished">Ievadītās paroles nav vienādas.</translation>
+    </message>
+    <message>
         <source>Wallet unlock failed</source>
         <translation type="unfinished">Maciņa atslēgšana neizdevās</translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">Uzmanību! Caps Lock uz klavietūras ir ieslēgts!</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -326,6 +334,10 @@
         <translation type="unfinished">Parādīt informāciju par Qt</translation>
     </message>
     <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Izveidot jaunu maciņu</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Maciņš:</translation>
     </message>
@@ -348,6 +360,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation type="unfinished">&amp;Saņemt</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Opcijas...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -376,6 +392,10 @@
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">Ciļņu rīkjosla</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Sinhronizē ar tīklu</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -743,6 +763,11 @@
         <translation type="unfinished">Apstiprināt iestatījumu atiestatīšanu</translation>
     </message>
     <message>
+        <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
+        <translation type="unfinished">Konfigurāciju Opcijas</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">Kļūda</translation>
     </message>
@@ -788,6 +813,33 @@
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">Jūsu kopējā tekošā bilance</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation type="unfinished">Iztērējams:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation type="unfinished">Nesenās transakcijas</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="unfinished">Dialogs</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation type="unfinished">Nokopēt</translation>
+    </message>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">Seiv</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Aiztaisīt</translation>
     </message>
     </context>
 <context>
@@ -1222,6 +1274,10 @@
     </context>
 <context>
     <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Izveidot jaunu maciņu</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation type="unfinished">Kļūda</translation>
