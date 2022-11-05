@@ -863,6 +863,13 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
             Scalar tau2 = nonces[j].GetHashWithSalt(4);
             Scalar gamma = nonces[j].GetHashWithSalt(100);
             Scalar excess = (proof.mu - rho*pd.x) - alpha;
+
+printf("excess binary: ");
+for(auto b: excess.GetBits()) {
+    printf("%s", b ? "1" : "0");
+}
+printf("\n");
+printf("excess uint64: %ld\n", excess.GetUint64());
             Scalar amount = (excess & Scalar(0xFFFFFFFFFFFFFFFF));
 printf("recovered amount=%s\n", amount.GetString().c_str());
 
@@ -885,7 +892,7 @@ printf("recovered amount=%s\n", amount.GetString().c_str());
 
             data.gamma = gamma;
             data.valid = true;
-printf("recovered gamma=%s\n", gamma.GetString().c_str());
+
             Scalar excessMsg2 = ((proof.taux - (tau2*pd.x*pd.x) - (pd.z*pd.z*gamma)) * pd.x.Invert()) - tau1;
 
             std::vector<unsigned char> vMsg2 = excessMsg2.GetVch();
