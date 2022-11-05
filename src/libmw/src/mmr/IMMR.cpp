@@ -5,7 +5,7 @@ using namespace mmr;
 
 mw::Hash IMMR::Root() const
 {
-    const uint64_t num_nodes = mmr::LeafIndex::At(GetNumLeaves()).GetPosition();
+    const uint64_t num_nodes = GetNumNodes();
 
     // Find the "peaks"
     std::vector<mmr::Index> peak_indices = MMRUtil::CalcPeakIndices(num_nodes);

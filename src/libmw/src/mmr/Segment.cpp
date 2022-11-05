@@ -25,8 +25,7 @@ Segment SegmentFactory::Assemble(const IMMR& mmr, const ILeafSet& leafset, const
         ++leaf_idx;
     }
     
-    const uint64_t num_nodes = leafset.GetNextLeafIdx().GetPosition();
-    std::vector<Index> peak_indices = MMRUtil::CalcPeakIndices(num_nodes);
+    std::vector<Index> peak_indices = MMRUtil::CalcPeakIndices(leafset.GetNumNodes());
     assert(!peak_indices.empty());
 
     // Populate hashes
@@ -37,15 +36,18 @@ Segment SegmentFactory::Assemble(const IMMR& mmr, const ILeafSet& leafset, const
     }
 
     // Determine the lowest peak that can be calculated using the hashes we've already provided
-    auto peak = *std::find_if(
+    auto peak = std::find_if(
         peak_indices.begin(), peak_indices.end(),
         [&last_leaf_idx](const Index& peak_idx) { return peak_idx > last_leaf_idx.GetNodeIndex(); });
 
     // Bag the next lower peak (if there is one), so the root can still be calculated
-    segment.lower_peak = BagNextLowerPeak(mmr, peak_indices, peak, num_nodes);
+    if (peak != peak_indices.end() && peak++ != peak_indices.end()) {
+        segment.lower_peak = MMRUtil::CalcBaggedPeak(mmr, *peak);
+    }
 
     return segment;
 }
+
 
 std::set<Index> SegmentFactory::CalcHashIndices(
     const ILeafSet& leafset,
@@ -98,11 +100,8 @@ std::set<Index> SegmentFactory::CalcHashIndices(
     assert(peak_iter != peak_indices.end());
 
     Index peak = *peak_iter;
-    auto on_mountain_right_edge = [prev_peak, peak](const Index& idx) -> bool {
-        const uint64_t adjustment = prev_peak
-                                        .map([](const Index& i) { return i.GetPosition() + 1; })
-                                        .value_or(0);
-        return (idx.GetPosition() - adjustment) >= ((peak.GetPosition() - adjustment) - peak.GetHeight());
+    auto on_mountain_right_edge = [peak](const Index& idx) -> bool {
+        return idx.GetPosition() >= peak.GetPosition() - peak.GetHeight();
     };
 
     idx = last_leaf_idx.GetNodeIndex();
@@ -117,31 +116,4 @@ std::set<Index> SegmentFactory::CalcHashIndices(
     }
 
     return proof_indices;
-}
-
-boost::optional<mw::Hash> SegmentFactory::BagNextLowerPeak(
-    const IMMR& mmr,
-    const std::vector<Index>& peak_indices,
-    const mmr::Index& peak_idx,
-    const uint64_t num_nodes)
-{
-    boost::optional<mw::Hash> lower_peak = boost::none;
-
-    if (peak_idx != peak_indices.back()) {
-        // Bag peaks until we reach the next lowest
-        for (auto iter = peak_indices.crbegin(); iter != peak_indices.crend(); iter++) {
-            if (*iter == peak_idx) {
-                break;
-            }
-
-            mw::Hash peakHash = mmr.GetHash(*iter);
-            if (lower_peak) {
-                lower_peak = MMRUtil::CalcParentHash(Index::At(num_nodes), peakHash, *lower_peak);
-            } else {
-                lower_peak = peakHash;
-            }
-        }
-    }
-
-    return lower_peak;
 }

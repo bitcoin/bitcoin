@@ -57,6 +57,13 @@ public:
     virtual mmr::LeafIndex GetNextLeafIdx() const noexcept = 0;
 
     /// <summary>
+    /// Gets the number of nodes in the MMR, including those that have been pruned.
+    /// eg. If the MMR contains leaves 0, 1, and 2, this will return 4.
+    /// </summary>
+    /// <returns>The number of (pruned and unpruned) nodes in the MMR.</returns>
+    uint64_t GetNumNodes() const noexcept { return GetNextLeafIdx().GetPosition(); }
+
+    /// <summary>
     /// Gets the number of leaves in the MMR, including those that have been pruned.
     /// eg. If the MMR contains leaves 0, 1, and 2, this will return 3.
     /// </summary>

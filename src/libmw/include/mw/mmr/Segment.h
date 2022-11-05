@@ -45,15 +45,8 @@ private:
     static std::set<Index> CalcHashIndices(
         const ILeafSet& leafset,
         const std::vector<Index>& peak_indices,
-        const mmr::LeafIndex& first_leaf_idx,
-        const mmr::LeafIndex& last_leaf_idx
-    );
-
-    static boost::optional<mw::Hash> BagNextLowerPeak(
-        const IMMR& mmr,
-        const std::vector<Index>& peak_indices,
-        const mmr::Index& peak_idx,
-        const uint64_t num_nodes
+        const LeafIndex& first_leaf_idx,
+        const LeafIndex& last_leaf_idx
     );
 };
 

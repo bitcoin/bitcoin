@@ -1884,7 +1884,6 @@ static void ProcessGetMWEBUTXOs(CNode& pfrom, const ChainstateManager& chainman,
     }
 
     auto mweb_cache = temp_view.GetMWEBCacheView();
-    auto pLeafset = mweb_cache->GetLeafSet();
 
     mmr::Segment segment = mmr::SegmentFactory::Assemble(
         *mweb_cache->GetOutputPMMR(),

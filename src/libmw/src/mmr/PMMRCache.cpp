@@ -75,7 +75,7 @@ void PMMRCache::Rewind(const uint64_t numLeaves)
             m_leaves.erase(iter, m_leaves.end());
         }
 
-        const uint64_t numNodes = GetNextLeafIdx().GetPosition() - m_firstLeaf.GetPosition();
+        const uint64_t numNodes = GetNumNodes() - m_firstLeaf.GetPosition();
         if (m_nodes.size() > numNodes) {
             m_nodes.erase(m_nodes.begin() + numNodes, m_nodes.end());
         }

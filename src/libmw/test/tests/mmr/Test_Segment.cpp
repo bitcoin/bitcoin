@@ -7,7 +7,6 @@
 #include <mw/mmr/LeafSet.h>
 #include <mw/mmr/Segment.h>
 #include <boost/optional/optional_io.hpp>
-#include <unordered_set>
 
 #include <test_framework/TestMWEB.h>
 
@@ -26,7 +25,7 @@ struct MMRWithLeafset {
     ILeafSet::Ptr leafset;
 };
 
-static mmr::Leaf DeterministicLeaf(const size_t i)
+static mmr::Leaf DeterministicLeaf(const uint64_t i)
 {
     std::vector<uint8_t> serialized{
         uint8_t(i >> 24),
@@ -36,7 +35,7 @@ static mmr::Leaf DeterministicLeaf(const size_t i)
     return mmr::Leaf::Create(mmr::LeafIndex::At(i), serialized);
 }
 
-static MMRWithLeafset BuildDetermininisticMMR(const size_t num_leaves)
+static MMRWithLeafset BuildDetermininisticMMR(const uint64_t num_leaves)
 {
     auto mmr = std::make_shared<MemMMR>();
     auto leafset = LeafSet::Open(GetDataDir(), 0);
@@ -46,32 +45,6 @@ static MMRWithLeafset BuildDetermininisticMMR(const size_t num_leaves)
     }
 
     return MMRWithLeafset{mmr, leafset};
-}
-
-static boost::optional<mw::Hash> CalcBaggedPeak(const IMMR::Ptr& mmr, const mmr::Index& peak_idx)
-{
-    const uint64_t num_nodes = mmr->GetNextLeafIdx().GetPosition();
-
-    // Find the "peaks"
-    std::vector<mmr::Index> peak_indices = MMRUtil::CalcPeakIndices(num_nodes);
-
-    // Bag 'em
-    boost::optional<mw::Hash> bagged_peak;
-    for (auto iter = peak_indices.crbegin(); iter != peak_indices.crend(); iter++) {
-        mw::Hash peakHash = mmr->GetHash(*iter);
-        if (bagged_peak) {
-            bagged_peak = MMRUtil::CalcParentHash(Index::At(num_nodes), peakHash, *bagged_peak);
-        } else {
-            bagged_peak = peakHash;
-        }
-
-        BOOST_TEST_MESSAGE("peak(" << iter->GetPosition() << "): " << bagged_peak);
-        if (*iter == peak_idx) {
-            return bagged_peak;
-        }
-    }
-
-    return bagged_peak;
 }
 
 BOOST_FIXTURE_TEST_SUITE(TestSegment, MWEBTestingSetup)
@@ -101,7 +74,7 @@ BOOST_AUTO_TEST_CASE(AssembleSegment)
     };
     BOOST_REQUIRE_EQUAL_COLLECTIONS(segment.hashes.begin(), segment.hashes.end(), expected_hashes.begin(), expected_hashes.end());
 
-    boost::optional<mw::Hash> expected_lower_peak = CalcBaggedPeak(mmr, mmr::Index::At(21));
+    boost::optional<mw::Hash> expected_lower_peak = MMRUtil::CalcBaggedPeak(*mmr, mmr::Index::At(21));
     BOOST_REQUIRE_EQUAL(expected_lower_peak, segment.lower_peak);
 
     // Verify PMMR root can be fully recomputed

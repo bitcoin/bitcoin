@@ -10,7 +10,7 @@ MW_NAMESPACE
 /// Consensus parameters
 /// Any change to these will cause a hardfork!
 /// </summary>
-static constexpr size_t BYTES_PER_WEIGHT = 42;
+static constexpr size_t BYTES_PER_WEIGHT = 42; // For any 'extra' data added to inputs, outputs, or kernels
 
 static constexpr size_t BASE_KERNEL_WEIGHT = 2;
 static constexpr size_t STEALTH_EXCESS_WEIGHT = 1;

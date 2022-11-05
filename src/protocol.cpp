@@ -92,6 +92,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::WTXIDRELAY,
     NetMsgType::MWEBHEADER,
     NetMsgType::MWEBLEAFSET,
+    NetMsgType::GETMWEBUTXOS,
+    NetMsgType::MWEBUTXOS,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
