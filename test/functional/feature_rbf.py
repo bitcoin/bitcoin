@@ -86,6 +86,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test replacement relay fee...")
         self.test_replacement_relay_fee()
 
+        self.log.info("Running test that we use worst-case ancestor feerate for the incoming transaction...")
+        self.test_worst_case_ancestor_feerate()
+
         self.log.info("Running test full replace by fee...")
         self.test_fullrbf()
 
@@ -279,6 +282,67 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+
+    def test_worst_case_ancestor_feerate(self):
+        """Let transaction A be in the mempool with feerate N.
+           Let transaction P1, P2 be in the mempool, with feerates 1 and M>>N.
+           Then transaction A' arrives, which conflicts with A, and has P1 and
+           P2 as parents, and has a feerate K such that:
+                K > N
+                feerate(P1, A) < N
+                feerate(P1, P2, A) > N
+           Then A' should not replace A, because a miner ought to mine P2 and A,
+           instead of P2, P1 and A' (assuming mempools are full etc)"""
+        tx0_outpoint = self.make_utxo(self.nodes[0], int(1 * COIN))
+        tx1_outpoint = self.make_utxo(self.nodes[0], int(1 * COIN))
+        tx2_outpoint = self.make_utxo(self.nodes[0], int(1 * COIN))
+
+        # Construct 3 transactions for the mempool: A, P1, P2.
+        txA = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx0_outpoint,
+            sequence=0,
+            fee=Decimal("0.001"),
+        )
+
+        txP1 = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx1_outpoint,
+            sequence=0,
+            fee=Decimal("0.00001"),
+        )
+
+        txP2 = self.wallet.send_self_transfer(
+            from_node=self.nodes[0],
+            utxo_to_spend=tx2_outpoint,
+            sequence=0,
+            fee=Decimal("0.01")
+        )
+
+        # Store the feerates of A, P1, P2
+        raw_mempool = self.nodes[0].getrawmempool(True)
+        txA_entry, txP1_entry, txP2_entry  = raw_mempool[txA["txid"]], raw_mempool[txP1["txid"]], raw_mempool[txP2["txid"]]
+        txA_vsize, txA_fees = txA_entry["vsize"], txA_entry["fees"]["base"]
+        txP1_vsize, txP1_fees = txP1_entry["vsize"], txP1_entry["fees"]["base"]
+        txP2_vsize, txP2_fees = txP2_entry["vsize"], txP2_entry["fees"]["base"]
+
+        self.log.debug("Checking that P2's feerate is greater than A's feerate")
+        assert (txP2_fees/txP2_vsize > txA_fees/txA_vsize)
+
+        self.log.debug("Checking that P1's feerate is less than A's feerate")
+        assert (txP1_fees/txP1_vsize < txA_fees/txA_vsize)
+
+        # Now create a child of P1,P2 that conflicts with A.
+        txA_conflict = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[tx0_outpoint, txP1["new_utxo"], txP2["new_utxo"]],
+            sequence=0,
+            num_outputs=1,
+            fee_per_output=220000
+        )
+
+        self.log.debug("Submitting transaction that conflicts with A and spends P1, P2")
+        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, txA_conflict["hex"], 0)
+
 
     def test_replacement_ancestorfeeperkb(self):
         """Replacement requires ancestor feeperkb to be greater than individual
