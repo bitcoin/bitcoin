@@ -65,7 +65,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
             token_id
         );
         BOOST_CHECK(is_valid);
-        printf("V.size: %d\n", range_proof.V.size());
 
         BOOST_CHECK(data.size() == 1);
         printf("data gamma=%ld\n", data[0].gamma.GetUint64());

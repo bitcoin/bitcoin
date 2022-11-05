@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(test_integration_gg_ones_times_z)
 BOOST_AUTO_TEST_CASE(test_integration_offset_by_negation)
 {
     {
-        Scalar z(100);
-        Scalar basis(12345);
+        Scalar z(100U);
+        Scalar basis(12345U);
 
         auto r1 = basis - z;
         auto r2 = basis + z.Negate();

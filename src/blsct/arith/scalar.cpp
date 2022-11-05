@@ -4,7 +4,7 @@
 
 #include <blsct/arith/scalar.h>
 
-Scalar::Scalar(const int64_t& n)
+Scalar::Scalar(const uint64_t& n)
 {
     mclBnFr_setInt(&m_fr, n);  // this takes int64_t
 }

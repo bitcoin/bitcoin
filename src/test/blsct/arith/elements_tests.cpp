@@ -18,7 +18,7 @@ BOOST_FIXTURE_TEST_SUITE(elements_tests, MclTestingSetup)
 BOOST_AUTO_TEST_CASE(test_elements_constructors)
 {
     {
-        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+        Scalars ss(std::vector<Scalar> { Scalar{1u}, Scalar{2u} });
         BOOST_CHECK(ss.Size() == 2);
         BOOST_CHECK(ss[0].GetUint64() == 1);
         BOOST_CHECK(ss[1].GetUint64() == 2);

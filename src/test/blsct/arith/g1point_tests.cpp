@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(test_g1point_point_mul)
 {
     auto g = G1Point::GetBasePoint();
     auto p = g + g + g;
-    auto q = g * 3;
+    auto q = g * 3U;
     BOOST_CHECK(p == q);
 }
 

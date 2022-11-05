@@ -838,4 +838,61 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_scalar_bitwise_and_recover_1)
+{
+    // 7370616765747469206d65617462616c6c730000000000000001
+    // 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
+    std::vector<unsigned char> excess_ser {
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        115,
+        112,
+        97,
+        103,
+        101,
+        116,
+        116,
+        105,
+        32,
+        109,
+        101,
+        97,
+        116,
+        98,
+        97,
+        108,
+        108,
+        115,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+    };
+    Scalar excess;
+    excess.SetVch(excess_ser);
+    printf("excess: %s\n", excess.GetString().c_str());
+    for(auto b: excess.GetBits()) {
+        printf("%s", b ? "1" : "0");
+    }
+    printf("\n");
+
+    // mask
+    Scalar mask(0xFFFFFFFFFFFFFFFF);
+    printf("mask: %s\n", mask.GetString().c_str());
+    for(auto b: mask.GetBits()) {
+        printf("%s", b ? "1" : "0");
+    }
+    printf("\n");
+
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
