@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">عنوانعنوانأنقر بزر الماوس الأيمن لتحرير العنوان أو التصنيف</translation>
+        <translation type="unfinished">أنقر بزر الماوس الأيمن لتحرير العنوان أو التصنيف</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -256,6 +256,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">هل تريد اعادة الاعدادت الى القيم الافتراضية ، او الايقاف دون القيام بالتغيير</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">خطأ كارثي قد حصل .تحقق من ان ملف الاعدادت قابل للكتابة، او حاول التشغيل دون اعدادات</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation type="unfinished">خطأ: دليل البيانات المحدد "%1" غير موجود.</translation>
     </message>
@@ -440,6 +450,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">ملف الاعدادات لا يمكن قرأته </translation>
+    </message>
+    <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s المبرمجون</translation>
     </message>
@@ -538,6 +552,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">لايمكن الكتابة على دليل البيانات '%s'؛ تحقق من السماحيات. </translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s طلب الاستماع على منفذ %u. يعتبر منفذه "سيئًا" وبالتالي فمن غير المحتمل أن يتصل به أي من أقران Bitcoin Core. انظر الى doc / p2p-bad-ports.md للحصول على التفاصيل والقائمة الكاملة.</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">فشل في إعادة تسمية ملف peers.dat غير صالح. يرجى نقلها أو حذفها وحاول مرة أخرى.</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided (no -proxy= and no -onion= given) or it is explicitly forbidden (-onion=0)</source>
+        <translation type="unfinished">الاتصالات الصادرة مقصورة على Tor (onion) ولكن لم يتم توفير الوكيل للوصول إلى شبكة Tor (لا يوجد وكيل (Proxy) ولا يوجد Onion), أو أنه محظور حتما (onion = 0).</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -1144,6 +1170,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 client</source>
         <translation type="unfinished">الزبون %1</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">إخفاء</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">إظهار</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -1153,7 +1187,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%nاتصالات نشطة بشبكة البيتكوين</numerusform>
         </translation>
     </message>
     <message>

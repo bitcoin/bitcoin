@@ -622,6 +622,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Fejlindlæsning %s: Ekstern underskriver-tegnebog indlæses uden ekstern underskriverunderstøttelse kompileret</translation>
     </message>
     <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">Kunne ikke omdøbe ugyldig peers.dat fil. Flyt eller slet den venligst og prøv igen.</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Opsætningen af %s bliver kun udført på %s-netværk under [%s]-sektionen.</translation>
     </message>

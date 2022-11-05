@@ -2,30 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Click-dreapta pentru a edita adresa sau eticheta</translation>
-    </message>
-    <message>
-        <source>Create a new address</source>
-        <translation type="unfinished">Creează o adresă nouă</translation>
-    </message>
-    <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">&amp;Nou</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copiază adresa selectată curent în clipboard</translation>
-    </message>
-    <message>
-        <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Copiază</translation>
-    </message>
-    <message>
-        <source>C&amp;lose</source>
-        <translation type="unfinished">Î&amp;nchide</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation type="unfinished">Şterge adresa selectată curent din listă</translation>
     </message>
@@ -694,11 +670,7 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation type="unfinished">Comentariul (%s) al Agentului Utilizator contine caractere nesigure.</translation>
     </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Portofelul trebuie rescris: reporneşte %s pentru finalizare</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>

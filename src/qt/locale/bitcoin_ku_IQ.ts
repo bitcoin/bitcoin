@@ -22,10 +22,6 @@
         <translation type="unfinished">&amp;ڕوونووس</translation>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;داخستن</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation type="unfinished">سڕینەوەی ناونیشانی هەڵبژێردراوی ئێستا لە لیستەکە</translation>
     </message>
@@ -113,9 +109,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(بێ ناونیشان)
-
-</translation>
+        <translation type="unfinished">(ناونیشان نییە)</translation>
     </message>
 </context>
 <context>
@@ -137,8 +131,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">دووبارەکردنەوەی دەستەواژەی تێپەڕی نوێ</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">نیشان دانا ناوه چونه</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">کیف خو یه پاره رمزه دانینه بر</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">او شوله بو ور کرنا کیف پاره گرکه رمزا کیفه وؤ یه پاره بزانی</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">به راستی اون هشیارن کا دخازن بو کیف خو یه پاره رمزه دانین</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">دەستەواژەی تێپەڕەوی نوێ تێبنووسە بۆ جزدان.1 تکایە دەستەواژەی تێپەڕێک بەکاربێنە لە 2ten یان زیاتر لە هێما هەڕەمەکیەکان2، یان 38 یان زیاتر ووشەکان3.</translation>
+        <translation type="unfinished">دەستەواژەی تێپەڕەوی نوێ بنووسە بۆ جزدان. &lt;br/&gt;تکایە دەستەواژەی تێپەڕێک بەکاربێنە لە &lt;b&gt;دە یان زیاتر لە هێما هەڕەمەکییەکان&lt;/b&gt;یان &lt;b&gt;هەشت یان وشەی زیاتر&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -240,16 +250,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;دەربارەی %1</translation>
+    </message>
+    <message>
         <source>&amp;Send</source>
         <translation type="unfinished">&amp;ناردن</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation type="unfinished">&amp;پەرگە</translation>
+        <translation type="unfinished">&amp;فایل</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;سازکارییەکان</translation>
+        <translation type="unfinished">&amp;ڕێکخستنەکان</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -287,7 +301,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation type="unfinished">یەکە بۆ نیشاندانی بڕی کرتە بکە بۆ دیاریکردنی یەکەیەکی تر.</translation>
+        <translation type="unfinished">یەکە بۆ نیشاندانی بڕی لەناو. کرتە بکە بۆ دیاریکردنی یەکەیەکی تر.</translation>
     </message>
 </context>
 <context>
