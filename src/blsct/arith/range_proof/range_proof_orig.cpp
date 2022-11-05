@@ -923,7 +923,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
     if (fOnlyRecover)
         return true;
 
-    size_t maxMN = 1u << max_length;
+    size_t maxMN = 1 << max_length;
 
     std::vector<Scalar> inverses(to_invert.size());
 

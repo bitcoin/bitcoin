@@ -606,7 +606,11 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
         // then applying 64-byte mask fuether extracts 64-byte v[0]
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-        const Scalar input_value0 = message_v0 & Scalar(0xFFFFFFFFFFFFFFFF);
+// create 0xFFFFFFFFFFFFFFFF mask
+Scalar int64_max(INT64_MAX);
+Scalar one(1);
+Scalar mask = (int64_max << 1) + one;
+        const Scalar input_value0 = message_v0 & mask; //Scalar(0xFFFFFFFFFFFFFFFF);
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (gens.G.get() * input_value0_gamma) + (gens.H * input_value0);
