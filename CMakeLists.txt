@@ -336,6 +336,12 @@ add_subdirectory(test)
 
 include(cmake/tests.cmake)
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(OBJCOPY ${CMAKE_OBJCOPY})
+  set(STRIP ${CMAKE_STRIP})
+  configure_file(contrib/devtools/split-debug.sh.in split-debug.sh @ONLY)
+endif()
+
 get_directory_property(definitions COMPILE_DEFINITIONS)
 include(SeparateConfigs)
 separate_configs(definitions)
