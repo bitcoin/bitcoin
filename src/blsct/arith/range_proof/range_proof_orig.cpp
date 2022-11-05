@@ -863,7 +863,11 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
             Scalar gamma = nonces[j].GetHashWithSalt(100);
             Scalar excess = (proof.mu - rho*pd.x) - alpha;
 
-            Scalar amount = (excess & Scalar(0xFFFFFFFFFFFFFFFF));
+    // create 0xFFFFFFFFFFFFFFFF mask
+    Scalar int64_max(INT64_MAX);
+    Scalar one(1);
+    Scalar mask = (int64_max << 1) + one;
+            Scalar amount = excess & mask;
 
             RangeproofEncodedData data;
             data.index = p.first;
@@ -904,7 +908,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
 
             {
                 printf("v gamma=%s\n", gamma.GetString().c_str());
-                printf("v amount=%lu\n", amount.GetString().c_str());
+                printf("v amount=%s\n", amount.GetString().c_str());
                 G1Point gammaElement = gens.G*gamma;
                 G1Point valueElement = gens.H*amount;
                 bool fIsMine = ((gammaElement + valueElement) == pd.V[0]);

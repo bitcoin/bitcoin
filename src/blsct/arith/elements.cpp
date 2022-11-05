@@ -74,7 +74,7 @@ Elements<T> Elements<T>::FirstNPow(const Scalar& k, const size_t& n, const size_
 {
     if constexpr (std::is_same_v<T, Scalar>) {
         Elements<Scalar> ret;
-        Scalar x(1u);
+        Scalar x(1);
         for (size_t i = 0; i < n + from_index; ++i) {
             if (i >= from_index) {
                 ret.m_vec.push_back(x);

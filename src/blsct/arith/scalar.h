@@ -29,7 +29,7 @@ class Scalar {
 public:
     static constexpr int SERIALIZATION_SIZE_IN_BYTES = 32;
 
-    Scalar(const uint64_t& n = 0);
+    Scalar(const int64_t& n = 0);  // has to take int64_t instead of uint64_t since underneath it calls mcl library that takes int64_t
     Scalar(const std::vector<uint8_t>& v);
     Scalar(const mclBnFr& n_fr);
     Scalar(const uint256& n);

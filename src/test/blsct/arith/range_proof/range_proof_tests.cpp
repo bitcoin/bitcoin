@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
             proofs,
             data,
             nonces,
-            true,
+            false,
             token_id
         );
         BOOST_CHECK(is_valid);

@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_scalar_bitwise_and_recover_1)
+BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_mask)
 {
     // 7370616765747469206d65617462616c6c730000000000000001
     // 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
@@ -885,8 +885,9 @@ BOOST_AUTO_TEST_CASE(test_scalar_bitwise_and_recover_1)
     printf("\n");
 
     // mask
-    uint64_t max_uint64 = 0xFFFFFFFFFFFFFFFF;
-    Scalar mask(max_uint64);
+    Scalar int64_max(INT64_MAX);
+    Scalar one(1);
+    Scalar mask = (int64_max << 1) + one;
     printf("mask: %s\n", mask.GetString().c_str());
     for(auto b: mask.GetBits()) {
         printf("%s", b ? "1" : "0");
