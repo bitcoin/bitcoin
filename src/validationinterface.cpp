@@ -18,6 +18,9 @@
 #include <utility>
 // SYSCOIN
 #include <node/blockstorage.h>
+
+const std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
+
 /**
  * MainSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
  *
@@ -217,9 +220,10 @@ void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemP
     auto event = [tx, reason, mempool_sequence, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(tx, reason, mempool_sequence); });
     };
-    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s reason=%s", __func__,
                           tx->GetHash().ToString(),
-                          tx->GetWitnessHash().ToString());
+                          tx->GetWitnessHash().ToString(),
+                          RemovalReasonToString(reason));
 }
 
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
