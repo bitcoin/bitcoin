@@ -10,7 +10,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
+BOOST_AUTO_TEST_CASE(test_range_proof_simplest_prove_and_verify)
 {
     Scalar one(1);
     Scalar two(2);
