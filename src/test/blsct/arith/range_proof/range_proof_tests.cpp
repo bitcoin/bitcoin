@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
         std::pair<int, BulletproofsRangeproof> proof1(1, range_proof);
         std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
         RangeproofEncodedData red;
-        std::vector<RangeproofEncodedData> data { red };
+        std::vector<RangeproofEncodedData> data;
 
         auto is_valid = VerifyBulletproof(
             proofs,
@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(test_range_proof_input_param_validation)
         BOOST_CHECK(is_valid);
 
         BOOST_CHECK(data.size() == 1);
-        printf("data gamma=%ld\n", data[0].gamma.GetUint64());
-        // BOOST_CHECK(data[0].gamma == gamma);
+        printf("data gamma=%s\n", data[0].gamma.GetString().c_str());
+        printf("data amount=%ld\n", data[0].amount);
     }
 
     // // test each valid value individually

@@ -885,7 +885,8 @@ BOOST_AUTO_TEST_CASE(test_scalar_bitwise_and_recover_1)
     printf("\n");
 
     // mask
-    Scalar mask(0xFFFFFFFFFFFFFFFF);
+    uint64_t max_uint64 = 0xFFFFFFFFFFFFFFFF;
+    Scalar mask(max_uint64);
     printf("mask: %s\n", mask.GetString().c_str());
     for(auto b: mask.GetBits()) {
         printf("%s", b ? "1" : "0");

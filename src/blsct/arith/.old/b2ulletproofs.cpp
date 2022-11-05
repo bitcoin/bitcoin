@@ -197,10 +197,10 @@ G1Point CrossVectorExponent(
 }
 
 void BulletproofsRangeproof::Prove(
-    std::vector<Scalar> v, 
-    bls::G1Element nonce, 
-    const std::vector<uint8_t>& message, 
-    const TokenId& tokenId, 
+    std::vector<Scalar> v,
+    bls::G1Element nonce,
+    const std::vector<uint8_t>& message,
+    const TokenId& tokenId,
     const std::vector<Scalar>& useGammas
 )
 {

@@ -86,8 +86,7 @@ bool BulletproofsRangeproof::Init()
     BulletproofsRangeproof::one = new Scalar(1);
     BulletproofsRangeproof::two = new Scalar(2);
 
-    auto G = G1Point::GetBasePoint();
-    BulletproofsRangeproof::G = &G;
+    BulletproofsRangeproof::G = new G1Point(G1Point::GetBasePoint());
     BulletproofsRangeproof::H[TokenId()] = GetBaseG1Element(*BulletproofsRangeproof::G, 0);
 
     BulletproofsRangeproof::Hi.resize(maxMN);
@@ -864,13 +863,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
             Scalar gamma = nonces[j].GetHashWithSalt(100);
             Scalar excess = (proof.mu - rho*pd.x) - alpha;
 
-auto xs = excess.GetVch();
-for(auto x: xs) {
-    printf("%d,\n", x);
-}
-printf("excess uint64: %ld\n", excess.GetUint64());
             Scalar amount = (excess & Scalar(0xFFFFFFFFFFFFFFFF));
-printf("recovered amount=%s\n", amount.GetString().c_str());
 
             RangeproofEncodedData data;
             data.index = p.first;
@@ -910,11 +903,12 @@ printf("recovered amount=%s\n", amount.GetString().c_str());
             data.message = std::string(vMsgTrimmed.begin(), vMsgTrimmed.end()) + std::string(vMsg2Trimmed.begin(), vMsg2Trimmed.end());
 
             {
+                printf("v gamma=%s\n", gamma.GetString().c_str());
+                printf("v amount=%lu\n", amount.GetString().c_str());
                 G1Point gammaElement = gens.G*gamma;
                 G1Point valueElement = gens.H*amount;
                 bool fIsMine = ((gammaElement + valueElement) == pd.V[0]);
-
-                //if (fIsMine)
+                if (fIsMine)
                     vData.push_back(data);
             }
 
