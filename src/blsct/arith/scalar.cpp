@@ -137,15 +137,22 @@ Scalar Scalar::operator<<(unsigned int shift) const
     return ret;
 }
 
-/**
- * Assumes that fr contains a number within int64_t range
- */
 Scalar Scalar::operator>>(unsigned int shift) const
 {
-    uint64_t n = GetUint64();
-    n >>= shift;
-    Scalar ret(n);
+    mclBnFr one;
+    mclBnFr two;
+    mclBnFr_setInt(&one, 1);
+    mclBnFr_setInt(&two, 2);
 
+    mclBnFr temp = m_fr;
+    while (shift > 0) {
+        if (mclBnFr_isOdd(&temp) != 0) {
+            mclBnFr_sub(&temp, &temp, &one);
+        }
+        mclBnFr_div(&temp, &temp, &two);
+        --shift;
+    }
+    Scalar ret(temp);
     return ret;
 }
 

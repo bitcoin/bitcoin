@@ -363,6 +363,28 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_scalar_shift_right)
+{
+    Scalar eight(8);
+    Scalar seven(7);
+    Scalar six(6);
+    Scalar five(5);
+    Scalar four(4);
+    Scalar three(3);
+    Scalar two(2);
+    Scalar one(1);
+    Scalar zero(0);
+
+    BOOST_CHECK(eight >> 1 == four);
+    BOOST_CHECK(seven >> 1 == three);
+    BOOST_CHECK(six >> 1 == three);
+    BOOST_CHECK(five >> 1 == two);
+    BOOST_CHECK(four >> 1 == two);
+    BOOST_CHECK(three >> 1 == one);
+    BOOST_CHECK(two >> 1 == one);
+    BOOST_CHECK(one >> 1 == zero);
+}
+
 BOOST_AUTO_TEST_CASE(test_scalar_assign)
 {
     {
@@ -838,10 +860,11 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_mask)
+BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
 {
-    // 7370616765747469206d65617462616c6c730000000000000001
-    // 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
+    // serialized excess based on message "spagetti meatballs"
+    // = 7370616765747469206d65617462616c6c730000000000000001
+    // = 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
     std::vector<unsigned char> excess_ser {
         0,
         0,
@@ -878,22 +901,19 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_mask)
     };
     Scalar excess;
     excess.SetVch(excess_ser);
-    printf("excess: %s\n", excess.GetString().c_str());
-    for(auto b: excess.GetBits()) {
-        printf("%s", b ? "1" : "0");
-    }
-    printf("\n");
 
-    // mask
-    Scalar int64_max(INT64_MAX);
-    Scalar one(1);
-    Scalar mask = (int64_max << 1) + one;
-    printf("mask: %s\n", mask.GetString().c_str());
-    for(auto b: mask.GetBits()) {
-        printf("%s", b ? "1" : "0");
+    std::vector<unsigned char> vMsg = (excess >> 64).GetVch();
+    std::vector<unsigned char> vMsgTrimmed(0);
+    bool fFoundNonZero = false;
+    for (auto&it: vMsg) {
+        if (it != '\0')
+            fFoundNonZero = true;
+        if (fFoundNonZero)
+            vMsgTrimmed.push_back(it);
     }
-    printf("\n");
-
+    vMsg = vMsgTrimmed;
+    std::string s(vMsg.begin(), vMsg.end());
+    BOOST_CHECK(s == "spagetti meatballs");
 }
 
 
