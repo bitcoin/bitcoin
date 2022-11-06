@@ -696,19 +696,36 @@ Scalar delta_yz =
 for (size_t i = 1; i <= M; ++i) {
     delta_yz = delta_yz - zpow[2+i] * *BulletproofsRangeproof::ip12;  // (3)
 }
+// auto lhs_65_h = gens.H * this->t;
+// auto rhs_65_h =
+//     gens.H * delta_yz
+//     + V_sum
+//     + (this->T2 * x.Square())
+//     + (this->T1 * x);
+// rhs_65_h = rhs_65_h
+//     - (gens.G * tau1 * x)
+//     - (gens.G * tau2 * x.Square());
+// for (size_t i=0; i<v.size(); ++i) {
+//     rhs_65_h = rhs_65_h - (gens.G * gamma[i] * zpow[2+i]);
+// }
 
-auto lhs_65_h = gens.H * this->t;
-auto rhs_65_h =
-    gens.H * delta_yz
-    + V_sum
-    + (this->T2 * x.Square())
-    + (this->T1 * x);
-rhs_65_h = rhs_65_h
-    - (gens.G * tau1 * x)
-    - (gens.G * tau2 * x.Square());
-for (size_t i=0; i<v.size(); ++i) {
-    rhs_65_h = rhs_65_h - (gens.G * gamma[i] * z.Square());
+// auto lhs_65_h = (this->T1 * x) + (this->T2 * x.Square());
+// auto rhs_65_h =
+//     gens.H * t1 * x + gens.H * t2 * x.Square() +
+//     (gens.G * tau1 * x) + (gens.G * tau2 * x.Square());
+
+G1Point V_sum1 = this->V[0] * zpow[2];
+for (size_t i=1; i<V.size(); ++i) {
+    V_sum1 = V_sum1 + (this->V[i] * zpow[i+2]);
 }
+auto lhs_65_h = V_sum1;
+
+Scalar V_sum2 = (v[0] + gamma[0]) * zpow[2];
+for (size_t i=1; i<v.size(); ++i) {
+    V_sum2 = V_sum2 + ((v[i] + gamma[i]) * zpow[i+2]);
+}
+auto rhs_65_h = gens.H * V_sum2;
+
 if (lhs_65_h != rhs_65_h)
     throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
 else

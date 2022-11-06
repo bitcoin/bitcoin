@@ -334,7 +334,7 @@ rhs_65_g = rhs_65_g
     - (gens.H * tau1 * x)
     - (gens.H * tau2 * x.Square());
 for (size_t i=0; i<vs.Size(); ++i) {
-    rhs_65_g = rhs_65_g - (gens.H * gammas[i] * z.Square());
+    rhs_65_g = rhs_65_g - (gens.H * gammas[i] * z.Square());  // ?????
 }
 if (lhs_65_g != rhs_65_g)
     throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
