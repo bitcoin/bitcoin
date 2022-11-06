@@ -665,6 +665,57 @@ try_again:
     if (x_ip == 0)
         goto try_again;
 
+///// debug
+
+auto lhs_65_g = gens.G * this->taux;
+
+G1Point V_sum = this->V[0] * zpow[2];
+for (size_t i=1; i<V.size(); ++i) {
+    V_sum = V_sum + (this->V[i] * zpow[i+2]);
+}
+Scalar v_sum = v[0] * zpow[2];
+for (size_t i=1; i<v.size(); ++i) {
+    v_sum = v_sum + (v[i] * zpow[i+2]);
+}
+auto rhs_65_g =
+    V_sum
+    + this->T1 * x
+    + this->T2 * x.Square()
+    - (gens.H * t1 * x)
+    - (gens.H * t2 * x.Square())
+    - gens.H * v_sum;
+if (lhs_65_g != rhs_65_g)
+    throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
+else
+    printf("==============> (65) G worked\n");
+
+Scalar ip1y = VectorPowerSum(y, MN);
+Scalar delta_yz =
+    z * ip1y  // (1)
+    - (zpow[2] * ip1y); // (2)
+for (size_t i = 1; i <= M; ++i) {
+    delta_yz = delta_yz - zpow[2+i] * *BulletproofsRangeproof::ip12;  // (3)
+}
+
+auto lhs_65_h = gens.H * this->t;
+auto rhs_65_h =
+    gens.H * delta_yz
+    + V_sum
+    + (this->T2 * x.Square())
+    + (this->T1 * x);
+rhs_65_h = rhs_65_h
+    - (gens.G * tau1 * x)
+    - (gens.G * tau2 * x.Square());
+for (size_t i=0; i<v.size(); ++i) {
+    rhs_65_h = rhs_65_h - (gens.G * gamma[i] * z.Square());
+}
+if (lhs_65_h != rhs_65_h)
+    throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
+else
+    printf("==============> (65) H worked\n");
+
+/////
+
     // These are used in the inner product rounds
     unsigned int nprime = MN;
 
