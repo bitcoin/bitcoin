@@ -566,7 +566,7 @@ bool RangeProof::Verify(
         proof_transcripts.push_back(proof_transcript);
     }
 
-    const size_t max_mn = 1u << max_num_rounds;
+    const size_t max_mn = 1 << max_num_rounds;
     const Generators gens = m_gf->GetInstance(token_id);
 
     G1Point point_sum = VerifyLoop2(

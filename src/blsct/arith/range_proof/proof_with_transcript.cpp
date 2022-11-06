@@ -32,7 +32,7 @@ ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
     transcript_gen << proof.mu;
     transcript_gen << proof.t_hat;
 
-    Scalar x_ip = transcript_gen.GetHash();
+    Scalar cx_factor = transcript_gen.GetHash();
 
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars xs;
@@ -53,7 +53,7 @@ ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
         x,
         y,
         z,
-        x_ip,
+        cx_factor,
         xs,
         inv_xs,
         num_input_values_power_2,

@@ -995,6 +995,12 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
         tmp = pd.x * pd.x * weight_y;
 
         multiexpdata.push_back({proof.T2, tmp});
+
+
+
+
+/// (66)-(68)
+/*
         multiexpdata.push_back({proof.A, weight_z});
 
         tmp = pd.x * weight_z;
@@ -1065,7 +1071,6 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
                 ypow = ypow * pd.y;
             }
         }
-
         z1 = z1 + (proof.mu * weight_z);
 
         for (size_t i = 0; i < rounds; ++i)
@@ -1082,6 +1087,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
         tmp = proof.t - (proof.a*proof.b);
         tmp = tmp * pd.x_ip;
         z3 = z3 + (tmp * weight_z);
+*/
     }
 
     tmp = y0 - z1;
