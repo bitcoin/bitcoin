@@ -153,49 +153,22 @@ BasicTestingSetup::~BasicTestingSetup()
     ECC_Stop();
 }
 
-TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
+ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : BasicTestingSetup(chainName, extra_args)
 {
-    const CChainParams& chainparams = Params();
-    // Ideally we'd move all the RPC tests to the functional testing framework
-    // instead of unit tests, but for now we need these here.
-    RegisterAllCoreRPCCommands(tableRPC);
-
-    m_node.scheduler = std::make_unique<CScheduler>();
-
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
+    m_node.scheduler = std::make_unique<CScheduler>();
     threadGroup.create_thread([&] { TraceThread("scheduler", [&] { m_node.scheduler->serviceQueue(); }); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
 
     m_node.chainman = &::g_chainman;
-    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
-    ::ChainstateActive().InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
-    assert(!::ChainstateActive().CanFlushToDisk());
-    ::ChainstateActive().InitCoinsCache(1 << 23);
-    assert(::ChainstateActive().CanFlushToDisk());
-    if (!LoadGenesisBlock(chainparams)) {
-        throw std::runtime_error("LoadGenesisBlock failed.");
-    }
 
     m_node.mempool = &::mempool;
     m_node.mempool->setSanityCheck(1.0);
-    m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-    m_node.peer_logic = std::make_unique<PeerLogicValidation>(
-        m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool,
-        llmq::quorumBlockProcessor, llmq::quorumDKGSessionManager, llmq::quorumManager,
-        llmq::quorumSigSharesManager, llmq::quorumSigningManager, llmq::chainLocksHandler,
-        llmq::quorumInstantSendManager, false
-    );
-    {
-        CConnman::Options options;
-        options.m_msgproc = m_node.peer_logic.get();
-        m_node.connman->Init(options);
-    }
 
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
@@ -208,18 +181,13 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
     llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, *sporkManager, true);
 
-    CValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
-        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
-    }
-
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
     g_parallel_script_checks = true;
 }
 
-TestingSetup::~TestingSetup()
+ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
     deterministicMNManager.reset();
@@ -247,6 +215,43 @@ TestingSetup::~TestingSetup()
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
+}
+
+TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
+    : ChainTestingSetup(chainName, extra_args)
+{
+    const CChainParams& chainparams = Params();
+    // Ideally we'd move all the RPC tests to the functional testing framework
+    // instead of unit tests, but for now we need these here.
+    RegisterAllCoreRPCCommands(tableRPC);
+
+    m_node.chainman->InitializeChainstate(llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+    ::ChainstateActive().InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+    assert(!::ChainstateActive().CanFlushToDisk());
+    ::ChainstateActive().InitCoinsCache(1 << 23);
+    assert(::ChainstateActive().CanFlushToDisk());
+    if (!LoadGenesisBlock(chainparams)) {
+        throw std::runtime_error("LoadGenesisBlock failed.");
+    }
+
+    m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.peer_logic = std::make_unique<PeerLogicValidation>(
+        m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool,
+        llmq::quorumBlockProcessor, llmq::quorumDKGSessionManager, llmq::quorumManager,
+        llmq::quorumSigSharesManager, llmq::quorumSigningManager, llmq::chainLocksHandler,
+        llmq::quorumInstantSendManager, false
+    );
+    {
+        CConnman::Options options;
+        options.m_msgproc = m_node.peer_logic.get();
+        m_node.connman->Init(options);
+    }
+
+    CValidationState state;
+    if (!ActivateBestChain(state, chainparams)) {
+        throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
+    }
 }
 
 TestChainSetup::TestChainSetup(int blockCount)
