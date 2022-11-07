@@ -27,6 +27,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     get_fee,
+    find_vout_for_address,
 )
 from test_framework.wallet import MiniWallet
 
@@ -109,6 +110,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
         self.test_bump_back_to_yourself()
+        self.test_provided_change_pos(rbf_node)
 
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
@@ -174,6 +176,13 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
                 rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
 
+        self.log.info("Test reduce_output option")
+        assert_raises_rpc_error(-1, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"reduce_output": -1})
+        assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"reduce_output": 2})
+
+        self.log.info("Test outputs and reduce_output cannot both be provided")
+        assert_raises_rpc_error(-8, "Cannot specify both new outputs to use and an output index to reduce", rbf_node.bumpfee, rbfid, {"reduce_output": 2, "outputs": [{dest_address: 0.1}]})
+
         self.clear_mempool()
 
     def test_bump_back_to_yourself(self):
@@ -224,6 +233,35 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped_tx["decoded"]["vout"][1]["value"] + bumped["fee"], 15)
 
         node.unloadwallet("back_to_yourself")
+
+    def test_provided_change_pos(self, rbf_node):
+        self.log.info("Test the reduce_output option")
+
+        change_addr = rbf_node.getnewaddress()
+        dest_addr = rbf_node.getnewaddress()
+        assert_equal(rbf_node.getaddressinfo(change_addr)["ischange"], False)
+        assert_equal(rbf_node.getaddressinfo(dest_addr)["ischange"], False)
+
+        send_res = rbf_node.send(outputs=[{dest_addr: 1}], options={"change_address": change_addr})
+        assert send_res["complete"]
+        txid = send_res["txid"]
+
+        tx = rbf_node.gettransaction(txid=txid, verbose=True)
+        assert_equal(len(tx["decoded"]["vout"]), 2)
+
+        change_pos = find_vout_for_address(rbf_node, txid, change_addr)
+        change_value = tx["decoded"]["vout"][change_pos]["value"]
+
+        bumped = rbf_node.bumpfee(txid, {"reduce_output": change_pos})
+        new_txid = bumped["txid"]
+
+        new_tx = rbf_node.gettransaction(txid=new_txid, verbose=True)
+        assert_equal(len(new_tx["decoded"]["vout"]), 2)
+        new_change_pos = find_vout_for_address(rbf_node, new_txid, change_addr)
+        new_change_value = new_tx["decoded"]["vout"][new_change_pos]["value"]
+
+        assert_greater_than(change_value, new_change_value)
+
 
 def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     self.log.info('Test simple bumpfee: {}'.format(mode))
