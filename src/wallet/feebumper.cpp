@@ -152,8 +152,14 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> reduce_output)
 {
+    // Cannot both specify new outputs and an output to reduce
+    if (!outputs.empty() && reduce_output.has_value()) {
+        errors.push_back(Untranslated("Cannot specify both new outputs to use and an output index to reduce"));
+        return Result::INVALID_PARAMETER;
+    }
+
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
 
@@ -165,6 +171,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
+
+    // Make sure that reduce_output is valid
+    if (reduce_output.has_value() && reduce_output.value() >= wtx.tx->vout.size()) {
+        errors.push_back(Untranslated("Change position is out of range"));
+        return Result::INVALID_PARAMETER;
+    }
 
     // Retrieve all of the UTXOs and add them to coin control
     // While we're here, calculate the input amount
@@ -233,14 +245,15 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     std::vector<CRecipient> recipients;
     CAmount new_outputs_value = 0;
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
-    for (const auto& output : txouts) {
-        if (!OutputIsChange(wallet, output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
-            recipients.push_back(recipient);
-        } else {
+    for (size_t i = 0; i < txouts.size(); ++i) {
+        const CTxOut& output = txouts.at(i);
+        if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
+        } else {
+            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
     }

@@ -1015,9 +1015,11 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "\"" + FeeModes("\"\n\"") + "\""},
                     {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "New outputs (key-value pairs) which will replace\n"
                              "the original ones, if provided. Each address can only appear once and there can\n"
-                             "only be one \"data\" object.\n",
+                             "only be one \"data\" object.\n"
+                             "Cannot be provided if 'reduce_output' is specified.",
                         OutputsDoc(),
                         RPCArgOptions{.skip_type_check = true}},
+                    {"reduce_output", RPCArg::Type::NUM, RPCArg::DefaultHint{"not set, detect change automatically"}, "The 0-based index of the output from which the additional fees will be deducted. In general, this should be the position of change output. Cannot be provided if 'outputs' is specified."},
                 },
                 RPCArgOptions{.oneline_description="options"}},
         },
@@ -1056,6 +1058,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     coin_control.m_signal_bip125_rbf = true;
     std::vector<CTxOut> outputs;
 
+    std::optional<uint32_t> reduce_output;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -1066,6 +1070,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"outputs", UniValueType()}, // will be checked by AddOutputs()
+                {"reduce_output", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -1089,6 +1094,10 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             AddOutputs(tempTx, options["outputs"]);
             outputs = tempTx.vout;
         }
+
+        if (options.exists("reduce_output")) {
+            reduce_output = options["reduce_output"].getInt<uint32_t>();
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -1106,7 +1115,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CMutableTransaction mtx;
     feebumper::Result res;
     // Targeting feerate bump.
-    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs);
+    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, reduce_output);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
