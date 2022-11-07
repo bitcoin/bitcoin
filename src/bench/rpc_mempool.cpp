@@ -32,7 +32,7 @@ static void RpcMempool(benchmark::Bench& bench)
     }
 
     bench.minEpochIterations(40).run([&] {
-        (void)MempoolToJSON(pool, /*verbose*/ true);
+        (void)MempoolToJSON(pool, nullptr, /*verbose*/ true);
     });
 }
 

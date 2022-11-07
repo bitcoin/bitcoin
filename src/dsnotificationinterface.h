@@ -11,22 +11,14 @@ class CConnman;
 class CDeterministicMNManager;
 class CGovernanceManager;
 class CMasternodeSync;
-
-namespace llmq {
-class CChainLocksHandler;
-class CDKGSessionManager;
-class CInstantSendManager;
-class CQuorumManager;
-} // namespace llmq
+struct LLMQContext;
 
 class CDSNotificationInterface : public CValidationInterface
 {
 public:
     explicit CDSNotificationInterface(CConnman& _connman,
                                       std::unique_ptr<CMasternodeSync>& _mnsync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
-                                      std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<llmq::CChainLocksHandler>& _clhandler,
-                                      std::unique_ptr<llmq::CInstantSendManager>& _isman, std::unique_ptr<llmq::CQuorumManager>& _qman,
-                                      std::unique_ptr<llmq::CDKGSessionManager>& _qdkgsman);
+                                      std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<LLMQContext>& _llmq_ctx);
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup
@@ -52,10 +44,7 @@ private:
     std::unique_ptr<CDeterministicMNManager>& dmnman;
     std::unique_ptr<CGovernanceManager>& govman;
 
-    std::unique_ptr<llmq::CChainLocksHandler>& clhandler;
-    std::unique_ptr<llmq::CInstantSendManager>& isman;
-    std::unique_ptr<llmq::CQuorumManager>& qman;
-    std::unique_ptr<llmq::CDKGSessionManager>& qdkgsman;
+    std::unique_ptr<LLMQContext>& llmq_ctx;
 };
 
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H

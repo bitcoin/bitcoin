@@ -17,11 +17,13 @@
 #include <masternode/sync.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/signing_shares.h>
 #include <llmq/signing.h>
+#include <llmq/snapshot.h>
 #include <miner.h>
 #include <net.h>
 #include <net_processing.h>
@@ -54,8 +56,6 @@
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/specialtx.h>
-#include <llmq/init.h>
-#include <llmq/snapshot.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -179,7 +179,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 #endif // ENABLE_WALLET
 
     deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *m_node.connman));
-    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, *sporkManager, true);
+    m_node.llmq_ctx = std::make_unique<LLMQContext>(*evoDb, *m_node.mempool, *m_node.connman, *sporkManager, true, false);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -191,8 +191,8 @@ ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
     deterministicMNManager.reset();
-    llmq::InterruptLLMQSystem();
-    llmq::StopLLMQSystem();
+    m_node.llmq_ctx->Interrupt();
+    m_node.llmq_ctx->Stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     StopScriptCheckWorkerThreads();
@@ -211,7 +211,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.mempool = nullptr;
     m_node.args = nullptr;
     m_node.scheduler.reset();
-    llmq::DestroyLLMQSystem();
+    m_node.llmq_ctx.reset();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
@@ -237,10 +237,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peer_logic = std::make_unique<PeerLogicValidation>(
-        m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool,
-        llmq::quorumBlockProcessor, llmq::quorumDKGSessionManager, llmq::quorumManager,
-        llmq::quorumSigSharesManager, llmq::quorumSigningManager, llmq::chainLocksHandler,
-        llmq::quorumInstantSendManager, false
+        m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false
     );
     {
         CConnman::Options options;
@@ -306,7 +303,7 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
 CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler,  *llmq::quorumInstantSendManager, *m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx->quorum_block_processor, *m_node.llmq_ctx->clhandler, *m_node.llmq_ctx->isman, *m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     std::vector<CTransactionRef> llmqCommitments;
@@ -334,7 +331,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
         if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         CMutableTransaction tmpTx{*block.vtx[0]};

@@ -9,7 +9,14 @@
 
 #include <univalue.h>
 
-/** Generate blocks (mine) */
-UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript);
+namespace llmq {
+class CChainLocksHandler;
+class CInstantSendManager;
+class CQuorumBlockProcessor;
+} // namespace llmq
 
-#endif
+/** Generate blocks (mine) */
+UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, llmq::CQuorumBlockProcessor& quorum_block_processor, llmq::CChainLocksHandler& clhandler,
+                        llmq::CInstantSendManager& isman, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript);
+
+#endif // BITCOIN_RPC_MINING_H

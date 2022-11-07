@@ -466,9 +466,6 @@ private:
     void SignPendingSigShares();
     void WorkThreadMain();
 };
-
-extern std::unique_ptr<CSigSharesManager> quorumSigSharesManager;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_SIGNING_SHARES_H

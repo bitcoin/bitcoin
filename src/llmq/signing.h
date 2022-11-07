@@ -228,9 +228,6 @@ public:
     // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
     static bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
 };
-
-extern std::unique_ptr<CSigningManager> quorumSigningManager;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_SIGNING_H

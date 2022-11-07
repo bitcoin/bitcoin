@@ -16,6 +16,7 @@
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
 #include <key_io.h>
+#include <llmq/context.h>
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
@@ -60,7 +61,7 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
 
 NodeContext& EnsureNodeContext(const CoreContext& context)
 {
@@ -87,6 +88,15 @@ ChainstateManager& EnsureChainman(const CoreContext& context)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
     }
     return *node.chainman;
+}
+
+LLMQContext& EnsureLLMQContext(const CoreContext& context)
+{
+    NodeContext& node = EnsureNodeContext(context);
+    if (!node.llmq_ctx) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node LLMQ context not found");
+    }
+    return *node.llmq_ctx;
 }
 
 /* Calculate the difficulty for a given block index.
@@ -123,7 +133,7 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
     return blockindex == tip ? 1 : -1;
 }
 
-UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman)
 {
     // Serialize passed information without accessing chain state of the active chain!
     AssertLockNotHeld(cs_main); // For performance reasons
@@ -150,12 +160,12 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
 
-    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
+    result.pushKV("chainlock", clhandler.HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
 
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, bool txDetails)
 {
     // Serialize passed information without accessing chain state of the active chain!
     AssertLockNotHeld(cs_main); // For performance reasons
@@ -170,7 +180,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("version", block.nVersion);
     result.pushKV("versionHex", strprintf("%08x", block.nVersion));
     result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
-    bool chainLock = llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash());
+    bool chainLock = clhandler.HasChainLock(blockindex->nHeight, blockindex->GetBlockHash());
     UniValue txs(UniValue::VARR);
     for(const auto& tx : block.vtx)
     {
@@ -178,7 +188,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         {
             UniValue objTx(UniValue::VOBJ);
             TxToUniv(*tx, uint256(), objTx, true);
-            bool fLocked = llmq::quorumInstantSendManager->IsLocked(tx->GetHash());
+            bool fLocked = isman.IsLocked(tx->GetHash());
             objTx.pushKV("instantlock", fLocked || chainLock);
             objTx.pushKV("instantlock_internal", fLocked);
             txs.push_back(objTx);
@@ -268,7 +278,8 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     }.Check(request);
     UniValue result(UniValue::VOBJ);
 
-    llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetBestChainLock();
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    llmq::CChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
     }
@@ -475,7 +486,7 @@ static std::vector<RPCResult> MempoolEntryDescription() { return {
     RPCResult{RPCResult::Type::BOOL, "time", "True if this transaction was locked via InstantSend"}
 };}
 
-static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e, llmq::CInstantSendManager* isman) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
 
@@ -521,10 +532,10 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     }
 
     info.pushKV("spentby", spent);
-    info.pushKV("instantlock", llmq::quorumInstantSendManager->IsLocked(tx.GetHash()));
+    info.pushKV("instantlock", isman ? (isman->IsLocked(tx.GetHash()) ? "true" : "false") : "unknown");
 }
 
-UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
+UniValue MempoolToJSON(const CTxMemPool& pool, llmq::CInstantSendManager* isman, bool verbose)
 {
     if (verbose) {
         LOCK(pool.cs);
@@ -532,7 +543,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
         for (const CTxMemPoolEntry& e : pool.mapTx) {
             const uint256& hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(pool, info, e);
+            entryToJSON(pool, info, e, isman);
             // Mempool has unique entries so there is no advantage in using
             // UniValue::pushKV, which checks if the key already exists in O(N).
             // UniValue::__pushKV is used instead which currently is O(1).
@@ -581,7 +592,7 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         fVerbose = request.params[0].get_bool();
 
-    return MempoolToJSON(EnsureMemPool(request.context), fVerbose);
+    return MempoolToJSON(EnsureMemPool(request.context), EnsureLLMQContext(request.context).isman, fVerbose);
 }
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
@@ -634,11 +645,12 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
+        LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
         for (CTxMemPool::txiter ancestorIt : setAncestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, e, llmq_ctx.isman);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -697,11 +709,12 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
+        LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
         for (CTxMemPool::txiter descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, e, llmq_ctx.isman);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -735,7 +748,8 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 
     const CTxMemPoolEntry &e = *it;
     UniValue info(UniValue::VOBJ);
-    entryToJSON(mempool, info, e);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    entryToJSON(mempool, info, e, llmq_ctx.isman);
     return info;
 }
 
@@ -862,7 +876,8 @@ static UniValue getblockheader(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockheaderToJSON(tip, pblockindex);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    return blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman);
 }
 
 static UniValue getblockheaders(const JSONRPCRequest& request)
@@ -950,9 +965,10 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
         return arrHeaders;
     }
 
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
     for (; pblockindex; pblockindex = ::ChainActive().Next(pblockindex))
     {
-        arrHeaders.push_back(blockheaderToJSON(tip, pblockindex));
+        arrHeaders.push_back(blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman));
         if (--nCount <= 0)
             break;
     }
@@ -1163,7 +1179,8 @@ static UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockToJSON(block, tip, pblockindex, verbosity >= 2);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    return blockToJSON(block, tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, verbosity >= 2);
 }
 
 static UniValue pruneblockchain(const JSONRPCRequest& request)
@@ -1720,7 +1737,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     return res;
 }
 
-UniValue MempoolInfoToJSON(const CTxMemPool& pool)
+UniValue MempoolInfoToJSON(const CTxMemPool& pool, llmq::CInstantSendManager& isman)
 {
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
@@ -1733,7 +1750,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("maxmempool", (int64_t) maxmempool);
     ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
-    ret.pushKV("instantsendlocks", (int64_t)llmq::quorumInstantSendManager->GetInstantSendLockCount());
+    ret.pushKV("instantsendlocks", (int64_t)isman.GetInstantSendLockCount());
 
     return ret;
 }
@@ -1761,7 +1778,7 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    return MempoolInfoToJSON(EnsureMemPool(request.context));
+    return MempoolInfoToJSON(EnsureMemPool(request.context), *(EnsureLLMQContext(request.context).isman));
 }
 
 static UniValue preciousblock(const JSONRPCRequest& request)
@@ -2320,6 +2337,8 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
 
     int nTxNum = 0;
     UniValue result(UniValue::VARR);
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+
     for(const auto& tx : block.vtx)
     {
         if (tx->nVersion != 3 || tx->nType == TRANSACTION_NORMAL // ensure it's in fact a special tx
@@ -2338,7 +2357,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             case 2 :
                 {
                     UniValue objTx(UniValue::VOBJ);
-                    TxToJSON(*tx, uint256(), objTx);
+                    TxToJSON(*tx, uint256(), *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
                     result.push_back(objTx);
                     break;
                 }

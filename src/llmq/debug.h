@@ -105,8 +105,6 @@ public:
     void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, int quorumIndex, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
 };
 
-extern std::unique_ptr<CDKGDebugManager> quorumDKGDebugManager;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_DEBUG_H

@@ -16,6 +16,7 @@ class CConnman;
 class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
+struct LLMQContext;
 class PeerLogicValidation;
 namespace interfaces {
 class Chain;
@@ -48,6 +49,8 @@ struct NodeContext {
     interfaces::WalletClient* wallet_client{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
+    //! Dash
+    std::unique_ptr<LLMQContext> llmq_ctx;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

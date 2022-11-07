@@ -81,7 +81,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/specialtxman -> validation -> evo/specialtxman"
 
     "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> llmq/snapshot -> evo/simplifiedmns"
+    "llmq/blockprocessor -> net_processing -> llmq/context -> llmq/blockprocessor"
     "llmq/blockprocessor -> net_processing -> llmq/snapshot -> llmq/blockprocessor"
+    "llmq/chainlocks -> net_processing -> llmq/context -> llmq/chainlocks"
+    "llmq/context -> llmq/dkgsessionmgr -> net_processing -> llmq/context"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/quorums -> llmq/dkgsession"
     "llmq/dkgsessionmgr -> llmq/quorums -> llmq/dkgsessionmgr"
     "llmq/snapshot -> llmq/utils -> llmq/snapshot"

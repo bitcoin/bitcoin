@@ -15,17 +15,16 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 
-#include <llmq/quorums.h>
 #include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
+#include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/instantsend.h>
+#include <llmq/quorums.h>
 
 CDSNotificationInterface::CDSNotificationInterface(CConnman& _connman,
     std::unique_ptr<CMasternodeSync>& _mnsync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
-    std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<llmq::CChainLocksHandler>& _clhandler,
-    std::unique_ptr<llmq::CInstantSendManager>& _isman, std::unique_ptr<llmq::CQuorumManager>& _qman,
-    std::unique_ptr<llmq::CDKGSessionManager>& _qdkgsman
-) : connman(_connman), mnsync(_mnsync), dmnman(_dmnman), govman(_govman), clhandler(_clhandler), isman(_isman), qman(_qman), qdkgsman(_qdkgsman) {}
+    std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<LLMQContext>& _llmq_ctx
+) : connman(_connman), mnsync(_mnsync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx) {}
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -35,7 +34,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    clhandler->AcceptedBlockHeader(pindexNew);
+    llmq_ctx->clhandler->AcceptedBlockHeader(pindexNew);
     if (mnsync != nullptr) {
         mnsync->AcceptedBlockHeader(pindexNew);
     }
@@ -67,32 +66,32 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    CCoinJoin::UpdatedBlockTip(pindexNew, *clhandler);
+    CCoinJoin::UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler);
 #ifdef ENABLE_WALLET
     for (auto& pair : coinJoinClientManagers) {
         pair.second->UpdatedBlockTip(pindexNew);
     }
 #endif // ENABLE_WALLET
 
-    isman->UpdatedBlockTip(pindexNew);
-    clhandler->UpdatedBlockTip();
+    llmq_ctx->isman->UpdatedBlockTip(pindexNew);
+    llmq_ctx->clhandler->UpdatedBlockTip();
 
-    qman->UpdatedBlockTip(pindexNew, fInitialDownload);
-    qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     if (!fDisableGovernance) govman->UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)
 {
-    isman->TransactionAddedToMempool(ptx);
-    clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
+    llmq_ctx->isman->TransactionAddedToMempool(ptx);
+    llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
     CCoinJoin::TransactionAddedToMempool(ptx);
 }
 
 void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason)
 {
-    isman->TransactionRemovedFromMempool(ptx);
+    llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
 }
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -105,15 +104,15 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     // to abandon a transaction and then have it inadvertently cleared by
     // the notification that the conflicted transaction was evicted.
 
-    isman->BlockConnected(pblock, pindex, vtxConflicted);
-    clhandler->BlockConnected(pblock, pindex, vtxConflicted);
+    llmq_ctx->isman->BlockConnected(pblock, pindex, vtxConflicted);
+    llmq_ctx->clhandler->BlockConnected(pblock, pindex, vtxConflicted);
     CCoinJoin::BlockConnected(pblock, pindex, vtxConflicted);
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
-    isman->BlockDisconnected(pblock, pindexDisconnected);
-    clhandler->BlockDisconnected(pblock, pindexDisconnected);
+    llmq_ctx->isman->BlockDisconnected(pblock, pindexDisconnected);
+    llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
     CCoinJoin::BlockDisconnected(pblock, pindexDisconnected);
 }
 
@@ -125,6 +124,6 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
-    isman->NotifyChainLock(pindex);
-    CCoinJoin::NotifyChainLock(pindex, *clhandler);
+    llmq_ctx->isman->NotifyChainLock(pindex);
+    CCoinJoin::NotifyChainLock(pindex, *llmq_ctx->clhandler);
 }

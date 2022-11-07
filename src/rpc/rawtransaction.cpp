@@ -41,6 +41,7 @@
 #include <evo/specialtx.h>
 
 #include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
 
 #include <numeric>
@@ -54,7 +55,7 @@
  */
 constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
@@ -97,8 +98,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
                 entry.pushKV("confirmations", 1 + ::ChainActive().Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
-
-                chainLock = llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
+                chainLock = clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
             } else {
                 entry.pushKV("height", -1);
                 entry.pushKV("confirmations", 0);
@@ -106,7 +106,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
 
-    bool fLocked = llmq::quorumInstantSendManager->IsLocked(txid);
+    bool fLocked = isman.IsLocked(txid);
     entry.pushKV("instantlock", fLocked || chainLock);
     entry.pushKV("instantlock_internal", fLocked);
     entry.pushKV("chainlock", chainLock);
@@ -256,9 +256,11 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         return EncodeHexTx(*tx);
     }
 
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
-    TxToJSON(*tx, hash_block, result);
+    TxToJSON(*tx, hash_block, *llmq_ctx.clhandler, *llmq_ctx.isman, result);
     return result;
 }
 

@@ -208,7 +208,7 @@ BITCOIN_CORE_H = \
   llmq/dkgsessionhandler.h \
   llmq/dkgsessionmgr.h \
   llmq/dkgsession.h \
-  llmq/init.h \
+  llmq/context.h \
   llmq/instantsend.h \
   llmq/snapshot.h \
   llmq/signing.h \
@@ -406,7 +406,7 @@ libbitcoin_server_a_SOURCES = \
   llmq/dkgsessionhandler.cpp \
   llmq/dkgsessionmgr.cpp \
   llmq/dkgsession.cpp \
-  llmq/init.cpp \
+  llmq/context.cpp \
   llmq/instantsend.cpp \
   llmq/snapshot.cpp \
   llmq/signing.cpp \

@@ -14,8 +14,6 @@
 
 namespace llmq
 {
-std::unique_ptr<CDKGDebugManager> quorumDKGDebugManager;
-
 UniValue CDKGDebugSessionStatus::ToJson(int quorumIndex, int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);

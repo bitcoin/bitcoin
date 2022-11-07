@@ -22,9 +22,6 @@
 
 namespace llmq
 {
-
-std::unique_ptr<CSigSharesManager> quorumSigSharesManager;
-
 void CSigShare::UpdateKey()
 {
     key.first = this->buildSignHash();
@@ -1431,13 +1428,6 @@ void CSigSharesManager::WorkThreadMain()
     int64_t lastSendTime = 0;
 
     while (!workInterrupt) {
-        if (quorumSigningManager == nullptr) {
-            if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
-                return;
-            }
-            continue;
-        }
-
         bool fMoreWork{false};
 
         RemoveBannedNodeStates();

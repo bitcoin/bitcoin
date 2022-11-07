@@ -11,7 +11,7 @@
 #include <univalue.h>
 #include <util/system.h>
 
-#include <llmq/init.h>
+#include <llmq/context.h>
 
 #include <QDir>
 #include <QtGlobal>

@@ -14,9 +14,11 @@
 #include <evo/specialtxman.h>
 #include <index/txindex.h>
 #include <llmq/blockprocessor.h>
+#include <llmq/context.h>
 #include <masternode/meta.h>
 #include <messagesigner.h>
 #include <netbase.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/moneystr.h>
@@ -1164,7 +1166,9 @@ static UniValue protx_diff(const JSONRPCRequest& request)
 
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, *llmq::quorumBlockProcessor, strError, extended)) {
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+
+    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, *llmq_ctx.quorum_block_processor, strError, extended)) {
         throw std::runtime_error(strError);
     }
 

@@ -36,7 +36,7 @@
 #include <string>
 #include <vector>
 
-bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, llmq::CQuorumBlockProcessor& quorum_block_processor, llmq::CDKGSessionManager& qdkgsman, llmq::CQuorumManager& qman, llmq::CSigSharesManager& shareman, llmq::CSigningManager& sigman, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61);
+bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, LLMQContext& llmq_ctx, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61);
 
 namespace {
 const TestingSetup* g_setup;
@@ -72,7 +72,7 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     p2p_node.SetSendVersion(PROTOCOL_VERSION);
     g_setup->m_node.peer_logic->InitializeNode(&p2p_node);
     try {
-        (void)ProcessMessage(&p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), *g_setup->m_node.chainman, *g_setup->m_node.mempool, *llmq::quorumBlockProcessor, *llmq::quorumDKGSessionManager, *llmq::quorumManager, *llmq::quorumSigSharesManager, *llmq::quorumSigningManager, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, g_setup->m_node.connman.get(), g_setup->m_node.banman.get(), std::atomic<bool>{false}, true);
+        (void)ProcessMessage(&p2p_node, random_message_type, random_bytes_data_stream, GetTimeMillis(), Params(), *g_setup->m_node.chainman, *g_setup->m_node.mempool, *g_setup->m_node.llmq_ctx, g_setup->m_node.connman.get(), g_setup->m_node.banman.get(), std::atomic<bool>{false}, true);
     } catch (const std::ios_base::failure& e) {
     }
     SyncWithValidationInterfaceQueue();
