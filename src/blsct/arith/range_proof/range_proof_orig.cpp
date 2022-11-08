@@ -37,33 +37,41 @@ std::map<TokenId, G1Point> BulletproofsRangeproof::H;
 // Calculate base point
 static G1Point GetBaseG1Element(const G1Point &base, size_t idx, std::string tokId = "", uint64_t tokNftId = -1)
 {
-    static const std::string salt("bulletproof");
-    std::vector<uint8_t> data =  base.GetVch();
-    std::string toHash = HexStr(data) + salt + std::to_string(idx) + tokId + (tokNftId != -1 ? "nft"+ std::to_string(tokNftId) : "");
+    auto G = G1Point::GetBasePoint();
+    // printf("Creating BaseG1Element w/ idx=%ld...\n", idx);
+    auto e = G + G;
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << toHash;
-    uint256 hash = ss.GetHash();
+    for (size_t i=0; i<idx; ++i) {
+        // printf("adding G to e... idx=%ld\n", i);
+        e = e + G;
+    }
+    // static const std::string salt("bulletproof");
+    // std::vector<uint8_t> data =  base.GetVch();
+    // std::string toHash = HexStr(data) + salt + std::to_string(idx) + tokId + (tokNftId != -1 ? "nft"+ std::to_string(tokNftId) : "");
 
-    // uint8_t dest[1];
-    // dest[0] = 0x0;
+    // CHashWriter ss(SER_GETHASH, 0);
+    // ss << toHash;
+    // uint256 hash = ss.GetHash();
 
-    // std::vector<unsigned char> vMcl(48);
+    // // uint8_t dest[1];
+    // // dest[0] = 0x0;
 
-    // if (tokId != "")
-    // {
-    //     Fp p;
-    //     auto vHash = std::vector<unsigned char>(hash.begin(), hash.end());
-    //     p.setLittleEndianMod(&vHash[0], 32);
-    //     G1 g;
-    //     mapToG1(g, p);
-    //     g.serialize(&vMcl[0], 48);
-    // }
+    // // std::vector<unsigned char> vMcl(48);
 
-    //G1Point e = tokId == "" ? G1Point::FromMessage(std::vector<unsigned char>(hash.begin(), hash.end()), dest, 1) : G1Point::SetVch(vMcl);
-    auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
-    auto e = G1Point::MapToG1(vec_hash);
-    CHECK_AND_ASSERT_THROW_MES(!e.IsUnity(), "GetBaseG1Element: Exponent is point at infinity");
+    // // if (tokId != "")
+    // // {
+    // //     Fp p;
+    // //     auto vHash = std::vector<unsigned char>(hash.begin(), hash.end());
+    // //     p.setLittleEndianMod(&vHash[0], 32);
+    // //     G1 g;
+    // //     mapToG1(g, p);
+    // //     g.serialize(&vMcl[0], 48);
+    // // }
+
+    // //G1Point e = tokId == "" ? G1Point::FromMessage(std::vector<unsigned char>(hash.begin(), hash.end()), dest, 1) : G1Point::SetVch(vMcl);
+    // auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
+    // auto e = G1Point::MapToG1(vec_hash);
+    // CHECK_AND_ASSERT_THROW_MES(!e.IsUnity(), "GetBaseG1Element: Exponent is point at infinity");
 
     return e;
 }

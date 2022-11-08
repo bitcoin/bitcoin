@@ -36,7 +36,7 @@
 
 static const size_t maxN = 64;
 static const size_t maxMessageSize = 54;
-static const size_t maxM = 16;
+static const size_t maxM = 1;
 static const size_t maxMN = maxM*maxN;
 
 static const std::vector<uint8_t> balanceMsg = {'B', 'L', 'S', 'C', 'T', 'B', 'A', 'L', 'A', 'N', 'C', 'E'};
