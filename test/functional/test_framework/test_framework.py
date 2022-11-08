@@ -117,17 +117,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
         self.bind_to_localhost_only = True
-        self.parse_args()
-        self.default_wallet_name = ""
-        self.wallet_data_filename = "wallet.dat"
         self.extra_args_from_options = []
-        # Optional list of wallet names that can be set in set_test_params to
-        # create and import keys to. If unset, default is len(nodes) *
-        # [default_wallet_name]. If wallet names are None, wallet creation is
-        # skipped. If list is truncated, wallet creation is skipped and keys
-        # are not imported.
-        self.wallet_names = None
         self.set_test_params()
+        self.parse_args()
         if self.options.timeout_factor == 0 :
             self.options.timeout_factor = 99999
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
@@ -395,8 +387,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        if self.is_wallet_compiled():
-            self.import_deterministic_coinbase_privkeys()
+        self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
@@ -413,11 +404,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["initialblockdownload"], False)
 
     def import_deterministic_coinbase_privkeys(self):
-        wallet_names = [self.default_wallet_name] * len(self.nodes) if self.wallet_names is None else self.wallet_names
-        assert len(wallet_names) <= len(self.nodes)
-        for wallet_name, n in zip(wallet_names, self.nodes):
-            if wallet_name is not None:
-                n.createwallet(wallet_name=wallet_name, load_on_startup=True)
+        for n in self.nodes:
+            try:
+                n.getwalletinfo()
+            except JSONRPCException as e:
+                assert str(e).startswith('Method not found')
+                continue
+
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
@@ -935,7 +928,6 @@ class DashTestFramework(BitcoinTestFramework):
         idx = len(self.nodes)
         self.add_nodes(1, extra_args=[self.extra_args[idx]])
         self.start_node(idx)
-        self.nodes[idx].createwallet(self.default_wallet_name)
         for i in range(0, idx):
             self.connect_nodes(i, idx)
 
@@ -1095,6 +1087,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.prepare_masternodes()
         self.prepare_datadirs()
         self.start_masternodes()
+        self.import_deterministic_coinbase_privkeys()
 
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates

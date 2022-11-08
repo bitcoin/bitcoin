@@ -16,7 +16,6 @@ class DisableWalletTest (BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-disablewallet"]]
-        self.wallet_names = []
 
     def run_test (self):
         # Make sure wallet is really disabled
