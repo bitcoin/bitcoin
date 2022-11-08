@@ -81,7 +81,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer.wait_for_verack()
         verack_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'verack'][0]
         sendtxrcncl_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'sendtxrcncl'][0]
-        assert(sendtxrcncl_index < verack_index)
+        assert (sendtxrcncl_index < verack_index)
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL on pre-WTXID version should not be sent')
