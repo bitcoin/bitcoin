@@ -166,7 +166,16 @@ void WalletInit::Construct(NodeContext& node) const
         LogPrintf("Wallet disabled!\n");
         return;
     }
-    auto wallet_client = interfaces::MakeWalletClient(*node.chain, args);
+    // If there's no -wallet setting with a list of wallets to load, set it to
+    // load the default "" wallet.
+    if (!args.IsArgSet("wallet")) {
+        args.LockSettings([&](util::Settings& settings) {
+            util::SettingsValue wallets(util::SettingsValue::VARR);
+            wallets.push_back(""); // Default wallet name is ""
+            settings.rw_settings["wallet"] = wallets;
+        });
+    }
+    auto wallet_client = interfaces::MakeWalletClient(*node.chain, args, args.GetArgs("-wallet"));
     node.wallet_client = wallet_client.get();
     node.chain_clients.emplace_back(std::move(wallet_client));
 }

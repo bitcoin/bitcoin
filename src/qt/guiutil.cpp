@@ -1455,7 +1455,7 @@ void updateFonts()
         std::vector<QString> vecIgnoreClasses{
             "QWidget", "QDialog", "QFrame", "QStackedWidget", "QDesktopWidget", "QDesktopScreenWidget",
             "QTipLabel", "QMessageBox", "QMenu", "QComboBoxPrivateScroller", "QComboBoxPrivateContainer",
-            "QScrollBar", "QListView", "BitcoinGUI", "WalletView", "WalletFrame", "QVBoxLayout", "QGroupBox"
+            "QScrollBar", "QListView", "BitcoinGUI", "WalletView", "WalletFrame"
         };
         std::vector<QString> vecIgnoreObjects{
             "messagesWidget"
