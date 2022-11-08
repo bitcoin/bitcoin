@@ -110,8 +110,8 @@ class SendTxRcnclTest(BitcoinTestFramework):
 
         self.log.info('valid SENDTXRCNCL received')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
-        peer.send_message(create_sendtxrcncl_msg())
-        self.wait_until(lambda : "sendtxrcncl" in self.nodes[0].getpeerinfo()[-1]["bytesrecv_per_msg"])
+        with self.nodes[0].assert_debug_log(["received: sendtxrcncl"]):
+            peer.send_message(create_sendtxrcncl_msg())
         self.log.info('second SENDTXRCNCL triggers a disconnect')
         with self.nodes[0].assert_debug_log(["(sendtxrcncl received from already registered peer); disconnecting"]):
             peer.send_message(create_sendtxrcncl_msg())
