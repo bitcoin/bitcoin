@@ -75,10 +75,6 @@ export CPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
 export OBJC_INCLUDE_PATH="${NATIVE_GCC}/include"
 export OBJCPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
 
-prepend_to_search_env_var() {
-    export "${1}=${2}${!1:+:}${!1}"
-}
-
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
 case "$HOST" in
