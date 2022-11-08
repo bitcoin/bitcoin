@@ -692,10 +692,10 @@ auto rhs_65_g =
     - (gens.H * t1 * x)
     - (gens.H * t2 * x.Square())
     - gens.H * v_sum;
-if (lhs_65_g != rhs_65_g)
-    throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
-else
-    printf("==============> (65) G worked\n");
+// if (lhs_65_g != rhs_65_g)
+//     throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
+// else
+//     printf("==============> (65) G worked\n");
 
 Scalar ip1y = VectorPowerSum(y, MN);
 Scalar delta_yz =
@@ -736,10 +736,10 @@ for (size_t i=0; i<v.size(); ++i) {
 // }
 // auto rhs_65_h = V_sum2;
 
-if (lhs_65_h != rhs_65_h)
-    throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
-else
-    printf("==============> (65) H worked\n");
+// if (lhs_65_h != rhs_65_h)
+//     throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
+// else
+//     printf("==============> (65) H worked\n");
 
 /////
 

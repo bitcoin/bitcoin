@@ -11,6 +11,16 @@
 
 BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
+void PrintG1(const char* name, G1Point& p)
+{
+    printf("%s: %s\n", name, HexStr(p.GetVch()).c_str());
+}
+
+void PrintScalar(const char* name, Scalar& s)
+{
+    printf("%s: %s\n", name, HexStr(s.GetVch()).c_str());
+}
+
 BOOST_AUTO_TEST_CASE(test_range_proof_parallel_test_with_navcoin_core)
 {
     G1Point nonce = G1Point::GetBasePoint();
@@ -21,32 +31,38 @@ BOOST_AUTO_TEST_CASE(test_range_proof_parallel_test_with_navcoin_core)
     std::vector<Scalar> vs;
     vs.push_back(one);
 
-    //RangeProof range_proof;
-    BulletproofsRangeproof range_proof;
+    BulletproofsRangeproof rp;
 
-    // test one
-    {
-        range_proof.Prove(vs, nonce, {1, 2, 3, 4});
+    rp.Prove(vs, nonce, {1, 2, 3, 4});
 
-        std::vector<G1Point> nonces { nonce };
-        std::pair<int, BulletproofsRangeproof> proof1(1, range_proof);
-        std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
-        RangeproofEncodedData red;
-        std::vector<RangeproofEncodedData> data;
+    PrintG1("A", rp.A);
+    PrintG1("S", rp.S);
+    PrintG1("T1", rp.T1);
+    PrintG1("T2", rp.T1);
+    PrintScalar("tau_x", rp.taux);
+    PrintScalar("mu", rp.mu);
+    PrintScalar("a", rp.a);
+    PrintScalar("b", rp.b);
+    PrintScalar("t_hat", rp.t);
 
-        auto is_valid = VerifyBulletproof(
-            proofs,
-            data,
-            nonces,
-            false
-        );
-        BOOST_CHECK(is_valid);
+    std::vector<G1Point> nonces { nonce };
+    std::pair<int, BulletproofsRangeproof> proof1(0, rp);
+    std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
+    RangeproofEncodedData red;
+    std::vector<RangeproofEncodedData> data;
 
-        BOOST_CHECK(data.size() == 1);
-        printf("data gamma=%s\n", data[0].gamma.GetString().c_str());
-        printf("data amount=%ld\n", data[0].amount);
-        printf("data message=%s\n", data[0].message.c_str());
-    }
+    auto is_valid = VerifyBulletproof(
+        proofs,
+        data,
+        nonces,
+        false
+    );
+    BOOST_CHECK(is_valid);
+
+    BOOST_CHECK(data.size() == 1);
+    printf("data gamma=%s\n", data[0].gamma.GetString().c_str());
+    printf("data amount=%ld\n", data[0].amount);
+    printf("data message=%s\n", data[0].message.c_str());
 
     // // test each valid value individually
     // int i = 1;
