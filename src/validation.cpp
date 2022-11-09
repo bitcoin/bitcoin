@@ -4702,7 +4702,7 @@ bool Chainstate::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockV
     // SYSCOIN ProcessNEVMData/FlushDataToCache so we have the data from processing out-of-order blocks and it reads from disk (recreating PoDA data in block) prior to validation in ConnectTip()
     bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;
     PoDAMAPMemory mapPoDA;
-    if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA)) {
+    if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, m_chain.Tip()? m_chain.Tip()->GetMedianTimePast(): 0, TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA)) {
         state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
         pindex->nStatus |= BLOCK_FAILED_VALID;
         m_blockman.m_dirty_blockindex.insert(pindex);
