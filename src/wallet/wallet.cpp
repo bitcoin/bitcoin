@@ -37,7 +37,6 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/fees.h>
-#include <walletinitinterface.h>
 #include <warnings.h>
 
 #include <coinjoin/client.h>
@@ -113,7 +112,6 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     if (i != vpwallets.end()) return false;
     coinJoinClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CCoinJoinClientManager>(*wallet)));
     vpwallets.push_back(wallet);
-    g_wallet_init_interface.InitCoinJoinSettings();
     return true;
 }
 
@@ -132,7 +130,6 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
     vpwallets.erase(i);
     auto it = coinJoinClientManagers.find(wallet->GetName());
     coinJoinClientManagers.erase(it);
-    g_wallet_init_interface.InitCoinJoinSettings();
 
     // Write the wallet setting
     UpdateWalletSetting(chain, name, load_on_start, warnings);

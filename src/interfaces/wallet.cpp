@@ -581,7 +581,8 @@ public:
 class WalletClientImpl : public WalletClient
 {
 public:
-    WalletClientImpl(Chain& chain, ArgsManager& args)
+    WalletClientImpl(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames)
+        : m_wallet_filenames(std::move(wallet_filenames))
     {
         m_context.chain = &chain;
         m_context.args = &args;
@@ -598,8 +599,8 @@ public:
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
     }
-    bool verify() override { return VerifyWallets(*m_context.chain); }
-    bool load() override { return LoadWallets(*m_context.chain); }
+    bool verify() override { return VerifyWallets(*m_context.chain, m_wallet_filenames); }
+    bool load() override { return LoadWallets(*m_context.chain, m_wallet_filenames); }
     void start(CScheduler& scheduler) override { return StartWallets(scheduler, *Assert(m_context.args)); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
@@ -658,9 +659,9 @@ public:
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<WalletImpl>(wallet) : nullptr; }
 
-std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args)
+std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args, std::vector<std::string> wallet_filenames)
 {
-    return std::make_unique<WalletClientImpl>(chain, args);
+    return std::make_unique<WalletClientImpl>(chain, args, std::move(wallet_filenames));
 }
 
 } // namespace interfaces
