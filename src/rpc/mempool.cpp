@@ -775,7 +775,7 @@ static RPCHelpMan getmempoolinfo()
                                 {RPCResult::Type::NUM, "count", "Number of transactions in the fee rate group"},
                                 {RPCResult::Type::NUM, "fees", "Cumulative fees of all transactions in the fee rate group (in " + CURRENCY_ATOM + ")"},
                                 {RPCResult::Type::NUM, "from_feerate", "Group contains transactions with fee rates equal or greater than this value (in " + CURRENCY_ATOM + "/vB)"},
-                                {RPCResult::Type::ANY, "to_feerate", "Group contains transactions with fee rates equal or less than this value (in " + CURRENCY_ATOM + "/vB)"},
+                                {RPCResult::Type::NUM, "to_feerate", /*optional=*/true, "Group contains transactions with fee rates equal or less than this value (in " + CURRENCY_ATOM + "/vB)"},
                             }},
                         {RPCResult::Type::ELISION, "", ""},
                         {RPCResult::Type::NUM, "total_fees", "Total available fees in mempool (in " + CURRENCY_ATOM + ")"},
