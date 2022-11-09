@@ -381,7 +381,6 @@ G1Point RangeProof::VerifyLoop2(
         // g^(t_hat - delta_yz) = h^(-tau_x) * V^(z^2) * T1^x * T2^(x^2)
 
         // LHS (65)
-        //h_pos_exp = h_pos_exp - (p.proof.tau_x * weight_y);
         h_neg_exp = h_neg_exp + p.proof.tau_x * weight_y;  // LHS (65)
 
         // delta(y,z) in (39)
@@ -471,14 +470,6 @@ G1Point RangeProof::VerifyLoop2(
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
     // generate points from aggregated exponents from G, H, Gi and Hi generators
-    auto g_exp = g_pos_exp - g_neg_exp;
-    auto h_exp = h_pos_exp - h_neg_exp;
-
-    // swap exponents for testing purpose
-    auto tmp = g_exp;
-    g_exp = h_exp;
-    h_exp = tmp;
-
     points.Add(G * (g_pos_exp - g_neg_exp));
     points.Add(H * (h_pos_exp - h_neg_exp));
 
