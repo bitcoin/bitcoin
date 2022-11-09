@@ -34,6 +34,16 @@ boost::mutex BulletproofsRangeproof::init_mutex;
 G1Point* BulletproofsRangeproof::G;
 std::map<TokenId, G1Point> BulletproofsRangeproof::H;
 
+static void PrintG1(const char* name, G1Point& p)
+{
+    printf("%s: %s\n", name, HexStr(p.GetVch()).c_str());
+}
+
+static void PrintScalar(const char* name, Scalar& s)
+{
+    printf("%s: %s\n", name, HexStr(s.GetVch()).c_str());
+}
+
 // Calculate base point
 static G1Point GetBaseG1Element(const G1Point &base, size_t idx, std::string tokId = "", uint64_t tokNftId = -1)
 {
@@ -109,7 +119,8 @@ bool BulletproofsRangeproof::Init()
     BulletproofsRangeproof::oneN = VectorDup(*BulletproofsRangeproof::one, maxN);
     BulletproofsRangeproof::twoN = VectorPowers(*BulletproofsRangeproof::two, maxN);
     auto ip12 = InnerProduct(BulletproofsRangeproof::oneN, BulletproofsRangeproof::twoN);
-    BulletproofsRangeproof::ip12 = &ip12;
+    PrintScalar("ip12 (org)", ip12);
+    BulletproofsRangeproof::ip12 = new Scalar(ip12);
 
     fInit = true;
 
@@ -1048,17 +1059,28 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
         Scalar ip1y = VectorPowerSum(pd.y, MN);
 
         k = (zpow[2]*ip1y).Negate();
+        PrintScalar("zpow[2]", zpow[2]);
 
+        char buf[100];
         for (size_t j = 1; j <= M; ++j)
         {
             k = k - (zpow[j+2] * *BulletproofsRangeproof::ip12);
-        }
 
+            sprintf(buf, "zpow[%ld]", j+2);
+            PrintScalar(buf, zpow[j+2]);
+        }
+        PrintScalar("ip12", *BulletproofsRangeproof::ip12);
+
+        PrintScalar("t_hat", proof.t);
+        PrintScalar("ip1y", ip1y);
         tmp = k + (pd.z*ip1y);
+        Scalar pd_z(pd.z);
+        PrintScalar("z", pd_z);
 
         tmp = (proof.t - tmp);
 
         y1 = y1 + (tmp * weight_y);
+        PrintScalar("y1", y1);
 
         for (size_t j = 0; j < pd.V.size(); j++)
         {
@@ -1078,7 +1100,6 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
 
 
 /// (66)-(68)
-/*
         multiexpdata.push_back({proof.A, weight_z});
 
         tmp = pd.x * weight_z;
@@ -1165,19 +1186,23 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
         tmp = proof.t - (proof.a*proof.b);
         tmp = tmp * pd.x_ip;
         z3 = z3 + (tmp * weight_z);
-*/
+        PrintScalar("z3", z3);
     }
 
     tmp = y0 - z1;
-
+// PrintScalar("G exp", tmp);
     multiexpdata.push_back({gens.G, tmp});
 
     tmp = z3 - y1;
-
+// PrintScalar("H exp", tmp);
     multiexpdata.push_back({gens.H, tmp});
-
+char buf[100];
     for (size_t i = 0; i < maxMN; ++i)
     {
+// sprintf(buf, "Gi[%ld] exp", i);
+// PrintScalar(buf, z4[i]);
+// sprintf(buf, "Hi[%ld] exp", i);
+// PrintScalar(buf, z5[i]);
         multiexpdata[i * 2] = {gens.Gi[i], z4[i]};
         multiexpdata[i * 2 + 1] = {gens.Hi[i], z5[i]};
     }
