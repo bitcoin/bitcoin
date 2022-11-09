@@ -59,6 +59,7 @@ QT_TS = \
   qt/locale/bitcoin_ne.ts \
   qt/locale/bitcoin_nl.ts \
   qt/locale/bitcoin_no.ts \
+  qt/locale/bitcoin_pa.ts \
   qt/locale/bitcoin_pam.ts \
   qt/locale/bitcoin_pl.ts \
   qt/locale/bitcoin_pt.ts \

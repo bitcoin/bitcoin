@@ -312,31 +312,31 @@ Signing is only possible with addresses of the type 'legacy'</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nวินาที</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nนาที</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nชั่วโมง</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nวัน</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nสัปดาห์</numerusform>
         </translation>
     </message>
     <message>
@@ -346,7 +346,7 @@ Signing is only possible with addresses of the type 'legacy'</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nปี</numerusform>
         </translation>
     </message>
     <message>
@@ -1526,13 +1526,13 @@ Signing is only possible with addresses of the type 'legacy'</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>มีพื้นที่ว่าง %n GB ที่ใช้งานได้</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(ต้องการพื้นที่ %n GB )</numerusform>
         </translation>
     </message>
     <message numerus="yes">
