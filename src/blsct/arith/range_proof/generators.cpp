@@ -43,7 +43,7 @@ GeneratorsFactory::GeneratorsFactory()
     m_Hi = Hi;
 
     const TokenId default_token_id;
-    const G1Point H = GetGenerator(m_G.value(), 0, default_token_id);
+    const G1Point H = GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
 
     for (size_t i = 0; i < Config::m_max_input_value_vec_len; ++i) {
         const size_t base_index = i * 2;
@@ -52,28 +52,6 @@ GeneratorsFactory::GeneratorsFactory()
         m_Hi.value().Add(hi);
         m_Gi.value().Add(gi);
     }
-
-    // boost::lock_guard<boost::mutex> lock(GeneratorsFactory::m_init_mutex);
-    // if (GeneratorsFactory::m_is_initialized) return;
-
-    // MclInitializer::Init();
-    // G1Point::Init();
-
-    // m_G = G1Point::GetBasePoint();
-    // G1Points Gi, Hi;
-    // m_Gi = Gi;
-    // m_Hi = Hi;
-
-    // const TokenId default_token_id;
-    // const G1Point H = GetGenerator(G1Point::GetBasePoint(), 0, default_token_id);
-
-    // for (size_t i = 0; i < Config::m_max_input_value_vec_len; ++i) {
-    //     const size_t base_index = i * 2;
-    //     G1Point hi = GetGenerator(H, base_index + 1, default_token_id);
-    //     G1Point gi = GetGenerator(H, base_index + 2, default_token_id);
-    //     m_Hi.value().Add(hi);
-    //     m_Gi.value().Add(gi);
-    // }
 
     m_is_initialized = true;
 }
