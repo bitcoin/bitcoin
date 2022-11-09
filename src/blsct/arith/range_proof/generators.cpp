@@ -9,22 +9,22 @@
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-G1Points Generators2::GetGi() const
+G1Points Generators::GetGi() const
 {
     return Gi.get();
 }
 
-G1Points Generators2::GetHi() const
+G1Points Generators::GetHi() const
 {
     return Hi.get();
 }
 
-G1Points Generators2::GetGiSubset(const size_t& size) const
+G1Points Generators::GetGiSubset(const size_t& size) const
 {
     return Gi.get().To(size);
 }
 
-G1Points Generators2::GetHiSubset(const size_t& size) const
+G1Points Generators::GetHiSubset(const size_t& size) const
 {
     return Hi.get().To(size);
 }
@@ -83,50 +83,38 @@ G1Point GeneratorsFactory::GetGenerator(
     const size_t index,
     const TokenId& token_id)
 {
-    auto G = G1Point::GetBasePoint();
-    // printf("Creating BaseG1Element w/ idx=%ld...\n", idx);
-    auto e = G + G;
+    static const std::string salt("bulletproof");
+    std::vector<uint8_t> serialized_p = p.GetVch();
 
-    for (size_t i=0; i<index; ++i) {
-        // printf("adding G to e... idx=%ld\n", i);
-        e = e + G;
+    auto s =  token_id.token.ToString();
+    std::string hash_preimage =
+        HexStr(serialized_p) +
+        salt +
+        std::to_string(index) +
+        token_id.token.ToString() +
+        (token_id.subid == std::numeric_limits<uint64_t>::max() ? "" : "nft" + std::to_string(token_id.subid));
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << hash_preimage;
+    auto hash = ss.GetHash();
+
+    auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
+    auto ret = G1Point::MapToG1(vec_hash);
+    if (ret.IsUnity()) {
+        throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. try changing index and/or token_id to get a valid point", __func__));
     }
-    return e;
-
-    // static const std::string salt("bulletproof");
-    // std::vector<uint8_t> serialized_p = p.GetVch();
-
-    // auto s =  token_id.token.ToString();
-    // std::string hash_preimage =
-    //     HexStr(serialized_p) +
-    //     salt +
-    //     std::to_string(index) +
-    //     token_id.token.ToString() +
-    //     (token_id.subid == std::numeric_limits<uint64_t>::max() ? "" : "nft" + std::to_string(token_id.subid));
-
-    // CHashWriter ss(SER_GETHASH, 0);
-    // ss << hash_preimage;
-    // auto hash = ss.GetHash();
-
-    // auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
-    // auto ret = G1Point::MapToG1(vec_hash);
-    // if (ret.IsUnity()) {
-    //     throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. try changing index and/or token_id to get a valid point", __func__));
-    // }
-    // return ret;
+    return ret;
 }
 
-Generators2 GeneratorsFactory::GetInstance(const TokenId& token_id)
+Generators GeneratorsFactory::GetInstance(const TokenId& token_id)
 {
     // if H for the token_id hasn't been created, create it and store it to the cache
     if (GeneratorsFactory::m_H_cache.count(token_id) == 0) {
         const G1Point H = GetGenerator(GeneratorsFactory::m_G.value(), 0, token_id);
         GeneratorsFactory::m_H_cache.emplace(token_id, H);
-    } else {
-        printf("Reusing existing H\n");
     }
     G1Point H = GeneratorsFactory::m_H_cache[token_id];
 
-    Generators2 gens(m_G.value(), H, m_Gi.value(), m_Hi.value());
+    Generators gens(m_G.value(), H, m_Gi.value(), m_Hi.value());
     return gens;
 }

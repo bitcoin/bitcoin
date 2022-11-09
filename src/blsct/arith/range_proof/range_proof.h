@@ -101,7 +101,7 @@ public:
 
     G1Point VerifyLoop2(
         const std::vector<ProofWithTranscript>& proof_transcripts,
-        const Generators2& gens,
+        const Generators& gens,
         const size_t& max_mn
     ) const;
 

@@ -4,7 +4,7 @@
 
 #include <test/util/setup_common.h>
 #include <blsct/arith/range_proof/range_proof.h>
-#include <blsct/arith/range_proof/range_proof_orig.h>
+// #include <blsct/arith/range_proof/range_proof_orig.h>
 
 #include <boost/test/unit_test.hpp>
 #include <util/strencodings.h>
@@ -86,42 +86,41 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
     Scalars vs;
     vs.Add(one);
 
+    // {
+    //     printf("\n==== old ====\n");
+    //     Scalar::Rand(true);   // reset the seed
+    //     BulletproofsRangeproof rp;
+    //     rp.Prove(vs_vec, nonce, message);
+
+    //     // PrintG1("A", rp.A);
+    //     // PrintG1("S", rp.S);
+    //     // PrintG1("T1", rp.T1);
+    //     // PrintG1("T2", rp.T1);
+    //     // PrintScalar("tau_x", rp.taux);
+    //     // PrintScalar("mu", rp.mu);
+    //     // PrintScalar("a", rp.a);
+    //     // PrintScalar("b", rp.b);
+    //     // PrintScalar("t_hat", rp.t);
+
+    //     std::vector<G1Point> nonces { nonce };
+    //     std::pair<int, BulletproofsRangeproof> proof1(0, rp);
+    //     std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
+    //     RangeproofEncodedData red;
+    //     std::vector<RangeproofEncodedData> data;
+
+    //     Scalar::Rand(true); // reset seed
+    //     auto is_valid = VerifyBulletproof(
+    //         proofs,
+    //         data,
+    //         nonces,
+    //         false
+    //     );
+    //     BOOST_CHECK(is_valid);
+    //     if (is_valid) {
+    //         printf("=====> old impl is working fine!!!!\n");
+    //     }
+    // }
     {
-        printf("\n==== old ====\n");
-        Scalar::Rand(true);   // reset the seed
-        BulletproofsRangeproof rp;
-        rp.Prove(vs_vec, nonce, message);
-
-        // PrintG1("A", rp.A);
-        // PrintG1("S", rp.S);
-        // PrintG1("T1", rp.T1);
-        // PrintG1("T2", rp.T1);
-        // PrintScalar("tau_x", rp.taux);
-        // PrintScalar("mu", rp.mu);
-        // PrintScalar("a", rp.a);
-        // PrintScalar("b", rp.b);
-        // PrintScalar("t_hat", rp.t);
-
-        std::vector<G1Point> nonces { nonce };
-        std::pair<int, BulletproofsRangeproof> proof1(0, rp);
-        std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
-        RangeproofEncodedData red;
-        std::vector<RangeproofEncodedData> data;
-
-        Scalar::Rand(true); // reset seed
-        auto is_valid = VerifyBulletproof(
-            proofs,
-            data,
-            nonces,
-            false
-        );
-        BOOST_CHECK(is_valid);
-        if (is_valid) {
-            printf("=====> old impl is working fine!!!!\n");
-        }
-    }
-    {
-        printf("\n==== new ====\n");
         Scalar::Rand(true);   // reset the seed
         RangeProof rp;
         auto p = rp.Prove(vs, nonce, message, token_id);

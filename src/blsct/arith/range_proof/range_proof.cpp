@@ -14,16 +14,6 @@ Scalars* RangeProof::m_two_pows_64 = nullptr;
 Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
-static void PrintG1(const char* name, G1Point& p)
-{
-    printf("%s: %s\n", name, HexStr(p.GetVch()).c_str());
-}
-
-static void PrintScalar(const char* name, Scalar& s)
-{
-    printf("%s: %s\n", name, HexStr(s.GetVch()).c_str());
-}
-
 RangeProof::RangeProof()
 {
     if (m_is_initialized) return;
@@ -141,7 +131,7 @@ Proof RangeProof::Prove(
     }
 
     // Get Generators for the token_id
-    Generators2 gens = m_gf->GetInstance(token_id);
+    Generators gens = m_gf->GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
 
@@ -317,66 +307,6 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalar cx_factor = transcript_gen.GetHash();
     if (cx_factor == 0) goto retry;
 
-///// debug
-
-auto lhs_65_h = H * proof.tau_x;
-auto rhs_65_h =
-    (proof.Vs * z_pows_from_2).Sum()
-    + proof.T1 * x
-    + proof.T2 * x.Square()
-    - (G * t1 * x)
-    - (G * t2 * x.Square())
-    - G * (vs * z_pows_from_2).Sum();
-if (lhs_65_h != rhs_65_h)
-    throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
-else
-    printf("==============> (65) H worked\n");
-
-Scalars z_pows = Scalars::FirstNPow(z, num_input_values_power_of_2 + 1, 2);
-Scalar y_pows_sum = Scalars::FirstNPow(y, concat_input_values_in_bits).Sum();
-
-Scalar delta_yz =
-    z * y_pows_sum  // (1)
-    - (z_pows[0] * y_pows_sum); // (2)
-for (size_t i = 1; i <= num_input_values_power_of_2; ++i) {
-    delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
-}
-
-auto lhs_65_g = G * proof.t_hat;
-auto rhs_65_g =
-    G * delta_yz
-    + (proof.Vs * z_pows_from_2).Sum()
-    + (proof.T2 * x.Square())
-    + (proof.T1 * x);
-rhs_65_g = rhs_65_g
-    - (H * tau1 * x)
-    - (H * tau2 * x.Square());
-for (size_t i=0; i<vs.Size(); ++i) {
-    rhs_65_g = rhs_65_g - (H * gammas[i] * z.Square());  // ?????
-}
-if (lhs_65_g != rhs_65_g)
-    throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
-else
-    printf("==============> (65) G worked\n");
-
-/// (66), (67)
-auto y_inv_pows = Scalars::FirstNPow(y.Invert(), concat_input_values_in_bits);
-auto HiPrime = Hi * y_inv_pows;
-
-/// (66)
-auto hp_exp = (y_pows * z) + z_pow_twos;
-auto P66 = proof.A + (proof.S * x) + (Gi * zs.Negate()).Sum() + (HiPrime * hp_exp).Sum();
-
-/// (67)
-auto P67 = (H * proof.mu) + (Gi * l).Sum() + (HiPrime * r).Sum();
-
-if (P66 != P67)
-    throw std::runtime_error(strprintf("%s: (66) != (67)", __func__));
-else
-    printf("==============> (66) == (67)!!\n");
-
-/////
-
     if (!InnerProductArgument(  // fails if x == 0 is generated from transcript_gen
         concat_input_values_in_bits,
         Gi,
@@ -421,7 +351,7 @@ void RangeProof::ValidateProofsBySizes(
 
 G1Point RangeProof::VerifyLoop2(
     const std::vector<ProofWithTranscript>& proof_transcripts,
-    const Generators2& gens,
+    const Generators& gens,
     const size_t& max_mn
 ) const {
     G1Points points;
@@ -461,15 +391,12 @@ G1Point RangeProof::VerifyLoop2(
             // multiply z^3, z^4, ..., z^(mn+3)
             delta_yz = delta_yz - z_pows_from_2[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
         }
-        PrintScalar("delta_yz", delta_yz);
-        PrintScalar("ip12", *RangeProof::m_inner_prod_1x2_pows_64);
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
         auto t_hat_delta_yz = p.proof.t_hat - delta_yz;
-        PrintScalar("t_hat - delta_yz", t_hat_delta_yz);
 
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
@@ -480,21 +407,6 @@ G1Point RangeProof::VerifyLoop2(
         points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
         points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
 
-///// debug
-G1Points p65;
-p65.Add(H * p.proof.tau_x.Negate() * weight_y);
-p65.Add(G * (p.proof.t_hat - delta_yz).Negate() * weight_y);
-p65.Add(p.proof.T1 * p.x * weight_y);
-p65.Add(p.proof.T2 * p.x.Square() * weight_y);
-for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-    p65.Add(p.proof.Vs[i] * z_pows_from_2[i] * weight_y);
-}
-if (!p65.Sum().IsUnity()) {
-    throw std::runtime_error(strprintf("%s: (65) is not balancing", __func__));
-} else {
-    printf("=========================> (65) balances!!!\n");
-}
-/////
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
         // exponents of g and (h') are created in a loop later
@@ -538,7 +450,6 @@ if (!p65.Sum().IsUnity()) {
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            char buf[100];
             gi_exps.Set(i, gi_exps[i] - (gi_exp * weight_z));  // (16) g^a moved to LHS
             hi_exps.Set(i, hi_exps[i] - (hi_exp * weight_z));  // (16) h^b moved to LHS
 
@@ -566,19 +477,15 @@ if (!p65.Sum().IsUnity()) {
     g_exp = h_exp;
     h_exp = tmp;
 
-    PrintScalar("g_exp", g_exp);
-    PrintScalar("h_exp", h_exp);
     points.Add(G * (g_pos_exp - g_neg_exp));
     points.Add(H * (h_pos_exp - h_neg_exp));
 
     auto Gi = gens.GetGiSubset(max_mn);
     auto Hi = gens.GetHiSubset(max_mn);
 
-    char buf[100];
     for (size_t i = 0; i < max_mn; ++i) {
         points.Add(Gi[i] * gi_exps[i]);
         points.Add(Hi[i] * hi_exps[i]);
-
     }
 
     // should be aggregated to zero if proofs are all valid
@@ -606,7 +513,7 @@ bool RangeProof::Verify(
     }
 
     const size_t max_mn = 1 << max_num_rounds;
-    const Generators2 gens = m_gf->GetInstance(token_id);
+    const Generators gens = m_gf->GetInstance(token_id);
 
     G1Point point_sum = VerifyLoop2(
         proof_transcripts,
@@ -623,7 +530,7 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
     std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
 
     for (const AmountRecoveryReq& req: reqs) {
-        const Generators2 gens = m_gf->GetInstance(token_id);
+        const Generators gens = m_gf->GetInstance(token_id);
 
         // swap G and H for testing purpose
         G1Point G = gens.H;
