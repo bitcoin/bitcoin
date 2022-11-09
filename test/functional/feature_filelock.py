@@ -11,6 +11,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 
 class FilelockTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

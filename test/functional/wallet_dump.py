@@ -93,6 +93,9 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
 
 
 class WalletDumpTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-addresstype=legacy"]]

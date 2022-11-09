@@ -147,6 +147,9 @@ def get_rand_amount():
 
 
 class ImportRescanTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
         self.supports_cli = False

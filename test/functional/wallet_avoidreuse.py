@@ -63,6 +63,8 @@ def assert_balances(node, mine, margin=0.001):
         assert_approx(got[k], v, margin)
 
 class AvoidReuseTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
 
     def set_test_params(self):
         self.num_nodes = 2

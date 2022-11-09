@@ -44,6 +44,9 @@ from test_framework.util import (
 
 
 class WalletBackupTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True

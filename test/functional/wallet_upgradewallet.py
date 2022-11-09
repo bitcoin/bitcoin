@@ -45,6 +45,9 @@ def deser_keymeta(f):
     return ver, create_time, kp_str, seed_id, fpr, path_len, path, has_key_orig
 
 class UpgradeWalletTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
