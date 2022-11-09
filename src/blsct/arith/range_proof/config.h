@@ -23,7 +23,7 @@ public:
     inline static const size_t m_input_value_bits = 64;  // = 2 << 5
 
     // maximum # of input values
-    inline static const size_t m_max_input_values = 16;
+    inline static const size_t m_max_input_values = 1; // 16;
 
     inline static const size_t m_max_message_size = 54;
     inline static const size_t m_max_input_value_vec_len = m_max_input_values * m_input_value_bits;

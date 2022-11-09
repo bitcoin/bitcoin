@@ -18,8 +18,8 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     TokenId token_id_2(uint256(2), 22ULL);
     GeneratorsFactory gf;
 
-    Generators gens1 = gf.GetInstance(token_id_1);
-    Generators gens2 = gf.GetInstance(token_id_2);
+    Generators2 gens1 = gf.GetInstance(token_id_1);
+    Generators2 gens2 = gf.GetInstance(token_id_2);
 
     // G should always be the same and equal to G1Point base point
     BOOST_CHECK(gens1.G.get() == gens2.G.get());
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
     BOOST_CHECK(gens1.H != gens2.H);
 
     // H should be identical if Generator is created from the same token_id
-    Generators gens3 = gf.GetInstance(token_id_1);
+    Generators2 gens3 = gf.GetInstance(token_id_1);
     BOOST_CHECK(gens1.H == gens3.H);
 }
 

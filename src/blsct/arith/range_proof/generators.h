@@ -14,9 +14,9 @@
 #include <blsct/arith/scalar.h>
 #include <ctokens/tokenid.h>
 
-struct Generators {
+struct Generators2 {
 public:
-    Generators(G1Point& G, G1Point&H, G1Points& Gi, G1Points& Hi): G{G}, H{H}, Gi{Gi}, Hi{Hi} {}
+    Generators2(G1Point& G, G1Point&H, G1Points& Gi, G1Points& Hi): G{G}, H{H}, Gi{Gi}, Hi{Hi} {}
     G1Points GetGi() const;
     G1Points GetHi() const;
     G1Points GetGiSubset(const size_t& size) const;
@@ -34,7 +34,7 @@ class GeneratorsFactory
 {
 public:
     GeneratorsFactory();
-    Generators GetInstance(const TokenId& token_id);
+    Generators2 GetInstance(const TokenId& token_id);
 
 private:
     G1Point GetGenerator(

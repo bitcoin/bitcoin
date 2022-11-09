@@ -240,6 +240,9 @@ Scalar Scalar::Pow(const Scalar& n) const
 Scalar Scalar::Rand(bool exclude_zero)
 {
     static uint64_t seed = 100000;
+    if (exclude_zero) {
+        seed = 100000;
+    }
     Scalar temp(seed);
     ++seed;
     return temp;

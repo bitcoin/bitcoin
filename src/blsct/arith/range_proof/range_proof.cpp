@@ -14,9 +14,18 @@ Scalars* RangeProof::m_two_pows_64 = nullptr;
 Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
+static void PrintG1(const char* name, G1Point& p)
+{
+    printf("%s: %s\n", name, HexStr(p.GetVch()).c_str());
+}
+
+static void PrintScalar(const char* name, Scalar& s)
+{
+    printf("%s: %s\n", name, HexStr(s.GetVch()).c_str());
+}
+
 RangeProof::RangeProof()
 {
-    printf("Initializing RangeProof...\n");  // TODO drop this
     if (m_is_initialized) return;
     boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
 
@@ -33,7 +42,6 @@ RangeProof::RangeProof()
     RangeProof::m_gf = new GeneratorsFactory();
 
     m_is_initialized = true;
-    printf("Initialized RangeProof\n");
 }
 
 bool RangeProof::InnerProductArgument(
@@ -60,11 +68,11 @@ bool RangeProof::InnerProductArgument(
 
         G1Point L =
             (Gi.From(n) * a.To(n)).Sum() +
-            (Hi.To(n) * (rounds == 0 ? b.From(n) * y_inv_pows.From(n) : b.From(n))).Sum() +
+            (Hi.To(n) * (rounds == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n))).Sum() +
             (u * cL * cx_factor);
         G1Point R =
             (Gi.To(n) * a.From(n)).Sum() +
-            (Hi.From(n) * (rounds == 0 ? b.To(n) * y_inv_pows.To(n) : b.To(n))).Sum() +
+            (Hi.From(n) * (rounds == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n))).Sum() +
             (u * cR * cx_factor);
         proof.Ls.Add(L);
         proof.Rs.Add(R);
@@ -133,19 +141,38 @@ Proof RangeProof::Prove(
     }
 
     // Get Generators for the token_id
-    Generators gens = m_gf->GetInstance(token_id);
+    Generators2 gens = m_gf->GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
+
+    // printf("G: %s\n", HexStr(gens.G.get().GetVch()).c_str());
+    // printf("H: %s\n", HexStr(gens.H.GetVch()).c_str());
+    // for(size_t i=0; i<gens.GetGi().Size(); ++i) {
+    //     auto p1 = gens.GetGi()[i];
+    //     printf("Gi[%ld]: %s\n", i, HexStr(p1.GetVch()).c_str());
+    //     auto p2 = gens.GetHi()[i];
+    //     printf("Hi[%ld]: %s\n", i, HexStr(p2.GetVch()).c_str());
+    // }
+
+    // swap H and G for testing purpose
+    auto H = gens.G.get();
+    auto G = gens.H;
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
 
     // Calculate value commitments and add them to transcript
     for (size_t i = 0; i < vs.Size(); ++i) {
-        auto V = gens.G.get() * vs[i] + gens.H * gammas[i];
+        auto V = (G * vs[i]) + (H * gammas[i]);
         proof.Vs.Add(V);
         transcript_gen << V;
     }
+    auto gamma0 = gammas[0];
+    // PrintScalar("gamma[0]", gamma0);
+    auto v0 = vs[0];
+    // PrintScalar("v[0]", v0);
+    auto V0 = proof.Vs[0];
+    // PrintG1("V[0]", V0);
 
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
@@ -193,16 +220,16 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     alpha = alpha + msg1_v0;
 
     // Using generator H for alpha following the paper
-    proof.A = (gens.H * alpha) + (Gi * aL).Sum() + (Hi * aR).Sum();
+    proof.A = (H * alpha) + (Gi * aL).Sum() + (Hi * aR).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
-    auto sL = Scalars::RandVec(concat_input_values_in_bits, true);
-    auto sR = Scalars::RandVec(concat_input_values_in_bits, true);
+    auto sL = Scalars::RandVec(concat_input_values_in_bits, false);  // TODO bring false back to true
+    auto sR = Scalars::RandVec(concat_input_values_in_bits, false);  // TODO bring false back to true
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (gens.H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
+    proof.S = (H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
 
     // (48)-(50)
     transcript_gen << proof.A;
@@ -259,8 +286,8 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     });
     tau1 = tau1 + msg2_scalar;
 
-    proof.T1 = (gens.G.get() * t1) + (gens.H * tau1);
-    proof.T2 = (gens.G.get() * t2) + (gens.H * tau2);
+    proof.T1 = (G * t1) + (H * tau1);
+    proof.T2 = (G * t2) + (H * tau2);
 
     // (54)-(56)
     transcript_gen << proof.T1;
@@ -301,14 +328,14 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
 ///// debug
 
-auto lhs_65_h = gens.H * proof.tau_x;
+auto lhs_65_h = H * proof.tau_x;
 auto rhs_65_h =
     (proof.Vs * z_pows_from_2).Sum()
     + proof.T1 * x
     + proof.T2 * x.Square()
-    - (gens.G.get() * t1 * x)
-    - (gens.G.get() * t2 * x.Square())
-    - gens.G.get() * (vs * z_pows_from_2).Sum();
+    - (G * t1 * x)
+    - (G * t2 * x.Square())
+    - G * (vs * z_pows_from_2).Sum();
 if (lhs_65_h != rhs_65_h)
     throw std::runtime_error(strprintf("%s: (65) H failed", __func__));
 else
@@ -324,17 +351,17 @@ for (size_t i = 1; i <= num_input_values_power_of_2; ++i) {
     delta_yz = delta_yz - z_pows[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
 }
 
-auto lhs_65_g = gens.G.get() * proof.t_hat;
+auto lhs_65_g = G * proof.t_hat;
 auto rhs_65_g =
-    gens.G.get() * delta_yz
+    G * delta_yz
     + (proof.Vs * z_pows_from_2).Sum()
     + (proof.T2 * x.Square())
     + (proof.T1 * x);
 rhs_65_g = rhs_65_g
-    - (gens.H * tau1 * x)
-    - (gens.H * tau2 * x.Square());
+    - (H * tau1 * x)
+    - (H * tau2 * x.Square());
 for (size_t i=0; i<vs.Size(); ++i) {
-    rhs_65_g = rhs_65_g - (gens.H * gammas[i] * z.Square());  // ?????
+    rhs_65_g = rhs_65_g - (H * gammas[i] * z.Square());  // ?????
 }
 if (lhs_65_g != rhs_65_g)
     throw std::runtime_error(strprintf("%s: (65) G failed", __func__));
@@ -350,7 +377,7 @@ auto hp_exp = (y_pows * z) + z_pow_twos;
 auto P66 = proof.A + (proof.S * x) + (Gi * zs.Negate()).Sum() + (HiPrime * hp_exp).Sum();
 
 /// (67)
-auto P67 = (gens.H * proof.mu) + (Gi * l).Sum() + (HiPrime * r).Sum();
+auto P67 = (H * proof.mu) + (Gi * l).Sum() + (HiPrime * r).Sum();
 
 if (P66 != P67)
     throw std::runtime_error(strprintf("%s: (66) != (67)", __func__));
@@ -363,7 +390,7 @@ else
         concat_input_values_in_bits,
         Gi,
         Hi,
-        gens.G,    // u
+        G,    // u
         cx_factor,
         l,         // a
         r,         // b
@@ -403,7 +430,7 @@ void RangeProof::ValidateProofsBySizes(
 
 G1Point RangeProof::VerifyLoop2(
     const std::vector<ProofWithTranscript>& proof_transcripts,
-    const Generators& gens,
+    const Generators2& gens,
     const size_t& max_mn
 ) const {
     G1Points points;
@@ -439,6 +466,7 @@ G1Point RangeProof::VerifyLoop2(
             // multiply z^3, z^4, ..., z^(mn+3)
             delta_yz = delta_yz - z_pows_from_2[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
         }
+        PrintScalar("ip12", *RangeProof::m_inner_prod_1x2_pows_64);
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
@@ -567,7 +595,7 @@ bool RangeProof::Verify(
     }
 
     const size_t max_mn = 1 << max_num_rounds;
-    const Generators gens = m_gf->GetInstance(token_id);
+    const Generators2 gens = m_gf->GetInstance(token_id);
 
     G1Point point_sum = VerifyLoop2(
         proof_transcripts,
@@ -584,7 +612,7 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
     std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
 
     for (const AmountRecoveryReq& req: reqs) {
-        const Generators gens = m_gf->GetInstance(token_id);
+        const Generators2 gens = m_gf->GetInstance(token_id);
 
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();

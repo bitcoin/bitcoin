@@ -119,7 +119,6 @@ bool BulletproofsRangeproof::Init()
     BulletproofsRangeproof::oneN = VectorDup(*BulletproofsRangeproof::one, maxN);
     BulletproofsRangeproof::twoN = VectorPowers(*BulletproofsRangeproof::two, maxN);
     auto ip12 = InnerProduct(BulletproofsRangeproof::oneN, BulletproofsRangeproof::twoN);
-    PrintScalar("ip12 (org)", ip12);
     BulletproofsRangeproof::ip12 = new Scalar(ip12);
 
     fInit = true;
@@ -444,6 +443,8 @@ G1Point CrossVectorExponent(
     }
     if (extra_point)
     {
+        auto s = *extra_scalar;
+        //PrintScalar("extra_scalar", s);
         multiexp_data.back().exp = *extra_scalar;
         multiexp_data.back().base = *extra_point;
     }
@@ -467,6 +468,14 @@ void BulletproofsRangeproof::Prove(std::vector<Scalar> v, G1Point nonce, const s
     Init();
 
     Generators gens = GetGenerators(tokenId);
+    // PrintG1("G", gens.G);
+    // PrintG1("H", gens.H);
+    // for(size_t i=0; i<64; ++i) {
+    //     auto p1 = gens.Gi[i];
+    //     auto p2 = gens.Hi[i];
+    //     printf("Gi[%ld]: %s\n", i, HexStr(p1.GetVch()).c_str());
+    //     printf("Hi[%ld]: %s\n", i, HexStr(p2.GetVch()).c_str());
+    // }
 
     const size_t N = 1<<BulletproofsRangeproof::logN;
 
@@ -502,6 +511,9 @@ void BulletproofsRangeproof::Prove(std::vector<Scalar> v, G1Point nonce, const s
         this->V[j] = gammaElement + valueElement;
         hasher << this->V[j];
     }
+    // PrintScalar("gamma[0]", gamma[0]);
+    // PrintScalar("v[0]", v[0]);
+    // PrintG1("V[0]", V[0]);
 
     // PAPER LINES 41-42
     // Value to be obfuscated is encoded in binary in aL
@@ -550,9 +562,18 @@ try_again:
     std::vector<Scalar> sL(MN);
     std::vector<Scalar> sR(MN);
 
+
+    // for (unsigned int i = 0; i < MN; i++)
+    // {
+    //     sL[i] = Scalar::Rand();
+    //     sR[i] = Scalar::Rand();
+    // }
     for (unsigned int i = 0; i < MN; i++)
     {
         sL[i] = Scalar::Rand();
+    }
+    for (unsigned int i = 0; i < MN; i++)
+    {
         sR[i] = Scalar::Rand();
     }
 
@@ -780,6 +801,17 @@ for (size_t i=0; i<v.size(); ++i) {
         aprime[i] = l[i];
         bprime[i] = r[i];
     }
+    char buf[100];
+    // for(size_t i=0; i<aprime.size(); ++i) {
+    //     sprintf(buf, "a[%ld]", i);
+    //     auto ai = aprime[i];
+    //     PrintScalar(buf, ai);
+    // }
+    // for(size_t i=0; i<bprime.size(); ++i) {
+    //     sprintf(buf, "b[%ld]", i);
+    //     auto bi = bprime[i];
+    //     PrintScalar(buf, bi);
+    // }
 
     this->L.resize(logMN);
     this->R.resize(logMN);
@@ -791,6 +823,7 @@ for (size_t i=0; i<v.size(); ++i) {
     std::vector<Scalar>* scale = &yinvpow;
 
     Scalar tmp;
+    // PrintScalar("cx_factor", x_ip);
 
     while (nprime > 1)
     {
@@ -804,11 +837,18 @@ for (size_t i=0; i<v.size(); ++i) {
         Scalar cR = InnerProduct(VectorSlice(aprime, nprime, aprime.size()),
                                  VectorSlice(bprime, 0, nprime));
 
+        // PrintScalar("cL", cL);
+        // PrintScalar("cR", cR);
+
         // PAPER LINES 23-24
         tmp = cL * x_ip;
+        //                                   size    A       Ao      B       Bo a       ao b       bo      scale  extra_p  extra_scalar
         this->L[round] = CrossVectorExponent(nprime, gprime, nprime, hprime, 0, aprime, 0, bprime, nprime, scale, &gens.H, &tmp);
         tmp = cR * x_ip;
         this->R[round] = CrossVectorExponent(nprime, gprime, 0, hprime, nprime, aprime, nprime, bprime, 0, scale, &gens.H, &tmp);
+
+        // PrintG1("L", L[round]);
+        // PrintG1("R", R[round]);
 
         // PAPER LINES 25-27
         hasher << this->L[round];
@@ -834,6 +874,17 @@ for (size_t i=0; i<v.size(); ++i) {
 
         bprime = VectorAdd(VectorScalar(VectorSlice(bprime, 0, nprime), winv),
                            VectorScalar(VectorSlice(bprime, nprime, bprime.size()), w[round]));
+
+        // for(size_t i=0; i<nprime; ++i) {
+        //     sprintf(buf, "a[%ld]", i);
+        //     auto ai = aprime[i];
+        //     PrintScalar(buf, ai);
+        // }
+        // for(size_t i=0; i<nprime; ++i) {
+        //     sprintf(buf, "b[%ld]", i);
+        //     auto bi = bprime[i];
+        //     PrintScalar(buf, bi);
+        // }
 
         scale = NULL;
 
@@ -1060,6 +1111,7 @@ bool VerifyBulletproof(const std::vector<std::pair<int, BulletproofsRangeproof>>
 
         k = (zpow[2]*ip1y).Negate();
         PrintScalar("zpow[2]", zpow[2]);
+        PrintScalar("ip12", *BulletproofsRangeproof::ip12);
 
         char buf[100];
         for (size_t j = 1; j <= M; ++j)
