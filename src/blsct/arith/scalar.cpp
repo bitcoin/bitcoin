@@ -239,27 +239,16 @@ Scalar Scalar::Pow(const Scalar& n) const
 
 Scalar Scalar::Rand(bool exclude_zero)
 {
-    static uint64_t seed = 100000;
-    if (exclude_zero) {
-        seed = 100000;
+    Scalar temp;
+
+    while (true) {
+        if (mclBnFr_setByCSPRNG(&temp.m_fr) != 0) {
+            throw std::runtime_error(std::string("Failed to generate random number"));
+        }
+        if (!exclude_zero || mclBnFr_isZero(&temp.m_fr) != 1) break;
     }
-    Scalar temp(seed);
-    ++seed;
     return temp;
 }
-
-// Scalar Scalar::Rand(bool exclude_zero)
-// {
-//     Scalar temp;
-
-//     while (true) {
-//         if (mclBnFr_setByCSPRNG(&temp.m_fr) != 0) {
-//             throw std::runtime_error(std::string("Failed to generate random number"));
-//         }
-//         if (!exclude_zero || mclBnFr_isZero(&temp.m_fr) != 1) break;
-//     }
-//     return temp;
-// }
 
 uint64_t Scalar::GetUint64() const
 {
