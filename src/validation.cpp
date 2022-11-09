@@ -4691,15 +4691,20 @@ bool Chainstate::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockV
     }
 
     const CChainParams& params{m_chainman.GetParams()};
-
+    // SYSCOIN ProcessNEVMData/FlushDataToCache so we have the data from processing out-of-order blocks and it reads from disk (recreating PoDA data in block) prior to validation in ConnectTip()
+    bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;
+    PoDAMAPMemory mapPoDA;
     if (!CheckBlock(block, state, params.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, m_chainman, pindex->pprev)) {
+        !ContextualCheckBlock(block, state, m_chainman, pindex->pprev) ||
+        (PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA))) {
         if (state.IsInvalid() && state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(pindex);
         }
         return error("%s: %s", __func__, state.ToString());
     }
+    if(pnevmdatadb)
+        pnevmdatadb->FlushDataToCache(mapPoDA, pindex->GetMedianTimePast());
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)

@@ -1164,6 +1164,7 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, const int64_t& 
     if(mapPoDA.empty()) {
         return;
     }
+    int nCount = 0;
     for (auto const& [key, val] : mapPoDA) {
         // Could be null if we are reindexing blocks from disk and we get the VH without data (because data wasn't provided in payload).
         // This is OK because we still want to provide the VH's to NEVM for indexing into DB (lookup via precompile).
@@ -1177,8 +1178,10 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, const int64_t& 
         if(!inserted.second) {
             inserted.first->second.second = nMedianTime;
         }
+        nCount++;
     }
-    LogPrint(BCLog::SYS, "Flushing to cache, storing %d nevm blobs\n", mapPoDA.size());
+    if(nCount > 0)
+        LogPrint(BCLog::SYS, "Flushing to cache, storing %d nevm blobs\n", nCount);
 }
 bool CNEVMDataDB::FlushCacheToDisk() {
     if(mapCache.empty()) {
