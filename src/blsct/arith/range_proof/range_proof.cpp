@@ -25,19 +25,19 @@ RangeProof::RangeProof()
 
     RangeProof::m_one = new Scalar(1);
     RangeProof::m_two = new Scalar(2);
-    auto two_pows_64 = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
-    RangeProof::m_two_pows_64 = new Scalars(two_pows_64);
-    auto ones_64 = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
-    RangeProof::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProof::m_two_pows_64).Sum());
-
     RangeProof::m_gf = new GeneratorsFactory();
+    {
+        auto two_pows_64 = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
+        RangeProof::m_two_pows_64 = new Scalars(two_pows_64);
+        auto ones_64 = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
+        RangeProof::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProof::m_two_pows_64).Sum());
+    }
     {
         Scalar int64_max(INT64_MAX);
         Scalar one(1);
         Scalar uint64_max = (int64_max << 1) + one;
         RangeProof::m_uint64_max = new Scalar(uint64_max);
     }
-
     m_is_initialized = true;
 }
 
