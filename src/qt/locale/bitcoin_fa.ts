@@ -259,6 +259,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">فایل تنظیمات %1 ممکن است خراب یا نامعتبر باشد.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">استثناء فراری (این استثناء نشان دهنده این است که هسته بیتکوین نتوانست چیزی را در کیف(والت) بنویسد.)</translation>
     </message>
@@ -1013,7 +1017,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>سابقه تراکنش بلوک(های) %n پردازش شد.</numerusform>
         </translation>
     </message>
     <message>
@@ -1087,6 +1091,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">کیف پول را ببندید</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">بازیابی کیف پول…</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">بازیابی یک کیف پول از یک فایل پشتیبان</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">همه‌ی کیف پول‌ها را ببند</translation>
     </message>
@@ -1103,6 +1117,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">داده های کیف پول</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">بارگیری پشتیبان‌گیری کیف پول</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">بازیابی کیف پول</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1133,7 +1157,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n اتصال(های) فعال به شبکه بیت کوین.</numerusform>
         </translation>
     </message>
     <message>
@@ -1155,6 +1179,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">فعال‌سازی فعالیت شبکه</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">پیش‌همگام‌سازی سرصفحه‌ها (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1414,7 +1442,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">نمی‌توان امضاکنندگان را فهرست کرد</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">تعداد زیادی امضاکننده خارجی پیدا شد</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1453,6 +1485,34 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation type="unfinished">در حال باز کردن کیف پول &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">بازیابی کیف پول</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">بازیابی کیف پول &lt;b&gt;%1&lt;/b&gt; ...</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">بازیابی کیف پول انجام نشد</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">هشدار بازیابی کیف پول</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">بازیابی پیام کیف پول</translation>
     </message>
 </context>
 <context>
@@ -1611,19 +1671,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%n گیگابایت فضای موجود</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(از %n گیگابایت مورد نیاز)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%n گیگابایت برای زنجیره کامل مورد نیاز است)</numerusform>
         </translation>
     </message>
     <message>
@@ -1638,7 +1698,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(برای بازیابی نسخه‌های پشتیبان %n روز (های) قدیمی کافی است)</numerusform>
         </translation>
     </message>
     <message>
@@ -1672,6 +1732,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source> GB</source>
         <translation type="unfinished">گیگابایت</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">وقتی تأیید را کلیک می‌کنید، %1 شروع به دانلود و پردازش زنجیره بلاک %4 کامل (%2 گیگابایت) می‌کند که با اولین تراکنش‌ها در %3 شروع می‌شود که %4 در ابتدا راه‌اندازی می شود.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1765,7 +1829,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">ناشناخته. هماهنگ‌سازی سربرگ‌ها (%1، %2%) </translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">ناشناس.  پیش‌همگام‌سازی سرصفحه‌ها (%1، %2% )…</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1799,6 +1867,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">اندازه کش پایگاه داده.</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">گزینه های تنظیم شده در این گفتگو توسط خط فرمان لغو می شوند:</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -2039,6 +2111,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">کلاینت نیازمند ریست شدن است برای فعال کردن تغییرات</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">تنظیمات فعلی در "%1" پشتیبان گیری خواهد شد.</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">کلاینت خاموش خواهد شد.آیا میخواهید ادامه دهید؟</translation>
@@ -2078,6 +2155,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation type="unfinished">آدرس پراکسی ارائه شده نامعتبر است.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">نمی توان تنظیم "%1"، %2 را خواند.</translation>
     </message>
 </context>
 <context>

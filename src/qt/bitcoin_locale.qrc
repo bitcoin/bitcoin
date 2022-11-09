@@ -60,6 +60,7 @@
         <file alias="ne">locale/bitcoin_ne.qm</file>
         <file alias="nl">locale/bitcoin_nl.qm</file>
         <file alias="no">locale/bitcoin_no.qm</file>
+        <file alias="pa">locale/bitcoin_pa.qm</file>
         <file alias="pam">locale/bitcoin_pam.qm</file>
         <file alias="pl">locale/bitcoin_pl.qm</file>
         <file alias="pt">locale/bitcoin_pt.qm</file>

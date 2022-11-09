@@ -248,6 +248,10 @@ Cüzdan kilidini aç.</translation>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">%1 ayar dosyası bozuk veya geçersiz olabilir.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Sızıntı istisnası</translation>
     </message>
@@ -985,7 +989,7 @@ Cüzdan kilidini aç.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>İşlem geçmişinin %n bloğu işlendi.</numerusform>
         </translation>
     </message>
     <message>
@@ -1403,7 +1407,11 @@ Cüzdan kilidini aç.</translation>
         <source>Create wallet warning</source>
         <translation type="unfinished">Cüzdan oluşturma uyarısı</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Çok fazla harici imzalayan bulundu</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1448,6 +1456,16 @@ Cüzdan kilidini aç.</translation>
         <source>Restore Wallet</source>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation type="unfinished">Cüzdanı Geri Yükle</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Cüzdan geri yüklenemedi</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Cüzdan uyarısını geri yükle</translation>
     </message>
     </context>
 <context>
