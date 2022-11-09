@@ -28,13 +28,11 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
     Scalars vs;
     vs.Add(one);
 
-    {
-        RangeProof rp;
-        auto p = rp.Prove(vs, nonce, message, token_id);
+    RangeProof rp;
+    auto p = rp.Prove(vs, nonce, message, token_id);
 
-        auto is_valid = rp.Verify(std::vector<Proof> { p }, token_id);
-        BOOST_CHECK(is_valid);
-    }
+    auto is_valid = rp.Verify(std::vector<Proof> { p }, token_id);
+    BOOST_CHECK(is_valid);
 
     // test each invalid value individually
     // test all valid values as a batch
@@ -63,46 +61,42 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_recovery)
 {
-    /*
-    std::string nonce_str("nonce");
-    G1Point nonce = G1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
-
     std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
 
+    std::string nonce_str("nonce");
+    G1Point nonce = G1Point::HashAndMap(std::vector<unsigned char> { nonce_str.begin(), nonce_str.end() });
+
     TokenId token_id(uint256(123));
 
-    std::vector<Scalar> vs;
-    Scalar amount(1);
-    vs.push_back(amount);
+    Scalar one(1);
+    std::vector<Scalar> vs_vec;
+    vs_vec.push_back(one);
 
-    //RangeProof range_proof;
-    BulletproofsRangeproof range_proof;
+    Scalars vs;
+    vs.Add(one);
 
-    // test one
-    {
-        range_proof.Prove(vs, nonce, message, token_id);
+    RangeProof rp;
+    auto p = rp.Prove(vs, nonce, message, token_id);
 
-        std::vector<G1Point> nonces { nonce };
-        std::pair<int, BulletproofsRangeproof> proof1(1, range_proof);
-        std::vector<std::pair<int, BulletproofsRangeproof>> proofs { proof1 };
-        RangeproofEncodedData red;
-        std::vector<RangeproofEncodedData> data;
+    AmountRecoveryReq req {
+        1,
+        p.x,
+        p.z,  // Scalar z;
+        p.Vs, // G1Points Vs;
+        p.Ls, // G1Points Ls;
+        p.Rs, // G1Points Rs;
+        p.mu, // Scalar mu;
+        p.tau_x, // Scalar tau_x;
+        nonce
+    };
+    auto reqs = std::vector<AmountRecoveryReq> { req };
+    auto amounts = rp.RecoverAmounts(reqs, token_id);
 
-        auto is_valid = VerifyBulletproof(
-            proofs,
-            data,
-            nonces,
-            false,
-            token_id
-        );
-        BOOST_CHECK(is_valid);
-
-        BOOST_CHECK(data.size() == 1);
-        BOOST_CHECK(data[0].gamma == nonce.GetHashWithSalt(100));
-        BOOST_CHECK(data[0].amount == amount);
-    }
-    */
+    BOOST_CHECK(amounts.size() == 1);
+    BOOST_CHECK(amounts[0].gamma == nonce.GetHashWithSalt(100));
+    BOOST_CHECK(amounts[0].amount == 1);
+    BOOST_CHECK(amounts[0].message == msg_str);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -136,8 +136,8 @@ Proof RangeProof::Prove(
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
 
     // swap H and G for testing purpose
-    auto H = gens.G.get();
-    auto G = gens.H;
+    auto H = gens.H; //.get();
+    auto G = gens.G.get();
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
@@ -222,6 +222,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     Scalar z = transcript_gen.GetHash();
     if (z == 0) goto retry;
+    proof.z = z;
     transcript_gen << z;
 
     // Polynomial construction by coefficients
@@ -276,6 +277,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     Scalar x = transcript_gen.GetHash();
     if (x == 0) goto retry;
+    proof.x = x;
 
     // x will be added to transcript later
 
@@ -363,8 +365,8 @@ G1Point RangeProof::VerifyLoop2(
     Scalars hi_exps(max_mn, 0);
 
     // swap G and H for testing purpose
-    G1Point G = gens.H;
-    G1Point H = gens.G.get();
+    G1Point G = gens.G.get();
+    G1Point H = gens.H; //.get();
 
     for (const ProofWithTranscript& p: proof_transcripts) {
         Scalar weight_y = Scalar::Rand();
@@ -533,8 +535,8 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         const Generators gens = m_gf->GetInstance(token_id);
 
         // swap G and H for testing purpose
-        G1Point G = gens.H;
-        G1Point H = gens.G.get();
+        G1Point G = gens.G.get();
+        G1Point H = gens.H;
 
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
@@ -563,7 +565,7 @@ Scalar mask = (int64_max << 1) + one;
         const Scalar input_value0 = message_v0 & mask; //Scalar(0xFFFFFFFFFFFFFFFF);
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
-        G1Point input_value0_commitment = (G * input_value0_gamma) + (H * input_value0);
+        G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
         if (input_value0_commitment != req.Vs[0]) {
             continue;
         }
