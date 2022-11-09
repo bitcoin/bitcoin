@@ -11,7 +11,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(range_proof_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
+BOOST_AUTO_TEST_CASE(test_range_proof_one_value)
 {
     std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
@@ -39,27 +39,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
     // test all invalid values as a batch
 }
 
-BOOST_AUTO_TEST_CASE(test_range_proof_inner_product_argument)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_get_first_power_of_2_greater_or_eq_to)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_prove)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_verify)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
-{
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_recovery)
+BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 {
     std::string msg_str("spagetti meatballs");
     std::vector<unsigned char> message { msg_str.begin(), msg_str.end() };
@@ -97,6 +77,26 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery)
     BOOST_CHECK(amounts[0].gamma == nonce.GetHashWithSalt(100));
     BOOST_CHECK(amounts[0].amount == 1);
     BOOST_CHECK(amounts[0].message == msg_str);
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_inner_product_argument)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_get_first_power_of_2_greater_or_eq_to)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_prove)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_verify)
+{
+}
+
+BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
+{
 }
 
 BOOST_AUTO_TEST_SUITE_END()
