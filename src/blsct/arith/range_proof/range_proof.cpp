@@ -12,6 +12,7 @@ Scalar* RangeProof::m_one = nullptr;
 Scalar* RangeProof::m_two = nullptr;
 Scalars* RangeProof::m_two_pows_64 = nullptr;
 Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
+Scalar* RangeProof::m_uint64_max = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
 RangeProof::RangeProof()
@@ -30,6 +31,12 @@ RangeProof::RangeProof()
     RangeProof::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProof::m_two_pows_64).Sum());
 
     RangeProof::m_gf = new GeneratorsFactory();
+    {
+        Scalar int64_max(INT64_MAX);
+        Scalar one(1);
+        Scalar uint64_max = (int64_max << 1) + one;
+        RangeProof::m_uint64_max = new Scalar(uint64_max);
+    }
 
     m_is_initialized = true;
 }
@@ -148,12 +155,6 @@ Proof RangeProof::Prove(
         proof.Vs.Add(V);
         transcript_gen << V;
     }
-    auto gamma0 = gammas[0];
-    // PrintScalar("gamma[0]", gamma0);
-    auto v0 = vs[0];
-    // PrintScalar("v[0]", v0);
-    auto V0 = proof.Vs[0];
-    // PrintG1("V[0]", V0);
 
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
@@ -398,7 +399,6 @@ G1Point RangeProof::VerifyLoop2(
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
-        auto t_hat_delta_yz = p.proof.t_hat - delta_yz;
 
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
@@ -558,11 +558,7 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
         // then applying 64-byte mask fuether extracts 64-byte v[0]
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-// create 0xFFFFFFFFFFFFFFFF mask
-Scalar int64_max(INT64_MAX);
-Scalar one(1);
-Scalar mask = (int64_max << 1) + one;
-        const Scalar input_value0 = message_v0 & mask; //Scalar(0xFFFFFFFFFFFFFFFF);
+        const Scalar input_value0 = message_v0 & *RangeProof::m_uint64_max;
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
