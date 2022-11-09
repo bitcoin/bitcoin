@@ -145,15 +145,6 @@ Proof RangeProof::Prove(
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
 
-    // printf("G: %s\n", HexStr(gens.G.get().GetVch()).c_str());
-    // printf("H: %s\n", HexStr(gens.H.GetVch()).c_str());
-    // for(size_t i=0; i<gens.GetGi().Size(); ++i) {
-    //     auto p1 = gens.GetGi()[i];
-    //     printf("Gi[%ld]: %s\n", i, HexStr(p1.GetVch()).c_str());
-    //     auto p2 = gens.GetHi()[i];
-    //     printf("Hi[%ld]: %s\n", i, HexStr(p2.GetVch()).c_str());
-    // }
-
     // swap H and G for testing purpose
     auto H = gens.G.get();
     auto G = gens.H;
@@ -441,6 +432,10 @@ G1Point RangeProof::VerifyLoop2(
     Scalars gi_exps(max_mn, 0);
     Scalars hi_exps(max_mn, 0);
 
+    // swap G and H for testing purpose
+    G1Point G = gens.H;
+    G1Point H = gens.G.get();
+
     for (const ProofWithTranscript& p: proof_transcripts) {
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
@@ -466,12 +461,15 @@ G1Point RangeProof::VerifyLoop2(
             // multiply z^3, z^4, ..., z^(mn+3)
             delta_yz = delta_yz - z_pows_from_2[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
         }
+        PrintScalar("delta_yz", delta_yz);
         PrintScalar("ip12", *RangeProof::m_inner_prod_1x2_pows_64);
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
         // g^t_hat ... = ... g^delta_yz
         // g^(t_hat - delta_yz) = ...
         g_neg_exp = g_neg_exp + (p.proof.t_hat - delta_yz) * weight_y;
+        auto t_hat_delta_yz = p.proof.t_hat - delta_yz;
+        PrintScalar("t_hat - delta_yz", t_hat_delta_yz);
 
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
@@ -484,8 +482,8 @@ G1Point RangeProof::VerifyLoop2(
 
 ///// debug
 G1Points p65;
-p65.Add(gens.H * p.proof.tau_x.Negate() * weight_y);
-p65.Add(gens.G.get() * (p.proof.t_hat - delta_yz).Negate() * weight_y);
+p65.Add(H * p.proof.tau_x.Negate() * weight_y);
+p65.Add(G * (p.proof.t_hat - delta_yz).Negate() * weight_y);
 p65.Add(p.proof.T1 * p.x * weight_y);
 p65.Add(p.proof.T2 * p.x.Square() * weight_y);
 for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
@@ -540,8 +538,9 @@ if (!p65.Sum().IsUnity()) {
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // (16) g^a moved to LHS
-            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);  // (16) h^b moved to LHS
+            char buf[100];
+            gi_exps.Set(i, gi_exps[i] - (gi_exp * weight_z));  // (16) g^a moved to LHS
+            hi_exps.Set(i, hi_exps[i] - (hi_exp * weight_z));  // (16) h^b moved to LHS
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;
@@ -559,15 +558,27 @@ if (!p65.Sum().IsUnity()) {
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
     // generate points from aggregated exponents from G, H, Gi and Hi generators
-    points.Add(gens.G.get() * (g_pos_exp - g_neg_exp));
-    points.Add(gens.H * (h_pos_exp - h_neg_exp));
+    auto g_exp = g_pos_exp - g_neg_exp;
+    auto h_exp = h_pos_exp - h_neg_exp;
+
+    // swap exponents for testing purpose
+    auto tmp = g_exp;
+    g_exp = h_exp;
+    h_exp = tmp;
+
+    PrintScalar("g_exp", g_exp);
+    PrintScalar("h_exp", h_exp);
+    points.Add(G * (g_pos_exp - g_neg_exp));
+    points.Add(H * (h_pos_exp - h_neg_exp));
 
     auto Gi = gens.GetGiSubset(max_mn);
     auto Hi = gens.GetHiSubset(max_mn);
 
+    char buf[100];
     for (size_t i = 0; i < max_mn; ++i) {
         points.Add(Gi[i] * gi_exps[i]);
         points.Add(Hi[i] * hi_exps[i]);
+
     }
 
     // should be aggregated to zero if proofs are all valid
@@ -614,6 +625,10 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
     for (const AmountRecoveryReq& req: reqs) {
         const Generators2 gens = m_gf->GetInstance(token_id);
 
+        // swap G and H for testing purpose
+        G1Point G = gens.H;
+        G1Point H = gens.G.get();
+
         // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
@@ -641,7 +656,7 @@ Scalar mask = (int64_max << 1) + one;
         const Scalar input_value0 = message_v0 & mask; //Scalar(0xFFFFFFFFFFFFFFFF);
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
-        G1Point input_value0_commitment = (gens.G.get() * input_value0_gamma) + (gens.H * input_value0);
+        G1Point input_value0_commitment = (G * input_value0_gamma) + (H * input_value0);
         if (input_value0_commitment != req.Vs[0]) {
             continue;
         }

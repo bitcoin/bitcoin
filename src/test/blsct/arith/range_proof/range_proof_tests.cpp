@@ -92,15 +92,15 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
         BulletproofsRangeproof rp;
         rp.Prove(vs_vec, nonce, message);
 
-        PrintG1("A", rp.A);
-        PrintG1("S", rp.S);
-        PrintG1("T1", rp.T1);
-        PrintG1("T2", rp.T1);
-        PrintScalar("tau_x", rp.taux);
-        PrintScalar("mu", rp.mu);
-        PrintScalar("a", rp.a);
-        PrintScalar("b", rp.b);
-        PrintScalar("t_hat", rp.t);
+        // PrintG1("A", rp.A);
+        // PrintG1("S", rp.S);
+        // PrintG1("T1", rp.T1);
+        // PrintG1("T2", rp.T1);
+        // PrintScalar("tau_x", rp.taux);
+        // PrintScalar("mu", rp.mu);
+        // PrintScalar("a", rp.a);
+        // PrintScalar("b", rp.b);
+        // PrintScalar("t_hat", rp.t);
 
         std::vector<G1Point> nonces { nonce };
         std::pair<int, BulletproofsRangeproof> proof1(0, rp);
@@ -108,6 +108,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
         RangeproofEncodedData red;
         std::vector<RangeproofEncodedData> data;
 
+        Scalar::Rand(true); // reset seed
         auto is_valid = VerifyBulletproof(
             proofs,
             data,
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
         );
         BOOST_CHECK(is_valid);
         if (is_valid) {
-            printf("=====> old impl is working fine!!!!");
+            printf("=====> old impl is working fine!!!!\n");
         }
     }
     {
@@ -125,18 +126,22 @@ BOOST_AUTO_TEST_CASE(test_range_proof_comarison)
         RangeProof rp;
         auto p = rp.Prove(vs, nonce, message, token_id);
 
-        PrintG1("A", p.A);
-        PrintG1("S", p.S);
-        PrintG1("T1", p.T1);
-        PrintG1("T2", p.T1);
-        PrintScalar("tau_x", p.tau_x);
-        PrintScalar("mu", p.mu);
-        PrintScalar("a", p.a);
-        PrintScalar("b", p.b);
-        PrintScalar("t_hat", p.t_hat);
+        // PrintG1("A", p.A);
+        // PrintG1("S", p.S);
+        // PrintG1("T1", p.T1);
+        // PrintG1("T2", p.T1);
+        // PrintScalar("tau_x", p.tau_x);
+        // PrintScalar("mu", p.mu);
+        // PrintScalar("a", p.a);
+        // PrintScalar("b", p.b);
+        // PrintScalar("t_hat", p.t_hat);
 
+        Scalar::Rand(true); // reset seed
         auto is_valid = rp.Verify(std::vector<Proof> { p }, token_id);
         BOOST_CHECK(is_valid);
+        if (is_valid) {
+            printf("=====> new impl is working fine!!!!\n");
+        }
     }
 
     // test each invalid value individually

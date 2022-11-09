@@ -103,6 +103,7 @@ public:
      */
     Elements<T> Negate() const;
 
+    void Set(int index, T v);
     std::vector<T> m_vec;
 };
 

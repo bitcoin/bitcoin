@@ -328,3 +328,11 @@ Elements<T> Elements<T>::Negate() const
     }
 }
 template Elements<Scalar> Elements<Scalar>::Negate() const;
+
+template <typename T>
+void Elements<T>::Set(int index, T v)
+{
+    m_vec[index] = v;
+}
+template void Elements<Scalar>::Set(int, Scalar);
+template void Elements<G1Point>::Set(int, G1Point);
