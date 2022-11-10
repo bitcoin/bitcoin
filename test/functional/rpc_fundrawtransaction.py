@@ -1173,7 +1173,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Case (3), Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount)
         options["add_inputs"] = True
-        options["add_to_wallet"] = False
         assert "psbt" in wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, options=options)
 
         # Case (4), Explicit add_inputs=true and preset inputs (with preset inputs covering the target amount)
