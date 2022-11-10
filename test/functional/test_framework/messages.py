@@ -1949,6 +1949,27 @@ class msg_feature:
     def __repr__(self):
         return f"msg_feature(feature_id={self.feature_id}, data={self.feature_data.hex()})"
 
+class msg_reqtxrcncl:
+    __slots__ = ("set_size", "q")
+    msgtype = b"reqtxrcncl"
+
+    def __init__(self):
+        self.set_size = 0
+        self.q = 0
+
+    def deserialize(self, f):
+        self.set_size = int.from_bytes(f.read(2), "little")
+        self.q = int.from_bytes(f.read(2), "little")
+
+    def serialize(self):
+        r = b""
+        r += self.set_size.to_bytes(2, "little")
+        r += self.q.to_bytes(2, "little")
+        return r
+
+    def __repr__(self):
+        return "msg_reqtxrcncl(set_size=%lu, q=%lu)" %\
+            (self.set_size, self.q)
 
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):
