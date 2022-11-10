@@ -631,7 +631,7 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
 {
     // Don't update the best block until the chain is attached so that in case of a shutdown,
     // the rescan will be restarted at next startup.
-    if (m_attaching_chain) {
+    if (m_attaching_chain || role == ChainstateRole::BACKGROUND) {
         return;
     }
     WalletBatch batch(GetDatabase());
@@ -1465,6 +1465,9 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
 
 void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& block)
 {
+    if (role == ChainstateRole::BACKGROUND) {
+        return;
+    }
     assert(block.data);
     LOCK(cs_wallet);
 
