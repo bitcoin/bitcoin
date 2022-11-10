@@ -1888,6 +1888,28 @@ class msg_sendtxrcncl:
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
 
+class msg_reqtxrcncl:
+    __slots__ = ("set_size", "q")
+    msgtype = b"reqtxrcncl"
+
+    def __init__(self):
+        self.set_size = 0
+        self.q = 0
+
+    def deserialize(self, f):
+        self.set_size = struct.unpack("<H", f.read(2))[0]
+        self.q = struct.unpack("<H", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<I", self.set_size)
+        r += struct.pack("<I", self.q)
+        return r
+
+    def __repr__(self):
+        return "msg_reqtxrcncl(set_size=%lu, q=%lu)" %\
+            (self.set_size, self.q)
+
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):
         def check_addrv2(ip, net):
