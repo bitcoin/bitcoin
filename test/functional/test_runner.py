@@ -368,6 +368,7 @@ BASE_SCRIPTS = [
     'tool_bitcoin.py',
     'p2p_sendtxrcncl.py',
     'p2p_connection_limits.py',
+    'p2p_reqtxrcncl.py',
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
     'mempool_cluster.py',
