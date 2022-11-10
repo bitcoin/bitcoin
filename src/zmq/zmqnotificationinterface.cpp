@@ -142,7 +142,8 @@ void TryForEachAndRemoveFailed(std::list<std::unique_ptr<CZMQAbstractNotifier>>&
 
 void CZMQNotificationInterface::UpdatedBlockTip(const ChainstateRole role, const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
+    // In IBD or blocks were disconnected without any new ones
+    if (fInitialDownload || pindexNew == pindexFork || role == ChainstateRole::BACKGROUND)
         return;
 
     TryForEachAndRemoveFailed(notifiers, [pindexNew](CZMQAbstractNotifier* notifier) {
@@ -171,6 +172,9 @@ void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransaction
 
 void CZMQNotificationInterface::BlockConnected(const ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
+    if (role == ChainstateRole::BACKGROUND) {
+        return;
+    }
     for (const CTransactionRef& ptx : pblock->vtx) {
         const CTransaction& tx = *ptx;
         TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
