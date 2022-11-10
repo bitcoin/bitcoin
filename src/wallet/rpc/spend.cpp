@@ -27,19 +27,44 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
 {
     std::set<CTxDestination> destinations;
     int i = 0;
+
+    std::set<std::vector<unsigned char>> silent_data;
+
     for (const std::string& address: address_amounts.getKeys()) {
-        CTxDestination dest = DecodeDestination(address);
-        if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
-        }
 
-        if (destinations.count(dest)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
-        }
-        destinations.insert(dest);
+        bool is_silent_address{false};
 
-        CScript script_pub_key = GetScriptForDestination(dest);
+        CScript script_pub_key;
         CAmount amount = AmountFromValue(address_amounts[i++]);
+
+        auto data = DecodeSilentAddress(address);
+        auto [scan_pubkey, spend_pubkey] = DecodeSilentData(data);
+
+        if (scan_pubkey.IsFullyValid() && spend_pubkey.IsFullyValid()) {
+
+            if (!silent_data.insert(data).second) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
+            }
+
+            // this scriptPubKey is the xonly pubkey + xonly pubkey
+            // This is not a valid pubkey but will be changed to a P2TR when creating the transaction
+            script_pub_key = CScript(std::begin(data), std::end(data));
+
+            is_silent_address = true;
+        } else {
+
+            CTxDestination dest = DecodeDestination(address);
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
+            }
+
+            if (destinations.count(dest)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
+            }
+            destinations.insert(dest);
+
+            script_pub_key = GetScriptForDestination(dest);
+        }
 
         bool subtract_fee = false;
         for (unsigned int idx = 0; idx < subtract_fee_outputs.size(); idx++) {
@@ -49,7 +74,13 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
             }
         }
 
-        CRecipient recipient = {script_pub_key, amount, subtract_fee};
+        CRecipient recipient{
+            .scriptPubKey=script_pub_key,
+            .nAmount=amount,
+            .fSubtractFeeFromAmount=subtract_fee,
+            .m_silentpayment=is_silent_address
+        };
+
         recipients.push_back(recipient);
     }
 }
