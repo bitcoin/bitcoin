@@ -256,6 +256,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
+    'feature_itcoin_control_block_time.py',
     'feature_itcoin_solution_independent_blockchain_1_of_2.py',
     'feature_itcoin_solution_independent_blockchain_3_of_4.py',
     'feature_itcoin_num_nodes_differs_from_num_signers.py',
