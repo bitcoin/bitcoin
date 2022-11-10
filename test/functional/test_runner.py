@@ -335,6 +335,7 @@ BASE_SCRIPTS = [
     'rpc_getdescriptoractivity.py',
     'rpc_scanblocks.py',
     'p2p_sendtxrcncl.py',
+    'p2p_reqtxrcncl.py',
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
     'feature_logging.py',
