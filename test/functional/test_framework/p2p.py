@@ -60,6 +60,7 @@ from test_framework.messages import (
     msg_notfound,
     msg_ping,
     msg_pong,
+    msg_reqtxrcncl,
     msg_sendaddrv2,
     msg_sendcmpct,
     msg_sendheaders,
@@ -138,6 +139,7 @@ MESSAGEMAP = {
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
+    b"reqtxrcncl": msg_reqtxrcncl,
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
@@ -454,7 +456,7 @@ class P2PInterface(P2PConnection):
 
     Individual testcases should subclass this and override the on_* methods
     if they want to alter message handling behaviour."""
-    def __init__(self, support_addrv2=False, wtxidrelay=True):
+    def __init__(self, support_addrv2=False, wtxidrelay=True, support_txrcncl=False):
         super().__init__()
 
         # Track number of messages of each type received.
@@ -473,6 +475,7 @@ class P2PInterface(P2PConnection):
         self.nServices = 0
 
         self.support_addrv2 = support_addrv2
+        self.support_txrcncl = support_txrcncl
 
         # If the peer supports wtxid-relay
         self.wtxidrelay = wtxidrelay
@@ -584,6 +587,11 @@ class P2PInterface(P2PConnection):
             self.send_without_ping(msg_wtxidrelay())
         if self.support_addrv2:
             self.send_without_ping(msg_sendaddrv2())
+        if self.support_txrcncl:
+            sendtxrcncl_msg = msg_sendtxrcncl()
+            sendtxrcncl_msg.version = 1
+            sendtxrcncl_msg.salt = 2
+            self.send_without_ping(sendtxrcncl_msg)
         self.send_without_ping(msg_verack())
         self.nServices = message.nServices
         self.relay = message.relay
