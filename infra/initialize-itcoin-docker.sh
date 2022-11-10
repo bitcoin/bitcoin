@@ -18,7 +18,11 @@
 # - the itcoin docker image must be available and tagged
 #
 # USAGE:
-#     initialize-itcoin-docker.sh
+#     initialize-itcoin-docker.sh [TIME_SHIFT]
+#
+#     TIME_SHIFT: how many minutes in the past should the first block date be.
+#                 If you want to use the current time, set this to 0.
+#                 Default: 120 minutes.
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
 
@@ -144,9 +148,14 @@ ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" getnewaddress -addresstype bech32m)
 errecho "Address ${ADDR} generated"
 
 # Ask the miner to send bitcoins to that address. Being the first block in the
-# chain, we need to choose a date. We'll use "-1", which means "current time".
+# chain, we need to choose a date. We'll use the current time minus the
+# TIME_SHIFT command line parameter (or 120 if no value was given).
 errecho "Mine the first block"
-"${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time -1
+
+TIME_SHIFT="${1:-120}"
+BLOCK_1_DATE=$(date --date "-${TIME_SHIFT} min" '+%s')
+
+"${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time "${BLOCK_1_DATE}"
 errecho "First block mined"
 
 cat <<-EOF
