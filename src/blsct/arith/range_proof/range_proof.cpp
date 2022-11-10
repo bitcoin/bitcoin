@@ -206,8 +206,8 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
-    auto sL = Scalars::RandVec(concat_input_values_in_bits, false);  // TODO bring false back to true
-    auto sR = Scalars::RandVec(concat_input_values_in_bits, false);  // TODO bring false back to true
+    auto sL = Scalars::RandVec(concat_input_values_in_bits, true);
+    auto sR = Scalars::RandVec(concat_input_values_in_bits, true);
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
