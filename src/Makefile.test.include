@@ -400,7 +400,7 @@ if TARGET_WINDOWS
 else
 if ENABLE_BENCH
 	@echo "Running bench/bench_dash (one iteration sanity check, only high priority)..."
-	$(BENCH_BINARY) -sanity-check -priority-level=high > /dev/null
+	$(BENCH_BINARY) -sanity-check -priority-level=high
 endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check

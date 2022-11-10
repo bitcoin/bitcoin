@@ -84,7 +84,7 @@ void BenchRunner::RunAll(const Args& args)
     std::smatch baseMatch;
 
     if (args.sanity_check) {
-        std::cout << "Running with --sanity-check option, benchmark results will be useless." << std::endl;
+        std::cout << "Running with -sanity-check option, output is being suppressed as benchmark results will be useless." << std::endl;
     }
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
@@ -107,6 +107,7 @@ void BenchRunner::RunAll(const Args& args)
         Bench bench;
         if (args.sanity_check) {
             bench.epochs(1).epochIterations(1);
+            bench.output(nullptr);
         }
         bench.name(name);
         if (args.min_time > 0ms) {
