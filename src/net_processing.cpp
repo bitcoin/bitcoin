@@ -108,7 +108,7 @@ static constexpr auto NONPREF_PEER_TX_DELAY{2s};
 static constexpr auto OVERLOADED_PEER_TX_DELAY{2s};
 /** How long to wait before downloading a transaction from an additional peer */
 static constexpr auto GETDATA_TX_INTERVAL{60s};
-/** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
+/** Limit to avoid sending big packets (getdata, notfound). Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
@@ -316,6 +316,10 @@ struct Peer {
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+
+    /** A vector of notfounds to send to the peer, limited to MAX_PEER_TX_ANNOUNCEMENTS. */
+    std::vector<CInv> m_notfounds_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+
     /** Probabilistic filter to track recent addr messages relayed with this
      *  peer. Used to avoid relaying redundant addresses to this peer.
      *
@@ -890,7 +894,7 @@ private:
     CTransactionRef FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main);
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex) LOCKS_EXCLUDED(::cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, g_msgproc_mutex) LOCKS_EXCLUDED(::cs_main);
 
     /** Process a new block. Perform any post-processing housekeeping */
     void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
@@ -1008,6 +1012,7 @@ private:
 
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void PushNotFound(Peer& peer, CNode& node, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1037,6 +1042,16 @@ void PeerManagerImpl::AddAddressKnown(Peer& peer, const CAddress& addr)
 {
     assert(peer.m_addr_known);
     peer.m_addr_known->insert(addr.GetKey());
+}
+
+void PeerManagerImpl::PushNotFound(Peer& peer, CNode& node, const CInv& inv)
+{
+    if (peer.m_notfounds_to_send.size() >= MAX_GETDATA_SZ) {
+        const CNetMsgMaker msg_maker(node.GetCommonVersion());
+        m_connman.PushMessage(&node, msg_maker.Make(NetMsgType::NOTFOUND, peer.m_notfounds_to_send));
+        peer.m_notfounds_to_send.clear();
+    }
+    peer.m_notfounds_to_send.push_back(inv);
 }
 
 void PeerManagerImpl::PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand)
@@ -2250,7 +2265,6 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     auto tx_relay = peer.GetTxRelay();
 
     std::deque<CInv>::iterator it = peer.m_getdata_requests.begin();
-    std::vector<CInv> vNotFound;
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
 
     const auto now{GetTime<std::chrono::seconds>()};
@@ -2303,7 +2317,21 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 }
             }
         } else {
-            vNotFound.push_back(inv);
+            // Let the peer know that we didn't find what it asked for, so it doesn't
+            // have to wait around forever.
+            // SPV clients care about this message: it's needed when they are
+            // recursively walking the dependencies of relevant unconfirmed
+            // transactions. SPV clients want to do that because they want to know
+            // about (and store and rebroadcast and risk analyze) the dependencies
+            // of transactions relevant to them, without having to download the
+            // entire memory pool.
+            // Also, other nodes can use these messages to automatically request a
+            // transaction from some other peer that annnounced it, and stop
+            // waiting for us to respond.
+            // In normal operation, we often send NOTFOUND messages for parents of
+            // transactions that we relay; if a peer is missing a parent, they may
+            // assume we have them and request the parents from us.
+            PushNotFound(peer, pfrom, inv);
         }
     }
 
@@ -2319,24 +2347,6 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     }
 
     peer.m_getdata_requests.erase(peer.m_getdata_requests.begin(), it);
-
-    if (!vNotFound.empty()) {
-        // Let the peer know that we didn't find what it asked for, so it doesn't
-        // have to wait around forever.
-        // SPV clients care about this message: it's needed when they are
-        // recursively walking the dependencies of relevant unconfirmed
-        // transactions. SPV clients want to do that because they want to know
-        // about (and store and rebroadcast and risk analyze) the dependencies
-        // of transactions relevant to them, without having to download the
-        // entire memory pool.
-        // Also, other nodes can use these messages to automatically request a
-        // transaction from some other peer that annnounced it, and stop
-        // waiting for us to respond.
-        // In normal operation, we often send NOTFOUND messages for parents of
-        // transactions that we relay; if a peer is missing a parent, they may
-        // assume we have them and request the parents from us.
-        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::NOTFOUND, vNotFound));
-    }
 }
 
 uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
@@ -5820,10 +5830,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 m_txrequest.ForgetTxHash(gtxid.GetHash());
             }
         }
-
-
         if (!vGetData.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
+
+        // Message: notfound
+        if (!peer->m_notfounds_to_send.empty()) {
+            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::NOTFOUND, peer->m_notfounds_to_send));
+            peer->m_notfounds_to_send.clear();
+        }
     } // release cs_main
     MaybeSendFeefilter(*pto, *peer, current_time);
     return true;
