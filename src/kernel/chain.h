@@ -14,6 +14,22 @@ struct BlockInfo;
 namespace kernel {
 //! Return data from block index.
 interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* block_index, const CBlock* data = nullptr);
+
 } // namespace kernel
+
+//! This enum describes the various roles a specific Chainstate instance can take.
+//! Other parts of the system sometimes need to vary in behavior depending on the
+//! existence of a background validation chainstate, e.g. when building indexes.
+enum class ChainstateRole {
+    // Single chainstate in use, "normal" IBD mode.
+    NORMAL,
+
+    // Doing IBD-style validation in the background. Implies use of an assumed-valid
+    // chainstate.
+    BACKGROUND,
+
+    // Active assumed-valid chainstate. Implies use of a background IBD chainstate.
+    ASSUMEDVALID,
+};
 
 #endif // BITCOIN_KERNEL_CHAIN_H

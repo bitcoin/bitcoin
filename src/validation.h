@@ -13,6 +13,7 @@
 #include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
+#include <kernel/chain.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <kernel/chainparams.h>
@@ -515,6 +516,11 @@ public:
         node::BlockManager& blockman,
         ChainstateManager& chainman,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
+
+    //! Return the current role of the chainstate.
+    //!
+    //! @sa ChainstateRole
+    ChainstateRole GetRole() const;
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
