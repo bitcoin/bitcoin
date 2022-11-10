@@ -139,6 +139,13 @@ struct RPCArg {
         STR,
         NUM,
         BOOL,
+        OBJ_NAMED_PARAMS, //!< Special type that behaves almost exactly like
+                          //!< OBJ, defining an options object with a list of
+                          //!< pre-defined keys. The only difference between OBJ
+                          //!< and OBJ_NAMED_PARAMS is that OBJ_NAMED_PARMS
+                          //!< also allows the keys to be passed as top-level
+                          //!< named parameters, as a more convenient way to pass
+                          //!< options to the RPC method without nesting them.
         OBJ_USER_KEYS, //!< Special type where the user must set the keys e.g. to define multiple addresses; as opposed to e.g. an options object where the keys are predefined
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
@@ -183,7 +190,7 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
     }
 
     RPCArg(
@@ -200,7 +207,7 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_NAMED_PARAMS || type == Type::OBJ_USER_KEYS);
     }
 
     bool IsOptional() const;
@@ -369,7 +376,8 @@ public:
     UniValue GetArgMap() const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
-    std::vector<std::string> GetArgNames() const;
+    //! Return list of arguments and whether they are named-only.
+    std::vector<std::pair<std::string, bool>> GetArgNames() const;
 
     const std::string m_name;
 
