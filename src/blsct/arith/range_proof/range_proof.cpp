@@ -141,9 +141,7 @@ Proof RangeProof::Prove(
     Generators gens = m_gf->GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
-
-    // swap H and G for testing purpose
-    auto H = gens.H; //.get();
+    auto H = gens.H;
     auto G = gens.G.get();
 
     // This hash is updated for Fiat-Shamir throughout the proof
@@ -365,9 +363,8 @@ G1Point RangeProof::VerifyLoop2(
     Scalars gi_exps(max_mn, 0);
     Scalars hi_exps(max_mn, 0);
 
-    // swap G and H for testing purpose
     G1Point G = gens.G.get();
-    G1Point H = gens.H; //.get();
+    G1Point H = gens.H;
 
     for (const ProofWithTranscript& p: proof_transcripts) {
         Scalar weight_y = Scalar::Rand();
@@ -524,8 +521,6 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
 
     for (const AmountRecoveryReq& req: reqs) {
         const Generators gens = m_gf->GetInstance(token_id);
-
-        // swap G and H for testing purpose
         G1Point G = gens.G.get();
         G1Point H = gens.H;
 
