@@ -5084,6 +5084,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        std::vector<uint32_t> txs_to_request;
+        std::vector<uint256> txs_to_announce;
+        bool recon_result;
+        bool valid_sketch = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata, txs_to_request, txs_to_announce, recon_result);
+
+        if (valid_sketch) {
+            MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result, txs_to_request);
+            AnnounceTxs(txs_to_announce, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogDebug(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
