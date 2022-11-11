@@ -104,7 +104,7 @@ BASE_SCRIPTS = [
     'itcoin_feature_solution_independent_blockchain_3_of_4.py',
     'itcoin_feature_taproot_challenge_frost_pubkey.py',
     'itcoin_feature_taproot_challenge_frost_pubkey_tweaked.py',
-    'itcoin_rpc_testblockvalidity.py',
+    'itcoin_rpc_testblockvalidity_1.py',
     # ITCOIN_SPECIFIC - END
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
