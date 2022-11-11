@@ -3523,28 +3523,20 @@ bool PeerManagerImpl::AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNod
     if (!tx_relay) return false;
     LOCK2(tx_relay->m_tx_inventory_mutex, tx_relay->m_bloom_filter_mutex);
 
-    // FIXME: compareInvMempoolOrder works with GenTxids now. TxReconciliation works only with
-    // Wtxids. We could store GenTxid in our internal structurs, but that feels really redundant.
-    // Otherwise, we need to transform it at some point.
-    std::vector<GenTxid> gtxids;
-    gtxids.reserve(remote_missing_wtxids.size());
-    std::transform(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), std::back_inserter(gtxids),
-               [](const Wtxid& id) { return GenTxid{id}; });
-
     const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
     // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
     // A heap is used so that not all items need sorting if only a few are being sent.
     CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
-    std::make_heap(gtxids.begin(), gtxids.end(), compareInvMempoolOrder);
+    std::make_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
 
     std::vector<CInv> remote_missing_invs;
     remote_missing_invs.reserve(std::min<size_t>(remote_missing_wtxids.size(), MAX_INV_SZ));
     unsigned int nRelayedTransactions = 0;
-    while (!gtxids.empty()) {
-        std::pop_heap(gtxids.begin(), gtxids.end(), compareInvMempoolOrder);
-        auto hash = gtxids.back();
-        gtxids.pop_back();
-        if (!ShouldSendTransaction(peer, hash, tx_relay, filterrate)) {
+    while (!remote_missing_wtxids.empty()) {
+        std::pop_heap(remote_missing_wtxids.begin(), remote_missing_wtxids.end(), compareInvMempoolOrder);
+        auto hash = remote_missing_wtxids.back();
+        remote_missing_wtxids.pop_back();
+        if (!ShouldSendTransaction(peer, GenTxid{hash}, tx_relay, filterrate)) {
             continue;
         }
 
@@ -3552,7 +3544,7 @@ bool PeerManagerImpl::AnnounceTxs(std::vector<Wtxid> remote_missing_wtxids, CNod
         remote_missing_invs.emplace_back(MSG_WTX, hash.ToUint256());
         nRelayedTransactions++;
 
-        if (remote_missing_invs.size() == MAX_INV_SZ || gtxids.empty()) {
+        if (remote_missing_invs.size() == MAX_INV_SZ || remote_missing_wtxids.empty()) {
             MakeAndPushMessage(pto, NetMsgType::INV, remote_missing_invs);
             remote_missing_invs.clear();
         }
@@ -5099,6 +5091,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LogInfo("Peer is requesting reconciliation while a previous reconciliation has not finished yet, %s\n", pfrom.DisconnectMsg(fLogIPs));
             pfrom.fDisconnect = true;
         };
+        return;
+    }
+
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        std::vector<uint32_t> txs_to_request;
+        std::vector<Wtxid> txs_to_announce;
+        bool recon_result;
+        bool valid_sketch = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata, txs_to_request, txs_to_announce, recon_result);
+
+        if (valid_sketch) {
+            MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result, txs_to_request);
+            AnnounceTxs(txs_to_announce, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         return;
     }
 

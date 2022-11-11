@@ -276,6 +276,11 @@ inline constexpr const char* REQTXRCNCL{"reqtxrcncl"};
  * Peer should respond with "reconcildiff" or "reqsketchext" message.
  */
 inline constexpr const char* SKETCH{"sketch"};
+/**
+ * Indicates whether ongoing reconciliation has succeeded,
+ * and requests the missing transactions by short ids.
+ */
+inline constexpr const char* RECONCILDIFF{"reconcildiff"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -317,6 +322,7 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::SENDTXRCNCL,
     NetMsgType::REQTXRCNCL,
     NetMsgType::SKETCH,
+    NetMsgType::RECONCILDIFF,
 })};
 
 /** nServices flags */
