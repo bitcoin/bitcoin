@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include <node/minisketchwrapper.h>
 #include <node/txreconciliation.h>
 #include <node/txreconciliation_impl.h>
 
@@ -14,6 +15,32 @@
 using namespace node;
 
 BOOST_FIXTURE_TEST_SUITE(txreconciliation_tests, BasicTestingSetup)
+
+// Helper function to compute short txids given a salt, in the same way Erlay does it
+uint32_t ComputeShortIDHelper(const Wtxid& wtxid, uint256 salt)
+{
+    const uint64_t s = SipHashUint256(salt.GetUint64(0), salt.GetUint64(1), wtxid.ToUint256());
+    const uint32_t short_txid = 1 + (s & 0xFFFFFFFF);
+    return short_txid;
+}
+
+// Lambda to add random wtxids to a peer's reconciliation set
+std::vector<Wtxid> AddTxsToReconSet(TxReconciliationTracker& tracker, NodeId peer_id, int n_txs_to_add)
+{
+    FastRandomContext frc{/*fDeterministic=*/true};
+    auto n_added_txs{0};
+
+    std::vector<Wtxid> added_txs;
+    while(n_added_txs < n_txs_to_add) {
+        auto wtxid = Wtxid::FromUint256(frc.rand256());
+        if (!tracker.AddToSet(peer_id, wtxid).has_value()) {
+            added_txs.push_back(wtxid);
+            ++n_added_txs;
+        }
+    }
+
+    return added_txs;
+}
 
 BOOST_AUTO_TEST_CASE(RegisterPeerTest)
 {
@@ -424,6 +451,127 @@ BOOST_AUTO_TEST_CASE(ShouldRespondToReconciliationRequestTest)
     tracker.PreRegisterPeer(peer_id1);
     BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
     BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id1, skdata, /*send_trickle*/true));
+}
+
+BOOST_AUTO_TEST_CASE(HandleSketchBasicFlowTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    std::vector<uint8_t> skdata{};
+
+    // We cannot respond to partially registered peers
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::NOT_FOUND);
+
+    // Only reply if we have initiated a request
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::WRONG_PHASE);
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0)));
+    BOOST_REQUIRE(std::holds_alternative<HandleSketchResult>(tracker.HandleSketch(peer_id0, skdata)));
+
+    // Only reply if we are the initiator (peer is outbound)
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::WRONG_ROLE);
+
+    // We cannot reply to a forgotten peer
+    tracker.ForgetPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::NOT_FOUND);
+}
+
+BOOST_AUTO_TEST_CASE(HandleSketchTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // Since we do not have access to the TxReconciliationState from outside TxReconciliationTracker we'll
+    // need to register the peer with a pre-defined salt, so we can compute the same (salted) short_ids
+    uint64_t local_salt = 1;
+    uint64_t remote_salt = 2;
+    const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
+
+    // Setup a peer we have initiated a reconciliation with
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeerWithSalt(peer_id0, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, remote_salt).has_value());
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0)));
+
+    // If we have nothing to reconcile with the peer, shortcut and send all transactions.
+    // This will trigger the peer sending all their pending transactions to us
+    std::vector<uint8_t> skdata(BYTES_PER_SKETCH_CAPACITY, 0);
+    auto result = std::get<HandleSketchResult>(tracker.HandleSketch(peer_id0, skdata));
+    BOOST_REQUIRE_EQUAL(result.m_succeeded, std::optional(false));
+    BOOST_REQUIRE(result.m_txs_to_announce.empty());
+    BOOST_REQUIRE(result.m_txs_to_request.empty());
+
+    // If their sketch is empty, reconciliation shortcuts and we announce all pending transactions
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0)));
+    skdata.clear();
+    auto n_txs_to_add = frc.randrange(42) + 1;
+    std::vector<Wtxid> added_txs = AddTxsToReconSet(tracker, peer_id0, n_txs_to_add);
+
+    result = std::get<HandleSketchResult>(tracker.HandleSketch(peer_id0, skdata));
+    BOOST_REQUIRE_EQUAL(result.m_succeeded, std::optional(false));
+    BOOST_REQUIRE(std::is_permutation(result.m_txs_to_announce.begin(), result.m_txs_to_announce.end(), added_txs.begin(), added_txs.end()));
+    BOOST_REQUIRE(result.m_txs_to_request.empty());
+     // After a successful reconciliation, the sets are emptied
+    added_txs = AddTxsToReconSet(tracker, peer_id0, n_txs_to_add);
+
+    // After successfully handling a Sketch the peer's phase is reset to NONE (even if we shortcut), so we won't handle another one
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::WRONG_PHASE);
+
+    // If the peer provided a non-empty sketch, its size need to be valid (multiple of the element size and within bounds)
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0))); // Re set the peer's phase
+
+    // Not multiple of the element size
+    skdata.push_back(0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::PROTOCOL_VIOLATION);
+
+    // Over the limit
+    skdata.resize((MAX_SKETCH_CAPACITY + 1) * BYTES_PER_SKETCH_CAPACITY, 0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, skdata)), ReconciliationError::PROTOCOL_VIOLATION);
+
+    // If the peer sketch has data and we also have data for the peer, we reconcile normally:
+    // Create a valid sketch with part of the data we have for the peer. Give enough capacity for
+    // up to `n_txs_to_add` to differ.
+    std::vector<Wtxid> expected_txs_to_announce{};
+    std::vector<uint32_t> expected_txs_to_request{};
+    std::set<uint32_t> added_shortids{};
+
+    Minisketch remote_sketch = node::MakeMinisketch32(n_txs_to_add);
+    // Add a few transaction we already know to the peer's sketch
+    for (size_t i=0; i < added_txs.size(); i++) {
+        if (i % 2 == 0) {
+            auto short_id = ComputeShortIDHelper(added_txs[i], full_salt);
+            // Make sure there are no collisions
+            if (added_shortids.insert(short_id).second) {
+                remote_sketch.Add(short_id);
+            }
+        } else {
+            expected_txs_to_announce.push_back(added_txs[i]);
+        }
+    }
+    // Also add a few that we don't know
+    for (size_t i=0; i < added_txs.size() / 2; i++) {
+        auto short_id = ComputeShortIDHelper(Wtxid::FromUint256(frc.rand256()), full_salt);
+        // Make sure there are no collisions
+        if (!added_shortids.contains(short_id)) {
+            remote_sketch.Add(short_id);
+            expected_txs_to_request.push_back(short_id);
+        }
+    }
+
+    result = std::get<HandleSketchResult>(tracker.HandleSketch(peer_id0, remote_sketch.Serialize()));
+    BOOST_REQUIRE(result.m_succeeded == std::optional(true));
+    BOOST_REQUIRE(std::is_permutation(result.m_txs_to_request.begin(), result.m_txs_to_request.end(), expected_txs_to_request.begin(), expected_txs_to_request.end()));
+    BOOST_REQUIRE(std::is_permutation(result.m_txs_to_announce.begin(), result.m_txs_to_announce.end(), expected_txs_to_announce.begin(), expected_txs_to_announce.end()));
+
+    // The phase has also reset when succeeding and not short-cutting
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, remote_sketch.Serialize())), ReconciliationError::WRONG_PHASE);
 }
 
 BOOST_AUTO_TEST_CASE(IsInboundFanoutTargetTest)

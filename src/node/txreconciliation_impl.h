@@ -14,6 +14,12 @@ class TxReconciliationTrackerImpl;
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
 /**
+ * Allows to infer capacity of a reconciliation sketch based on it's char[] representation,
+ * which is necessary to deserialize a received sketch.
+ */
+constexpr unsigned int BYTES_PER_SKETCH_CAPACITY = RECON_FIELD_SIZE / 8;
+
+/**
  * Limit sketch capacity to avoid DoS. This applies only to the original sketches,
  * and implies that extended sketches could be at most twice the size.
  */
@@ -77,6 +83,16 @@ class AddToSetError {
 
         explicit AddToSetError(ReconciliationError error): m_error(error), m_collision(std::nullopt) {}
         explicit AddToSetError(ReconciliationError error, Wtxid collision): m_error(error), m_collision(std::optional(collision)) {}
+};
+
+class HandleSketchResult
+{
+    public:
+        std::vector<uint32_t> m_txs_to_request;
+        std::vector<Wtxid> m_txs_to_announce;
+        std::optional<bool> m_succeeded;
+
+        explicit HandleSketchResult(std::vector<uint32_t> txs_to_request, std::vector<Wtxid> txs_to_announce, std::optional<bool> succeeded): m_txs_to_request(txs_to_request), m_txs_to_announce(txs_to_announce), m_succeeded(succeeded) {};
 };
 
 using ReconCoefficients = std::pair<uint16_t, uint16_t>;
@@ -188,6 +204,14 @@ public:
      * this peer has ticked (send_trickle is true) to prevent announcing things too early.
      */
     bool ShouldRespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata, bool send_trickle);
+
+    /**
+     * Step 3. Process a response to our reconciliation request.
+     * Returns an error if the peer seems to violate the protocol.
+     * Returns a stucture containing data to request and announce, and a flag signaling
+     * whether reconciliation succeeded, failed, or we need to request an extension.
+     */
+    std::variant<HandleSketchResult, ReconciliationError> HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata);
 
     /** Whether a given inbound peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
