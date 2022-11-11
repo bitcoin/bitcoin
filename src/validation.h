@@ -351,7 +351,7 @@ void InitScriptExecutionCache();
 /** Functions for validating blocks and updating the block tree */
 
 /** Context-independent validity checks */
-bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool fCheckSignetSolution = true); // ITCOIN_SPECIFIC: added fCheckSignetSolution flag to allow testblockvalidity to skip the check on the signet solution
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
 bool TestBlockValidity(BlockValidationState& state,
@@ -360,7 +360,8 @@ bool TestBlockValidity(BlockValidationState& state,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
                        bool fCheckPOW = true,
-                       bool fCheckMerkleRoot = true) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                       bool fCheckMerkleRoot = true,
+                       bool fCheckSignetSolution = true) TS_ITCOIN_EXCLUSIVE_LOCKS_REQUIRED(cs_main); // ITCOIN_SPECIFIC: added fCheckSignetSolution
 
 /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);

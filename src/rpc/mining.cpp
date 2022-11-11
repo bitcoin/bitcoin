@@ -1076,7 +1076,7 @@ static RPCHelpMan testblockvalidity()
                       "Test the validity of the block with respect to the current blockchain tip.",
                       {
                         {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to check for validity"},
-                        {"dummy", RPCArg::Type::STR, RPCArg::DefaultHint{"ignored"}, "dummy value, for compatibility with BIP22. This value is ignored."},
+                        {"check_signet_solution", RPCArg::Type::BOOL, RPCArg::Default{true}, "If false, don't check signet solution of block"},
                       },
                       {
                               RPCResult{"If the block is valid for submit", RPCResult::Type::NONE, "", ""},
@@ -1091,6 +1091,8 @@ static RPCHelpMan testblockvalidity()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CChainParams chainparams(Params());
     ChainstateManager& chainman = EnsureChainman(node);
+
+    bool check_signet_solution = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
 
     CBlock block;
     if (!DecodeHexBlk(block, request.params[0].get_str())) {
@@ -1125,7 +1127,7 @@ static RPCHelpMan testblockvalidity()
     {
         LOCK(cs_main);
         BlockValidationState state;
-        if (!TestBlockValidity(state, chainparams, chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), true, true)) {
+        if (!TestBlockValidity(state, chainparams, chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), true, true, check_signet_solution)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
         return BIP22ValidationResult(state);
