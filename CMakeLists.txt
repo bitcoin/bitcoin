@@ -252,6 +252,46 @@ else()
   endif()
 endif()
 
+if(SANITIZERS)
+  # First check if the compiler accepts flags. If an incompatible pair like
+  # -fsanitize=address,thread is used here, this check will fail. This will also
+  # fail if a bad argument is passed, e.g. -fsanitize=undfeined
+  set(sanitizers_cxx_flags "")
+  try_append_cxxflag(sanitizers_cxx_flags "-fsanitize=${SANITIZERS}")
+  if(NOT try_append_cxxflag_result)
+    message(FATAL_ERROR "Compiler did not accept requested flags.")
+  endif()
+  separate_arguments(sanitizers_cxx_flags)
+  add_compile_options(${sanitizers_cxx_flags})
+
+  # Some compilers (e.g. GCC) require additional libraries like libasan,
+  # libtsan, libubsan, etc. Make sure linking still works with the sanitize
+  # flag. This is a separate check so we can give a better error message when
+  # the sanitize flags are supported by the compiler but the actual sanitizer
+  # libs are missing.
+  set(sanitizers_linker_flags "")
+  set(sanitizers_linker_code "
+    #include <cstdint>
+    #include <cstddef>
+    extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
+    __attribute__((weak)) // allow for libFuzzer linking
+    int main() { return 0; }
+  ")
+  try_append_linker_flag(sanitizers_linker_flags "-fsanitize=${SANITIZERS}"
+    SOURCE "${sanitizers_linker_code}"
+  )
+  if(NOT try_append_linker_flag_result)
+    message(FATAL_ERROR "Linker did not accept requested flags, you are missing required libraries.")
+  endif()
+  separate_arguments(sanitizers_linker_flags)
+  add_link_options(${sanitizers_linker_flags})
+
+  if(WITH_SECCOMP)
+    message(WARNING "Specifying -DSANITIZERS forces -DWITH_SECCOMP=OFF since the sanitizers introduce use of syscalls not allowed by the bitcoind syscall sandbox (-sandbox=<mode>).")
+    set(WITH_SECCOMP OFF)
+  endif()
+endif()
+
 include(cmake/optional_qt.cmake)
 
 include(cmake/optional.cmake)
