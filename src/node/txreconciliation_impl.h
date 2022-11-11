@@ -14,6 +14,12 @@ class TxReconciliationTrackerImpl;
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
 /**
+ * Allows to infer capacity of a reconciliation sketch based on it's char[] representation,
+ * which is necessary to deserialize a received sketch.
+ */
+constexpr unsigned int BYTES_PER_SKETCH_CAPACITY = RECON_FIELD_SIZE / 8;
+
+/**
  * Limit sketch capacity to avoid DoS. This applies only to the original sketches,
  * and implies that extended sketches could be at most twice the size.
  */
@@ -67,6 +73,16 @@ class AddToSetError {
 
         explicit AddToSetError(ReconciliationError error): m_error(error), m_collision(std::nullopt) {}
         explicit AddToSetError(ReconciliationError error, Wtxid collision): m_error(error), m_collision(std::optional(collision)) {}
+};
+
+class HandleSketchResult
+{
+    public:
+        std::vector<uint32_t> m_txs_to_request;
+        std::vector<Wtxid> m_txs_to_announce;
+        std::optional<bool> m_succeeded;
+
+        explicit HandleSketchResult(const std::vector<uint32_t>& txs_to_request, const std::vector<Wtxid>& txs_to_announce, std::optional<bool> succeeded): m_txs_to_request(txs_to_request), m_txs_to_announce(txs_to_announce), m_succeeded(succeeded) {};
 };
 
 using ReconCoefficients = std::pair<uint16_t, uint16_t>;
@@ -177,6 +193,14 @@ public:
      * to reconcile with us, return false.
      */
     bool ShouldRespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata);
+
+    /**
+     * Step 3. Process a response to our reconciliation request.
+     * Returns an error if the peer seems to violate the protocol.
+     * Returns a structure containing data to request and announce, and a flag signaling
+     * whether reconciliation succeeded, failed, or we need to request an extension.
+     */
+    std::variant<HandleSketchResult, ReconciliationError> HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H

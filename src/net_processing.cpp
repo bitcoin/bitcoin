@@ -5208,7 +5208,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
     // Only respond to reconciliation messages if this is a reconciliation connection.
     // Disconnect otherwise.
-    if (!m_txreconciliation && msg_type == NetMsgType::REQTXRCNCL) {
+    if (!m_txreconciliation && (msg_type == NetMsgType::REQTXRCNCL || msg_type == NetMsgType::SKETCH)) {
         LogDebug(BCLog::NET, "%s received, but we don't have reconciliation enabled, %s", msg_type, pfrom.DisconnectMsg());
         pfrom.fDisconnect = true;
         return;
@@ -5232,6 +5232,26 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 default: break; // No other error is returned by HandleReconciliationRequest
             }
             pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        auto result = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata);
+        if (auto handle_sketch_result = std::get_if<node::HandleSketchResult>(&result)) {
+            if (handle_sketch_result->m_succeeded.has_value()) {
+                // Handles both successful and failed reconciliation (but not the case per which we want to request extension).
+                MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, handle_sketch_result->m_succeeded.value(), handle_sketch_result->m_txs_to_request);
+                AnnounceTxs(handle_sketch_result->m_txs_to_announce, pfrom);
+            }
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
         }
         return;
     }
