@@ -3445,10 +3445,11 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
 namespace {
 class CompareInvMempoolOrder
 {
-    CTxMemPool *mp;
+    CTxMemPool* mp;
     bool m_wtxid_relay;
+
 public:
-    explicit CompareInvMempoolOrder(CTxMemPool *_mempool, bool use_wtxid)
+    explicit CompareInvMempoolOrder(CTxMemPool* _mempool, bool use_wtxid)
     {
         mp = _mempool;
         m_wtxid_relay = use_wtxid;
@@ -3461,7 +3462,7 @@ public:
         return mp->CompareDepthAndScore(b, a, m_wtxid_relay);
     }
 };
-}
+} // namespace
 
 void PeerManagerImpl::AnnounceTxs(std::vector<uint256> remote_missing_wtxids, CNode& pto)
 {
@@ -5007,6 +5008,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         uint16_t peer_recon_set_size, peer_q;
         vRecv >> peer_recon_set_size >> peer_q;
         m_txreconciliation->HandleReconciliationRequest(pfrom.GetId(), peer_recon_set_size, peer_q);
+        return;
+    }
+
+    if (msg_type == NetMsgType::SKETCH) {
+        std::vector<uint8_t> skdata;
+        vRecv >> skdata;
+
+        std::vector<uint32_t> txs_to_request;
+        std::vector<uint256> txs_to_announce;
+        bool recon_result;
+        bool valid_sketch = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata, txs_to_request, txs_to_announce, recon_result);
+
+        if (valid_sketch) {
+            MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result, txs_to_request);
+            AnnounceTxs(txs_to_announce, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation sketch violating the protocol.
+            LogPrint(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         return;
     }
 
