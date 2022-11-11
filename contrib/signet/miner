@@ -601,7 +601,7 @@ def do_generate(args):
         if args.nbits is not None:
             logging.error("Cannot specify --nbits and --min-nbits")
             return 1
-        args.nbits = "1e0377ae"
+        args.nbits = "207fffff"  # ITCOIN_SPECIFIC (changed "1e0377ae" -> "207fffff")
         logging.info("Using nbits=%s" % (args.nbits))
 
     if args.set_block_time is None:
