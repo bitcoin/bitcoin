@@ -12,8 +12,24 @@ Scalar* RangeProof::m_one = nullptr;
 Scalar* RangeProof::m_two = nullptr;
 Scalars* RangeProof::m_two_pows_64 = nullptr;
 Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
-Scalar* RangeProof::m_uint64_max = nullptr;
+Scalar* RangeProof::m_max_input_value = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
+
+AmountRecoveryReq AmountRecoveryReq::of(Proof& proof, size_t& index, G1Point& nonce)
+{
+    AmountRecoveryReq req {
+        1,
+        proof.x,
+        proof.z,
+        proof.Vs,
+        proof.Ls,
+        proof.Rs,
+        proof.mu,
+        proof.tau_x,
+        nonce
+    };
+    return req;
+}
 
 RangeProof::RangeProof()
 {
@@ -36,9 +52,14 @@ RangeProof::RangeProof()
         Scalar int64_max(INT64_MAX);
         Scalar one(1);
         Scalar uint64_max = (int64_max << 1) + one;
-        RangeProof::m_uint64_max = new Scalar(uint64_max);
+        RangeProof::m_max_input_value = new Scalar(uint64_max);
     }
     m_is_initialized = true;
+}
+
+Scalar RangeProof::GetMaxInputValue() const
+{
+    return *m_max_input_value;
 }
 
 bool RangeProof::InnerProductArgument(
@@ -542,9 +563,9 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         //
         // alpha (B) equals to alpha (A) + (message || 64-byte v[0])
         // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
-        // then applying 64-byte mask fuether extracts 64-byte v[0]
+        // then applying 64-byte mask (= max input value) fuether extracts 64-byte v[0]
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-        const Scalar input_value0 = message_v0 & *RangeProof::m_uint64_max;
+        const Scalar input_value0 = message_v0 & *RangeProof::m_max_input_value;
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
