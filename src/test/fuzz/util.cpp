@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netmessagemaker.h>
 #include <pubkey.h>
 #include <test/fuzz/util.h>
@@ -524,7 +525,10 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
     } else if (network == Network::NET_INTERNAL) {
         net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
     } else if (network == Network::NET_ONION) {
-        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
+        auto pub_key{fuzzed_data_provider.ConsumeBytes<uint8_t>(ADDR_TORV3_SIZE)};
+        pub_key.resize(ADDR_TORV3_SIZE);
+        const bool ok{net_addr.SetSpecial(OnionToString(pub_key))};
+        assert(ok);
     }
     return net_addr;
 }
