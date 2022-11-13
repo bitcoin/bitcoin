@@ -329,6 +329,9 @@ std::vector<bool> Scalar::GetBits() const
  */
 bool Scalar::GetBit(uint8_t n) const
 {
+    if (n > 255) {
+        throw std::runtime_error(std::string("Maximum index is 255"));
+    }
     std::vector<uint8_t> vch = GetVch();
     assert(vch.size() == 32);
 

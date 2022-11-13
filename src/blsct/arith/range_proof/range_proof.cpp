@@ -194,27 +194,39 @@ printf("4\n");
     }
 
 printf("5 vs.size=%ld\n", vs.Size());
-
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
     Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v: vs.m_vec) {  // for each input value
-        printf("v=%s\n", v.GetString().c_str());
-        auto bits = v.GetBits();  // gets the value in binary
-        printf("5.1 m_input_value_bits=%ld, bits.size=%ld\n", Config::m_input_value_bits, bits.size());
-        for(bool bit: bits) {
-            aL.Add(bit);
-        }
-        // pad the remaining bits with false if exist
-        for(size_t i = 0; i < Config::m_input_value_bits - bits.size(); ++i) {
-            aL.Add(false);
+        for(size_t i=0; i<Config::m_input_value_bits; ++i) {
+            aL.Add(v.GetBit(i) ? 1 : 0);
         }
     }
-    printf("5.5 concat_input_values_in_bits=%ld\n", concat_input_values_in_bits);
     // pad 0 bits at the end if aL.size < concat_input_values_in_bits
     while (aL.Size() < concat_input_values_in_bits) {
-        aL.Add(false);
+        aL.Add(0);
     }
+
+    // // (41)-(42)
+    // // Values to be obfuscated are encoded in binary and flattened to a single vector aL
+    // Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
+    // for (Scalar& v: vs.m_vec) {  // for each input value
+    //     printf("v=%s\n", v.GetString().c_str());
+    //     auto bits = v.GetBits();  // gets the value in binary
+    //     printf("5.1 m_input_value_bits=%ld, bits.size=%ld\n", Config::m_input_value_bits, bits.size());
+    //     for(bool bit: bits) {
+    //         aL.Add(bit);
+    //     }
+    //     // pad the remaining bits with false if exist
+    //     for(size_t i = 0; i < Config::m_input_value_bits - bits.size(); ++i) {
+    //         aL.Add(false);
+    //     }
+    // }
+    // printf("5.5 concat_input_values_in_bits=%ld\n", concat_input_values_in_bits);
+    // // pad 0 bits at the end if aL.size < concat_input_values_in_bits
+    // while (aL.Size() < concat_input_values_in_bits) {
+    //     aL.Add(false);
+    // }
 printf("6\n");
 
 //// debug

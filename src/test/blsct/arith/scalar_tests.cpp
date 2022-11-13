@@ -816,7 +816,6 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bits)
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 {
     {
@@ -857,6 +856,10 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
         for (size_t i = 0; i < 8; ++i) {
             BOOST_CHECK_EQUAL(a.GetBit(31 * 8 + i), bits115[i]);
         }
+    }
+    {
+        Scalar a;
+        BOOST_CHECK_THROW(a.GetBit(256), std::runtime_error);
     }
 }
 
@@ -915,6 +918,5 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
     std::string s(vMsg.begin(), vMsg.end());
     BOOST_CHECK(s == "spagetti meatballs");
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

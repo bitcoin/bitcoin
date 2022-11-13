@@ -95,24 +95,22 @@ static std::vector<TestCase> BuildTestCases()
     Scalar upper_bound = (one << 63) - one;  // int64_t max
     // [LB, LB+1, UB-1, UB]
     Scalars valid_inputs;
-    // valid_inputs.Add(lower_bound);
-    //valid_inputs.Add(lower_bound + one);
-    valid_inputs.Add(upper_bound - one);   // FAILS!!
-    //valid_inputs.Add(upper_bound);
+    valid_inputs.Add(lower_bound);
+    valid_inputs.Add(lower_bound + one);
+    valid_inputs.Add(upper_bound - one);
+    valid_inputs.Add(upper_bound);
 
     // [-1, UB+1, UB+2, UB*2]
     Scalars invalid_inputs;
     // invalid_inputs.Add(one.Negate());
     // invalid_inputs.Add(upper_bound + one);
-    invalid_inputs.Add(upper_bound + one + one);   // SUCCEEDS!!
-    //invalid_inputs.Add(upper_bound << 1);
+    // invalid_inputs.Add(upper_bound + one + one);
+    // invalid_inputs.Add(upper_bound << 1);
 
     std::vector<TestCase> test_cases;
 
-    // test single valid value
-    // int i = 0;
+    // // test single valid value
     // for (auto value: valid_inputs.m_vec) {
-    //     printf("i=%d\n", ++i);
     //     Scalars values;
     //     values.Add(value);
 
@@ -206,7 +204,7 @@ static void RunTestCase(
     // verify proofs
     auto verify_result = rp.Verify(proofs, token_id);
     printf("===> verify result: %s (exp: %s)\n", verify_result ? "succ" : "fail", test_case.verify_result ? "succ" : "fail");
-    //BOOST_CHECK(verify_result == test_case.verify_result);
+    BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
     std::vector<AmountRecoveryReq> reqs;
