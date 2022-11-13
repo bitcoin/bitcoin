@@ -156,31 +156,32 @@ static std::vector<TestCase> BuildTestCases()
         test_cases.push_back(x);
     }
 
-    // // test single valid values w/ # of values not power of 2
-    // {
-    //     Scalars values;
-    //     for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
+    // test single valid values w/ # of values not power of 2
+    {
+        Scalars values;
+        for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
 
-    //     TestCase x;
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.verify_result = true;
-    //     test_cases.push_back(x);
-    // }
+        TestCase x;
+        x.name = "# of values not power of 2";
+        x.values = values;
+        x.is_batch = false;
+        x.verify_result = true;
+        test_cases.push_back(x);
+    }
 
-    // // test valid input values of maximum number
-    // {
-    //     Scalars values;
-    //     for (size_t i=0; i<Config::m_max_input_values; ++i) {
-    //         values.Add(valid_inputs[i & valid_inputs.Size()]);
-    //     }
-    //     TestCase x;
-    //     x.name = "max # of input values";
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.verify_result = true;
-    //     test_cases.push_back(x);
-    // }
+    // test valid input values of maximum number
+    {
+        Scalars values;
+        for (size_t i=0; i<Config::m_max_input_values; ++i) {
+            values.Add(valid_inputs[i & valid_inputs.Size()]);
+        }
+        TestCase x;
+        x.name = "max # of input values";
+        x.values = values;
+        x.is_batch = false;
+        x.verify_result = true;
+        test_cases.push_back(x);
+    }
 
     // test valid and invalid values mixed
     {

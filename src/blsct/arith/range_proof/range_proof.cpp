@@ -160,7 +160,7 @@ Proof RangeProof::Prove(
 
     // Initialize gammas
     Scalars gammas;
-    for (size_t i = 0; i < vs.Size(); ++i) {
+    for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto hash = nonce.GetHashWithSalt(100 + i);
         gammas.Add(hash);
     }
