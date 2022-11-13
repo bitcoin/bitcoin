@@ -588,7 +588,7 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         // extract the message part from (up-to-23-byte message || 64-bit v[0])
         // by 64-bit to the right
         std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
-
+printf("msg1='%s'\n", std::string(msg1.begin(), msg1.end()).c_str());
         auto tau_x = req.tau_x;
         auto x = req.x;
         auto z = req.z;
@@ -604,6 +604,7 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         // you can extract msg2
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
+printf("msg2='%s'\n", std::string(msg2.begin(), msg2.end()).c_str());
 
         RecoveredAmount recovered_amount(
             req.index,
