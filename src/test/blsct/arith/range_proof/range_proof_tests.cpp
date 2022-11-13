@@ -109,17 +109,17 @@ static std::vector<TestCase> BuildTestCases()
 
     std::vector<TestCase> test_cases;
 
-    // // test single valid value
-    // for (auto value: valid_inputs.m_vec) {
-    //     Scalars values;
-    //     values.Add(value);
+    // test single valid value
+    for (auto value: valid_inputs.m_vec) {
+        Scalars values;
+        values.Add(value);
 
-    //     TestCase x;
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.verify_result = true;
-    //     test_cases.push_back(x);
-    // }
+        TestCase x;
+        x.values = values;
+        x.is_batch = false;
+        x.verify_result = true;
+        test_cases.push_back(x);
+    }
 
     // test single invalid value
     for (auto value: invalid_inputs.m_vec) {

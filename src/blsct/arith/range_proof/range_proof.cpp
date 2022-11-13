@@ -147,7 +147,7 @@ Proof RangeProof::Prove(
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
-printf("1\n");
+
     const size_t num_input_values_power_of_2 =
         Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
 
@@ -164,7 +164,6 @@ printf("1\n");
         auto hash = nonce.GetHashWithSalt(100 + i);
         gammas.Add(hash);
     }
-printf("2\n");
 
     // Get Generators for the token_id
     Generators gens = m_gf->GetInstance(token_id);
@@ -172,25 +171,24 @@ printf("2\n");
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
     auto H = gens.H;
     auto G = gens.G.get();
-printf("3\n");
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
 
-    // Calculate value commitments and add them to transcript
+    // Calculate value commitments directly form the input values
     for (size_t i = 0; i < vs.Size(); ++i) {
         auto V = (G * vs[i]) + (H * gammas[i]);
         proof.Vs.Add(V);
         transcript_gen << V;
     }
 
-printf("5 vs.size=%ld\n", vs.Size());
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
+    // only the first 64 bits of each Scalar is picked up
     Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v: vs.m_vec) {  // for each input value
         for(size_t i=0; i<Config::m_input_value_bits; ++i) {
-            aL.Add(v.GetBit(i) ? 1 : 0);
+            aL.Add(v.GetSeriBit(i) ? 1 : 0);
         }
     }
     // pad 0 bits at the end if aL.size < concat_input_values_in_bits
@@ -198,87 +196,10 @@ printf("5 vs.size=%ld\n", vs.Size());
         aL.Add(0);
     }
 
-    // // (41)-(42)
-    // // Values to be obfuscated are encoded in binary and flattened to a single vector aL
-    // Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
-    // for (Scalar& v: vs.m_vec) {  // for each input value
-    //     printf("v=%s\n", v.GetString().c_str());
-    //     auto bits = v.GetBits();  // gets the value in binary
-    //     printf("5.1 m_input_value_bits=%ld, bits.size=%ld\n", Config::m_input_value_bits, bits.size());
-    //     for(bool bit: bits) {
-    //         aL.Add(bit);
-    //     }
-    //     // pad the remaining bits with false if exist
-    //     for(size_t i = 0; i < Config::m_input_value_bits - bits.size(); ++i) {
-    //         aL.Add(false);
-    //     }
-    // }
-    // printf("5.5 concat_input_values_in_bits=%ld\n", concat_input_values_in_bits);
-    // // pad 0 bits at the end if aL.size < concat_input_values_in_bits
-    // while (aL.Size() < concat_input_values_in_bits) {
-    //     aL.Add(false);
-    // }
-printf("6\n");
-
-//// debug
-auto MN = concat_input_values_in_bits;
-auto M = num_input_values_power_of_2;
-auto N = Config::m_input_value_bits;
-printf("M=%ld, N=%ld\n", M, N);
-
-std::vector<Scalar> aL2(MN), aR2(MN);
-
-for (size_t j = 0; j < M; ++j)
-{
-    for (size_t i = 0; i < N; ++i)
-    {
-        if (j < vs.Size() && vs[j].GetBit(i) == 1)
-        {
-            aL2[j*N+i] = 1;
-            aR2[j*N+i] = 0;
-        }
-        else
-        {
-            aL2[j*N+i] = 0;
-            aR2[j*N+i] = 1;
-            aR2[j*N+i] = aR2[j*N+i].Negate();
-        }
-    }
-}
-printf("aL2[0] = "); print_binary(aL2[0].GetBits());
-printf("aR2[0] = "); print_binary(aR2[0].GetBits());
-
-
-//// debug
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     auto one_value_concat_bits = Scalars::RepeatN(*m_one, concat_input_values_in_bits);
-printf("7\n");
 
     // aR is aL - 1
     Scalars aR = aL - one_value_concat_bits;
-printf("8\n");
-
-printf("aL[0] = "); print_binary(aL[0].GetBits());
-printf("aR[0] = "); print_binary(aR[0].GetBits());
 
     size_t num_tries = 0;
 retry:  // hasher is not cleared so that different hash will be obtained upon retry

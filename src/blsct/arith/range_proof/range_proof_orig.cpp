@@ -524,7 +524,7 @@ void BulletproofsRangeproof::Prove(std::vector<Scalar> v, G1Point nonce, const s
     {
         for (size_t i = 0; i < N; ++i)
         {
-            if (j < v.size() && v[j].GetBit(i) == 1)
+            if (j < v.size() && v[j].GetSeriBit(i) == 1)
             {
                 aL[j*N+i] = 1;
                 aR[j*N+i] = 0;

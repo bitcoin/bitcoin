@@ -225,7 +225,7 @@ Scalar Scalar::Pow(const Scalar& n) const
     Scalar temp(1);
     mclBnFr bit_val;
     bit_val = m_fr;
-    auto bits = n.GetBits();
+    auto bits = n.RepresentInBits();
 
     for (auto it = bits.rbegin(); it != bits.rend(); ++it) {
         Scalar s(bit_val);
@@ -314,7 +314,7 @@ std::string Scalar::GetString(const int8_t radix) const
     return std::string(str);
 }
 
-std::vector<bool> Scalar::GetBits() const
+std::vector<bool> Scalar::RepresentInBits() const
 {
     auto bitStr = GetString(2);
     std::vector<bool> vec;
@@ -327,7 +327,7 @@ std::vector<bool> Scalar::GetBits() const
 /**
  * Since GetVch returns 32-byte vector, maximum bit index is 8 * 32 - 1 = 255
  */
-bool Scalar::GetBit(uint8_t n) const
+bool Scalar::GetSeriBit(uint8_t n) const
 {
     if (n > 255) {
         throw std::runtime_error(std::string("Maximum index is 255"));

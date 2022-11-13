@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bits)
     Scalar s(u);
 
     std::string exp = n_bin;
-    auto bs = s.GetBits();
+    auto bs = s.RepresentInBits();
 
     BOOST_CHECK(bs.size() == exp.size());
     for (size_t i = 0; i < bs.size(); ++i) {
@@ -820,16 +820,16 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 {
     {
         Scalar a(0b100000001);
-        BOOST_CHECK_EQUAL(a.GetBit(0), true); // 1st byte
-        BOOST_CHECK_EQUAL(a.GetBit(1), false);
-        BOOST_CHECK_EQUAL(a.GetBit(2), false);
-        BOOST_CHECK_EQUAL(a.GetBit(3), false);
-        BOOST_CHECK_EQUAL(a.GetBit(4), false);
-        BOOST_CHECK_EQUAL(a.GetBit(5), false);
-        BOOST_CHECK_EQUAL(a.GetBit(6), false);
-        BOOST_CHECK_EQUAL(a.GetBit(7), false);
-        BOOST_CHECK_EQUAL(a.GetBit(8), true); // 2nd byte
-        BOOST_CHECK_EQUAL(a.GetBit(9), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(0), true); // 1st byte
+        BOOST_CHECK_EQUAL(a.GetSeriBit(1), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(2), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(3), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(4), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(5), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(6), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(7), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(8), true); // 2nd byte
+        BOOST_CHECK_EQUAL(a.GetSeriBit(9), false);
     }
     {
         SCALAR_CURVE_ORDER_MINUS_1(a);
@@ -837,29 +837,29 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 
         // 5th byte from the last is 255
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(4 * 8 + i), true);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(4 * 8 + i), true);
         }
 
         // 9th byte from the last is 254
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(8 * 8 + i), i != 0);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(8 * 8 + i), i != 0);
         }
 
         // 13th byte from the last is 2
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(12 * 8 + i), i == 1);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(12 * 8 + i), i == 1);
         }
 
         // 32nd byte from the last is 115
         // 115 = 0b01110011 and rightmost bit is index 0
         std::vector<bool> bits115 = {true, true, false, false, true, true, true, false};
         for (size_t i = 0; i < 8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(31 * 8 + i), bits115[i]);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(31 * 8 + i), bits115[i]);
         }
     }
     {
         Scalar a;
-        BOOST_CHECK_THROW(a.GetBit(256), std::runtime_error);
+        BOOST_CHECK_THROW(a.GetSeriBit(256), std::runtime_error);
     }
 }
 

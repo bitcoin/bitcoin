@@ -82,8 +82,15 @@ public:
 
     std::string GetString(const int8_t radix = 16) const;
 
-    bool GetBit(uint8_t n) const;
-    std::vector<bool> GetBits() const;
+    /**
+     * extracts a specified bit of 32-byte serialization result
+     */
+    bool GetSeriBit(uint8_t n) const;
+
+    /**
+     * extracts a binary representation of the integer represented bu m_fr
+     */
+    std::vector<bool> RepresentInBits() const;
 
     unsigned int GetSerializeSize() const;
 
