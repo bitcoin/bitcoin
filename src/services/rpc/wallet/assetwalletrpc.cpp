@@ -176,7 +176,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
         "\nCreate NEVM blob data used by rollups via a custom raw parameters\n",
         {
             {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the KZG commitment"},
-            {"rawdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "raw blob (hex encoded ascii)"},
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -184,8 +184,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"rawdata\" 6 economical 25")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"data\" 6 economical 25")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"data\" 6 economical 25")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -197,7 +197,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
-    const std::vector<uint8_t> &vchData = ParseHex(request.params[1].get_str());
+    std::vector<uint8_t> vchData = ParseHex(request.params[1].get_str());
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
@@ -230,7 +230,7 @@ static RPCHelpMan syscoincreatenevmblob()
     return RPCHelpMan{"syscoincreatenevmblob",
         "\nCreate NEVM blob data used by rollups\n",
         {
-            {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data"},
+            {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "blob in hex"},
             {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
@@ -254,45 +254,16 @@ static RPCHelpMan syscoincreatenevmblob()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(*pwallet);
-    std::string strData(request.params[0].get_str());
+    const valtype &vchData = ParseHex(request.params[0].get_str());
     bool bOverwrite{false};
     if(request.params.size() > 1) {
         bOverwrite = request.params[1].get_bool();
-    }
-    std::vector<unsigned char> vchData(strData.data(), strData.data() + strData.size());
-    // how many 0 bytes are we going to add to each field element?
-    int numMultiples = vchData.size() / 31;
-    int nSize = vchData.size();
-    int modDataFill = 0;
-    // fill up to factor of 32 with 0
-    if((nSize % 31) != 0) {
-        modDataFill = 32 - (nSize % 31);
-    }
-    std::vector<unsigned char> vchFill(modDataFill, 0);
-    std::vector<unsigned char> newVchData;
-    auto it = vchData.begin();
-    for(int i = 0; i<numMultiples;i++) {
-        newVchData.insert(newVchData.end(), it, (it+31));
-        // fill with 0 delimiter
-        newVchData.push_back(0);
-        it += 31;
-    }
-    // insert the remaining bytes
-    newVchData.insert(newVchData.end(), it, std::end(vchData));
-    // fill with 0's to make sure we are using divisor of 32
-    newVchData.insert(newVchData.end(), std::begin(vchFill), std::end((vchFill)));
-    // make sure we are at least 1024 bytes (32 multiples of 32 bytes) long to ensure KZG commitment verification works
-    const int numNewMultiples = (newVchData.size() / 32);
-    if(numNewMultiples < 32) {
-        const int numNewFillBytes = 32*(32 - numNewMultiples);
-        std::vector<unsigned char> vchNewFill(numNewFillBytes, 0);
-        newVchData.insert(newVchData.end(), std::begin(vchNewFill), std::end((vchNewFill)));
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
     CNEVMData nevmDataPayload;
     // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCreateNEVMBlob(newVchData, nevmDataPayload, state);
+    GetMainSignals().NotifyCreateNEVMBlob(vchData, nevmDataPayload, state);
     if(state.IsInvalid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
     }
@@ -302,11 +273,13 @@ static RPCHelpMan syscoincreatenevmblob()
         resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
         return resObj;
     }
+    // nevmDataPayload.vchNEVMData should have the kzg commitment so lets append the data
+    valtype vchNEVMData = {*nevmDataPayload.vchNEVMData};
+    vchNEVMData.insert( vchNEVMData.end(), vchData.begin(), vchData.end() );
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
-    paramsSend.push_back(HexStr(*nevmDataPayload.vchNEVMData));
+    paramsSend.push_back(HexStr(vchNEVMData));
     std::vector<uint8_t> vchVersionHash = nevmDataPayload.vchVersionHash;
-    size_t nSizeData = nevmDataPayload.vchNEVMData->size();
     nevmDataPayload.ClearData();
     paramsSend.push_back(request.params[2]);
     paramsSend.push_back(request.params[3]);
@@ -321,7 +294,7 @@ static RPCHelpMan syscoincreatenevmblob()
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(vchVersionHash));
-            resObj.__pushKV("datasize", nSizeData);
+            resObj.__pushKV("datasize", vchNEVMData.size());
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   
