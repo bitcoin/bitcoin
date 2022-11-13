@@ -174,15 +174,6 @@ printf("2\n");
     auto G = gens.G.get();
 printf("3\n");
 
-    // clear above 64th bits of input value since input value is expected to of type int64_t
-    // and the rest of code is written based on that assumption
-    for (size_t i=0; i<vs.Size(); ++i) {
-        printf("vs[%ld] (before) = ", i); print_binary(vs[i].GetBits());
-        vs.Set(i, vs[i] & GetUint64Max());
-        printf("vs[%ld] (after)  = ", i); print_binary(vs[i].GetBits());
-    }
-printf("4\n");
-
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
 
