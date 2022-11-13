@@ -114,108 +114,108 @@ static std::vector<TestCase> BuildTestCases()
 
     std::vector<TestCase> test_cases;
 
-    // test single valid value
-    for (auto value: valid_inputs.m_vec) {
-        Scalars values;
-        values.Add(value);
-
-        TestCase x;
-        x.name = "single valid value";
-        x.values = values;
-        x.is_batch = false;
-        x.verify_result = true;
-        x.should_complete_recovery = true;
-        x.num_amounts = 1;
-        test_cases.push_back(x);
-    }
-
-    // test single invalid value
-    for (auto value: invalid_inputs.m_vec) {
-        Scalars values;
-        values.Add(value);
-
-        TestCase x;
-        x.name = "single invalid value";
-        x.values = values;
-        x.is_batch = false;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
-
-    // test valid values
-    for (auto is_batch: std::vector<bool> { true, false }) {
-        auto num_amounts = is_batch ? valid_inputs.Size() : 1;
-        TestCase x;
-        x.name = "valid values";
-        x.values = valid_inputs;
-        x.is_batch = is_batch;
-        x.should_complete_recovery = true;
-        x.num_amounts = num_amounts;
-        x.verify_result = true;
-        test_cases.push_back(x);
-    }
-
-    // test invalid values
-    for (auto is_batch: std::vector<bool> { true, false }) {
-        //auto num_amounts = is_batch ? invalid_inputs.Size() : 1;
-        TestCase x;
-        x.name = "invalid values";
-        x.values = invalid_inputs;
-        x.is_batch = is_batch;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
-
-    // // test single valid values w/ # of values not power of 2
-    // {
+    // // test single valid value
+    // for (auto value: valid_inputs.m_vec) {
     //     Scalars values;
-    //     for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
+    //     values.Add(value);
 
     //     TestCase x;
-    //     x.name = "# of values not power of 2";
+    //     x.name = "single valid value";
     //     x.values = values;
     //     x.is_batch = false;
-        // x.should_complete_recovery = true;
-        // x.num_amounts = 0;
+    //     x.verify_result = true;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = 1;
+    //     test_cases.push_back(x);
+    // }
+
+    // // test single invalid value
+    // for (auto value: invalid_inputs.m_vec) {
+    //     Scalars values;
+    //     values.Add(value);
+
+    //     TestCase x;
+    //     x.name = "single invalid value";
+    //     x.values = values;
+    //     x.is_batch = false;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = 0;
+    //     x.verify_result = false;
+    //     test_cases.push_back(x);
+    // }
+
+    // // test valid values
+    // for (auto is_batch: std::vector<bool> { true, false }) {
+    //     auto num_amounts = is_batch ? valid_inputs.Size() : 1;
+    //     TestCase x;
+    //     x.name = "valid values";
+    //     x.values = valid_inputs;
+    //     x.is_batch = is_batch;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = num_amounts;
     //     x.verify_result = true;
     //     test_cases.push_back(x);
     // }
 
-    // test valid input values of maximum number
+    // // test invalid values
+    // for (auto is_batch: std::vector<bool> { true, false }) {
+    //     //auto num_amounts = is_batch ? invalid_inputs.Size() : 1;
+    //     TestCase x;
+    //     x.name = "invalid values";
+    //     x.values = invalid_inputs;
+    //     x.is_batch = is_batch;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = 0;
+    //     x.verify_result = false;
+    //     test_cases.push_back(x);
+    // }
+
+    // test single valid values w/ # of values not power of 2
     {
         Scalars values;
-        for (size_t i=0; i<Config::m_max_input_values; ++i) {
-            values.Add(Scalar(i + 1));
-        }
+        for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
+
         TestCase x;
-        x.name = "max # of input values";
+        x.name = "# of values not power of 2";
         x.values = values;
         x.is_batch = false;
         x.should_complete_recovery = true;
-        x.num_amounts = 1;
+        x.num_amounts = 0;
         x.verify_result = true;
         test_cases.push_back(x);
     }
 
-    // test valid and invalid values mixed
-    {
-        Scalars values;
-        for (auto& s: valid_inputs.m_vec) values.Add(s);
-        for (auto& s: invalid_inputs.m_vec) values.Add(s);
+    // // test valid input values of maximum number
+    // {
+    //     Scalars values;
+    //     for (size_t i=0; i<Config::m_max_input_values; ++i) {
+    //         values.Add(Scalar(i + 1));
+    //     }
+    //     TestCase x;
+    //     x.name = "max # of input values";
+    //     x.values = values;
+    //     x.is_batch = false;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = 1;
+    //     x.verify_result = true;
+    //     test_cases.push_back(x);
+    // }
 
-        TestCase x;
-        x.name = "mix of valid and invalid values";
-        x.values = values;
-        x.is_batch = false;
-        x.should_complete_recovery = true;
-        x.num_amounts = 1;
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
+    // // test valid and invalid values mixed
+    // {
+    //     Scalars values;
+    //     for (auto& s: valid_inputs.m_vec) values.Add(s);
+    //     for (auto& s: invalid_inputs.m_vec) values.Add(s);
+
+    //     TestCase x;
+    //     x.name = "mix of valid and invalid values";
+    //     x.values = values;
+    //     x.is_batch = false;
+    //     x.should_complete_recovery = true;
+    //     x.num_amounts = 1;
+    //     x.verify_result = false;
+    //     test_cases.push_back(x);
+    // }
 
     return test_cases;
 }

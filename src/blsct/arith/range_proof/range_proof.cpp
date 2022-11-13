@@ -172,6 +172,11 @@ Proof RangeProof::Prove(
         gammas.Add(hash);
     }
 
+    // pad input values with zeros if needed
+    while(vs.Size() < num_input_values_power_of_2) {
+        vs.Add(Scalar(0));
+    }
+
     // Get Generators for the token_id
     Generators gens = m_gf->GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
