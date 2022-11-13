@@ -80,6 +80,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
 struct TestCase
 {
+    std::string name;
     Scalars values;
     bool is_batch;  // if true, prove function is called for each value in values
     bool verify_result;
@@ -115,6 +116,7 @@ static std::vector<TestCase> BuildTestCases()
         values.Add(value);
 
         TestCase x;
+        x.name = "single valid value";
         x.values = values;
         x.is_batch = false;
         x.verify_result = true;
@@ -127,16 +129,17 @@ static std::vector<TestCase> BuildTestCases()
         values.Add(value);
 
         TestCase x;
+        x.name = "single invalid value";
         x.values = values;
         x.is_batch = false;
         x.verify_result = false;
         test_cases.push_back(x);
     }
 
-/*
     // test valid values
     for (auto is_batch: std::vector<bool> { true, false }) {
         TestCase x;
+        x.name = "valid values";
         x.values = valid_inputs;
         x.is_batch = is_batch;
         x.verify_result = true;
@@ -146,34 +149,52 @@ static std::vector<TestCase> BuildTestCases()
     // test invalid values
     for (auto is_batch: std::vector<bool> { true, false }) {
         TestCase x;
+        x.name = "invalid values";
         x.values = invalid_inputs;
         x.is_batch = is_batch;
         x.verify_result = false;
         test_cases.push_back(x);
     }
 
-    // test valid input values of maximum number
-    {
-        Scalars values;
-        for (size_t i=0; i<Config::m_max_input_values; ++i) {
-            values.Add(valid_inputs[i & valid_inputs.Size()]);
-        }
-        TestCase x;
-        x.values = values;
-        x.is_batch = false;
-        x.verify_result = true;
-        test_cases.push_back(x);
-    }
+    // // test single valid values w/ # of values not power of 2
+    // {
+    //     Scalars values;
+    //     for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
+
+    //     TestCase x;
+    //     x.values = values;
+    //     x.is_batch = false;
+    //     x.verify_result = true;
+    //     test_cases.push_back(x);
+    // }
+
+    // // test valid input values of maximum number
+    // {
+    //     Scalars values;
+    //     for (size_t i=0; i<Config::m_max_input_values; ++i) {
+    //         values.Add(valid_inputs[i & valid_inputs.Size()]);
+    //     }
+    //     TestCase x;
+    //     x.name = "max # of input values";
+    //     x.values = values;
+    //     x.is_batch = false;
+    //     x.verify_result = true;
+    //     test_cases.push_back(x);
+    // }
 
     // test valid and invalid values mixed
     {
+        Scalars values;
+        for (auto& s: valid_inputs.m_vec) values.Add(s);
+        for (auto& s: invalid_inputs.m_vec) values.Add(s);
+
         TestCase x;
-        x.values = std::vector<Scalar> { lower_bound, upper_bound + one };
+        x.name = "mix of valid and invalid values";
+        x.values = values;
         x.is_batch = false;
         x.verify_result = false;
         test_cases.push_back(x);
     }
-*/
 
     return test_cases;
 }
@@ -182,6 +203,8 @@ static void RunTestCase(
     RangeProof& rp,
     TestCase& test_case
 ) {
+    printf("===> Testing '%s'\n", test_case.name.c_str());
+
     auto msg = GenMessage();
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
@@ -203,7 +226,9 @@ static void RunTestCase(
 
     // verify proofs
     auto verify_result = rp.Verify(proofs, token_id);
-    printf("===> verify result: %s (exp: %s)\n", verify_result ? "succ" : "fail", test_case.verify_result ? "succ" : "fail");
+    if (verify_result != test_case.verify_result) {
+        printf("=====> VERIFICATION FAILED\n");
+    }
     BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
@@ -214,17 +239,19 @@ static void RunTestCase(
     }
     auto amounts = rp.RecoverAmounts(reqs, token_id);
 
-    // BOOST_CHECK(amounts.size() == proofs.size());
+    // if (test_case.verify_result) {
+    //     BOOST_CHECK(amounts.size() == proofs.size());
 
-    // for (size_t i=0; i<amounts.size(); ++i) {
-    //     auto x = amounts[i];
-    //     auto gamma = nonce.GetHashWithSalt(100 + i);
+    //     for (size_t i=0; i<amounts.size(); ++i) {
+    //         auto x = amounts[i];
+    //         auto gamma = nonce.GetHashWithSalt(100 + i);
 
-    //     BOOST_CHECK(((uint64_t) x.amount) == test_case.values[i].GetUint64());
-    //     BOOST_CHECK(x.gamma == gamma);
+    //         BOOST_CHECK(((uint64_t) x.amount) == test_case.values[i].GetUint64());
+    //         BOOST_CHECK(x.gamma == gamma);
 
-    //     std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
-    //     BOOST_CHECK(x_msg == msg.second);
+    //         std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
+    //         BOOST_CHECK(x_msg == msg.second);
+    //     }
     // }
 }
 
