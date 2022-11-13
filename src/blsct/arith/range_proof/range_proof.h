@@ -54,7 +54,7 @@ class RangeProof
 public:
     RangeProof();
 
-    Scalar GetMaxInputValue() const;
+    Scalar GetUint64Max() const;
 
     G1Point GenerateBaseG1PointH(
         const G1Point& p,
@@ -110,7 +110,7 @@ private:
     static Scalar* m_two;
     static Scalars* m_two_pows_64;
     static Scalar* m_inner_prod_1x2_pows_64;
-    static Scalar* m_max_input_value;
+    static Scalar* m_uint64_max;
 
     inline static boost::mutex m_init_mutex;
     inline static bool m_is_initialized = false;

@@ -12,7 +12,7 @@ Scalar* RangeProof::m_one = nullptr;
 Scalar* RangeProof::m_two = nullptr;
 Scalars* RangeProof::m_two_pows_64 = nullptr;
 Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
-Scalar* RangeProof::m_max_input_value = nullptr;
+Scalar* RangeProof::m_uint64_max = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
 AmountRecoveryReq AmountRecoveryReq::of(Proof& proof, size_t& index, G1Point& nonce)
@@ -52,14 +52,14 @@ RangeProof::RangeProof()
         Scalar int64_max(INT64_MAX);
         Scalar one(1);
         Scalar uint64_max = (int64_max << 1) + one;
-        RangeProof::m_max_input_value = new Scalar(uint64_max);
+        RangeProof::m_uint64_max = new Scalar(uint64_max);
     }
     m_is_initialized = true;
 }
 
-Scalar RangeProof::GetMaxInputValue() const
+Scalar RangeProof::GetUint64Max() const
 {
-    return *m_max_input_value;
+    return *m_uint64_max;
 }
 
 bool RangeProof::InnerProductArgument(
@@ -125,6 +125,13 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
+static void print_binary(std::vector<bool> bs) {
+    for (auto b: bs) {
+        printf("%s", b ? "1" : "0");
+    }
+    printf(" (%ld)\n", bs.size());
+}
+
 Proof RangeProof::Prove(
     Scalars& vs,
     G1Point& nonce,
@@ -140,7 +147,7 @@ Proof RangeProof::Prove(
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));
     }
-
+printf("1\n");
     const size_t num_input_values_power_of_2 =
         Config::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
 
@@ -157,6 +164,7 @@ Proof RangeProof::Prove(
         auto hash = nonce.GetHashWithSalt(100 + i);
         gammas.Add(hash);
     }
+printf("2\n");
 
     // Get Generators for the token_id
     Generators gens = m_gf->GetInstance(token_id);
@@ -164,6 +172,16 @@ Proof RangeProof::Prove(
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
     auto H = gens.H;
     auto G = gens.G.get();
+printf("3\n");
+
+    // clear above 64th bits of input value since input value is expected to of type int64_t
+    // and the rest of code is written based on that assumption
+    for (size_t i=0; i<vs.Size(); ++i) {
+        printf("vs[%ld] (before) = ", i); print_binary(vs[i].GetBits());
+        vs.Set(i, vs[i] & GetUint64Max());
+        printf("vs[%ld] (after)  = ", i); print_binary(vs[i].GetBits());
+    }
+printf("4\n");
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
@@ -175,11 +193,15 @@ Proof RangeProof::Prove(
         transcript_gen << V;
     }
 
+printf("5 vs.size=%ld\n", vs.Size());
+
     // (41)-(42)
     // Values to be obfuscated are encoded in binary and flattened to a single vector aL
     Scalars aL;   // ** size of aL can be shorter than concat_input_values_in_bits
     for (Scalar& v: vs.m_vec) {  // for each input value
+        printf("v=%s\n", v.GetString().c_str());
         auto bits = v.GetBits();  // gets the value in binary
+        printf("5.1 m_input_value_bits=%ld, bits.size=%ld\n", Config::m_input_value_bits, bits.size());
         for(bool bit: bits) {
             aL.Add(bit);
         }
@@ -188,15 +210,72 @@ Proof RangeProof::Prove(
             aL.Add(false);
         }
     }
+    printf("5.5 concat_input_values_in_bits=%ld\n", concat_input_values_in_bits);
     // pad 0 bits at the end if aL.size < concat_input_values_in_bits
     while (aL.Size() < concat_input_values_in_bits) {
         aL.Add(false);
     }
+printf("6\n");
+
+//// debug
+auto MN = concat_input_values_in_bits;
+auto M = num_input_values_power_of_2;
+auto N = Config::m_input_value_bits;
+printf("M=%ld, N=%ld\n", M, N);
+
+std::vector<Scalar> aL2(MN), aR2(MN);
+
+for (size_t j = 0; j < M; ++j)
+{
+    for (size_t i = 0; i < N; ++i)
+    {
+        if (j < vs.Size() && vs[j].GetBit(i) == 1)
+        {
+            aL2[j*N+i] = 1;
+            aR2[j*N+i] = 0;
+        }
+        else
+        {
+            aL2[j*N+i] = 0;
+            aR2[j*N+i] = 1;
+            aR2[j*N+i] = aR2[j*N+i].Negate();
+        }
+    }
+}
+printf("aL2[0] = "); print_binary(aL2[0].GetBits());
+printf("aR2[0] = "); print_binary(aR2[0].GetBits());
+
+
+//// debug
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     auto one_value_concat_bits = Scalars::RepeatN(*m_one, concat_input_values_in_bits);
+printf("7\n");
 
     // aR is aL - 1
     Scalars aR = aL - one_value_concat_bits;
+printf("8\n");
+
+printf("aL[0] = "); print_binary(aL[0].GetBits());
+printf("aR[0] = "); print_binary(aR[0].GetBits());
 
     size_t num_tries = 0;
 retry:  // hasher is not cleared so that different hash will be obtained upon retry
@@ -561,11 +640,11 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         // mu = alpha + rho * x ... (62)
         // alpha = mu - rho * x ... (B)
         //
-        // alpha (B) equals to alpha (A) + (message || 64-byte v[0])
-        // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-byte v[0])
-        // then applying 64-byte mask (= max input value) fuether extracts 64-byte v[0]
+        // alpha (B) equals to alpha (A) + (message || 64-bit v[0])
+        // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-bit v[0])
+        // then applying 64-bit mask (= max input value) fuether extracts 64-bit v[0]
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-        const Scalar input_value0 = message_v0 & *RangeProof::m_max_input_value;
+        const Scalar input_value0 = message_v0 & *RangeProof::m_uint64_max;
 
         // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
@@ -574,8 +653,8 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
         }
 
         // generate message and set to data
-        // extract the message part from (up-to-23-byte message || 64-byte v[0])
-        // by 64 bytes tot the right
+        // extract the message part from (up-to-23-byte message || 64-bit v[0])
+        // by 64-bit to the right
         std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
 
         auto tau_x = req.tau_x;
