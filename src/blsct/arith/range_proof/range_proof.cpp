@@ -15,9 +15,9 @@ Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
 Scalar* RangeProof::m_uint64_max = nullptr;
 GeneratorsFactory* RangeProof::m_gf = nullptr;
 
-AmountRecoveryReq AmountRecoveryReq::of(Proof& proof, size_t& index, G1Point& nonce)
+AmountRecoveryRequest AmountRecoveryRequest::of(Proof& proof, size_t& index, G1Point& nonce)
 {
-    AmountRecoveryReq req {
+    AmountRecoveryRequest req {
         1,
         proof.x,
         proof.z,
@@ -29,6 +29,13 @@ AmountRecoveryReq AmountRecoveryReq::of(Proof& proof, size_t& index, G1Point& no
         nonce
     };
     return req;
+}
+
+AmountRecoveryResult AmountRecoveryResult::failure() {
+    return {
+        false,
+        std::vector<RecoveredAmount>()
+    };
 }
 
 RangeProof::RangeProof()
@@ -537,21 +544,22 @@ bool RangeProof::Verify(
     return point_sum.IsUnity();
 }
 
-std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
-    const std::vector<AmountRecoveryReq>& reqs,
+AmountRecoveryResult RangeProof::RecoverAmounts(
+    const std::vector<AmountRecoveryRequest>& reqs,
     const TokenId& token_id
 ) const {
-    std::vector<RecoveredAmount> ret;  // will contain result of successful requests only
+    // will contain result of successful requests only
+    std::vector<RecoveredAmount> recovered_amounts;
 
-    for (const AmountRecoveryReq& req: reqs) {
+    for (const AmountRecoveryRequest& req: reqs) {
         const Generators gens = m_gf->GetInstance(token_id);
         G1Point G = gens.G.get();
         G1Point H = gens.H;
 
-        // skip this tx_in if sizes of Ls and Rs differ or Vs is empty
+        // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
-            continue;
+            return AmountRecoveryResult::failure();
         }
 
         // derive random Scalar values from nonce
@@ -603,7 +611,10 @@ std::vector<RecoveredAmount> RangeProof::RecoverAmounts(
             input_value0_gamma,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
         );
-        ret.push_back(recovered_amount);
+        recovered_amounts.push_back(recovered_amount);
     }
-    return ret;
+    return {
+        true,
+        recovered_amounts
+    };
 }

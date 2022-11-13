@@ -17,7 +17,7 @@
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
-struct AmountRecoveryReq
+struct AmountRecoveryRequest
 {
     size_t index;
     Scalar x;
@@ -29,7 +29,7 @@ struct AmountRecoveryReq
     Scalar tau_x;
     G1Point nonce;
 
-    static AmountRecoveryReq of(Proof& proof, size_t& index, G1Point& nonce);
+    static AmountRecoveryRequest of(Proof& proof, size_t& index, G1Point& nonce);
 };
 
 struct RecoveredAmount
@@ -45,6 +45,14 @@ struct RecoveredAmount
     CAmount amount;
     Scalar gamma;
     std::string message;
+};
+
+struct AmountRecoveryResult
+{
+    bool is_completed;  // done doesn't mean recovery success
+    std::vector<RecoveredAmount> amounts;
+
+    static AmountRecoveryResult failure();
 };
 
 // implementation of range proof described in Bulletproofs
@@ -97,8 +105,8 @@ public:
         const size_t& max_mn
     ) const;
 
-    std::vector<RecoveredAmount> RecoverAmounts(
-        const std::vector<AmountRecoveryReq>& reqs,
+    AmountRecoveryResult RecoverAmounts(
+        const std::vector<AmountRecoveryRequest>& reqs,
         const TokenId& token_id
     ) const;
 
