@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bits)
     Scalar s(u);
 
     std::string exp = n_bin;
-    auto bs = s.RepresentInBits();
+    auto bs = s.ToBinaryVec();
 
     BOOST_CHECK(bs.size() == exp.size());
     for (size_t i = 0; i < bs.size(); ++i) {
@@ -856,10 +856,6 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
         for (size_t i = 0; i < 8; ++i) {
             BOOST_CHECK_EQUAL(a.GetSeriBit(31 * 8 + i), bits115[i]);
         }
-    }
-    {
-        Scalar a;
-        BOOST_CHECK_THROW(a.GetSeriBit(256), std::runtime_error);
     }
 }
 

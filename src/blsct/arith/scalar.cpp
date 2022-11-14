@@ -332,9 +332,6 @@ std::vector<bool> Scalar::ToBinaryVec() const
  */
 bool Scalar::GetSeriBit(const uint8_t& n) const
 {
-    if (n > 255) {
-        throw std::runtime_error(std::string("Index out of range"));
-    }
     std::vector<uint8_t> vch = GetVch();
     assert(vch.size() == 32);
 

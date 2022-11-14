@@ -20,12 +20,14 @@ public:
     inline static const size_t max_prove_func_retries = 100;
 
     // size of each input value in bits. N in old code
-    inline static const size_t m_input_value_bits = 64;  // = 2 << 5
+    inline static const size_t m_input_value_bits = 64;
 
     // maximum # of input values
     inline static const size_t m_max_input_values = 16;
 
+    // 23 and 31 bytes for message 1 and message 2 respectively
     inline static const size_t m_max_message_size = 54;
+
     inline static const size_t m_max_input_value_vec_len = m_max_input_values * m_input_value_bits;
 
     // maximum number of tries in Prove() function

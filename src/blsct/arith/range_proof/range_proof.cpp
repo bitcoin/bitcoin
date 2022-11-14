@@ -132,13 +132,6 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-static void print_binary(std::vector<bool> bs) {
-    for (auto b: bs) {
-        printf("%s", b ? "1" : "0");
-    }
-    printf(" (%ld)\n", bs.size());
-}
-
 Proof RangeProof::Prove(
     Scalars& vs,
     G1Point& nonce,
@@ -149,7 +142,7 @@ Proof RangeProof::Prove(
         throw std::runtime_error(strprintf("%s: message size is too large", __func__));
     }
     if (vs.Empty()) {
-        throw std::runtime_error(strprintf("%s: value vector is empty", __func__));
+        throw std::runtime_error(strprintf("%s: no input values to prove", __func__));
     }
     if (vs.Size() > Config::m_max_input_values) {
         throw std::runtime_error(strprintf("%s: number of input values exceeds the maximum", __func__));

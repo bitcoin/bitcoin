@@ -95,13 +95,13 @@ public:
     unsigned int GetSerializeSize() const;
 
     template <typename Stream>
-    void Serialize(const Stream& s) const
+    void Serialize(Stream& s) const
     {
         ::Serialize(s, GetVch());
     }
 
     template <typename Stream>
-    void Unserialize(const Stream& s)
+    void Unserialize(Stream& s)
     {
         std::vector<uint8_t> vch;
         ::Unserialize(s, vch);
