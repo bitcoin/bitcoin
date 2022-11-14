@@ -82,15 +82,13 @@ public:
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
-        // We do not support txreconciliation salt/version updates.
-        assert(m_states.find(peer_id) == m_states.end());
 
         LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Pre-register peer=%d\n", peer_id);
         const uint64_t local_salt{GetRand(UINT64_MAX)};
 
         // We do this exactly once per peer (which are unique by NodeId, see GetNewNodeId) so it's
         // safe to assume we don't have this record yet.
-        Assert(m_states.emplace(peer_id, local_salt).second);
+        Assume(m_states.emplace(peer_id, local_salt).second);
         return local_salt;
     }
 
