@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #define BOOST_CHECK(expr) assert(expr)
@@ -159,6 +160,14 @@ void univalue_set()
     v.setStr("zum");
     BOOST_CHECK(v.isStr());
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
+
+    {
+        std::string_view sv{"ab\0c", 4};
+        UniValue j{sv};
+        BOOST_CHECK(j.isStr());
+        BOOST_CHECK_EQUAL(j.getValStr(), sv);
+        BOOST_CHECK_EQUAL(j.write(), "\"ab\\u0000c\"");
+    }
 
     v.setFloat(-1.01);
     BOOST_CHECK(v.isNum());
