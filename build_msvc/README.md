@@ -7,7 +7,9 @@ Visual Studio 2022 is minimum required to build Bitcoin Core.
 
 Solution and project files to build with `msbuild` or Visual Studio can be found in the `build_msvc` directory.
 
-To build Bitcoin Core from the command-line, it is sufficient to only install the Visual Studio Build Tools component.
+To build Bitcoin Core from the command-line, it is sufficient to only install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) component.
+
+The "Desktop development with C++" workload must be installed as well.
 
 Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows.md).
 
