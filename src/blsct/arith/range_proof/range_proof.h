@@ -99,7 +99,7 @@ public:
         const std::vector<Proof>& proofs
     ) const;
 
-    G1Point VerifyLoop2(
+    G1Point VerifyProofs(
         const std::vector<ProofWithTranscript>& proof_transcripts,
         const Generators& gens,
         const size_t& max_mn

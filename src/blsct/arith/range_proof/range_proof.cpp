@@ -165,14 +165,14 @@ Proof RangeProof::Prove(
     ////////////// Proving steps
     Proof proof;
 
-    // Initialize gammas
+    // generate gammas
     Scalars gammas;
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto hash = nonce.GetHashWithSalt(100 + i);
         gammas.Add(hash);
     }
 
-    // pad input values with zeros if needed
+    // make the number of input values a power of 2 w/ 0s if needed
     while(vs.Size() < num_input_values_power_of_2) {
         vs.Add(Scalar(0));
     }
@@ -224,13 +224,13 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     // Commitment to aL and aR (obfuscated with alpha)
 
     // trim message to first 23 bytes if needed
-    Scalar msg1_scalar(
+    Scalar msg1(
         message.size() > 23 ?
             std::vector<uint8_t>(message.begin(), message.begin() + 23) :
             message
     );
-    // first part of message + 64-bit vs[0]
-    Scalar msg1_v0 = (msg1_scalar << Config::m_input_value_bits) | vs[0];
+    // message followed by 64-bit vs[0]
+    Scalar msg1_v0 = (msg1 << Config::m_input_value_bits) | vs[0];
 
     Scalar alpha = nonce.GetHashWithSalt(1);
     alpha = alpha + msg1_v0;
@@ -295,13 +295,13 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalar tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    // if message size is 24-byte or bigger, treat that part as msg2
-    Scalar msg2_scalar = Scalar({
+    // if message exceeds 23 bytes, treat the part after 23rd byte as msg2
+    Scalar msg2 = Scalar({
         message.size() > 23 ?
             std::vector<uint8_t>(message.begin() + 23, message.end()) :
             std::vector<uint8_t>()
     });
-    tau1 = tau1 + msg2_scalar;
+    tau1 = tau1 + msg2;
 
     proof.T1 = (G * t1) + (H * tau1);
     proof.T2 = (G * t2) + (H * tau2);
@@ -386,7 +386,7 @@ void RangeProof::ValidateProofsBySizes(
     }
 }
 
-G1Point RangeProof::VerifyLoop2(
+G1Point RangeProof::VerifyProofs(
     const std::vector<ProofWithTranscript>& proof_transcripts,
     const Generators& gens,
     const size_t& max_mn
@@ -541,7 +541,7 @@ bool RangeProof::Verify(
     const size_t max_mn = 1 << max_num_rounds;
     const Generators gens = m_gf->GetInstance(token_id);
 
-    G1Point point_sum = VerifyLoop2(
+    G1Point point_sum = VerifyProofs(
         proof_transcripts,
         gens,
         max_mn
@@ -566,24 +566,33 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
             return AmountRecoveryResult::failure();
         }
+        // recovery can only be done when the number of value commitment is 1
+        if (req.Vs.Size() != 1) {
+            continue;
+        }
 
-        // derive random Scalar values from nonce
-        const Scalar alpha = req.nonce.GetHashWithSalt(1);  // (A)
+        // recover Scalar values from nonce
+        const Scalar alpha = req.nonce.GetHashWithSalt(1);
         const Scalar rho = req.nonce.GetHashWithSalt(2);
-        const Scalar tau1 = req.nonce.GetHashWithSalt(3);  // (C)
+        const Scalar tau1 = req.nonce.GetHashWithSalt(3);
         const Scalar tau2 = req.nonce.GetHashWithSalt(4);
         const Scalar input_value0_gamma = req.nonce.GetHashWithSalt(100);  // gamma for vs[0]
 
+        // breakdown of mu is:
         // mu = alpha + rho * x ... (62)
-        // alpha = mu - rho * x ... (B)
         //
-        // alpha (B) equals to alpha (A) + (message || 64-bit v[0])
-        // so by subtracting alpha (A) from alpha (B), you can extract (message || 64-bit v[0])
-        // then applying 64-bit mask (= max input value) fuether extracts 64-bit v[0]
+        // and this alpha is the alpha from nonce + (message << 64 | 64-bit v[0])
+        // so, subtracting rho * x from mu equals to:
+        //
+        // alpha from nonce + (message << 64 | 64-bit v[0])
+        //
+        // subtracting alpha from nonce from it results in:
+        // (message << 64 | 64-bit v[0])
+        //
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
         const Scalar input_value0 = message_v0 & *RangeProof::m_uint64_max;
 
-        // skip this tx_in if recovered input value 0 commitment doesn't match with Vs[0]
+        // skip this request if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);
         if (input_value0_commitment != req.Vs[0]) {
             continue;
@@ -593,7 +602,6 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         // extract the message part from (up-to-23-byte message || 64-bit v[0])
         // by 64-bit to the right
         std::vector<uint8_t> msg1 = (message_v0 >> 64).GetVch(true);
-printf("msg1='%s'\n", std::string(msg1.begin(), msg1.end()).c_str());
         auto tau_x = req.tau_x;
         auto x = req.x;
         auto z = req.z;
@@ -609,7 +617,6 @@ printf("msg1='%s'\n", std::string(msg1.begin(), msg1.end()).c_str());
         // you can extract msg2
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
-printf("msg2='%s'\n", std::string(msg2.begin(), msg2.end()).c_str());
 
         RecoveredAmount recovered_amount(
             req.index,

@@ -84,7 +84,7 @@ struct TestCase
 {
     std::string name;
     Scalars values;
-    bool is_batch;  // if true, prove function is called for each value in values
+    bool is_batched;  // prove function is called once for with all values
     bool should_complete_recovery;
     size_t num_amounts;
     bool verify_result;
@@ -113,109 +113,98 @@ static std::vector<TestCase> BuildTestCases()
     invalid_inputs.Add(upper_bound << 1);
 
     std::vector<TestCase> test_cases;
+    char name[100];
 
-    // // test single valid value
-    // for (auto value: valid_inputs.m_vec) {
-    //     Scalars values;
-    //     values.Add(value);
-
-    //     TestCase x;
-    //     x.name = "single valid value";
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.verify_result = true;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = 1;
-    //     test_cases.push_back(x);
-    // }
-
-    // // test single invalid value
-    // for (auto value: invalid_inputs.m_vec) {
-    //     Scalars values;
-    //     values.Add(value);
-
-    //     TestCase x;
-    //     x.name = "single invalid value";
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = 0;
-    //     x.verify_result = false;
-    //     test_cases.push_back(x);
-    // }
-
-    // // test valid values
-    // for (auto is_batch: std::vector<bool> { true, false }) {
-    //     auto num_amounts = is_batch ? valid_inputs.Size() : 1;
-    //     TestCase x;
-    //     x.name = "valid values";
-    //     x.values = valid_inputs;
-    //     x.is_batch = is_batch;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = num_amounts;
-    //     x.verify_result = true;
-    //     test_cases.push_back(x);
-    // }
-
-    // // test invalid values
-    // for (auto is_batch: std::vector<bool> { true, false }) {
-    //     //auto num_amounts = is_batch ? invalid_inputs.Size() : 1;
-    //     TestCase x;
-    //     x.name = "invalid values";
-    //     x.values = invalid_inputs;
-    //     x.is_batch = is_batch;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = 0;
-    //     x.verify_result = false;
-    //     test_cases.push_back(x);
-    // }
-
-    // test single valid values w/ # of values not power of 2
-    {
+    // test single valid value
+    for (auto value: valid_inputs.m_vec) {
         Scalars values;
-        for (size_t i=0; i<3; ++i) values.Add(valid_inputs[i]);
+        values.Add(value);
 
         TestCase x;
-        x.name = "# of values not power of 2";
+        sprintf(name, "valid input value %s", value.GetString().c_str());
+        x.name = name;
         x.values = values;
-        x.is_batch = false;
+        x.is_batched = false;
+        x.verify_result = true;
+        x.should_complete_recovery = true;
+        x.num_amounts = 1;
+        test_cases.push_back(x);
+    }
+
+    // test single invalid value
+    for (auto value: invalid_inputs.m_vec) {
+        Scalars values;
+        values.Add(value);
+
+        TestCase x;
+        sprintf(name, "invalid input value %s", value.GetString().c_str());
+        x.name = name;
+        x.values = values;
+        x.is_batched = false;
+        x.should_complete_recovery = true;
+        x.num_amounts = 0;
+        x.verify_result = false;
+        test_cases.push_back(x);
+    }
+
+    // test batched valid values
+    {
+        TestCase x;
+        x.name = "batched valid values";
+        x.values = valid_inputs;
+        x.is_batched = true;
         x.should_complete_recovery = true;
         x.num_amounts = 0;
         x.verify_result = true;
         test_cases.push_back(x);
     }
 
-    // // test valid input values of maximum number
-    // {
-    //     Scalars values;
-    //     for (size_t i=0; i<Config::m_max_input_values; ++i) {
-    //         values.Add(Scalar(i + 1));
-    //     }
-    //     TestCase x;
-    //     x.name = "max # of input values";
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = 1;
-    //     x.verify_result = true;
-    //     test_cases.push_back(x);
-    // }
+    // test batched invalid values
+    {
+        TestCase x;
+        x.name = "batched invalid values";
+        x.values = invalid_inputs;
+        x.is_batched = true;
+        x.should_complete_recovery = true;
+        x.num_amounts = 0;
+        x.verify_result = false;
+        test_cases.push_back(x);
+    }
 
-    // // test valid and invalid values mixed
-    // {
-    //     Scalars values;
-    //     for (auto& s: valid_inputs.m_vec) values.Add(s);
-    //     for (auto& s: invalid_inputs.m_vec) values.Add(s);
+    // test # of input values from 1 to max
+    {
+        for (size_t n=1; n<=Config::m_max_input_values; ++n) {
+            Scalars values;
+            for (size_t i=0; i<n; ++i) {
+                values.Add(Scalar(i + 1));
+            }
+            TestCase x;
+            sprintf(name, "%ld valid input values", n);
+            x.name = name;
+            x.values = values;
+            x.is_batched = true;
+            x.should_complete_recovery = true;
+            x.num_amounts = n == 1 ? 1 : 0;  // recovery should be performed only when n=1
+            x.verify_result = true;
+            test_cases.push_back(x);
+        }
+    }
 
-    //     TestCase x;
-    //     x.name = "mix of valid and invalid values";
-    //     x.values = values;
-    //     x.is_batch = false;
-    //     x.should_complete_recovery = true;
-    //     x.num_amounts = 1;
-    //     x.verify_result = false;
-    //     test_cases.push_back(x);
-    // }
+    // test valid and invalid values mixed
+    {
+        Scalars values;
+        for (auto& s: valid_inputs.m_vec) values.Add(s);
+        for (auto& s: invalid_inputs.m_vec) values.Add(s);
+
+        TestCase x;
+        x.name = "mix of valid and invalid values";
+        x.values = values;
+        x.is_batched = true;
+        x.should_complete_recovery = true;
+        x.num_amounts = 0;
+        x.verify_result = false;
+        test_cases.push_back(x);
+    }
 
     return test_cases;
 }
@@ -233,23 +222,23 @@ static void RunTestCase(
     std::vector<Proof> proofs;
 
     // calculate proofs
-    if (test_case.is_batch) {
+    if (test_case.is_batched) {
+        auto proof = rp.Prove(test_case.values, nonce, msg.second, token_id);
+        proofs.push_back(proof);
+    } else {
         for (auto value: test_case.values.m_vec) {
             Scalars single_value_vec;
             single_value_vec.Add(value);
             auto proof = rp.Prove(single_value_vec, nonce, msg.second, token_id);
             proofs.push_back(proof);
         }
-    } else {
-        auto proof = rp.Prove(test_case.values, nonce, msg.second, token_id);
-        proofs.push_back(proof);
     }
 
     // verify proofs
     auto verify_result = rp.Verify(proofs, token_id);
-    if (verify_result != test_case.verify_result) {
-        printf("=====> VERIFICATION FAILED\n");
-    }
+    // if (verify_result != test_case.verify_result) {
+    //     printf("=====> VERIFICATION FAILED\n");
+    // }
     BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
@@ -263,7 +252,7 @@ static void RunTestCase(
 
     if (recovery_result.is_completed) {
         auto amounts = recovery_result.amounts;
-        printf("amounts=%ld, num_amounts=%ld\n", amounts.size(), test_case.num_amounts);
+        //printf("amounts=%ld, num_amounts=%ld\n", amounts.size(), test_case.num_amounts);
         BOOST_CHECK(amounts.size() == test_case.num_amounts);
 
         for (size_t i=0; i<amounts.size(); ++i) {
@@ -274,7 +263,7 @@ static void RunTestCase(
             BOOST_CHECK(x.gamma == gamma);
 
             std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
-            printf("===> act msg: %s, exp msg: %s\n", x.message.c_str(), msg.first.c_str());
+            //printf("===> act msg: %s, exp msg: %s\n", x.message.c_str(), msg.first.c_str());
             BOOST_CHECK(x_msg == msg.second);
         }
     }
