@@ -614,7 +614,8 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         // tau1 = (tau_x - tau2 * x^2 - z^2 * gamma) * x^-1 ... (D)
         //
         // since tau1 in (61) is tau1 (C) + msg2, by subtracting tau1 (C) from RHS of (D)
-        // you can extract msg2
+        // msg2 can be extracted
+        //
         Scalar msg2_scalar = ((tau_x - (tau2 * x.Square()) - (z.Square() * input_value0_gamma)) * x.Invert()) - tau1;
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
