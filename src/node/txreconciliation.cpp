@@ -101,11 +101,13 @@ public:
         LOCK(m_txreconciliation_mutex);
         auto recon_state = m_states.find(peer_id);
 
-        // A peer should be in the pre-registered state to proceed here.
-        if (recon_state == m_states.end()) return NOT_FOUND;
-        uint64_t* local_salt = std::get_if<uint64_t>(&recon_state->second);
-        // A peer is already registered. This should be checked by the caller.
-        Assume(local_salt);
+        if (recon_state == m_states.end()) return ReconciliationRegisterResult::NOT_FOUND;
+
+        if (std::holds_alternative<TxReconciliationState>(recon_state->second)) {
+            return ReconciliationRegisterResult::ALREADY_REGISTERED;
+        }
+
+        uint64_t local_salt = *std::get_if<uint64_t>(&recon_state->second);
 
         // If the peer supports the version which is lower than ours, we downgrade to the version
         // it supports. For now, this only guarantees that nodes with future reconciliation
@@ -114,14 +116,14 @@ public:
         // satisfactory (e.g. too low).
         const uint32_t recon_version{std::min(peer_recon_version, m_recon_version)};
         // v1 is the lowest version, so suggesting something below must be a protocol violation.
-        if (recon_version < 1) return PROTOCOL_VIOLATION;
+        if (recon_version < 1) return ReconciliationRegisterResult::PROTOCOL_VIOLATION;
 
         LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Register peer=%d (inbound=%i)\n",
                       peer_id, is_peer_inbound);
 
-        const uint256 full_salt{ComputeSalt(*local_salt, remote_salt)};
+        const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
         recon_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
-        return SUCCESS;
+        return ReconciliationRegisterResult::SUCCESS;
     }
 
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)

@@ -3510,24 +3510,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (m_txreconciliation->IsPeerRegistered(pfrom.GetId())) {
-            // A peer is already registered, meaning we already received SENDTXRCNCL from them.
-            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d (sendtxrcncl received from already registered peer); disconnecting\n", pfrom.GetId());
-            pfrom.fDisconnect = true;
-            return;
-        }
-
         uint32_t peer_txreconcl_version;
         uint64_t remote_salt;
         vRecv >> peer_txreconcl_version >> remote_salt;
 
         const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
                                                                                      peer_txreconcl_version, remote_salt);
-
-        // If it's a protocol violation, disconnect.
-        // If the peer was not found (but something unexpected happened) or it was registered,
-        // nothing to be done.
-        if (result == ReconciliationRegisterResult::PROTOCOL_VIOLATION) {
+        switch (result) {
+        case ReconciliationRegisterResult::NOT_FOUND:
+        case ReconciliationRegisterResult::SUCCESS:
+            break;
+        case ReconciliationRegisterResult::ALREADY_REGISTERED:
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d (sendtxrcncl received from already registered peer); disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        case ReconciliationRegisterResult::PROTOCOL_VIOLATION:
             LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;

@@ -16,10 +16,11 @@ static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
-enum ReconciliationRegisterResult {
-    NOT_FOUND = 0,
-    SUCCESS = 1,
-    PROTOCOL_VIOLATION = 2,
+enum class ReconciliationRegisterResult {
+    NOT_FOUND,
+    SUCCESS,
+    ALREADY_REGISTERED,
+    PROTOCOL_VIOLATION,
 };
 
 /**

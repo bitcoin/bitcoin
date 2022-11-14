@@ -33,6 +33,9 @@ BOOST_AUTO_TEST_CASE(RegisterPeerTest)
     BOOST_REQUIRE(tracker.RegisterPeer(1, true, 2, salt) == ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(1));
 
+    // Try registering for the second time.
+    BOOST_REQUIRE(tracker.RegisterPeer(1, false, 1, salt) == ReconciliationRegisterResult::ALREADY_REGISTERED);
+
     // Do not register if there were no pre-registration for the peer.
     BOOST_REQUIRE(tracker.RegisterPeer(100, true, 1, salt) == ReconciliationRegisterResult::NOT_FOUND);
     BOOST_CHECK(!tracker.IsPeerRegistered(100));
