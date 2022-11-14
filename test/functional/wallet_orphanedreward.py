@@ -37,17 +37,7 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # from the wallet can still be spent.
         self.nodes[0].invalidateblock(blk)
         self.generate(self.nodes[0], 152)
-        # Without the following abandontransaction call, the coins are
-        # not considered available yet.
-        assert_equal(self.nodes[1].getbalances()["mine"], {
-          "trusted": 0,
-          "untrusted_pending": 0,
-          "immature": 0,
-        })
-        # The following abandontransaction is necessary to make the later
-        # lines succeed, and probably should not be needed; see
-        # https://github.com/bitcoin/bitcoin/issues/14148.
-        self.nodes[1].abandontransaction(txid)
+        # We expect the descendants of orphaned rewards to no longer be considered
         assert_equal(self.nodes[1].getbalances()["mine"], {
           "trusted": 10,
           "untrusted_pending": 0,
