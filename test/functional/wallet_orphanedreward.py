@@ -31,19 +31,40 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # the existing balance and the block reward.
         self.generate(self.nodes[0], 150)
         assert_equal(self.nodes[1].getbalance(), 10 + 25)
+        pre_reorg_conf_bals = self.nodes[1].getbalances()
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 30)
+        orig_chain_tip = self.nodes[0].getbestblockhash()
+        self.sync_mempools()
 
         # Orphan the block reward and make sure that the original coins
         # from the wallet can still be spent.
         self.nodes[0].invalidateblock(blk)
-        self.generate(self.nodes[0], 152)
+        blocks = self.generate(self.nodes[0], 152)
+        conflict_block = blocks[0]
         # We expect the descendants of orphaned rewards to no longer be considered
         assert_equal(self.nodes[1].getbalances()["mine"], {
           "trusted": 10,
           "untrusted_pending": 0,
           "immature": 0,
         })
-        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 9)
+        # And the unconfirmed tx to be abandoned
+        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+
+        # The abandoning should persist through reloading
+        self.nodes[1].unloadwallet(self.default_wallet_name)
+        self.nodes[1].loadwallet(self.default_wallet_name)
+        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+
+        # If the orphaned reward is reorged back into the main chain, any unconfirmed
+        # descendant txs at the time of the original reorg remain abandoned.
+        self.nodes[0].invalidateblock(conflict_block)
+        self.nodes[0].reconsiderblock(blk)
+        assert_equal(self.nodes[0].getbestblockhash(), orig_chain_tip)
+        self.generate(self.nodes[0], 3)
+
+        assert_equal(self.nodes[1].getbalances(), pre_reorg_conf_bals)
+        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+
 
 if __name__ == '__main__':
     OrphanedBlockRewardTest().main()
