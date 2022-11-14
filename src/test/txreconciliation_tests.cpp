@@ -22,16 +22,20 @@ BOOST_AUTO_TEST_CASE(RegisterPeerTest)
     BOOST_CHECK(tracker.RegisterPeer(/*peer_id=*/0, /*is_peer_inbound=*/true,
                                      /*peer_recon_version=*/0, salt) == ReconciliationRegisterResult::PROTOCOL_VIOLATION);
 
-    // Valid registration.
+    // Valid registration (inbound and outbound peers).
     BOOST_REQUIRE(!tracker.IsPeerRegistered(0));
     BOOST_REQUIRE(tracker.RegisterPeer(0, true, 1, salt) == ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(0));
-
-    // Reconciliation version is higher than ours, should be able to register.
     BOOST_REQUIRE(!tracker.IsPeerRegistered(1));
     tracker.PreRegisterPeer(1);
-    BOOST_REQUIRE(tracker.RegisterPeer(1, true, 2, salt) == ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(tracker.RegisterPeer(1, false, 1, salt) == ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(1));
+
+    // Reconciliation version is higher than ours, should be able to register.
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(2));
+    tracker.PreRegisterPeer(2);
+    BOOST_REQUIRE(tracker.RegisterPeer(2, true, 2, salt) == ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(2));
 
     // Try registering for the second time.
     BOOST_REQUIRE(tracker.RegisterPeer(1, false, 1, salt) == ReconciliationRegisterResult::ALREADY_REGISTERED);

@@ -77,7 +77,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer.wait_for_verack()
         verack_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'verack'][0]
         sendtxrcncl_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'sendtxrcncl'][0]
-        assert(sendtxrcncl_index < verack_index)
+        assert sendtxrcncl_index < verack_index
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL on pre-WTXID version should not be sent')
@@ -120,6 +120,14 @@ class SendTxRcnclTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["txreconciliation protocol violation"]):
             peer.send_message(sendtxrcncl_low_version)
             peer.wait_for_disconnect()
+
+        self.log.info('SENDTXRCNCL with version=2 is valid')
+        sendtxrcncl_higher_version = create_sendtxrcncl_msg()
+        sendtxrcncl_higher_version.version = 2
+        peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
+        with self.nodes[0].assert_debug_log(['Register peer=6']):
+            peer.send_message(sendtxrcncl_higher_version)
+        self.nodes[0].disconnect_p2ps()
 
         self.log.info('sending SENDTXRCNCL after sending VERACK triggers a disconnect')
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
