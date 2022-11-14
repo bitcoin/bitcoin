@@ -50,13 +50,13 @@ public:
     Scalar operator^(const Scalar& b) const;
     Scalar operator&(const Scalar& b) const;
     Scalar operator~() const;
-    Scalar operator<<(unsigned int shift) const;
-    Scalar operator>>(unsigned int shift) const;
+    Scalar operator<<(const uint32_t& shift) const;
+    Scalar operator>>(const uint32_t& shift) const;
 
     bool operator==(const Scalar& b) const;
-    bool operator==(const int& b) const;
+    bool operator==(const int32_t& b) const;
     bool operator!=(const Scalar& b) const;
-    bool operator!=(const int& b) const;
+    bool operator!=(const int32_t& b) const;
 
     bool IsValid() const;
 
@@ -66,7 +66,7 @@ public:
     Scalar Cube() const;
     Scalar Pow(const Scalar& n) const;
 
-    static Scalar Rand(bool exclude_zero = false);
+    static Scalar Rand(const bool exclude_zero = false);
 
     uint64_t GetUint64() const;
 
@@ -76,32 +76,32 @@ public:
     /**
      * Sets 2^n to the instance
      */
-    void SetPow2(int n);
+    void SetPow2(const uint32_t& n);
 
     uint256 GetHashWithSalt(const uint64_t& salt) const;
 
-    std::string GetString(const int8_t radix = 16) const;
+    std::string GetString(const int8_t& radix = 16) const;
 
     /**
      * extracts a specified bit of 32-byte serialization result
      */
-    bool GetSeriBit(uint8_t n) const;
+    bool GetSeriBit(const uint8_t& n) const;
 
     /**
-     * extracts a binary representation of the integer represented bu m_fr
+     * returns the binary representation m_fr
      */
-    std::vector<bool> RepresentInBits() const;
+    std::vector<bool> ToBinaryVec() const;
 
     unsigned int GetSerializeSize() const;
 
     template <typename Stream>
-    void Serialize(Stream& s) const
+    void Serialize(const Stream& s) const
     {
         ::Serialize(s, GetVch());
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s)
+    void Unserialize(const Stream& s)
     {
         std::vector<uint8_t> vch;
         ::Unserialize(s, vch);
