@@ -236,8 +236,6 @@ static void RunTestCase(
     RangeProof& rp,
     TestCase& test_case
 ) {
-    printf(" Test case '%s'\n", test_case.name.c_str());
-
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
 
@@ -290,11 +288,9 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 {
     auto test_cases = BuildTestCases();
     RangeProof rp;
-    printf("====> Started running range proof prove/verify/recovery tests\n");
     for (auto test_case: test_cases) {
         RunTestCase(rp, test_case);
     }
-    printf("====> Done\n");
 }
 
 BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
