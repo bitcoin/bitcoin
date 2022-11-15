@@ -22,6 +22,7 @@
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util/net.h>
 #include <test/util/net.h>
 #include <uint256.h>
 #include <version.h>
@@ -282,8 +283,6 @@ inline void SetFuzzedErrNo(FuzzedDataProvider& fuzzed_data_provider) noexcept
     }
     return result;
 }
-
-CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
