@@ -392,7 +392,7 @@ G1Point RangeProof::VerifyProofs(
     Scalars gi_exps(max_mn, 0);
     Scalars hi_exps(max_mn, 0);
 
-    //G1Point G = gens.G.get();
+    G1Point G = gens.G.get();
     G1Point H = gens.H;
 
     for (const ProofWithTranscript& p: proof_transcripts) {
