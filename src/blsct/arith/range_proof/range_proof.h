@@ -112,8 +112,8 @@ public:
 
 private:
     // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
+    // these variables are meant to be constant. do not make changes after initialization.
     static GeneratorsFactory* m_gf;
-
     static Scalar* m_one;
     static Scalar* m_two;
     static Scalars* m_two_pows_64;

@@ -291,7 +291,6 @@ static void RunTestCase(
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 {
     auto test_cases = BuildTestCases();
