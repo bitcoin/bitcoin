@@ -74,7 +74,7 @@ bool RangeProof::InnerProductArgument(
     G1Points& Gi,
     G1Points& Hi,
     const G1Point& u,
-    const Scalar& cx_factor,  // factor to multiply to cL and cR
+    const Scalar& cx_factor,  // factor to multiply with cL and cR
     Scalars& a,
     Scalars& b,
     const Scalar& y,
@@ -216,10 +216,10 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     // (43)-(44)
     // Commitment to aL and aR (obfuscated with alpha)
 
-    // trim message to first 23 bytes if needed
+    // part of the message up to Config::m_message_1_max_size
     Scalar msg1(
-        message.size() > 23 ?
-            std::vector<uint8_t>(message.begin(), message.begin() + 23) :
+        message.size() > Config::m_message_1_max_size ?
+            std::vector<uint8_t>(message.begin(), message.begin() + Config::m_message_1_max_size) :
             message
     );
     // message followed by 64-bit vs[0]
@@ -288,10 +288,10 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalar tau1 = nonce.GetHashWithSalt(3);
     Scalar tau2 = nonce.GetHashWithSalt(4);
 
-    // if message exceeds 23 bytes, treat the part after 23rd byte as msg2
+    // part of the message after Config::m_message_1_max_size
     Scalar msg2 = Scalar({
-        message.size() > 23 ?
-            std::vector<uint8_t>(message.begin() + 23, message.end()) :
+        message.size() > Config::m_message_1_max_size ?
+            std::vector<uint8_t>(message.begin() + Config::m_message_1_max_size, message.end()) :
             std::vector<uint8_t>()
     });
     tau1 = tau1 + msg2;

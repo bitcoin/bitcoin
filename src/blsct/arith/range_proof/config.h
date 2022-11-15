@@ -25,6 +25,9 @@ public:
     // maximum # of input values
     inline static const size_t m_max_input_values = 16;
 
+    // maximum size of the first half of the message
+    inline static const size_t m_message_1_max_size = 23;
+
     // 23 and 31 bytes for message 1 and message 2 respectively
     inline static const size_t m_max_message_size = 54;
 
