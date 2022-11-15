@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/arith/range_proof/lazy_g1point.h>
 #include <blsct/arith/range_proof/proof.h>
 #include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/arith/range_proof/lazy_g1point.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
 #include <tinyformat.h>
@@ -384,7 +386,7 @@ G1Point RangeProof::VerifyProofs(
     const Generators& gens,
     const size_t& max_mn
 ) const {
-    G1Points points;
+    LazyG1Points points;
     Scalar h_pos_exp = 0;
     Scalar g_neg_exp = 0;
     Scalar h_neg_exp = 0;
@@ -427,20 +429,20 @@ G1Point RangeProof::VerifyProofs(
 
         // V^(z^2) in RHS (65)
         for (size_t i = 0; i < p.proof.Vs.Size(); ++i) {
-            points.Add(p.proof.Vs[i] * (z_pows_from_2[i] * weight_y));  // multiply z^2, z^3, ...
+            points.Add(LazyG1Point(p.proof.Vs[i], z_pows_from_2[i] * weight_y));  // multiply z^2, z^3, ...
         }
 
         // T1^x and T2^(x^2) in RHS (65)
-        points.Add(p.proof.T1 * (p.x * weight_y));  // T1^x
-        points.Add(p.proof.T2 * (p.x.Square() * weight_y));  // T2^(x^2)
+        points.Add(LazyG1Point(p.proof.T1, p.x * weight_y));  // T1^x
+        points.Add(LazyG1Point(p.proof.T2, p.x.Square() * weight_y));  // T2^(x^2)
 
         //////// (66)
         // P = A * S^x * g^(-z) * (h')^(z * y^n + z^2 * 2^n)
         // exponents of g and (h') are created in a loop later
 
         // A and S^x in RHS (66)
-        points.Add(p.proof.A * weight_z); // A
-        points.Add(p.proof.S * (p.x * weight_z));  // S^x
+        points.Add(LazyG1Point(p.proof.A, weight_z)); // A
+        points.Add(LazyG1Point(p.proof.S, p.x * weight_z));  // S^x
 
         //////// (67), (68)
 
@@ -489,22 +491,22 @@ G1Point RangeProof::VerifyProofs(
 
         // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
         for (size_t i = 0; i < p.proof.num_rounds; ++i) {
-            points.Add(p.proof.Ls[i] * (p.xs[i].Square() * weight_z));
-            points.Add(p.proof.Rs[i] * (p.inv_xs[i].Square() * weight_z));
+            points.Add(LazyG1Point(p.proof.Ls[i], p.xs[i].Square() * weight_z));
+            points.Add(LazyG1Point(p.proof.Rs[i], p.inv_xs[i].Square() * weight_z));
         }
 
         g_pos_exp = g_pos_exp + ((p.proof.t_hat - p.proof.a * p.proof.b) * p.cx_factor * weight_z);
     }
     // generate points from aggregated exponents from G, H, Gi and Hi generators
-    points.Add(G * (g_pos_exp - g_neg_exp));
-    points.Add(H * (h_pos_exp - h_neg_exp));
+    points.Add(LazyG1Point(G, g_pos_exp - g_neg_exp));
+    points.Add(LazyG1Point(H, h_pos_exp - h_neg_exp));
 
     auto Gi = gens.GetGiSubset(max_mn);
     auto Hi = gens.GetHiSubset(max_mn);
 
     for (size_t i = 0; i < max_mn; ++i) {
-        points.Add(Gi[i] * gi_exps[i]);
-        points.Add(Hi[i] * hi_exps[i]);
+        points.Add(LazyG1Point(Gi[i], gi_exps[i]));
+        points.Add(LazyG1Point(Hi[i], hi_exps[i]));
     }
 
     // should be aggregated to zero if proofs are all valid
