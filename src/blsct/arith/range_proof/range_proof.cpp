@@ -93,14 +93,16 @@ bool RangeProof::InnerProductArgument(
         Scalar cL = (a.To(n) * b.From(n)).Sum();
         Scalar cR = (a.From(n) * b.To(n)).Sum();
 
-        G1Point L =
-            (Gi.From(n) * a.To(n)).Sum() +
-            (Hi.To(n) * (rounds == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n))).Sum() +
-            (u * cL * cx_factor);
-        G1Point R =
-            (Gi.To(n) * a.From(n)).Sum() +
-            (Hi.From(n) * (rounds == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n))).Sum() +
-            (u * cR * cx_factor);
+        G1Point L = (
+            LazyG1Points(Gi.From(n), a.To(n)) +
+            LazyG1Points(Hi.To(n), rounds == 0 ? b.From(n) * y_inv_pows.To(n) : b.From(n)) +
+            LazyG1Point(u, cL * cx_factor)
+        ).Sum();
+        G1Point R = (
+            LazyG1Points(Gi.To(n), a.From(n)) +
+            LazyG1Points(Hi.From(n), rounds == 0 ? b.To(n) * y_inv_pows.From(n) : b.To(n)) +
+            LazyG1Point(u, cR * cx_factor)
+        ).Sum();
         proof.Ls.Add(L);
         proof.Rs.Add(R);
 

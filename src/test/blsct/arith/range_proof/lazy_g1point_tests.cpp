@@ -46,4 +46,35 @@ BOOST_AUTO_TEST_CASE(test_lazy_g1points_sum)
     BOOST_CHECK(sum == lazy_sum);
 }
 
+BOOST_AUTO_TEST_CASE(test_lazy_g1points_add_lazy_g1points_to_lazy_g1points)
+{
+    auto g = LazyG1Point(G1Point::GetBasePoint(), 1);
+    auto g2 = LazyG1Point(G1Point::GetBasePoint(), 2);
+
+    LazyG1Points ps1, ps2, ps3;
+    ps1.Add(g);
+    ps2.Add(g2);
+
+    ps3.Add(g);
+    ps3.Add(g2);
+
+    BOOST_CHECK(ps3.Sum() == (ps1 + ps2).Sum());
+}
+
+BOOST_AUTO_TEST_CASE(test_lazy_g1points_add_lazy_g1points_to_lazy_g1point)
+{
+    auto g = LazyG1Point(G1Point::GetBasePoint(), 1);
+    auto g2 = LazyG1Point(G1Point::GetBasePoint(), 2);
+
+    LazyG1Points ps1;
+    ps1.Add(g);
+    auto ps2 = ps1 + g2;
+
+    LazyG1Points ps3;
+    ps3.Add(g);
+    ps3.Add(g2);
+
+    BOOST_CHECK(ps3.Sum() == ps2.Sum());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
