@@ -264,7 +264,7 @@ template <typename T>
 Elements<T> Elements<T>::From(const size_t from_index) const
 {
     if (from_index >= Size()) {
-        throw std::runtime_error("from index out of range");
+        throw std::runtime_error("'From' index out of range");
     }
 
     Elements<T> ret;
@@ -280,7 +280,7 @@ template <typename T>
 Elements<T> Elements<T>::To(const size_t to_index) const
 {
     if (to_index > Size()) {
-        throw std::runtime_error("to index out of range");
+        throw std::runtime_error("'To' index out of range");
     }
 
     Elements<T> ret;

@@ -16,20 +16,27 @@
 
 struct Generators {
 public:
-    Generators(G1Point& G, G1Point&H, G1Points& Gi, G1Points& Hi): G{G}, H{H}, Gi{Gi}, Hi{Hi} {}
-    G1Points GetGi() const;
-    G1Points GetHi() const;
+    Generators(G1Point& H, G1Point& G, G1Points& Gi, G1Points& Hi): H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
     G1Points GetGiSubset(const size_t& size) const;
     G1Points GetHiSubset(const size_t& size) const;
 
-    std::reference_wrapper<G1Point> G;
-    G1Point H;
+    std::reference_wrapper<G1Point> H;
+    G1Point G;
 
 private:
     std::reference_wrapper<G1Points> Gi;
     std::reference_wrapper<G1Points> Hi;
 };
 
+/**
+ * token_id dependent:
+ * - G generator is derived from token_id
+ *
+ * Static:
+ * - H generator points to the base point
+ * - Gi and Hi generators are derived from the base point
+ *   and the default token_id at initialization time
+ */
 class GeneratorsFactory
 {
 public:
@@ -37,17 +44,17 @@ public:
     Generators GetInstance(const TokenId& token_id);
 
 private:
-    G1Point GetGenerator(
+    G1Point DeriveGenerator(
         const G1Point& p,
         const size_t index,
         const TokenId& token_id
     );
 
-    // H generator is created for each instance and cached
-    inline static std::map<const TokenId, const G1Point> m_H_cache;
+    // G generators are cached
+    inline static std::map<const TokenId, const G1Point> m_G_cache;
 
     // made optional to initialize values lazily after mcl initialization
-    inline static std::optional<G1Point> m_G;
+    inline static std::optional<G1Point> m_H;
     inline static std::optional<G1Points> m_Gi;
     inline static std::optional<G1Points> m_Hi;
 

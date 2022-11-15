@@ -178,8 +178,8 @@ Proof RangeProof::Prove(
     Generators gens = m_gf->GetInstance(token_id);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
-    auto H = gens.H;
-    auto G = gens.G.get();
+    auto H = gens.H.get();
+    auto G = gens.G;
 
     // This hash is updated for Fiat-Shamir throughout the proof
     CHashWriter transcript_gen(0, 0);
@@ -396,8 +396,8 @@ G1Point RangeProof::VerifyProofs(
     Scalars gi_exps(max_mn, 0);
     Scalars hi_exps(max_mn, 0);
 
-    G1Point G = gens.G.get();
-    G1Point H = gens.H;
+    G1Point G = gens.G;
+    G1Point H = gens.H.get();
 
     for (const ProofWithTranscript& p: proof_transcripts) {
         Scalar weight_y = Scalar::Rand();
@@ -555,8 +555,8 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
 
     for (const AmountRecoveryRequest& req: reqs) {
         const Generators gens = m_gf->GetInstance(token_id);
-        G1Point G = gens.G.get();
-        G1Point H = gens.H;
+        G1Point G = gens.G;
+        G1Point H = gens.H.get();
 
         // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
