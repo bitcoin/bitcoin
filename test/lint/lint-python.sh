@@ -98,7 +98,7 @@ fi
 
 PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
     if [[ $# == 0 ]]; then
-        git ls-files "*.py"
+        git ls-files "*.py" | grep -vE "src/(immer)/"
     else
         echo "$@"
     fi
