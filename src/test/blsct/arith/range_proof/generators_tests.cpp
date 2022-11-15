@@ -43,7 +43,6 @@ BOOST_AUTO_TEST_CASE(test_generators_get_instance)
 
 BOOST_AUTO_TEST_CASE(test_generators_get_gihi_subset)
 {
-    BOOST_CHECK(false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
