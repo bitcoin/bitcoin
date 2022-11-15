@@ -198,6 +198,9 @@ static RPCHelpMan syscoincreaterawnevmblob()
     EnsureWalletIsUnlocked(*pwallet);
     CNEVMData nevmData;
     std::vector<uint8_t> vchData = ParseHex(request.params[1].get_str());
+    if(vchData.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
+    }
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
@@ -255,6 +258,9 @@ static RPCHelpMan syscoincreatenevmblob()
 
     EnsureWalletIsUnlocked(*pwallet);
     const valtype &vchData = ParseHex(request.params[0].get_str());
+    if(vchData.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
+    }
     bool bOverwrite{false};
     if(request.params.size() > 1) {
         bOverwrite = request.params[1].get_bool();
