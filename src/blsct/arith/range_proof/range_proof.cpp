@@ -477,8 +477,8 @@ G1Point RangeProof::VerifyProofs(
             // ** z * y^n in (h')^(z * y^n + z^2 * 2^n) (66)
             hi_exp = hi_exp - (tmp + p.z * y_pow) * y_inv_pow;
 
-            gi_exps.Set(i, gi_exps[i] - (gi_exp * weight_z));  // (16) g^a moved to LHS
-            hi_exps.Set(i, hi_exps[i] - (hi_exp * weight_z));  // (16) h^b moved to LHS
+            gi_exps[i] = gi_exps[i] - (gi_exp * weight_z);  // (16) g^a moved to LHS
+            hi_exps[i] = hi_exps[i] - (hi_exp * weight_z);  // (16) h^b moved to LHS
 
             // update y_pow and y_inv_pow to the next power
             y_inv_pow = y_inv_pow * p.inv_y;

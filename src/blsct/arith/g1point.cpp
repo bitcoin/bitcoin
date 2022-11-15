@@ -209,7 +209,7 @@ void G1Point::SetVch(const std::vector<uint8_t>& b)
     }
 }
 
-std::string G1Point::GetString(const int& radix) const
+std::string G1Point::GetString(const uint8_t& radix) const
 {
     char str[1024];
     if (mclBnG1_getStr(str, sizeof(str), &m_p, radix) == 0) {

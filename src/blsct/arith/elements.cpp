@@ -28,12 +28,20 @@ template Scalar Elements<Scalar>::Sum() const;
 template G1Point Elements<G1Point>::Sum() const;
 
 template <typename T>
-T Elements<T>::operator[](int index) const
+T& Elements<T>::operator[](const uint32_t& index)
 {
     return m_vec[index];
 }
-template Scalar Elements<Scalar>::operator[](int) const;
-template G1Point Elements<G1Point>::operator[](int) const;
+template Scalar& Elements<Scalar>::operator[](const uint32_t&);
+template G1Point& Elements<G1Point>::operator[](const uint32_t&);
+
+template <typename T>
+T Elements<T>::operator[](const uint32_t& index) const
+{
+    return m_vec[index];
+}
+template Scalar Elements<Scalar>::operator[](const uint32_t&) const;
+template G1Point Elements<G1Point>::operator[](const uint32_t&) const;
 
 template <typename T>
 size_t Elements<T>::Size() const
@@ -52,12 +60,12 @@ template bool Elements<Scalar>::Empty() const;
 template bool Elements<G1Point>::Empty() const;
 
 template <typename T>
-void Elements<T>::Add(const T x)
+void Elements<T>::Add(const T& x)
 {
     m_vec.push_back(x);
 }
-template void Elements<Scalar>::Add(const Scalar);
-template void Elements<G1Point>::Add(const G1Point);
+template void Elements<Scalar>::Add(const Scalar&);
+template void Elements<G1Point>::Add(const G1Point&);
 
 template <typename T>
 inline void Elements<T>::ConfirmSizesMatch(const size_t& other_size) const
@@ -328,11 +336,3 @@ Elements<T> Elements<T>::Negate() const
     }
 }
 template Elements<Scalar> Elements<Scalar>::Negate() const;
-
-template <typename T>
-void Elements<T>::Set(int index, T v)
-{
-    m_vec[index] = v;
-}
-template void Elements<Scalar>::Set(int, Scalar);
-template void Elements<G1Point>::Set(int, G1Point);

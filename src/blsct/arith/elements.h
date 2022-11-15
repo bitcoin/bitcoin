@@ -33,10 +33,11 @@ public:
     Elements(const size_t& size, const T& default_value);
 
     T Sum() const;
-    T operator[](int index) const;
+    T& operator[](const uint32_t& index);
+    T operator[](const uint32_t& index) const;
     size_t Size() const;
     bool Empty() const;
-    void Add(const T x);
+    void Add(const T& x);
 
     void ConfirmSizesMatch(const size_t& other_size) const;
     static Elements<T> FirstNPow(const Scalar& k, const size_t& n, const size_t& from_index = 0);
@@ -102,8 +103,6 @@ public:
      * Negate each contained elements
      */
     Elements<T> Negate() const;
-
-    void Set(int index, T v);
 
     std::vector<T> m_vec;
 };
