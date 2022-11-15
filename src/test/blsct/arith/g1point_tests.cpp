@@ -269,26 +269,6 @@ BOOST_AUTO_TEST_CASE(test_g1point_hash_and_map)
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_mulvec_mcl)
-{
-    auto base_point = G1Point::GetBasePoint();
-    mclBnG1 p1, p2;
-    p1 = base_point.m_p;
-    mclBnG1_dbl(&p2, &p1);
-    std::vector<mclBnG1> ps { p1, p2 };
-
-    mclBnFr s1, s2;
-    mclBnFr_setInt(&s1, 2);
-    mclBnFr_setInt(&s2, 3);
-    std::vector<mclBnFr> ss { s1, s2 };
-
-    // p should be G^2 + (G+G)^3 = G^8
-    auto p = G1Point::MulVec(ps, ss);
-    auto q = base_point * 8;
-
-    BOOST_CHECK(p == q);
-}
-
 BOOST_AUTO_TEST_CASE(test_g1point_rand)
 {
     unsigned int num_tries = 1000;

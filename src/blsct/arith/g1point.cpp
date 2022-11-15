@@ -154,19 +154,6 @@ G1Point G1Point::HashAndMap(const std::vector<uint8_t>& vec)
     return temp;
 }
 
-G1Point G1Point::MulVec(const std::vector<mclBnG1>& g_vec, const std::vector<mclBnFr>& s_vec)
-{
-    if (g_vec.size() != s_vec.size()) {
-        throw std::runtime_error("G1Point::MulVec(): sizes of g_vec and s_vec must be equial");
-    }
-
-    G1Point ret;
-    const auto vec_count = g_vec.size();
-    mclBnG1_mulVec(&ret.m_p, g_vec.data(), s_vec.data(), vec_count);
-
-    return ret;
-}
-
 bool G1Point::operator==(const G1Point& b) const
 {
     return mclBnG1_isEqual(&m_p, &b.m_p);
