@@ -502,4 +502,39 @@ BOOST_AUTO_TEST_CASE(test_elements_negate)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_elements_get_via_index_operator)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+        Scalars xs(std::vector<Scalar> { one, two });
+        BOOST_CHECK(xs[0] == one);
+        BOOST_CHECK(xs[1] == two);
+        BOOST_CHECK_THROW(xs[2], std::runtime_error);
+    }
+    {
+        auto g = G1Point::GetBasePoint();
+        auto g2 = g + g;
+        G1Points xs(std::vector<G1Point> { g, g2 });
+        BOOST_CHECK(xs[0] == g);
+        BOOST_CHECK(xs[1] == g2);
+        BOOST_CHECK_THROW(xs[2], std::runtime_error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_elements_set_via_index_operator)
+{
+    {
+        Scalar one(1);
+        Scalar two(2);
+        Scalar three(3);
+        Scalars xs(2, Scalar(0));
+        xs[0] = one;
+        xs[1] = two;
+        BOOST_CHECK_NO_THROW(xs[0] = one);
+        BOOST_CHECK_NO_THROW(xs[1] = two);
+        BOOST_CHECK_THROW(xs[2] = three, std::runtime_error);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

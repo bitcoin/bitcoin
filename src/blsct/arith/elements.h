@@ -39,6 +39,7 @@ public:
     bool Empty() const;
     void Add(const T& x);
 
+    void ConfirmIndexInsideRange(const uint32_t& index) const;
     void ConfirmSizesMatch(const size_t& other_size) const;
     static Elements<T> FirstNPow(const Scalar& k, const size_t& n, const size_t& from_index = 0);
     static Elements<T> RepeatN(const T& k, const size_t& n);
