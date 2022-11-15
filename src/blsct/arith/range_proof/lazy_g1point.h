@@ -5,6 +5,7 @@
 #ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_LAZY_G1POINT_H
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_LAZY_G1POINT_H
 
+#include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/scalar.h>
 
@@ -18,8 +19,14 @@ public:
 
 struct LazyG1Points {
 public:
+    LazyG1Points() {}
+    LazyG1Points(const G1Points& bases, const Scalars& exps);
+
     void Add(const LazyG1Point& point);
     G1Point Sum() const;
+
+    LazyG1Points operator+(const LazyG1Points& rhs) const;
+    LazyG1Points operator+(const LazyG1Point& rhs) const;
 
 private:
     std::vector<LazyG1Point> points;

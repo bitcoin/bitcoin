@@ -10,7 +10,24 @@
 
 BOOST_FIXTURE_TEST_SUITE(lazy_g1point_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_lazy_g1point_mulvec_mcl)
+BOOST_AUTO_TEST_CASE(test_lazy_g1points_ctor)
+{
+    auto g = G1Point::GetBasePoint();
+    auto g2 = g + g;
+
+    LazyG1Points points1(
+        std::vector<G1Point> { g, g2 },
+        std::vector<Scalar> { 1, 2 }
+    );
+
+    LazyG1Points points2;
+    points2.Add(LazyG1Point(g, 1));
+    points2.Add(LazyG1Point(g, 2));
+
+    BOOST_CHECK(points1.Sum() == points1.Sum());
+}
+
+BOOST_AUTO_TEST_CASE(test_lazy_g1points_sum)
 {
     auto lazy_g = LazyG1Point(G1Point::GetBasePoint(), 1);
     auto lazy_g2 = LazyG1Point(G1Point::GetBasePoint(), 2);

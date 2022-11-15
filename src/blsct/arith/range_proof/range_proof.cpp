@@ -231,7 +231,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     alpha = alpha + msg1_v0;
 
     // Using generator H for alpha following the paper
-    proof.A = (H * alpha) + (Gi * aL).Sum() + (Hi * aR).Sum();
+    proof.A = (LazyG1Points(Gi, aL) + LazyG1Points(Hi, aR) + LazyG1Point(H, alpha)).Sum();
 
     // (45)-(47)
     // Commitment to blinding vectors sL and sR (obfuscated with rho)
@@ -240,7 +240,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     auto rho = nonce.GetHashWithSalt(2);
     // Using generator H for alpha following the paper
-    proof.S = (H * rho) + (Gi * sL).Sum() + (Hi * sR).Sum();
+    proof.S = (LazyG1Points(Gi, sL) + LazyG1Points(Hi, sR) + LazyG1Point(H, rho)).Sum();
 
     // (48)-(50)
     transcript_gen << proof.A;
