@@ -2205,7 +2205,7 @@ static RPCHelpMan scantxoutset()
         result.pushKV("unspents", unspents);
         result.pushKV("total_amount", ValueFromAmount(total_in));
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));
     }
     return result;
 },
@@ -2402,7 +2402,7 @@ static RPCHelpMan scanblocks()
         ret.pushKV("relevant_blocks", blocks);
     }
     else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));
     }
     return ret;
 },
