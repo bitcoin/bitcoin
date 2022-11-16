@@ -612,7 +612,6 @@ private:
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
     std::vector<std::byte> vchBuf; //!< the buffer
 
-protected:
     //! read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
@@ -628,6 +627,28 @@ protected:
         }
         nSrcPos += nBytes;
         return true;
+    }
+
+    //! Advance the stream's read pointer (m_read_pos) by up to 'length' bytes,
+    //! filling the buffer from the file so that at least one byte is available.
+    //! Return a pointer to the available buffer data and the number of bytes
+    //! (which may be less than the requested length) that may be accessed
+    //! beginning at that pointer.
+    std::pair<std::byte*, size_t> AdvanceStream(size_t length)
+    {
+        assert(m_read_pos <= nSrcPos);
+        if (m_read_pos + length > nReadLimit) {
+            throw std::ios_base::failure("Attempt to position past buffer limit");
+        }
+        // If there are no bytes available, read from the file.
+        if (m_read_pos == nSrcPos && length > 0) Fill();
+
+        size_t buffer_offset{static_cast<size_t>(m_read_pos % vchBuf.size())};
+        size_t buffer_available{static_cast<size_t>(vchBuf.size() - buffer_offset)};
+        size_t bytes_until_source_pos{static_cast<size_t>(nSrcPos - m_read_pos)};
+        size_t advance{std::min({length, buffer_available, bytes_until_source_pos})};
+        m_read_pos += advance;
+        return std::make_pair(&vchBuf[buffer_offset], advance);
     }
 
 public:
@@ -667,22 +688,19 @@ public:
     //! read a number of bytes
     void read(Span<std::byte> dst)
     {
-        if (dst.size() + m_read_pos > nReadLimit) {
-            throw std::ios_base::failure("Read attempted past buffer limit");
-        }
         while (dst.size() > 0) {
-            if (m_read_pos == nSrcPos)
-                Fill();
-            unsigned int pos = m_read_pos % vchBuf.size();
-            size_t nNow = dst.size();
-            if (nNow + pos > vchBuf.size())
-                nNow = vchBuf.size() - pos;
-            if (nNow + m_read_pos > nSrcPos)
-                nNow = nSrcPos - m_read_pos;
-            memcpy(dst.data(), &vchBuf[pos], nNow);
-            m_read_pos += nNow;
-            dst = dst.subspan(nNow);
+            auto [buffer_pointer, length]{AdvanceStream(dst.size())};
+            memcpy(dst.data(), buffer_pointer, length);
+            dst = dst.subspan(length);
         }
+    }
+
+    //! Move the read position ahead in the stream to the given position.
+    //! Use SetPos() to back up in the stream, not SkipTo().
+    void SkipTo(const uint64_t file_pos)
+    {
+        assert(file_pos >= m_read_pos);
+        while (m_read_pos < file_pos) AdvanceStream(file_pos - m_read_pos);
     }
 
     //! return the current reading position
