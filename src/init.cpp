@@ -97,7 +97,6 @@
 #ifndef WIN32
 #include <cerrno>
 #include <signal.h>
-#include <sys/stat.h>
 #endif
 
 #include <boost/signals2/signal.hpp>
@@ -801,9 +800,6 @@ bool AppInitBasicSetup(const ArgsManager& args)
     }
 
 #ifndef WIN32
-    if (!args.GetBoolArg("-sysperms", false)) {
-        umask(077);
-    }
 
     // Clean shutdown on SIGTERM
     registerSignalHandler(SIGTERM, HandleSIGTERM);

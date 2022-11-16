@@ -31,6 +31,10 @@
 #include <functional>
 #include <optional>
 
+#ifndef WIN32
+#include <sys/stat.h>
+#endif
+
 using node::NodeContext;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -150,6 +154,12 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     std::any context{&node};
     try
     {
+#ifndef WIN32
+        // Set the umask before acessing config files, otherwise they might be created with incorrect permissions.
+        if (!args.GetBoolArg("-sysperms", false)) {
+            umask(077);
+        }
+#endif
         if (!CheckDataDirOption()) {
             return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""))));
         }
