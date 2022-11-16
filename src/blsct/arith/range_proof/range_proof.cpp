@@ -617,7 +617,7 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         std::vector<uint8_t> msg2 = msg2_scalar.GetVch(true);
 
         RecoveredAmount recovered_amount(
-            req.index,
+            req.id,
             input_value0.GetUint64(),
             input_value0_gamma,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())

@@ -19,7 +19,7 @@
 
 struct AmountRecoveryRequest
 {
-    size_t index;
+    size_t id;
     Scalar x;
     Scalar z;
     G1Points Vs;
@@ -35,13 +35,13 @@ struct AmountRecoveryRequest
 struct RecoveredAmount
 {
     RecoveredAmount(
-        const size_t& index,
+        const size_t& id,
         const CAmount& amount,
         const Scalar& gamma,
         const std::string& message
-    ): index{index}, amount{amount}, gamma{gamma}, message{message} {}
+    ): id{id}, amount{amount}, gamma{gamma}, message{message} {}
 
-    size_t index;
+    size_t id;
     CAmount amount;
     Scalar gamma;
     std::string message;
