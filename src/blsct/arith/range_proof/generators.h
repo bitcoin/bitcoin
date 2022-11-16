@@ -16,7 +16,9 @@
 
 struct Generators {
 public:
-    Generators(G1Point& H, G1Point& G, G1Points& Gi, G1Points& Hi): H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
+    Generators(
+        G1Point& H, G1Point& G, G1Points& Gi, G1Points& Hi
+    ): H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
     G1Points GetGiSubset(const size_t& size) const;
     G1Points GetHiSubset(const size_t& size) const;
 
@@ -29,13 +31,28 @@ private:
 };
 
 /**
- * token_id dependent:
+ * Dependent on token_id:
  * - G generator is derived from token_id
  *
  * Static:
  * - H generator points to the base point
  * - Gi and Hi generators are derived from the base point
  *   and the default token_id at initialization time
+ *
+ * Reason for assigning the base point to H:
+ *
+ * On the bulletproofs paper, G is used for amounts and H is used
+ * for randomness. Our Bulletproofs code follows the convension for
+ * readbility.
+ *
+ * Upon checking if a tx is valid, the total of the value commitments
+ * of tx input and output are calculated. The total becomes zero when
+ * the tx is valid and that clears the G term. The remaining term will
+ * be H^Sum(randomness).
+ *
+ * By assigning the base point to H, we are making the remaining term
+ * the public key whose private key is Sum(randomness). That will be
+ * used later for signature verification.
  */
 class GeneratorsFactory
 {
