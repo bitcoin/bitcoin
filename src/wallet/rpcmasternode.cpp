@@ -28,7 +28,10 @@ static RPCHelpMan masternode_outputs()
     std::vector<wallet::COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
-        vPossibleCoins = AvailableCoins(*pwallet, nullptr, /*feerate=*/ std::nullopt, nMNCollateralRequired, nMNCollateralRequired).All();
+        CoinFilterParams coins_params;
+        coins_params.min_amount = nMNCollateralRequired;
+        coins_params.max_amount = nMNCollateralRequired;
+        vPossibleCoins = AvailableCoins(*pwallet, nullptr, /*feerate=*/ std::nullopt, coins_params).All();
     }
 
     UniValue objArr(UniValue::VARR);
