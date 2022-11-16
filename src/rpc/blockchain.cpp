@@ -2891,7 +2891,7 @@ static RPCHelpMan getblocklocations()
                     },
                 },
                 RPCExamples{
-                    HelpExampleCli("getblocklocation", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 10")
+                    HelpExampleCli("getblocklocations", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 10")
                 },
                 [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
 
