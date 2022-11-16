@@ -7,6 +7,7 @@
 #include <rpc/mempool.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <txmempool_entry.h>
 
 #include <univalue.h>
 

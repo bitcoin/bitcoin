@@ -7,7 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
-#include <txmempool.h>
+#include <txmempool_entry.h>
 
 #include <limits>
 
