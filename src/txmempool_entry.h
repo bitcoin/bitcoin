@@ -6,8 +6,13 @@
 #define BITCOIN_TXMEMPOOL_ENTRY_H
 
 #include <consensus/amount.h>
+#include <consensus/validation.h>
+#include <core_memusage.h>
+#include <policy/policy.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <util/epochguard.h>
+#include <util/overflow.h>
 
 #include <chrono>
 #include <functional>
@@ -77,14 +82,14 @@ private:
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
-    LockPoints lockPoints;     //!< Track the height and time at which tx was final
+    LockPoints lockPoints;          //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
     uint64_t nCountWithDescendants{1}; //!< number of descendant transactions
-    uint64_t nSizeWithDescendants;   //!< ... and size
-    CAmount nModFeesWithDescendants; //!< ... and total fees (all including us)
+    uint64_t nSizeWithDescendants;     //!< ... and size
+    CAmount nModFeesWithDescendants;   //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
     uint64_t nCountWithAncestors{1};
@@ -96,12 +101,30 @@ public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height,
                     bool spends_coinbase,
-                    int64_t sigops_cost, LockPoints lp);
+                    int64_t sigops_cost, LockPoints lp)
+        : tx{tx},
+          nFee{fee},
+          nTxWeight(GetTransactionWeight(*tx)),
+          nUsageSize{RecursiveDynamicUsage(tx)},
+          nTime{time},
+          entryHeight{entry_height},
+          spendsCoinbase{spends_coinbase},
+          sigOpCost{sigops_cost},
+          m_modified_fee{nFee},
+          lockPoints{lp},
+          nSizeWithDescendants{GetTxSize()},
+          nModFeesWithDescendants{nFee},
+          nSizeWithAncestors{GetTxSize()},
+          nModFeesWithAncestors{nFee},
+          nSigOpCostWithAncestors{sigOpCost} {}
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
-    size_t GetTxSize() const;
+    size_t GetTxSize() const
+    {
+        return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
+    }
     size_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
@@ -115,9 +138,18 @@ public:
     // Adjusts the ancestor state
     void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the modified fees with descendants/ancestors.
-    void UpdateModifiedFee(CAmount fee_diff);
+    void UpdateModifiedFee(CAmount fee_diff)
+    {
+        nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, fee_diff);
+        nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, fee_diff);
+        m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
+    }
+
     // Update the LockPoints after a reorg
-    void UpdateLockPoints(const LockPoints& lp);
+    void UpdateLockPoints(const LockPoints& lp)
+    {
+        lockPoints = lp;
+    }
 
     uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
     uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
