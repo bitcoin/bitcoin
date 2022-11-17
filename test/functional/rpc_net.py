@@ -107,6 +107,54 @@ class NetTest(BitcoinTestFramework):
         # Check dynamically generated networks list in getpeerinfo help output.
         assert "(ipv4, ipv6, onion, i2p, cjdns, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
 
+        self.log.info("Check getpeerinfo output before a version message was sent")
+        no_version_peer_id = 2
+        no_version_peer_conntime = int(time.time())
+        self.nodes[0].setmocktime(no_version_peer_conntime)
+        with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
+            self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+        self.nodes[0].setmocktime(0)
+        peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
+        peer_info.pop("addr")
+        peer_info.pop("addrbind")
+        assert_equal(
+            peer_info,
+            {
+                "addr_processed": 0,
+                "addr_rate_limited": 0,
+                "addr_relay_enabled": False,
+                "bip152_hb_from": False,
+                "bip152_hb_to": False,
+                "bytesrecv": 0,
+                "bytesrecv_per_msg": {},
+                "bytessent": 0,
+                "bytessent_per_msg": {},
+                "connection_type": "inbound",
+                "conntime": no_version_peer_conntime,
+                "id": no_version_peer_id,
+                "inbound": True,
+                "inflight": [],
+                "last_block": 0,
+                "last_transaction": 0,
+                "lastrecv": 0,
+                "lastsend": 0,
+                "minfeefilter": Decimal("0E-8"),
+                "network": "not_publicly_routable",
+                "permissions": [],
+                "presynced_headers": -1,
+                "relaytxes": False,
+                "services": "0000000000000000",
+                "servicesnames": [],
+                "startingheight": -1,
+                "subver": "",
+                "synced_blocks": -1,
+                "synced_headers": -1,
+                "timeoffset": 0,
+                "version": 0,
+            },
+        )
+        self.nodes[0].disconnect_p2ps()
+
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
         # Test getnettotals and getpeerinfo by doing a ping. The bytes
