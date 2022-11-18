@@ -39,22 +39,22 @@ template void Elements<Scalar>::ConfirmIndexInsideRange(const uint32_t&) const;
 template void Elements<G1Point>::ConfirmIndexInsideRange(const uint32_t&) const;
 
 template <typename T>
-T& Elements<T>::operator[](const uint32_t& index)
+T& Elements<T>::operator[](const size_t& index)
 {
     ConfirmIndexInsideRange(index);
     return m_vec[index];
 }
-template Scalar& Elements<Scalar>::operator[](const uint32_t&);
-template G1Point& Elements<G1Point>::operator[](const uint32_t&);
+template Scalar& Elements<Scalar>::operator[](const size_t&);
+template G1Point& Elements<G1Point>::operator[](const size_t&);
 
 template <typename T>
-T Elements<T>::operator[](const uint32_t& index) const
+T Elements<T>::operator[](const size_t& index) const
 {
     ConfirmIndexInsideRange(index);
     return m_vec[index];
 }
-template Scalar Elements<Scalar>::operator[](const uint32_t&) const;
-template G1Point Elements<G1Point>::operator[](const uint32_t&) const;
+template Scalar Elements<Scalar>::operator[](const size_t&) const;
+template G1Point Elements<G1Point>::operator[](const size_t&) const;
 
 template <typename T>
 size_t Elements<T>::Size() const

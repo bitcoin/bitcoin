@@ -33,8 +33,8 @@ public:
     Elements(const size_t& size, const T& default_value);
 
     T Sum() const;
-    T& operator[](const uint32_t& index);
-    T operator[](const uint32_t& index) const;
+    T& operator[](const size_t& index);
+    T operator[](const size_t& index) const;
     size_t Size() const;
     bool Empty() const;
     void Add(const T& x);
