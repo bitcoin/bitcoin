@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_CTOKENS_TOKENID_H
-#define NAVCOIN_CTOKENS_TOKENID_H
+#ifndef BITCOIN_CTOKENS_TOKENID_H
+#define BITCOIN_CTOKENS_TOKENID_H
 
 #include <uint256.h>
 #include <streams.h>
@@ -43,4 +43,4 @@ public:
     }
 };
 
-#endif // NAVCOIN_CTOKENS_TOKENID_H
+#endif // BITCOIN_CTOKENS_TOKENID_H

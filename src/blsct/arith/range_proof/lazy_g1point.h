@@ -6,8 +6,6 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_LAZY_G1POINT_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/arith/g1point.h>
-#include <blsct/arith/scalar.h>
 
 struct LazyG1Point {
 public:
