@@ -5,7 +5,7 @@
 #include <test/util/setup_common.h>
 #include <blsct/arith/range_proof/range_proof.h>
 
-#include <boost/format.hpp>
+#include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
 #include <util/strencodings.h>
 
@@ -122,7 +122,7 @@ static std::vector<TestCase> BuildTestCases()
         values.Add(value);
 
         TestCase x;
-        x.name = (boost::format("valid input value %1%") % value.GetString()).str().c_str();
+        x.name = strprintf("valid input value %s", value.GetString()).c_str();
         x.values = values;
         x.is_batched = false;
         x.should_complete_recovery = true;
@@ -138,7 +138,7 @@ static std::vector<TestCase> BuildTestCases()
         values.Add(value);
 
         TestCase x;
-        x.name = (boost::format("invalid input value %1%") % value.GetString()).str().c_str();
+        x.name = strprintf("invalid input value %s", value.GetString()).c_str();
         x.values = values;
         x.is_batched = false;
         x.should_complete_recovery = true;
@@ -182,7 +182,7 @@ static std::vector<TestCase> BuildTestCases()
         std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, Config::m_max_message_size };
         for (auto msg_size: msg_sizes) {
             TestCase x;
-            x.name = (boost::format("with message of length %1%") % msg_size).str().c_str();
+            x.name = strprintf("with message of length %d", msg_size).c_str();
             x.values = values;
             x.is_batched = true;
             x.should_complete_recovery = true;
@@ -201,7 +201,7 @@ static std::vector<TestCase> BuildTestCases()
                 values.Add(Scalar(i + 1));
             }
             TestCase x;
-            x.name = (boost::format("%1% valid input values") % n).str().c_str();
+            x.name = strprintf("%d valid input values", n).c_str();
             x.values = values;
             x.is_batched = true;
             x.should_complete_recovery = true;

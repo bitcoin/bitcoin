@@ -5,7 +5,7 @@
 #include <blsct/arith/elements.h>
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/scalar.h>
-#include <boost/format.hpp>
+#include <tinyformat.h>
 
 template <typename T>
 Elements<T>::Elements(const size_t& size, const T& default_value)
@@ -39,8 +39,8 @@ template G1Point Elements<G1Point>::Sum() const;
 template <typename T>
 void Elements<T>::ConfirmIndexInsideRange(const uint32_t& index) const {
     if (index >= m_vec.size()) {
-        auto s = boost::format("index %1% is out of range [0..%2%]") % index % (m_vec.size() - 1ul);
-        throw std::runtime_error(s.str());
+        auto s = strprintf("index %d is out of range [0..%d]", index, m_vec.size() - 1ul);
+        throw std::runtime_error(s);
     }
 }
 template void Elements<Scalar>::ConfirmIndexInsideRange(const uint32_t&) const;
