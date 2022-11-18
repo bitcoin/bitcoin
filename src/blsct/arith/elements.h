@@ -31,6 +31,7 @@ public:
     Elements() {}
     Elements(const std::vector<T>& vec) : m_vec(vec) {}
     Elements(const size_t& size, const T& default_value);
+    Elements(const Elements &x);
 
     T Sum() const;
     T& operator[](const size_t& index);

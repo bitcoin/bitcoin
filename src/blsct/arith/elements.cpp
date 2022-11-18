@@ -17,6 +17,14 @@ template Elements<Scalar>::Elements(const size_t&, const Scalar&);
 template Elements<G1Point>::Elements(const size_t&, const G1Point&);
 
 template <typename T>
+Elements<T>::Elements(const Elements &x)
+{
+    m_vec = x.m_vec;
+}
+template Elements<Scalar>::Elements(const Elements &x);
+template Elements<G1Point>::Elements(const Elements &x);
+
+template <typename T>
 T Elements<T>::Sum() const
 {
     T ret;
