@@ -874,8 +874,8 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
         112,
         97,
         103,
-        101,
         104,
+        101,
         116,
         116,
         105,
@@ -912,6 +912,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
     }
     vMsg = vMsgTrimmed;
     std::string s(vMsg.begin(), vMsg.end());
+    printf("sss: '%s'", s.c_str());
     BOOST_CHECK(s == "spaghetti meatballs");
 }
 
