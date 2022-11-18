@@ -98,7 +98,13 @@ BASE_SCRIPTS = [
     'rpc_fundrawtransaction.py --legacy-wallet',
     'rpc_fundrawtransaction.py --descriptors',
     # ITCOIN_SPECIFIC - START
-    'rpc_itcoin_testblockvalidity.py',
+    'itcoin_feature_control_block_time.py',
+    'itcoin_feature_num_nodes_differs_from_num_signers.py',
+    'itcoin_feature_solution_independent_blockchain_1_of_2.py',
+    'itcoin_feature_solution_independent_blockchain_3_of_4.py',
+    'itcoin_feature_taproot_challenge_frost_pubkey.py',
+    'itcoin_feature_taproot_challenge_frost_pubkey_tweaked.py',
+    'itcoin_rpc_testblockvalidity.py',
     # ITCOIN_SPECIFIC - END
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
@@ -256,12 +262,6 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
-    'feature_itcoin_control_block_time.py',
-    'feature_itcoin_solution_independent_blockchain_1_of_2.py',
-    'feature_itcoin_solution_independent_blockchain_3_of_4.py',
-    'feature_itcoin_num_nodes_differs_from_num_signers.py',
-    'feature_itcoin_taproot_challenge_frost_pubkey.py',
-    'feature_itcoin_taproot_challenge_frost_pubkey_tweaked.py',
     'feature_signet.py',
     'wallet_bumpfee.py --legacy-wallet',
     'wallet_bumpfee.py --descriptors',
@@ -736,7 +736,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("^(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("^(itcoin|example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")  # ITCOIN_SPECIFIC: allowed "itcoin" prefix
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:
