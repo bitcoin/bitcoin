@@ -37,7 +37,7 @@ static TokenId GenTokenId()
     return token_id;
 }
 
-static MsgPair GenMsgPair(std::string s = "spagetti meatballs")
+static MsgPair GenMsgPair(std::string s = "spaghetti meatballs")
 {
     std::vector<unsigned char> message { s.begin(), s.end() };
     return std::pair(s, message);

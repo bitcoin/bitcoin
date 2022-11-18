@@ -861,11 +861,10 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 
 BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
 {
-    // serialized excess based on message "spagetti meatballs"
+    // serialized excess based on message "spaghetti meatballs"
     // = 7370616765747469206d65617462616c6c730000000000000001
     // = 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
     std::vector<unsigned char> excess_ser {
-        0,
         0,
         0,
         0,
@@ -876,6 +875,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
         97,
         103,
         101,
+        104,
         116,
         116,
         105,
@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
     }
     vMsg = vMsgTrimmed;
     std::string s(vMsg.begin(), vMsg.end());
-    BOOST_CHECK(s == "spagetti meatballs");
+    BOOST_CHECK(s == "spaghetti meatballs");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
