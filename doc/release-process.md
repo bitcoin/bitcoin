@@ -123,7 +123,7 @@ git -C ./guix.sigs pull
 ### Create the macOS SDK tarball (first time, or when SDK version changes)
 
 Create the macOS SDK tarball, see the [macdeploy
-instructions](/contrib/macdeploy/README.md#deterministic-macos-dmg-notes) for
+instructions](/contrib/macdeploy/README.md#deterministic-macos-app-notes) for
 details.
 
 ### Build and attest to build outputs
