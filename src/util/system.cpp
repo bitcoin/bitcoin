@@ -1186,8 +1186,15 @@ bool FileCommit(FILE *file)
     }
 #elif defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
-        LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
-        return false;
+        // Certain filesystems may not support F_FULLFSYNC and fail with various error codes.
+        // In that case, use fsync as fallback. SQLite, LevelDB, and others take this approach.
+        int fullfsync_errno = errno;
+        if (fsync(fileno(file)) != 0 && errno != EINVAL) {
+            int fsync_errno = errno;
+            LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, fullfsync_errno);
+            LogPrintf("%s: fallback fsync failed: %d\n", __func__, fsync_errno);
+            return false;
+        }
     }
 #elif HAVE_FDATASYNC
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
