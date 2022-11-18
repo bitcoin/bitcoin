@@ -523,12 +523,10 @@ bool RangeProof::Verify(
 
     std::vector<ProofWithTranscript> proof_transcripts;
     size_t max_num_rounds = 0;
-    size_t Vs_size_sum = 0;
 
     for (const Proof& proof: proofs) {
         // update max # of rounds and sum of all V bits
         max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
-        Vs_size_sum += proof.Vs.Size();
 
         // derive transcript from the proof
         auto proof_transcript = ProofWithTranscript::Build(proof);
