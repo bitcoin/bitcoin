@@ -62,6 +62,11 @@ class WalletDescriptorTest(BitcoinTestFramework):
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/0/0')
 
+        addr = self.nodes[0].getnewaddress("", "bech32m")
+        addr_info = self.nodes[0].getaddressinfo(addr)
+        assert addr_info['desc'].startswith('tr(')
+        assert_equal(addr_info['hdkeypath'], 'm/86\'/1\'/0\'/0/0')
+
         # Check that getrawchangeaddress works
         addr = self.nodes[0].getrawchangeaddress("legacy")
         addr_info = self.nodes[0].getaddressinfo(addr)
@@ -77,6 +82,11 @@ class WalletDescriptorTest(BitcoinTestFramework):
         addr_info = self.nodes[0].getaddressinfo(addr)
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84\'/1\'/0\'/1/0')
+
+        addr = self.nodes[0].getrawchangeaddress("bech32m")
+        addr_info = self.nodes[0].getaddressinfo(addr)
+        assert addr_info['desc'].startswith('tr(')
+        assert_equal(addr_info['hdkeypath'], 'm/86\'/1\'/0\'/1/0')
 
         # Make a wallet to receive coins at
         self.nodes[0].createwallet(wallet_name="desc2", descriptors=True)
@@ -161,9 +171,11 @@ class WalletDescriptorTest(BitcoinTestFramework):
         addr_types = [('legacy', False, 'pkh(', '44\'/1\'/0\'', -13),
                       ('p2sh-segwit', False, 'sh(wpkh(', '49\'/1\'/0\'', -14),
                       ('bech32', False, 'wpkh(', '84\'/1\'/0\'', -13),
+                      ('bech32m', False, 'tr(', '86\'/1\'/0\'', -13),
                       ('legacy', True, 'pkh(', '44\'/1\'/0\'', -13),
                       ('p2sh-segwit', True, 'sh(wpkh(', '49\'/1\'/0\'', -14),
-                      ('bech32', True, 'wpkh(', '84\'/1\'/0\'', -13)]
+                      ('bech32', True, 'wpkh(', '84\'/1\'/0\'', -13),
+                      ('bech32m', True, 'tr(', '86\'/1\'/0\'', -13)]
 
         for addr_type, internal, desc_prefix, deriv_path, int_idx in addr_types:
             int_str = 'internal' if internal else 'external'

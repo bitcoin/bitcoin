@@ -1182,3 +1182,17 @@ void CTxMemPool::SetLoadTried(bool load_tried)
     LOCK(cs);
     m_load_tried = load_tried;
 }
+
+
+const std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
+{
+    switch (r) {
+        case MemPoolRemovalReason::EXPIRY: return "expiry";
+        case MemPoolRemovalReason::SIZELIMIT: return "sizelimit";
+        case MemPoolRemovalReason::REORG: return "reorg";
+        case MemPoolRemovalReason::BLOCK: return "block";
+        case MemPoolRemovalReason::CONFLICT: return "conflict";
+        case MemPoolRemovalReason::REPLACED: return "replaced";
+    }
+    assert(false);
+}

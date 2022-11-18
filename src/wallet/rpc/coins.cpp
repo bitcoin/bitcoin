@@ -515,6 +515,7 @@ RPCHelpMan listunspent()
                             {"maximumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"maximumCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"unlimited"}, "Maximum number of UTXOs"},
                             {"minimumSumAmount", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"unlimited"}, "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
+                            {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase UTXOs"}
                         },
                         RPCArgOptions{.oneline_description="query_options"}},
                 },
@@ -590,10 +591,8 @@ RPCHelpMan listunspent()
         include_unsafe = request.params[3].get_bool();
     }
 
-    CAmount nMinimumAmount = 0;
-    CAmount nMaximumAmount = MAX_MONEY;
-    CAmount nMinimumSumAmount = MAX_MONEY;
-    uint64_t nMaximumCount = 0;
+    CoinFilterParams filter_coins;
+    filter_coins.min_amount = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -604,20 +603,25 @@ RPCHelpMan listunspent()
                 {"maximumAmount", UniValueType()},
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
+                {"include_immature_coinbase", UniValueType(UniValue::VBOOL)}
             },
             true, true);
 
         if (options.exists("minimumAmount"))
-            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+            filter_coins.min_amount = AmountFromValue(options["minimumAmount"]);
 
         if (options.exists("maximumAmount"))
-            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+            filter_coins.max_amount = AmountFromValue(options["maximumAmount"]);
 
         if (options.exists("minimumSumAmount"))
-            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+            filter_coins.min_sum_amount = AmountFromValue(options["minimumSumAmount"]);
 
         if (options.exists("maximumCount"))
-            nMaximumCount = options["maximumCount"].getInt<int64_t>();
+            filter_coins.max_count = options["maximumCount"].getInt<int64_t>();
+
+        if (options.exists("include_immature_coinbase")) {
+            filter_coins.include_immature_coinbase = options["include_immature_coinbase"].get_bool();
+        }
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -633,7 +637,7 @@ RPCHelpMan listunspent()
         cctl.m_max_depth = nMaxDepth;
         cctl.m_include_unsafe_inputs = include_unsafe;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount).All();
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &cctl, filter_coins).All();
     }
 
     LOCK(pwallet->cs_wallet);
