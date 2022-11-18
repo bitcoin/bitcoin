@@ -1185,7 +1185,7 @@
                <item row="6" column="0">
                 <widget class="QLabel" name="peerRelayTxesLabel">
                  <property name="toolTip">
-                  <string>Whether we relay transactions to this peer (not available while the peer connection is being set up).</string>
+                  <string>Whether we relay transactions to this peer.</string>
                  </property>
                  <property name="text">
                   <string>Transaction Relay</string>

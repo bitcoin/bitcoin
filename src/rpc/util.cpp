@@ -65,11 +65,8 @@ void RPCTypeCheckObj(const UniValue& o,
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
-        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
-            std::string err = strprintf("Expected type %s for %s, got %s",
-                uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
-            throw JSONRPCError(RPC_TYPE_ERROR, err);
-        }
+        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull())))
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("JSON value of type %s for field %s is not of expected type %s", uvTypeName(v.type()),  t.first, uvTypeName(t.second.type)));
     }
 
     if (fStrict)

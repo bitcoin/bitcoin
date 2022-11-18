@@ -25,10 +25,7 @@ public:
     };
 
     UniValue() { typ = VNULL; }
-    UniValue(UniValue::VType initialType, const std::string& initialStr = "") {
-        typ = initialType;
-        val = initialStr;
-    }
+    UniValue(UniValue::VType type, std::string str = {}) : typ{type}, val{std::move(str)} {}
     template <typename Ref, typename T = std::remove_cv_t<std::remove_reference_t<Ref>>,
               std::enable_if_t<std::is_floating_point_v<T> ||                      // setFloat
                                    std::is_same_v<bool, T> ||                      // setBool
@@ -54,12 +51,12 @@ public:
 
     void setNull();
     void setBool(bool val);
-    void setNumStr(const std::string& val);
+    void setNumStr(std::string str);
     void setInt(uint64_t val);
     void setInt(int64_t val);
     void setInt(int val_) { return setInt(int64_t{val_}); }
     void setFloat(double val);
-    void setStr(const std::string& val);
+    void setStr(std::string str);
     void setArray();
     void setObject();
 
