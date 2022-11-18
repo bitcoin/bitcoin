@@ -213,7 +213,7 @@ Proof RangeProof::Prove(
 retry:  // hasher is not cleared so that different hash will be obtained upon retry
 
     if (++num_tries > Config::m_max_prove_tries) {
-        throw std::runtime_error(strprintf("%s: exceeded maxinum number of tries", __func__));
+        throw std::runtime_error(strprintf("%s: exceeded maximum number of tries", __func__));
     }
 
     // (43)-(44)

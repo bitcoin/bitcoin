@@ -42,7 +42,7 @@ private:
  * Reason for assigning the base point to H:
  *
  * On the bulletproofs paper, G is used for amounts and H is used
- * for randomness. Our Bulletproofs code follows the convension for
+ * for randomness. Our Bulletproofs code follows the convention for
  * readbility.
  *
  * Upon checking if a tx is valid, the total of the value commitments
