@@ -179,7 +179,7 @@ static std::vector<TestCase> BuildTestCases()
         Scalars values;
         values.Add(Scalar(1));
 
-        std::vector msg_sizes { 1ul, 23ul, 24ul, Config::m_max_message_size };
+        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, Config::m_max_message_size };
         for (auto msg_size: msg_sizes) {
             TestCase x;
             x.name = (boost::format("with message of length %1%") % msg_size).str().c_str();
