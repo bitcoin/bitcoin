@@ -375,14 +375,14 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_right)
     Scalar one(1);
     Scalar zero(0);
 
-    BOOST_CHECK(eight >> 1 == four);
-    BOOST_CHECK(seven >> 1 == three);
-    BOOST_CHECK(six >> 1 == three);
-    BOOST_CHECK(five >> 1 == two);
-    BOOST_CHECK(four >> 1 == two);
-    BOOST_CHECK(three >> 1 == one);
-    BOOST_CHECK(two >> 1 == one);
-    BOOST_CHECK(one >> 1 == zero);
+    BOOST_CHECK((eight >> 1) == four);
+    BOOST_CHECK((seven >> 1) == three);
+    BOOST_CHECK((six >> 1) == three);
+    BOOST_CHECK((five >> 1) == two);
+    BOOST_CHECK((four >> 1) == two);
+    BOOST_CHECK((three >> 1) == one);
+    BOOST_CHECK((two >> 1) == one);
+    BOOST_CHECK((one >> 1) == zero);
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_assign)
