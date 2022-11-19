@@ -18,10 +18,12 @@ GeneratorsFactory* RangeProof::m_gf = nullptr;
 
 AmountRecoveryRequest AmountRecoveryRequest::of(Proof& proof, size_t& index, G1Point& nonce)
 {
+    auto proof_with_transcript = ProofWithTranscript::Build(proof);
+
     AmountRecoveryRequest req {
         1,
-        proof.x,
-        proof.z,
+        proof_with_transcript.x,
+        proof_with_transcript.z,
         proof.Vs,
         proof.Ls,
         proof.Rs,
@@ -253,7 +255,6 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     Scalar z = transcript_gen.GetHash();
     if (z == 0) goto retry;
-    proof.z = z;
     transcript_gen << z;
 
     // Polynomial construction by coefficients
@@ -308,7 +309,6 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
 
     Scalar x = transcript_gen.GetHash();
     if (x == 0) goto retry;
-    proof.x = x;
 
     // x will be added to transcript later
 
