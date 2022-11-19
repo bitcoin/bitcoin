@@ -534,10 +534,13 @@ void BlockManager::FlushBlockFile(bool fFinalize, bool finalize_undo)
     }
     assert(static_cast<int>(m_blockfile_info.size()) > m_last_blockfile);
 
-    FlatFilePos block_pos_old(m_last_blockfile, m_blockfile_info[m_last_blockfile].nSize);
-    if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
-        AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
+    if (m_blockfile_info[m_last_blockfile].modified) {
+        FlatFilePos block_pos_old(m_last_blockfile, m_blockfile_info[m_last_blockfile].nSize);
+        if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
+            AbortNode("Flushing block file to disk failed. This is likely the result of an I/O error.");
+        }
     }
+
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
     if (!fFinalize || finalize_undo) FlushUndoFile(m_last_blockfile, finalize_undo);
@@ -821,6 +824,7 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CCha
             AbortNode("Failed to write block");
             return FlatFilePos();
         }
+        m_blockfile_info[blockPos.nFile].modified = true;
     }
     return blockPos;
 }

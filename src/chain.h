@@ -50,6 +50,7 @@ public:
     unsigned int nHeightLast;  //!< highest height of block in file
     uint64_t nTimeFirst;       //!< earliest time of block in file
     uint64_t nTimeLast;        //!< latest time of block in file
+    bool modified;             //!< (memory only) whether the file has been modified
 
     SERIALIZE_METHODS(CBlockFileInfo, obj)
     {
@@ -71,6 +72,7 @@ public:
         nHeightLast = 0;
         nTimeFirst = 0;
         nTimeLast = 0;
+        modified = false;
     }
 
     CBlockFileInfo()
