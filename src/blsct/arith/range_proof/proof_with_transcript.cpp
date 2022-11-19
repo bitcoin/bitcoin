@@ -5,6 +5,7 @@
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/proof.h>
 #include <blsct/arith/range_proof/proof_with_transcript.h>
+#include <blsct/arith/range_proof/range_proof.h>
 
 ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
     // build transcript from proof in the same way it was built in Prove function
@@ -34,10 +35,12 @@ ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
 
     Scalar cx_factor = transcript_gen.GetHash();
 
+    auto num_rounds = RangeProof::RecoverNumRounds(proof.Vs.Size());
+
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars xs;
     Scalars inv_xs;
-    for (size_t i = 0; i < proof.num_rounds; ++i) {
+    for (size_t i = 0; i < num_rounds; ++i) {
         transcript_gen << proof.Ls[i];
         transcript_gen << proof.Rs[i];
         Scalar x(transcript_gen.GetHash());

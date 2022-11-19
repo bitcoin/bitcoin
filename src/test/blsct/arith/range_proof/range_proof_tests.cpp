@@ -349,13 +349,26 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_range_proof_recover_num_rounds)
+{
+    RangeProof rp;
+    BOOST_CHECK(rp.RecoverNumRounds(1ul) == 6ul);
+
+}
+
 BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
-    auto gen_valid_proof_wo_value_commitments = []() {
+    auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
         Proof p;
-        p.num_rounds = 1;
-        p.Ls.Add(G1Point::GetBasePoint());
-        p.Rs.Add(G1Point::GetBasePoint());
+        auto n = Config::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
+        for (size_t i=0; i<n; ++i) {
+            p.Vs.Add(G1Point::GetBasePoint());
+        }
+        auto num_rounds = RangeProof::RecoverNumRounds(n);
+        for (size_t i=0; i<num_rounds; ++i) {
+            p.Ls.Add(G1Point::GetBasePoint());
+            p.Rs.Add(G1Point::GetBasePoint());
+        }
         return p;
     };
 
@@ -367,32 +380,25 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
     }
     {
         // no value commitment
-        auto p = gen_valid_proof_wo_value_commitments();
+        Proof p;
         std::vector<Proof> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }
     {
         // minimum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments();
-        p.Vs.Add(G1Point::GetBasePoint());
+        auto p = gen_valid_proof_wo_value_commitments(1);
         std::vector<Proof> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // maximum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments();
-        for (size_t i=0; i<Config::m_max_input_values; ++i) {
-            p.Vs.Add(G1Point::GetBasePoint());
-        }
+        auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values);
         std::vector<Proof> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // number of value commitments exceeding maximum
-        auto p = gen_valid_proof_wo_value_commitments();
-        for (size_t i=0; i<Config::m_max_input_values + 1; ++i) {
-            p.Vs.Add(G1Point::GetBasePoint());
-        }
+        auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values + 1);
         std::vector<Proof> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }

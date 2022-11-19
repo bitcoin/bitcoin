@@ -132,7 +132,6 @@ bool RangeProof::InnerProductArgument(
 
     proof.a = a[0];
     proof.b = b[0];
-    proof.num_rounds = rounds;
 
     return true;
 }
@@ -357,10 +356,23 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     return proof;
 }
 
+size_t RangeProof::RecoverNumRounds(const size_t& num_input_values)
+{
+    auto num_input_values_pow2 =
+        Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
+    auto num_rounds =
+        ((int) std::log2(num_input_values_pow2)) +
+        Config::m_inupt_value_bits_log2;
+
+    return num_rounds;
+}
+
 void RangeProof::ValidateProofsBySizes(
     const std::vector<Proof>& proofs
-) const {
+) {
     for (const Proof& proof: proofs) {
+        size_t num_rounds = RecoverNumRounds(proof.Vs.Size());
+
         // proof must contain input values
         if (proof.Vs.Size() == 0)
             throw std::runtime_error(strprintf("%s: no input value", __func__));
@@ -371,9 +383,9 @@ void RangeProof::ValidateProofsBySizes(
                 __func__, Config::m_max_input_values));
 
         // L,R keep track of aggregation history and the size should equal to # of rounds
-        if (proof.Ls.Size() != proof.num_rounds)
+        if (proof.Ls.Size() != num_rounds)
             throw std::runtime_error(strprintf("%s: size of Ls (%ld) differs from number of rounds (%ld)",
-                __func__, proof.Ls.Size(), proof.num_rounds));
+                __func__, proof.Ls.Size(), num_rounds));
 
         // if Ls and Rs should have the same size
         if (proof.Ls.Size() != proof.Rs.Size())
@@ -399,6 +411,7 @@ G1Point RangeProof::VerifyProofs(
     G1Point H = gens.H.get();
 
     for (const ProofWithTranscript& p: proof_transcripts) {
+        auto num_rounds = RecoverNumRounds(p.proof.Vs.Size());
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 
@@ -449,10 +462,10 @@ G1Point RangeProof::VerifyProofs(
 
         // this loop generates exponents for gi and hi generators so that
         // when there are aggregated, they become g and h in (16)
-        std::vector<Scalar> acc_xs(1 << p.proof.num_rounds, 1);  // initialize all elems to 1
+        std::vector<Scalar> acc_xs(1 << num_rounds, 1);  // initialize all elems to 1
         acc_xs[0] = p.inv_xs[0];
         acc_xs[1] = p.xs[0];
-        for (size_t i = 1; i < p.proof.num_rounds; ++i) {
+        for (size_t i = 1; i < num_rounds; ++i) {
             const size_t sl = 1 << (i + 1);  // 4, 8, 16 ...
             for (long signed int s = sl - 1; s > 0; s -= 2) {
                 acc_xs[s] = acc_xs[s / 2] * p.xs[i];
@@ -491,7 +504,7 @@ G1Point RangeProof::VerifyProofs(
         h_neg_exp = h_neg_exp + p.proof.mu * weight_z;  // ** h^mu (67) RHS
 
         // add L and R of all rounds to RHS (66) which equals P to generate the P of the final round on LHS (16)
-        for (size_t i = 0; i < p.proof.num_rounds; ++i) {
+        for (size_t i = 0; i < num_rounds; ++i) {
             points.Add(LazyG1Point(p.proof.Ls[i], p.xs[i].Square() * weight_z));
             points.Add(LazyG1Point(p.proof.Rs[i], p.inv_xs[i].Square() * weight_z));
         }

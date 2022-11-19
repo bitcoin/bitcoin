@@ -62,6 +62,36 @@ class RangeProof
 public:
     RangeProof();
 
+    Proof Prove(
+        Scalars& vs,
+        G1Point& nonce,
+        const std::vector<uint8_t>& message,
+        const TokenId& token_id
+    );
+
+    bool Verify(
+        const std::vector<Proof>& proofs,
+        const TokenId& token_id
+    ) const;
+
+    G1Point VerifyProofs(
+        const std::vector<ProofWithTranscript>& proof_transcripts,
+        const Generators& gens,
+        const size_t& max_mn
+    ) const;
+
+    AmountRecoveryResult RecoverAmounts(
+        const std::vector<AmountRecoveryRequest>& reqs,
+        const TokenId& token_id
+    ) const;
+
+    static size_t RecoverNumRounds(const size_t& num_input_values);
+
+    static void ValidateProofsBySizes(
+        const std::vector<Proof>& proofs
+    );
+
+private:
     Scalar GetUint64Max() const;
 
     G1Point GenerateBaseG1PointH(
@@ -83,34 +113,6 @@ public:
         CHashWriter& transcript_gen
     );
 
-    Proof Prove(
-        Scalars& vs,
-        G1Point& nonce,
-        const std::vector<uint8_t>& message,
-        const TokenId& token_id
-    );
-
-    bool Verify(
-        const std::vector<Proof>& proofs,
-        const TokenId& token_id
-    ) const;
-
-    void ValidateProofsBySizes(
-        const std::vector<Proof>& proofs
-    ) const;
-
-    G1Point VerifyProofs(
-        const std::vector<ProofWithTranscript>& proof_transcripts,
-        const Generators& gens,
-        const size_t& max_mn
-    ) const;
-
-    AmountRecoveryResult RecoverAmounts(
-        const std::vector<AmountRecoveryRequest>& reqs,
-        const TokenId& token_id
-    ) const;
-
-private:
     // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
     // these variables are meant to be constant. do not make changes after initialization.
     static GeneratorsFactory* m_gf;

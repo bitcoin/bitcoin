@@ -6,6 +6,7 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H
 
 #include <cstddef>
+#include <cmath>
 
 class Config
 {
@@ -21,6 +22,8 @@ public:
 
     // size of each input value in bits. N in old code
     inline static const size_t m_input_value_bits = 64;
+
+    inline static const size_t m_inupt_value_bits_log2 = std::log2(m_input_value_bits);
 
     // maximum # of input values
     inline static const size_t m_max_input_values = 16;
