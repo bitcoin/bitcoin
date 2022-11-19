@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/g1point.h>
-#include <blsct/arith/elements.h>
 
 #include <numeric>
 

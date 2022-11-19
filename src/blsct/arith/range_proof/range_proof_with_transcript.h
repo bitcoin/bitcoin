@@ -6,7 +6,6 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/arith/scalar.h>
 #include <blsct/arith/range_proof/range_proof.h>
 
 class RangeProofWithTranscript
