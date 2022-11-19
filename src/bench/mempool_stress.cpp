@@ -6,6 +6,7 @@
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <txmempool_entry.h>
 #include <validation.h>
 
 #include <vector>

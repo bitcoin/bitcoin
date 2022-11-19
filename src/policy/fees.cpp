@@ -16,7 +16,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <txmempool.h>
+#include <txmempool_entry.h>
 #include <uint256.h>
 #include <util/serfloat.h>
 #include <util/system.h>
