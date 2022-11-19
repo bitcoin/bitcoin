@@ -42,6 +42,7 @@
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <txmempool_entry.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/check.h> // For NDEBUG compile time check
