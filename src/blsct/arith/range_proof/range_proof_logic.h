@@ -12,7 +12,7 @@
 #include <blsct/arith/g1point.h>
 #include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
-#include <blsct/arith/range_proof/proof_with_transcript.h>
+#include <blsct/arith/range_proof/range_proof_with_transcript.h>
 #include <blsct/arith/scalar.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -29,7 +29,7 @@ struct AmountRecoveryRequest
     Scalar tau_x;
     G1Point nonce;
 
-    static AmountRecoveryRequest of(Proof& proof, size_t& index, G1Point& nonce);
+    static AmountRecoveryRequest of(RangeProof& proof, size_t& index, G1Point& nonce);
 };
 
 struct RecoveredAmount
@@ -62,7 +62,7 @@ class RangeProofLogic
 public:
     RangeProofLogic();
 
-    Proof Prove(
+    RangeProof Prove(
         Scalars& vs,
         G1Point& nonce,
         const std::vector<uint8_t>& message,
@@ -70,12 +70,12 @@ public:
     );
 
     bool Verify(
-        const std::vector<Proof>& proofs,
+        const std::vector<RangeProof>& proofs,
         const TokenId& token_id
     ) const;
 
     G1Point VerifyProofs(
-        const std::vector<ProofWithTranscript>& proof_transcripts,
+        const std::vector<RangeProofWithTranscript>& proof_transcripts,
         const Generators& gens,
         const size_t& max_mn
     ) const;
@@ -88,7 +88,7 @@ public:
     static size_t RecoverNumRounds(const size_t& num_input_values);
 
     static void ValidateProofsBySizes(
-        const std::vector<Proof>& proofs
+        const std::vector<RangeProof>& proofs
     );
 
 private:
@@ -109,7 +109,7 @@ private:
         Scalars& a,
         Scalars& b,
         const Scalar& y,
-        Proof& proof,
+        RangeProof& proof,
         CHashWriter& transcript_gen
     );
 

@@ -160,8 +160,8 @@ BITCOIN_CORE_H = \
   blsct/arith/g1point.h \
   blsct/arith/mcl_initializer.h \
   blsct/arith/range_proof/config.h \
-  blsct/arith/range_proof/proof.h \
-  blsct/arith/range_proof/proof_with_transcript.h \
+  blsct/arith/range_proof/range_proof.h \
+  blsct/arith/range_proof/range_proof_with_transcript.h \
   blsct/arith/range_proof/generators.h \
   blsct/arith/range_proof/lazy_g1point.h \
   blsct/arith/range_proof/range_proof_logic.h \
@@ -404,7 +404,7 @@ libbitcoin_node_a_SOURCES = \
   blsct/arith/range_proof/config.cpp \
   blsct/arith/range_proof/generators.cpp \
   blsct/arith/range_proof/lazy_g1point.cpp \
-  blsct/arith/range_proof/proof_with_transcript.cpp \
+  blsct/arith/range_proof/range_proof_with_transcript.cpp \
   blsct/arith/range_proof/range_proof_logic.cpp \
   blsct/arith/scalar.cpp \
   blsct/keys.cpp \

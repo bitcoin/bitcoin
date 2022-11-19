@@ -7,13 +7,13 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/arith/scalar.h>
-#include <blsct/arith/range_proof/proof.h>
+#include <blsct/arith/range_proof/range_proof.h>
 
-class ProofWithTranscript
+class RangeProofWithTranscript
 {
 public:
-    ProofWithTranscript(
-        const Proof& proof,
+    RangeProofWithTranscript(
+        const RangeProof& proof,
         const Scalar& x,
         const Scalar& y,
         const Scalar& z,
@@ -27,9 +27,9 @@ public:
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits) {}
 
-    static ProofWithTranscript Build(const Proof& proof);
+    static RangeProofWithTranscript Build(const RangeProof& proof);
 
-    const Proof proof;
+    const RangeProof proof;
 
     // transcript
     const Scalar x;  // x used in the main prove procedure

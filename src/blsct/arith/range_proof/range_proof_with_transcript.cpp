@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/range_proof/config.h>
-#include <blsct/arith/range_proof/proof.h>
-#include <blsct/arith/range_proof/proof_with_transcript.h>
+#include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/arith/range_proof/range_proof_with_transcript.h>
 #include <blsct/arith/range_proof/range_proof_logic.h>
 
-ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
+RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof) {
     // build transcript from proof in the same way it was built in Prove function
     CHashWriter transcript_gen(0,0);
 
@@ -51,7 +51,7 @@ ProofWithTranscript ProofWithTranscript::Build(const Proof& proof) {
     size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
-    return ProofWithTranscript(
+    return RangeProofWithTranscript(
         proof,
         x,
         y,

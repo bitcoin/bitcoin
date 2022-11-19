@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/range_proof/lazy_g1point.h>
-#include <blsct/arith/range_proof/proof.h>
+#include <blsct/arith/range_proof/range_proof.h>
 #include <blsct/arith/range_proof/range_proof_logic.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
@@ -16,9 +16,9 @@ Scalar* RangeProofLogic::m_inner_prod_1x2_pows_64 = nullptr;
 Scalar* RangeProofLogic::m_uint64_max = nullptr;
 GeneratorsFactory* RangeProofLogic::m_gf = nullptr;
 
-AmountRecoveryRequest AmountRecoveryRequest::of(Proof& proof, size_t& index, G1Point& nonce)
+AmountRecoveryRequest AmountRecoveryRequest::of(RangeProof& proof, size_t& index, G1Point& nonce)
 {
-    auto proof_with_transcript = ProofWithTranscript::Build(proof);
+    auto proof_with_transcript = RangeProofWithTranscript::Build(proof);
 
     AmountRecoveryRequest req {
         1,
@@ -81,7 +81,7 @@ bool RangeProofLogic::InnerProductArgument(
     Scalars& a,
     Scalars& b,
     const Scalar& y,
-    Proof& proof,
+    RangeProof& proof,
     CHashWriter& transcript_gen
 ) {
     const Scalars y_inv_pows = Scalars::FirstNPow(y.Invert(), concat_input_values_in_bits);
@@ -136,7 +136,7 @@ bool RangeProofLogic::InnerProductArgument(
     return true;
 }
 
-Proof RangeProofLogic::Prove(
+RangeProof RangeProofLogic::Prove(
     Scalars& vs,
     G1Point& nonce,
     const std::vector<uint8_t>& message,
@@ -160,7 +160,7 @@ Proof RangeProofLogic::Prove(
         num_input_values_power_of_2 * Config::m_input_value_bits;
 
     ////////////// Proving steps
-    Proof proof;
+    RangeProof proof;
 
     // generate gammas
     Scalars gammas;
@@ -368,9 +368,9 @@ size_t RangeProofLogic::RecoverNumRounds(const size_t& num_input_values)
 }
 
 void RangeProofLogic::ValidateProofsBySizes(
-    const std::vector<Proof>& proofs
+    const std::vector<RangeProof>& proofs
 ) {
-    for (const Proof& proof: proofs) {
+    for (const RangeProof& proof: proofs) {
         size_t num_rounds = RecoverNumRounds(proof.Vs.Size());
 
         // proof must contain input values
@@ -395,7 +395,7 @@ void RangeProofLogic::ValidateProofsBySizes(
 }
 
 G1Point RangeProofLogic::VerifyProofs(
-    const std::vector<ProofWithTranscript>& proof_transcripts,
+    const std::vector<RangeProofWithTranscript>& proof_transcripts,
     const Generators& gens,
     const size_t& max_mn
 ) const {
@@ -410,7 +410,7 @@ G1Point RangeProofLogic::VerifyProofs(
     G1Point G = gens.G;
     G1Point H = gens.H.get();
 
-    for (const ProofWithTranscript& p: proof_transcripts) {
+    for (const RangeProofWithTranscript& p: proof_transcripts) {
         auto num_rounds = RecoverNumRounds(p.proof.Vs.Size());
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
@@ -528,20 +528,20 @@ G1Point RangeProofLogic::VerifyProofs(
 }
 
 bool RangeProofLogic::Verify(
-    const std::vector<Proof>& proofs,
+    const std::vector<RangeProof>& proofs,
     const TokenId& token_id
 ) const {
     ValidateProofsBySizes(proofs);
 
-    std::vector<ProofWithTranscript> proof_transcripts;
+    std::vector<RangeProofWithTranscript> proof_transcripts;
     size_t max_num_rounds = 0;
 
-    for (const Proof& proof: proofs) {
+    for (const RangeProof& proof: proofs) {
         // update max # of rounds and sum of all V bits
         max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
 
         // derive transcript from the proof
-        auto proof_transcript = ProofWithTranscript::Build(proof);
+        auto proof_transcript = RangeProofWithTranscript::Build(proof);
         proof_transcripts.push_back(proof_transcript);
     }
 

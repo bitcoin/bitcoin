@@ -6,10 +6,8 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/arith/g1point.h>
-#include <blsct/arith/scalar.h>
 
-struct Proof
+struct RangeProof
 {
     // intermediate values used to derive random values later
     G1Points Vs;

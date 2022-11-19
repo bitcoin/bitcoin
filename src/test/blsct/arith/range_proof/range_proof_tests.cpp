@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     RangeProofLogic rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
 
-    auto is_valid = rp.Verify(std::vector<Proof> { p }, token_id);
+    auto is_valid = rp.Verify(std::vector<RangeProof> { p }, token_id);
     BOOST_CHECK(is_valid);
 }
 
@@ -239,7 +239,7 @@ static void RunTestCase(
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
 
-    std::vector<Proof> proofs;
+    std::vector<RangeProof> proofs;
 
     // calculate proofs
     if (test_case.is_batched) {
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recover_num_rounds)
 BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
     auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
-        Proof p;
+        RangeProof p;
         auto n = Config::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
         for (size_t i=0; i<n; ++i) {
             p.Vs.Add(G1Point::GetBasePoint());
@@ -375,31 +375,31 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
     RangeProofLogic rp;
     {
         // no proof should validate fine
-        std::vector<Proof> proofs;
+        std::vector<RangeProof> proofs;
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // no value commitment
-        Proof p;
-        std::vector<Proof> proofs { p };
+        RangeProof p;
+        std::vector<RangeProof> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }
     {
         // minimum number of value commitments
         auto p = gen_valid_proof_wo_value_commitments(1);
-        std::vector<Proof> proofs { p };
+        std::vector<RangeProof> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // maximum number of value commitments
         auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values);
-        std::vector<Proof> proofs { p };
+        std::vector<RangeProof> proofs { p };
         BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
     }
     {
         // number of value commitments exceeding maximum
         auto p = gen_valid_proof_wo_value_commitments(Config::m_max_input_values + 1);
-        std::vector<Proof> proofs { p };
+        std::vector<RangeProof> proofs { p };
         BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
     }
 }
