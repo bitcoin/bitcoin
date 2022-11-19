@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/util/setup_common.h>
-#include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/arith/range_proof/range_proof_logic.h>
 
 #include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     Scalars vs;
     vs.Add(one);
 
-    RangeProof rp;
+    RangeProofLogic rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
 
     auto is_valid = rp.Verify(std::vector<Proof> { p }, token_id);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
     Scalars vs;
     vs.Add(one);
 
-    RangeProof rp;
+    RangeProofLogic rp;
     auto proof = rp.Prove(vs, nonce, msg.second, token_id);
 
     size_t index = 0;
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
 static std::vector<TestCase> BuildTestCases()
 {
-    RangeProof rp;
+    RangeProofLogic rp;
 
     Scalar one(1);
     Scalar two(2);
@@ -233,7 +233,7 @@ static std::vector<TestCase> BuildTestCases()
 }
 
 static void RunTestCase(
-    RangeProof& rp,
+    RangeProofLogic& rp,
     TestCase& test_case
 ) {
     auto token_id = GenTokenId();
@@ -287,7 +287,7 @@ static void RunTestCase(
 BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 {
     auto test_cases = BuildTestCases();
-    RangeProof rp;
+    RangeProofLogic rp;
     for (auto test_case: test_cases) {
         RunTestCase(rp, test_case);
     }
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 {
-    RangeProof rp;
+    RangeProofLogic rp;
 
     Scalars values;
     values.Add(Scalar(1));
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 {
-    RangeProof rp;
+    RangeProofLogic rp;
     G1Point nonce = G1Point::GetBasePoint();
     std::vector<unsigned char> msg;
     TokenId token_id;
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_recover_num_rounds)
 {
-    RangeProof rp;
+    RangeProofLogic rp;
     BOOST_CHECK(rp.RecoverNumRounds(1ul) == 6ul);
 
 }
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
         for (size_t i=0; i<n; ++i) {
             p.Vs.Add(G1Point::GetBasePoint());
         }
-        auto num_rounds = RangeProof::RecoverNumRounds(n);
+        auto num_rounds = RangeProofLogic::RecoverNumRounds(n);
         for (size_t i=0; i<num_rounds; ++i) {
             p.Ls.Add(G1Point::GetBasePoint());
             p.Rs.Add(G1Point::GetBasePoint());
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
         return p;
     };
 
-    RangeProof rp;
+    RangeProofLogic rp;
     {
         // no proof should validate fine
         std::vector<Proof> proofs;

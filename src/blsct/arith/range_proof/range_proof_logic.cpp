@@ -4,17 +4,17 @@
 
 #include <blsct/arith/range_proof/lazy_g1point.h>
 #include <blsct/arith/range_proof/proof.h>
-#include <blsct/arith/range_proof/range_proof.h>
+#include <blsct/arith/range_proof/range_proof_logic.h>
 #include <ctokens/tokenid.h>
 #include <util/strencodings.h>
 #include <tinyformat.h>
 
-Scalar* RangeProof::m_one = nullptr;
-Scalar* RangeProof::m_two = nullptr;
-Scalars* RangeProof::m_two_pows_64 = nullptr;
-Scalar* RangeProof::m_inner_prod_1x2_pows_64 = nullptr;
-Scalar* RangeProof::m_uint64_max = nullptr;
-GeneratorsFactory* RangeProof::m_gf = nullptr;
+Scalar* RangeProofLogic::m_one = nullptr;
+Scalar* RangeProofLogic::m_two = nullptr;
+Scalars* RangeProofLogic::m_two_pows_64 = nullptr;
+Scalar* RangeProofLogic::m_inner_prod_1x2_pows_64 = nullptr;
+Scalar* RangeProofLogic::m_uint64_max = nullptr;
+GeneratorsFactory* RangeProofLogic::m_gf = nullptr;
 
 AmountRecoveryRequest AmountRecoveryRequest::of(Proof& proof, size_t& index, G1Point& nonce)
 {
@@ -41,38 +41,38 @@ AmountRecoveryResult AmountRecoveryResult::failure() {
     };
 }
 
-RangeProof::RangeProof()
+RangeProofLogic::RangeProofLogic()
 {
     if (m_is_initialized) return;
-    boost::lock_guard<boost::mutex> lock(RangeProof::m_init_mutex);
+    boost::lock_guard<boost::mutex> lock(RangeProofLogic::m_init_mutex);
 
     MclInitializer::Init();
     G1Point::Init();
 
-    RangeProof::m_one = new Scalar(1);
-    RangeProof::m_two = new Scalar(2);
-    RangeProof::m_gf = new GeneratorsFactory();
+    RangeProofLogic::m_one = new Scalar(1);
+    RangeProofLogic::m_two = new Scalar(2);
+    RangeProofLogic::m_gf = new GeneratorsFactory();
     {
         auto two_pows_64 = Scalars::FirstNPow(*m_two, Config::m_input_value_bits);
-        RangeProof::m_two_pows_64 = new Scalars(two_pows_64);
-        auto ones_64 = Scalars::RepeatN(*RangeProof::m_one, Config::m_input_value_bits);
-        RangeProof::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProof::m_two_pows_64).Sum());
+        RangeProofLogic::m_two_pows_64 = new Scalars(two_pows_64);
+        auto ones_64 = Scalars::RepeatN(*RangeProofLogic::m_one, Config::m_input_value_bits);
+        RangeProofLogic::m_inner_prod_1x2_pows_64 = new Scalar((ones_64 * *RangeProofLogic::m_two_pows_64).Sum());
     }
     {
         Scalar int64_max(INT64_MAX);
         Scalar one(1);
         Scalar uint64_max = (int64_max << 1) + one;
-        RangeProof::m_uint64_max = new Scalar(uint64_max);
+        RangeProofLogic::m_uint64_max = new Scalar(uint64_max);
     }
     m_is_initialized = true;
 }
 
-Scalar RangeProof::GetUint64Max() const
+Scalar RangeProofLogic::GetUint64Max() const
 {
     return *m_uint64_max;
 }
 
-bool RangeProof::InnerProductArgument(
+bool RangeProofLogic::InnerProductArgument(
     const size_t concat_input_values_in_bits,
     G1Points& Gi,
     G1Points& Hi,
@@ -136,7 +136,7 @@ bool RangeProof::InnerProductArgument(
     return true;
 }
 
-Proof RangeProof::Prove(
+Proof RangeProofLogic::Prove(
     Scalars& vs,
     G1Point& nonce,
     const std::vector<uint8_t>& message,
@@ -356,7 +356,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     return proof;
 }
 
-size_t RangeProof::RecoverNumRounds(const size_t& num_input_values)
+size_t RangeProofLogic::RecoverNumRounds(const size_t& num_input_values)
 {
     auto num_input_values_pow2 =
         Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
@@ -367,7 +367,7 @@ size_t RangeProof::RecoverNumRounds(const size_t& num_input_values)
     return num_rounds;
 }
 
-void RangeProof::ValidateProofsBySizes(
+void RangeProofLogic::ValidateProofsBySizes(
     const std::vector<Proof>& proofs
 ) {
     for (const Proof& proof: proofs) {
@@ -394,7 +394,7 @@ void RangeProof::ValidateProofsBySizes(
     }
 }
 
-G1Point RangeProof::VerifyProofs(
+G1Point RangeProofLogic::VerifyProofs(
     const std::vector<ProofWithTranscript>& proof_transcripts,
     const Generators& gens,
     const size_t& max_mn
@@ -433,7 +433,7 @@ G1Point RangeProof::VerifyProofs(
             - (z_pows_from_2[0] * y_pows_sum);  // (2)
         for (size_t i = 1; i <= p.num_input_values_power_2; ++i) {
             // multiply z^3, z^4, ..., z^(mn+3)
-            delta_yz = delta_yz - z_pows_from_2[i] * *RangeProof::m_inner_prod_1x2_pows_64;  // (3)
+            delta_yz = delta_yz - z_pows_from_2[i] * *RangeProofLogic::m_inner_prod_1x2_pows_64;  // (3)
         }
 
         // g part of LHS in (65) where delta_yz on RHS is moved to LHS
@@ -527,7 +527,7 @@ G1Point RangeProof::VerifyProofs(
     return points.Sum();
 }
 
-bool RangeProof::Verify(
+bool RangeProofLogic::Verify(
     const std::vector<Proof>& proofs,
     const TokenId& token_id
 ) const {
@@ -556,7 +556,7 @@ bool RangeProof::Verify(
     return point_sum.IsUnity();
 }
 
-AmountRecoveryResult RangeProof::RecoverAmounts(
+AmountRecoveryResult RangeProofLogic::RecoverAmounts(
     const std::vector<AmountRecoveryRequest>& reqs,
     const TokenId& token_id
 ) const {
@@ -597,7 +597,7 @@ AmountRecoveryResult RangeProof::RecoverAmounts(
         // (message << 64 | 64-bit v[0])
         //
         const Scalar message_v0 = (req.mu - rho * req.x) - alpha;
-        const Scalar input_value0 = message_v0 & *RangeProof::m_uint64_max;
+        const Scalar input_value0 = message_v0 & *RangeProofLogic::m_uint64_max;
 
         // skip this request if recovered input value 0 commitment doesn't match with Vs[0]
         G1Point input_value0_commitment = (H * input_value0_gamma) + (G * input_value0);

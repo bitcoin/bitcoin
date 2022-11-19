@@ -55,12 +55,12 @@ struct AmountRecoveryResult
     static AmountRecoveryResult failure();
 };
 
-// implementation of range proof described in Bulletproofs
+// implementation of range proof algorithms described
 // based on the paper: https://eprint.iacr.org/2017/1066.pdf
-class RangeProof
+class RangeProofLogic
 {
 public:
-    RangeProof();
+    RangeProofLogic();
 
     Proof Prove(
         Scalars& vs,

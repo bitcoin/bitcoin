@@ -17,7 +17,7 @@ public:
      */
     static size_t GetFirstPowerOf2GreaterOrEqTo(const size_t& input_value_vec_len);
 
-    // maximum # of retries allowed for RangeProof::Prove function
+    // maximum # of retries allowed for RangeProofLogic::Prove function
     inline static const size_t max_prove_func_retries = 100;
 
     // size of each input value in bits. N in old code
