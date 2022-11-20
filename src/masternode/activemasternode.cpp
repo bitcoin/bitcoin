@@ -136,7 +136,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, *sockPtr, nConnectTimeout, true) && !sockPtr->IsSelectable();
+    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, *sockPtr, nConnectTimeout, true) && sockPtr->IsSelectable();
     sockPtr = std::make_unique<Sock>(INVALID_SOCKET);
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
