@@ -145,6 +145,8 @@ class NetTest(SyscoinTestFramework):
                 "relaytxes": False,
                 "services": "0000000000000000",
                 "servicesnames": [],
+                # SYSCOIN
+                'masternode': False,
                 "startingheight": -1,
                 "subver": "",
                 "synced_blocks": -1,
