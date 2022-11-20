@@ -43,7 +43,7 @@ public:
     bool ReadDataSize(const std::vector<uint8_t>& nVersionHash, uint32_t &nSize);
     bool ReadMTP(const std::vector<uint8_t>& nVersionHash, int64_t &nMedianTime);
     bool Prune(int64_t nMedianTime);
-    bool BlobExists(const CNEVMData& nevmDataToFind, bool &bDataMismatch);
+    bool BlobExists(const std::vector<uint8_t>& vchVersionhash);
     const PoDAMAP& GetMapCache() const { return mapCache;}
 };
 class CAssetDB : public CDBWrapper {

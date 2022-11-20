@@ -71,6 +71,7 @@
 #include <services/assetconsensus.h>
 #include <fstream>
 #include <cachemultimap.h>
+#include <nevm/sha3.h>
 #ifndef WIN32
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -2145,10 +2146,25 @@ bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     }
     return true;
 }
-// optimize so KZG validations can be skipped if they are already done (version hash must exist and data must be the same as well to skip)
-bool BlobExistsInCache(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
-    return pnevmdatadb->BlobExists(nevmDataToFind, bDataMismatch);
-}
+class CBlobCheck
+{
+private:
+    const CNEVMData* nevmData;
+public:
+    CBlobCheck() {}
+    CBlobCheck(const CNEVMData* nevmDataIn) :
+        nevmData(nevmDataIn)  { };
+
+    bool operator()() noexcept {
+        return nevmData->vchVersionHash == dev::sha3(*nevmData->vchNEVMData).asBytes();
+    }
+
+    void swap(CBlobCheck& check) noexcept
+    {
+        std::swap(nevmData, check.nevmData);
+    }
+};
+static CCheckQueue<CBlobCheck> blobcheckqueue(MAX_DATA_BLOBS);
 bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) { 
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
@@ -2161,7 +2177,8 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
         }
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
-    std::vector<CNEVMData> vecNEVMDataToProcess;
+    CCheckQueueControl<CBlobCheck> control(&blobcheckqueue);
+    std::vector<CBlobCheck> vChecks;
     for (const auto &nevmDataPayload : vecNevmDataPayload) {
         // if connecting block is over NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA seconds old (median) and we have a chainlock less than NEVM_DATA_ENFORCE_TIME_HAVE_DATA seconds old (median)
         const bool enforceNotHaveData = nMedianTimeCL > 0 && nMedianTime < (nTimeNow - NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA) && nMedianTimeCL >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
@@ -2173,29 +2190,24 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
             return false;
         }
-        bool bDataMismatch = false;
-        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty() && !BlobExistsInCache(nevmDataPayload, bDataMismatch)) {
-            vecNEVMDataToProcess.emplace_back(nevmDataPayload);
+        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty() && !pnevmdatadb->BlobExists(nevmDataPayload.vchVersionHash)){
+            vChecks.emplace_back(CBlobCheck(&nevmDataPayload));
         }
-        if(bDataMismatch) {
-            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper(block): NEVM mismatch in commitment\n");
-            return false;   
-        }
-        mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, nevmDataPayload.vchNEVMData);
     }
-    if(fNEVMConnection && !vecNEVMDataToProcess.empty()) {
+    if(!vChecks.empty()) {
         // process new vector in batch checking the blobs
         BlockValidationState state;
         const auto time_1{SteadyClock::now()};
-        // if not in DB then we need to verify it via Geth KZG blob verification
-        GetMainSignals().NotifyCheckNEVMBlobs(vecNEVMDataToProcess, state);
-        const auto time_2{SteadyClock::now()};
-        if(state.IsInvalid()) {
-            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob %s\n", state.ToString());
+        control.Add(vChecks);
+        if (!control.Wait()){
+            LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob(s)\n");
             return false;
-        } else {
-            LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fms (%.2fms/blob)\n", vecNEVMDataToProcess.size(), Ticks<MillisecondsDouble>(time_2 - time_1), Ticks<MillisecondsDouble>(time_2 - time_1) / vecNEVMDataToProcess.size());
         }
+        const auto time_2{SteadyClock::now()};
+        LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fms (%.2fms/blob)\n", vChecks.size(), Ticks<MillisecondsDouble>(time_2 - time_1), Ticks<MillisecondsDouble>(time_2 - time_1) / vChecks.size());
+    }
+    for (const auto &nevmDataPayload : vecNevmDataPayload) {
+        mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, nevmDataPayload.vchNEVMData);
     }
     return true;
 }
@@ -2337,11 +2349,13 @@ static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 void StartScriptCheckWorkerThreads(int threads_num)
 {
     scriptcheckqueue.StartWorkerThreads(threads_num);
+    blobcheckqueue.StartWorkerThreads(threads_num);
 }
 
 void StopScriptCheckWorkerThreads()
 {
     scriptcheckqueue.StopWorkerThreads();
+    blobcheckqueue.StopWorkerThreads();
 }
 
 // SYSCOIN

@@ -485,7 +485,7 @@ bool IsAssetAllocationTx(const int &nVersion) {
 }
 
 bool IsSyscoinNEVMDataTx(const int &nVersion) {
-    return nVersion == SYSCOIN_TX_VERSION_NEVM_DATA;
+    return nVersion == SYSCOIN_TX_VERSION_NEVM_DATA_SHA3;
 }
 
 bool IsZdagTx(const int &nVersion) {

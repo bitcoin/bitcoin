@@ -19,10 +19,9 @@ class NEVMDataTest(DashTestFramework):
 
     def nevm_data_max_size_blob(self):
         print('Testing for max size of a blob (2MB)')
-        vh = secrets.token_hex(32)
         blobDataMax = secrets.token_hex(MAX_NEVM_DATA_BLOB)
         print('Creating large blob (2MB)...')
-        self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
+        vh = self.nodes[0].syscoincreatenevmblob(blobDataMax)['versionhash']
         self.sync_mempools()
         print('Generating block...')
         cl = self.nodes[0].getbestblockhash()
@@ -37,14 +36,14 @@ class NEVMDataTest(DashTestFramework):
         vh = secrets.token_hex(32)
         print('Trying 2MB + 1 to ensure it cannot create blob...')
         blobDataMaxPlus = secrets.token_hex(MAX_NEVM_DATA_BLOB + 1)
-        txBad = self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMaxPlus)['txid']
+        txBad = self.nodes[0].syscoincreatenevmblob(blobDataMaxPlus)['txid']
         assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
         print('Trying 2MB * MAX_DATA_BLOBS per block...')
         self.blobVHs = []
         for i in range(0, 33):
-            vh = secrets.token_hex(32)
+            blobDataMax = secrets.token_hex(MAX_NEVM_DATA_BLOB)
+            vh = self.nodes[0].syscoincreatenevmblob(blobDataMax)['versionhash']
             self.blobVHs.append(vh)
-            self.nodes[0].syscoincreaterawnevmblob(vh, blobDataMax)
         self.sync_mempools()
         print('Generating block...')
         cl = self.nodes[0].getbestblockhash()
@@ -91,9 +90,8 @@ class NEVMDataTest(DashTestFramework):
         self.blobVHs = []
         print('Populate 2 * MAX_DATA_BLOBS blobs in mempool (64)')
         for i in range(0, MAX_DATA_BLOBS*2):
-            vh = secrets.token_hex(32)
+            vh = self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))['versionhash']
             self.blobVHs.append(vh)
-            self.nodes[0].syscoincreaterawnevmblob(vh,  secrets.token_hex(55))
         self.sync_mempools()
         print('Generating block...')
         cl = self.nodes[0].getbestblockhash()
@@ -137,16 +135,21 @@ class NEVMDataTest(DashTestFramework):
         self.stop_node(4)
         print('Creating a few blobs across nodes...')
         startblockhash = self.nodes[0].getbestblockhash()
-        self.nodes[0].syscoincreaterawnevmblob('a37fca4d23174bf6aa93e965f9ff39c8a072a5a241f4e773f67edfa2b6d39edc', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        txid = self.nodes[1].syscoincreaterawnevmblob('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')['txid']
-        self.nodes[0].syscoincreaterawnevmblob('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        self.nodes[3].syscoincreaterawnevmblob('f40bd0d7f1b38686c799d32c854e11cc3c05d8f203080147f2d7587847da31af', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcae')
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        txidData = secrets.token_hex(55)
+        txid = self.nodes[1].syscoincreatenevmblob(txidData)['txid']
+        txid1Data = secrets.token_hex(55)
+        txid1 = self.nodes[0].syscoincreatenevmblob(txid1Data)['txid']
+        vhData = secrets.token_hex(55)
+        res = self.nodes[3].syscoincreatenevmblob(vhData)
+        vh = res['versionhash']
+        vhTxid = res['txid']
+        self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))
         print('Checking for duplicate versionhash...')
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
+        assert(vhTxid != self.nodes[3].syscoincreaterawnevmblob(vh, vhData)['txid'])
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')['txid']
+        self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))['txid']
         print('Generating blocks without waiting for mempools to sync...')
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:4])
@@ -156,27 +159,31 @@ class NEVMDataTest(DashTestFramework):
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         print('Check for consistency...')
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
+        self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
-        self.nodes[3].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')['txid']
+        self.nodes[3].syscoincreatenevmblob(secrets.token_hex(55))
         self.bump_mocktime(5, nodes=self.nodes[0:4])
         self.sync_mempools(self.nodes[0:4])
-        assert_equal(self.nodes[0].getnevmblobdata(txid, True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
-        assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
+        assert_equal(self.nodes[0].getnevmblobdata(txid, True)['data'], txidData)
+        assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], vhData)
+        assert_equal(self.nodes[1].getnevmblobdata(txid, True)['data'], txidData)
         # test relay before block creation
         print('Create more blobs...')
-        self.nodes[0].syscoincreaterawnevmblob('cfaadb6afa319dade1f54e705767645babee71682aebd5f8f96cf7b5b73a7aee', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('00b6f7108755f153456b474bf05320610313632d85dadc045393f20028bfb76d', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('ef54962b45b39600fd68fc07e9103154d5e9038b60e2727cb91a9c0ff79042d4', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('2d089ea4dbc17e500feae746481ea0ec0efa0f16e63c6f35d3bab352382dc47c', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('5dbe4b6494d25e75ad9d763958f236b71ce60de60260931bee2befd32c08770c', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('8f79cab7cf8367d91a06b821c56877c1e0e018795117491a1daa7444437301b7', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('214bd9691a9012d773af838ecc4d948903ee5591b3b10eaa8c0dad663303d7a5', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('1ac036a1b200809cfba7df9a3faa345d5787166b0e761610129f8fd48a88534a', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('cae99142756fc5d59a9d835529085bd04e24526798ef1eced147d072bca5c857', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
-        self.nodes[0].syscoincreaterawnevmblob('c9e023414c0f376dc2c65cd7c4998a4c801a9142cf927cf97ca9969e4f03ebe8', 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaa')
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))
+        data = secrets.token_hex(55)
+        self.nodes[0].syscoincreatenevmblob(data)
+        self.nodes[0].syscoincreatenevmblob(vhData, True)
+        self.nodes[0].syscoincreatenevmblob(data, True)
+        self.nodes[0].syscoincreatenevmblob(data, True)
+        self.nodes[0].syscoincreatenevmblob(data, True)
+        for i in range(0, 33):
+            blobDataMax = secrets.token_hex(MAX_NEVM_DATA_BLOB)
+            self.nodes[0].syscoincreatenevmblob(blobDataMax)
         print('Generating blocks after waiting for mempools to sync...')
         self.sync_mempools(self.nodes[0:4])
         self.generate(self.nodes[2], 5, sync_fun=self.no_op)
@@ -191,9 +198,9 @@ class NEVMDataTest(DashTestFramework):
         time.sleep(1)
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.sync_blocks(self.nodes[0:3])
-        assert_equal(self.nodes[1].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
-        assert_equal(self.nodes[1].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        assert_equal(self.nodes[1].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
+        assert_equal(self.nodes[1].getnevmblobdata(txid, True)['data'], txidData)
+        assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], vhData)
+        assert_equal(self.nodes[1].getnevmblobdata(txid1, True)['data'], txid1Data)
         print('Start node 4...')
         self.start_node(4, extra_args=self.extra_args[4])
         force_finish_mnsync(self.nodes[4])
@@ -206,9 +213,9 @@ class NEVMDataTest(DashTestFramework):
         self.connect_nodes(0, 3)
         self.connect_nodes(0, 4)
         self.sync_blocks()
-        assert_equal(self.nodes[4].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
-        assert_equal(self.nodes[4].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        assert_equal(self.nodes[4].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
+        assert_equal(self.nodes[4].getnevmblobdata(txid, True)['data'], txidData)
+        assert_equal(self.nodes[4].getnevmblobdata(vh, True)['data'], vhData)
+        assert_equal(self.nodes[4].getnevmblobdata(txid1, True)['data'], txid1Data)
         print('Test blob expiry...')
         self.mocktime = self.starttime
         self.bump_mocktime(NEVM_DATA_EXPIRE_TIME-1) # right before expiry
@@ -216,9 +223,9 @@ class NEVMDataTest(DashTestFramework):
         cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5)
         self.wait_for_chainlocked_block_all_nodes(cl)
-        assert_equal(self.nodes[3].getnevmblobdata('7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcab')
-        assert_equal(self.nodes[2].getnevmblobdata('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcad')
-        assert_equal(self.nodes[3].getnevmblobdata('7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a', True)['data'], 'fdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcaafdfdfdfdfcfcfcfcac')
+        assert_equal(self.nodes[3].getnevmblobdata(txid, True)['data'], txidData)
+        assert_equal(self.nodes[2].getnevmblobdata(vh, True)['data'], vhData)
+        assert_equal(self.nodes[3].getnevmblobdata(txid1, True)['data'], txid1Data)
         self.bump_mocktime(3) # push median time over expiry
         time.sleep(1)
         cl = self.generate(self.nodes[0], 10)[-6]
@@ -228,13 +235,13 @@ class NEVMDataTest(DashTestFramework):
         cl = self.generate(self.nodes[0], 10)[-6]
         time.sleep(1)
         self.wait_for_chainlocked_block_all_nodes(cl)
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[4].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[3].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[2].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[1].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, vh)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid1)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[4].getnevmblobdata, txid)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[3].getnevmblobdata, vh)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[2].getnevmblobdata, txid1)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[1].getnevmblobdata, txid1)
         nowblockhash = self.nodes[0].getbestblockhash()
         print('Checking for reorg with chainlocks in-place so pruned blobs are mined again...')
         print('Invalidating back to the original blockhash {}'.format(startblockhash))
@@ -242,30 +249,19 @@ class NEVMDataTest(DashTestFramework):
         print('Reconsidering block')
         self.nodes[0].reconsiderblock(startblockhash)
         assert_equal(self.nodes[0].getbestblockhash(), nowblockhash)
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, vh)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid1)
         cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5)
         self.wait_for_chainlocked_block_all_nodes(cl)
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7c822321c4ce8a690efe74527773e6de8ad1034b6115bf4f5e81611e2ee3ad8e')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6')
-        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, '7745e43153db13aea8803c5ee2250a3a53ae9830abe206201d6622e2a2cf7d7a')
-        print('Checking for duplicate versionhash but different blob size/commitment...')
-        txGood = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabc')['txid']
-        self.sync_mempools(self.nodes[0:4])
-        # different size
-        txBad = self.nodes[0].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aab')['txid']
-        # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different size
-        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txBad)
-        tip = self.generatetoaddress(self.nodes[1], 1, self.nodes[1].getnewaddress(), sync_fun=self.no_op)[-1]
-        self.nodes[1].getrawtransaction(txid=txGood, blockhash=tip)
-        self.generate(self.nodes[0], 4)
-        # different data (but same size)
-        txBad = self.nodes[1].syscoincreaterawnevmblob('6404b2e7ed8e17c95c1af05104c15e9fe2854e7d9ec8ceb47bd4e017421ad2b6', 'aabd')['txid']
-        self.generate(self.nodes[0], 5)
-        # should give 'ProcessNEVMData(tx): NEVM mismatch in commitment' because it tries to create duplicate with different data
-        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[1].getrawtransaction, txid=txBad)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, vh)
+        assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid1)
+        print('Checking for invalid versionhash...')
+        txidBad = self.nodes[3].syscoincreaterawnevmblob(secrets.token_hex(55), secrets.token_hex(55))['txid']
+        # should fail and not propogate due to 'bad-txns-poda-invalid'
+        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txidBad)
 
     def run_test(self):
         self.nodes[1].createwallet("")

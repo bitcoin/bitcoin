@@ -16,6 +16,7 @@
 #include <wallet/rpc/spend.h>
 #include <rpc/server.h>
 #include <wallet/coincontrol.h>
+#include <nevm/sha3.h>
 using namespace wallet;
 static RPCHelpMan convertaddresswallet()
 {
@@ -170,12 +171,13 @@ static RPCHelpMan signmessagebech32()
     };
 } 
 
+
 static RPCHelpMan syscoincreaterawnevmblob()
 {
     return RPCHelpMan{"syscoincreaterawnevmblob",
         "\nCreate NEVM blob data used by rollups via a custom raw parameters\n",
         {
-            {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the KZG commitment"},
+            {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the blob"},
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
@@ -184,8 +186,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"data\" 6 economical 25")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"data\" 6 economical 25")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -204,22 +206,11 @@ static RPCHelpMan syscoincreaterawnevmblob()
     nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
-    if(fNEVMConnection) {
-        CNEVMData nevmDataPayload(nevmData.vchVersionHash, vchData);
-        // process new vector in batch checking the blobs
-        BlockValidationState state;
-        // if not in DB then we need to verify it via Geth KZG blob verification
-        std::vector<CNEVMData> vecPayload{nevmDataPayload};
-        GetMainSignals().NotifyCheckNEVMBlobs(vecPayload, state);
-        if(state.IsInvalid()) {
-            throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not verify NEVM blob data: %s", state.ToString()));
-        }
-        nevmDataPayload.ClearData();
-    }
+
     CScript scriptData;
     scriptData << OP_RETURN << data;
     CCoinControl coin_control;
-    coin_control.m_version = SYSCOIN_TX_VERSION_NEVM_DATA;
+    coin_control.m_version = SYSCOIN_TX_VERSION_NEVM_DATA_SHA3;
     coin_control.m_nevmdata = vchData;
     std::vector<CRecipient> recipient{CRecipient{scriptData, 0, false}};
     mapValue_t mapValue;
@@ -247,9 +238,6 @@ static RPCHelpMan syscoincreatenevmblob()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
-    if(!fNEVMConnection) {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "NEVM not configured to run, required to create blobs");  
-    }
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
@@ -257,7 +245,7 @@ static RPCHelpMan syscoincreatenevmblob()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     EnsureWalletIsUnlocked(*pwallet);
-    const valtype &vchData = ParseHex(request.params[0].get_str());
+    const std::vector<uint8_t> &vchData = ParseHex(request.params[0].get_str());
     if(vchData.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
     }
@@ -267,26 +255,17 @@ static RPCHelpMan syscoincreatenevmblob()
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
-    CNEVMData nevmDataPayload;
-    // if not in DB then we need to verify it via Geth KZG blob verification
-    GetMainSignals().NotifyCreateNEVMBlob(vchData, nevmDataPayload, state);
-    if(state.IsInvalid()) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Could not create NEVM blob data: %s\n", state.ToString()));   
-    }
+    const std::vector<uint8_t> &vchVersionHash = dev::sha3(vchData).asBytes();
     int64_t mpt = -1;
-    if(pnevmdatadb->ReadMTP(nevmDataPayload.vchVersionHash, mpt) && !bOverwrite) {
+    if(pnevmdatadb->ReadMTP(vchVersionHash, mpt) && !bOverwrite) {
         UniValue resObj(UniValue::VOBJ);
-        resObj.__pushKV("versionhash", HexStr(nevmDataPayload.vchVersionHash));
+        resObj.__pushKV("versionhash", HexStr(vchVersionHash));
         return resObj;
     }
-    // nevmDataPayload.vchNEVMData should have the kzg commitment so lets append the data
-    valtype vchNEVMData = {*nevmDataPayload.vchNEVMData};
-    vchNEVMData.insert( vchNEVMData.end(), vchData.begin(), vchData.end() );
+
     UniValue paramsSend(UniValue::VARR);
-    paramsSend.push_back(HexStr(nevmDataPayload.vchVersionHash));
-    paramsSend.push_back(HexStr(vchNEVMData));
-    std::vector<uint8_t> vchVersionHash = nevmDataPayload.vchVersionHash;
-    nevmDataPayload.ClearData();
+    paramsSend.push_back(HexStr(vchVersionHash));
+    paramsSend.push_back(HexStr(vchData));
     paramsSend.push_back(request.params[2]);
     paramsSend.push_back(request.params[3]);
     paramsSend.push_back(request.params[4]);
@@ -294,13 +273,12 @@ static RPCHelpMan syscoincreatenevmblob()
     requestSend.context = request.context;
     requestSend.params = paramsSend;
     requestSend.URI = request.URI;
-    UniValue res = syscoincreaterawnevmblob().HandleRequest(requestSend);
-    UniValue resObj = res.get_obj();
+    UniValue resObj = syscoincreaterawnevmblob().HandleRequest(requestSend);
     if(!resObj.isNull()) {
         if(!find_value(resObj, "txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
             resObj.__pushKV("versionhash", HexStr(vchVersionHash));
-            resObj.__pushKV("datasize", vchNEVMData.size());
+            resObj.__pushKV("datasize", vchData.size());
             return resObj;
         } else {
             throw JSONRPCError(RPC_DATABASE_ERROR, "Transaction not complete or could not find txid");   

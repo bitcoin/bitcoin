@@ -1277,21 +1277,8 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     LogPrint(BCLog::SYS, "Flushing, erasing %d nevm entries\n", vecDataKeys.size());
     return WriteBatch(batch, true);
 }
-bool CNEVMDataDB::BlobExists(const CNEVMData& nevmDataToFind, bool &bDataMismatch) {
-    std::vector<uint8_t> emptyVec{};
-    std::vector<uint8_t> vchData;
-    auto it = mapCache.find(nevmDataToFind.vchVersionHash);
-    if(it != mapCache.end()) {
-        bDataMismatch = it->second.first != (nevmDataToFind.vchNEVMData? *nevmDataToFind.vchNEVMData: emptyVec);
-        return true;
-    } else {
-        const auto& pair = std::make_pair(nevmDataToFind.vchVersionHash, true);
-        if(Read(pair, vchData)) {
-            bDataMismatch = vchData != (nevmDataToFind.vchNEVMData? *nevmDataToFind.vchNEVMData: emptyVec);
-            return true;
-        }
-    }
-    return false;
+bool CNEVMDataDB::BlobExists(const std::vector<uint8_t>& vchVersionHash) {
+    return (mapCache.find(vchVersionHash) != mapCache.end()) || Exists(std::make_pair(vchVersionHash, true));
 }
 bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
     auto it = mapCache.begin();
