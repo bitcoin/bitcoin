@@ -509,15 +509,17 @@ static RPCHelpMan getblockhash()
 
 static RPCHelpMan getblockheader()
 {
+    int maxHeaders = 2000;
     return RPCHelpMan{"getblockheader",
                 "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
                 "If verbose is true, returns an Object with information about blockheader <hash>.\n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
                     {"verbose", RPCArg::Type::BOOL, RPCArg::Default{true}, "true for a json object, false for the hex-encoded data"},
+                    {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Number of headers to get (maximum: " + ::ToString(maxHeaders) + ")"},
                 },
                 {
-                    RPCResult{"for verbose = true",
+                    RPCResult{"for verbose = true, count = null",
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
@@ -536,8 +538,21 @@ static RPCHelpMan getblockheader()
                             {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
                             {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
                         }},
-                    RPCResult{"for verbose=false",
+                    RPCResult{"for verbose = true, count > 0",
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "header", "The blockheader for block 'hash'",
+                            {
+                                {RPCResult::Type::ELISION, "", "Same output as verbosity = true, count = 0"}
+                            }}
+                        }},
+                    RPCResult{"for verbose = false, count = null",
                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
+                    RPCResult{"for verbose = false, count > 0",
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "hex", "A string that is serialized, hex-encoded data for block 'hash'"}
+                        }}
                 },
                 RPCExamples{
                     HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
@@ -551,10 +566,15 @@ static RPCHelpMan getblockheader()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
+    bool returnArray = !request.params[2].isNull();
+    const int count{returnArray ? request.params[2].getInt<int>() : 1};
+    if ((count < 1) || (count > maxHeaders))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Header count is out of acceptable range (1-" + ::ToString(maxHeaders) + "): " + ::ToString(count));
+
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
-        ChainstateManager& chainman = EnsureAnyChainman(request.context);
         LOCK(cs_main);
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         tip = chainman.ActiveChain().Tip();
@@ -564,15 +584,26 @@ static RPCHelpMan getblockheader()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
-    if (!fVerbose)
+    std::vector<const CBlockIndex*> blocks;
+    while ((blocks.size() < static_cast<size_t>(count)) && (pblockindex != nullptr))
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-        ssBlock << pblockindex->GetBlockHeader();
-        std::string strHex = HexStr(ssBlock);
-        return strHex;
+        blocks.push_back(pblockindex);
+        pblockindex = chainman.ActiveChain().Next(pblockindex);
     }
 
-    return blockheaderToJSON(tip, pblockindex);
+    UniValue headers{UniValue::VARR};
+    for (auto block : blocks)
+    {
+        if (!fVerbose) {
+            CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+            ssBlock << block->GetBlockHeader();
+            headers.push_back(HexStr(ssBlock));
+        } else {
+            headers.push_back(blockheaderToJSON(tip, block));
+        }
+    }
+
+    return (returnArray) ? headers : headers[0];
 },
     };
 }
