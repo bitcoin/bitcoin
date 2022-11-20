@@ -50,8 +50,7 @@ class NEVMDataTest(DashTestFramework):
         tip = self.generate(self.nodes[0], 1)[-1]
         rpc_details = self.nodes[0].getblock(tip, True)
         print('Ensure fees will be properly calculated due to the block size being correctly calculated based on PoDA policy (100x factor of blob data)...')
-        print('size {}'.format(rpc_details["size"]))
-        assert(rpc_details["size"] > 650000 and rpc_details["size"]  < 660000)
+        assert(rpc_details["size"] > 670000 and rpc_details["size"]  < 680000)
         foundCount = 0
         self.sync_blocks()
         print('Testing nodes to see if MAX_DATA_BLOBS blobs exist at 2MB each...')
