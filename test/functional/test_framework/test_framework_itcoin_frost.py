@@ -1,7 +1,8 @@
-from test_framework.address import key_to_p2pkh
+from test_framework.test_node import TestNode
+from test_framework.address import key_to_p2pkh, byte_to_base58
 from test_framework.conftest import SIGNET
 from test_framework.frost import FROST
-from test_framework.key import TaggedHash, SECP256K1_ORDER
+from test_framework.key import TaggedHash, SECP256K1_ORDER, ECKey
 from test_framework.script import SIGHASH_DEFAULT, TaprootSignatureHash, CScriptOp
 from test_framework.test_framework_itcoin import BaseItcoinTest
 from test_framework.util import assert_equal
@@ -32,10 +33,6 @@ class BaseFrostTest(BaseItcoinTest):
         self.requires_wallet = True
         self.setup_clean_chain = True
 
-        # We need to set the key pairs - needed just because otherwise it
-        # throws - even if we won't use them
-        self._key_pairs = [None] * self.signet_num_signers
-
         # Define FROST participants and perform key generation
         self.participants = []
         for i in range(self.signet_num_signers):
@@ -46,6 +43,22 @@ class BaseFrostTest(BaseItcoinTest):
 
         for p in self.participants:
             p.aggregate_shares([participant.shares[p.index-1] for participant in self.participants if participant.index != p.index])
+
+        # We need to set the key pairs
+        keypairs = []
+        for p in self.participants:
+            aggregate_share_bytes = p.aggregate_share.to_bytes(32, byteorder='big')
+            priv_key = ECKey()
+            priv_key.set(aggregate_share_bytes, True)
+            pub_key = priv_key.get_pubkey()
+            # Note that private keys for compressed and uncompressed bitcoin public keys use the same version byte (239). 
+            # The reason for the compressed form starting with a different character ('c' instead of '9') is because a 
+            # 0x01 byte is appended to the private key before base58 encoding.
+            priv_key_b58 = byte_to_base58(bytes(priv_key.get_bytes() + b"\x01"), 239)
+            address = key_to_p2pkh(pub_key.get_bytes().hex())
+            keypairs.append(TestNode.AddressKeyPair(address, priv_key_b58))
+        TestNode.PRIV_KEYS[:self.signet_num_signers] = keypairs
+        self._key_pairs = keypairs
 
         if (tweak_public_key):
             # 1. Derive pubkey without tweak, Y = ∏ 𝜙_j_0, 1 ≤ j ≤ n
