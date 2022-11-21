@@ -356,7 +356,8 @@ BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
     Scalar one(1);
     uint64_t exp = 1;
-    for (size_t i = 0; i < 64; ++i) {
+    // test up to the positive max of int64_t since assignment op takes int64_t as an input
+    for (size_t i = 0; i < 63; ++i) {
         Scalar act = one << i;
         BOOST_CHECK_EQUAL(act.GetUint64(), exp);
         exp <<= 1;
