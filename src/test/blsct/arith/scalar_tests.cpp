@@ -507,19 +507,29 @@ BOOST_AUTO_TEST_CASE(test_scalar_getuint64)
         // Scalar(int) operator takes int64_t, so let it take INT64_MAX
         Scalar a(INT64_MAX);
         uint64_t b = a.GetUint64();
-        uint64_t c = 9223372036854775807;  // is INT64_MAX
+        uint64_t c = 9223372036854775807ul;  // is INT64_MAX
         BOOST_CHECK_EQUAL(b, c);
     }
     {
-        // assignment operator takes int64_t, so whatever base << i becomes
-        // Scalar is expected to have value interpreted as int64_t
+        // assignment operator takes int64_t
         Scalar base(0b1);
         int64_t n = 1;
-        for (uint8_t i=0; i<64; ++i) {
+        for (uint8_t i=0; i<63; ++i) {  // test up to positive max of int64_t
             Scalar a = base << i;
             BOOST_CHECK_EQUAL(a.GetUint64(), n);
             n <<= 1;
         }
+    }
+    {
+        int64_t int64_t_min = std::numeric_limits<int64_t>::min();
+        Scalar s(int64_t_min);
+
+        // int64_t minimum value maps to:
+        // '0b111111111111111111111111111111100000000000000000000000000000001'
+        // = 9223372032559808513
+        uint64_t exp(9223372032559808513);
+
+        BOOST_CHECK_EQUAL(s.GetUint64(), exp);
     }
 }
 
