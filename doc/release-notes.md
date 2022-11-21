@@ -1,9 +1,9 @@
-22.0 Release Notes
-==================
+22.1rc2 Release Notes Draft
+===========================
 
-Bitcoin Core version 22.0 is now available from:
+Bitcoin Core version 22.1rc2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-22.0/>
+  <https://bitcoincore.org/bin/bitcoin-core-22.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -21,7 +21,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
@@ -42,21 +42,6 @@ From Bitcoin Core 22.0 onwards, macOS versions earlier than 10.14 are no longer 
 Notable changes
 ===============
 
-P2P and network changes
------------------------
-
-New and Updated RPCs
---------------------
-
-Build System
-------------
-
-Files
------
-
-New settings
-------------
-
 Updated settings
 ----------------
 
@@ -66,57 +51,76 @@ Updated settings
   mean `-persistmempool=1`. Passing `-persistmempool=0`, `-persistmempool=1`
   and `-nopersistmempool` is unaffected. (#23061)
 
-Tools and Utilities
--------------------
-
-Wallet
-------
-
-GUI changes
------------
-
-Low-level changes
-=================
-
-RPC
----
-
-Tests
------
-
-22.0 change log
-===============
-
-A detailed list of changes in this version follows. To keep the list to a manageable length, small refactors and typo fixes are not included, and similar changes are sometimes condensed into one line.
-
-### Consensus
-
-### Policy
-
-### Mining
-
-### Block and transaction handling
-
-### P2P protocol and network code
-
-### Wallet
+### P2P
 
 ### RPC and other APIs
 
-### GUI
+- #25237 rpc: Capture UniValue by ref for rpcdoccheck
+- #25983 Prevent data race for pathHandlers
+- #26275 Fix crash on deriveaddresses when index is 2147483647 (2^31-1)
+
+### Wallet
+
+- #22781 wallet: fix the behavior of IsHDEnabled
+- #22949 fee: Round up fee calculation to avoid a lower than expected feerate
+- #23333 wallet: fix segfault by avoiding invalid default-ctored external_spk_managers entry
 
 ### Build system
 
-### Tests and QA
+- #22820 build, qt: Fix typo in QtInputSupport check
+- #23045 build: Restrict check for CRC32C intrinsic to aarch64
+- #23148 build: Fix guix linker-loader path and add check_ELF_interpreter
+- #23314 build: explicitly disable libsecp256k1 openssl based tests
+- #23580 build: patch qt to explicitly define previously implicit header include
+- #24215 guix: ignore additional failing certvalidator test
+- #24256 build: Bump depends packages (zmq, libXau)
+- #25201 windeploy: Renewed windows code signing certificate
+- #25985 Revert "build: Use Homebrew's sqlite package if it is available"
+
+### GUI
+
+- #gui631 Disallow encryption of watchonly wallets
+- #gui680 Fixes MacOS 13 segfault by preventing certain notifications
+- #24498 qt: Avoid crash on startup if int specified in settings.json
+
+### Tests
+
+- #23716 test: replace hashlib.ripemd160 with an own implementation
+- #24239 test: fix ceildiv division by using integers
+
+### Utilities
+
+- #22390 system: skip trying to set the locale on NetBSD
+- #22895 don't call GetBlockPos in ReadBlockFromDisk without cs_main lock
+- #24104 fs: Make compatible with boost 1.78
 
 ### Miscellaneous
 
-### Documentation
+- #23335 refactor: include a missing <limits> header in fs.cpp
+- #23504 ci: Replace soon EOL hirsute with jammy
+- #26321 Adjust .tx/config for new Transifex CLI
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
+
+- Andrew Chow
+- Carl Dong
+- Hennadii Stepanov
+- Joan Karadimov
+- John Moffett
+- Jon Atack
+- Kittywhiskers Van Gogh
+- Marco Falke
+- Martin Zumsande
+- Michael Ford
+- muxator
+- Pieter Wuille
+- Ryan Ofsky
+- Saibato
+- Sebastian Falbesoner
+- W. J. van der Laan
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
