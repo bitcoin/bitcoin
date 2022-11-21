@@ -55,13 +55,17 @@ G1Point GeneratorsFactory::DeriveGenerator(
     static const std::string salt("bulletproof");
     std::vector<uint8_t> serialized_p = p.GetVch();
 
-    auto s =  token_id.token.ToString();
+    auto num_to_str = [](auto n) {
+        std::ostringstream os;
+        os << n;
+        return os.str();
+    };
     std::string hash_preimage =
         HexStr(serialized_p) +
         salt +
-        std::to_string(index) +
+        num_to_str(index) +
         token_id.token.ToString() +
-        (token_id.subid == std::numeric_limits<uint64_t>::max() ? "" : "nft" + std::to_string(token_id.subid));
+        (token_id.subid == std::numeric_limits<uint64_t>::max() ? "" : "nft" + num_to_str(token_id.subid));
 
     CHashWriter ss(SER_GETHASH, 0);
     ss << hash_preimage;
@@ -70,7 +74,8 @@ G1Point GeneratorsFactory::DeriveGenerator(
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
     auto ret = G1Point::MapToG1(vec_hash);
     if (ret.IsUnity()) {
-        throw std::runtime_error(strprintf("%s: generated G1Point is the point at infinity. try changing index and/or token_id to get a valid point", __func__));
+        throw std::runtime_error(strprintf(
+            "%s: Generated G1Point is the point at infinity. Try changing parameters", __func__));
     }
     return ret;
 }
