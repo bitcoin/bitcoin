@@ -82,6 +82,75 @@ static UniValue quorum_list(const JSONRPCRequest& request)
     return ret;
 }
 
+static void quorum_list_extended_help(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"quorum listextended",
+        "Extended list of on-chain quorums\n",
+        {
+            {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::OBJ_DYN, "quorumName", "List of quorum details per some quorum type",
+                {
+                        {RPCResult::Type::OBJ, "xxxx", "Quorum hash. Note: most recent quorums come first.",
+                         {
+                                 {RPCResult::Type::NUM, "creationHeight", "Block height where the DKG started."},
+                                 {RPCResult::Type::NUM, "quorumIndex", "Quorum index (applicable only to rotated quorums)."},
+                                 {RPCResult::Type::STR_HEX, "minedBlockHash", "Blockhash where the commitment was mined."}
+                         }},
+                }}
+            }},
+            RPCExamples{
+                HelpExampleCli("quorum", "listextended")
+                + HelpExampleCli("quorum", "listextended 10")
+                + HelpExampleRpc("quorum", "listextended, 10")
+            },
+    }.Check(request);
+}
+
+static UniValue quorum_list_extended(const JSONRPCRequest& request)
+{
+    quorum_list_extended_help(request);
+
+    int count = -1;
+    if (!request.params[0].isNull()) {
+        count = ParseInt32V(request.params[0], "count");
+        if (count < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
+        }
+    }
+
+    UniValue ret(UniValue::VOBJ);
+
+    LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
+    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return ::ChainActive().Tip());
+
+    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
+        const auto& llmq_params = llmq::GetLLMQParams(type);
+        UniValue v(UniValue::VARR);
+
+        auto quorums = llmq_ctx.qman->ScanQuorums(type, pindexTip, count > -1 ? count : llmq_params.signingActiveQuorumCount);
+        for (const auto& q : quorums) {
+            UniValue obj(UniValue::VOBJ);
+            {
+                UniValue j(UniValue::VOBJ);
+                if (llmq_params.useRotation) {
+                    j.pushKV("quorumIndex", q->qc->quorumIndex);
+                }
+                j.pushKV("creationHeight", q->m_quorum_base_block_index->nHeight);
+                j.pushKV("minedBlockHash", q->minedBlockHash.ToString());
+                obj.pushKV(q->qc->quorumHash.ToString(),j);
+            }
+            v.push_back(obj);
+        }
+        ret.pushKV(std::string(llmq_params.name), v);
+    }
+
+    return ret;
+}
+
 static void quorum_info_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"quorum info",
@@ -727,6 +796,8 @@ static UniValue _quorum(const JSONRPCRequest& request)
 
     if (command == "quorumlist") {
         return quorum_list(new_request);
+    } else if (command == "quorumlistextended") {
+        return quorum_list_extended(new_request);
     } else if (command == "quoruminfo") {
         return quorum_info(new_request);
     } else if (command == "quorumdkgstatus") {

@@ -88,6 +88,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
         b_0 = self.nodes[0].getbestblockhash()
 
         (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
+        assert(self.test_quorum_listextended(quorum_info_0_0, llmq_type_name))
+        assert(self.test_quorum_listextended(quorum_info_0_1, llmq_type_name))
         quorum_members_0_0 = extract_quorum_members(quorum_info_0_0)
         quorum_members_0_1 = extract_quorum_members(quorum_info_0_1)
         assert_equal(len(intersection(quorum_members_0_0, quorum_members_0_1)), 0)
@@ -106,6 +108,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
         quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, {}, expectedDeleted, expectedNew)
 
         (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
+        assert(self.test_quorum_listextended(quorum_info_1_0, llmq_type_name))
+        assert(self.test_quorum_listextended(quorum_info_1_1, llmq_type_name))
         quorum_members_1_0 = extract_quorum_members(quorum_info_1_0)
         quorum_members_1_1 = extract_quorum_members(quorum_info_1_1)
         assert_equal(len(intersection(quorum_members_1_0, quorum_members_1_1)), 0)
@@ -212,6 +216,22 @@ class LLMQQuorumRotationTest(DashTestFramework):
         assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["newQuorums"]]), set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]))
 
         return d
+
+    def test_quorum_listextended(self, quorum_info, llmq_type_name):
+        extended_quorum_list = self.nodes[0].quorum("listextended")[llmq_type_name]
+        quorum_dict = {}
+        for dictionary in extended_quorum_list:
+            quorum_dict.update(dictionary)
+        if quorum_info["quorumHash"] in quorum_dict:
+            q = quorum_dict[quorum_info["quorumHash"]]
+            if q["minedBlockHash"] != quorum_info["minedBlock"]:
+                return False
+            if q["creationHeight"] != quorum_info["height"]:
+                return False
+            if q["quorumIndex"] != quorum_info["quorumIndex"]:
+                return False
+            return True
+        return False
 
 if __name__ == '__main__':
     LLMQQuorumRotationTest().main()
