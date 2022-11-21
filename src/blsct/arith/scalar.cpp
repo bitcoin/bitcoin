@@ -254,10 +254,10 @@ Scalar Scalar::Rand(bool exclude_zero)
 
 uint64_t Scalar::GetUint64() const
 {
-    int64_t ret = 0;
+    uint64_t ret = 0;
     std::vector<uint8_t> vch = GetVch();
     for (auto i = 0; i < 8; ++i) {
-        ret |= (int64_t) vch[vch.size()-i-1] << i*8;
+        ret |= (uint64_t) vch[vch.size() - 1 - i] << i * 8;
     }
     return ret;
 }
