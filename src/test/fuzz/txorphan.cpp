@@ -89,9 +89,8 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
                 },
                 [&] {
                     {
-                        NodeId originator;
                         bool more = true;
-                        CTransactionRef ref = orphanage.GetTxToReconsider(peer_id, originator, more);
+                        CTransactionRef ref = orphanage.GetTxToReconsider(peer_id, more);
                         if (!ref) {
                             Assert(!more);
                         } else {

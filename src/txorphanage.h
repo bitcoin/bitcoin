@@ -29,11 +29,11 @@ public:
     /** Extract a transaction from a peer's work set
      *  Returns nullptr and sets more to false if there are no transactions
      *  to work on. Otherwise returns the transaction reference, removes
-     *  the transaction from the work set, and populates its arguments with
-     *  the originating peer, and whether there are more orphans for this peer
+     *  the transaction from the work set, and sets "more" to indicate
+     *  if there are more orphans for this peer
      *  to work on after this tx.
      */
-    CTransactionRef GetTxToReconsider(NodeId peer, NodeId& originator, bool& more) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    CTransactionRef GetTxToReconsider(NodeId peer, bool& more) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase an orphan by txid */
     int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);

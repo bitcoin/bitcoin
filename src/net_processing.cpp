@@ -2892,10 +2892,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     AssertLockHeld(cs_main);
 
     CTransactionRef porphanTx = nullptr;
-    NodeId from_peer = -1;
     bool more = false;
 
-    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id, from_peer, more)) {
+    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id, more)) {
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
@@ -2913,10 +2912,10 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
             if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
-                    from_peer,
+                    peer.m_id,
                     state.ToString());
                 // Maybe punish peer that gave us an invalid orphan tx
-                MaybePunishNodeForTx(from_peer, state);
+                MaybePunishNodeForTx(peer.m_id, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
