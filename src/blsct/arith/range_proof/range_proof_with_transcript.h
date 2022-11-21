@@ -28,6 +28,8 @@ public:
 
     static RangeProofWithTranscript Build(const RangeProof& proof);
 
+    static size_t RecoverNumRounds(const size_t& num_input_values);
+
     const RangeProof proof;
 
     // transcript

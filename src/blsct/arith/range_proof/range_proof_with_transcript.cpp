@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/range_proof/config.h>
-#include <blsct/arith/range_proof/range_proof_logic.h>
+// #include <blsct/arith/range_proof/range_proof_logic.h>
 #include <blsct/arith/range_proof/range_proof_with_transcript.h>
 
 RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof) {
@@ -34,7 +34,7 @@ RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof
 
     Scalar cx_factor = transcript_gen.GetHash();
 
-    auto num_rounds = RangeProofLogic::RecoverNumRounds(proof.Vs.Size());
+    auto num_rounds = RangeProofWithTranscript::RecoverNumRounds(proof.Vs.Size());
 
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars xs;
@@ -61,4 +61,15 @@ RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof
         num_input_values_power_2,
         concat_input_values_in_bits
     );
+}
+
+size_t RangeProofWithTranscript::RecoverNumRounds(const size_t& num_input_values)
+{
+    auto num_input_values_pow2 =
+        Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
+    auto num_rounds =
+        ((int) std::log2(num_input_values_pow2)) +
+        Config::m_inupt_value_bits_log2;
+
+    return num_rounds;
 }

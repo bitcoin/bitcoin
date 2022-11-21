@@ -349,13 +349,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_range_proof_recover_num_rounds)
-{
-    RangeProofLogic rp;
-    BOOST_CHECK(rp.RecoverNumRounds(1ul) == 6ul);
-
-}
-
 BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
     auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
@@ -364,7 +357,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
         for (size_t i=0; i<n; ++i) {
             p.Vs.Add(G1Point::GetBasePoint());
         }
-        auto num_rounds = RangeProofLogic::RecoverNumRounds(n);
+        auto num_rounds = RangeProofWithTranscript::RecoverNumRounds(n);
         for (size_t i=0; i<num_rounds; ++i) {
             p.Ls.Add(G1Point::GetBasePoint());
             p.Rs.Add(G1Point::GetBasePoint());

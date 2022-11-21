@@ -3,10 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/range_proof/lazy_g1point.h>
-#include <blsct/arith/range_proof/range_proof.h>
 #include <blsct/arith/range_proof/range_proof_logic.h>
-#include <ctokens/tokenid.h>
-#include <util/strencodings.h>
 #include <tinyformat.h>
 
 Scalar* RangeProofLogic::m_one = nullptr;
@@ -356,22 +353,11 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     return proof;
 }
 
-size_t RangeProofLogic::RecoverNumRounds(const size_t& num_input_values)
-{
-    auto num_input_values_pow2 =
-        Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
-    auto num_rounds =
-        ((int) std::log2(num_input_values_pow2)) +
-        Config::m_inupt_value_bits_log2;
-
-    return num_rounds;
-}
-
 void RangeProofLogic::ValidateProofsBySizes(
     const std::vector<RangeProof>& proofs
 ) {
     for (const RangeProof& proof: proofs) {
-        size_t num_rounds = RecoverNumRounds(proof.Vs.Size());
+        size_t num_rounds = RangeProofWithTranscript::RecoverNumRounds(proof.Vs.Size());
 
         // proof must contain input values
         if (proof.Vs.Size() == 0)
@@ -411,7 +397,7 @@ G1Point RangeProofLogic::VerifyProofs(
     G1Point H = gens.H.get();
 
     for (const RangeProofWithTranscript& p: proof_transcripts) {
-        auto num_rounds = RecoverNumRounds(p.proof.Vs.Size());
+        auto num_rounds = RangeProofWithTranscript::RecoverNumRounds(p.proof.Vs.Size());
         Scalar weight_y = Scalar::Rand();
         Scalar weight_z = Scalar::Rand();
 

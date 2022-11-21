@@ -8,12 +8,8 @@
 #include <optional>
 #include <vector>
 
-#include <blsct/arith/elements.h>
-#include <blsct/arith/g1point.h>
-#include <blsct/arith/range_proof/config.h>
 #include <blsct/arith/range_proof/generators.h>
 #include <blsct/arith/range_proof/range_proof_with_transcript.h>
-#include <blsct/arith/scalar.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 
@@ -84,8 +80,6 @@ public:
         const std::vector<AmountRecoveryRequest>& reqs,
         const TokenId& token_id
     ) const;
-
-    static size_t RecoverNumRounds(const size_t& num_input_values);
 
     static void ValidateProofsBySizes(
         const std::vector<RangeProof>& proofs

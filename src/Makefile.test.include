@@ -88,6 +88,7 @@ BITCOIN_TESTS =\
   test/blsct/arith/range_proof/generators_tests.cpp \
   test/blsct/arith/range_proof/lazy_g1point_tests.cpp \
   test/blsct/arith/range_proof/range_proof_tests.cpp \
+  test/blsct/arith/range_proof/range_proof_with_transcript_tests.cpp \
   test/blsct/keys_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
