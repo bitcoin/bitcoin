@@ -118,7 +118,7 @@ Scalar Scalar::operator~() const
     // CHECK!
     // Getting complement of lower 8 bytes only since when 32-byte buffer is fully complemented,
     // mclBrFr_deserialize returns undesired result
-    const uint64_t n_complement_scalar = ~GetUint64();
+    const int64_t n_complement_scalar = (int64_t) ~GetUint64();
     Scalar ret(n_complement_scalar);
 
     return ret;
