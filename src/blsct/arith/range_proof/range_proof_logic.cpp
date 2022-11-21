@@ -261,7 +261,7 @@ retry:  // hasher is not cleared so that different hash will be obtained upon re
     Scalars l0 = aL - zs;
 
     // l(1) is (aL - z 1^n) + sL, but this is reduced to sL
-    Scalars l1 = sL;
+    const Scalars& l1 = sL;
 
     // Calculation of r(0) and r(1) on page 19
     Scalars z_pow_twos;
