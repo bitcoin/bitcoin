@@ -75,14 +75,16 @@ all available types and scopes, please see the
 include:
 
   - *consensus* for changes to consensus critical code
-  - *qt* for changes to dash-qt
   - *log* Changes to log messages
   - *mining* for changes to the mining code
   - *net* for changes to the peer-to-peer network code
-  - *rpc/rest/zmq* for changes to the RPC, REST or ZMQ APIs
+  - *qt* for changes to dash-qt
+  - *rest* for changes to the REST APIs
+  - *rpc* for changes to the RPC APIs
   - *scripts* for changes to the scripts and tools
   - *utils* for changes to the utils and libraries
   - *wallet* for changes to the wallet code
+  - *zmq* for changes to the ZMQ APIs
 
 Examples:
 

@@ -36,11 +36,13 @@ jobs:
           # Configure which scopes are allowed (newline delimited).
           scopes: |
             consensus
-            qt
             log
             mining
             net
-            rpc/rest/zmq
+            qt
+            rest
+            rpc
             scripts
             utils
             wallet
+            zmq
