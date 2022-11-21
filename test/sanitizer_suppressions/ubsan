@@ -53,7 +53,6 @@ unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:txmempool.cpp
-unsigned-integer-overflow:txmempool_entry.h
 implicit-integer-sign-change:compat/stdin.cpp
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
@@ -63,7 +62,6 @@ implicit-integer-sign-change:script/bitcoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:txmempool.cpp
-implicit-integer-sign-change:txmempool_entry.h
 implicit-signed-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
