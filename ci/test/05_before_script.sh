@@ -11,6 +11,7 @@ if [ "$CI_OS_NAME" == "macos" ]; then
   echo > "${HOME}/Library/Application Support/Syscoin"
 else
   CI_EXEC echo \> \$HOME/.syscoin
+  CI_EXEC_ROOT echo \> \$HOME/.syscoin
 fi
 
 CI_EXEC mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
