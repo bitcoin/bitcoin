@@ -222,10 +222,11 @@ static RPCHelpMan deriveaddresses()
     return RPCHelpMan{"deriveaddresses",
         {"\nDerives one or more addresses corresponding to an output descriptor.\n"
          "Examples of output descriptors are:\n"
-         "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
-         "    wpkh(<pubkey>)                       Native segwit P2PKH outputs for the given pubkey\n"
-         "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
-         "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
+         "    pkh(<pubkey>)                                     P2PKH outputs for the given pubkey\n"
+         "    wpkh(<pubkey>)                                    Native segwit P2PKH outputs for the given pubkey\n"
+         "    sh(multi(<n>,<pubkey>,<pubkey>,...))              P2SH-multisig outputs for the given threshold and pubkeys\n"
+         "    raw(<hex script>)                                 Outputs whose scriptPubKey equals the specified hex scripts\n"
+         "    tr(<pubkey>,multi_a(<n>,<pubkey>,<pubkey>,...))   P2TR-multisig outputs for the given threshold and pubkeys\n"
          "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
          "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
          "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
