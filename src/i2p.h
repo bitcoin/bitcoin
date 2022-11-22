@@ -9,8 +9,8 @@
 #include <fs.h>
 #include <netaddress.h>
 #include <sync.h>
-#include <threadinterrupt.h>
 #include <util/sock.h>
+#include <util/threadinterrupt.h>
 
 #include <memory>
 #include <optional>

@@ -6,7 +6,7 @@
 #define SYSCOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <chrono>
