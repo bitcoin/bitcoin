@@ -342,8 +342,15 @@ BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
 
 BOOST_AUTO_TEST_CASE(test_g1point_operator_mul_g1point_by_scalars)
 {
-    // TODO write test for: std::vector<G1Point> G1Point::operator*(const std::vector<Scalar>& bs) const
-    BOOST_CHECK(1 == 1);
+    Scalar one(1);
+    Scalar two(2);
+    std::vector<Scalar> one_two { one, two };
+    auto g = G1Point::GetBasePoint();
+
+    auto act = g * one_two;
+    std::vector<G1Point> exp { g, g + g };
+
+    BOOST_CHECK(act == exp);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
