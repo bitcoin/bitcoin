@@ -14,9 +14,9 @@ Scalar::Scalar(const std::vector<uint8_t> &v)
     Scalar::SetVch(v);
 }
 
-Scalar::Scalar(const mclBnFr& nFr)
+Scalar::Scalar(const mclBnFr& other_fr)
 {
-    m_fr = nFr;
+    m_fr = other_fr;
 }
 
 Scalar::Scalar(const uint256& n)
@@ -282,8 +282,14 @@ std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
 
 void Scalar::SetVch(const std::vector<uint8_t> &v)
 {
-    if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
-        throw std::runtime_error(std::string("Failed to setBigEndianMod vector"));
+    if (v.size() == 0) {
+        mclBnFr x;
+        mclBnFr_clear(&x);
+        m_fr = x;
+    } else {
+        if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
+            throw std::runtime_error(std::string("Failed to setBigEndianMod vector"));
+        }
     }
 }
 

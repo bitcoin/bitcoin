@@ -705,7 +705,14 @@ BOOST_AUTO_TEST_CASE(test_scalar_setvch)
             1,
         };
         Scalar a;
+        a.SetVch(vec);
         BOOST_CHECK_EQUAL(a.GetString(), "0");
+    }
+    {
+        std::vector<uint8_t> vec;
+        Scalar a(100);
+        a.SetVch(vec);
+        BOOST_CHECK_EQUAL(a.GetUint64(), 0);
     }
 }
 

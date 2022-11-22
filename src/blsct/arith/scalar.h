@@ -31,7 +31,7 @@ public:
 
     Scalar(const int64_t& n = 0);  // has to take int64_t instead of uint64_t since underneath it calls mcl library that takes int64_t
     Scalar(const std::vector<uint8_t>& v);
-    Scalar(const mclBnFr& n_fr);
+    Scalar(const mclBnFr& other_fr);
     Scalar(const uint256& n);
     Scalar(const std::string& s, int radix);
 
