@@ -229,6 +229,28 @@ static std::vector<TestCase> BuildTestCases()
         test_cases.push_back(x);
     }
 
+    {
+        // string of maximum message size 54
+        const std::string s("Pneumonoultramicroscopicsilicovolcanoconiosis123456789");
+        assert(s.size() == Config::m_max_message_size);
+        Scalars values;
+        values.Add(one);
+
+        for (size_t i=0; i<=s.size(); ++i) {  // try message of size 0 to 54
+            auto msg = s.substr(0, i);
+
+            TestCase x;
+            x.name = strprintf("message size %ld", i).c_str();
+            x.values = values;
+            x.is_batched = false;
+            x.should_complete_recovery = true;
+            x.num_amounts = 1;
+            x.msg = GenMsgPair(msg);
+            x.verify_result = true;
+            test_cases.push_back(x);
+        }
+    }
+
     return test_cases;
 }
 
