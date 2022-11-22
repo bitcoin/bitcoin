@@ -488,7 +488,7 @@ void BitcoinGUI::createMenuBar()
     connect(minimize_action, &QAction::triggered, [] {
         QApplication::activeWindow()->showMinimized();
     });
-    connect(qApp, &QApplication::focusWindowChanged, [minimize_action] (QWindow* window) {
+    connect(qApp, &QApplication::focusWindowChanged, this, [minimize_action] (QWindow* window) {
         minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
     });
 
@@ -503,7 +503,7 @@ void BitcoinGUI::createMenuBar()
         }
     });
 
-    connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
+    connect(qApp, &QApplication::focusWindowChanged, this, [zoom_action] (QWindow* window) {
         zoom_action->setEnabled(window != nullptr);
     });
 #endif
@@ -1310,6 +1310,12 @@ void BitcoinGUI::setEncryptionStatus(int status)
 {
     switch(status)
     {
+    case WalletModel::NoKeys:
+        labelWalletEncryptionIcon->hide();
+        encryptWalletAction->setChecked(false);
+        changePassphraseAction->setEnabled(false);
+        encryptWalletAction->setEnabled(false);
+        break;
     case WalletModel::Unencrypted:
         labelWalletEncryptionIcon->hide();
         encryptWalletAction->setChecked(false);
