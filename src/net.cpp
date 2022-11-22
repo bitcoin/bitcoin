@@ -31,6 +31,7 @@
 #include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
+#include <util/threadinterrupt.h>
 #include <util/trace.h>
 #include <util/translation.h>
 

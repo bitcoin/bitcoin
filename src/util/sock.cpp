@@ -4,11 +4,11 @@
 
 #include <compat/compat.h>
 #include <logging.h>
-#include <threadinterrupt.h>
 #include <tinyformat.h>
 #include <util/sock.h>
 #include <util/syserror.h>
 #include <util/system.h>
+#include <util/threadinterrupt.h>
 #include <util/time.h>
 
 #include <memory>
