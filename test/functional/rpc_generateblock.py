@@ -56,14 +56,32 @@ class GenerateBlockTest(BitcoinTestFramework):
             miniwallet.send_self_transfer(from_node=node)
 
         self.log.info('Generate block with txid')
-        txid = miniwallet.send_self_transfer(from_node=node)['txid']
+        # ITCOIN_SPECIFIC - START
+        #
+        # Ensure that the utxo that is spent is already confirmed, i.e. it must
+        # have height>0. The block is generated to contain only one transaction
+        # [txid] and the spent utxo must already be in the blockchain,
+        # otherwise a "missing input" error is raised.
+        miniwallet._utxos = sorted(miniwallet._utxos, key=lambda k: (k['value'], -k['height']))
+        utxo = next(filter(lambda utxo: utxo['height']>0, miniwallet._utxos))
+        utxo = miniwallet._utxos.pop(miniwallet._utxos.index(utxo))
+        txid = miniwallet.send_self_transfer(from_node=node, utxo_to_spend=utxo)['txid']  # ITCOIN_SPECIFIC: added "utxo_to_spend=utxo"
+        # ITCOIN_SPECIFIC - END
         hash = self.generateblock(node, address, [txid])['hash']
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
 
         self.log.info('Generate block with raw tx')
-        rawtx = miniwallet.create_self_transfer()['hex']
+        # ITCOIN_SPECIFIC - START
+        #
+        # Ensure that the utxo that is spent is already confirmed. See the
+        # explaination above.
+        miniwallet._utxos = sorted(miniwallet._utxos, key=lambda k: (k['value'], -k['height']))
+        utxo = next(filter(lambda utxo: utxo['height']>0, miniwallet._utxos))
+        utxo = miniwallet._utxos.pop(miniwallet._utxos.index(utxo))
+        rawtx = miniwallet.create_self_transfer(utxo_to_spend=utxo)['hex']  # ITCOIN_SPECIFIC: added "utxo_to_spend=utxo"
+        # ITCOIN_SPECIFIC - END
         hash = self.generateblock(node, address, [rawtx])['hash']
 
         block = node.getblock(hash, 1)

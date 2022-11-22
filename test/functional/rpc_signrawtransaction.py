@@ -181,7 +181,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def test_fully_signed_tx(self):
         self.log.info("Test signing a fully signed transaction does nothing")
         self.nodes[0].walletpassphrase("password", 9999)
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], 100 + 1) # ITCOIN_SPECIFIC: it was COINBASE_MATURITY + 1, but CLTV tests require blockchain to have more than 100 blocks.
         rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
         fundedtx = self.nodes[0].fundrawtransaction(rawtx)
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
@@ -200,7 +200,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         embedded_pubkey = eckey.get_pubkey().get_bytes().hex()
         p2sh_p2wsh_address = self.nodes[1].createmultisig(1, [embedded_pubkey], "p2sh-segwit")
         # send transaction to P2SH-P2WSH 1-of-1 multisig address
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], 100 + 1) # ITCOIN_SPECIFIC: it was COINBASE_MATURITY + 1, but CLTV tests require blockchain to have more than 100 blocks.
         self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
         self.generate(self.nodes[0], 1)
         # Get the UTXO info from scantxoutset

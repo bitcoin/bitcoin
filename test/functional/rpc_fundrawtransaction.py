@@ -624,7 +624,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 1)
 
         # Make sure funds are received at node1.
-        assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
+        assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[0].getbalance())  # ITCOIN_SPECIFIC: it was Decimal('51.10000000'): with COINBASE_MATURITY=0, no new matured reward at node0, subtract 50 from expected balance
 
     def test_many_inputs_fee(self):
         """Multiple (~19) inputs tx test | Compare fee."""
@@ -632,7 +632,14 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
-        self.generate(self.nodes[1], 1)
+        # ITCOIN_SPECIFIC - START
+        #
+        # At the end of the sendtoaddress, there should be no UTXO left at
+        # node1. Hence, we sync the mempools and let node0 mine the block, so
+        # that node1 does not get any reward.
+        self.sync_mempools()  # ITCOIN_SPECIFIC: added this line
+        self.generate(self.nodes[0], 1)  # ITCOIN_SPECIFIC: it was self.nodes[1]
+        # ITCOIN_SPECIFIC - END
 
         for _ in range(20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
@@ -674,7 +681,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.generate(self.nodes[1], 1)
-        assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
+        assert_equal(oldBalance+Decimal('0.19000000'), self.nodes[0].getbalance()) #0.19+block reward  # ITCOIN_SPECIFIC: it was Decimal('50.19000000'): there is no new matured block at node0, hence no block reward
 
     def test_op_return(self):
         self.log.info("Test fundrawtxn with OP_RETURN and no vin")

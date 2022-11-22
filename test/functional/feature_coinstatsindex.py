@@ -96,7 +96,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for hash_option in index_hash_options:
             # Fetch old stats by height
-            res2 = index_node.gettxoutsetinfo(hash_option, 102)
+            res2 = index_node.gettxoutsetinfo(hash_option, 2)  # ITCOIN_SPECIFIC: it was 102
             del res2['block_info'], res2['total_unspendable_amount']
             res2.pop('muhash', None)
             assert_equal(res0, res2)
@@ -131,7 +131,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             self.block_sanity_check(res4['block_info'])
 
             # Test an older block height that included a normal tx
-            res5 = index_node.gettxoutsetinfo(hash_option, 102)
+            res5 = index_node.gettxoutsetinfo(hash_option, 2)  # ITCOIN_SPECIFIC: it was 102
             assert_equal(res5['total_unspendable_amount'], 50)
             assert_equal(res5['block_info'], {
                 'unspendable': 0,
@@ -173,25 +173,25 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
-            res6 = index_node.gettxoutsetinfo(hash_option, 108)
+            res6 = index_node.gettxoutsetinfo(hash_option, 8)  # ITCOIN_SPECIFIC: it was 108
             assert_equal(res6['total_unspendable_amount'], Decimal('70.99000000'))
             assert_equal(res6['block_info'], {
                 'unspendable': Decimal('20.99000000'),
-                'prevout_spent': 111,
-                'new_outputs_ex_coinbase': Decimal('89.99993620'),
+                'prevout_spent': Decimal('111.00004440'),  # ITCOIN_SPECIFIC: it was 111
+                'new_outputs_ex_coinbase': Decimal('89.99998060'),  # ITCOIN_SPECIFIC: it was Decimal('89.99993620')
                 'coinbase': Decimal('50.01006380'),
                 'unspendables': {
-                    'genesis_block': 0,
-                    'bip30': 0,
+                    'genesis_block': Decimal('0E-8'),  # ITCOIN_SPECIFIC: it was 0
+                    'bip30': Decimal('0E-8'),  # ITCOIN_SPECIFIC: it was 0
                     'scripts': Decimal('20.99000000'),
-                    'unclaimed_rewards': 0
+                    'unclaimed_rewards': Decimal('0E-8')  # ITCOIN_SPECIFIC: it was 0
                 }
             })
             self.block_sanity_check(res6['block_info'])
 
         # Create a coinbase that does not claim full subsidy and also
         # has two outputs
-        cb = create_coinbase(109, nValue=35)
+        cb = create_coinbase(9, nValue=35)  # ITCOIN_SPECIFIC: it was 109. nValue stays the same
         cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
         cb.rehash()
 
@@ -204,7 +204,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         for hash_option in index_hash_options:
-            res7 = index_node.gettxoutsetinfo(hash_option, 109)
+            res7 = index_node.gettxoutsetinfo(hash_option, 9)  # ITCOIN_SPECIFIC: it was 109
             assert_equal(res7['total_unspendable_amount'], Decimal('80.99000000'))
             assert_equal(res7['block_info'], {
                 'unspendable': 10,
@@ -235,7 +235,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.log.info("Test use_index option for nodes running the index")
 
         self.connect_nodes(0, 1)
-        self.nodes[0].waitforblockheight(110)
+        self.nodes[0].waitforblockheight(10) # ITCOIN_SPECIFIC: it was 110
         res = self.nodes[0].gettxoutsetinfo('muhash')
         option_res = self.nodes[1].gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
         del res['disk_size'], option_res['disk_size']
@@ -250,14 +250,14 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         reorg_block = reorg_blocks[1]
         res_invalid = index_node.gettxoutsetinfo('muhash')
         index_node.invalidateblock(reorg_blocks[0])
-        assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
+        assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 10) # ITCOIN_SPECIFIC: it was 110.
 
         # Add two new blocks
         block = self.generate(index_node, 2, sync_fun=self.no_op)[1]
         res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
 
         # Test that the result of the reorged block is not returned for its old block height
-        res2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
+        res2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=12) # ITCOIN_SPECIFIC: it was 112
         assert_equal(res["bestblock"], block)
         assert_equal(res["muhash"], res2["muhash"])
         assert(res["muhash"] != res_invalid["muhash"])
@@ -272,20 +272,20 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.generate(index_node, 1)
 
         # Ensure that removing and re-adding blocks yields consistent results
-        block = index_node.getblockhash(99)
+        block = index_node.getblockhash(9) # ITCOIN_SPECIFIC: it was 99. Can be any existing random block
         index_node.invalidateblock(block)
         index_node.reconsiderblock(block)
-        res3 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
+        res3 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=12) # ITCOIN_SPECIFIC: it was 112
         assert_equal(res2, res3)
 
     def _test_index_rejects_hash_serialized(self):
         self.log.info("Test that the rpc raises if the legacy hash is passed with the index")
 
         msg = "hash_serialized_2 hash type cannot be queried for a specific block"
-        assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111)
+        assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=11) # ITCOIN_SPECIFIC: it was 111
 
         for use_index in {True, False, None}:
-            assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=111, use_index=use_index)
+            assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_2', hash_or_height=11, use_index=use_index) # ITCOIN_SPECIFIC: it was 111
 
 
 if __name__ == '__main__':

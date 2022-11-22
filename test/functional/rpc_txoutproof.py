@@ -33,7 +33,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         self.generate(self.nodes[0], COINBASE_MATURITY)
 
         chain_height = self.nodes[1].getblockcount()
-        assert_equal(chain_height, 105)
+        assert_equal(chain_height, 5)  # ITCOIN_SPECIFIC COINBASE_MATURITY = 0 only 5 blocks are generated. It was 105
 
         txid1 = miniwallet.send_self_transfer(from_node=self.nodes[0])['txid']
         txid2 = miniwallet.send_self_transfer(from_node=self.nodes[0])['txid']

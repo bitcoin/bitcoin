@@ -63,20 +63,20 @@ class WalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         walletinfo = self.nodes[0].getwalletinfo()
-        assert_equal(walletinfo['immature_balance'], 50)
-        assert_equal(walletinfo['balance'], 0)
+        assert_equal(walletinfo['immature_balance'], 0)  # ITCOIN_SPECIFIC: it was 50: COINBASE_MATURITY = 0, so there is no immature_balance
+        assert_equal(walletinfo['balance'], 50)  # ITCOIN_SPECIFIC: it was 0: since COINBASE_MATURITY = 0, the balance is the block reward
 
         self.sync_all(self.nodes[0:3])
-        self.generate(self.nodes[1], COINBASE_MATURITY + 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.generate(self.nodes[1], 100 + 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was COINBASE_MATURITY instead of hardcoded 100
 
         assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
+        assert_equal(self.nodes[1].getbalance(), 5050)  # ITCOIN_SPECIFIC: balance with 101 blocks was 50, since COINBASE_MATURITY=0 it is 5050
         assert_equal(self.nodes[2].getbalance(), 0)
 
         # Check that only first and second nodes have UTXOs
         utxos = self.nodes[0].listunspent()
         assert_equal(len(utxos), 1)
-        assert_equal(len(self.nodes[1].listunspent()), 1)
+        assert_equal(len(self.nodes[1].listunspent()), 101)  # ITCOIN_SPECIFIC: Number of utxos with 101 blocks was 1, since COINBASE_MATURITY=0 it is 101
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
         self.log.info("Test gettxout")
@@ -194,7 +194,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
 
         # Have node1 generate 100 blocks (so node0 can recover the fee)
-        self.generate(self.nodes[1], COINBASE_MATURITY, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.generate(self.nodes[1], 100, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was COINBASE_MATURITY instead of hardcoded 100
 
         # node0 should end up with 100 btc in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
@@ -236,13 +236,15 @@ class WalletTest(BitcoinTestFramework):
         fee_per_byte = Decimal('0.001') / 1000
         self.nodes[2].settxfee(fee_per_byte * 1000)
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('84'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(self.nodes[0].getbalance(), Decimal('10'))
 
         # Send 10 BTC with subtract fee from amount
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", True)
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         node_2_bal -= Decimal('10')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
@@ -251,14 +253,16 @@ class WalletTest(BitcoinTestFramework):
 
         # Sendmany 10 BTC
         txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [])
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         node_0_bal += Decimal('10')
         node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
         # Sendmany 10 BTC with subtract fee from amount
         txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [address])
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         node_2_bal -= Decimal('10')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
@@ -270,7 +274,8 @@ class WalletTest(BitcoinTestFramework):
 
         # Test passing fee_rate as a string
         txid = self.nodes[2].sendmany(amounts={address: 10}, fee_rate=str(fee_rate_sat_vb))
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         balance = self.nodes[2].getbalance()
         node_2_bal = self.check_fee_amount(balance, node_2_bal - Decimal('10'), explicit_fee_rate_btc_kvb, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(balance, node_2_bal)
@@ -280,7 +285,8 @@ class WalletTest(BitcoinTestFramework):
         # Test passing fee_rate as an integer
         amount = Decimal("0.0001")
         txid = self.nodes[2].sendmany(amounts={address: amount}, fee_rate=fee_rate_sat_vb)
-        self.generate(self.nodes[2], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[2]: node 1 generates the block, so that block reward does not affect balance assertions
         balance = self.nodes[2].getbalance()
         node_2_bal = self.check_fee_amount(balance, node_2_bal - amount, explicit_fee_rate_btc_kvb, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(balance, node_2_bal)
@@ -582,18 +588,28 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(coinbase_tx_1["transactions"][0]["blockhash"], blocks[1])
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
+        # ITCOIN_SPECIFIC - START
+        #
+        # we need nodes to be connected for transaction and block propagation
+        self.connect_nodes(0, 1)
+        self.connect_nodes(1, 2)
+        self.connect_nodes(0, 2)
+        # ITCOIN_SPECIFIC - END
+
         # ==Check that wallet prefers to use coins that don't exceed mempool limits =====
 
         # Get all non-zero utxos together
         chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
         singletxid = self.nodes[0].sendtoaddress(chain_addrs[0], self.nodes[0].getbalance(), "", "", True)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate blocks and transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[0] and sync_fun=self.no_op: node 1 generates and propagates the block, so that block reward does not affect node 0 assertions
         node0_balance = self.nodes[0].getbalance()
         # Split into two chains
         rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.sync_all(self.nodes[0:3])  # ITCOIN_SPECIFIC: added this line. Awaits sync to propagate blocks and transactions
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))  # ITCOIN_SPECIFIC: it was nodes[0] and sync_fun=self.no_op: node 1 generates and propagates the block, so that block reward does not affect node 0 assertions
 
         # Make a long chain of unconfirmed payments without hitting mempool limit
         # Each tx we make leaves only one output of change on a chain 1 longer

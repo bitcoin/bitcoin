@@ -247,7 +247,7 @@ TestChain100Setup::TestChain100Setup(const std::vector<const char*>& extra_args)
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
     // Generate a 100-block chain:
-    this->mineBlocks(COINBASE_MATURITY);
+    this->mineBlocks(100); // ITCOIN_SPECIFIC since COINBASE_MATURITY=0, we have to use an hardcoded 100 instead of COINBASE_MATURITY in mineBlocks(), in order to create the TestChain100Setup
 
     {
         LOCK(::cs_main);

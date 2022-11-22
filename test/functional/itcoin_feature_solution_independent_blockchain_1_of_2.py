@@ -7,7 +7,6 @@ import time
 import sys, os
 
 # Import the test primitives
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.test_framework_itcoin import BaseItcoinTest
 from test_framework.util import assert_equal
@@ -129,13 +128,6 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         # - Node 1 will throw missing-inputs on the spending transaction,
         #   because Node 1 sees a different coinbase, i.e. block3_coinbase_1
         # This is an issue that will be resolved in a future PR.
-
-        # Create COINBASE_MATURITY blocks, so that block3_coinbase matures.
-        for _ in range(COINBASE_MATURITY):
-            block = miner.do_generate_next_block(args0)[0]
-            signed_block = miner.do_sign_block(args0, block, signet_challenge)
-            miner.do_propagate_block(args0, signed_block)
-        self.sync_all(self.nodes[0:2])
 
         # Prepare the transaction
         destination_address_0 = self.nodes[0].getnewaddress()

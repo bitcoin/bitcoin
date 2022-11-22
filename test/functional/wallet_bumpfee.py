@@ -533,7 +533,8 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
 
 def test_bumpfee_metadata(self, rbf_node, dest_address):
     self.log.info('Test that bumped txn metadata persists to new txn record')
-    assert(rbf_node.getbalance() < 49)
+    # ITCOIN_SPECIFIC: the assert below is commented. It seems not relevant and it does not work with COINBASE_MATURITY = 0.
+    # assert(rbf_node.getbalance() < 49)
     self.generatetoaddress(rbf_node, 101, rbf_node.getnewaddress())
     rbfid = rbf_node.sendtoaddress(dest_address, 49, "comment value", "to value")
     bumped_tx = rbf_node.bumpfee(rbfid)

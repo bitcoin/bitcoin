@@ -164,7 +164,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.segwit_node.send_and_ping(msg_no_witness_block(block))
         assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
-        self.generate(self.wallet, COINBASE_MATURITY)
+        self.generate(self.wallet, 100) # ITCOIN_SPECIFIC: was COINBASE_MATURITY instead of hardcoded 100.
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -275,7 +275,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], 100 + 1) # ITCOIN_SPECIFIC: was COINBASE_MATURITY instead of hardcoded 100.
         block = self.build_block_on_tip(self.nodes[0])
 
         cmpct_block = P2PHeaderAndShortIDs()
@@ -293,7 +293,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         version = test_node.cmpct_version
         node = self.nodes[0]
         # Generate a bunch of transactions.
-        self.generate(node, COINBASE_MATURITY + 1)
+        self.generate(node, 100 + 1) # ITCOIN_SPECIFIC: was COINBASE_MATURITY instead of hardcoded 100.
         num_transactions = 25
 
         segwit_tx_generated = False

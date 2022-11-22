@@ -193,7 +193,7 @@ class SegWitTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)  # block 163
 
         # Make sure all nodes recognize the transactions as theirs
-        assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 50)
+        assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 25 + 60 * Decimal("0.001"))  # ITCOIN_SPECIFIC: Replaced +50(matured block subsidy) with +25(new block subsidy) and +60 * Decimal("0.001") which is the just collected fee.
         assert_equal(self.nodes[1].getbalance(), 20 * Decimal("49.999"))
         assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
 

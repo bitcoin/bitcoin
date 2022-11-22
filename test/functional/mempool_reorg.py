@@ -29,8 +29,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), 200)
 
         self.log.info("Add 4 coinbase utxos to the miniwallet")
-        # Block 76 contains the first spendable coinbase txs.
-        first_block = 76
+        # Block 112 contains the first spendable coinbase txs. ITCOIN_SPECIFIC: it was 76
+        first_block = 112  # ITCOIN_SPECIFIC: it was 76. This depends on how the 200 blocks blockchain is generated in _initialize_chain() of test_framework.py
         wallet.rescan_utxos()
 
         # Three scenarios for re-orging coinbase spends in the memory pool:
@@ -99,7 +99,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id})
 
         self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
-        b = self.nodes[0].getblockhash(first_block + 100)
+        b = self.nodes[0].getblockhash(first_block) # ITCOIN_SPECIFIC: It was first_block + 100. Nevertheless, since COINBASE_MATURITY = 0, we need to invalidate first_block to make above transactions unspendable.
         for node in self.nodes:
             node.invalidateblock(b)
 

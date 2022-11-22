@@ -80,7 +80,7 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getwalletinfo()['balance'], 50)
             assert_equal(self.nodes[1].getbalances()['mine']['trusted'], 50)
 
-            assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 5000)
+            assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], Decimal('0E-8'))  # ITCOIN_SPECIFIC: it was 5000
             assert 'watchonly' not in self.nodes[1].getbalances()
 
             assert_equal(self.nodes[0].getbalance(), 50)
@@ -157,7 +157,7 @@ class WalletTest(BitcoinTestFramework):
             expected_balances_0 = {'mine':      {'immature':          Decimal('0E-8'),
                                                  'trusted':           Decimal('9.99'),  # change from node 0's send
                                                  'untrusted_pending': Decimal('60.0')},
-                                   'watchonly': {'immature':          Decimal('5000'),
+                                   'watchonly': {'immature':          Decimal('0E-8'),  # ITCOIN_SPECIFIC: it was 5000
                                                  'trusted':           Decimal('50.0'),
                                                  'untrusted_pending': Decimal('0E-8')}}
             expected_balances_1 = {'mine':      {'immature':          Decimal('0E-8'),

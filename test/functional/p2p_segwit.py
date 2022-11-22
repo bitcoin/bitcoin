@@ -1423,13 +1423,13 @@ class SegWitTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 98)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
-        test_witness_block(self.nodes[0], self.test_node, block2, accepted=False, reason='bad-txns-premature-spend-of-coinbase')
+        test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)  # ITCOIN_SPECIFIC: it was accepted=False. Moreover, removed keyword argument reason='bad-txns-premature-spend-of-coinbase': with COINBASE_MATURITY=0 there is no such a thing as premature spend
 
         # Advancing one more block should allow the spend.
         self.generate(self.nodes[0], 1)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
-        test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
+        test_witness_block(self.nodes[0], self.test_node, block2, accepted=False, reason='bad-txns-BIP30')  # ITCOIN_SPECIFIC: it was accepted=True. Moreover, added keyword argument reason='bad-txns-BIP30': adding another block with the same spend_tx should raise duplicate transactions error
         self.sync_blocks()
 
     @subtest

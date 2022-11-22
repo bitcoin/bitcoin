@@ -297,24 +297,29 @@ class FullBlockTest(BitcoinTestFramework):
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b20 (7)
         #                      \-> b3 (1) -> b4 (2)
-        self.log.info("Reject a block spending an immature coinbase.")
+        self.log.info("Do not reject a block spending an immature coinbase.") # ITCOIN_SPECIFIC: was "Reject".
         self.move_tip(15)
         b20 = self.next_block(20, spend=out[7])
-        self.send_blocks([b20], success=False, reject_reason='bad-txns-premature-spend-of-coinbase', reconnect=True)
+        # ITCOIN_SPECIFIC - START: block b20 is valid, so we use invalidateblock to cleanup blockchain. This will add block txs to the mempool.
+        self.send_blocks([b20], success=True)
+        node.invalidateblock(b20.hash)
+        # ITCOIN_SPECIFIC - END
 
         # Attempt to spend a coinbase at depth too low (on a fork this time)
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5)
         #                                                                \-> b21 (6) -> b22 (5)
         #                      \-> b3 (1) -> b4 (2)
-        self.log.info("Reject a block spending an immature coinbase (on a forked chain)")
+        self.log.info("Do not reject a block spending an immature coinbase (on a forked chain)") # ITCOIN_SPECIFIC: was "Reject".
         self.move_tip(13)
         b21 = self.next_block(21, spend=out[6])
         self.send_blocks([b21], False)
 
         b22 = self.next_block(22, spend=out[5])
-        self.send_blocks([b22], success=False, reject_reason='bad-txns-premature-spend-of-coinbase', reconnect=True)
-
+        # ITCOIN_SPECIFIC - START: block b22 is valid, so we use invalidateblock to cleanup blockchain. This will add block txs to the mempool.
+        self.send_blocks([b22], success=True)
+        node.invalidateblock(b22.hash)
+        # ITCOIN_SPECIFIC - END
         # Create a block on either side of MAX_BLOCK_WEIGHT and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6)
@@ -380,7 +385,7 @@ class FullBlockTest(BitcoinTestFramework):
 
         # b30 has a max-sized coinbase scriptSig.
         self.move_tip(23)
-        b30 = self.next_block(30)
+        b30 = self.next_block(30, spend=out[7]) # ITCOIN_SPECIFIC: out[7] no longer used, so we spend it in order to cleanup mempool after invalidateblock used during the above coinbase maturity tests.
         b30.vtx[0].vin[0].scriptSig = bytes(b30.vtx[0].vin[0].scriptSig)  # Convert CScript to raw bytes
         b30.vtx[0].vin[0].scriptSig += b'\x00' * (100 - len(b30.vtx[0].vin[0].scriptSig))  # Fill with 0s
         assert_equal(len(b30.vtx[0].vin[0].scriptSig), 100)

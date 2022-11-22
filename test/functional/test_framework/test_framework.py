@@ -776,20 +776,73 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Set a time in the past, so that blocks don't end up in the future
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
-            # Create a 199-block-long chain; each of the 3 first nodes
-            # gets 25 mature blocks and 25 immature.
-            # The 4th address gets 25 mature and only 24 immature blocks so that the very last
-            # block in the cache does not age too much (have an old tip age).
+            # ITCOIN_SPECIFIC - START
+            #
+            # Create a 199-block-long chain;
+            # Node1 and Node2 get 38 mature blocks. Node3 gets 86 mature blocks.
+            # The 1st address (i.e. Node0) gets 37 mature blocks so that the very last
+            # block in the cache, which is later generated in the setup_nodes()
+            # function, does not age too much (have an old tip age).
+            #
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
             gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [create_deterministic_address_bcrt1_p2tr_op_true()[0]]
             assert_equal(len(gen_addresses), 4)
-            for i in range(8):
-                self.generatetoaddress(
-                    cache_node,
-                    nblocks=25 if i != 7 else 24,
-                    address=gen_addresses[i % len(gen_addresses)],
-                )
+            # for i in range(8):
+                # self.generatetoaddress(
+                #     cache_node,
+                #     nblocks=25 if i != 7 else 24,
+                #     address=gen_addresses[i % len(gen_addresses)],
+                # )
+            # Generate to addresses=[0,1,2,3]: 37 blocks with a reward of 50BTC.
+            self.generatetoaddress(
+                cache_node,
+                nblocks=37,
+                address=gen_addresses[0],
+            )
+            self.generatetoaddress(
+                cache_node,
+                nblocks=37,
+                address=gen_addresses[1],
+            )
+            self.generatetoaddress(
+                cache_node,
+                nblocks=37,
+                address=gen_addresses[2],
+            )
+            self.generatetoaddress(
+                cache_node,
+                nblocks=37,
+                address=gen_addresses[3],
+            )
+            # Since at block 150, the reward is halved to 25 in regtest,
+            # (i.e. consensus.nSubsidyHalvingInterval = 150 in chainparams.cpp),
+            #
+            # Generate to address 3: 1 block with a reward of 50BTC,
+            # and 48 blocks with a reward of 25BTC.
+            self.generatetoaddress(
+                cache_node,
+                nblocks=49,
+                address=gen_addresses[3],
+            )
+            # Generate to addresses=[1,2]: 1 block with a reward of 25BTC.
+            # Note that an additional block with reward 25 will be generated
+            # to address 0 in the setup_nodes function.
+            self.generatetoaddress(
+                cache_node,
+                nblocks=1,
+                address=gen_addresses[1],
+            )
+            self.generatetoaddress(
+                cache_node,
+                nblocks=1,
+                address=gen_addresses[2],
+            )
+            # When also the final block is generated, then addresses=[0,1,2]
+            # will have balance 1875BTC, while address 3 (deterministic taproot)
+            # will have balance 3100BTC.
+            #
+            # ITCOIN_SPECIFIC - END
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
 

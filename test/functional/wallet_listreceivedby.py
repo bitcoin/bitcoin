@@ -177,7 +177,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
         self.log.info("getreceivedbyaddress returns nothing with defaults")
         balance = self.nodes[0].getreceivedbyaddress(address)
-        assert_equal(balance, 0)
+        assert_equal(balance, reward)  # ITCOIN_SPECIFIC COINBASE_MATURITY = 0 reward immediately mature instead of 0
 
         self.log.info("getreceivedbyaddress returns block reward when including immature coinbase")
         balance = self.nodes[0].getreceivedbyaddress(address=address, include_immature_coinbase=True)
@@ -185,26 +185,26 @@ class ReceivedByTest(BitcoinTestFramework):
 
         self.log.info("getreceivedbylabel returns nothing with defaults")
         balance = self.nodes[0].getreceivedbylabel("label")
-        assert_equal(balance, 0)
+        assert_equal(balance, reward)  # ITCOIN_SPECIFIC COINBASE_MATURITY = 0 reward immediately mature instead of 0
 
         self.log.info("getreceivedbylabel returns block reward when including immature coinbase")
         balance = self.nodes[0].getreceivedbylabel(label="label", include_immature_coinbase=True)
         assert_equal(balance, reward)
 
-        self.log.info("listreceivedbyaddress does not include address with defaults")
+        self.log.info("listreceivedbyaddress includes address with defaults, since COINBASE_MATURITY = 0")  # ITCOIN_SPECIFIC: it was "listreceivedbyaddress does not include address with defaults"
         assert_array_result(self.nodes[0].listreceivedbyaddress(),
                             {"address": address},
-                            {}, True)
+                            {"address": address, "amount": reward}, False)  # ITCOIN_SPECIFIC: this line was "{}, True)": address should indeed be included with defaults
 
         self.log.info("listreceivedbyaddress includes address when including immature coinbase")
         assert_array_result(self.nodes[0].listreceivedbyaddress(minconf=1, include_immature_coinbase=True),
                             {"address": address},
                             {"address": address, "amount": reward})
 
-        self.log.info("listreceivedbylabel does not include label with defaults")
+        self.log.info("listreceivedbylabel includes label with defaults")  # ITCOIN_SPECIFIC: it was "listreceivedbylabel does not include label with defaults"
         assert_array_result(self.nodes[0].listreceivedbylabel(),
                             {"label": label},
-                            {}, True)
+                            {"label": label, "amount": reward}, False)  # ITCOIN_SPECIFIC: this line was "{}, True)":  label should indeed be included with defaults
 
         self.log.info("listreceivedbylabel includes label when including immature coinbase")
         assert_array_result(self.nodes[0].listreceivedbylabel(minconf=1, include_immature_coinbase=True),
@@ -212,7 +212,7 @@ class ReceivedByTest(BitcoinTestFramework):
                             {"label": label, "amount": reward})
 
         self.log.info("Generate 100 more blocks")
-        self.generate(self.nodes[0], COINBASE_MATURITY, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 100, sync_fun=self.no_op) # ITCOIN_SPECIFIC: was COINBASE_MATURITY instead of the hardcoded 100.
 
         self.log.info("getreceivedbyaddress returns reward with defaults")
         balance = self.nodes[0].getreceivedbyaddress(address)

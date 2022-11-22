@@ -154,7 +154,7 @@ class WalletLabelsTest(BitcoinTestFramework):
                 wallet_watch_only.importaddress(label=l, rescan=False, address=ad)
                 self.generatetoaddress(node, 1, ad)
                 assert_equal(wallet_watch_only.getaddressesbylabel(label=l), {ad: {'purpose': 'receive'}})
-                assert_equal(wallet_watch_only.getreceivedbylabel(label=l), 0)
+                assert_equal(wallet_watch_only.getreceivedbylabel(label=l), 50)  # ITCOIN_SPECIFIC: changed 0 to 50, since block reward is immediately mature.
             for l in BECH32_INVALID:
                 ad = BECH32_INVALID[l]
                 assert_raises_rpc_error(

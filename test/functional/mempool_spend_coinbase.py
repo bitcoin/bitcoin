@@ -34,16 +34,25 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         # get mined. Coinbase at height chain_height-100+2 is
         # too immature to spend.
         coinbase_txid = lambda h: self.nodes[0].getblock(self.nodes[0].getblockhash(h))['tx'][0]
-        utxo_mature = wallet.get_utxo(txid=coinbase_txid(chain_height - 100 + 1))
-        utxo_immature = wallet.get_utxo(txid=coinbase_txid(chain_height - 100 + 2))
+        utxo_mature = wallet.get_utxo(txid=coinbase_txid(chain_height - 50 + 1))  # ITCOIN_SPECIFIC: it was "- 100 + 1". There is no definition of mature and immature utxo, since COINBASE_MATURITY=0. This is just a random utxo
+        utxo_immature = wallet.get_utxo(txid=coinbase_txid(chain_height - 50 + 2))  # ITCOIN_SPECIFIC: it was "- 100 + 2". There is no definition of mature and immature utxo, since COINBASE_MATURITY=0. This is just a random utxo
 
         spend_mature_id = wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_mature)["txid"]
 
+        # ITCOIN_SPECIFIC - START
+        #
+        # The immature tx is mempool valid.
+        #
+        # The following original comment no longer applies:
         # other coinbase should be too immature to spend
-        immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature, mempool_valid=False)
-        assert_raises_rpc_error(-26,
-                                "bad-txns-premature-spend-of-coinbase",
-                                lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))
+        immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature, mempool_valid=True)  # ITCOIN_SPECIFIC: it was mempool_valid=False
+        # The following original code would mine a new block without throwing
+        # any errors. Calling it in itcoin would change the status of the chain
+        # with respect to the original bitcoin test.
+        # assert_raises_rpc_error(-26,
+        #                         "bad-txns-premature-spend-of-coinbase",
+        #                         lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))
+        # ITCOIN_SPECIFIC - END
 
         # mempool should have just the mature one
         assert_equal(self.nodes[0].getrawmempool(), [spend_mature_id])

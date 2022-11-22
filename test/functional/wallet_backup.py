@@ -183,9 +183,15 @@ class WalletBackupTest(BitcoinTestFramework):
         balance3 = self.nodes[3].getbalance()
         total = balance0 + balance1 + balance2 + balance3
 
-        # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
-        # 114 are mature, so the sum of all wallets should be 114 * 50 = 5700.
-        assert_equal(total, 5700)
+        # ITCOIN_SPECIFIC - START
+        #
+        # Please note that the numbers were changed in the following comment
+        # and in the subsequent assertion.
+        #
+        # At this point, there are 14 blocks (3 for setup, then 10 rounds, then 1.)
+        # 14 are mature, so the sum of all wallets should be 14 * 50 = 700.
+        assert_equal(total, 700)  # ITCOIN_SPECIFIC: it was 5700
+        # ITCOIN_SPECIFIC - END
 
         ##
         # Test restoring spender wallets from backups
