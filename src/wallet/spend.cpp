@@ -102,15 +102,13 @@ void CoinsResult::Clear() {
     coins.clear();
 }
 
-void CoinsResult::Erase(std::set<COutPoint>& preset_coins)
+void CoinsResult::Erase(const std::set<COutPoint>& coins_to_remove)
 {
-    for (auto& it : coins) {
-        auto& vec = it.second;
-        auto i = std::find_if(vec.begin(), vec.end(), [&](const COutput &c) { return preset_coins.count(c.outpoint);});
-        if (i != vec.end()) {
-            vec.erase(i);
-            break;
-        }
+    for (auto& [type, vec] : coins) {
+        auto remove_it = std::remove_if(vec.begin(), vec.end(), [&](const COutput& coin) {
+            return coins_to_remove.count(coin.outpoint) == 1;
+        });
+        vec.erase(remove_it, vec.end());
     }
 }
 
