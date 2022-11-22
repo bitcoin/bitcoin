@@ -614,7 +614,7 @@ AmountRecoveryResult RangeProofLogic::RecoverAmounts(
 
         RecoveredAmount recovered_amount(
             req.id,
-            input_value0.GetUint64(),
+            (int64_t) input_value0.GetUint64(),  // valid values are of type int64_t
             input_value0_gamma,
             std::string(msg1.begin(), msg1.end()) + std::string(msg2.begin(), msg2.end())
         );
