@@ -35,7 +35,8 @@ enum class NetPermissionFlags : uint32_t {
     // unlimited amounts of addrs.
     Addr = (1U << 7),
 
-    // True if the user did not specifically set fine grained permissions
+    // True if the user did not specifically set fine-grained permissions with
+    // the -whitebind or -whitelist configuration options.
     Implicit = (1U << 31),
     All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
 };
