@@ -332,13 +332,13 @@ BOOST_AUTO_TEST_CASE(test_g1point_serialize_unserialize)
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
-{
-    auto g = G1Point::GetBasePoint();
-    auto a = g.GetHashWithSalt(1);
-    auto b = g.GetHashWithSalt(2);
-    BOOST_CHECK(a != b);
-}
+// BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
+// {
+//     auto g = G1Point::GetBasePoint();
+//     auto a = g.GetHashWithSalt(1);
+//     auto b = g.GetHashWithSalt(2);
+//     BOOST_CHECK(a != b);
+// }
 
 BOOST_AUTO_TEST_CASE(test_g1point_operator_mul_g1point_by_scalars)
 {
