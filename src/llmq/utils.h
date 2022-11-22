@@ -93,6 +93,7 @@ bool IsQuorumRotationEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pi
 Consensus::LLMQType GetInstantSendLLMQType(const CQuorumManager& qman, const CBlockIndex* pindex);
 Consensus::LLMQType GetInstantSendLLMQType(bool deterministic);
 bool IsDIP0024Active(const CBlockIndex* pindex);
+bool IsV19Active(const CBlockIndex* pindex);
 static bool IsInstantSendLLMQTypeShared();
 
 /// Returns the state of `-llmq-data-recovery`

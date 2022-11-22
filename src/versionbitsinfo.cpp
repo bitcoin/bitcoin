@@ -51,5 +51,10 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.name =*/"dip0024",
         /*.gbt_force =*/true,
         /*.check_mn_protocol =*/false,
+    },
+    {
+        /*.name =*/"v19",
+        /*.gbt_force =*/true,
+        /*.check_mn_protocol =*/false,
     }
 };
