@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_H
 #define SYSCOIN_LLMQ_QUORUMS_H
 
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 
 #include <validationinterface.h>
 #include <consensus/params.h>
