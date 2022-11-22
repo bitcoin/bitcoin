@@ -52,7 +52,7 @@ KNOWN_VIOLATIONS=(
     "src/wallet/scriptpubkeyman.cpp.*std::to_string"
 )
 
-REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
+REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(dashbls/|crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
 
 LOCALE_DEPENDENT_FUNCTIONS=(
     alphasort    # LC_COLLATE (via strcoll)

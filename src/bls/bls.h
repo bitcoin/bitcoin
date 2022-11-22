@@ -14,11 +14,11 @@
 // bls-dash uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
 #undef DEBUG
-#include <bls-dash/bls.hpp>
-#include <bls-dash/privatekey.hpp>
-#include <bls-dash/elements.hpp>
-#include <bls-dash/schemes.hpp>
-#include <bls-dash/threshold.hpp>
+#include <dashbls/bls.hpp>
+#include <dashbls/privatekey.hpp>
+#include <dashbls/elements.hpp>
+#include <dashbls/schemes.hpp>
+#include <dashbls/threshold.hpp>
 #undef DOUBLE
 #undef SEED
 

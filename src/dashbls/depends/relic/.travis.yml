@@ -1,0 +1,33 @@
+language: cpp
+
+addons:
+  apt:
+    packages:
+      - cmake
+      - cmake-data
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  # Automatic allocation
+  - CONFIG="-DSEED= -DBENCH=0" TEST=""
+  # Dynamic allocation
+  - CONFIG="-DALLOC=DYNAMIC -DSEED= -DBENCH=0" TEST=""
+  # Jacobian coordinates
+  - CONFIG="-DSEED= -DBENCH=0 -DEP_METHD='JACOB;LWNAF;COMBS;INTER'" TEST=""
+  # Build for Edwards curves
+  - CONFIG="-DSEED= -DBENCH=0 -DFP_PRIME=255 -FP_QNRES=off -DEC_METHD=EDDIE -DED_METHD='PROJC;LWNAF;LWNAF;BASIC' -DWITH='BN;DV;MD;FP;ED,EC;CP'" TEST="-E test_fpx"
+  # Build Supersingular curves
+  - CONFIG="-DSEED= -DBENCH=0 -DBN_PRECI=1536 -DFP_PRIME=1536 -DFP_QNRES=on" TEST="-E test_fpx"
+  # Build BLS12-381
+  - CONFIG="-DWSIZE=64 -DARITH=x64-asm-6l -DFP_PRIME=381 -DFP_PMERS=off -DFP_QNRES=on"
+
+  # Build with Address Sanityzer
+  - CONFIG="-DAUSAN=on -DSEED= -DBENCH=0" TEST=""
+
+script:
+  - mkdir build && cd build
+  - cmake $CONFIG  .. && make -j && ctest -V $TEST
+  - cd .. && rm -rf build
