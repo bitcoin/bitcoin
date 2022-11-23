@@ -107,6 +107,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 121)
 
         self.test_add_inputs_default_value()
+        self.test_preset_inputs_selection_crash()
         self.test_weight_calculation()
         self.test_change_position()
         self.test_simple()
@@ -1188,6 +1189,63 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert "psbt" in wallet.walletcreatefundedpsbt(inputs=[], outputs=outputs, options=options)
 
         self.nodes[2].unloadwallet("test_preset_inputs")
+
+    def test_preset_inputs_selection_crash(self):
+        self.log.info('Test wallet preset inputs selection')
+
+        # Here will confuse the wallet to make it select the
+        # preset inputs twice during the coin selection process (on v24.0).
+        #
+        # Making it think that the selection process result covers
+        # the entire tx target when it does not. It's actually creating
+        # a tx that sends more coins than what inputs are covering for.
+        #
+        # Which, combined with the subtract fee from outputs option,
+        # makes the wallet generate and broadcast a tx that pays
+        # up to the sum of all the preset inputs, minus one, amounts in fee!
+
+        # Create and fund the wallet with 10 UTXO of 5 BTC each
+        self.nodes[2].createwallet("test_preset_inputs_selection")
+        wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs_selection")
+        outputs = {}
+        for _ in range(10):
+            outputs[wallet.getnewaddress(address_type="bech32")] = 5
+        self.nodes[0].sendmany("", outputs)
+        self.generate(self.nodes[0], 1)
+
+        # Select the preset inputs and lock the rest of the coins
+        coins = wallet.listunspent()
+        preset_inputs = [coins[0], coins[1]]
+        to_lock = []
+        for utxo in coins[2:]:
+            to_lock.append({"txid": utxo["txid"], "vout": utxo["vout"]})
+        wallet.lockunspent(unlock=False, transactions=to_lock)
+
+        # Now that all coins were locked except the two preset inputs, let's create the tx
+        options = {
+            "inputs": [
+                {
+                    "txid": preset_inputs[0]["txid"],
+                    "vout": preset_inputs[0]["vout"]
+                },
+                {
+                    "txid": preset_inputs[1]["txid"],
+                    "vout": preset_inputs[1]["vout"]
+                },
+            ],
+            "add_inputs": True,
+            "subtract_fee_from_outputs": [0],
+            "add_to_wallet": False
+        }
+
+        # First case, use 'subtract_fee_from_outputs' to make the wallet create a tx that pays an insane fee on v24.0.
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{wallet.getnewaddress(address_type="bech32"): 14}], options=options)
+
+        # Second case, don't use 'subtract_fee_from_outputs' to make the wallet crash due the insane fee on v24.0
+        del options["subtract_fee_from_outputs"]
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{wallet.getnewaddress(address_type="bech32"): 14}], options=options)
+
+        self.nodes[2].unloadwallet("test_preset_inputs_selection")
 
     def test_weight_calculation(self):
         self.log.info("Test weight calculation with external inputs")
