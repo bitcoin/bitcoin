@@ -1,0 +1,77 @@
+<!--
+    immer: immutable data structures for C++
+    Copyright (C) 2016, 2017, 2018 Juan Pedro Bolivar Puente
+
+    This software is distributed under the Boost Software License, Version 1.0.
+    See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="../lib/lodash.js"></script>
+    <script src="../lib/platform.js"></script>
+    <script src="../lib/benchmark.js"></script>
+    <script src="../lib/immutable.min.js"></script>
+    <script src="../lib/mori.js"></script>
+    <script>
+    </script>
+  </head>
+  <body>
+    <script>
+     var IMMER_WASM_HAS_MEM = false;
+     var IMMER_JS_FILE = '%IMMER_JS%'
+     var Module = {};
+
+     if (IMMER_JS_FILE.endsWith('wasm.js'))
+         loadWasm()
+     else if (IMMER_JS_FILE.endsWith('asmjs.js'))
+         loadAsmjs()
+     else
+         throw Error('Wrong format')
+
+     function loadAsync(u, c) {
+         var d = document, t = 'script',
+             o = d.createElement(t),
+             s = d.getElementsByTagName(t)[0];
+         o.src = u;
+         if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+         s.parentNode.insertBefore(o, s);
+     }
+
+     function loadAsmjs() {
+         loadAsync(IMMER_JS_FILE, function () {
+             loadAsync('../index.js')
+         });
+     }
+
+     function loadWasm() {
+         var xhr = new XMLHttpRequest();
+         var basename = IMMER_JS_FILE.substring(0, IMMER_JS_FILE.length-3)
+         xhr.open('GET', basename + '.wasm', true);
+         xhr.responseType = 'arraybuffer';
+         xhr.onload = function() {
+             Module.wasmBinary = xhr.response;
+             if (IMMER_WASM_HAS_MEM) {
+                 (function() {
+                     var memoryInitializer = IMMER_JS_FILE + '.mem';
+                     if (typeof Module['locateFile'] === 'function') {
+                         memoryInitializer = Module['locateFile'](memoryInitializer);
+                     } else if (Module['memoryInitializerPrefixURL']) {
+                         memoryInitializer = Module['memoryInitializerPrefixURL'] + memoryInitializer;
+                     }
+                     var xhr = Module['memoryInitializerRequest'] = new XMLHttpRequest();
+                     xhr.open('GET', memoryInitializer, true);
+                     xhr.responseType = 'arraybuffer';
+                     xhr.send(null);
+                 })();
+             }
+             loadAsync(IMMER_JS_FILE, function () {
+                 loadAsync('../index.js')
+             });
+         };
+         xhr.send(null);
+     }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,123 @@
+name: test
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # needed for fetchGit in default.nix
+      - uses: cachix/install-nix-action@v12
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
+      - uses: cachix/cachix-action@v8
+        with:
+          name: arximboldi
+          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+      - run: nix-build
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: cachix/install-nix-action@v12
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
+      - uses: cachix/cachix-action@v8
+        with:
+          name: arximboldi
+          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+      - run: nix-shell --run "mkdir build"
+      - run: nix-shell --run "cd build && cmake .."
+      - run: nix-shell --run "cd build && make docs"
+      - uses: shimataro/ssh-key-action@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          key: ${{ secrets.SINUSOIDES_SSH_KEY }}
+          known_hosts: ${{ secrets.SINUSOIDES_KNOWN_HOSTS }}
+      - run: nix-shell --run "cd build && make upload-docs"
+        if: github.ref == 'refs/heads/master'
+
+  check:
+    strategy:
+      matrix:
+        type: [Debug, Release]
+        toolchain: [gnu-6, gnu-7, llvm-5, llvm-6]
+        std: [14]
+        opts: [[]]
+        include:
+          # coverage
+          - type: Debug
+            toolchain: gnu-9
+            std: 14
+            opts: ['coverage']
+          # std 17
+          - type: Debug
+            toolchain: gnu-8
+            std: 17
+          - type: Debug
+            toolchain: llvm-9
+            std: 17
+            opts: ['fuzzers']
+          # std 20
+          - type: Debug
+            toolchain: gnu-11
+            std: 20
+          - type: Debug
+            toolchain: llvm-13
+            std: 20
+          # sanitizers
+          - type: Debug
+            toolchain: llvm-8
+            std: 14
+            opts: ['sanitizer']
+          # benchmarks
+          - type: Release
+            toolchain: gnu-9
+            std: 14
+            opts: ['benchmark']
+          - type: Release
+            toolchain: llvm-10
+            std: 14
+            opts: ['benchmark']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v12
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
+      - uses: cachix/cachix-action@v8
+        with:
+          name: arximboldi
+          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+      - run: nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "mkdir build"
+      - name: configure CMake
+        run: |
+          nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "
+            cd build && cmake .. \
+              -DCMAKE_BUILD_TYPE=${{ matrix.type }} \
+              -DCHECK_SLOW_TESTS=false \
+              -DCXX_STANDARD=${{ matrix.std }} \
+              -DCHECK_BENCHMARKS=${{ contains(matrix.opts, 'benchmark') }} \
+              -DENABLE_COVERAGE=${{ contains(matrix.opts, 'coverage') }} \
+              -DENABLE_ASAN=${{ contains(matrix.opts, 'sanitize') }} \
+              -DENABLE_LSAN=${{ contains(matrix.opts, 'sanitize') }} \
+              -DENABLE_UBSAN=${{ contains(matrix.opts, 'sanitize') }} \
+              -DCHECK_FUZZERS=${{ contains(matrix.opts, 'fuzzers') }} \
+              -DDISABLE_FREE_LIST=${{ contains(matrix.opts, 'sanitize') }}
+          "
+      - run: nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "cd build && make check -j`nproc`"
+      - run: nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "bash <(curl -s https://codecov.io/bash)"
+        if: ${{ contains(matrix.opts, 'coverage') }}
+      - uses: shimataro/ssh-key-action@v2
+        if: ${{ contains(matrix.opts, 'benchmark') }}
+        with:
+          key: ${{ secrets.SINUSOIDES_SSH_KEY }}
+          known_hosts: ${{ secrets.SINUSOIDES_KNOWN_HOSTS }}
+      - run: nix-shell --run "cd build && make upload-benchmark-reports"
+        if: ${{ contains(matrix.opts, 'benchmark') }}
