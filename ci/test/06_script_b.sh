@@ -56,6 +56,7 @@ if [ "${RUN_TIDY}" = "true" ]; then
           " src/rpc/fees.cpp"\
           " src/rpc/signmessage.cpp"\
           " src/test/fuzz/txorphan.cpp"\
+          " src/test/fuzz/util/"\
           " src/util/bip32.cpp"\
           " src/util/bytevectorhash.cpp"\
           " src/util/check.cpp"\
