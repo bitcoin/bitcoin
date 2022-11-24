@@ -158,25 +158,36 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
     return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
 }
 
+// ITCOIN_SPECIFIC START, introduces GetWitnessCommitmentIndex(const CTransaction& tx) 
+// This method is used not only in GetWitnessCommitmentIndex(const CBlock& block) but also in CTransaction::ComputeHash
+/** Compute at which vout of the given transaction the witness commitment occurs, or -1 if not found */
+inline int GetWitnessCommitmentIndex(const CTransaction& tx)
+{
+    int commitpos = NO_WITNESS_COMMITMENT;
+    for (size_t o = 0; o < tx.vout.size(); o++) {
+        const CTxOut& vout = tx.vout[o];
+        if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
+            vout.scriptPubKey[0] == OP_RETURN &&
+            vout.scriptPubKey[1] == 0x24 &&
+            vout.scriptPubKey[2] == 0xaa &&
+            vout.scriptPubKey[3] == 0x21 &&
+            vout.scriptPubKey[4] == 0xa9 &&
+            vout.scriptPubKey[5] == 0xed) {
+            commitpos = o;
+        }
+    }
+    return commitpos;
+}
+
 /** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
 inline int GetWitnessCommitmentIndex(const CBlock& block)
 {
     int commitpos = NO_WITNESS_COMMITMENT;
     if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            const CTxOut& vout = block.vtx[0]->vout[o];
-            if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
-                vout.scriptPubKey[0] == OP_RETURN &&
-                vout.scriptPubKey[1] == 0x24 &&
-                vout.scriptPubKey[2] == 0xaa &&
-                vout.scriptPubKey[3] == 0x21 &&
-                vout.scriptPubKey[4] == 0xa9 &&
-                vout.scriptPubKey[5] == 0xed) {
-                commitpos = o;
-            }
-        }
+        commitpos = GetWitnessCommitmentIndex(*block.vtx[0]);
     }
     return commitpos;
 }
+// ITCOIN_SPECIFIC END
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H

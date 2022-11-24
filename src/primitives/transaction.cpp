@@ -6,7 +6,9 @@
 #include <primitives/transaction.h>
 
 #include <consensus/amount.h>
+#include <consensus/validation.h>
 #include <hash.h>
+#include <signet.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
@@ -67,7 +69,41 @@ uint256 CMutableTransaction::GetHash() const
 
 uint256 CTransaction::ComputeHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    /** ITCOIN_SPECIFIC - START
+     *
+     * If the transaction is a coinbase, then the signet solution is excluded
+     * from the transaction hash and, consequentially, from the block merkle
+     * root.
+     *
+     * This is necessary because in a threshold signet, two otherwise identical
+     * blocks can have two different valid sets of signatures. From the point of
+     * view of the consensus, they should be treated as exactly the same block,
+     * and no forks should arise.
+     *
+     * Moreover, this allows the signet solution to be appended after the PoW
+     * calculation (see SignetTxs::Create() in signet.cpp).
+     *
+     * NB: since these changes are applied to every chain type, this code is no
+     *     longer useful to validate bitcoin mainnet blockchain.
+     */
+    if (!this->IsCoinBase()) {
+        return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    }
+
+    const int cidx = GetWitnessCommitmentIndex(*this);
+    if (cidx == NO_WITNESS_COMMITMENT) {
+        return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    }
+
+    CMutableTransaction modified_cb(*this);
+    CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
+    std::vector<uint8_t> unused_signet_solution;
+    if (!FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, unused_signet_solution)) {
+        return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    }
+
+    return SerializeHash(modified_cb, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    // ITCOIN_SPECIFIC - END
 }
 
 uint256 CTransaction::ComputeWitnessHash() const

@@ -7,7 +7,7 @@ import time
 import sys, os
 
 # Import the test primitives
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, tx_from_hex
 from test_framework.test_framework_itcoin import BaseItcoinTest
 from test_framework.util import assert_equal
 
@@ -97,7 +97,19 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         #  but they kept the same different coinbase txs
         block3_coinbase_0 = self.nodes[0].getblock(self.nodes[0].getblockhash(3))["tx"][0]
         block3_coinbase_1 = self.nodes[1].getblock(self.nodes[1].getblockhash(3))["tx"][0]
-        assert(block3_coinbase_0 != block3_coinbase_1)
+        # The hash of the coinbase should be the same
+        assert(block3_coinbase_0 == block3_coinbase_1)
+        # The content of the coinbase should be different
+        block3_hash = self.nodes[0].getblockhash(3)
+        raw_tx_block3_coinbase_0 = self.nodes[0].getrawtransaction(block3_coinbase_0, True, block3_hash)["hex"]
+        raw_tx_block3_coinbase_1 = self.nodes[1].getrawtransaction(block3_coinbase_1, True, block3_hash)["hex"]
+        assert(raw_tx_block3_coinbase_0 != raw_tx_block3_coinbase_1)
+        # The content of the coinbase, once excluded the signet solution, should be the same
+        tx_block3_coinbase_0 = tx_from_hex(raw_tx_block3_coinbase_0)
+        tx_block3_coinbase_1 = tx_from_hex(raw_tx_block3_coinbase_1)
+        tx_block3_coinbase_0.vout[1].scriptPubKey = tx_block3_coinbase_0.vout[1].scriptPubKey[:40]
+        tx_block3_coinbase_1.vout[1].scriptPubKey = tx_block3_coinbase_1.vout[1].scriptPubKey[:40]
+        assert( tx_block3_coinbase_0.serialize().hex() == tx_block3_coinbase_1.serialize().hex() )
 
         # Mine 4th block
         block = miner.do_generate_next_block(args0)[0]
@@ -111,23 +123,24 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         # Check that 4th block propagates correctly to node 1
         self.assert_blockchaininfo_property(1, "blocks", 4)
 
-        # Assert the two chains are in sync even if they differ in one coinbase transaction
+        # Assert the two chains are in sync even if each node kept its own
+        # original coinbase transaction
         expected_bestblockhash = self.get_blockchaininfo_field_from_node(0, "bestblockhash")
         self.assert_blockchaininfo_property_forall_nodes('bestblockhash', expected_bestblockhash)
-        block3_coinbase_0 = self.nodes[0].getblock(self.nodes[0].getblockhash(3))["tx"][0]
-        block3_coinbase_1 = self.nodes[1].getblock(self.nodes[1].getblockhash(3))["tx"][0]
-        block4_coinbase_0 = self.nodes[0].getblock(self.nodes[0].getblockhash(4))["tx"][0]
-        block4_coinbase_1 = self.nodes[1].getblock(self.nodes[1].getblockhash(4))["tx"][0]
-        assert(block3_coinbase_0 != block3_coinbase_1)
-        assert_equal(block4_coinbase_0, block4_coinbase_1)
+        raw_tx_block3_coinbase_0_new = self.nodes[0].getrawtransaction(block3_coinbase_0, True, block3_hash)["hex"]
+        raw_tx_block3_coinbase_1_new = self.nodes[1].getrawtransaction(block3_coinbase_1, True, block3_hash)["hex"]
+        assert_equal(raw_tx_block3_coinbase_0, raw_tx_block3_coinbase_0_new)
+        assert_equal(raw_tx_block3_coinbase_1, raw_tx_block3_coinbase_1_new)
 
-        # Try to spend block3_coinbase_0 at node 1
+        # Spend block3_coinbase_0 at node 1
         #
-        # Since block3_coinbase_0 != block3_coinbase_1:
-        # - Node 0 will accept the spending transaction
-        # - Node 1 will throw missing-inputs on the spending transaction,
-        #   because Node 1 sees a different coinbase, i.e. block3_coinbase_1
-        # This is an issue that will be resolved in a future PR.
+        # Since block3_coinbase_0 and block3_coinbase_1 are the same hash:
+        # - Node 0 will submit the spending transaction, and will propagate it
+        #   to Node 1.
+        # - Node 1 will accept the spending transaction coming from node 0, and
+        #   will add it to its mempool.
+        # - Later, when Node 1 tries to add the transaction to its mempool
+        #   again, txn-already-in-mempool is raised.
 
         # Prepare the transaction
         destination_address_0 = self.nodes[0].getnewaddress()
@@ -141,10 +154,11 @@ class SignetSignatureIndependentMerkleRootTest(BaseItcoinTest):
         # Node 0 accepts the transaction
         actual_tx_hash_hex = self.nodes[0].sendrawtransaction(raw_coinbase_spending_tx_signed)
         assert_equal(actual_tx_hash_hex, coinbase_spending_tx.rehash())
+        self.sync_all(self.nodes[0:2])
 
         # Node 1 rejects the transaction
         node1_mempool_initial_size = self.nodes[1].getmempoolinfo()['size']
-        node1_mempool_result_expected = [{'txid': coinbase_spending_tx.rehash(), 'allowed': False, 'reject-reason': 'missing-inputs'}]
+        node1_mempool_result_expected = [{'txid': coinbase_spending_tx.rehash(), 'allowed': False, 'reject-reason': 'txn-already-in-mempool'}]
         node1_mempool_result_actual = self.nodes[1].testmempoolaccept(rawtxs=[raw_coinbase_spending_tx_signed])
         for r in node1_mempool_result_actual:
             # we have no easy way of precomputing an expected value for wtxid.
