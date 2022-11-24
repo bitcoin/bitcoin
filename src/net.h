@@ -39,6 +39,7 @@
 #include <memory>
 #include <optional>
 #include <thread>
+#include <utility>
 #include <vector>
 
 class AddrMan;
@@ -374,10 +375,6 @@ public:
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
-    RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
-
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
@@ -598,6 +595,10 @@ private:
     const ConnectionType m_conn_type;
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
+    RecursiveMutex cs_vProcessMsg;
+    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
+
     std::list<CNetMessage> vRecvMsg; // Used only by SocketHandler thread
 
     // Our address, as reported by the peer
@@ -749,6 +750,7 @@ public:
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    std::optional<std::pair<CNetMessage, bool>> PollMessage(CNode& node);
 
     using NodeFn = std::function<void(CNode*)>;
     void ForEachNode(const NodeFn& func)

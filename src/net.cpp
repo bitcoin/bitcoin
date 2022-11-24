@@ -55,6 +55,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 
 #include <math.h>
 
@@ -2809,6 +2810,21 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         if (optimisticSend) nBytesSent = SocketSendData(*pnode);
     }
     if (nBytesSent) RecordBytesSent(nBytesSent);
+}
+
+std::optional<std::pair<CNetMessage, bool>> CConnman::PollMessage(CNode& node)
+{
+    std::list<CNetMessage> msgs;
+
+    LOCK(node.cs_vProcessMsg);
+    if (node.vProcessMsg.empty()) return std::nullopt;
+
+    // Just take one message
+    msgs.splice(msgs.begin(), node.vProcessMsg, node.vProcessMsg.begin());
+    node.nProcessQueueSize -= msgs.front().m_raw_message_size;
+    node.fPauseRecv = node.nProcessQueueSize > GetReceiveFloodSize();
+
+    return std::make_pair(msgs.front(), !node.vProcessMsg.empty());
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
