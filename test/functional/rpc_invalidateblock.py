@@ -63,12 +63,20 @@ class InvalidateTest(BitcoinTestFramework):
         self.log.info("Verify that we reconsider all ancestors as well")
         blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+        # Ensure the best-known header is synchronized with the active chain.
+        assert_equal(self.nodes[1].getchainstates()['headers'], self.nodes[1].getblockcount())
         # Invalidate the two blocks at the tip
         self.nodes[1].invalidateblock(blocks[-1])
         self.nodes[1].invalidateblock(blocks[-2])
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-3])
+        # Verify that the best header is updated after invalidating a block.
+        assert_equal(self.nodes[1].getchainstates()['headers'], self.nodes[1].getblockcount())
+
         # Reconsider only the previous tip
         self.nodes[1].reconsiderblock(blocks[-1])
+        # Verify that the best header is updated after reconsidering a block.
+        assert_equal(self.nodes[1].getchainstates()['headers'], self.nodes[1].getblockcount())
+
         # Should be back at the tip by now
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
