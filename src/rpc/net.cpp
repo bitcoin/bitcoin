@@ -233,8 +233,8 @@ static RPCHelpMan getpeerinfo()
         // their ver message.
         obj.pushKV("subver", peer_stats.m_clean_subversion);
         obj.pushKV("inbound", stats.fInbound);
-        obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
-        obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
+        obj.pushKV("bip152_hb_to", peer_stats.m_bip152_highbandwidth_to);
+        obj.pushKV("bip152_hb_from", peer_stats.m_bip152_highbandwidth_from);
         obj.pushKV("startingheight", peer_stats.m_starting_height);
         obj.pushKV("presynced_headers", peer_stats.presync_height);
         obj.pushKV("synced_headers", peer_stats.nSyncHeight);

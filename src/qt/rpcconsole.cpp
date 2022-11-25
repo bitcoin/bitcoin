@@ -1168,11 +1168,6 @@ void RPCConsole::updateDetailWidget()
     if (!stats->nodeStats.addrLocal.empty())
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
-    QString bip152_hb_settings;
-    if (stats->nodeStats.m_bip152_highbandwidth_to) bip152_hb_settings = ts.to;
-    if (stats->nodeStats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
-    if (bip152_hb_settings.isEmpty()) bip152_hb_settings = ts.no;
-    ui->peerHighBandwidth->setText(bip152_hb_settings);
     const auto time_now{GetTime<std::chrono::seconds>()};
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.m_connected));
     ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.m_last_block_time));
@@ -1203,6 +1198,11 @@ void RPCConsole::updateDetailWidget()
     // This check fails for example if the lock was busy and
     // m_peer_stats couldn't be fetched.
     if (stats->m_peer_stats_available) {
+        QString bip152_hb_settings;
+        if (stats->m_peer_stats.m_bip152_highbandwidth_to) bip152_hb_settings = ts.to;
+        if (stats->m_peer_stats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
+        if (bip152_hb_settings.isEmpty()) bip152_hb_settings = ts.no;
+        ui->peerHighBandwidth->setText(bip152_hb_settings);
         ui->peerServices->setText(GUIUtil::formatServicesStr(stats->m_peer_stats.their_services));
         // Sync height is init to -1
         if (stats->m_peer_stats.nSyncHeight > -1) {

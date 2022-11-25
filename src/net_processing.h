@@ -41,6 +41,10 @@ struct PeerStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::string m_clean_subversion;
+    // We requested high bandwidth connection to peer
+    bool m_bip152_highbandwidth_to{false};
+    // Peer requested high bandwidth connection
+    bool m_bip152_highbandwidth_from{false};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
