@@ -198,7 +198,7 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
         return "HEAD";
     case HTTPRequest::PUT:
         return "PUT";
-    default:
+    case HTTPRequest::UNKNOWN:
         return "unknown";
     }
 }
@@ -622,19 +622,14 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
     switch (evhttp_request_get_command(req)) {
     case EVHTTP_REQ_GET:
         return GET;
-        break;
     case EVHTTP_REQ_POST:
         return POST;
-        break;
     case EVHTTP_REQ_HEAD:
         return HEAD;
-        break;
     case EVHTTP_REQ_PUT:
         return PUT;
-        break;
     default:
         return UNKNOWN;
-        break;
     }
 }
 
