@@ -7,14 +7,7 @@
 export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
-${CI_RETRY_EXE} apt-get install -y python3-pip curl git gawk jq
-(
-  # Temporary workaround for https://github.com/bitcoin/bitcoin/pull/26130#issuecomment-1260499544
-  # Can be removed once the underlying image is bumped to something that includes git2.34 or later
-  sed -i -e 's/bionic/jammy/g' /etc/apt/sources.list
-  ${CI_RETRY_EXE} apt-get update
-  ${CI_RETRY_EXE} apt-get install -y --reinstall git
-)
+${CI_RETRY_EXE} apt-get install -y curl git gawk jq
 
 ${CI_RETRY_EXE} pip3 install codespell==2.2.1
 ${CI_RETRY_EXE} pip3 install flake8==4.0.1
