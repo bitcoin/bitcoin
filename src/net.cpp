@@ -620,7 +620,6 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_last_send);
     X(m_last_recv);
     X(m_connected);
-    X(nTimeOffset);
     X(m_addr_name);
     X(nVersion);
     stats.fInbound = IsInboundConn();
