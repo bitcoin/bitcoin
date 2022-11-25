@@ -86,6 +86,8 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
     # packages. Meanwhile, use an untrusted PPA to install an up-to-date version of the bpfcc-tools
     # package.
     # TODO: drop this once we can use newer images in GCE
+    ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
+    ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get install --no-install-recommends --no-upgrade -y gpg gpg-agent software-properties-common
     CI_EXEC_ROOT add-apt-repository ppa:hadret/bpfcc
   fi
   ${CI_RETRY_EXE} CI_EXEC_ROOT apt-get update
