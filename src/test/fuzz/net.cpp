@@ -32,7 +32,6 @@ FUZZ_TARGET(net, .init = initialize_net)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     CNode node{ConsumeNode(fuzzed_data_provider)};
-    node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -70,7 +69,6 @@ FUZZ_TARGET(net, .init = initialize_net)
     (void)node.GetId();
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
-    (void)node.GetCommonVersion();
 
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
