@@ -33,6 +33,7 @@ public:
     void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override {}
     std::optional<int64_t> ScriptSize() const override { return {}; }
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)

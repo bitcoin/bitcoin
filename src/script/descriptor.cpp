@@ -718,6 +718,8 @@ public:
     virtual std::optional<int64_t> MaxSatSize(bool use_max_sig) const { return {}; }
 
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -795,6 +797,8 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
         return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 1; }
 };
 
 /** A parsed pkh(P) descriptor. */
@@ -822,6 +826,8 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
         return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 2; }
 };
 
 /** A parsed wpkh(P) descriptor. */
@@ -849,6 +855,8 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
         return MaxSatSize(use_max_sig);
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 2; }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -909,6 +917,8 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
         return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 1 + m_threshold; }
 };
 
 /** A parsed (sorted)multi_a(...) descriptor. Always uses x-only pubkeys. */
@@ -943,6 +953,8 @@ public:
     std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
         return (1 + 65) * m_threshold + (m_pubkey_args.size() - m_threshold);
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return m_pubkey_args.size(); }
 };
 
 /** A parsed sh(...) descriptor. */
@@ -983,6 +995,11 @@ public:
         }
         return {};
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        if (const auto sub_elems = m_subdescriptor_args[0]->MaxSatisfactionElems()) return 1 + *sub_elems;
+        return {};
+    }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -1013,6 +1030,11 @@ public:
 
     std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
         return MaxSatSize(use_max_sig);
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        if (const auto sub_elems = m_subdescriptor_args[0]->MaxSatisfactionElems()) return 1 + *sub_elems;
+        return {};
     }
 };
 
@@ -1073,6 +1095,11 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
         // FIXME: We assume keypath spend, which can lead to very large underestimations.
         return 1 + 65;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        // FIXME: See above, we assume keypath spend.
+        return 1;
     }
 };
 
@@ -1164,6 +1191,10 @@ public:
         // For Miniscript we always assume high-R ECDSA signatures.
         return m_node->GetWitnessSize();
     }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        return m_node->GetStackSize();
+    }
 };
 
 /** A parsed rawtr(...) descriptor. */
@@ -1188,6 +1219,11 @@ public:
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
         // We can't know whether there is a script path, so assume key path spend.
         return 1 + 65;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        // See above, we assume keypath spend.
+        return 1;
     }
 };
 

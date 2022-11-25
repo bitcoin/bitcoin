@@ -154,7 +154,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     const bool is_nontop_or_nonsolvable{!parse_priv->IsSolvable() || !parse_priv->GetOutputType()};
     const auto max_sat_maxsig{parse_priv->MaxSatisfactionWeight(true)};
     const auto max_sat_nonmaxsig{parse_priv->MaxSatisfactionWeight(true)};
-    const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig};
+    const auto max_elems{parse_priv->MaxSatisfactionElems()};
+    const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
     BOOST_CHECK_MESSAGE(is_input_size_info_set || is_nontop_or_nonsolvable, prv);
 
     // The ScriptSize() must match the size of the Script string. (ScriptSize() is set for all descs but 'combo()'.)

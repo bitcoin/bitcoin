@@ -59,19 +59,20 @@ static std::optional<int64_t> MaxInputWeight(const Descriptor& desc, const std::
                                              const CCoinControl* coin_control, const bool tx_is_segwit,
                                              const bool can_grind_r) {
     if (const auto sat_weight = desc.MaxSatisfactionWeight(!can_grind_r || UseMaxSig(txin, coin_control))) {
-        const bool is_segwit = IsSegwit(desc);
-        // Account for the size of the scriptsig and the number of elements on the witness stack. Note
-        // that if any input in the transaction is spending a witness program, we need to specify the
-        // witness stack size for every input regardless of whether it is segwit itself.
-        // NOTE: this also works in case of mixed scriptsig-and-witness such as in p2sh-wrapped segwit v0
-        // outputs. In this case the size of the scriptsig length will always be one (since the redeemScript
-        // is always a push of the witness program in this case, which is smaller than 253 bytes).
-        const int64_t scriptsig_len = is_segwit ? 1 : GetSizeOfCompactSize(*sat_weight / WITNESS_SCALE_FACTOR);
-        // FIXME: use the real number of stack elements instead of the "1" placeholder.
-        const int64_t witstack_len = is_segwit ? GetSizeOfCompactSize(1) : (tx_is_segwit ? 1 : 0);
-        // previous txid + previous vout + sequence + scriptsig len + witstack size + scriptsig or witness
-        // NOTE: sat_weight already accounts for the witness discount accordingly.
-        return (32 + 4 + 4 + scriptsig_len) * WITNESS_SCALE_FACTOR + witstack_len + *sat_weight;
+        if (const auto elems_count = desc.MaxSatisfactionElems()) {
+            const bool is_segwit = IsSegwit(desc);
+            // Account for the size of the scriptsig and the number of elements on the witness stack. Note
+            // that if any input in the transaction is spending a witness program, we need to specify the
+            // witness stack size for every input regardless of whether it is segwit itself.
+            // NOTE: this also works in case of mixed scriptsig-and-witness such as in p2sh-wrapped segwit v0
+            // outputs. In this case the size of the scriptsig length will always be one (since the redeemScript
+            // is always a push of the witness program in this case, which is smaller than 253 bytes).
+            const int64_t scriptsig_len = is_segwit ? 1 : GetSizeOfCompactSize(*sat_weight / WITNESS_SCALE_FACTOR);
+            const int64_t witstack_len = is_segwit ? GetSizeOfCompactSize(*elems_count) : (tx_is_segwit ? 1 : 0);
+            // previous txid + previous vout + sequence + scriptsig len + witstack size + scriptsig or witness
+            // NOTE: sat_weight already accounts for the witness discount accordingly.
+            return (32 + 4 + 4 + scriptsig_len) * WITNESS_SCALE_FACTOR + witstack_len + *sat_weight;
+        }
     }
 
     return {};

@@ -155,6 +155,9 @@ struct Descriptor {
      * @param use_max_sig Whether to assume ECDSA signatures will have a high-r.
      */
     virtual std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const = 0;
+
+    /** Get the maximum size number of stack elements for satisfying this descriptor. */
+    virtual std::optional<int64_t> MaxSatisfactionElems() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.
