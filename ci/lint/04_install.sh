@@ -17,10 +17,14 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 ${CI_RETRY_EXE} curl https://pyenv.run | bash
 eval "$(pyenv init -)"
 
-[[ -d /tmp/python-build ]] && ${CI_RETRY_EXE} mv /tmp/python-build $PYENV_ROOT/versions/$(cat .python-version) # Pyenv doesn't like .pyenv being already present, so an intermediary directory is used to interface with Cirrus's CI Caching features. Uses atomic swap (mv) to speed up CI instead of cp.
+PYENV_VERSION_DIR="$PYENV_ROOT"/versions/$(cat .python-version)
+PYENV_EVERYTHING_DIR="$PYENV_ROOT"/versions/$(cat .python-version)/*
+TMP_PYTHON_DIR=/tmp/python-build
+
+[[ -d $TMP_PYTHON_DIR ]] && ${CI_RETRY_EXE} mv $TMP_PYTHON_DIR "$PYENV_VERSION_DIR" # Pyenv doesn't like .pyenv being already present, so an intermediary directory is used to interface with Cirrus's CI Caching features. Uses atomic swap (mv) to speed up CI instead of cp.
 ${CI_RETRY_EXE} pyenv install # Uses python version found in CWD's .python-version file, or searches parent directories until root for it
 ${CI_RETRY_EXE} pyenv local
-[[ ! -d /tmp/python-build ]] && ${CI_RETRY_EXE} mkdir -p /tmp/python-build && cp -r $PYENV_ROOT/versions/$(cat .python-version)/* /tmp/python-build # Copy built python to intermediary directory. Do not use atomic swap as python needs it.
+[[ ! -d /tmp/python-build ]] && ${CI_RETRY_EXE} mkdir -p $TMP_PYTHON_DIR && cp -r "$PYENV_EVERYTHING_DIR" $TMP_PYTHON_DIR # Copy built python to intermediary directory. Do not use atomic swap as python needs it.
 
 ${CI_RETRY_EXE} pip3 install codespell==2.2.1
 ${CI_RETRY_EXE} pip3 install flake8==4.0.1
