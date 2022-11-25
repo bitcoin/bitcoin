@@ -599,7 +599,6 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_last_tx_time);
     X(m_last_block_time);
     X(m_connected);
-    X(nTimeOffset);
     X(m_addr_name);
     X(nVersion);
     {

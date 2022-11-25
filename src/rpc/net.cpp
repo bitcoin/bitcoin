@@ -239,7 +239,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bytessent", stats.nSendBytes);
         obj.pushKV("bytesrecv", stats.nRecvBytes);
         obj.pushKV("conntime", count_seconds(stats.m_connected));
-        obj.pushKV("timeoffset", stats.nTimeOffset);
+        obj.pushKV("timeoffset", statestats.time_offset);
         if (stats.m_last_ping_time > 0us) {
             obj.pushKV("pingtime", Ticks<SecondsDouble>(stats.m_last_ping_time));
         }

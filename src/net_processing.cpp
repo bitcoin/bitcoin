@@ -390,6 +390,10 @@ struct Peer {
     /** Whether this peer wants invs or headers (when possible) for block announcements */
     bool m_prefers_headers GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
+    /** Time offset computed during the version handshake based on the
+     * timestamp the peer sent in the version message. */
+    std::atomic<int64_t> m_time_offset{0};
+
     explicit Peer(NodeId id, ServiceFlags our_services)
         : m_id{id}
         , m_our_services{our_services}
@@ -1792,6 +1796,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             stats.presync_height = peer->m_headers_sync->GetPresyncHeight();
         }
     }
+    stats.time_offset = peer->m_time_offset;
 
     return true;
 }
@@ -3666,12 +3671,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
-        int64_t nTimeOffset = nTime - GetTime();
-        pfrom.nTimeOffset = nTimeOffset;
+        peer->m_time_offset = nTime - GetTime();
         if (!pfrom.IsInboundConn()) {
             // Don't use timedata samples from inbound peers to make it
             // harder for others to tamper with our adjusted time.
-            AddTimeData(pfrom.addr, nTimeOffset);
+            AddTimeData(pfrom.addr, peer->m_time_offset);
         }
 
         // If the peer is old enough to have the old alert system, send it the final alert.
