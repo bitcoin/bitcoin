@@ -72,9 +72,8 @@ task:
     memory: 4G
   python_cache:
     folder: /tmp/python-build # Uses intermediary directory for python caching. See the install.sh script in ci/lint/
-    fingerprint_script: # Since install.sh script uses atomic swaps between intermediary directory and target, define our own fingerprinting
+    fingerprint_script:
       - echo $CIRRUS_OS
-      - echo "CI_SCRIPT_VERSION_2"
       - cat .python-version
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
