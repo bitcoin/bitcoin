@@ -203,10 +203,6 @@ public:
     std::string m_addr_name;
     int nVersion;
     bool fInbound;
-    // We requested high bandwidth connection to peer
-    bool m_bip152_highbandwidth_to;
-    // Peer requested high bandwidth connection
-    bool m_bip152_highbandwidth_from;
     int m_starting_height;
     uint64_t nSendBytes;
     mapMsgTypeSize mapSendBytesPerMsgType;
@@ -824,11 +820,6 @@ public:
      * @return network the peer connected through.
      */
     Network ConnectedThroughNetwork() const;
-
-    // We selected peer as (compact blocks) high-bandwidth peer (BIP152)
-    std::atomic<bool> m_bip152_highbandwidth_to{false};
-    // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
-    std::atomic<bool> m_bip152_highbandwidth_from{false};
 
     /** Whether this peer provides all services that we want. Used for eviction decisions */
     std::atomic_bool m_has_all_wanted_services{false};
