@@ -63,6 +63,9 @@ public:
 			return true;
 		}
 		T *q = (T*)malloc(sizeof(T) * n);
+		for (size_t i=0; i<n; ++i) {  // my code
+			q[i] = 0ul;
+		}
 		if (q == 0) return false;
 		for (size_t i = 0; i < n_; i++) {
 			q[i] = p_[i];
