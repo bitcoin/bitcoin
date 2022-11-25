@@ -197,7 +197,6 @@ public:
     std::chrono::seconds m_last_block_time;
     std::chrono::seconds m_connected;
     std::string m_addr_name;
-    int nVersion;
     bool fInbound;
     int m_starting_height;
     uint64_t nSendBytes;
@@ -391,7 +390,6 @@ public:
     const std::string m_addr_name;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
-    std::atomic<int> nVersion{0};
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permission_flags, permission);
     }
