@@ -1178,9 +1178,6 @@ void RPCConsole::updateDetailWidget()
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
-    if (stats->nodeStats.nVersion) {
-        ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
-    }
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /*prepend_direction=*/true));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permission_flags == NetPermissionFlags::None) {
@@ -1197,6 +1194,9 @@ void RPCConsole::updateDetailWidget()
     // This check fails for example if the lock was busy and
     // m_peer_stats couldn't be fetched.
     if (stats->m_peer_stats_available) {
+        if (stats->m_peer_stats.m_version) {
+            ui->peerVersion->setText(QString::number(stats->m_peer_stats.m_version));
+        }
         ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->m_peer_stats.m_time_offset));
         QString bip152_hb_settings;
         if (stats->m_peer_stats.m_bip152_highbandwidth_to) bip152_hb_settings = ts.to;

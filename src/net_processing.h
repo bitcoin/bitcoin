@@ -47,6 +47,7 @@ struct PeerStats {
     // Peer requested high bandwidth connection
     bool m_bip152_highbandwidth_from{false};
     int64_t m_time_offset{0};
+    int m_version{0};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
