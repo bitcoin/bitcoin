@@ -39,7 +39,7 @@ def call_security_check(cc, source, executable, options):
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
     subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
-    p = subprocess.run(['./contrib/devtools/security-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.run([os.path.join(os.path.dirname(__file__), 'security-check.py'), executable], stdout=subprocess.PIPE, universal_newlines=True)
     return (p.returncode, p.stdout.rstrip())
 
 def get_arch(cc, source, executable):
