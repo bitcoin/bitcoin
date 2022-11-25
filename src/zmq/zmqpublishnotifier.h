@@ -59,22 +59,11 @@ class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) override;
 };
-class CZMQPublishNEVMBlobNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyCheckNEVMBlobs(const std::vector<CNEVMData> &nevmData, BlockValidationState &state) override;
-};
-
-class CZMQPublishNEVMCreateBlobNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyCreateNEVMBlob(const std::vector<uint8_t> &vchData, CNEVMData &nevmData, BlockValidationState &state) override;
-};
 
 class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight) override;
+    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) override;
 };
 class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
 {

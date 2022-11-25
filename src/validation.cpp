@@ -2071,14 +2071,14 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     for (auto const& [key, val] : mapPoDA) {
         NEVMDataVecOut.emplace_back(key);
     }
-    if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight);
-    }
-    bool res = true;
-    if(nHeight > nLastKnownHeightOnStart)
-        res = (state.IsValid() || !fNEVMConnection);
-    else 
+    bool bSkipValidation = nHeight <= nLastKnownHeightOnStart;
+    if(bSkipValidation) {
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
+    }
+    if(fNEVMConnection) {
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+    }
+    bool res = state.IsValid();
     // try to bring connection back alive if its not connected for some reason
     if(!res) {
         if(state.GetRejectReason() == "nevm-connect-not-sent") {
@@ -2087,9 +2087,8 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             if(!bResponse) {
                 if(RestartGethNode()) {
                     // try again after resetting connection
-                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight);
-                    if(nHeight > nLastKnownHeightOnStart)
-                        res = state.IsValid();
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+                    res = state.IsValid();
                 }
             }
         }
