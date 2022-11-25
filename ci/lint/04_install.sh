@@ -7,14 +7,18 @@
 export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
-${CI_RETRY_EXE} apt-get install -y python3-pip curl git gawk jq
-(
-  # Temporary workaround for https://github.com/bitcoin/bitcoin/pull/26130#issuecomment-1260499544
-  # Can be removed once the underlying image is bumped to something that includes git2.34 or later
-  sed -i -e 's/bionic/jammy/g' /etc/apt/sources.list
-  ${CI_RETRY_EXE} apt-get update
-  ${CI_RETRY_EXE} apt-get install -y --reinstall git
-)
+${CI_RETRY_EXE} apt-get install -y --no-install-recommends \
+    curl git gawk jq build-essential clang libbz2-dev \
+    libffi-dev liblzma-dev libncursesw5-dev libreadline-dev \
+    libsqlite3-dev libssl-dev zlib1g-dev
+
+INSTALL_PYENV=$([[ ! -d "${PYENV_ROOT}" ]] && echo true || echo false)
+[[ "${INSTALL_PYENV}" == 'true' ]] && ${CI_RETRY_EXE} curl -sL https://pyenv.run | bash
+export PATH="${PYENV_ROOT}/bin:${PATH}"
+eval "$(pyenv init -)"
+# Python version is determined by the .python-version file in the project root.
+[[ "${INSTALL_PYENV}" == 'true' ]] && CC=clang ${CI_RETRY_EXE} pyenv install
+pyenv local
 
 ${CI_RETRY_EXE} pip3 install codespell==2.2.1
 ${CI_RETRY_EXE} pip3 install flake8==4.0.1

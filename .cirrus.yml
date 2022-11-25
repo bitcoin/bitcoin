@@ -64,18 +64,23 @@ compute_credits_template: &CREDITS_TEMPLATE
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
 
 task:
-  name: 'lint [bionic]'
+  name: 'lint [jammy]'
   << : *BASE_TEMPLATE
   container:
-    image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
+    image: ubuntu:jammy
     cpu: 1
-    memory: 1G
+    memory: 2G
+  pyenv_cache:
+    folder: '$PYENV_ROOT'
+    fingerprint_script:
+      - cat .python-version
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   lint_script:
     - ./ci/lint_run_all.sh
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    PYENV_ROOT: '/tmp/pyenv_dir'
 
 task:
   name: 'tidy [jammy]'
