@@ -79,7 +79,7 @@ $(LIBBLS):
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS)' \
+		CFLAGS='$(CXXFLAGS) -DMCL_MAX_BIT_SIZE=384' \
 		LDFLAGS='$(LDFLAGS)' \
 		ARFLAGS='$(ARFLAGS)' \
 		AR='$(AR)' \
@@ -93,7 +93,7 @@ $(LIBMCL):
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS)' \
+		CFLAGS='$(CXXFLAGS) -DMCL_MAX_BIT_SIZE=384' \
 		LDFLAGS='$(LDFLAGS)' \
 		ARFLAGS='$(ARFLAGS)' \
 		AR='$(AR)' \
