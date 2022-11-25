@@ -399,6 +399,10 @@ struct Peer {
     /** Peer selected us as (compact blocks) high-bandwidth peer (BIP152). */
     std::atomic<bool> m_bip152_highbandwidth_from{false};
 
+    /** Time offset computed during the version handshake based on the
+     * timestamp the peer send in the version message. */
+    std::atomic<int64_t> m_time_offset{0};
+
     explicit Peer(NodeId id, ServiceFlags our_services)
         : m_id{id}
         , m_our_services{our_services}
@@ -1678,6 +1682,7 @@ bool PeerManagerImpl::GetPeerStats(NodeId nodeid, PeerStats& stats) const
     }
     stats.m_bip152_highbandwidth_to = peer->m_bip152_highbandwidth_to;
     stats.m_bip152_highbandwidth_from = peer->m_bip152_highbandwidth_from;
+    stats.m_time_offset = peer->m_time_offset;
 
     return true;
 }
@@ -3510,7 +3515,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
         int64_t nTimeOffset = nTime - GetTime();
-        pfrom.nTimeOffset = nTimeOffset;
+        peer->m_time_offset = nTimeOffset;
         if (!pfrom.IsInboundConn()) {
             // Don't use timedata samples from inbound peers to make it
             // harder for others to tamper with our adjusted time.

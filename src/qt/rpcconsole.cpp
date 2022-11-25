@@ -1178,7 +1178,6 @@ void RPCConsole::updateDetailWidget()
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
-    ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
     if (stats->nodeStats.nVersion) {
         ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
     }
@@ -1198,6 +1197,7 @@ void RPCConsole::updateDetailWidget()
     // This check fails for example if the lock was busy and
     // m_peer_stats couldn't be fetched.
     if (stats->m_peer_stats_available) {
+        ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->m_peer_stats.m_time_offset));
         QString bip152_hb_settings;
         if (stats->m_peer_stats.m_bip152_highbandwidth_to) bip152_hb_settings = ts.to;
         if (stats->m_peer_stats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings.isEmpty() ? ts.from : QLatin1Char('/') + ts.from);
