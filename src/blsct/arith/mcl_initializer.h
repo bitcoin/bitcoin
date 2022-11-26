@@ -9,9 +9,8 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_INITIALIZER_H
 #define NAVCOIN_BLSCT_ARITH_MCL_INITIALIZER_H
 
-// #include <bls/bls384_256.h> // must include this before bls/bls.h
-// #include <bls/bls.h>
-#include <mcl/bn_c384_256.h>
+#include <bls/bls384_256.h> // must include this before bls/bls.h
+#include <bls/bls.h>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 

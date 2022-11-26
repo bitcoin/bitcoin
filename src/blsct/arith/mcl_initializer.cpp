@@ -10,8 +10,7 @@ void MclInitializer::Init()
     static bool is_initialized = false;
     if (is_initialized) return;
 
-    if (mclBn_init(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
-    //if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
+    if (blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR) != 0) {
         throw std::runtime_error("blsInit failed");
     }
     mclBn_setETHserialization(1);
