@@ -67,9 +67,16 @@ task:
   name: 'lint [jammy]'
   << : *BASE_TEMPLATE
   container:
-    image: ubuntu:jammy  # For python 3.6, oldest supported version according to doc/dependencies.md
-    cpu: 1
-    memory: 1G
+    image: ubuntu:jammy
+    cpu: 2 # Assign 2 cores and 4G of ram in case .python-version has changed and cirrus has to rebuild python
+    memory: 4G
+  python_cache:
+    folder: /tmp/python-build # Uses intermediary directory for python caching. See the install.sh script in ci/lint/
+    fingerprint_script:
+      - echo $CIRRUS_OS
+      - cat .python-version
+      - cat ./ci/lint_run_all.sh
+      - cat ./ci/lint/*.sh
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   lint_script:

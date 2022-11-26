@@ -8,13 +8,19 @@ export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
 ${CI_RETRY_EXE} apt-get install -y python3-pip curl git gawk jq
-(
-  # Temporary workaround for https://github.com/bitcoin/bitcoin/pull/26130#issuecomment-1260499544
-  # Can be removed once the underlying image is bumped to something that includes git2.34 or later
-  sed -i -e 's/bionic/jammy/g' /etc/apt/sources.list
-  ${CI_RETRY_EXE} apt-get update
-  ${CI_RETRY_EXE} apt-get install -y --reinstall git
-)
+${CI_RETRY_EXE} apt-get install -y make build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+${CI_RETRY_EXE} curl https://pyenv.run | bash
+eval "$(pyenv init -)"
+
+[[ -d /tmp/python-build ]] && mkdir -p "$PYENV_ROOT"/versions/"$(cat .python-version)" && cp -r /tmp/python-build/* "$PYENV_ROOT"/versions/"$(cat .python-version)" && echo "Python cache found, copying..." # Pyenv doesn't like .pyenv being already present, so an intermediary directory is used to interface with Cirrus's CI Caching features
+[[ ! -d "$PYENV_ROOT"/versions/"$(cat .python-version)" ]] && ${CI_RETRY_EXE} pyenv install # Uses python version found in CWD's .python-version file, or searches parent directories until root for it
+${CI_RETRY_EXE} pyenv local
+mkdir -p /tmp/python-build && cp -r "$PYENV_ROOT"/versions/"$(cat .python-version)"/* /tmp/python-build && echo "Copying built python to tmp" # Copy built python to intermediary directory
 
 ${CI_RETRY_EXE} pip3 install codespell==2.2.1
 ${CI_RETRY_EXE} pip3 install flake8==4.0.1
