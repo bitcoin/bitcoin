@@ -201,6 +201,7 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
     case HTTPRequest::UNKNOWN:
         return "unknown";
     }
+    assert(false);
 }
 
 /** HTTP request callback */
