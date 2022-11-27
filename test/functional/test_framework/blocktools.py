@@ -61,6 +61,7 @@ WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
+MIN_BLOCKS_TO_KEEP = 288
 
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):

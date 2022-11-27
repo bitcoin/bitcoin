@@ -11,6 +11,7 @@ This test takes 30 mins or more (up to 2 hours)
 import os
 
 from test_framework.blocktools import (
+    MIN_BLOCKS_TO_KEEP,
     create_block,
     create_coinbase,
 )
@@ -333,7 +334,7 @@ class PruneTest(BitcoinTestFramework):
         assert has_block(2), "blk00002.dat is still there, should be pruned by now"
 
         # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
-        self.generate(node, 288, sync_fun=self.no_op)
+        self.generate(node, MIN_BLOCKS_TO_KEEP, sync_fun=self.no_op)
         prune(1000)
         assert not has_block(2), "blk00002.dat is still there, should be pruned by now"
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"
