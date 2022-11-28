@@ -925,8 +925,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // This carve out is NOT granted in package RBF (see m_allow_carveouts in ATMPArgs ctors) because, during
         // package acceptance, we may call PreChecks for multiple transactions that conflict with different mempool
         // entries that don't share ancestry. It would be a bug to keep increasing the descendant limit each time.
-        // The carve out also does not apply to package RBF while it is restricted to V3 transactions, since an
-        // unconfirmed V3 transaction cannot have more than one descendant.
+        Assume(!args.m_package_feerates && !args.m_package_submission);
+        // This carve out is not necessary with V3 transactions because V3 is 1-parent-1-child only,
+        // so CalculateMemPoolAncestors will not overestimate anyone's descendant count.  See the
+        // "Don't double-count a transaction that is going to be replaced" logic in ApplyV3Rules.
+        // If package RBF is enabled for non-V3 transactions in the future, be aware that this
+        // property could be broken.
         assert(ws.m_iters_conflicting.size() == 1);
         CTxMemPool::txiter conflict = *ws.m_iters_conflicting.begin();
 
@@ -1104,6 +1108,20 @@ bool MemPoolAccept::PackageMempoolChecks(const ATMPArgs& args,
                                      "package RBF failed: package conflicts with dependency", *err_string);
     }
 
+    // CheckMinerScores is very conservative and should not be used for individual transactions.
+    // For example, the mempool contains a large, low-feerate transaction A (99,000vB, 1sat/vB feerate) is
+    // Transaction A has a small, high-feerate child B (1,000vB, 101sat/vB). The user wants to
+    // further bump A+B by replacing B with an even higher feerate transaction, B'. If
+    // CheckMinerScores is enforced, then B' needs an ancestor score higher than the individual
+    // feerate of its directly conflicting transaction, B, which is 101sat/vB, This is extremely
+    // expensive since the ancestor feerate includes A (101sat/vB * 99,000vB).
+    // On the other hand, CheckMinerScores is fine if A+B is to be replaced by A'+B' (where A' is a
+    // transaction that conflicts with A) because the directly conflicting transaction A, has a low
+    // individual feerate.
+    // As such, it's also important to ensure that we don't apply CheckMinerScores() to individual
+    // transactions that were submitted as a package (e.g. if it's the only transaction left after
+    // deduplication in AcceptPackage()).
+    Assume(txns.size() > 1);
     // Check if it's economically rational to mine this package rather than the ones it replaces.
     if (const auto err_string{CheckMinerScores(m_total_modified_fees, m_total_vsize, m_collective_ancestors,
                                                direct_conflict_iters, m_all_conflicts)}) {
