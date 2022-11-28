@@ -97,6 +97,8 @@ def main():
             commit_range = merge_base + "..HEAD"
     else:
         commit_range = os.getenv("COMMIT_RANGE")
+        if commit_range == "SKIP_EMPTY_NOT_A_PR":
+            sys.exit(0)
 
     whitespace_selection = []
     tab_selection = []
