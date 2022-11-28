@@ -9,7 +9,12 @@ export LC_ALL=C
 GIT_HEAD=$(git rev-parse HEAD)
 if [ -n "$CIRRUS_PR" ]; then
   COMMIT_RANGE="${CIRRUS_BASE_SHA}..$GIT_HEAD"
+  echo
+  git log --no-merges --oneline "$COMMIT_RANGE"
+  echo
   test/lint/commit-script-check.sh "$COMMIT_RANGE"
+else
+  COMMIT_RANGE="SKIP_EMPTY_NOT_A_PR"
 fi
 export COMMIT_RANGE
 
@@ -28,9 +33,4 @@ if [ "$CIRRUS_REPO_FULL_NAME" = "dashpay/dash" ] && [ -n "$CIRRUS_CRON" ]; then
     mapfile -t KEYS < contrib/verify-commits/trusted-keys
     ${CI_RETRY_EXE} gpg --keyserver hkps://keys.openpgp.org --recv-keys "${KEYS[@]}" &&
     ./contrib/verify-commits/verify-commits.py --clean-merge=2;
-fi
-
-if [ -n "$COMMIT_RANGE" ]; then
-  echo
-  git log --no-merges --oneline "$COMMIT_RANGE"
 fi
