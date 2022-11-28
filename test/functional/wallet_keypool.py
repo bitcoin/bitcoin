@@ -9,11 +9,13 @@ from decimal import Decimal
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-
 from test_framework.auxpow import reverseHex
 from test_framework.auxpow_testing import computeAuxpow
 
 class KeyPoolTest(SyscoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 1
 

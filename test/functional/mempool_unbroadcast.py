@@ -9,14 +9,17 @@ import time
 
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, MAX_INITIAL_BROADCAST_DELAY
+from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
+
 class MempoolUnbroadcastTest(SyscoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
-        if self.is_wallet_compiled():
-            self.requires_wallet = True
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -33,6 +36,7 @@ class MempoolUnbroadcastTest(SyscoinTestFramework):
         self.log.info("Generate transactions that only node 0 knows about")
 
         if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
             # generate a wallet txn
             addr = node.getnewaddress()
             wallet_tx_hsh = node.sendtoaddress(addr, 0.0001)
