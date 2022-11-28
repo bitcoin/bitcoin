@@ -48,7 +48,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.17.2
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1", "-wallet=wallet.dat"], # v0.16.3
         ]
-        self.wallet_names = [self.default_wallet_name]
+        self.wallet_names = [True]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

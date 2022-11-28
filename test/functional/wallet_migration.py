@@ -23,7 +23,7 @@ from test_framework.wallet_util import (
 
 class WalletMigrationTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, descriptors=False)
 
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -493,7 +493,8 @@ class WalletMigrationTest(BitcoinTestFramework):
 
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
-        wallet = self.create_legacy_wallet("")
+        wallet = self.nodes[0].get_wallet_rpc("")
+        assert_equal(wallet.getwalletinfo()["descriptors"], False)
 
         wallet.migratewallet()
         info = wallet.getwalletinfo()

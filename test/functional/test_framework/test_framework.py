@@ -114,13 +114,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.bind_to_localhost_only = True
         self.use_descriptors = OptionalBool()
         self.parse_args()
-        self.default_wallet_name = "default_wallet" if self.use_descriptors else ""
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
         # create and import keys to. If unset, default is len(nodes) *
         # [default_wallet_name]. If wallet names are None, wallet creation is
         # skipped. If list is truncated, wallet creation is skipped and keys
-        # are not imported.
+        # are not imported. If the name is True, then the default_wallet_name
+        # will be used for that node.
         self.wallet_names = None
         # By default the wallet is not required. Set to true by skip_if_no_wallet().
         # When False, we ignore wallet_names regardless of what it is.
@@ -262,6 +262,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Call this method to start up the test framework object with options set."""
 
         check_json_precision()
+
+        self.default_wallet_name = "default_wallet" if self.use_descriptors.value else ""
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
@@ -447,6 +449,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def init_wallet(self, *, node):
         wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[node] if node < len(self.wallet_names) else False
+        if wallet_name is True:
+            wallet_name = self.default_wallet_name
         if wallet_name is not False:
             n = self.nodes[node]
             if wallet_name is not None:
