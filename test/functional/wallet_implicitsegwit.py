@@ -39,6 +39,9 @@ def check_implicit_transactions(implicit_keys, implicit_node):
             assert(('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs))
 
 class ImplicitSegwitTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.supports_cli = False

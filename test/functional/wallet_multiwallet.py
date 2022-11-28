@@ -52,6 +52,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def add_options(self, parser):
+        self.add_wallet_options(parser)
         parser.add_argument(
             '--data_wallets_dir',
             default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/wallets/'),

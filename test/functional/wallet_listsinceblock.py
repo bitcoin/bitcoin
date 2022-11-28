@@ -20,6 +20,9 @@ from test_framework.wallet_util import bytes_to_wif
 from decimal import Decimal
 
 class ListSinceBlockTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True

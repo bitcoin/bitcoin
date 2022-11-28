@@ -21,6 +21,9 @@ from test_framework.wallet_util import bytes_to_wif
 
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

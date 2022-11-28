@@ -21,6 +21,9 @@ from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [

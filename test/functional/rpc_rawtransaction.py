@@ -54,6 +54,9 @@ class multidict(dict):
 
 
 class RawTransactionsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser, descriptors=False)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -65,8 +68,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # whitelist all peers to speed up tx relay / mempool sync
         for args in self.extra_args:
             args.append("-whitelist=noban@127.0.0.1")
-        self.requires_wallet = self.is_specified_wallet_compiled()
-
         self.supports_cli = False
 
     def setup_network(self):
@@ -85,7 +86,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sendrawtransaction_testmempoolaccept_tests()
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
-        if self.requires_wallet and not self.options.descriptors:
+        if self.is_specified_wallet_compiled() and not self.options.descriptors:
+            self.import_deterministic_coinbase_privkeys()
             self.raw_multisig_transaction_legacy_tests()
 
     def getrawtransaction_tests(self):

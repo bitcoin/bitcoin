@@ -66,11 +66,12 @@ def cli_get_info_string_to_dict(cli_get_info_string):
 
 
 class TestBitcoinCli(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        if self.is_specified_wallet_compiled():
-            self.requires_wallet = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
@@ -114,6 +115,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test -getinfo returns expected network and blockchain info")
         if self.is_specified_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
             self.nodes[0].encryptwallet(password)
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
