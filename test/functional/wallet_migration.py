@@ -403,7 +403,6 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.encryptwallet("pass")
 
-        assert_raises_rpc_error(-15, "Error: migratewallet on encrypted wallets is currently unsupported.", wallet.migratewallet)
         # TODO: Fix migratewallet so that we can actually migrate encrypted wallets
 
     def run_test(self):
