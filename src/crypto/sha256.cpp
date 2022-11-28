@@ -579,6 +579,15 @@ bool AVXEnabled()
     return (a & 6) == 6;
 }
 #endif
+
+#if defined(_MSC_VER) && defined(_M_X64)
+#include <intrin.h>
+bool AVXEnabled()
+{
+    auto a = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+    return (a & 6) == 6;
+}
+#endif  // defined(_MSC_VER) && defined(_M_X64)
 #endif // DISABLE_OPTIMIZED_SHA256
 } // namespace
 
