@@ -304,6 +304,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/process_message.cpp \
  test/fuzz/process_messages.cpp \
  test/fuzz/protocol.cpp \
+ test/fuzz/proxyman.cpp \
  test/fuzz/psbt.cpp \
  test/fuzz/random.cpp \
  test/fuzz/rbf.cpp \
