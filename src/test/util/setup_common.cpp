@@ -351,9 +351,11 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
                                                                                   const std::vector<CKey>& input_signing_keys,
                                                                                   const std::vector<CTxOut>& outputs,
                                                                                   const std::optional<CFeeRate>& feerate,
-                                                                                  const std::optional<uint32_t>& fee_output)
+                                                                                  const std::optional<uint32_t>& fee_output,
+                                                                                  uint32_t version)
 {
     CMutableTransaction mempool_txn;
+    mempool_txn.nVersion = version;
     mempool_txn.vin.reserve(inputs.size());
     mempool_txn.vout.reserve(outputs.size());
 
@@ -415,9 +417,10 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(const std::
                                                                      int input_height,
                                                                      const std::vector<CKey>& input_signing_keys,
                                                                      const std::vector<CTxOut>& outputs,
-                                                                     bool submit)
+                                                                     bool submit,
+                                                                     uint32_t version)
 {
-    CMutableTransaction mempool_txn = CreateValidTransaction(input_transactions, inputs, input_height, input_signing_keys, outputs, std::nullopt, std::nullopt).first;
+    CMutableTransaction mempool_txn = CreateValidTransaction(input_transactions, inputs, input_height, input_signing_keys, outputs, std::nullopt, std::nullopt, version).first;
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
@@ -433,7 +436,8 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
                                                                      CKey input_signing_key,
                                                                      CScript output_destination,
                                                                      CAmount output_amount,
-                                                                     bool submit)
+                                                                     bool submit,
+                                                                     uint32_t version)
 {
     COutPoint input{input_transaction->GetHash(), input_vout};
     CTxOut output{output_amount, output_destination};
@@ -442,7 +446,8 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
                                          /*input_height=*/input_height,
                                          /*input_signing_keys=*/{input_signing_key},
                                          /*outputs=*/{output},
-                                         /*submit=*/submit);
+                                         /*submit=*/submit,
+                                         /*version=*/version);
 }
 
 std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit)
