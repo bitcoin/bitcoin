@@ -568,7 +568,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn with locked wallet and hardened derivation")
 
         df_wallet = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
-        self.nodes[1].createwallet(wallet_name="locked_wallet", descriptors=self.options.descriptors)
+        self.nodes[1].createwallet(wallet_name="locked_wallet", descriptors=bool(self.use_descriptors))
         wallet = self.nodes[1].get_wallet_rpc("locked_wallet")
         # This test is not meant to exercise fee estimation. Making sure all txs are sent at a consistent fee rate.
         wallet.settxfee(self.min_relay_tx_fee)

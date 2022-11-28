@@ -49,6 +49,16 @@ TEST_EXIT_SKIPPED = 77
 TMPDIR_PREFIX = "bitcoin_func_test_"
 
 
+# Bool that can be None, and if evaluated when None, asserts instead of being False
+class OptionalBool(object):
+    def __init__(self, value=None):
+        self.value = value
+
+    def __bool__(self):
+        assert self.value is not None
+        return self.value
+
+
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
 
@@ -102,8 +112,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
         self.bind_to_localhost_only = True
+        self.use_descriptors = OptionalBool()
         self.parse_args()
-        self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
+        self.default_wallet_name = "default_wallet" if self.use_descriptors else ""
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
         # create and import keys to. If unset, default is len(nodes) *
@@ -213,18 +224,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # It still needs to exist and be None in order for tests to work however.
             # So set it to None to force -disablewallet, because the wallet is not needed.
             self.options.descriptors = None
+            self.use_descriptors = OptionalBool()
         elif self.options.descriptors is None:
             # Some wallet is either required or optionally used by the test.
             # Prefer SQLite unless it isn't available
             if self.is_sqlite_compiled():
                 self.options.descriptors = True
+                self.use_descriptors = OptionalBool(True)
             elif self.is_bdb_compiled():
                 self.options.descriptors = False
+                self.use_descriptors = OptionalBool(False)
             else:
                 # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
                 # It still needs to exist and be None in order for tests to work however.
                 # So set it to None, which will also set -disablewallet.
                 self.options.descriptors = None
+                self.use_descriptors = OptionalBool()
+        else:
+            self.use_descriptors = OptionalBool(self.options.descriptors)
 
         PortSeed.n = self.options.port_seed
 
@@ -437,7 +454,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if wallet_name is not False:
             n = self.nodes[node]
             if wallet_name is not None:
-                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
+                n.createwallet(wallet_name=wallet_name, descriptors=bool(self.use_descriptors), load_on_startup=True)
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=True)
 
     def run_test(self):
@@ -527,7 +544,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
-                descriptors=self.options.descriptors,
+                descriptors=self.use_descriptors.value,
             )
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
@@ -798,7 +815,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     bitcoin_cli=self.options.bitcoincli,
                     coverage_dir=None,
                     cwd=self.tmpdir,
-                    descriptors=self.options.descriptors,
+                    descriptors=self.use_descriptors.value,
                 ))
             self.start_node(CACHE_NODE_ID)
             cache_node = self.nodes[CACHE_NODE_ID]
@@ -904,7 +921,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self._requires_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
-        if self.options.descriptors:
+        if self.use_descriptors:
             self.skip_if_no_sqlite()
         else:
             self.skip_if_no_bdb()
@@ -967,7 +984,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_specified_wallet_compiled(self):
         """Checks whether wallet support for the specified type
            (legacy or descriptor wallet) was compiled."""
-        if self.options.descriptors:
+        if self.use_descriptors:
             return self.is_sqlite_compiled()
         else:
             return self.is_bdb_compiled()

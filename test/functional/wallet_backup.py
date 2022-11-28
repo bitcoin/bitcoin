@@ -228,7 +228,7 @@ class WalletBackupTest(BitcoinTestFramework):
             # Create new wallets for the three nodes.
             # We will use this empty wallets to test the 'importwallet()' RPC command below.
             for node_num in range(3):
-                self.nodes[node_num].createwallet(wallet_name=self.default_wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
+                self.nodes[node_num].createwallet(wallet_name=self.default_wallet_name, descriptors=bool(self.use_descriptors), load_on_startup=True)
 
             assert_equal(self.nodes[0].getbalance(), 0)
             assert_equal(self.nodes[1].getbalance(), 0)
