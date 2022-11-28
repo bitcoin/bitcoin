@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\crypto\sha256_avx2.cpp" />
+    <ClCompile Include="..\..\src\crypto\sha256_sse41.cpp" />
 @SOURCE_FILES@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -16,7 +17,7 @@
   <Import Project="..\common.vcxproj" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>ENABLE_AVX2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENABLE_AVX2;ENABLE_SSE41;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>
