@@ -80,7 +80,7 @@ class ExampleTest(BitcoinTestFramework):
     # and setup_nodes() methods to customize the test setup as required.
 
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, any_type=True)
 
     def set_test_params(self):
         """Override test parameters for your individual test.

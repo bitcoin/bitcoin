@@ -1276,7 +1276,7 @@ UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
 class TaprootTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, any_type=True)
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
 

@@ -44,7 +44,7 @@ def process_mapping(fname):
 
 class HelpRpcTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, any_type=True)
 
     def set_test_params(self):
         self.num_nodes = 1

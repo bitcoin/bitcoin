@@ -40,7 +40,7 @@ INVALID_ADDRESS_2 = '1q049ldschfnwystcqnsvyfpj23mpsg3jcedq9xv'
 
 class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, any_type=True)
 
     def set_test_params(self):
         self.setup_clean_chain = True

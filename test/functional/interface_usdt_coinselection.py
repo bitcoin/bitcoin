@@ -98,7 +98,7 @@ int trace_aps_create_tx(struct pt_regs *ctx) {
 
 class CoinSelectionTracepointTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        self.add_wallet_options(parser, any_type=True)
 
     def set_test_params(self):
         self.num_nodes = 1

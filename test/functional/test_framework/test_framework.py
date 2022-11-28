@@ -137,33 +137,52 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
 
-        try:
-            self.setup()
-            self.run_test()
-        except JSONRPCException:
-            self.log.exception("JSONRPC error")
-            self.success = TestStatus.FAILED
-        except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
-            self.success = TestStatus.SKIPPED
-        except AssertionError:
-            self.log.exception("Assertion failed")
-            self.success = TestStatus.FAILED
-        except KeyError:
-            self.log.exception("Key error")
-            self.success = TestStatus.FAILED
-        except subprocess.CalledProcessError as e:
-            self.log.exception("Called Process failed with '{}'".format(e.output))
-            self.success = TestStatus.FAILED
-        except Exception:
-            self.log.exception("Unexpected exception caught during testing")
-            self.success = TestStatus.FAILED
-        except KeyboardInterrupt:
-            self.log.warning("Exiting after keyboard interrupt")
-            self.success = TestStatus.FAILED
-        finally:
-            exit_code = self.shutdown()
-            sys.exit(exit_code)
+        exit_codes = []
+
+        # Because of a strange interaction between "append_const" and "default" in ArgumentParser,
+        # wallet_types may have duplicate values. Using a set deduplicates.
+        for wallet_type in set(self.options.descriptors):
+            self.use_descriptors = OptionalBool(wallet_type)
+            try:
+                self.setup()
+                self.run_test()
+            except JSONRPCException:
+                self.log.exception("JSONRPC error")
+                self.success = TestStatus.FAILED
+            except SkipTest as e:
+                self.log.warning("Test Skipped: %s" % e.message)
+                self.success = TestStatus.SKIPPED
+            except AssertionError:
+                self.log.exception("Assertion failed")
+                self.success = TestStatus.FAILED
+            except KeyError:
+                self.log.exception("Key error")
+                self.success = TestStatus.FAILED
+            except subprocess.CalledProcessError as e:
+                self.log.exception("Called Process failed with '{}'".format(e.output))
+                self.success = TestStatus.FAILED
+            except Exception:
+                self.log.exception("Unexpected exception caught during testing")
+                self.success = TestStatus.FAILED
+            except KeyboardInterrupt:
+                self.log.warning("Exiting after keyboard interrupt")
+                self.success = TestStatus.FAILED
+            finally:
+                self.shutdown()
+                exit_codes.append(self.success)
+
+        # Determine the exit code
+        # If one failed, the test failed.
+        # If both skipped, the test skipped.
+        # If one passed and the other skipped, the test passed
+        if any([ec == TestStatus.FAILED for ec in exit_codes]):
+            sys.exit(TEST_EXIT_FAILED)
+        if all([ec == TestStatus.SKIPPED for ec in exit_codes]):
+            sys.exit(TEST_EXIT_SKIPPED)
+        if any([ec == TestStatus.PASSED for ec in exit_codes]):
+            sys.exit(TEST_EXIT_PASSED)
+
+        assert False, "Unhandled exit scenario Legacy {}, descriptor {}".format(exit_codes[0], exit_codes[1])
 
     def parse_args(self):
         previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
@@ -219,25 +238,25 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config.read_file(open(self.options.configfile))
         self.config = config
 
-        if "descriptors" not in self.options:
+        if "descriptors" not in self.options or not self.is_wallet_compiled():
             # Wallet is not required by the test at all and the value of self.options.descriptors won't matter.
             # It still needs to exist and be None in order for tests to work however.
             # So set it to None to force -disablewallet, because the wallet is not needed.
-            self.use_descriptors = OptionalBool()
+            self.options.descriptors = [None]
         elif self.options.descriptors is None:
-            # Some wallet is either required or optionally used by the test.
-            # Prefer SQLite unless it isn't available
+            # This can only happen if both --legacy-wallet and --descriptors can be provided
+            # but weren't. In this case, we want to run both wallet types if they are available.
+            self.options.descriptors = []
             if self.is_sqlite_compiled():
-                self.use_descriptors = OptionalBool(True)
+                self.options.descriptors.append(True)
+            if self.is_bdb_compiled():
+                self.options.descriptors.append(False)
+        elif self.options.descriptors == "any":
+            self.options.descriptors = []
+            if self.is_sqlite_compiled():
+                self.options.descriptors.append(True)
             elif self.is_bdb_compiled():
-                self.use_descriptors = OptionalBool(False)
-            else:
-                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
-                # It still needs to exist and be None in order for tests to work however.
-                # So set it to None, which will also set -disablewallet.
-                self.use_descriptors = OptionalBool()
-        else:
-            self.use_descriptors = OptionalBool(self.options.descriptors)
+                self.options.descriptors.append(False)
 
         PortSeed.n = self.options.port_seed
 
@@ -463,19 +482,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def add_wallet_options(self, parser, *, descriptors=True, legacy=True):
+    def add_wallet_options(self, parser, *, descriptors=True, legacy=True, any_type=False):
         kwargs = {}
         if descriptors + legacy == 1:
             # If only one type can be chosen, set it as default
-            kwargs["default"] = descriptors
+            kwargs["default"] = [descriptors]
+        if any_type:
+            assert descriptors
+            assert legacy
+            kwargs["default"] = "any"
         group = parser.add_mutually_exclusive_group(
-            # If only one type is allowed, require it to be set in test_runner.py
-            required=os.getenv("REQUIRE_WALLET_TYPE_SET") == "1" and "default" in kwargs)
+            # Require the type to be set in test_runner.py
+            required=os.getenv("REQUIRE_WALLET_TYPE_SET") == "1" and not any_type)
         if descriptors:
-            group.add_argument("--descriptors", action='store_const', const=True, **kwargs,
+            group.add_argument("--descriptors", action='append_const', const=True, **kwargs,
                                help="Run test using a descriptor wallet", dest='descriptors')
         if legacy:
-            group.add_argument("--legacy-wallet", action='store_const', const=False, **kwargs,
+            group.add_argument("--legacy-wallet", action='append_const', const=False, **kwargs,
                                help="Run test using legacy wallets", dest='descriptors')
 
     def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
@@ -984,6 +1007,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_specified_wallet_compiled(self):
         """Checks whether wallet support for the specified type
            (legacy or descriptor wallet) was compiled."""
+        if not self.is_wallet_compiled():
+            return False
         if self.use_descriptors:
             return self.is_sqlite_compiled()
         else:
