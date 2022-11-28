@@ -711,7 +711,9 @@ static RPCHelpMan migratewallet()
         "file will be named <wallet name>-<timestamp>.legacy.bak and can be found in the directory\n"
         "for this wallet. In the event of an incorrect migration, the backup can be restored using restorewallet." +
         HELP_REQUIRING_PASSPHRASE,
-        {},
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to migrate. If provided both here and in the RPC endpoint, the two must be identical."},
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
@@ -728,17 +730,24 @@ static RPCHelpMan migratewallet()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             std::string wallet_name;
-            {
-                std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
-                if (!wallet) return NullUniValue;
-
-                if (wallet->IsCrypted()) {
-                    throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: migratewallet on encrypted wallets is currently unsupported.");
+            if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
+                if (!(request.params[0].isNull() || request.params[0].get_str() == wallet_name)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "RPC endpoint wallet and wallet_name parameter specify different wallets");
                 }
-                wallet_name = wallet->GetName();
+            } else {
+                if (request.params[0].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Either RPC endpoint wallet or wallet_name parameter must be provided");
+                }
+                wallet_name = request.params[0].get_str();
             }
 
             WalletContext& context = EnsureWalletContext(request.context);
+            {
+                std::shared_ptr<CWallet> wallet = GetWallet(context, wallet_name);
+                if (wallet && wallet->IsCrypted()) {
+                    throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: migratewallet on encrypted wallets is currently unsupported.");
+                }
+            }
 
             util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, context);
             if (!res) {
