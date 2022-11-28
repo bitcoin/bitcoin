@@ -2007,8 +2007,15 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         auto tx_relay = peer.GetTxRelay();
         if (!tx_relay) continue;
 
-        const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
         LOCK(tx_relay->m_tx_inventory_mutex);
+        // Only queue transactions for announcement once the version handshake
+        // is completed. The time of arrival for these transactions is
+        // otherwise at risk of leaking to a spy, if the spy is able to
+        // distinguish transactions received during the handshake from the rest
+        // in the announcement.
+        if (tx_relay->m_next_inv_send_time == 0s) continue;
+
+        const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
             tx_relay->m_tx_inventory_to_send.insert(hash);
         }
