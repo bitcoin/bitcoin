@@ -1366,10 +1366,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
-        SetProxy(NET_IPV4, addrProxy);
-        SetProxy(NET_IPV6, addrProxy);
-        SetProxy(NET_CJDNS, addrProxy);
-        SetNameProxy(addrProxy);
+        node.connman->GetProxyManager().SetProxy(NET_IPV4, addrProxy);
+        node.connman->GetProxyManager().SetProxy(NET_IPV6, addrProxy);
+        node.connman->GetProxyManager().SetProxy(NET_CJDNS, addrProxy);
+        node.connman->GetProxyManager().SetNameProxy(addrProxy);
         onion_proxy = addrProxy;
     }
 
@@ -1397,7 +1397,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (onion_proxy.IsValid()) {
-        SetProxy(NET_ONION, onion_proxy);
+        node.connman->GetProxyManager().SetProxy(NET_ONION, onion_proxy);
     } else {
         // If -listenonion is set, then we will (try to) connect to the Tor control port
         // later from the torcontrol thread and may retrieve the onion proxy from there.
@@ -1787,7 +1787,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringIPPort()));
         }
-        StartTorControl(onion_service_target);
+        StartTorControl(onion_service_target, node.connman->GetProxyManager());
     }
 
     if (connOptions.bind_on_any) {
@@ -1820,7 +1820,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!Lookup(i2psam_arg, addr, 7656, fNameLookup) || !addr.IsValid()) {
             return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
         }
-        SetProxy(NET_I2P, Proxy{addr});
+        node.connman->GetProxyManager().SetProxy(NET_I2P, Proxy{addr});
     } else {
         if (args.IsArgSet("-onlynet") && IsReachable(NET_I2P)) {
             return InitError(

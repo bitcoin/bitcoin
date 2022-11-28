@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/proxy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -43,7 +44,8 @@ FUZZ_TARGET_INIT(torcontrol, initialize_torcontrol)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    TorController tor_controller;
+    ProxyManager proxyman;
+    TorController tor_controller{proxyman};
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         TorControlReply tor_control_reply;
         CallOneOf(

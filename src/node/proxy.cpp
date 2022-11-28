@@ -2,60 +2,52 @@
 #include <node/proxy.h>
 #include <sync.h>
 
-static GlobalMutex g_proxyinfo_mutex;
-static Proxy proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
-static Proxy nameProxy GUARDED_BY(g_proxyinfo_mutex);
-
-bool SetProxy(enum Network net, const Proxy& addrProxy)
+bool ProxyManager::SetProxy(enum Network net, const Proxy& proxy)
 {
     assert(net >= 0 && net < NET_MAX);
-    if (!addrProxy.IsValid())
+    if (!proxy.IsValid())
         return false;
-    LOCK(g_proxyinfo_mutex);
-    proxyInfo[net] = addrProxy;
+
+    LOCK(m_mutex);
+    m_proxies[net] = proxy;
     return true;
 }
 
-bool GetProxy(enum Network net, Proxy& proxyInfoOut)
+std::optional<Proxy> ProxyManager::GetProxy(enum Network net) const
 {
     assert(net >= 0 && net < NET_MAX);
-    LOCK(g_proxyinfo_mutex);
-    if (!proxyInfo[net].IsValid())
-        return false;
-    proxyInfoOut = proxyInfo[net];
-    return true;
+    LOCK(m_mutex);
+    return m_proxies[net];
 }
 
-bool IsProxy(const CNetAddr& addr)
+bool ProxyManager::HasProxy(const CNetAddr& addr) const
 {
-    LOCK(g_proxyinfo_mutex);
+    LOCK(m_mutex);
     for (int i = 0; i < NET_MAX; i++) {
-        if (addr == static_cast<CNetAddr>(proxyInfo[i].proxy))
+        if (addr == static_cast<CNetAddr>(m_proxies[i].value_or(Proxy{}).proxy))
             return true;
     }
     return false;
 }
 
-bool SetNameProxy(const Proxy& addrProxy)
+bool ProxyManager::SetNameProxy(const Proxy& proxy)
 {
-    if (!addrProxy.IsValid())
+    if (!proxy.IsValid())
         return false;
-    LOCK(g_proxyinfo_mutex);
-    nameProxy = addrProxy;
+
+    LOCK(m_mutex);
+    m_name_proxy = proxy;
     return true;
 }
 
-bool HaveNameProxy()
+bool ProxyManager::HaveNameProxy() const
 {
-    LOCK(g_proxyinfo_mutex);
-    return nameProxy.IsValid();
+    LOCK(m_mutex);
+    return m_name_proxy.has_value();
 }
 
-bool GetNameProxy(Proxy& nameProxyOut)
+std::optional<Proxy> ProxyManager::GetNameProxy() const
 {
-    LOCK(g_proxyinfo_mutex);
-    if (!nameProxy.IsValid())
-        return false;
-    nameProxyOut = nameProxy;
-    return true;
+    LOCK(m_mutex);
+    return m_name_proxy;
 }

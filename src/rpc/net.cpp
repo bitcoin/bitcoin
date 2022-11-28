@@ -557,15 +557,14 @@ static RPCHelpMan getnettotals()
     };
 }
 
-static UniValue GetNetworksInfo()
+static UniValue GetNetworksInfo(CConnman& connman)
 {
     UniValue networks(UniValue::VARR);
     for (int n = 0; n < NET_MAX; ++n) {
         enum Network network = static_cast<enum Network>(n);
         if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
-        Proxy proxy;
         UniValue obj(UniValue::VOBJ);
-        GetProxy(network, proxy);
+        Proxy proxy = connman.GetProxyManager().GetProxy(network).value_or(Proxy{});
         obj.pushKV("name", GetNetworkName(network));
         obj.pushKV("limited", !IsReachable(network));
         obj.pushKV("reachable", IsReachable(network));
@@ -650,7 +649,7 @@ static RPCHelpMan getnetworkinfo()
         obj.pushKV("connections_in", node.connman->GetNodeCount(ConnectionDirection::In));
         obj.pushKV("connections_out", node.connman->GetNodeCount(ConnectionDirection::Out));
     }
-    obj.pushKV("networks",      GetNetworksInfo());
+    obj.pushKV("networks", GetNetworksInfo(*node.connman));
     if (node.mempool) {
         // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
         obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_min_relay_feerate.GetFeePerK()));

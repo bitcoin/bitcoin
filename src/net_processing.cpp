@@ -1382,7 +1382,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     NodeId nodeid = pnode.GetId();
     CAddress addr = pnode.addr;
 
-    CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
+    CService addr_you = addr.IsRoutable() && !m_connman.GetProxyManager().HasProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
     uint64_t your_services{addr.nServices};
 
     const bool tx_relay{!RejectIncomingTxs(pnode)};

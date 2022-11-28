@@ -303,10 +303,11 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
     return mapping;
 }
 
-TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target):
+TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target, ProxyManager& proxyman):
     base(_base),
     m_tor_control_center(tor_control_center), conn(base), reconnect(true), reconnect_timeout(RECONNECT_TIMEOUT_START),
-    m_target(target)
+    m_target(target),
+    m_proxyman{proxyman}
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
@@ -382,8 +383,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
 
     Assume(resolved.IsValid());
     LogPrint(BCLog::TOR, "Configuring onion proxy for %s\n", resolved.ToStringIPPort());
-    Proxy addrOnion = Proxy(resolved, true);
-    SetProxy(NET_ONION, addrOnion);
+    m_proxyman.SetProxy(NET_ONION, Proxy{resolved, true});
 
     const auto onlynets = gArgs.GetArgs("-onlynet");
 
@@ -651,15 +651,15 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 static struct event_base *gBase;
 static std::thread torControlThread;
 
-static void TorControlThread(CService onion_service_target)
+static void TorControlThread(CService onion_service_target, ProxyManager& proxyman)
 {
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::TOR_CONTROL);
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target, proxyman);
 
     event_base_dispatch(gBase);
 }
 
-void StartTorControl(CService onion_service_target)
+void StartTorControl(CService onion_service_target, ProxyManager& proxyman)
 {
     assert(!gBase);
 #ifdef WIN32
@@ -673,8 +673,8 @@ void StartTorControl(CService onion_service_target)
         return;
     }
 
-    torControlThread = std::thread(&util::TraceThread, "torcontrol", [onion_service_target] {
-        TorControlThread(onion_service_target);
+    torControlThread = std::thread(&util::TraceThread, "torcontrol", [onion_service_target, &proxyman] {
+        TorControlThread(onion_service_target, proxyman);
     });
 }
 

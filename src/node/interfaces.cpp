@@ -164,7 +164,19 @@ public:
         gArgs.WriteSettingsFile();
     }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
-    bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
+
+    bool getProxy(Network net, Proxy& proxy_info) override
+    {
+        if (m_context->connman) {
+            auto proxy = m_context->connman->GetProxyManager().GetProxy(net);
+            if (!proxy) return false;
+            proxy_info = *proxy;
+            return true;
+        }
+
+        return false;
+    }
+
     size_t getNodeCount(ConnectionDirection flags) override
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;

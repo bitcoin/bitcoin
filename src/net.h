@@ -10,6 +10,7 @@
 #include <common/bloom.h>
 #include <compat/compat.h>
 #include <node/connection_types.h>
+#include <node/proxy.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
@@ -863,6 +864,8 @@ public:
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
+    ProxyManager& GetProxyManager() { return m_proxyman; }
+
 private:
     struct ListenSocket {
     public:
@@ -1125,6 +1128,8 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    ProxyManager m_proxyman;
 
     /**
      * RAII helper to atomically create a copy of `m_nodes` and add a reference

@@ -462,7 +462,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                                                      Params().GetDefaultPort()};
     if (pszDest) {
         std::vector<CService> resolved;
-        if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
+        if (Lookup(pszDest, resolved,  default_port, fNameLookup && !m_proxyman.HaveNameProxy(), 256) && !resolved.empty()) {
             const CService rnd{resolved[GetRand(resolved.size())]};
             addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
             if (!addrConnect.IsValid()) {
@@ -483,22 +483,21 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Connect
     bool connected = false;
     std::unique_ptr<Sock> sock;
-    Proxy proxy;
     CAddress addr_bind;
     assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
     if (addrConnect.IsValid()) {
-        const bool use_proxy{GetProxy(addrConnect.GetNetwork(), proxy)};
+        auto proxy{m_proxyman.GetProxy(addrConnect.GetNetwork())};
         bool proxyConnectionFailed = false;
 
-        if (addrConnect.GetNetwork() == NET_I2P && use_proxy) {
+        if (addrConnect.GetNetwork() == NET_I2P && proxy) {
             i2p::Connection conn;
 
             if (m_i2p_sam_session) {
                 connected = m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed);
             } else {
-                i2p_transient_session = std::make_unique<i2p::sam::Session>(proxy.proxy, &interruptNet);
+                i2p_transient_session = std::make_unique<i2p::sam::Session>(proxy->proxy, &interruptNet);
                 connected = i2p_transient_session->Connect(addrConnect, conn, proxyConnectionFailed);
             }
 
@@ -506,12 +505,12 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 sock = std::move(conn.sock);
                 addr_bind = CAddress{conn.me, NODE_NONE};
             }
-        } else if (use_proxy) {
-            sock = CreateSock(proxy.proxy);
+        } else if (proxy) {
+            sock = CreateSock(proxy->proxy);
             if (!sock) {
                 return nullptr;
             }
-            connected = socks5::ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
+            connected = socks5::ConnectThroughProxy(*proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
                                             *sock, nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
@@ -527,8 +526,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             // the proxy, mark this as an attempt.
             addrman.Attempt(addrConnect, fCountFailure);
         }
-    } else if (pszDest && GetNameProxy(proxy)) {
-        sock = CreateSock(proxy.proxy);
+    } else if (auto proxy = m_proxyman.GetNameProxy(); proxy && pszDest) {
+        sock = CreateSock(proxy->proxy);
         if (!sock) {
             return nullptr;
         }
@@ -536,8 +535,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         uint16_t port{default_port};
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = socks5::ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
-                                        proxyConnectionFailed);
+        connected = socks5::ConnectThroughProxy(*proxy, host, port, *sock, nConnectTimeout,
+                                                proxyConnectionFailed);
     }
     if (!connected) {
         return nullptr;
@@ -1468,7 +1467,7 @@ void CConnman::ThreadDNSAddressSeed()
         }
 
         LogPrintf("Loading addresses from DNS seed %s\n", seed);
-        if (HaveNameProxy()) {
+        if (m_proxyman.HaveNameProxy()) {
             AddAddrFetch(seed);
         } else {
             std::vector<CNetAddr> vIPs;
@@ -2283,10 +2282,9 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
-    Proxy i2p_sam;
-    if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
+    if (auto i2p_sam = m_proxyman.GetProxy(NET_I2P); i2p_sam && connOptions.m_i2p_accept_incoming) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
-                                                                i2p_sam.proxy, &interruptNet);
+                                                                i2p_sam->proxy, &interruptNet);
     }
 
     for (const auto& strDest : connOptions.vSeedNodes) {

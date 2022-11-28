@@ -23,11 +23,12 @@
 #include <vector>
 
 class CService;
+class ProxyManager;
 
 extern const std::string DEFAULT_TOR_CONTROL;
 static const bool DEFAULT_LISTEN_ONION = true;
 
-void StartTorControl(CService onion_service_target);
+void StartTorControl(CService onion_service_target, ProxyManager& proxyman);
 void InterruptTorControl();
 void StopTorControl();
 
@@ -112,10 +113,11 @@ private:
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
-    TorController() : conn{nullptr} {
-        // Used for testing only.
-    }
+    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target, ProxyManager& proxyman);
+    // Used for testing only.
+    TorController(ProxyManager& proxyman)
+        : conn{nullptr}, m_proxyman{proxyman} {}
+
     ~TorController();
 
     /** Get name of file to store private key in */
@@ -138,6 +140,7 @@ private:
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
     std::vector<uint8_t> clientNonce;
+    ProxyManager& m_proxyman;
 
 public:
     /** Callback for GETINFO net/listeners/socks result */
