@@ -136,7 +136,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # importdescriptors RPC (with argument 'timestamp'='now'), which always rescans
         # blocks of the past 2 hours, based on the current MTP timestamp; in order to avoid
         # importing the last address (wo3), we advance the time further and generate 10 blocks
-        if self.options.descriptors:
+        if self.use_descriptors:
             set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
             self.generatetoaddress(minernode, 10, m1)
 
@@ -181,7 +181,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         enc_wallet = usernode.get_wallet_rpc("enc_wallet")
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", enc_wallet.rescanblockchain)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             self.log.info("Test rescanning an encrypted wallet")
             hd_seed = get_generate_key().privkey
 

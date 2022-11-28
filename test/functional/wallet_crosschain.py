@@ -44,7 +44,7 @@ class WalletCrossChain(BitcoinTestFramework):
 
         self.log.info("Loading/restoring wallets into nodes with a different genesis block")
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[0].loadwallet, node1_wallet)
             assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[1].loadwallet, node0_wallet)
             assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[0].restorewallet, 'w', node1_wallet_backup)
@@ -55,7 +55,7 @@ class WalletCrossChain(BitcoinTestFramework):
             assert_raises_rpc_error(-4, 'Wallet files should not be reused across chains.', self.nodes[0].restorewallet, 'w', node1_wallet_backup)
             assert_raises_rpc_error(-4, 'Wallet files should not be reused across chains.', self.nodes[1].restorewallet, 'w', node0_wallet_backup)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             self.log.info("Override cross-chain wallet load protection")
             self.stop_nodes()
             self.start_nodes([['-walletcrosschain', '-prune=550']] * self.num_nodes)

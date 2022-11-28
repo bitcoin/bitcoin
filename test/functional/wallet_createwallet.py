@@ -52,7 +52,7 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info('Test that private keys cannot be imported')
         privkey, pubkey = generate_keypair(wif=True)
         assert_raises_rpc_error(-4, 'Cannot import private keys to a wallet with private keys disabled', w1.importprivkey, privkey)
-        if self.options.descriptors:
+        if self.use_descriptors:
             result = w1.importdescriptors([{'desc': descsum_create('wpkh(' + privkey + ')'), 'timestamp': 'now'}])
         else:
             result = w1.importmulti([{'scriptPubKey': {'address': key_to_p2wpkh(pubkey)}, 'timestamp': 'now', 'keys': [privkey]}])
@@ -80,7 +80,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_equal(w3.getwalletinfo()['keypoolsize'], 0)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w3.getnewaddress)
         # Set the seed
-        if self.options.descriptors:
+        if self.use_descriptors:
             w3.importdescriptors([{
                 'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
                 'timestamp': 'now',
@@ -110,7 +110,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getrawchangeaddress)
         # Now set a seed and it should work. Wallet should also be encrypted
         w4.walletpassphrase('pass', 60)
-        if self.options.descriptors:
+        if self.use_descriptors:
             w4.importdescriptors([{
                 'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
                 'timestamp': 'now',
@@ -156,12 +156,12 @@ class CreateWalletTest(BitcoinTestFramework):
         w6.keypoolrefill(1)
         # There should only be 1 key for legacy, 3 for descriptors
         walletinfo = w6.getwalletinfo()
-        keys = 4 if self.options.descriptors else 1
+        keys = 4 if self.use_descriptors else 1
         assert_equal(walletinfo['keypoolsize'], keys)
         assert_equal(walletinfo['keypoolsize_hd_internal'], keys)
         # Allow empty passphrase, but there should be a warning
         resp = self.nodes[0].createwallet(wallet_name='w7', disable_private_keys=False, blank=False, passphrase='')
-        assert_equal(resp["warnings"], [EMPTY_PASSPHRASE_MSG] if self.options.descriptors else [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG])
+        assert_equal(resp["warnings"], [EMPTY_PASSPHRASE_MSG] if self.use_descriptors else [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG])
 
         w7 = node.get_wallet_rpc('w7')
         assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 60)

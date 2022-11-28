@@ -162,7 +162,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(self.nodes[i].deriveaddresses(sh_wpkh_desc)[0], key.p2sh_p2wpkh_addr)
             assert_equal(self.nodes[i].deriveaddresses(wpkh_desc)[0], key.p2wpkh_addr)
 
-            if self.options.descriptors:
+            if self.use_descriptors:
                 res = self.nodes[i].importdescriptors([
                 {"desc": p2sh_ms_desc, "timestamp": "now"},
                 {"desc": bip173_ms_desc, "timestamp": "now"},
@@ -333,7 +333,7 @@ class SegWitTest(BitcoinTestFramework):
         # Mine a block to clear the gbt cache again.
         self.generate(self.nodes[0], 1)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             self.log.info("Verify behaviour of importaddress and listunspent")
 
             # Some public keys to be used later

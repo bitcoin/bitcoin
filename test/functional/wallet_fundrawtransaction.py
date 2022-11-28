@@ -543,7 +543,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 addr2Obj['pubkey'],
             ]
         )['address']
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             wmulti.importaddress(mSigObj)
 
         # Send 1.2 BTC to msig addr.
@@ -580,7 +580,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Encrypt wallet and import descriptors
         wallet.encryptwallet("test")
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             wallet.walletpassphrase('test', 10)
             wallet.importdescriptors([{
                 'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
@@ -731,7 +731,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             "range": [0, 100],
             "watchonly": True,
         }]
-        if self.options.descriptors:
+        if self.use_descriptors:
             wwatch.importdescriptors(desc_import)
         else:
             wwatch.importmulti(desc_import)
@@ -1012,7 +1012,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Make a weird but signable script. sh(pkh()) descriptor accomplishes this
         desc = descsum_create("sh(pkh({}))".format(privkey))
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
             res = self.nodes[0].importmulti([{"desc": desc, "timestamp": "now"}])

@@ -91,7 +91,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sendrawtransaction_testmempoolaccept_tests()
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
-        if self.is_specified_wallet_compiled() and not self.options.descriptors:
+        if self.is_specified_wallet_compiled() and not self.use_descriptors:
             self.import_deterministic_coinbase_privkeys()
             self.raw_multisig_transaction_legacy_tests()
 

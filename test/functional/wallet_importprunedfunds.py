@@ -109,7 +109,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
         address_info = wwatch.getaddressinfo(address2)
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(address_info['iswatchonly'], False)
             assert_equal(address_info['ismine'], True)
         else:

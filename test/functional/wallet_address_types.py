@@ -236,7 +236,7 @@ class AddressTypeTest(BitcoinTestFramework):
         compressed_1 = "0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52"
         compressed_2 = "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Tests for addmultisigaddress's address type behavior is only for legacy wallets.
             # Descriptor wallets do not have addmultsigaddress so these tests are not needed for those.
             # addmultisigaddress with at least 1 uncompressed key should return a legacy address.
@@ -251,7 +251,7 @@ class AddressTypeTest(BitcoinTestFramework):
             self.test_address(3, self.nodes[3].addmultisigaddress(2, [compressed_1, compressed_2])['address'], True, 'bech32')
 
         do_multisigs = [False]
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             do_multisigs.append(True)
 
         for explicit_type, multisig, from_node in itertools.product([False, True], do_multisigs, range(4)):
@@ -378,7 +378,7 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             self.log.info("Descriptor wallets have bech32m addresses")
             self.test_address(4, self.nodes[4].getnewaddress("", "bech32m"), multisig=False, typ="bech32m")
             self.test_address(4, self.nodes[4].getrawchangeaddress("bech32m"), multisig=False, typ="bech32m")

@@ -438,7 +438,7 @@ class WalletTest(BitcoinTestFramework):
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
 
             # This will raise an exception for the invalid private key format
             assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
@@ -713,7 +713,7 @@ class WalletTest(BitcoinTestFramework):
         txid_feeReason_four = self.nodes[2].sendmany(dummy='', amounts={address: 5}, verbose=False)
         assert_equal(self.nodes[2].gettransaction(txid_feeReason_four)['txid'], txid_feeReason_four)
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             self.log.info("Testing 'listunspent' outputs the parent descriptor(s) of coins")
             # Create two multisig descriptors, and send a UTxO each.
             multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
@@ -788,7 +788,7 @@ class WalletTest(BitcoinTestFramework):
         self.test_chain_listunspent()
 
     def test_chain_listunspent(self):
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             return
         self.wallet = MiniWallet(self.nodes[0])
         self.nodes[0].get_wallet_rpc(self.default_wallet_name).sendtoaddress(self.wallet.get_address(), "5")

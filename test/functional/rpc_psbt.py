@@ -252,7 +252,7 @@ class PSBTTest(BitcoinTestFramework):
         p2sh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "legacy")['address']
         p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "bech32")['address']
         p2sh_p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], "", "p2sh-segwit")['address']
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             wmulti.importaddress(p2sh)
             wmulti.importaddress(p2wsh)
             wmulti.importaddress(p2sh_p2wsh)
@@ -588,7 +588,7 @@ class PSBTTest(BitcoinTestFramework):
         for i, signer in enumerate(signers):
             self.nodes[2].unloadwallet("wallet{}".format(i))
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             self.test_utxo_conversion()
 
         self.test_input_confs_control()
@@ -723,7 +723,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
         desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
             res = self.nodes[0].importmulti([{"desc": desc, "timestamp": "now"}])
@@ -811,7 +811,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(psbt2["fee"], psbt3["fee"])
 
         # Import the external utxo descriptor so that we can sign for it from the test wallet
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = wallet.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
             res = wallet.importmulti([{"desc": desc, "timestamp": "now"}])
@@ -831,7 +831,7 @@ class PSBTTest(BitcoinTestFramework):
         privkey, pubkey = generate_keypair(wif=True)
 
         desc = descsum_create("wsh(pkh({}))".format(pubkey.hex()))
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
             res = watchonly.importmulti([{"desc": desc, "timestamp": "now"}])
@@ -846,7 +846,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(signed_tx["hex"])
 
         # Same test but for taproot
-        if self.options.descriptors:
+        if self.use_descriptors:
             privkey, pubkey = generate_keypair(wif=True)
 
             desc = descsum_create("tr({},pk({}))".format(H_POINT, pubkey.hex()))

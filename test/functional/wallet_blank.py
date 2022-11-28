@@ -27,7 +27,7 @@ class WalletBlankTest(BitcoinTestFramework):
         self.add_wallet_options(options)
 
     def test_importaddress(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that importaddress unsets the blank flag")
         self.nodes[0].createwallet(wallet_name="iaddr", disable_private_keys=True, blank=True)
@@ -39,7 +39,7 @@ class WalletBlankTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importpubkey(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that importpubkey unsets the blank flag")
         for i, comp in enumerate([True, False]):
@@ -54,7 +54,7 @@ class WalletBlankTest(BitcoinTestFramework):
             assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importprivkey(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that importprivkey unsets the blank flag")
         for i, comp in enumerate([True, False]):
@@ -69,7 +69,7 @@ class WalletBlankTest(BitcoinTestFramework):
             assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importmulti(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that importmulti unsets the blank flag")
         self.nodes[0].createwallet(wallet_name="imulti", disable_private_keys=True, blank=True)
@@ -84,7 +84,7 @@ class WalletBlankTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_importdescriptors(self):
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             return
         self.log.info("Test that importdescriptors preserves the blank flag")
         self.nodes[0].createwallet(wallet_name="idesc", disable_private_keys=True, blank=True)
@@ -99,7 +99,7 @@ class WalletBlankTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], True)
 
     def test_importwallet(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that importwallet unsets the blank flag")
         def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -117,7 +117,7 @@ class WalletBlankTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], False)
 
     def test_encrypt_legacy(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info("Test that encrypting a blank legacy wallet preserves the blank flag and does not generate a seed")
         self.nodes[0].createwallet(wallet_name="encblanklegacy", blank=True)
@@ -134,7 +134,7 @@ class WalletBlankTest(BitcoinTestFramework):
         assert "hdseedid" not in info
 
     def test_encrypt_descriptors(self):
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             return
         self.log.info("Test that encrypting a blank descriptor wallet preserves the blank flag and descriptors remain the same")
         self.nodes[0].createwallet(wallet_name="encblankdesc", blank=True)

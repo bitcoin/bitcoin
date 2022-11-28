@@ -94,7 +94,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"category": "receive", "amount": Decimal("0.44")},
                             {"txid": txid})
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # include_watchonly is a legacy wallet feature, so don't test it for descriptor wallets
             self.log.info("Test 'include_watchonly' feature (legacy wallet)")
             pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']

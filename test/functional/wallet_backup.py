@@ -163,7 +163,7 @@ class WalletBackupTest(BitcoinTestFramework):
         self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, 'wallet.bak'))
         self.nodes[2].backupwallet(os.path.join(self.nodes[2].datadir, 'wallet.bak'))
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             self.nodes[0].dumpwallet(os.path.join(self.nodes[0].datadir, 'wallet.dump'))
             self.nodes[1].dumpwallet(os.path.join(self.nodes[1].datadir, 'wallet.dump'))
             self.nodes[2].dumpwallet(os.path.join(self.nodes[2].datadir, 'wallet.dump'))
@@ -215,7 +215,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
         self.restore_wallet_existent_name()
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             self.log.info("Restoring using dumped wallet")
             self.stop_three()
             self.erase_three()

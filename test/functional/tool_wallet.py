@@ -33,7 +33,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def bitcoin_wallet_process(self, *args):
         default_args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain]
-        if not self.options.descriptors and 'create' in args:
+        if not self.use_descriptors and 'create' in args:
             default_args.append('-legacy')
 
         return subprocess.Popen([self.options.bitcoinwallet] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -67,7 +67,7 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0, imported_privs=0):
         wallet_name = self.default_wallet_name if name == "" else name
-        if self.options.descriptors:
+        if self.use_descriptors:
             output_types = 4  # p2pkh, p2sh, segwit, bech32m
             return textwrap.dedent('''\
                 Wallet info
@@ -190,7 +190,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Wallet name must be provided when creating a new wallet.', 'create')
         locked_dir = self.nodes[0].wallets_path
         error = 'Error initializing wallet database environment "{}"!'.format(locked_dir)
-        if self.options.descriptors:
+        if self.use_descriptors:
             error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
         self.assert_raises_tool_error(
             error,
@@ -291,7 +291,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.debug('Wallet file timestamp after calling getwalletinfo: {}'.format(timestamp_after))
 
         assert_equal(0, out['txcount'])
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             assert_equal(1000, out['keypoolsize'])
             assert_equal(1000, out['keypoolsize_hd_internal'])
             assert_equal(True, 'hdseedid' in out)
@@ -441,11 +441,11 @@ class ToolWalletTest(BitcoinTestFramework):
             Wallet info
             ===========
             Name: conflicts
-            Format: {"sqlite" if self.options.descriptors else "bdb"}
-            Descriptors: {"yes" if self.options.descriptors else "no"}
+            Format: {"sqlite" if self.use_descriptors else "bdb"}
+            Descriptors: {"yes" if self.use_descriptors else "no"}
             Encrypted: no
             HD (hd seed available): yes
-            Keypool Size: {"8" if self.options.descriptors else "1"}
+            Keypool Size: {"8" if self.use_descriptors else "1"}
             Transactions: 4
             Address Book: 4
         ''')
@@ -459,7 +459,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_tool_wallet_info_after_transaction()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Salvage is a legacy wallet only thing
             self.test_salvage()
         self.test_dump_createfromdump()

@@ -81,7 +81,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             assert_equal(self.nodes[idx].getbalance(), 15)
             assert_equal(self.nodes[idx].listtransactions()[0]['category'], "receive")
             # Check that we have marked all keys up to the used keypool key as used
-            if self.options.descriptors:
+            if self.use_descriptors:
                 if output_type == 'legacy':
                     assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress(address_type=output_type))['hdkeypath'], "m/44h/1h/0h/0/110")
                 elif output_type == 'p2sh-segwit':

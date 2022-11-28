@@ -173,7 +173,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     os.path.join(self.nodes_wallet_dir(node), wallet)
                 )
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Descriptor wallets break compatibility, only run this test for legacy wallet
             # Load modern wallet with older nodes
             for node in legacy_nodes:
@@ -222,7 +222,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # Instead, we stop node and try to launch it with the wallet:
         self.stop_node(node_v17.index)
-        if self.options.descriptors:
+        if self.use_descriptors:
             # Descriptor wallets appear to be corrupted wallets to old software
             node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
             node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
@@ -231,7 +231,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
         self.start_node(node_v17.index)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Descriptor wallets break compatibility, only run this test for legacy wallets
             # Open most recent wallet in v0.16 (no loadwallet RPC)
             self.restart_node(node_v16.index, extra_args=["-wallet=w2"])

@@ -593,7 +593,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
         "internal": True,
         "keypool": False
     }]
-    if self.options.descriptors:
+    if self.use_descriptors:
         result = signer.importdescriptors(reqs)
     else:
         result = signer.importmulti(reqs)
@@ -621,7 +621,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
         "watchonly": True,
         "active": True,
     }]
-    if self.options.descriptors:
+    if self.use_descriptors:
         result = watcher.importdescriptors(reqs)
     else:
         result = watcher.importmulti(reqs)

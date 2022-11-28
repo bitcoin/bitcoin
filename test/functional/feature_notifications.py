@@ -75,7 +75,7 @@ class NotificationsTest(BitcoinTestFramework):
             # Ensures that node 0 and node 1 share the same wallet for the conflicting transaction tests below.
             for i, name in enumerate(self.wallet_names):
                 self.nodes[i].createwallet(wallet_name=name, descriptors=bool(self.use_descriptors), blank=True, load_on_startup=True)
-                if self.options.descriptors:
+                if self.use_descriptors:
                     self.nodes[i].importdescriptors(desc_imports)
                 else:
                     self.nodes[i].sethdseed(True, seed)

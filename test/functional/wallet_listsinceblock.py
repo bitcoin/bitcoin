@@ -44,7 +44,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_double_send()
         self.double_spends_filtered()
         self.test_targetconfirmations()
-        if self.options.descriptors:
+        if self.use_descriptors:
             self.test_desc()
         self.test_send_to_self()
         self.test_op_return()

@@ -303,7 +303,7 @@ class SendallTest(BitcoinTestFramework):
             "desc": utxo["desc"],
             "timestamp": 0,
         }]
-        if self.options.descriptors:
+        if self.use_descriptors:
             watchonly.importdescriptors(import_req)
         else:
             watchonly.importmulti(import_req)

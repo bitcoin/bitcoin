@@ -255,7 +255,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # getbalances should show no used, 5 btc trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # For the second send, we transmute it to a related single-key address
             # to make sure it's also detected as re-use
             fund_spk = address_to_scriptpubkey(fundaddr).hex()

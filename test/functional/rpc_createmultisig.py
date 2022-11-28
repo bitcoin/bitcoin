@@ -119,7 +119,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
 
     def check_addmultisigaddress_errors(self):
-        if self.options.descriptors:
+        if self.use_descriptors:
             return
         self.log.info('Check that addmultisigaddress fails when the private keys are missing')
         addresses = [self.nodes[1].getnewaddress(address_type='legacy') for _ in range(2)]

@@ -40,7 +40,7 @@ class WalletHDTest(BitcoinTestFramework):
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV = self.nodes[1].getaddressinfo(change_addr)
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(change_addrV["hdkeypath"], "m/84h/1h/0h/1/0")
         else:
             assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'")  #first internal child key
@@ -62,7 +62,7 @@ class WalletHDTest(BitcoinTestFramework):
         for i in range(1, NUM_HD_ADDS + 1):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].getaddressinfo(hd_add)
-            if self.options.descriptors:
+            if self.use_descriptors:
                 assert_equal(hd_info["hdkeypath"], "m/84h/1h/0h/0/" + str(i))
             else:
                 assert_equal(hd_info["hdkeypath"], "m/0'/0'/" + str(i) + "'")
@@ -75,7 +75,7 @@ class WalletHDTest(BitcoinTestFramework):
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV = self.nodes[1].getaddressinfo(change_addr)
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(change_addrV["hdkeypath"], "m/84h/1h/0h/1/1")
         else:
             assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'")  #second internal child key
@@ -100,7 +100,7 @@ class WalletHDTest(BitcoinTestFramework):
         for i in range(1, NUM_HD_ADDS + 1):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
-            if self.options.descriptors:
+            if self.use_descriptors:
                 assert_equal(hd_info_2["hdkeypath"], "m/84h/1h/0h/0/" + str(i))
             else:
                 assert_equal(hd_info_2["hdkeypath"], "m/0'/0'/" + str(i) + "'")
@@ -142,12 +142,12 @@ class WalletHDTest(BitcoinTestFramework):
             if out['value'] != 1:
                 keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['address'])['hdkeypath']
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(keypath[0:14], "m/84h/1h/0h/1/")
         else:
             assert_equal(keypath[0:7], "m/0'/1'")
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Generate a new HD seed on node 1 and make sure it is set
             orig_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
             self.nodes[1].sethdseed()

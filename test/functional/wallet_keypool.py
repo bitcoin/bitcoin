@@ -25,12 +25,12 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        if self.options.descriptors:
+        if self.use_descriptors:
             # Import hardened derivation only descriptors
             nodes[0].walletpassphrase('test', 10)
             nodes[0].importdescriptors([
@@ -80,7 +80,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
         assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             assert addr_data['hdseedid'] == wallet_info['hdseedid']
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
@@ -89,7 +89,7 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(wi['keypoolsize_hd_internal'], 24)
             assert_equal(wi['keypoolsize'], 24)
         else:
@@ -134,14 +134,14 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
-        if self.options.descriptors:
+        if self.use_descriptors:
             assert_equal(wi['keypoolsize_hd_internal'], 400)
             assert_equal(wi['keypoolsize'], 400)
         else:
             assert_equal(wi['keypoolsize_hd_internal'], 100)
             assert_equal(wi['keypoolsize'], 100)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Check that newkeypool entirely flushes the keypool
             start_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
             start_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
@@ -165,7 +165,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # import private key and fund it
         address = addr.pop()
         desc = w1.getaddressinfo(address)['desc']
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = w2.importdescriptors([{'desc': desc, 'timestamp': 'now'}])
         else:
             res = w2.importmulti([{'desc': desc, 'timestamp': 'now'}])
@@ -204,7 +204,7 @@ class KeyPoolTest(BitcoinTestFramework):
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.00010, changeAddress=addr.pop())
         assert_equal("psbt" in res, True)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             msg = "Error: Private keys are disabled for this wallet"
             assert_raises_rpc_error(-4, msg, w2.keypoolrefill, 100)
 

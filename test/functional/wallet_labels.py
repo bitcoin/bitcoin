@@ -41,7 +41,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             [node.getreceivedbylabel],
             [node.listsinceblock, node.getblockhash(0), 1, False, True, False],
         ]
-        if self.options.descriptors:
+        if self.use_descriptors:
             response = node.importdescriptors([{
                 'desc': f'pkh({pubkey})',
                 'label': '*',
@@ -167,7 +167,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-11, "No addresses with label", node.getaddressesbylabel, "")
 
         # Check that addmultisigaddress can assign labels.
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             for label in labels:
                 addresses = []
                 for _ in range(10):
@@ -188,7 +188,7 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         self.invalid_label_name_test()
 
-        if self.options.descriptors:
+        if self.use_descriptors:
             # This is a descriptor wallet test because of segwit v1+ addresses
             self.log.info('Check watchonly labels')
             node.createwallet(wallet_name='watch_only', disable_private_keys=True)
@@ -212,7 +212,7 @@ class WalletLabelsTest(BitcoinTestFramework):
                 ad = BECH32_INVALID[l]
                 assert_raises_rpc_error(
                     -5,
-                    "Address is not valid" if self.options.descriptors else "Invalid Bitcoin address or script",
+                    "Address is not valid" if self.use_descriptors else "Invalid Bitcoin address or script",
                     lambda: wallet_watch_only.importaddress(label=l, rescan=False, address=ad),
                 )
 

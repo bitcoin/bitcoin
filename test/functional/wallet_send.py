@@ -196,7 +196,7 @@ class WalletSendTest(BitcoinTestFramework):
         w2 = self.nodes[1].get_wallet_rpc("w2")
         xpriv = "tprv8ZgxMBicQKsPfHCsTwkiM1KT56RXbGGTqvc2hgqzycpwbHqqpcajQeMRZoBD35kW4RtyCemu6j34Ku5DEspmgjKdt2qe4SvRch5Kk8B8A2v"
         xpub = "tpubD6NzVbkrYhZ4YkEfMbRJkQyZe7wTkbTNRECozCtJPtdLRn6cT1QKb8yHjwAPcAr26eHBFYs5iLiFFnCbwPRsncCKUKCfubHDMGKzMVcN1Jg"
-        if self.options.descriptors:
+        if self.use_descriptors:
             w2.importdescriptors([{
                 "desc": descsum_create("wpkh(" + xpriv + "/0/0/*)"),
                 "timestamp": "now",
@@ -215,7 +215,7 @@ class WalletSendTest(BitcoinTestFramework):
         # w3 is a watch-only wallet, based on w2
         self.nodes[1].createwallet(wallet_name="w3", disable_private_keys=True)
         w3 = self.nodes[1].get_wallet_rpc("w3")
-        if self.options.descriptors:
+        if self.use_descriptors:
             # Match the privkeys in w2 for descriptors
             res = w3.importdescriptors([{
                 "desc": descsum_create("wpkh(" + xpub + "/0/0/*)"),
@@ -237,7 +237,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         for _ in range(3):
             a2_receive = w2.getnewaddress()
-            if not self.options.descriptors:
+            if not self.use_descriptors:
                 # Because legacy wallets use exclusively hardened derivation, we can't do a ranged import like we do for descriptors
                 a2_change = w2.getrawchangeaddress() # doesn't actually use change derivation
                 res = w3.importmulti([{
@@ -257,7 +257,7 @@ class WalletSendTest(BitcoinTestFramework):
         w0.sendtoaddress(a2_receive, 10) # fund w3
         self.generate(self.nodes[0], 1)
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # w4 has private keys enabled, but only contains watch-only keys (from w2)
             # This is legacy wallet behavior only as descriptor wallets don't allow watchonly and non-watchonly things in the same wallet.
             self.nodes[1].createwallet(wallet_name="w4", disable_private_keys=False)
@@ -305,7 +305,7 @@ class WalletSendTest(BitcoinTestFramework):
         res = w2.walletprocesspsbt(res["psbt"])
         assert res["complete"]
 
-        if not self.options.descriptors:
+        if not self.use_descriptors:
             # Descriptor wallets do not allow mixed watch-only and non-watch-only things in the same wallet.
             # This is specifically testing that w4 ignores its own private keys and creates a psbt with send
             # which is not something that needs to be tested in descriptor wallets.
@@ -509,7 +509,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
         desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
-        if self.options.descriptors:
+        if self.use_descriptors:
             res = ext_fund.importdescriptors([{"desc": desc, "timestamp": "now"}])
         else:
             res = ext_fund.importmulti([{"desc": desc, "timestamp": "now"}])
