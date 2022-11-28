@@ -22,6 +22,9 @@ std::optional<Proxy> ProxyManager::GetProxy(enum Network net) const
 
 bool ProxyManager::HasProxy(const CNetAddr& addr) const
 {
+    // Invalid address can't be a proxy
+    if (!addr.IsValid()) return false;
+
     LOCK(m_mutex);
     for (int i = 0; i < NET_MAX; i++) {
         if (addr == static_cast<CNetAddr>(m_proxies[i].value_or(Proxy{}).proxy))
