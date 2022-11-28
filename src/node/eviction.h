@@ -61,6 +61,8 @@ public:
 
     /** Set the candidate's tx relay status to true. */
     void UpdateRelayTxs(NodeId id);
+
+    bool HasCandidate(NodeId id) const;
 };
 
 #endif // BITCOIN_NODE_EVICTION_H

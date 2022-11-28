@@ -373,6 +373,16 @@ void EvictionManagerImpl::UpdateRelayTxs(NodeId id)
     }
 }
 
+bool EvictionManagerImpl::HasCandidate(NodeId id) const
+{
+    LOCK(m_candidates_mutex);
+    if (const auto& it = m_candidates.find(id); it != m_candidates.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 EvictionManager::EvictionManager()
     : m_impl(std::make_unique<EvictionManagerImpl>()) {}
 EvictionManager::~EvictionManager() = default;
@@ -439,4 +449,9 @@ void EvictionManager::UpdateLoadedBloomFilter(NodeId id, bool bloom_filter_loade
 void EvictionManager::UpdateRelayTxs(NodeId id)
 {
     m_impl->UpdateRelayTxs(id);
+}
+
+bool EvictionManager::HasCandidate(NodeId id) const
+{
+    return m_impl->HasCandidate(id);
 }

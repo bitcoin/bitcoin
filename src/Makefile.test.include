@@ -271,6 +271,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/descriptor_parse.cpp \
  test/fuzz/deserialize.cpp \
  test/fuzz/eval_script.cpp \
+ test/fuzz/evictionman.cpp \
  test/fuzz/fee_rate.cpp \
  test/fuzz/fees.cpp \
  test/fuzz/flatfile.cpp \

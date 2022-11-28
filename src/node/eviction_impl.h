@@ -102,6 +102,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 
     void UpdateRelayTxs(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
+
+    bool HasCandidate(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_candidates_mutex);
 };
 
 #endif // BITCOIN_NODE_EVICTION_IMPL_H
