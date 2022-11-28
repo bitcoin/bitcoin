@@ -26,6 +26,7 @@
 #include <node/context.h>
 #include <node/transaction.h>
 #include <node/interface_ui.h>
+#include <node/proxy.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>

@@ -23,9 +23,11 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
+#include <node/proxy.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <socks5.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/syscall_sandbox.h>
@@ -509,7 +511,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (!sock) {
                 return nullptr;
             }
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
+            connected = socks5::ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
                                             *sock, nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
@@ -534,7 +536,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         uint16_t port{default_port};
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
+        connected = socks5::ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
                                         proxyConnectionFailed);
     }
     if (!connected) {
@@ -2319,7 +2321,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Start threads
     //
     assert(m_msgproc);
-    InterruptSocks5(false);
+    socks5::Interrupt(false);
     interruptNet.reset();
     flagInterruptMsgProc = false;
 
@@ -2391,7 +2393,7 @@ void CConnman::Interrupt()
     condMsgProc.notify_all();
 
     interruptNet();
-    InterruptSocks5(true);
+    socks5::Interrupt(true);
 
     if (semOutbound) {
         for (int i=0; i<m_max_outbound; i++) {

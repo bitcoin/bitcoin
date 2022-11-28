@@ -45,25 +45,6 @@ static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
     return (underlying(a) & underlying(b));
 }
 
-class Proxy
-{
-public:
-    Proxy(): randomize_credentials(false) {}
-    explicit Proxy(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
-
-    bool IsValid() const { return proxy.IsValid(); }
-
-    CService proxy;
-    bool randomize_credentials;
-};
-
-/** Credentials for proxy authentication */
-struct ProxyCredentials
-{
-    std::string username;
-    std::string password;
-};
-
 /**
  * Wrapper for getaddrinfo(3). Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
  */
@@ -73,28 +54,6 @@ enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
-bool SetProxy(enum Network net, const Proxy &addrProxy);
-bool GetProxy(enum Network net, Proxy &proxyInfoOut);
-bool IsProxy(const CNetAddr &addr);
-/**
- * Set the name proxy to use for all connections to nodes specified by a
- * hostname. After setting this proxy, connecting to a node specified by a
- * hostname won't result in a local lookup of said hostname, rather, connect to
- * the node by asking the name proxy for a proxy connection to the hostname,
- * effectively delegating the hostname lookup to the specified proxy.
- *
- * This delegation increases privacy for those who set the name proxy as they no
- * longer leak their external hostname queries to their DNS servers.
- *
- * @returns Whether or not the operation succeeded.
- *
- * @note SOCKS5's support for UDP-over-SOCKS5 has been considered, but no SOCK5
- *       server in common use (most notably Tor) actually implements UDP
- *       support, and a DNS resolver is beyond the scope of this project.
- */
-bool SetNameProxy(const Proxy &addrProxy);
-bool HaveNameProxy();
-bool GetNameProxy(Proxy &nameProxyOut);
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
@@ -203,45 +162,6 @@ extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
  * @returns Whether or not a connection was successfully made.
  */
 bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nTimeout, bool manual_connection);
-
-/**
- * Connect to a specified destination service through a SOCKS5 proxy by first
- * connecting to the SOCKS5 proxy.
- *
- * @param proxy The SOCKS5 proxy.
- * @param strDest The destination service to which to connect.
- * @param port The destination port.
- * @param sock The socket on which to connect to the SOCKS5 proxy.
- * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
- *                 proxy to be established.
- * @param[out] outProxyConnectionFailed Whether or not the connection to the
- *                                      SOCKS5 proxy failed.
- *
- * @returns Whether or not the operation succeeded.
- */
-bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
-
-void InterruptSocks5(bool interrupt);
-
-/**
- * Connect to a specified destination service through an already connected
- * SOCKS5 proxy.
- *
- * @param strDest The destination fully-qualified domain name.
- * @param port The destination port.
- * @param auth The credentials with which to authenticate with the specified
- *             SOCKS5 proxy.
- * @param socket The SOCKS5 proxy socket.
- *
- * @returns Whether or not the operation succeeded.
- *
- * @note The specified SOCKS5 proxy socket must already be connected to the
- *       SOCKS5 proxy.
- *
- * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC1928: SOCKS Protocol
- *      Version 5</a>
- */
-bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& socket);
 
 /**
  * Determine if a port is "bad" from the perspective of attempting to connect

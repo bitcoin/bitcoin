@@ -4,6 +4,8 @@
 
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/proxy.h>
+#include <socks5.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -18,12 +20,14 @@ namespace {
 int default_socks5_recv_timeout;
 };
 
-extern int g_socks5_recv_timeout;
+namespace socks5 {
+extern int g_recv_timeout;
+}
 
 void initialize_socks5()
 {
     static const auto testing_setup = MakeNoLogFileContext<const BasicTestingSetup>();
-    default_socks5_recv_timeout = g_socks5_recv_timeout;
+    default_socks5_recv_timeout = socks5::g_recv_timeout;
 }
 
 FUZZ_TARGET_INIT(socks5, initialize_socks5)
@@ -32,14 +36,14 @@ FUZZ_TARGET_INIT(socks5, initialize_socks5)
     ProxyCredentials proxy_credentials;
     proxy_credentials.username = fuzzed_data_provider.ConsumeRandomLengthString(512);
     proxy_credentials.password = fuzzed_data_provider.ConsumeRandomLengthString(512);
-    InterruptSocks5(fuzzed_data_provider.ConsumeBool());
+    socks5::Interrupt(fuzzed_data_provider.ConsumeBool());
     // Set FUZZED_SOCKET_FAKE_LATENCY=1 to exercise recv timeout code paths. This
     // will slow down fuzzing.
-    g_socks5_recv_timeout = (fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) ? 1 : default_socks5_recv_timeout;
+    socks5::g_recv_timeout = (fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) ? 1 : default_socks5_recv_timeout;
     FuzzedSock fuzzed_sock = ConsumeSock(fuzzed_data_provider);
-    // This Socks5(...) fuzzing harness would have caught CVE-2017-18350 within
+    // This socks5::Connect(...) fuzzing harness would have caught CVE-2017-18350 within
     // a few seconds of fuzzing.
-    (void)Socks5(fuzzed_data_provider.ConsumeRandomLengthString(512),
+    (void)socks5::Connect(fuzzed_data_provider.ConsumeRandomLengthString(512),
                  fuzzed_data_provider.ConsumeIntegral<uint16_t>(),
                  fuzzed_data_provider.ConsumeBool() ? &proxy_credentials : nullptr,
                  fuzzed_sock);

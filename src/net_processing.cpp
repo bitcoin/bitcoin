@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
+#include <node/proxy.h>
 #include <node/txreconciliation.h>
 #include <policy/fees.h>
 #include <policy/policy.h>

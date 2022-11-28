@@ -14,6 +14,7 @@
 #include <net_types.h> // For banmap_t
 #include <netbase.h>
 #include <node/context.h>
+#include <node/proxy.h>
 #include <policy/settings.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>

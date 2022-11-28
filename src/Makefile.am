@@ -209,6 +209,7 @@ BITCOIN_CORE_H = \
   node/mempool_persist_args.h \
   node/miner.h \
   node/minisketchwrapper.h \
+  node/proxy.h \
   node/psbt.h \
   node/transaction.h \
   node/txreconciliation.h \
@@ -251,6 +252,7 @@ BITCOIN_CORE_H = \
   script/standard.h \
   shutdown.h \
   signet.h \
+  socks5.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -395,6 +397,7 @@ libbitcoin_node_a_SOURCES = \
   node/miner.cpp \
   node/minisketchwrapper.cpp \
   node/psbt.cpp \
+  node/proxy.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
   node/utxo_snapshot.cpp \
@@ -661,6 +664,7 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
+  socks5.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
