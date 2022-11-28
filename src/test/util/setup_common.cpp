@@ -49,6 +49,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/thread.h>
@@ -341,14 +342,16 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
                                                                      CKey input_signing_key,
                                                                      CScript output_destination,
                                                                      CAmount output_amount,
-                                                                     bool submit)
+                                                                     bool submit,
+                                                                     uint32_t version)
 {
     // Transaction we will submit to the mempool
     CMutableTransaction mempool_txn;
+    mempool_txn.nVersion = version;
 
     // Create an input
     COutPoint outpoint_to_spend(input_transaction->GetHash(), input_vout);
-    CTxIn input(outpoint_to_spend);
+    CTxIn input(outpoint_to_spend, CScript(), MAX_BIP125_RBF_SEQUENCE);
     mempool_txn.vin.push_back(input);
 
     // Create an output

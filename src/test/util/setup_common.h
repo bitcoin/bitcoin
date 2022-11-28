@@ -140,7 +140,8 @@ struct TestChain100Setup : public TestingSetup {
                                                       CKey input_signing_key,
                                                       CScript output_destination,
                                                       CAmount output_amount = CAmount(1 * COIN),
-                                                      bool submit = true);
+                                                      bool submit = true,
+                                                      uint32_t version = 2);
 
     /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
      * that exist in the current chain, but may be premature coinbase spends, have missing
