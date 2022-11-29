@@ -5,6 +5,28 @@ The headless daemon `syscoind` has the JSON-RPC API enabled by default, the GUI
 option. In the GUI it is possible to execute RPC methods in the Debug Console
 Dialog.
 
+## Parameter passing
+
+The JSON-RPC server supports both _by-position_ and _by-name_ [parameter
+structures](https://www.jsonrpc.org/specification#parameter_structures)
+described in the JSON-RPC specification. For extra convenience, to avoid the
+need to name every parameter value, all RPC methods accept a named parameter
+called `args`, which can be set to an array of initial positional values that
+are combined with named values.
+
+Examples:
+
+```sh
+# "params": ["mywallet", false, false, "", false, false, true]
+syscoin-cli createwallet mywallet false false "" false false true
+
+# "params": {"wallet_name": "mywallet", "load_on_startup": true}
+syscoin-cli -named createwallet wallet_name=mywallet load_on_startup=true
+
+# "params": {"args": ["mywallet"], "load_on_startup": true}
+syscoin-cli -named createwallet mywallet load_on_startup=true
+```
+
 ## Versioning
 
 The RPC interface might change from one major version of Syscoin Core to the
