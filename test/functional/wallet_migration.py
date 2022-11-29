@@ -399,8 +399,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.encryptwallet("pass")
 
-        wallet.walletpassphrase("pass", 10)
-        assert_raises_rpc_error(-4, "Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first", wallet.migratewallet)
+        assert_raises_rpc_error(-15, "Error: migratewallet on encrypted wallets is currently unsupported.", wallet.migratewallet)
         # TODO: Fix migratewallet so that we can actually migrate encrypted wallets
 
     def run_test(self):
