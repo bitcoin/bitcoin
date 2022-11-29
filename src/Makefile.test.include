@@ -213,8 +213,6 @@ FUZZ_WALLET_SRC += \
 endif # USE_SQLITE
 
 SYSCOIN_TEST_SUITE += \
-  wallet/test/util.cpp \
-  wallet/test/util.h \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \

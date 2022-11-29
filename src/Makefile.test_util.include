@@ -18,8 +18,11 @@ TEST_UTIL_H = \
   test/util/str.h \
   test/util/transaction_utils.h \
   test/util/txmempool.h \
-  test/util/validation.h \
-  test/util/wallet.h
+  test/util/validation.h
+
+if ENABLE_WALLET
+TEST_UTIL_H += wallet/test/util.h
+endif # ENABLE_WALLET
 
 libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -33,11 +36,15 @@ libtest_util_a_SOURCES = \
   test/util/str.cpp \
   test/util/transaction_utils.cpp \
   test/util/txmempool.cpp \
-  test/util/validation.cpp \
-  test/util/wallet.cpp \
+  test/util/validation.cpp
   $(TEST_UTIL_H)
 
 LIBTEST_UTIL += $(LIBSYSCOIN_NODE)
 LIBTEST_UTIL += $(LIBSYSCOIN_COMMON)
 LIBTEST_UTIL += $(LIBSYSCOIN_UTIL)
 LIBTEST_UTIL += $(LIBSYSCOIN_BLS)
+if ENABLE_WALLET
+libtest_util_a_SOURCES += wallet/test/util.cpp
+endif # ENABLE_WALLET
+
+libtest_util_a_SOURCES += $(TEST_UTIL_H)
