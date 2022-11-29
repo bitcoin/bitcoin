@@ -448,11 +448,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def add_wallet_options(self, parser, *, descriptors=True, legacy=True):
-        group = parser.add_mutually_exclusive_group()
         kwargs = {}
         if descriptors + legacy == 1:
             # If only one type can be chosen, set it as default
             kwargs["default"] = descriptors
+        group = parser.add_mutually_exclusive_group(
+            # If only one type is allowed, require it to be set in test_runner.py
+            required=os.getenv("REQUIRE_WALLET_TYPE_SET") == "1" and "default" in kwargs)
         if descriptors:
             group.add_argument("--descriptors", action='store_const', const=True, **kwargs,
                                help="Run test using a descriptor wallet", dest='descriptors')
