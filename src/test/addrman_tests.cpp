@@ -990,4 +990,42 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_size)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const CNetAddr source = ResolveIP("252.2.2.2");
+
+    // empty addrman
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 0U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/false), 0U);
+
+    // add two ipv4 addresses, one to tried and new
+    const CAddress addr1{ResolveService("250.1.1.1", 8333), NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr1}, source));
+    BOOST_CHECK(addrman->Good(addr1));
+    const CAddress addr2{ResolveService("250.1.1.2", 8333), NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr2}, source));
+
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/false), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/false), 1U);
+
+    // add one i2p address to new
+    CService i2p_addr;
+    i2p_addr.SetSpecial("UDHDrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.I2P");
+    const CAddress addr3{i2p_addr, NODE_NONE};
+    BOOST_CHECK(addrman->Add({addr3}, source));
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/std::nullopt), 3U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_I2P, /*in_new=*/std::nullopt), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_I2P, /*in_new=*/true), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/true), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/std::nullopt, /*in_new=*/false), 1U);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
