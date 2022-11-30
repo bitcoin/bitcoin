@@ -1575,6 +1575,19 @@ int CConnman::GetExtraBlockRelayCount() const
     return std::max(block_relay_peers - m_max_outbound_block_relay, 0);
 }
 
+std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
+{
+    std::unordered_set<Network> networks{};
+    for (int n = 0; n < NET_MAX; n++) {
+        enum Network net = (enum Network)n;
+        if (net == NET_UNROUTABLE || net == NET_INTERNAL) continue;
+        if (IsReachable(net) && addrman.Size(net, std::nullopt) == 0) {
+            networks.insert(net);
+        }
+    }
+    return networks;
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::NET_OPEN_CONNECTION);
@@ -1624,7 +1637,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (interruptNet)
             return;
 
-        if (add_fixed_seeds && addrman.size() == 0) {
+        const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
+        if (add_fixed_seeds && !fixed_seed_networks.empty()) {
             // When the node starts with an empty peers.dat, there are a few other sources of peers before
             // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
             // If none of those are available, we fallback on to fixed seeds immediately, else we allow
@@ -1633,7 +1647,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // It is cheapest to check if enough time has passed first.
             if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
                 add_fixed_seeds_now = true;
-                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty\n");
+                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
             }
 
             // Checking !dnsseed is cheaper before locking 2 mutexes.
@@ -1650,14 +1664,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 // We will not make outgoing connections to peers that are unreachable
                 // (e.g. because of -onlynet configuration).
                 // Therefore, we do not add them to addrman in the first place.
-                // Note that if you change -onlynet setting from one network to another,
-                // peers.dat will contain only peers of unreachable networks and
-                // manual intervention will be needed (either delete peers.dat after
-                // configuration change or manually add some reachable peer using addnode),
-                // see <https://github.com/bitcoin/bitcoin/issues/26035> for details.
+                // In case previously unreachable networks become reachable
+                // (e.g. in case of -onlynet changes by the user), fixed seeds will
+                // be loaded only for networks for which we have no addressses.
                 seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
-                                               [](const CAddress& addr) { return !IsReachable(addr); }),
-                                seed_addrs.end());
+                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
+                                 seed_addrs.end());
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
                 addrman.Add(seed_addrs, local);
