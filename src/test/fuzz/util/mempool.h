@@ -5,7 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_MEMPOOL_H
 #define BITCOIN_TEST_FUZZ_UTIL_MEMPOOL_H
 
-#include <txmempool_entry.h>
+#include <kernel/mempool_entry.h>
 #include <validation.h>
 
 class CTransaction;

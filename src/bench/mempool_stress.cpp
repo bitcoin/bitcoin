@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <kernel/mempool_entry.h>
 #include <policy/policy.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
-#include <txmempool_entry.h>
 #include <validation.h>
 
 #include <vector>
