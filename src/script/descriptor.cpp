@@ -1243,7 +1243,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
 }
 
 /** Parse a public key including origin information (if enabled). */
-std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+std::unique_ptr<PubkeyProvider> ParseSinglePubkey(uint32_t key_exp_index, const Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
 
@@ -1281,6 +1281,40 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
     auto provider = ParsePubkeyInner(key_exp_index, origin_split[1], ctx, out, apostrophe, error);
     if (!provider) return nullptr;
     return std::make_unique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider), apostrophe);
+}
+
+/** Parse a public key expression, potentially being a list of pubkeys. */
+std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+{
+    using namespace spanparsing;
+
+    Span<const char> expr{sp};
+    if (Const("{", expr)) {
+        std::vector<std::unique_ptr<PubkeyProvider>> providers;
+        do {
+            auto arg = Expr(expr);
+            auto pk = ParseSinglePubkey(key_exp_index, arg, ctx, out, error);
+            if (!pk) {
+                return nullptr;
+            }
+            if (pk->IsRange()) {
+                error = "Cannot have list of ranged keys";
+                return nullptr;
+            }
+            providers.emplace_back(std::move(pk));
+            if (expr.size() == 1) {
+                if (!Const("}", expr)) {
+                    error = strprintf("expected '}', got '%c'", expr[0]);
+                    return nullptr;
+                }
+            } else if (!Const(",", expr)) {
+                error = strprintf("expected ',', got '%c'", expr[0]);
+                return nullptr;
+            }
+        } while (expr.size());
+        return std::make_unique<ListPubkeyProvider>(key_exp_index, std::move(providers));
+    }
+    return ParseSinglePubkey(key_exp_index, sp, ctx, out, error);
 }
 
 std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
