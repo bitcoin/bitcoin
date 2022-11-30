@@ -432,6 +432,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
 {
     auto& pool = static_cast<MemPoolTest&>(*Assert(m_node.mempool));
     LOCK2(cs_main, pool.cs);
+    const auto saved_memory_usage{pool.DynamicMemoryUsage()};
     TestMemPoolEntryHelper entry;
 
     CMutableTransaction tx1 = CMutableTransaction();
@@ -454,7 +455,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx1.GetHash())));
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx2.GetHash())));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // should remove the lower-feerate transaction
+    pool.TrimToSize((pool.DynamicMemoryUsage() - saved_memory_usage) * 3 / 4 + saved_memory_usage); // should remove the lower-feerate transaction
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx1.GetHash())));
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx2.GetHash())));
 
@@ -468,7 +469,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vout[0].nValue = 10 * COIN;
     pool.addUnchecked(entry.Fee(20000LL).FromTx(tx3));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
+    pool.TrimToSize((pool.DynamicMemoryUsage() - saved_memory_usage) * 3 / 4 + saved_memory_usage); // tx3 should pay for tx2 (CPFP)
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx1.GetHash())));
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx2.GetHash())));
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx3.GetHash())));
@@ -544,7 +545,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
         pool.addUnchecked(entry.Fee(1000LL).FromTx(tx5));
     pool.addUnchecked(entry.Fee(9000LL).FromTx(tx7));
 
-    pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
+    pool.TrimToSize((pool.DynamicMemoryUsage() - saved_memory_usage) / 2 + saved_memory_usage); // should maximize mempool size by only removing 5/7
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx4.GetHash())));
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx5.GetHash())));
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx6.GetHash())));
