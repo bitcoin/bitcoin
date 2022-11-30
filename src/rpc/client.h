@@ -17,6 +17,6 @@ UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<s
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
  */
-UniValue ParseNonRFCJSONValue(const std::string& strVal);
+UniValue ParseNonRFCJSONValue(const std::string& raw);
 
 #endif // BITCOIN_RPC_CLIENT_H

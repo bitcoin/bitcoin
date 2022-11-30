@@ -253,13 +253,11 @@ static CRPCConvertTable rpcCvtTable;
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
  */
-UniValue ParseNonRFCJSONValue(const std::string& strVal)
+UniValue ParseNonRFCJSONValue(const std::string& raw)
 {
-    UniValue jVal;
-    if (!jVal.read(std::string("[")+strVal+std::string("]")) ||
-        !jVal.isArray() || jVal.size()!=1)
-        throw std::runtime_error(std::string("Error parsing JSON: ") + strVal);
-    return jVal[0];
+    UniValue parsed;
+    if (!parsed.read(raw)) throw std::runtime_error(std::string("Error parsing JSON: ") + raw);
+    return parsed;
 }
 
 UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
