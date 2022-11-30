@@ -5,9 +5,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/client.h>
+#include <tinyformat.h>
 #include <util/system.h>
 
 #include <set>
+#include <string>
+#include <string_view>
 
 class CRPCConvertParam
 {
@@ -262,15 +265,15 @@ public:
     CRPCConvertTable();
 
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
-    UniValue ArgToUniValue(const std::string& arg_value, const std::string& method, int param_idx)
+    UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, int param_idx)
     {
-        return members.count(std::make_pair(method, param_idx)) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
+        return members.count({method, param_idx}) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
     }
 
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
-    UniValue ArgToUniValue(const std::string& arg_value, const std::string& method, const std::string& param_name)
+    UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, const std::string& param_name)
     {
-        return membersByName.count(std::make_pair(method, param_name)) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
+        return membersByName.count({method, param_name}) > 0 ? ParseNonRFCJSONValue(arg_value) : arg_value;
     }
 };
 
@@ -287,13 +290,11 @@ static CRPCConvertTable rpcCvtTable;
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
  */
-UniValue ParseNonRFCJSONValue(const std::string& strVal)
+UniValue ParseNonRFCJSONValue(std::string_view raw)
 {
-    UniValue jVal;
-    if (!jVal.read(std::string("[")+strVal+std::string("]")) ||
-        !jVal.isArray() || jVal.size()!=1)
-        throw std::runtime_error(std::string("Error parsing JSON: ") + strVal);
-    return jVal[0];
+    UniValue parsed;
+    if (!parsed.read(raw)) throw std::runtime_error(tfm::format("Error parsing JSON: %s", raw));
+    return parsed;
 }
 
 UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
@@ -301,8 +302,8 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     UniValue params(UniValue::VARR);
 
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
-        const std::string& strVal = strParams[idx];
-        params.push_back(rpcCvtTable.ArgToUniValue(strVal, strMethod, idx));
+        std::string_view value{strParams[idx]};
+        params.push_back(rpcCvtTable.ArgToUniValue(value, strMethod, idx));
     }
 
     return params;
@@ -313,15 +314,15 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
     UniValue params(UniValue::VOBJ);
     UniValue positional_args{UniValue::VARR};
 
-    for (const std::string &s: strParams) {
+    for (std::string_view s: strParams) {
         size_t pos = s.find('=');
         if (pos == std::string::npos) {
             positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, positional_args.size()));
             continue;
         }
 
-        std::string name = s.substr(0, pos);
-        std::string value = s.substr(pos+1);
+        std::string name{s.substr(0, pos)};
+        std::string_view value{s.substr(pos+1)};
 
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
