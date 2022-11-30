@@ -695,7 +695,6 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
             ui->peerWidget->setColumnWidth(PeerTableModel::Received, bytesize_width);
         }
-        ui->peerWidget->horizontalHeader()->setSectionResizeMode(PeerTableModel::Age, QHeaderView::ResizeToContents);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
         ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
 
@@ -728,7 +727,6 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
             ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         }
-        ui->banlistWidget->horizontalHeader()->setSectionResizeMode(BanTableModel::Address, QHeaderView::ResizeToContents);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create ban table context menu
