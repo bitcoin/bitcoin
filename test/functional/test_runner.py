@@ -27,6 +27,8 @@ import re
 import logging
 import unittest
 
+os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
+
 # Formatting. Default colors to empty strings.
 DEFAULT, BOLD, GREEN, RED = ("", ""), ("", ""), ("", ""), ("", "")
 try:
@@ -185,7 +187,7 @@ BASE_SCRIPTS = [
     'wallet_avoidreuse.py --legacy-wallet',
     'wallet_avoidreuse.py --descriptors',
     'mempool_reorg.py',
-    'mempool_persist.py',
+    'mempool_persist.py --descriptors',
     'p2p_block_sync.py --v1transport',
     'p2p_block_sync.py --v2transport',
     'wallet_multiwallet.py --legacy-wallet',
@@ -266,7 +268,7 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
-    'wallet_multisig_descriptor_psbt.py',
+    'wallet_multisig_descriptor_psbt.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
     'feature_backwards_compatibility.py --legacy-wallet',
     'feature_backwards_compatibility.py --descriptors',
