@@ -37,14 +37,14 @@ libtest_util_a_SOURCES = \
   test/util/transaction_utils.cpp \
   test/util/txmempool.cpp \
   test/util/validation.cpp
-  $(TEST_UTIL_H)
 
-LIBTEST_UTIL += $(LIBSYSCOIN_NODE)
-LIBTEST_UTIL += $(LIBSYSCOIN_COMMON)
-LIBTEST_UTIL += $(LIBSYSCOIN_UTIL)
-LIBTEST_UTIL += $(LIBSYSCOIN_BLS)
 if ENABLE_WALLET
 libtest_util_a_SOURCES += wallet/test/util.cpp
 endif # ENABLE_WALLET
 
 libtest_util_a_SOURCES += $(TEST_UTIL_H)
+
+LIBTEST_UTIL += $(LIBSYSCOIN_NODE)
+LIBTEST_UTIL += $(LIBSYSCOIN_COMMON)
+LIBTEST_UTIL += $(LIBSYSCOIN_UTIL)
+LIBTEST_UTIL += $(LIBSYSCOIN_BLS)
