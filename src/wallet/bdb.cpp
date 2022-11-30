@@ -481,11 +481,10 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                         while (fSuccess) {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
                             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-                            bool complete;
-                            bool ret1 = cursor->Next(ssKey, ssValue, complete);
-                            if (complete) {
+                            DatabaseCursor::Status ret1 = cursor->Next(ssKey, ssValue);
+                            if (ret1 == DatabaseCursor::Status::DONE) {
                                 break;
-                            } else if (!ret1) {
+                            } else if (ret1 == DatabaseCursor::Status::FAIL) {
                                 fSuccess = false;
                                 break;
                             }
@@ -668,21 +667,19 @@ BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
     }
 }
 
-bool BerkeleyCursor::Next(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
+DatabaseCursor::Status BerkeleyCursor::Next(CDataStream& ssKey, CDataStream& ssValue)
 {
-    complete = false;
-    if (m_cursor == nullptr) return false;
+    if (m_cursor == nullptr) return Status::FAIL;
     // Read at cursor
     SafeDbt datKey;
     SafeDbt datValue;
     int ret = m_cursor->get(datKey, datValue, DB_NEXT);
     if (ret == DB_NOTFOUND) {
-        complete = true;
+        return Status::DONE;
     }
-    if (ret != 0)
-        return false;
-    else if (datKey.get_data() == nullptr || datValue.get_data() == nullptr)
-        return false;
+    if (ret != 0 || datKey.get_data() == nullptr || datValue.get_data() == nullptr) {
+        return Status::FAIL;
+    }
 
     // Convert to streams
     ssKey.SetType(SER_DISK);
@@ -691,7 +688,7 @@ bool BerkeleyCursor::Next(CDataStream& ssKey, CDataStream& ssValue, bool& comple
     ssValue.SetType(SER_DISK);
     ssValue.clear();
     ssValue.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
-    return true;
+    return Status::MORE;
 }
 
 BerkeleyCursor::~BerkeleyCursor()

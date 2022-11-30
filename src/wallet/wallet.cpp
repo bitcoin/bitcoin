@@ -3776,12 +3776,12 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         error = _("Error: Unable to begin reading all records in the database");
         return false;
     }
-    bool complete = false;
+    DatabaseCursor::Status status = DatabaseCursor::Status::FAIL;
     while (true) {
         CDataStream ss_key(SER_DISK, CLIENT_VERSION);
         CDataStream ss_value(SER_DISK, CLIENT_VERSION);
-        bool ret = cursor->Next(ss_key, ss_value, complete);
-        if (complete || !ret) {
+        status = cursor->Next(ss_key, ss_value);
+        if (status != DatabaseCursor::Status::MORE) {
             break;
         }
         SerializeData key(ss_key.begin(), ss_key.end());
@@ -3790,7 +3790,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     }
     cursor.reset();
     batch.reset();
-    if (!complete) {
+    if (status != DatabaseCursor::Status::DONE) {
         error = _("Error: Unable to read all records in the database");
         return false;
     }

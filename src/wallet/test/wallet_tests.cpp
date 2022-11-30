@@ -870,7 +870,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 class FailCursor : public DatabaseCursor
 {
 public:
-    bool Next(CDataStream& key, CDataStream& value, bool& complete) override { return false; }
+    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a FailDatabase. Which fails if needed. */

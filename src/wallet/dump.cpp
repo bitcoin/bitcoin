@@ -69,13 +69,13 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
         while (true) {
             CDataStream ss_key(SER_DISK, CLIENT_VERSION);
             CDataStream ss_value(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            ret = cursor->Next(ss_key, ss_value, complete);
-            if (complete) {
+            DatabaseCursor::Status status = cursor->Next(ss_key, ss_value);
+            if (status == DatabaseCursor::Status::DONE) {
                 ret = true;
                 break;
-            } else if (!ret) {
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 error = _("Error reading next record from wallet database");
+                ret = false;
                 break;
             }
             std::string key_str = HexStr(ss_key);

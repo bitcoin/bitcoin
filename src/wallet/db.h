@@ -31,7 +31,14 @@ public:
     DatabaseCursor(const DatabaseCursor&) = delete;
     DatabaseCursor& operator=(const DatabaseCursor&) = delete;
 
-    virtual bool Next(CDataStream& key, CDataStream& value, bool& complete) { return false; }
+    enum class Status
+    {
+        FAIL,
+        MORE,
+        DONE,
+    };
+
+    virtual Status Next(CDataStream& key, CDataStream& value) { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a WalletDatabase */
@@ -168,7 +175,7 @@ public:
 
 class DummyCursor : public DatabaseCursor
 {
-    bool Next(CDataStream& key, CDataStream& value, bool& complete) override { return false; }
+    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a DummyDatabase. Never fails. */

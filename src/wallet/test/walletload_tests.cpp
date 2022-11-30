@@ -60,9 +60,9 @@ bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
     while (true) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        BOOST_CHECK(cursor->Next(ssKey, ssValue, complete));
-        if (complete) break;
+        DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
+        assert(status != DatabaseCursor::Status::FAIL);
+        if (status == DatabaseCursor::Status::DONE) break;
         std::string type;
         ssKey >> type;
         if (type == key) return true;

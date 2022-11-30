@@ -470,18 +470,15 @@ bool SQLiteBatch::HasKey(CDataStream&& key)
     return res == SQLITE_ROW;
 }
 
-bool SQLiteCursor::Next(CDataStream& key, CDataStream& value, bool& complete)
+DatabaseCursor::Status SQLiteCursor::Next(CDataStream& key, CDataStream& value)
 {
-    complete = false;
-
     int res = sqlite3_step(m_cursor_stmt);
     if (res == SQLITE_DONE) {
-        complete = true;
-        return true;
+        return Status::DONE;
     }
     if (res != SQLITE_ROW) {
         LogPrintf("%s: Unable to execute cursor step: %s\n", __func__, sqlite3_errstr(res));
-        return false;
+        return Status::FAIL;
     }
 
     // Leftmost column in result is index 0
@@ -491,7 +488,7 @@ bool SQLiteCursor::Next(CDataStream& key, CDataStream& value, bool& complete)
     const std::byte* value_data{AsBytePtr(sqlite3_column_blob(m_cursor_stmt, 1))};
     size_t value_data_size(sqlite3_column_bytes(m_cursor_stmt, 1));
     value.write({value_data, value_data_size});
-    return true;
+    return Status::MORE;
 }
 
 SQLiteCursor::~SQLiteCursor()

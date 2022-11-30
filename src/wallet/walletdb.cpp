@@ -824,13 +824,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            bool ret = cursor->Next(ssKey, ssValue, complete);
-            if (complete) {
+            DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
+            if (status == DatabaseCursor::Status::DONE) {
                 break;
-            }
-            else if (!ret)
-            {
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 cursor.reset();
                 pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
@@ -998,11 +995,10 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
             // Read next record
             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-            bool complete;
-            bool ret = cursor->Next(ssKey, ssValue, complete);
-            if (complete) {
+            DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
+            if (status == DatabaseCursor::Status::DONE) {
                 break;
-            } else if (!ret) {
+            } else if (status == DatabaseCursor::Status::FAIL) {
                 LogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
@@ -1125,13 +1121,10 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         // Read next record
         CDataStream key(SER_DISK, CLIENT_VERSION);
         CDataStream value(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        bool ret = cursor->Next(key, value, complete);
-        if (complete) {
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        if (status == DatabaseCursor::Status::DONE) {
             break;
-        }
-        else if (!ret)
-        {
+        } else if (status == DatabaseCursor::Status::FAIL) {
             return false;
         }
 

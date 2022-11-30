@@ -59,9 +59,9 @@ std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, 
     while (true) {
         CDataStream key(SER_DISK, CLIENT_VERSION);
         CDataStream value(SER_DISK, CLIENT_VERSION);
-        bool complete;
-        cursor->Next(key, value, complete);
-        if (complete) break;
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        assert(status != DatabaseCursor::Status::FAIL);
+        if (status == DatabaseCursor::Status::DONE) break;
         new_batch->Write(key, value);
     }
 
