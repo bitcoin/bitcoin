@@ -20,7 +20,9 @@
 #include <util/strencodings.h>
 #include <util/vector.h>
 
+#include <algorithm>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <string>
 #include <vector>
@@ -307,6 +309,69 @@ public:
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
         return arg.GetKey(m_pubkey.GetID(), key);
+    }
+};
+
+/** An object representing a parsed list of pubkeys in a descriptor. */
+class ListPubkeyProvider final : public PubkeyProvider
+{
+    std::vector<std::unique_ptr<PubkeyProvider>> m_pubkeys;
+
+public:
+    ListPubkeyProvider(uint32_t exp_index, std::vector<std::unique_ptr<PubkeyProvider>> pubkeys) : PubkeyProvider(exp_index), m_pubkeys(std::move(pubkeys)) {}
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    {
+        if ((size_t)pos >= m_pubkeys.size()) {
+            return false;
+        }
+        return m_pubkeys.at(pos)->GetPubKey(0, arg, key, info, read_cache, write_cache);
+    }
+    bool IsRange() const override { return true; }
+    size_t GetSize() const override
+    {
+        return std::accumulate(
+            m_pubkeys.begin(), m_pubkeys.end(),
+            0,
+            [](const size_t acc, const std::unique_ptr<PubkeyProvider>& pubkey) {
+                return std::max(acc, pubkey->GetSize());
+            }
+        );
+    }
+    std::string ToString(StringType type=StringType::PUBLIC) const override
+    {
+        std::string ret = "{";
+        for (const auto& pubkey : m_pubkeys) {
+            ret += pubkey->ToString();
+            ret += ",";
+        }
+        ret.pop_back();
+        ret += "}";
+        return ret;
+    }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
+    {
+        out = "{";
+        for (const auto& pubkey : m_pubkeys) {
+            std::string inner;
+            bool ret = pubkey->ToPrivateString(arg, inner);
+            if (!ret) return false;
+            out += inner + ",";
+        }
+        out.pop_back();
+        out += "}";
+        return true;
+    }
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const override
+    {
+        out = ToString();
+        return true;
+    }
+    bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
+    {
+        if ((size_t)pos >= m_pubkeys.size()) {
+            return false;
+        }
+        return m_pubkeys.at(pos)->GetPrivKey(0, arg, key);
     }
 };
 
