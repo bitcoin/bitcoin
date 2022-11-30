@@ -37,15 +37,16 @@ void CheckInferRaw(const CScript& script)
 }
 
 constexpr int DEFAULT = 0;
-constexpr int RANGE = 1; // Expected to be ranged descriptor
-constexpr int HARDENED = 2; // Derivation needs access to private keys
-constexpr int UNSOLVABLE = 4; // This descriptor is not expected to be solvable
-constexpr int SIGNABLE = 8; // We can sign with this descriptor (this is not true when actual BIP32 derivation is used, as that's not integrated in our signing code)
-constexpr int DERIVE_HARDENED = 16; // The final derivation is hardened, i.e. ends with *' or *h
-constexpr int MIXED_PUBKEYS = 32;
-constexpr int XONLY_KEYS = 64; // X-only pubkeys are in use (and thus inferring/caching may swap parity of pubkeys/keyids)
-constexpr int MISSING_PRIVKEYS = 128; // Not all private keys are available, so ToPrivateString will fail.
-constexpr int SIGNABLE_FAILS = 256; // We can sign with this descriptor, but actually trying to sign will fail
+constexpr int RANGE = 1 << 1; // Expected to be ranged descriptor
+constexpr int HARDENED = 1 << 2; // Derivation needs access to private keys
+constexpr int UNSOLVABLE = 1 << 3; // This descriptor is not expected to be solvable
+constexpr int SIGNABLE = 1 << 4; // We can sign with this descriptor (this is not true when actual BIP32 derivation is used, as that's not integrated in our signing code)
+constexpr int DERIVE_HARDENED = 1 << 5; // The final derivation is hardened, i.e. ends with *' or *h
+constexpr int MIXED_PUBKEYS = 1 << 6;
+constexpr int XONLY_KEYS = 1 << 7; // X-only pubkeys are in use (and thus inferring/caching may swap parity of pubkeys/keyids)
+constexpr int MISSING_PRIVKEYS = 1 << 8; // Not all private keys are available, so ToPrivateString will fail.
+constexpr int SIGNABLE_FAILS = 1 << 9; // We can sign with this descriptor, but actually trying to sign will fail
+constexpr int XPUBS_KEYS_LIST = 1 << 10; // Keys list descriptor that has mixed xpubs and pubkeys
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
 bool EqualDescriptor(std::string a, std::string b)
@@ -202,12 +203,14 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     if (!(flags & RANGE)) assert(scripts.size() == 1);
     size_t max = (flags & RANGE) ? scripts.size() : 3;
 
-    // Iterate over the position we'll evaluate the descriptors in.
-    for (size_t i = 0; i < max; ++i) {
-        // Call the expected result scripts `ref`.
-        const auto& ref = scripts[(flags & RANGE) ? i : 0];
-        // When t=0, evaluate the `prv` descriptor; when t=1, evaluate the `pub` descriptor.
-        for (int t = 0; t < 2; ++t) {
+    // When t=0, evaluate the `prv` descriptor; when t=1, evaluate the `pub` descriptor.
+    for (int t = 0; t < 2; ++t) {
+        size_t cached_xpubs_count = 0;
+        const size_t num_xpubs = CountXpubs(pub1);
+        // Iterate over the position we'll evaluate the descriptors in.
+        for (size_t i = 0; i < max; ++i) {
+            // Call the expected result scripts `ref`.
+            const auto& ref = scripts[(flags & RANGE) ? i : 0];
             // When the descriptor is hardened, evaluate with access to the private keys inside.
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
 
@@ -230,8 +233,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             // Check whether keys are in the cache
             const auto& der_xpub_cache = desc_cache.GetCachedDerivedExtPubKeys();
             const auto& parent_xpub_cache = desc_cache.GetCachedParentExtPubKeys();
-            const size_t num_xpubs = CountXpubs(pub1);
-            if ((flags & RANGE) && !(flags & (DERIVE_HARDENED))) {
+            if (flags & XPUBS_KEYS_LIST) {
+                cached_xpubs_count += der_xpub_cache.size() + parent_xpub_cache.size();
+            } else if ((flags & RANGE) && !(flags & (DERIVE_HARDENED))) {
                 // For ranged, unhardened derivation, None of the keys in origins should appear in the cache but the cache should have parent keys
                 // But we can derive one level from each of those parent keys and find them all
                 BOOST_CHECK(der_xpub_cache.empty());
@@ -349,6 +353,10 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 left_paths.erase(origin.second.second.path);
             }
         }
+
+        if (flags & XPUBS_KEYS_LIST) {
+            BOOST_CHECK_EQUAL(cached_xpubs_count, num_xpubs);
+        }
     }
 
     // Verify no expected paths remain that were not observed.
@@ -456,6 +464,11 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("wsh(sh(pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)))", "wsh(sh(pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)))", "Can only have sh() at top level"); // Cannot embed P2SH inside P2WSH
     CheckUnparsable("sh(sh(pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)))", "sh(sh(pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)))", "Can only have sh() at top level"); // Cannot embed P2SH inside P2SH
     CheckUnparsable("wsh(wsh(pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)))", "wsh(wsh(pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)))", "Can only have wsh() at top level or inside sh()"); // Cannot embed P2WSH inside P2WSH
+
+    // Using list of keys expression
+    Check("pkh({L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,KzoAz5CanayRKex3fSLQ2BwJpN7U52gZvxMyk78nDMHuqrUxuSJy,KwGNz6YCCQtYvFzMtrC6D3tKTKdBBboMrLTsjr2NYVBwapCkn7Mr})", "pkh({03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,03669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0,0260b2003c386519fc9eadf2b5cf124dd8eea4c4e68d5e154050a9346ea98ce600})", "pkh({03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,03669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0,0260b2003c386519fc9eadf2b5cf124dd8eea4c4e68d5e154050a9346ea98ce600})", RANGE | DERIVE_HARDENED | SIGNABLE, {{"76a9149a1c78a507689f6f54b847ad1cef1e614ee23f1e88ac"}, {"76a914a48e80ddd68b1a9ac7b3bdf028b00a1dbf5e450388ac"}}, OutputType::LEGACY, std::nullopt, {{}, {}});
+    Check("pkh({xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/1,KzoAz5CanayRKex3fSLQ2BwJpN7U52gZvxMyk78nDMHuqrUxuSJy,KwGNz6YCCQtYvFzMtrC6D3tKTKdBBboMrLTsjr2NYVBwapCkn7Mr})", "pkh({xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/1,03669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0,0260b2003c386519fc9eadf2b5cf124dd8eea4c4e68d5e154050a9346ea98ce600})", "pkh({xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/1,03669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0,0260b2003c386519fc9eadf2b5cf124dd8eea4c4e68d5e154050a9346ea98ce600})", RANGE | DERIVE_HARDENED | XPUBS_KEYS_LIST, {{"76a914e9c820f5fe7e6442ace0403f12ef8315198bb4e288ac"}, {"76a914a48e80ddd68b1a9ac7b3bdf028b00a1dbf5e450388ac"}}, OutputType::LEGACY, std::nullopt, {{1}, {}});
+    Check("pkh({xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/1,[00000000/111h/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc})", "pkh({xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/1,[00000000/111h/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL})", "pkh({xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/1,[00000000/111h/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL})", RANGE | DERIVE_HARDENED | XPUBS_KEYS_LIST, {{"76a914e9c820f5fe7e6442ace0403f12ef8315198bb4e288ac"}, {"76a91431a507b815593dfc51ffc7245ae7e5aee304246e88ac"}}, OutputType::LEGACY, std::nullopt, {{1}, {0x8000006FUL,222}});
 
     // Checksums
     Check("sh(multi(2,[00000000/111'/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0))#ggrsrxfy", "sh(multi(2,[00000000/111'/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0))#tjg09x5t", "sh(multi(2,[00000000/111h/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0))#hgmsckna", DEFAULT, {{"a91445a9a622a8b0a1269944be477640eedc447bbd8487"}}, OutputType::LEGACY, /*op_desc_id=*/uint256S("9339b7bfbe8cfd9d0d55819778ef77f52e5786e85b4c83be8a0d5b976e033f4c"), {{0x8000006FUL,222},{0}});
