@@ -17,10 +17,6 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
-    add_witness_commitment,
-    create_block,
-    create_coinbase,
-    send_to_witness,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -203,16 +199,8 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     # Create a transaction with segwit output, then create an RBF transaction
     # which spends it, and make sure bumpfee can be called on it.
 
-    segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
-    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='bech32'))
-    segwitid = send_to_witness(
-        use_p2wsh=False,
-        node=rbf_node,
-        utxo=segwit_in,
-        pubkey=segwit_out["pubkey"],
-        encode_p2sh=False,
-        amount=Decimal("0.0009"),
-        sign=True)
+    segwit_out = rbf_node.getnewaddress(address_type='bech32')
+    segwitid = rbf_node.send({segwit_out: "0.0009"}, options={"change_position": 1})["txid"]
 
     rbfraw = rbf_node.createrawtransaction([{
         'txid': segwitid,
@@ -544,10 +532,10 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # then invalidate the block so the rbf tx will be put back in the mempool.
     # This makes it possible to check whether the rbf tx outputs are
     # spendable before the rbf tx is confirmed.
-    block = submit_block_with_tx(rbf_node, rbftx)
+    block = self.generateblock(rbf_node, output="raw(51)", transactions=[rbftx])
     # Can not abandon conflicted tx
     assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
-    rbf_node.invalidateblock(block.hash)
+    rbf_node.invalidateblock(block["hash"])
     # Call abandon to make sure the wallet doesn't attempt to resubmit
     # the bump tx and hope the wallet does not rebroadcast before we call.
     rbf_node.abandontransaction(bumpid)
@@ -620,17 +608,6 @@ def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
-
-def submit_block_with_tx(node, tx):
-    tip = node.getbestblockhash()
-    height = node.getblockcount() + 1
-    block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time, txlist=[tx])
-    add_witness_commitment(block)
-    block.solve()
-    node.submitblock(block.serialize().hex())
-    return block
 
 
 def test_no_more_inputs_fails(self, rbf_node, dest_address):
