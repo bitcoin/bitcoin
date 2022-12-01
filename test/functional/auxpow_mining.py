@@ -26,7 +26,6 @@ from test_framework.messages import (
 from decimal import Decimal
 
 class AuxpowMiningTest (SyscoinTestFramework):
-
   def skip_test_if_missing_module(self):
     self.skip_if_no_wallet()
 
@@ -36,6 +35,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
     self.extra_args = [['-dip3params=9000:9000'],['-dip3params=9000:9000']]
 
   def add_options (self, parser):
+    self.add_wallet_options(parser)
     parser.add_argument ("--segwit", dest="segwit", default=False,
                          action="store_true",
                          help="Test behaviour with SegWit active")

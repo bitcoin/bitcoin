@@ -22,9 +22,6 @@ Checks LLMQs signing sessions
 '''
 
 class LLMQSigningTest(DashTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
@@ -34,6 +31,7 @@ class LLMQSigningTest(DashTestFramework):
         self.skip_if_no_bdb()
 
     def add_options(self, parser):
+        self.add_wallet_options(parser)
         parser.add_argument("--spork21", dest="spork21", default=False, action="store_true",
                         help="Test with spork21 enabled")
 
