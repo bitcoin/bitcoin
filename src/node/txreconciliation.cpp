@@ -134,13 +134,19 @@ public:
         }
     }
 
-    bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
-        AssertLockNotHeld(m_txreconciliation_mutex);
-        LOCK(m_txreconciliation_mutex);
+        AssertLockHeld(m_txreconciliation_mutex);
         auto recon_state = m_states.find(peer_id);
         return (recon_state != m_states.end() &&
                 std::holds_alternative<TxReconciliationState>(recon_state->second));
+    }
+
+    bool IsPeerRegisteredExternal(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        return IsPeerRegistered(peer_id);
     }
 };
 
@@ -166,5 +172,5 @@ void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
 
 bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
 {
-    return m_impl->IsPeerRegistered(peer_id);
+    return m_impl->IsPeerRegisteredExternal(peer_id);
 }
