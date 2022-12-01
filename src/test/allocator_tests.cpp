@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <memusage.h>
 #include <support/lockedpool.h>
 #include <util/system.h>
 
@@ -233,6 +234,90 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
     BOOST_CHECK(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
     // Usage must be back to where it started
     BOOST_CHECK(pool.stats().used == initial.used);
+}
+
+BOOST_AUTO_TEST_CASE(accounting_allocation_set_test)
+{
+    size_t total{0};
+    size_t dummy{0};
+
+    {
+        using AllocatorType = memusage::AccountingAllocator<int>;
+        using AccountingAllocationSet = std::unordered_set<int, std::hash<int>, std::equal_to<int>, AllocatorType>;
+        // set1 is accounted for in 'dummy'.
+        AccountingAllocationSet set1{{}, 2, std::hash<int>(), std::equal_to<int>(), AllocatorType(dummy)};
+        set1.insert(6);
+        {
+            // set2 is accounted for in 'total'.
+            AccountingAllocationSet set2{1, std::hash<int>(), std::equal_to<int>(), AllocatorType(total)};
+            set2.insert(5);
+            set2.insert(2);
+            set2.insert(3);
+            set2.erase(2);
+            BOOST_CHECK(total > 0);
+            const size_t old = total;
+            set1 = std::move(set2); // set1 is now accounted for in 'total'.
+            BOOST_CHECK_GE(total, old);
+        }
+        set1.erase(5);
+        const size_t cached = total;
+        BOOST_CHECK(cached > 0);
+        {
+            auto set3 = set1; // set3 is a copy of set1; set3 is unaccounted.
+            BOOST_CHECK_EQUAL(total, cached);
+            set3.insert(4);
+            BOOST_CHECK_EQUAL(total, cached);
+            set3.erase(3);
+            BOOST_CHECK_EQUAL(total, cached);
+        }
+        BOOST_CHECK_EQUAL(total, cached);
+    }
+
+    // After all objects using 'total' are gone, its value must go back to 0.
+    BOOST_CHECK_EQUAL(total, 0);
+    BOOST_CHECK_EQUAL(dummy, 0);
+}
+
+BOOST_AUTO_TEST_CASE(accounting_allocation_map_test)
+{
+    size_t total{0};
+    size_t dummy{0};
+
+    {
+        using AllocatorType = memusage::AccountingAllocator<std::pair<const int, int>>;
+        using AccountingAllocationMap = std::map<int, int, std::less<int>, AllocatorType>;
+        // map1 is accounted for in 'dummy'.
+        AccountingAllocationMap map1{AllocatorType(dummy)};
+        map1.emplace(6, 6);
+        {
+            // map2 is accounted for in 'total'.
+            AccountingAllocationMap map2{AllocatorType(total)};
+            map2.emplace(5, 5);
+            map2.emplace(2, 2);
+            map2.emplace(3, 3);
+            map1.erase(2);
+            BOOST_CHECK(total > 0);
+            const size_t old = total;
+            map1 = std::move(map2); // map1 is now accounted for in 'total'.
+            BOOST_CHECK_GE(total, old);
+        }
+        map1.erase(5);
+        const size_t cached = total;
+        BOOST_CHECK(cached > 0);
+        {
+            auto map3 = map1; // map3 is a copy of map1; map3 is unaccounted.
+            BOOST_CHECK_EQUAL(total, cached);
+            map3.emplace(4, 4);
+            BOOST_CHECK_EQUAL(total, cached);
+            map3.erase(3);
+            BOOST_CHECK_EQUAL(total, cached);
+        }
+        BOOST_CHECK_EQUAL(total, cached);
+    }
+
+    // After all objects using 'total' are gone, its value must go back to 0.
+    BOOST_CHECK_EQUAL(total, 0);
+    BOOST_CHECK_EQUAL(dummy, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
