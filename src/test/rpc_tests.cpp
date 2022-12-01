@@ -50,9 +50,9 @@ UniValue RPCTestingSetup::TransformParams(const UniValue& params, std::vector<st
 {
     UniValue transformed_params;
     CRPCTable table;
-    CRPCCommand command{"category", "method", [&](const JSONRPCRequest& request, UniValue&, bool) -> bool { transformed_params = request.params; return true; }, arg_names, /*unique_id=*/0};
+    CRPCCommand command{"category", "method", [&](const node::JSONRPCRequest& request, UniValue&, bool) -> bool { transformed_params = request.params; return true; }, arg_names, /*unique_id=*/0};
     table.appendCommand("method", &command);
-    JSONRPCRequest request;
+    node::JSONRPCRequest request;
     request.strMethod = "method";
     request.params = params;
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();

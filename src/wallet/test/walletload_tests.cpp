@@ -159,7 +159,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
             BOOST_CHECK(batch->Read(std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey()), crypted_data));
 
             // Write an invalid checksum
-            std::pair<std::vector<unsigned char>, uint256> value = std::make_pair(crypted_data, uint256::ONE);
+            std::pair<std::vector<unsigned char>, uint256> value = std::make_pair(crypted_data, uint256::ONEV);
             const auto key = std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey());
             BOOST_CHECK(batch->Write(key, value, /*fOverwrite=*/true));
         }
