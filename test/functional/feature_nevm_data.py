@@ -259,7 +259,7 @@ class NEVMDataTest(DashTestFramework):
         assert_raises_rpc_error(-32602, 'Could not find MTP for versionhash', self.nodes[0].getnevmblobdata, txid1)
         print('Checking for invalid versionhash...')
         txidBad = self.nodes[3].syscoincreaterawnevmblob(secrets.token_hex(55), secrets.token_hex(55))['txid']
-        # should fail and not propogate due to 'bad-txns-poda-invalid'
+        # should fail and not propagate due to 'bad-txns-poda-invalid'
         assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txidBad)
 
     def run_test(self):

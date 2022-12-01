@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1,2,3], "arg4": 4, "arg2": 2})"), arg_names), UniValue,
                           HasJSON(R"({"code":-8,"message":"Parameter arg2 specified twice both as positional and named argument"})"));
 
-    // Make sure extra positional arguments can be passed through to the method implemenation, as long as they don't overlap with named arguments.
+    // Make sure extra positional arguments can be passed through to the method implementation, as long as they don't overlap with named arguments.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10]})"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"([1,2,3,4,5,6,7,8,9,10])"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
 }

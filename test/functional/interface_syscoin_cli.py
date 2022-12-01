@@ -65,7 +65,7 @@ def cli_get_info_string_to_dict(cli_get_info_string):
     return cli_get_info
 
 
-class TestBitcoinCli(SyscoinTestFramework):
+class TestSyscoinCli(SyscoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
