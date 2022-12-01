@@ -408,10 +408,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def setup_nodes(self):
         """Override this method to customize test node setup"""
-        extra_args = [[]] * self.num_nodes
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, extra_args)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
         if self.requires_wallet:
             self.import_deterministic_coinbase_privkeys()
