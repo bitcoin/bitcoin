@@ -730,7 +730,9 @@ static RPCHelpMan migratewallet()
             std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return NullUniValue;
 
-            EnsureWalletIsUnlocked(*wallet);
+            if (wallet->IsCrypted()) {
+                throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: migratewallet on encrypted wallets is currently unsupported.");
+            }
 
             WalletContext& context = EnsureWalletContext(request.context);
 
