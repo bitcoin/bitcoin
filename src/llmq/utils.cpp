@@ -341,10 +341,21 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
     auto idx = 0;
     for (auto i = 0; i < nQuorums; ++i) {
         auto usedMNsCount = MnsUsedAtHIndexed[i].GetAllMNsCount();
+        auto updated{false};
+        auto initial_loop_idx = idx;
         while (quarterQuorumMembers[i].size() < quarterSize && (usedMNsCount + quarterQuorumMembers[i].size() < sortedCombinedMnsList.size())) {
+            bool skip{true};
             if (!MnsUsedAtHIndexed[i].HasMN(sortedCombinedMnsList[idx]->proTxHash)) {
-                quarterQuorumMembers[i].push_back(sortedCombinedMnsList[idx]);
-            } else {
+                try {
+                    // NOTE: AddMN is the one that can throw exceptions, must be exicuted first
+                    MnsUsedAtHIndexed[i].AddMN(sortedCombinedMnsList[idx]);
+                    quarterQuorumMembers[i].push_back(sortedCombinedMnsList[idx]);
+                    updated = true;
+                    skip = false;
+                } catch (const std::runtime_error& e) {
+                }
+            }
+            if (skip) {
                 if (firstSkippedIndex == 0) {
                     firstSkippedIndex = idx;
                     skipList.push_back(idx);
@@ -354,6 +365,15 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
             }
             if (++idx == sortedCombinedMnsList.size()) {
                 idx = 0;
+            }
+            if (idx == initial_loop_idx) {
+                // we made full "while" loop
+                if (!updated) {
+                    // there are not enough MNs, there is nothing we can do here
+                    return std::vector<std::vector<CDeterministicMNCPtr>>(nQuorums);
+                }
+                // reset and try again
+                updated = false;
             }
         }
     }
