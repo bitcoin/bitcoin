@@ -97,6 +97,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.chain: str = 'regtest'
         self.setup_clean_chain: bool = False
         self.nodes: List[TestNode] = []
+        self.extra_args = None
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
