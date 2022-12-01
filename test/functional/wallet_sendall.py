@@ -285,6 +285,12 @@ class SendallTest(BitcoinTestFramework):
                 fee_rate=100000)
 
     @cleanup
+    def sendall_fails_on_low_fee(self):
+        self.log.info("Test sendall fails if the transaction fee is lower than the minimum fee rate setting")
+        assert_raises_rpc_error(-8, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
+        self.wallet.sendall, recipients=[self.recipient], fee_rate=0.999)
+
+    @cleanup
     def sendall_watchonly_specific_inputs(self):
         self.log.info("Test sendall with a subset of UTXO pool in a watchonly wallet")
         self.add_utxos([17, 4])
@@ -375,6 +381,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when providing a fee that is too high
         self.sendall_fails_on_high_fee()
+
+        # Sendall fails when fee rate is lower than minimum
+        self.sendall_fails_on_low_fee()
 
         # Sendall succeeds with watchonly wallets spending specific UTXOs
         self.sendall_watchonly_specific_inputs()
