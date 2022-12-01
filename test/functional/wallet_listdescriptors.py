@@ -4,8 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listdescriptors RPC."""
 
+from test_framework.blocktools import (
+    TIME_GENESIS_BLOCK,
+)
 from test_framework.descriptors import (
-    descsum_create
+    descsum_create,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -66,13 +69,13 @@ class ListDescriptorsTest(BitcoinTestFramework):
         wallet = node.get_wallet_rpc('w2')
         wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
-            'timestamp': 1296688602,
+            'timestamp': TIME_GENESIS_BLOCK,
         }])
         expected = {
             'wallet_name': 'w2',
             'descriptors': [
                 {'desc': descsum_create('wpkh([80002067' + hardened_path + ']' + xpub_acc + '/0/*)'),
-                 'timestamp': 1296688602,
+                 'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
                  'next': 0},
@@ -86,7 +89,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             'wallet_name': 'w2',
             'descriptors': [
                 {'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
-                 'timestamp': 1296688602,
+                 'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
                  'next': 0},
@@ -108,7 +111,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         watch_only_wallet = node.get_wallet_rpc('watch-only')
         watch_only_wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
-            'timestamp': 1296688602,
+            'timestamp': TIME_GENESIS_BLOCK,
         }])
         assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
 
@@ -117,14 +120,14 @@ class ListDescriptorsTest(BitcoinTestFramework):
         wallet = node.get_wallet_rpc('w4')
         wallet.importdescriptors([{
             'desc': descsum_create('combo(' + node.get_deterministic_priv_key().key + ')'),
-            'timestamp': 1296688602,
+            'timestamp': TIME_GENESIS_BLOCK,
         }])
         expected = {
             'wallet_name': 'w4',
             'descriptors': [
                 {'active': False,
                  'desc': 'combo(0227d85ba011276cf25b51df6a188b75e604b38770a462b2d0e9fb2fc839ef5d3f)#np574htj',
-                 'timestamp': 1296688602},
+                 'timestamp': TIME_GENESIS_BLOCK},
             ]
         }
         assert_equal(expected, wallet.listdescriptors())
