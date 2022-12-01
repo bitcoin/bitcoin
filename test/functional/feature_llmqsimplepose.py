@@ -17,6 +17,9 @@ Checks simple PoSe system based on LLMQ commitments
 
 
 class LLMQSimplePoSeTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.bind_to_localhost_only = False
         self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)

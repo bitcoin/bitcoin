@@ -22,6 +22,9 @@ def validate_object(prepared, rpc_prepared):
 
 
 class SyscoinGovernanceTest (DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(2, 1)
 

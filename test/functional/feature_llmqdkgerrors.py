@@ -13,6 +13,9 @@ Simulate and check DKG errors
 '''
 
 class LLMQDKGErrors(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(4, 3, [["-whitelist=noban@127.0.0.1"]] * 4, fast_dip3_enforcement=True)
 

@@ -9,6 +9,9 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 from test_framework.messages import NEVM_DATA_EXPIRE_TIME, MAX_DATA_BLOBS, MAX_NEVM_DATA_BLOB
 
 class NEVMDataTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.set_dash_test_params(5, 4, [["-disablewallet=0","-walletrejectlongchains=0","-whitelist=noban@127.0.0.1"]] * 5, fast_dip3_enforcement=True)
