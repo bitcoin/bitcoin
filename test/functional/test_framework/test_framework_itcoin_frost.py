@@ -1,3 +1,6 @@
+import collections
+from typing import Sequence
+
 from test_framework.test_node import TestNode
 from test_framework.address import key_to_p2pkh, byte_to_base58
 from test_framework.conftest import SIGNET
@@ -74,6 +77,9 @@ class BaseFrostTest(BaseItcoinTest):
             arg_signetchallenge = f"-signetchallenge={self.signet_challenge}"
             self.extra_args = [[arg_signetchallenge]] * self.num_nodes
 
+        # 5. Save info to export
+        FrostInfo = collections.namedtuple('FrostInfo', ['privkey', 'pubkey'])
+        self.frost_info: Sequence[FrostInfo] = []
         # We need to set the key pairs
         keypairs = []
         for p in self.participants:
@@ -89,6 +95,7 @@ class BaseFrostTest(BaseItcoinTest):
             priv_key_b58 = byte_to_base58(bytes(priv_key.get_bytes() + b"\x01"), 239)
             address = key_to_p2pkh(pub_key.get_bytes().hex())
             keypairs.append(TestNode.AddressKeyPair(address, priv_key_b58))
+            self.frost_info.append(FrostInfo(priv_key_b58, pub_key.get_bytes().hex()))
         TestNode.PRIV_KEYS[:self.signet_num_signers] = keypairs
         self._key_pairs = keypairs
 
