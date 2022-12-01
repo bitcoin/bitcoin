@@ -396,6 +396,15 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(bals, wallet.getbalances())
 
+    def test_encrypted(self):
+        self.log.info("Test migration of an encrypted wallet")
+        wallet = self.create_legacy_wallet("encrypted")
+
+        wallet.encryptwallet("pass")
+
+        assert_raises_rpc_error(-15, "Error: migratewallet on encrypted wallets is currently unsupported.", wallet.migratewallet)
+        # TODO: Fix migratewallet so that we can actually migrate encrypted wallets
+
     def run_test(self):
         self.generate(self.nodes[0], 101)
 
@@ -405,6 +414,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_other_watchonly()
         self.test_no_privkeys()
         self.test_pk_coinbases()
+        self.test_encrypted()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()
