@@ -1957,8 +1957,15 @@ void PeerManagerImpl::PushTxInventory(Peer& peer, const uint256& txid, const uin
     auto tx_relay = peer.GetTxRelay();
     if (!tx_relay) return;
 
-    const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
     LOCK(tx_relay->m_tx_inventory_mutex);
+    // Only queue transactions for announcement once the version handshake
+    // is completed. The time of arrival for these transactions is
+    // otherwise at risk of leaking to a spy, if the spy is able to
+    // distinguish transactions received during the handshake from the rest
+    // in the announcement.
+    if (tx_relay->m_next_inv_send_time == 0s) return;
+
+    const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
     if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
         tx_relay->m_tx_inventory_to_send.insert(hash);
     }
@@ -3551,6 +3558,20 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // by WTXIDRELAY (since WTXIDRELAY can't be announced later).
                 m_txreconciliation->ForgetPeer(pfrom.GetId());
             }
+        }
+
+        if (auto tx_relay = peer->GetTxRelay()) {
+            // `TxRelay::m_tx_inventory_to_send` must be empty before the
+            // version handshake is completed as
+            // `TxRelay::m_next_inv_send_time` is first initialised in
+            // `SendMessages` after the verack is received. Any transactions
+            // received during the version handshake would otherwise
+            // immediately be advertised without random delay, potentially
+            // leaking the time of arrival to a spy.
+            Assume(WITH_LOCK(
+                tx_relay->m_tx_inventory_mutex,
+                return tx_relay->m_tx_inventory_to_send.empty() &&
+                       tx_relay->m_next_inv_send_time == 0s));
         }
 
         pfrom.fSuccessfullyConnected = true;

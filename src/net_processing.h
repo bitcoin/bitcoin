@@ -138,7 +138,7 @@ struct Peer {
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
         /** The next time after which we will send an `inv` message containing
          *  transaction announcements to this peer. */
-        std::chrono::microseconds m_next_inv_send_time GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
+        std::chrono::microseconds m_next_inv_send_time GUARDED_BY(m_tx_inventory_mutex){0};
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
