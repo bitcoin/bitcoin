@@ -332,7 +332,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             // Checks the sum amount of all UTXO's.
             if (params.min_sum_amount != MAX_MONEY) {
-                if (result.total_amount >= params.min_sum_amount) {
+                if (result.GetTotalAmount() >= params.min_sum_amount) {
                     return result;
                 }
             }
@@ -356,7 +356,7 @@ CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl*
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
 {
     LOCK(wallet.cs_wallet);
-    return AvailableCoins(wallet, coinControl).total_amount;
+    return AvailableCoins(wallet, coinControl).GetTotalAmount();
 }
 
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output)
@@ -586,8 +586,8 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& a
 
     // Return early if we cannot cover the target with the wallet's UTXO.
     // We use the total effective value if we are not subtracting fee from outputs and 'available_coins' contains the data.
-    CAmount available_coins_total_amount = coin_selection_params.m_subtract_fee_outputs ? available_coins.total_amount :
-            (available_coins.total_effective_amount.has_value() ? *available_coins.total_effective_amount : 0);
+    CAmount available_coins_total_amount = coin_selection_params.m_subtract_fee_outputs ? available_coins.GetTotalAmount() :
+            (available_coins.GetEffectiveTotalAmount().has_value() ? *available_coins.GetEffectiveTotalAmount() : 0);
     if (selection_target > available_coins_total_amount) {
         return std::nullopt; // Insufficient funds
     }
