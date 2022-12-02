@@ -89,6 +89,9 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
     // Make sure named arguments are transformed into positional arguments in correct places separated by nulls
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg4": 4})"), arg_names).write(), "[null,2,null,4]");
 
+    // Make sure later named argument value silently overwrites earlier values
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg2": 2, "arg2": 4})"), arg_names).write(), "[null,4]");
+
     // Make sure named and positional arguments can be combined.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg5": 5, "args": [1, 2], "arg4": 4})"), arg_names).write(), "[1,2,null,4,5]");
 
