@@ -35,7 +35,6 @@ MAKE_MSG(NOTFOUND, "notfound");
 MAKE_MSG(FILTERLOAD, "filterload");
 MAKE_MSG(FILTERADD, "filteradd");
 MAKE_MSG(FILTERCLEAR, "filterclear");
-MAKE_MSG(REJECT, "reject");
 MAKE_MSG(SENDHEADERS, "sendheaders");
 MAKE_MSG(SENDCMPCT, "sendcmpct");
 MAKE_MSG(CMPCTBLOCK, "cmpctblock");
@@ -117,7 +116,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERLOAD,
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
-    NetMsgType::REJECT,
     NetMsgType::SENDHEADERS,
     NetMsgType::SENDCMPCT,
     NetMsgType::CMPCTBLOCK,
