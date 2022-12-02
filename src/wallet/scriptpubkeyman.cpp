@@ -1758,36 +1758,51 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         keyid_it++;
     }
 
-    // keyids is now all non-HD keys. Each key will have its own combo descriptor
-    for (const CKeyID& keyid : keyids) {
-        CKey key;
-        if (!GetKey(keyid, key)) {
-            assert(false);
+    // keyids is now all non-HD keys. Aggregate them into one big combo descriptor
+    if (!keyids.empty()) {
+        std::set<CKey> combo_keys;
+        int64_t creation_time = std::numeric_limits<int64_t>::max();
+        std::string combo_desc_str = "combo({";
+        for (const CKeyID& keyid : keyids) {
+            CKey key;
+            if (!GetKey(keyid, key)) {
+                assert(false);
+            }
+            combo_keys.emplace(key);
+
+            // Get birthdate from key meta
+            const auto& it = mapKeyMetadata.find(keyid);
+            if (it != mapKeyMetadata.end()) {
+                creation_time = std::min(creation_time, it->second.nCreateTime);
+            }
+
+            // Get the key origin
+            // Maybe this doesn't matter because floating keys here shouldn't have origins
+            KeyOriginInfo info;
+            bool has_info = GetKeyOrigin(keyid, info);
+            std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path) + "]" : "";
+            combo_desc_str += origin_str + HexStr(key.GetPubKey()) + ",";
+        }
+        combo_desc_str.pop_back();
+        combo_desc_str += "})";
+
+        if (creation_time == std::numeric_limits<int64_t>::max()){
+            creation_time = 0;
         }
 
-        // Get birthdate from key meta
-        uint64_t creation_time = 0;
-        const auto& it = mapKeyMetadata.find(keyid);
-        if (it != mapKeyMetadata.end()) {
-            creation_time = it->second.nCreateTime;
-        }
-
-        // Get the key origin
-        // Maybe this doesn't matter because floating keys here shouldn't have origins
-        KeyOriginInfo info;
-        bool has_info = GetKeyOrigin(keyid, info);
-        std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path) + "]" : "";
-
-        // Construct the combo descriptor
-        std::string desc_str = "combo(" + origin_str + HexStr(key.GetPubKey()) + ")";
+        // Add the combo descriptor
         FlatSigningProvider keys;
         std::string error;
-        std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
+        std::unique_ptr<Descriptor> desc = Parse(combo_desc_str, keys, error, false);
         WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
         auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
-        desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
+
+        for (const CKey& key : combo_keys) {
+            desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
+        }
+
         desc_spk_man->TopUp();
         auto desc_spks = desc_spk_man->GetScriptPubKeys();
 

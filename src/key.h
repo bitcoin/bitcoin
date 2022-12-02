@@ -73,6 +73,10 @@ public:
             a.size() == b.size() &&
             memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
     }
+    friend bool operator<(const CKey& a, const CKey& b)
+    {
+        return a.GetPubKey() < b.GetPubKey();
+    }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
