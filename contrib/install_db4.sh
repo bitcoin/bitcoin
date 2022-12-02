@@ -8,6 +8,18 @@
 export LC_ALL=C
 set -e
 
+# Set C_FLAG for Mac OS version > 11.0.0
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  os_ver_str=$(sw_vers -productVersion)
+  os_ver=${os_ver_str//.}
+  required_ver=1100
+
+  if (($os_ver > $required_ver)); then
+	  export CFLAGS="-Wno-error=implicit-function-declaration"
+  fi
+fi
+
 if [ -z "${1}" ]; then
   echo "Usage: $0 <base-dir> [<extra-bdb-configure-flag> ...]"
   echo
