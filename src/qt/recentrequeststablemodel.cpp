@@ -92,11 +92,23 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             else
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
-    }
-    else if (role == Qt::TextAlignmentRole)
-    {
+    } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Amount)
-            return (int)(Qt::AlignRight|Qt::AlignVCenter);
+            return (int)(Qt::AlignRight | Qt::AlignVCenter);
+    } else if (role == Qt::UserRole) {
+        const RecentRequestEntry* rec = &list[index.row()];
+        switch (index.column()) {
+        case Date:
+            return rec->date;
+        case Label:
+            return rec->recipient.label;
+        case Message:
+            return rec->recipient.message;
+        case Amount:
+            return QVariant(static_cast<qlonglong>(rec->recipient.amount));
+        default:
+            return QVariant();
+        }
     }
     return QVariant();
 }
@@ -212,35 +224,7 @@ void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
     endInsertRows();
 }
 
-void RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
-{
-    std::sort(list.begin(), list.end(), RecentRequestEntryLessThan(column, order));
-    Q_EMIT dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
-}
-
 void RecentRequestsTableModel::updateDisplayUnit()
 {
     updateAmountColumnTitle();
-}
-
-bool RecentRequestEntryLessThan::operator()(const RecentRequestEntry& left, const RecentRequestEntry& right) const
-{
-    const RecentRequestEntry* pLeft = &left;
-    const RecentRequestEntry* pRight = &right;
-    if (order == Qt::DescendingOrder)
-        std::swap(pLeft, pRight);
-
-    switch(column)
-    {
-    case RecentRequestsTableModel::Date:
-        return pLeft->date.toSecsSinceEpoch() < pRight->date.toSecsSinceEpoch();
-    case RecentRequestsTableModel::Label:
-        return pLeft->recipient.label < pRight->recipient.label;
-    case RecentRequestsTableModel::Message:
-        return pLeft->recipient.message < pRight->recipient.message;
-    case RecentRequestsTableModel::Amount:
-        return pLeft->recipient.amount < pRight->recipient.amount;
-    default:
-        return pLeft->id < pRight->id;
-    }
 }
