@@ -92,7 +92,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test that later cli named arguments values silently overwrite earlier ones")
         assert_equal(self.nodes[0].cli("-named", "echo", "arg0=0", "arg1=1", "arg2=2", "arg1=3").send_cli(), ['0', '3', '2'])
-        assert_equal(self.nodes[0].cli("-named", "echo", "args=[0,1,2,3]", "4", "5", "6", ).send_cli(), ['4', '5', '6'])
+        assert_raises_rpc_error(-8, "Parameter args specified multiple times", self.nodes[0].cli("-named", "echo", "args=[0,1,2,3]", "4", "5", "6", ).send_cli)
 
         user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
