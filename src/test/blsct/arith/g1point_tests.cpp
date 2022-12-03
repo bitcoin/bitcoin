@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-//
+
 #include <test/util/setup_common.h>
 
 #include <algorithm>
@@ -75,6 +75,19 @@ BOOST_AUTO_TEST_CASE(test_g1point_point_mul)
     auto p = g + g + g;
     auto q = g * 3;
     BOOST_CHECK(p == q);
+}
+
+BOOST_AUTO_TEST_CASE(test_g1point_points_mul)
+{
+    auto scalars = std::vector<Scalar>({
+        Scalar(1), Scalar(2)
+    });
+    auto g = G1Point::GetBasePoint();
+    auto p1 = g;
+    auto p2 = g + g;
+    auto qs = g * scalars;
+    BOOST_CHECK(qs[0] == p1);
+    BOOST_CHECK(qs[1] == p2);
 }
 
 BOOST_AUTO_TEST_CASE(test_g1point_point_equal_or_not_equal)
@@ -256,26 +269,6 @@ BOOST_AUTO_TEST_CASE(test_g1point_hash_and_map)
     BOOST_CHECK(p == q);
 }
 
-BOOST_AUTO_TEST_CASE(test_g1point_mulvec_mcl)
-{
-    auto base_point = G1Point::GetBasePoint();
-    mclBnG1 p1, p2;
-    p1 = base_point.m_p;
-    mclBnG1_dbl(&p2, &p1);
-    std::vector<mclBnG1> ps { p1, p2 };
-
-    mclBnFr s1, s2;
-    mclBnFr_setInt(&s1, 2);
-    mclBnFr_setInt(&s2, 3);
-    std::vector<mclBnFr> ss { s1, s2 };
-
-    // p should be G^2 + (G+G)^3 = G^8
-    auto p = G1Point::MulVec(ps, ss);
-    auto q = base_point * 8;
-
-    BOOST_CHECK(p == q);
-}
-
 BOOST_AUTO_TEST_CASE(test_g1point_rand)
 {
     unsigned int num_tries = 1000;
@@ -337,6 +330,27 @@ BOOST_AUTO_TEST_CASE(test_g1point_serialize_unserialize)
 
     q.Unserialize(st);
     BOOST_CHECK(p == q);
+}
+
+BOOST_AUTO_TEST_CASE(test_g1point_get_hash_with_salt)
+{
+    auto g = G1Point::GetBasePoint();
+    auto a = g.GetHashWithSalt(1);
+    auto b = g.GetHashWithSalt(2);
+    BOOST_CHECK(a != b);
+}
+
+BOOST_AUTO_TEST_CASE(test_g1point_operator_mul_g1point_by_scalars)
+{
+    Scalar one(1);
+    Scalar two(2);
+    std::vector<Scalar> one_two { one, two };
+    auto g = G1Point::GetBasePoint();
+
+    auto act = g * one_two;
+    std::vector<G1Point> exp { g, g + g };
+
+    BOOST_CHECK(act == exp);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

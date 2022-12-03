@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/g1point.h>
+
 #include <numeric>
 
-mclBnG1 G1Point::m_g;
+mclBnG1* G1Point::m_g = nullptr;
 boost::mutex G1Point::m_init_mutex;
 
 G1Point::G1Point()
@@ -44,13 +45,18 @@ void G1Point::Init()
     if (is_initialized) return;
 
     MclInitializer::Init();
-    mclBnG1 g;
+    mclBnG1* g = new mclBnG1();
     const char* serialized_g = "1 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569";
-    if (mclBnG1_setStr(&g, serialized_g, strlen(serialized_g), 10) == -1) {
+    if (mclBnG1_setStr(g, serialized_g, strlen(serialized_g), 10) == -1) {
         throw std::runtime_error("G1Point::Init(): mclBnG1_setStr failed");
     }
     G1Point::m_g = g;
     is_initialized = true;
+}
+
+void G1Point::Dispose()
+{
+    if (G1Point::m_g != nullptr) delete G1Point::m_g;
 }
 
 G1Point G1Point::operator=(const mclBnG1& q)
@@ -59,24 +65,39 @@ G1Point G1Point::operator=(const mclBnG1& q)
     return *this;
 }
 
-G1Point G1Point::operator+(const G1Point& b) const
+G1Point G1Point::operator+(const G1Point& p) const
 {
     G1Point ret;
-    mclBnG1_add(&ret.m_p, &m_p, &b.m_p);
+    mclBnG1_add(&ret.m_p, &m_p, &p.m_p);
     return ret;
 }
 
-G1Point G1Point::operator-(const G1Point& b) const
+G1Point G1Point::operator-(const G1Point& p) const
 {
     G1Point ret;
-    mclBnG1_sub(&ret.m_p, &m_p, &b.m_p);
+    mclBnG1_sub(&ret.m_p, &m_p, &p.m_p);
     return ret;
 }
 
-G1Point G1Point::operator*(const Scalar& b) const
+G1Point G1Point::operator*(const Scalar& s) const
 {
     G1Point ret;
-    mclBnG1_mul(&ret.m_p, &m_p, &b.m_fr);
+    mclBnG1_mul(&ret.m_p, &m_p, &s.m_fr);
+    return ret;
+}
+
+std::vector<G1Point> G1Point::operator*(const std::vector<Scalar>& ss) const
+{
+    if (ss.size() == 0) {
+        throw std::runtime_error("G1Point::operator*: cannot multiply G1Point by empty Scalars");
+    }
+    std::vector<G1Point> ret;
+
+    G1Point p = *this;
+    for(size_t i = 0; i < ss.size(); ++i) {
+        G1Point q = p * ss[i];
+        ret.push_back(q);
+    }
     return ret;
 }
 
@@ -89,7 +110,7 @@ G1Point G1Point::Double() const
 
 G1Point G1Point::GetBasePoint()
 {
-    G1Point g(G1Point::m_g);
+    G1Point g(*G1Point::m_g);
     return g;
 }
 
@@ -130,19 +151,6 @@ G1Point G1Point::HashAndMap(const std::vector<uint8_t>& vec)
     }
     G1Point temp(p);
     return temp;
-}
-
-G1Point G1Point::MulVec(const std::vector<mclBnG1>& g_vec, const std::vector<mclBnFr>& s_vec)
-{
-    if (g_vec.size() != s_vec.size()) {
-        throw std::runtime_error("G1Point::MulVec(): sizes of g_vec and s_vec must be equial");
-    }
-
-    G1Point ret;
-    const auto vec_count = g_vec.size();
-    mclBnG1_mulVec(&ret.m_p, g_vec.data(), s_vec.data(), vec_count);
-
-    return ret;
 }
 
 bool G1Point::operator==(const G1Point& b) const
@@ -187,7 +195,7 @@ void G1Point::SetVch(const std::vector<uint8_t>& b)
     }
 }
 
-std::string G1Point::GetString(const int& radix) const
+std::string G1Point::GetString(const uint8_t& radix) const
 {
     char str[1024];
     if (mclBnG1_getStr(str, sizeof(str), &m_p, radix) == 0) {
@@ -199,4 +207,13 @@ std::string G1Point::GetString(const int& radix) const
 unsigned int G1Point::GetSerializeSize() const
 {
     return ::GetSerializeSize(GetVch());
+}
+
+Scalar G1Point::GetHashWithSalt(const uint64_t salt) const
+{
+    CHashWriter hasher(0,0);
+    hasher << *this;
+    hasher << salt;
+    Scalar hash(hasher.GetHash());
+    return hash;
 }

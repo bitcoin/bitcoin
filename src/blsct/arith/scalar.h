@@ -14,6 +14,9 @@
 #include <string>
 #include <vector>
 
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <bls/bls384_256.h> // must include this before bls/bls.h
 #include <bls/bls.h>
 #include <blsct/arith/mcl_initializer.h>
@@ -22,15 +25,13 @@
 #include <uint256.h>
 #include <version.h>
 
-#define CHECK_AND_ASSERT_THROW_MES(expr, message) do {if(!(expr)) throw std::runtime_error(message);} while(0)
-
 class Scalar {
 public:
-    static constexpr int WIDTH = 256 / 8;
+    static constexpr int SERIALIZATION_SIZE_IN_BYTES = 32;
 
-    Scalar(const int64_t& n = 0);
+    Scalar(const int64_t& n = 0);  // has to take int64_t instead of uint64_t since underneath it calls mcl library that takes int64_t
     Scalar(const std::vector<uint8_t>& v);
-    Scalar(const mclBnFr& n_fr);
+    Scalar(const mclBnFr& other_fr);
     Scalar(const uint256& n);
     Scalar(const std::string& s, int radix);
 
@@ -39,7 +40,7 @@ public:
     Scalar ApplyBitwiseOp(const Scalar& a, const Scalar& b,
                           std::function<uint8_t(uint8_t, uint8_t)> op) const;
 
-    void operator=(const uint64_t& n);
+    void operator=(const int64_t& n);  // using int64_t instead of uint64_t since underlying mcl lib takes int64_t
 
     Scalar operator+(const Scalar& b) const;
     Scalar operator-(const Scalar& b) const;
@@ -49,13 +50,13 @@ public:
     Scalar operator^(const Scalar& b) const;
     Scalar operator&(const Scalar& b) const;
     Scalar operator~() const;
-    Scalar operator<<(unsigned int shift) const;
-    Scalar operator>>(unsigned int shift) const;
+    Scalar operator<<(const uint32_t& shift) const;
+    Scalar operator>>(const uint32_t& shift) const;
 
     bool operator==(const Scalar& b) const;
-    bool operator==(const int& b) const;
+    bool operator==(const int32_t& b) const;
     bool operator!=(const Scalar& b) const;
-    bool operator!=(const int& b) const;
+    bool operator!=(const int32_t& b) const;
 
     bool IsValid() const;
 
@@ -65,24 +66,31 @@ public:
     Scalar Cube() const;
     Scalar Pow(const Scalar& n) const;
 
-    static Scalar Rand(bool exclude_zero = false);
+    static Scalar Rand(const bool exclude_zero = false);
 
-    int64_t GetInt64() const;
+    uint64_t GetUint64() const;
 
-    std::vector<uint8_t> GetVch() const;
+    std::vector<uint8_t> GetVch(const bool trim_preceeding_zeros = false) const;
     void SetVch(const std::vector<uint8_t>& v);
 
     /**
      * Sets 2^n to the instance
      */
-    void SetPow2(int n);
+    void SetPow2(const uint32_t& n);
 
-    uint256 Hash(const int& n) const;
+    uint256 GetHashWithSalt(const uint64_t& salt) const;
 
-    std::string GetString(const int8_t radix = 16) const;
+    std::string GetString(const int8_t& radix = 16) const;
 
-    bool GetBit(uint8_t n) const;
-    std::vector<bool> GetBits() const;
+    /**
+     * extracts a specified bit of 32-byte serialization result
+     */
+    bool GetSeriBit(const uint8_t& n) const;
+
+    /**
+     * returns the binary representation m_fr
+     */
+    std::vector<bool> ToBinaryVec() const;
 
     unsigned int GetSerializeSize() const;
 

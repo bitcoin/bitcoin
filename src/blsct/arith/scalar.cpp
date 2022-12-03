@@ -6,7 +6,7 @@
 
 Scalar::Scalar(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, n);
+    mclBnFr_setInt(&m_fr, n);  // this takes int64_t
 }
 
 Scalar::Scalar(const std::vector<uint8_t> &v)
@@ -14,9 +14,9 @@ Scalar::Scalar(const std::vector<uint8_t> &v)
     Scalar::SetVch(v);
 }
 
-Scalar::Scalar(const mclBnFr& nFr)
+Scalar::Scalar(const mclBnFr& other_fr)
 {
-    m_fr = nFr;
+    m_fr = other_fr;
 }
 
 Scalar::Scalar(const uint256& n)
@@ -115,15 +115,16 @@ Scalar Scalar::operator&(const Scalar &b) const
 
 Scalar Scalar::operator~() const
 {
+    // CHECK!
     // Getting complement of lower 8 bytes only since when 32-byte buffer is fully complemented,
     // mclBrFr_deserialize returns undesired result
-    int64_t n_complement_scalar = ~GetInt64();
+    const int64_t n_complement_scalar = (int64_t) ~GetUint64();
     Scalar ret(n_complement_scalar);
 
     return ret;
 }
 
-Scalar Scalar::operator<<(unsigned int shift) const
+Scalar Scalar::operator<<(const uint32_t& shift) const
 {
     mclBnFr next;
     mclBnFr prev = m_fr;
@@ -136,23 +137,33 @@ Scalar Scalar::operator<<(unsigned int shift) const
     return ret;
 }
 
-/**
- * Assumes that fr contains a number within int64_t range
- */
-Scalar Scalar::operator>>(unsigned int shift) const
+Scalar Scalar::operator>>(const uint32_t& shift) const
 {
-    int64_t n = GetInt64();
-    Scalar ret(n >> shift);
+    mclBnFr one;
+    mclBnFr two;
+    mclBnFr_setInt(&one, 1);
+    mclBnFr_setInt(&two, 2);
 
+    mclBnFr temp = m_fr;
+    uint32_t n = shift;
+
+    while (n > 0) {
+        if (mclBnFr_isOdd(&temp) != 0) {
+            mclBnFr_sub(&temp, &temp, &one);
+        }
+        mclBnFr_div(&temp, &temp, &two);
+        --n;
+    }
+    Scalar ret(temp);
     return ret;
 }
 
-void Scalar::operator=(const uint64_t& n)
+void Scalar::operator=(const int64_t& n)
 {
-    mclBnFr_setInt(&m_fr, (mclInt)n);
+    mclBnFr_setInt(&m_fr, n);
 }
 
-bool Scalar::operator==(const int &b) const
+bool Scalar::operator==(const int32_t& b) const
 {
     Scalar temp;
     temp = b;
@@ -216,7 +227,7 @@ Scalar Scalar::Pow(const Scalar& n) const
     Scalar temp(1);
     mclBnFr bit_val;
     bit_val = m_fr;
-    auto bits = n.GetBits();
+    auto bits = n.ToBinaryVec();
 
     for (auto it = bits.rbegin(); it != bits.rend(); ++it) {
         Scalar s(bit_val);
@@ -241,52 +252,68 @@ Scalar Scalar::Rand(bool exclude_zero)
     return temp;
 }
 
-int64_t Scalar::GetInt64() const
+uint64_t Scalar::GetUint64() const
 {
-    int64_t ret = 0;
+    uint64_t ret = 0;
     std::vector<uint8_t> vch = GetVch();
     for (auto i = 0; i < 8; ++i) {
-        ret |= (int64_t) vch[vch.size()-i-1] << i*8;
+        ret |= (uint64_t) vch[vch.size() - 1 - i] << i * 8;
     }
     return ret;
 }
 
-std::vector<uint8_t> Scalar::GetVch() const
+std::vector<uint8_t> Scalar::GetVch(const bool trim_preceeding_zeros) const
 {
-    std::vector<uint8_t> b(WIDTH);
-    if (mclBnFr_serialize(&b[0], WIDTH, &m_fr) == 0) {
-        throw std::runtime_error(std::string("Failed to serialize mclBnFr"));
+    std::vector<uint8_t> vec(Scalar::SERIALIZATION_SIZE_IN_BYTES);
+    if (mclBnFr_serialize(&vec[0], Scalar::SERIALIZATION_SIZE_IN_BYTES, &m_fr) == 0) {
+        throw std::runtime_error(std::string("Serialization failed"));
     }
-    return b;
+    if (!trim_preceeding_zeros) return vec;
+
+    std::vector<uint8_t> trimmed_vec;
+
+    bool take_char = false;
+    for (auto c: vec) {
+        if (!take_char && c != '\0') take_char = true;
+        if (take_char) trimmed_vec.push_back(c);
+    }
+    return trimmed_vec;
 }
 
 void Scalar::SetVch(const std::vector<uint8_t> &v)
 {
-    if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
-        throw std::runtime_error(std::string("Failed to setBigEndianMod vector"));
+    if (v.size() == 0) {
+        mclBnFr x;
+        mclBnFr_clear(&x);
+        m_fr = x;
+    } else {
+        if (mclBnFr_setBigEndianMod(&m_fr, &v[0], v.size()) == -1) {
+            throw std::runtime_error(std::string("Failed to setBigEndianMod vector"));
+        }
     }
 }
 
-void Scalar::SetPow2(int n)
+void Scalar::SetPow2(const uint32_t& n)
 {
+    uint32_t i = n;
     Scalar temp = 1;
-    while (n != 0) {
-        temp = temp * 2;
-        --n;
-    }
 
+    while (i != 0) {
+        temp = temp * 2;
+        --i;
+    }
     m_fr = temp.m_fr;
 }
 
-uint256 Scalar::Hash(const int& n) const
+uint256 Scalar::GetHashWithSalt(const uint64_t& salt) const
 {
     CHashWriter hasher(0,0);
     hasher << *this;
-    hasher << n;
+    hasher << salt;
     return hasher.GetHash();
 }
 
-std::string Scalar::GetString(const int8_t radix) const
+std::string Scalar::GetString(const int8_t& radix) const
 {
     char str[1024];
 
@@ -296,7 +323,7 @@ std::string Scalar::GetString(const int8_t radix) const
     return std::string(str);
 }
 
-std::vector<bool> Scalar::GetBits() const
+std::vector<bool> Scalar::ToBinaryVec() const
 {
     auto bitStr = GetString(2);
     std::vector<bool> vec;
@@ -309,7 +336,7 @@ std::vector<bool> Scalar::GetBits() const
 /**
  * Since GetVch returns 32-byte vector, maximum bit index is 8 * 32 - 1 = 255
  */
-bool Scalar::GetBit(uint8_t n) const
+bool Scalar::GetSeriBit(const uint8_t& n) const
 {
     std::vector<uint8_t> vch = GetVch();
     assert(vch.size() == 32);

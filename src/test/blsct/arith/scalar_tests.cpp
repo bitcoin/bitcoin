@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-//
+
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -9,6 +9,7 @@
 #include <blsct/arith/scalar.h>
 #include <uint256.h>
 
+#include <cinttypes>
 #include <limits>
 
 #define SCALAR_CURVE_ORDER_MINUS_1(x) Scalar x("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000", 16)
@@ -16,7 +17,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(scalar_tests, MclTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_scalar_constructors)
+BOOST_AUTO_TEST_CASE(test_scalar_ctor_vec_uint8)
 {
     // input vector modulo curve order r should be set to Scalar
 
@@ -161,17 +162,23 @@ BOOST_AUTO_TEST_CASE(test_scalar_constructors)
 
     //// int64_t
     {
-        int64_t ui = 65535;
-        Scalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetInt64(), ui);
+        uint64_t one = 1;
+        {
+            // test up to shift = 62 excluding the sign bit
+            for(size_t shift = 0; shift < 63; ++shift) {
+                int64_t i = one << shift;
+                Scalar a(i);
+                BOOST_CHECK_EQUAL(a.GetUint64(), i);
+            }
+        }
+        {
+            int64_t i = -1;
+            Scalar a(i);
+            // fr order: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+            //       -1: 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+            BOOST_CHECK_EQUAL(a.GetString().c_str(), "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000");
+        }
     }
-    {
-        int64_t ui = std::numeric_limits<int64_t>::max();
-        Scalar a(ui);
-        BOOST_CHECK_EQUAL(a.GetInt64(), ui);
-    }
-
-    // TODO test negative input and possibly make the fixes
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_add)
@@ -347,14 +354,36 @@ BOOST_AUTO_TEST_CASE(test_scalar_bitwise_compl)
 
 BOOST_AUTO_TEST_CASE(test_scalar_shift_left)
 {
-    Scalar base(0b1);
-    int64_t exp = 1;
-    // We limit the loops to 30 counts as int64_t will just overflow
-    for(unsigned int i=0; i<31; ++i) {
-        Scalar a = base << i;
-        BOOST_CHECK_EQUAL(a.GetInt64(), exp);
+    Scalar one(1);
+    uint64_t exp = 1;
+    // test up to the positive max of int64_t since assignment op takes int64_t as an input
+    for (size_t i = 0; i < 63; ++i) {
+        Scalar act = one << i;
+        BOOST_CHECK_EQUAL(act.GetUint64(), exp);
         exp <<= 1;
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_scalar_shift_right)
+{
+    Scalar eight(8);
+    Scalar seven(7);
+    Scalar six(6);
+    Scalar five(5);
+    Scalar four(4);
+    Scalar three(3);
+    Scalar two(2);
+    Scalar one(1);
+    Scalar zero(0);
+
+    BOOST_CHECK((eight >> 1) == four);
+    BOOST_CHECK((seven >> 1) == three);
+    BOOST_CHECK((six >> 1) == three);
+    BOOST_CHECK((five >> 1) == two);
+    BOOST_CHECK((four >> 1) == two);
+    BOOST_CHECK((three >> 1) == one);
+    BOOST_CHECK((two >> 1) == one);
+    BOOST_CHECK((one >> 1) == zero);
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_assign)
@@ -362,7 +391,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_assign)
     {
         int64_t n = INT64_MAX;
         Scalar a = n;
-        BOOST_CHECK_EQUAL(a.GetInt64(), n);
+        BOOST_CHECK_EQUAL(a.GetUint64(), n);
     }
     {
         Scalar a(INT64_MIN);
@@ -473,23 +502,35 @@ BOOST_AUTO_TEST_CASE(test_scalar_rand)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_scalar_getint64)
+BOOST_AUTO_TEST_CASE(test_scalar_getuint64)
 {
     {
+        // Scalar(int) operator takes int64_t, so let it take INT64_MAX
         Scalar a(INT64_MAX);
-        int64_t b = a.GetInt64();
-        int64_t c = 9223372036854775807;
+        uint64_t b = a.GetUint64();
+        uint64_t c = 9223372036854775807ul;  // is INT64_MAX
         BOOST_CHECK_EQUAL(b, c);
     }
     {
+        // assignment operator takes int64_t
         Scalar base(0b1);
-        int64_t exp = 1;
-        // We limit the loops to 30 counts as int64_t will just overflow
-        for(unsigned int i=0; i<31; ++i) {
+        int64_t n = 1;
+        for (uint8_t i=0; i<63; ++i) {  // test up to positive max of int64_t
             Scalar a = base << i;
-            BOOST_CHECK_EQUAL(a.GetInt64(), exp);
-            exp <<= 1;
+            BOOST_CHECK_EQUAL(a.GetUint64(), n);
+            n <<= 1;
         }
+    }
+    {
+        int64_t int64_t_min = std::numeric_limits<int64_t>::min();
+        Scalar s(int64_t_min);
+
+        // int64_t minimum value maps to:
+        // '0b111111111111111111111111111111100000000000000000000000000000001'
+        // = 9223372032559808513
+        uint64_t exp(9223372032559808513);
+
+        BOOST_CHECK_EQUAL(s.GetUint64(), exp);
     }
 }
 
@@ -530,8 +571,17 @@ BOOST_AUTO_TEST_CASE(test_scalar_getvch)
         31,
     };
     Scalar a(vec);
-    auto a_vec = a.GetVch();
-    BOOST_CHECK(vec == a_vec);
+    {
+        auto a_vec = a.GetVch();
+        BOOST_CHECK(vec == a_vec);
+    }
+    {
+        // with trim option on, the first 0 should have been removed in act
+        auto act = a.GetVch(true);
+        std::vector<uint8_t> exp(vec.size() - 1);
+        std::copy(vec.begin() + 1, vec.end(), exp.begin());
+        BOOST_CHECK(act == exp);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_scalar_setvch)
@@ -655,7 +705,14 @@ BOOST_AUTO_TEST_CASE(test_scalar_setvch)
             1,
         };
         Scalar a;
+        a.SetVch(vec);
         BOOST_CHECK_EQUAL(a.GetString(), "0");
+    }
+    {
+        std::vector<uint8_t> vec;
+        Scalar a(100);
+        a.SetVch(vec);
+        BOOST_CHECK_EQUAL(a.GetUint64(), 0);
     }
 }
 
@@ -708,7 +765,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_setpow2)
     for (size_t i = 0; i < 10; ++i) {
         Scalar a;
         a.SetPow2(i);
-        BOOST_CHECK_EQUAL(a.GetInt64(), std::pow(2, i));
+        BOOST_CHECK_EQUAL(a.GetUint64(), std::pow(2, i));
     }
 }
 
@@ -720,10 +777,10 @@ BOOST_AUTO_TEST_CASE(test_scalar_hash)
     // - 4-byte little-endian array representing the parameter of Hash function
 
     Scalar a(1);
-    const int n = 42;
-    uint256 digest = a.Hash(n);
+    const int n = 51;
+    uint256 digest = a.GetHashWithSalt(n);
     auto act = digest.GetHex();
-    std::string exp("cd3f58bb5489460619c322a3b0ec0a21432a22a03ca345e458165b0aaf1202c0");
+    std::string exp("def41d150b8d183ab49b001838f5c824ceba560e68e3e1a5d43f62cbd30a37f8");
     BOOST_CHECK(act == exp);
 }
 
@@ -767,7 +824,7 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bits)
     Scalar s(u);
 
     std::string exp = n_bin;
-    auto bs = s.GetBits();
+    auto bs = s.ToBinaryVec();
 
     BOOST_CHECK(bs.size() == exp.size());
     for (size_t i = 0; i < bs.size(); ++i) {
@@ -777,21 +834,20 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bits)
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 {
     {
         Scalar a(0b100000001);
-        BOOST_CHECK_EQUAL(a.GetBit(0), true); // 1st byte
-        BOOST_CHECK_EQUAL(a.GetBit(1), false);
-        BOOST_CHECK_EQUAL(a.GetBit(2), false);
-        BOOST_CHECK_EQUAL(a.GetBit(3), false);
-        BOOST_CHECK_EQUAL(a.GetBit(4), false);
-        BOOST_CHECK_EQUAL(a.GetBit(5), false);
-        BOOST_CHECK_EQUAL(a.GetBit(6), false);
-        BOOST_CHECK_EQUAL(a.GetBit(7), false);
-        BOOST_CHECK_EQUAL(a.GetBit(8), true); // 2nd byte
-        BOOST_CHECK_EQUAL(a.GetBit(9), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(0), true); // 1st byte
+        BOOST_CHECK_EQUAL(a.GetSeriBit(1), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(2), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(3), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(4), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(5), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(6), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(7), false);
+        BOOST_CHECK_EQUAL(a.GetSeriBit(8), true); // 2nd byte
+        BOOST_CHECK_EQUAL(a.GetSeriBit(9), false);
     }
     {
         SCALAR_CURVE_ORDER_MINUS_1(a);
@@ -799,26 +855,82 @@ BOOST_AUTO_TEST_CASE(test_scalar_get_bit)
 
         // 5th byte from the last is 255
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(4 * 8 + i), true);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(4 * 8 + i), true);
         }
 
         // 9th byte from the last is 254
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(8 * 8 + i), i != 0);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(8 * 8 + i), i != 0);
         }
 
         // 13th byte from the last is 2
         for (size_t i=0; i<8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(12 * 8 + i), i == 1);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(12 * 8 + i), i == 1);
         }
 
         // 32nd byte from the last is 115
         // 115 = 0b01110011 and rightmost bit is index 0
         std::vector<bool> bits115 = {true, true, false, false, true, true, true, false};
         for (size_t i = 0; i < 8; ++i) {
-            BOOST_CHECK_EQUAL(a.GetBit(31 * 8 + i), bits115[i]);
+            BOOST_CHECK_EQUAL(a.GetSeriBit(31 * 8 + i), bits115[i]);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_scalar_create_64_bit_shift)
+{
+    // serialized excess based on message "spaghetti meatballs"
+    // = 7370616765747469206d65617462616c6c730000000000000001
+    // = 111001101110000011000010110011101100101011101000111010001101001001000000110110101100101011000010111010001100010011000010110110001101100011100110000000000000000000000000000000000000000000000000000000000000001
+    std::vector<unsigned char> excess_ser {
+        0,
+        0,
+        0,
+        0,
+        0,
+        115,
+        112,
+        97,
+        103,
+        104,
+        101,
+        116,
+        116,
+        105,
+        32,
+        109,
+        101,
+        97,
+        116,
+        98,
+        97,
+        108,
+        108,
+        115,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+    };
+    Scalar excess;
+    excess.SetVch(excess_ser);
+
+    std::vector<unsigned char> vMsg = (excess >> 64).GetVch();
+    std::vector<unsigned char> vMsgTrimmed(0);
+    bool fFoundNonZero = false;
+    for (auto&it: vMsg) {
+        if (it != '\0')
+            fFoundNonZero = true;
+        if (fFoundNonZero)
+            vMsgTrimmed.push_back(it);
+    }
+    vMsg = vMsgTrimmed;
+    std::string s(vMsg.begin(), vMsg.end());
+    BOOST_CHECK(s == "spaghetti meatballs");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
