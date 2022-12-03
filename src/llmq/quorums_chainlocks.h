@@ -65,6 +65,7 @@ private:
     CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
     CChainLockSig bestChainLockWithKnownBlockPrev GUARDED_BY(cs);
     const CBlockIndex* bestChainLockBlockIndex {nullptr};
+    const CBlockIndex* bestChainLockBlockIndexPrev {nullptr};
     // Keep best chainlock shares and candidates, sorted by height (highest heght first).
     std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares GUARDED_BY(cs);
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);
@@ -88,7 +89,7 @@ public:
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
     const CChainLockSig GetMostRecentChainLock() const;
     const CChainLockSig GetBestChainLock() const ;
-    const CChainLockSig GetPreviousChainLock() const ;
+    const CBlockIndex* GetPreviousChainLock() const ;
     const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);

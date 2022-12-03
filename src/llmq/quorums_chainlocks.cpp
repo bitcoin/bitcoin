@@ -143,10 +143,10 @@ const CChainLockSig CChainLocksHandler::GetBestChainLock() const
     LOCK(cs);
     return bestChainLockWithKnownBlock;
 }
-const CChainLockSig CChainLocksHandler::GetPreviousChainLock() const
+const CBlockIndex* CChainLocksHandler::GetPreviousChainLock() const
 {
     LOCK(cs);
-    return bestChainLockWithKnownBlockPrev;
+    return bestChainLockBlockIndexPrev;
 }
 const std::map<CQuorumCPtr, CChainLockSigCPtr> CChainLocksHandler::GetBestChainLockShares() const
 {
@@ -177,6 +177,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
             LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
         }
         bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
+        bestChainLockBlockIndexPrev = pindex;
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
@@ -214,6 +215,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 // all sigs should be validated already
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
+                bestChainLockBlockIndexPrev = pindex;
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
@@ -609,7 +611,7 @@ void CChainLocksHandler::CheckActiveState()
             // us with some stale values which we should not try to enforce anymore (there probably was a good reason
             // to disable spork19)
             mostRecentChainLockShare = bestChainLockWithKnownBlock = bestChainLockWithKnownBlockPrev = CChainLockSig();
-            bestChainLockBlockIndex = nullptr;
+            bestChainLockBlockIndex = bestChainLockBlockIndexPrev = nullptr;
             bestChainLockCandidates.clear();
             bestChainLockShares.clear();
         }
@@ -869,10 +871,14 @@ bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blo
 void CChainLocksHandler::SetToPreviousChainLock()
 {
     LOCK(cs);
+    const CBlockIndex* prevIndex = GetPreviousChainLock();
+    if(!prevIndex) {
+        return;
+    }
     bestChainLockShares.erase(bestChainLockBlockIndex->nHeight);
     bestChainLockWithKnownBlock = bestChainLockWithKnownBlockPrev;
     // move index back to previous lock position so chain cannot reorg farther than 2 chainlocks no matter what
-    bestChainLockBlockIndex = bestChainLockBlockIndex->GetAncestor(bestChainLockWithKnownBlock.nHeight);
+    bestChainLockBlockIndex = prevIndex;
     bestChainLockCandidates.clear();
     bestChainLockCandidates[bestChainLockWithKnownBlock.nHeight] = std::make_shared<const CChainLockSig>(bestChainLockWithKnownBlock);
     bestChainLockShares.clear();

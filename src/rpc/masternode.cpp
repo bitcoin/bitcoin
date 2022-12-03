@@ -276,14 +276,14 @@ static RPCHelpMan masternode_sign()
     uint256 msgHash = ParseHashV(request.params[0], "msgHash");
     CBLSSignature sig;
     const CBlockIndex* pindexTip{nullptr};
-    llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
-    if (clsigPrev.IsNull()) {
+    const CBlockIndex* prevCLIndex = llmq::chainLocksHandler->GetPreviousChainLock();
+    if (!prevCLIndex) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
     }
     {
         LOCK(cs_main);
-        pindexTip = node.chainman->ActiveChain()[clsigPrev.nHeight];
-        if(pindexTip->GetBlockHash() != clsigPrev.blockHash) {
+        pindexTip = node.chainman->ActiveChain()[prevCLIndex->nHeight];
+        if(pindexTip->GetBlockHash() != prevCLIndex->GetBlockHash()) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
         }
     }
@@ -359,14 +359,14 @@ static RPCHelpMan masternode_verify()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Signature validation failed");
     }
     const CBlockIndex* pindexTip{nullptr};
-    llmq::CChainLockSig clsigPrev = llmq::chainLocksHandler->GetPreviousChainLock();
-    if (clsigPrev.IsNull()) {
+    const CBlockIndex* prevCLIndex = llmq::chainLocksHandler->GetPreviousChainLock();
+    if (!prevCLIndex) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No previous chainlock found");
     }
     {
         LOCK(cs_main);
-        pindexTip = node.chainman->ActiveChain()[clsigPrev.nHeight];
-        if(pindexTip->GetBlockHash() != clsigPrev.blockHash) {
+        pindexTip = node.chainman->ActiveChain()[prevCLIndex->nHeight];
+        if(pindexTip->GetBlockHash() != prevCLIndex->GetBlockHash()) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid previous chainlock");
         }
     }

@@ -2169,11 +2169,9 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         // use previous chainlock because chain can technically rollback up to previous lock
-        const auto& clsig = llmq::chainLocksHandler->GetPreviousChainLock();
-        if (!clsig.IsNull()) {
-            const CBlockIndex* blockIndex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(clsig.blockHash));
-            if(blockIndex)
-                nMedianTimeCL = blockIndex->GetMedianTimePast();
+        const CBlockIndex* prevCLIndex = llmq::chainLocksHandler->GetPreviousChainLock();
+        if (prevCLIndex) {
+            nMedianTimeCL = prevCLIndex->GetMedianTimePast();
         }
     }
     // first sanity test times to ensure data should or shouldn't exist and save to another vector
