@@ -177,7 +177,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
             LogPrintf("CChainLocksHandler::%s -- CNEVMDataDB::Prune failed\n", __func__);
         }
         bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
-        bestChainLockBlockIndexPrev = pindex;
+        bestChainLockBlockIndexPrev = bestChainLockBlockIndex;
         bestChainLockWithKnownBlock = *it1->second;
         bestChainLockBlockIndex = pindex;
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG from candidates (%s)\n", __func__, bestChainLockWithKnownBlock.ToString());
@@ -215,7 +215,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
                 // all sigs should be validated already
                 clsigAgg.sig = CBLSSignature::AggregateInsecure(sigs);
                 bestChainLockWithKnownBlockPrev = bestChainLockWithKnownBlock;
-                bestChainLockBlockIndexPrev = pindex;
+                bestChainLockBlockIndexPrev = bestChainLockBlockIndex;
                 bestChainLockWithKnownBlock = clsigAgg;
                 bestChainLockBlockIndex = pindex;
                 bestChainLockCandidates[clsigAgg.nHeight] = std::make_shared<const CChainLockSig>(clsigAgg);
