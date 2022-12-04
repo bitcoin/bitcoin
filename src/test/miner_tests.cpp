@@ -88,6 +88,7 @@ constexpr static struct {
     {0, 0x40045af7}, {0, 0x6000df7a}, {0, 0xe00131a1}, {0, 0x40021386},
     {0, 0xa00891b5}, {0, 0x60007854}, {0, 0x60021730}
 };
+constexpr static size_t blockinfo_size = sizeof(blockinfo) / sizeof(blockinfo[0]);
 
 static CBlockIndex CreateBlockIndex(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     std::vector<CTransactionRef> txFirst;
 
     auto createAndProcessEmptyBlock = [&]() {
-        int i = ::ChainActive().Height();
+        int i = ::ChainActive().Height() % blockinfo_size;
         CBlock *pblock = &pemptyblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
