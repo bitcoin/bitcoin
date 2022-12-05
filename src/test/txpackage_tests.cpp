@@ -278,6 +278,24 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK(result_3gen_submit.m_package_feerate == std::nullopt);
     }
 
+    // Parent and child package where transactions are invalid for reasons other than fee and
+    // missing inputs, so the package validation isn't expected to happen.
+    {
+        CScriptWitness bad_witness;
+        bad_witness.stack.push_back(std::vector<unsigned char>(1));
+        CMutableTransaction mtx_parent_invalid{mtx_parent};
+        mtx_parent_invalid.vin[0].scriptWitness = bad_witness;
+        CTransactionRef tx_parent_invalid = MakeTransactionRef(mtx_parent_invalid);
+        auto result_quit_early = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                   {tx_parent_invalid, tx_child}, /*test_accept=*/ false);
+        BOOST_CHECK(result_quit_early.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+        BOOST_CHECK(!result_quit_early.m_tx_results.empty());
+        auto it_parent = result_quit_early.m_tx_results.find(tx_parent_invalid->GetWitnessHash());
+        BOOST_CHECK(it_parent != result_quit_early.m_tx_results.end());
+        BOOST_CHECK_EQUAL(it_parent->second.m_state.GetResult(), TxValidationResult::TX_WITNESS_MUTATED);
+    }
+
     // Child with missing parent.
     mtx_child.vin.push_back(CTxIn(COutPoint(package_unrelated[0]->GetHash(), 0)));
     Package package_missing_parent;
