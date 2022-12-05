@@ -3,6 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descriptor wallet function."""
+import os
+import sqlite3
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -223,6 +225,16 @@ class WalletDescriptorTest(BitcoinTestFramework):
                     exp_addr = exp_rpc.getnewaddress(address_type=addr_type)
                     imp_addr = imp_rpc.getnewaddress(address_type=addr_type)
                 assert_equal(exp_addr, imp_addr)
+
+        self.log.info("Test that loading descriptor wallet containing legacy key types throws error")
+        self.nodes[0].createwallet(wallet_name="crashme", descriptors=True)
+        self.nodes[0].unloadwallet("crashme")
+        wallet_db = os.path.join(self.nodes[0].datadir, self.chain, "wallets", "crashme", self.wallet_data_filename)
+        with sqlite3.connect(wallet_db) as conn:
+            # add "cscript" entry: key type is uint160 (20 bytes), value type is CScript (zero-length here)
+            conn.execute('INSERT INTO main VALUES(?, ?)', (b'\x07cscript' + b'\x00'*20, b'\x00'))
+        assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
+
 
 if __name__ == '__main__':
     WalletDescriptorTest().main ()
