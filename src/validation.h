@@ -1066,4 +1066,10 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
  */
 const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& params);
 
+/** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
+bool IsBIP30Repeat(const CBlockIndex& block_index);
+
+/** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
+bool IsBIP30Unspendable(const CBlockIndex& block_index);
+
 #endif // BITCOIN_VALIDATION_H
