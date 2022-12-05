@@ -13,4 +13,8 @@
  */
 std::string SysErrorString(int err);
 
+#if defined(WIN32)
+std::string Win32ErrorString(int err);
+#endif
+
 #endif // BITCOIN_UTIL_SYSERROR_H
