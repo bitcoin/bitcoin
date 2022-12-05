@@ -964,6 +964,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     Assume(recipients_sum + change_amount == output_value);
     CAmount current_fee = result->GetSelectedValue() - output_value;
 
+    // Sanity check that the fee cannot be negative as that means we have more output value than input value
+    if (current_fee < 0) {
+        return util::Error{Untranslated(STR_INTERNAL_BUG("Fee paid < 0"))};
+    }
+
     // If there is a change output and we overpay the fees then increase the change to match the fee needed
     if (nChangePosInOut != -1 && fee_needed < current_fee) {
         auto& change = txNew.vout.at(nChangePosInOut);
