@@ -1520,9 +1520,6 @@ dnl check if libgmp is present
 AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
 AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
 
-dnl check if immer headers-only library is present
-AC_CHECK_HEADER([immer/map.hpp],, AC_MSG_ERROR(immer map headers missing))
-
 AC_MSG_CHECKING([whether to build dashd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)

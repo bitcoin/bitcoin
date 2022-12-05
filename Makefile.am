@@ -193,6 +193,7 @@ LCOV_FILTER_PATTERN = \
 	-p "/usr/lib/" \
 	-p "/usr/lib64/" \
 	-p "src/dashbls/" \
+	-p "src/immer/" \
 	-p "src/leveldb/" \
 	-p "src/crc32c/" \
 	-p "src/bench/" \

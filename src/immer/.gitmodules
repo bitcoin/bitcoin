@@ -1,0 +1,6 @@
+[submodule "extra/python/lib/pybind11"]
+	path = extra/python/lib/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "tools/sinusoidal-sphinx-theme"]
+	path = tools/sinusoidal-sphinx-theme
+        url = https://github.com/arximboldi/sinusoidal-sphinx-theme.git
