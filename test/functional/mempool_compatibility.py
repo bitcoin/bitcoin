@@ -21,12 +21,8 @@ from test_framework.wallet import (
 
 
 class MempoolCompatibilityTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
-        self.wallet_names = [None]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_previous_releases()
@@ -37,7 +33,6 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
             None,
         ])
         self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         self.log.info("Test that mempool.dat is compatible between versions")
@@ -51,11 +46,10 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.
         self.connect_nodes(0, 1)
         self.sync_blocks()
-        recipient = old_node.getnewaddress()
         self.stop_node(1)
 
         self.log.info("Add a transaction to mempool on old node and shutdown")
-        old_tx_hash = old_node.sendtoaddress(recipient, 0.0001)
+        old_tx_hash = new_wallet.send_self_transfer(from_node=old_node)["txid"]
         assert old_tx_hash in old_node.getrawmempool()
         self.stop_node(0)
 
