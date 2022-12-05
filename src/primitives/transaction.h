@@ -17,6 +17,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -278,6 +279,12 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+}
+
+template<typename TxType>
+inline CAmount CalculateOutputValue(const TxType& tx)
+{
+    return std::accumulate(tx.vout.cbegin(), tx.vout.cend(), CAmount{0}, [](CAmount sum, const auto& txout) { return sum + txout.nValue; });
 }
 
 
