@@ -110,6 +110,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 121)
 
         self.test_add_inputs_default_value()
+        self.test_preset_inputs_selection()
         self.test_weight_calculation()
         self.test_change_position()
         self.test_simple()
@@ -1202,6 +1203,50 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, inputs=[], outputs=outputs, options=options)
 
         self.nodes[2].unloadwallet("test_preset_inputs")
+
+    def test_preset_inputs_selection(self):
+        self.log.info('Test wallet preset inputs are not double-counted or reused in coin selection')
+
+        # Create and fund the wallet with 4 UTXO of 5 BTC each (20 BTC total)
+        self.nodes[2].createwallet("test_preset_inputs_selection")
+        wallet = self.nodes[2].get_wallet_rpc("test_preset_inputs_selection")
+        outputs = {}
+        for _ in range(4):
+            outputs[wallet.getnewaddress(address_type="bech32")] = 5
+        self.nodes[0].sendmany("", outputs)
+        self.generate(self.nodes[0], 1)
+
+        # Select the preset inputs
+        coins = wallet.listunspent()
+        preset_inputs = [coins[0], coins[1], coins[2]]
+
+        # Now let's create the tx creation options
+        options = {
+            "inputs": preset_inputs,
+            "add_inputs": True,  # automatically add coins from the wallet to fulfill the target
+            "subtract_fee_from_outputs": [0],  # deduct fee from first output
+            "add_to_wallet": False
+        }
+
+        # Attempt to send 29 BTC from a wallet that only has 20 BTC. The wallet should exclude
+        # the preset inputs from the pool of available coins, realize that there is not enough
+        # money to fund the 29 BTC payment, and fail with "Insufficient funds".
+        #
+        # Even with SFFO, the wallet can only afford to send 20 BTC.
+        # If the wallet does not properly exclude preset inputs from the pool of available coins
+        # prior to coin selection, it may create a transaction that does not fund the full payment
+        # amount or, through SFFO, incorrectly reduce the recipient's amount by the difference
+        # between the original target and the wrongly counted inputs (in this case 9 BTC)
+        # so that the recipient's amount is no longer equal to the user's selected target of 29 BTC.
+
+        # First case, use 'subtract_fee_from_outputs = true'
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{wallet.getnewaddress(address_type="bech32"): 29}], options=options)
+
+        # Second case, don't use 'subtract_fee_from_outputs'
+        del options["subtract_fee_from_outputs"]
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{wallet.getnewaddress(address_type="bech32"): 29}], options=options)
+
+        self.nodes[2].unloadwallet("test_preset_inputs_selection")
 
     def test_weight_calculation(self):
         self.log.info("Test weight calculation with external inputs")
