@@ -214,11 +214,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.descriptors = None
         elif self.options.descriptors is None:
             # Some wallet is either required or optionally used by the test.
-            # Prefer BDB unless it isn't available
-            if self.is_bdb_compiled():
-                self.options.descriptors = False
-            elif self.is_sqlite_compiled():
+            # Prefer SQLite unless it isn't available
+            if self.is_sqlite_compiled():
                 self.options.descriptors = True
+            elif self.is_bdb_compiled():
+                self.options.descriptors = False
             else:
                 # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
                 # It still needs to exist and be None in order for tests to work however.
