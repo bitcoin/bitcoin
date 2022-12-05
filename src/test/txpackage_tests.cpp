@@ -90,6 +90,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /*test_accept=*/true);
     BOOST_CHECK_MESSAGE(result_parent_child.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << result_parent_child.m_state.GetRejectReason());
+    BOOST_CHECK(result_parent_child.m_tx_results.size() == 2);
     auto it_parent = result_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
     auto it_child = result_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
     BOOST_CHECK(it_parent != result_parent_child.m_tx_results.end());
@@ -112,6 +113,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetRejectReason(), "transaction failed");
+    BOOST_CHECK(result_single_large.m_tx_results.size() == 1);
     auto it_giant_tx = result_single_large.m_tx_results.find(giant_ptx->GetWitnessHash());
     BOOST_CHECK(it_giant_tx != result_single_large.m_tx_results.end());
     BOOST_CHECK_EQUAL(it_giant_tx->second.m_state.GetRejectReason(), "tx-size");
@@ -291,9 +293,15 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         BOOST_CHECK(result_quit_early.m_state.IsInvalid());
         BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
         BOOST_CHECK(!result_quit_early.m_tx_results.empty());
+        BOOST_CHECK_EQUAL(result_quit_early.m_tx_results.size(), 2);
         auto it_parent = result_quit_early.m_tx_results.find(tx_parent_invalid->GetWitnessHash());
+        auto it_child = result_quit_early.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != result_quit_early.m_tx_results.end());
+        BOOST_CHECK(it_child != result_quit_early.m_tx_results.end());
         BOOST_CHECK_EQUAL(it_parent->second.m_state.GetResult(), TxValidationResult::TX_WITNESS_MUTATED);
+        BOOST_CHECK_EQUAL(it_parent->second.m_state.GetRejectReason(), "bad-witness-nonstandard");
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
+        BOOST_CHECK_EQUAL(it_child->second.m_state.GetRejectReason(), "bad-txns-inputs-missingorspent");
     }
 
     // Child with missing parent.
@@ -317,6 +325,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_parent_child.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_parent_child.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_parent_child.m_tx_results.size(), package_parent_child.size());
         auto it_parent = submit_parent_child.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child = submit_parent_child.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_parent_child.m_tx_results.end());
@@ -341,6 +350,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
                                                       package_parent_child, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_deduped.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_deduped.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_deduped.m_tx_results.size(), package_parent_child.size());
         auto it_parent_deduped = submit_deduped.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child_deduped = submit_deduped.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent_deduped != submit_deduped.m_tx_results.end());
@@ -415,6 +425,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                        {ptx_parent, ptx_child1}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_witness1.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_witness1.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_witness1.m_tx_results.size(), 2);
         auto it_parent1 = submit_witness1.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child1 = submit_witness1.m_tx_results.find(ptx_child1->GetWitnessHash());
         BOOST_CHECK(it_parent1 != submit_witness1.m_tx_results.end());
@@ -432,6 +443,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                        {ptx_parent, ptx_child2}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_witness2.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_witness2.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_witness2.m_tx_results.size(), 2);
         auto it_parent2_deduped = submit_witness2.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child2 = submit_witness2.m_tx_results.find(ptx_child2->GetWitnessHash());
         BOOST_CHECK(it_parent2_deduped != submit_witness2.m_tx_results.end());
@@ -449,6 +461,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                            {ptx_parent, ptx_child1}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_segwit_dedup.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_segwit_dedup.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_segwit_dedup.m_tx_results.size(), 2);
         auto it_parent_dup = submit_segwit_dedup.m_tx_results.find(ptx_parent->GetWitnessHash());
         auto it_child_dup = submit_segwit_dedup.m_tx_results.find(ptx_child1->GetWitnessHash());
         BOOST_CHECK(it_parent_dup->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
@@ -477,6 +490,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                             {ptx_child2, ptx_grandchild}, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_spend_ignored.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_spend_ignored.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_spend_ignored.m_tx_results.size(), 2);
         auto it_child2_ignored = submit_spend_ignored.m_tx_results.find(ptx_child2->GetWitnessHash());
         auto it_grandchild = submit_spend_ignored.m_tx_results.find(ptx_grandchild->GetWitnessHash());
         BOOST_CHECK(it_child2_ignored != submit_spend_ignored.m_tx_results.end());
@@ -577,6 +591,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     {
         const auto mixed_result = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package_mixed, false);
         BOOST_CHECK_MESSAGE(mixed_result.m_state.IsValid(), mixed_result.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(mixed_result.m_tx_results.size(), package_mixed.size());
         auto it_parent1 = mixed_result.m_tx_results.find(ptx_parent1->GetWitnessHash());
         auto it_parent2 = mixed_result.m_tx_results.find(ptx_parent2_v1->GetWitnessHash());
         auto it_parent3 = mixed_result.m_tx_results.find(ptx_parent3->GetWitnessHash());
@@ -648,6 +663,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
         const auto submit_cpfp_deprio = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
                                                    package_cpfp, /*test_accept=*/ false);
+        BOOST_CHECK_EQUAL(submit_cpfp_deprio.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_MESSAGE(submit_cpfp_deprio.m_state.IsInvalid(),
                             "Package validation unexpectedly succeeded: " << submit_cpfp_deprio.m_state.GetRejectReason());
         BOOST_CHECK(submit_cpfp_deprio.m_tx_results.empty());
@@ -667,6 +683,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_cpfp.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_cpfp.m_state.GetRejectReason());
+        BOOST_CHECK_EQUAL(submit_cpfp.m_tx_results.size(), package_cpfp.size());
         auto it_parent = submit_cpfp.m_tx_results.find(tx_parent->GetWitnessHash());
         auto it_child = submit_cpfp.m_tx_results.find(tx_child->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_cpfp.m_tx_results.end());
@@ -736,6 +753,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
                 "Package validation unexpectedly failed" << submit_prioritised_package.m_state.GetRejectReason());
         const CFeeRate expected_feerate(1 * COIN + 200,
             GetVirtualTransactionSize(*tx_parent_cheap) + GetVirtualTransactionSize(*tx_child_cheap));
+        BOOST_CHECK_EQUAL(submit_prioritised_package.m_tx_results.size(), package_still_too_low.size());
         auto it_parent = submit_prioritised_package.m_tx_results.find(tx_parent_cheap->GetWitnessHash());
         auto it_child = submit_prioritised_package.m_tx_results.find(tx_child_cheap->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_prioritised_package.m_tx_results.end());
