@@ -47,12 +47,18 @@ struct CoinsResult {
      * i.e., methods can work with individual OutputType vectors or on the entire object */
     size_t Size() const;
     void Clear();
-    void Erase(std::set<COutPoint>& preset_coins);
+    void Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher>& coins_to_remove);
     void Shuffle(FastRandomContext& rng_fast);
     void Add(OutputType type, const COutput& out);
 
-    /** Sum of all available coins */
+    CAmount GetTotalAmount() { return total_amount; }
+    std::optional<CAmount> GetEffectiveTotalAmount() {return total_effective_amount; }
+
+private:
+    /** Sum of all available coins raw value */
     CAmount total_amount{0};
+    /** Sum of all available coins effective value (each output value minus fees required to spend it) */
+    std::optional<CAmount> total_effective_amount{0};
 };
 
 struct CoinFilterParams {
