@@ -1,9 +1,12 @@
-24.0 Release Notes
-==================
+24.0.1 Release Notes
+====================
 
-Bitcoin Core version 24.0 is now available from:
+Due to last-minute issues (#26616), 24.0, although tagged, was never fully
+announced or released.
 
-  <https://bitcoincore.org/bin/bitcoin-core-24.0/>
+Bitcoin Core version 24.0.1 is now available from:
+
+  <https://bitcoincore.org/bin/bitcoin-core-24.0.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
