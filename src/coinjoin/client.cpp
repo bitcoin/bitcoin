@@ -113,7 +113,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream&
     }
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -132,12 +132,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, std::string_view msg_ty
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, msg_type, vRecv, connman, enable_bip61);
+            session.ProcessMessage(peer, msg_type, vRecv, connman);
         }
     }
 }
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;

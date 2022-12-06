@@ -21,8 +21,6 @@ extern CCriticalSection cs_main;
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
-/** Default for BIP61 (sending reject messages) */
-static constexpr bool DEFAULT_ENABLE_BIP61 = true;
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 
@@ -34,10 +32,10 @@ private:
     CTxMemPool& m_mempool;
     std::unique_ptr<LLMQContext>& m_llmq_ctx;
 
-    bool MaybeDiscourageAndDisconnect(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool MaybeDiscourageAndDisconnect(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
     PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                        std::unique_ptr<LLMQContext>& llmq_ctx, bool enable_bip61);
+                        std::unique_ptr<LLMQContext>& llmq_ctx);
 
     /**
      * Overridden from CValidationInterface.
@@ -87,9 +85,6 @@ public:
 
 private:
     int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
-
-    /** Enable BIP61 (sending reject messages) */
-    const bool m_enable_bip61;
 };
 
 struct CNodeStateStats {
