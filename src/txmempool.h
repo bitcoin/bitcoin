@@ -20,12 +20,12 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
+#include <kernel/mempool_entry.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <sync.h>
-#include <txmempool_entry.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
 

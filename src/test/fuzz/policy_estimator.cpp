@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/mempool_entry.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <primitives/transaction.h>
@@ -11,7 +12,6 @@
 #include <test/fuzz/util/mempool.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
-#include <txmempool_entry.h>
 
 #include <cstdint>
 #include <optional>
