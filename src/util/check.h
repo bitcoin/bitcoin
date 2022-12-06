@@ -10,11 +10,15 @@
 #include <stdexcept>
 #include <utility>
 
+std::string StrFormatInternalBug(const char* msg, const char* file, int line, const char* func);
+
 class NonFatalCheckError : public std::runtime_error
 {
 public:
     NonFatalCheckError(const char* msg, const char* file, int line, const char* func);
 };
+
+#define STR_INTERNAL_BUG(msg) StrFormatInternalBug((msg), __FILE__, __LINE__, __func__)
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
