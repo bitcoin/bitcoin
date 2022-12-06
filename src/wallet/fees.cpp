@@ -84,7 +84,7 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
 CFeeRate GetDiscardRate(const CWallet& wallet)
 {
     unsigned int highest_target = wallet.chain().estimateMaxBlocks();
-    CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, false /* conservative */);
+    CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, /*conservative=*/false);
     // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
     discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
     // Discard rate must be at least dust relay feerate

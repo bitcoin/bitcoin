@@ -587,7 +587,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     // returns the coin associated with the change address underneath the
     // coinbaseKey pubkey, even though the change address has a different
     // pubkey.
-    AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, false /* subtract fee */});
+    AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, /*subtract_fee=*/false});
     {
         LOCK(wallet->cs_wallet);
         list = ListCoins(*wallet);

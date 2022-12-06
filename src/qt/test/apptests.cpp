@@ -72,7 +72,7 @@ void AppTests::appTests()
 
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
-    QVERIFY(m_app.createOptionsModel(true /* reset settings */));
+    QVERIFY(m_app.createOptionsModel(/*resetSettings=*/true));
     QScopedPointer<const NetworkStyle> style(NetworkStyle::instantiate(Params().NetworkIDString()));
     m_app.setupPlatformStyle();
     m_app.createWindow(style.data());

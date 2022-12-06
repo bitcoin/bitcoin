@@ -614,7 +614,7 @@ RPCHelpMan listsinceblock()
         blockId = ParseHashV(request.params[0], "blockhash");
         height = int{};
         altheight = int{};
-        if (!wallet.chain().findCommonAncestor(blockId, wallet.GetLastBlockHash(), /* ancestor out */ FoundBlock().height(*height), /* blockId out */ FoundBlock().height(*altheight))) {
+        if (!wallet.chain().findCommonAncestor(blockId, wallet.GetLastBlockHash(), /*ancestor_out=*/FoundBlock().height(*height), /*block1_out=*/FoundBlock().height(*altheight))) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
@@ -642,7 +642,7 @@ RPCHelpMan listsinceblock()
         const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, nullptr /* filter_label */, /*include_change=*/include_change);
+            ListTransactions(wallet, tx, 0, true, transactions, filter, /*filter_label=*/nullptr, /*include_change=*/include_change);
         }
     }
 
@@ -659,7 +659,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */, /*include_change=*/include_change);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter, /*filter_label=*/nullptr, /*include_change=*/include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -777,7 +777,7 @@ RPCHelpMan gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
+    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/nullptr);
     entry.pushKV("details", details);
 
     std::string strHex = EncodeHexTx(*wtx.tx, pwallet->chain().rpcSerializationFlags());
