@@ -1411,7 +1411,7 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
     m_last_block_processed = block.hash;
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
         SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
-        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK, 0 /* mempool_sequence */);
+        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK, /*mempool_sequence=*/0);
     }
 }
 
@@ -2463,7 +2463,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
 util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, const std::string label)
 {
     LOCK(cs_wallet);
-    auto spk_man = GetScriptPubKeyMan(type, false /* internal */);
+    auto spk_man = GetScriptPubKeyMan(type, /*internal=*/false);
     if (!spk_man) {
         return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
     }

@@ -103,7 +103,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
         {
             UniValue unused_result;
             if (setDone.insert(pcmd->unique_id).second)
-                pcmd->actor(jreq, unused_result, true /* last_handler */);
+                pcmd->actor(jreq, unused_result, /*last_handler=*/true);
         }
         catch (const std::exception& e)
         {
