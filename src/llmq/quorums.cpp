@@ -22,7 +22,7 @@
 
 #include <cxxtimer.hpp>
 #include <net.h>
-
+extern bool fRegTest;
 namespace llmq
 {
 
@@ -163,11 +163,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
-
-    for (auto& p : Params().GetConsensus().llmqs) {
-        EnsureQuorumConnections(p.second, pindexNew);
-    }
-
+    EnsureQuorumConnections(Params().GetConsensus().llmqs.at(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60), pindexNew);
 }
 
 void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
