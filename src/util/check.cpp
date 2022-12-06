@@ -14,13 +14,16 @@
 #include <cstdio>
 #include <cstdlib>
 
-
-NonFatalCheckError::NonFatalCheckError(const char* msg, const char* file, int line, const char* func)
-    : std::runtime_error{
-          strprintf("Internal bug detected: \"%s\"\n%s:%d (%s)\n"
+std::string StrFormatInternalBug(const char* msg, const char* file, int line, const char* func)
+{
+    return strprintf("Internal bug detected: \"%s\"\n%s:%d (%s)\n"
                     "%s %s\n"
                     "Please report this issue here: %s\n",
-                    msg, file, line, func, PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT)}
+                    msg, file, line, func, PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
+}
+
+NonFatalCheckError::NonFatalCheckError(const char* msg, const char* file, int line, const char* func)
+    : std::runtime_error{StrFormatInternalBug(msg, file, line, func)}
 {
 }
 

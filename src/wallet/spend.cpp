@@ -1002,6 +1002,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     nFeeRet = result->GetSelectedValue() - recipients_sum - change_amount;
 
+    // The only time that fee_needed should be less than the amount available for fees is when
+    // we are subtracting the fee from the outputs. If this occurs at any other time, it is a bug.
+    if (!coin_selection_params.m_subtract_fee_outputs && fee_needed > nFeeRet) {
+        return util::Error{Untranslated(STR_INTERNAL_BUG("Fee needed > fee paid"))};
+    }
+
     // Update nFeeRet in case fee_needed changed due to dropping the change output
     if (fee_needed <= change_and_fee - change_amount) {
         nFeeRet = change_and_fee - change_amount;
