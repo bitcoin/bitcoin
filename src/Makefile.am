@@ -225,6 +225,7 @@ SYSCOIN_CORE_H = \
   kernel/checks.h \
   kernel/coinstats.h \
   kernel/context.h \
+  kernel/mempool_entry.h \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
@@ -325,7 +326,6 @@ SYSCOIN_CORE_H = \
   torcontrol.h \
   txdb.h \
   txmempool.h \
-  txmempool_entry.h \
   txorphanage.h \
   txrequest.h \
   undo.h \

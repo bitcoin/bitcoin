@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_TXMEMPOOL_ENTRY_H
-#define SYSCOIN_TXMEMPOOL_ENTRY_H
+#ifndef SYSCOIN_KERNEL_MEMPOOL_ENTRY_H
+#define SYSCOIN_KERNEL_MEMPOOL_ENTRY_H
 
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -175,4 +175,4 @@ public:
     mutable bool isKeyChangeProTx{false};
 };
 
-#endif // SYSCOIN_TXMEMPOOL_ENTRY_H
+#endif // SYSCOIN_KERNEL_MEMPOOL_ENTRY_H

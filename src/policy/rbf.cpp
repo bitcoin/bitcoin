@@ -5,12 +5,12 @@
 #include <policy/rbf.h>
 
 #include <consensus/amount.h>
+#include <kernel/mempool_entry.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
-#include <txmempool_entry.h>
 #include <uint256.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>

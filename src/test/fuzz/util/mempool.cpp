@@ -4,11 +4,11 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <kernel/mempool_entry.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
-#include <txmempool_entry.h>
 
 #include <cassert>
 #include <cstdint>
