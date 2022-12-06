@@ -47,7 +47,7 @@ struct CoinsResult {
      * i.e., methods can work with individual OutputType vectors or on the entire object */
     size_t Size() const;
     void Clear();
-    void Erase(std::set<COutPoint>& preset_coins);
+    void Erase(const std::set<COutPoint>& coins_to_remove);
     void Shuffle(FastRandomContext& rng_fast);
     void Add(OutputType type, const COutput& out);
 
