@@ -137,3 +137,93 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     }
     return candidates;
 }
+
+StaticContentsSock::StaticContentsSock(const std::string& contents)
+    : Sock{INVALID_SOCKET}, m_contents{contents}
+{
+}
+
+StaticContentsSock::~StaticContentsSock() { m_socket = INVALID_SOCKET; }
+
+StaticContentsSock& StaticContentsSock::operator=(Sock&& other)
+{
+    assert(false && "Move of Sock into MockSock not allowed.");
+    return *this;
+}
+
+ssize_t StaticContentsSock::Send(const void*, size_t len, int) const { return len; }
+
+ssize_t StaticContentsSock::Recv(void* buf, size_t len, int flags) const
+{
+    const size_t consume_bytes{std::min(len, m_contents.size() - m_consumed)};
+    std::memcpy(buf, m_contents.data() + m_consumed, consume_bytes);
+    if ((flags & MSG_PEEK) == 0) {
+        m_consumed += consume_bytes;
+    }
+    return consume_bytes;
+}
+
+int StaticContentsSock::Connect(const sockaddr*, socklen_t) const { return 0; }
+
+int StaticContentsSock::Bind(const sockaddr*, socklen_t) const { return 0; }
+
+int StaticContentsSock::Listen(int) const { return 0; }
+
+std::unique_ptr<Sock> StaticContentsSock::Accept(sockaddr* addr, socklen_t* addr_len) const
+{
+    if (addr != nullptr) {
+        // Pretend all connections come from 5.5.5.5:6789
+        memset(addr, 0x00, *addr_len);
+        const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
+        if (*addr_len >= write_len) {
+            *addr_len = write_len;
+            sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
+            addr_in->sin_family = AF_INET;
+            memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
+            addr_in->sin_port = htons(6789);
+        }
+    }
+    return std::make_unique<StaticContentsSock>("");
+};
+
+int StaticContentsSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
+{
+    std::memset(opt_val, 0x0, *opt_len);
+    return 0;
+}
+
+int StaticContentsSock::SetSockOpt(int, int, const void*, socklen_t) const { return 0; }
+
+int StaticContentsSock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    std::memset(name, 0x0, *name_len);
+    return 0;
+}
+
+bool StaticContentsSock::SetNonBlocking() const { return true; }
+
+bool StaticContentsSock::IsSelectable() const { return true; }
+
+bool StaticContentsSock::Wait(std::chrono::milliseconds timeout,
+          Event requested,
+          Event* occurred) const
+{
+    if (occurred != nullptr) {
+        *occurred = requested;
+    }
+    return true;
+}
+
+bool StaticContentsSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
+{
+    for (auto& [sock, events] : events_per_sock) {
+        (void)sock;
+        events.occurred = events.requested;
+    }
+    return true;
+}
+
+bool StaticContentsSock::IsConnected(std::string&) const
+{
+    return true;
+}
