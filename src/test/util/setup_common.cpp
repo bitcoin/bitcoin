@@ -446,6 +446,12 @@ CBlock getBlock13b8a()
     return block;
 }
 
+// Suppress memory sanitizer                                                    
+#if defined(__has_feature) && defined(HAVE_SYS_GETRANDOM)
+#  if __has_feature(memory_sanitizer)
+__attribute__((no_sanitize("memory")))
+#  endif
+#endif
 MclTestingSetup::MclTestingSetup()
 {
     MclInitializer::Init();
