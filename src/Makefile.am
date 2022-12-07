@@ -778,6 +778,7 @@ libsyscoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   common/bloom.cpp \
+  common/interfaces.cpp \
   common/run_command.cpp \
   core_read.cpp \
   core_write.cpp \
@@ -818,7 +819,7 @@ endif
 #
 
 # util #
-libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
   bls/bls_batchverifier.h \
@@ -830,9 +831,6 @@ libsyscoin_util_a_SOURCES = \
   chainparamsbase.cpp \
   clientversion.cpp \
   fs.cpp \
-  interfaces/echo.cpp \
-  interfaces/handler.cpp \
-  interfaces/init.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
