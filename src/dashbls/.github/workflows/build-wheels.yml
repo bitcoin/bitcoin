@@ -1,0 +1,338 @@
+name: build - check - upload
+
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '**'
+  pull_request:
+    branches:
+    - '**'
+
+concurrency:
+  # SHA is added to the end if on `main` to let all main workflows run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/long_lived/')) && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+  build-wheels:
+    name: Wheel - ${{ matrix.os.name }} ${{ matrix.python.major-dot-minor }} ${{ matrix.arch.name }}
+    runs-on: ${{ matrix.os.runs-on[matrix.arch.matrix] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: macOS
+            matrix: macos
+            runs-on:
+              arm: [macOS, ARM64]
+              intel: [macos-latest]
+            cibw-archs-macos:
+              arm: arm64
+              intel: x86_64
+          - name: Ubuntu
+            matrix: ubuntu
+            runs-on:
+              arm: [Linux, ARM64]
+              intel: [ubuntu-latest]
+          - name: Windows
+            matrix: windows
+            runs-on:
+              intel: [windows-latest]
+        python:
+          - major-dot-minor: '3.7'
+            cibw-build: 'cp37-*'
+            matrix: '3.7'
+          - major-dot-minor: '3.8'
+            cibw-build: 'cp38-*'
+            matrix: '3.8'
+          - major-dot-minor: '3.9'
+            cibw-build: 'cp39-*'
+            matrix: '3.9'
+          - major-dot-minor: '3.10'
+            cibw-build: 'cp310-*'
+            matrix: '3.10'
+        arch:
+          - name: ARM
+            matrix: arm
+          - name: Intel
+            matrix: intel
+        exclude:
+          # Only partial entries are required here by GitHub Actions so generally I
+          # only specify the `matrix:` entry.  The super linter complains so for now
+          # all entries are included to avoid that.  Reported at
+          # https://github.com/github/super-linter/issues/3016
+          - os:
+              name: Windows
+              matrix: windows
+              runs-on:
+                intel: [windows-latest]
+            arch:
+              name: ARM
+              matrix: arm
+          - os:
+              name: macOS
+              matrix: macos
+              runs-on:
+                arm: [macOS, ARM64]
+                intel: [macos-latest]
+            python:
+              major-dot-minor: '3.7'
+              cibw-build: 'cp37-*'
+              matrix: '3.7'
+            arch:
+              name: ARM
+              matrix: arm
+          - os:
+              name: macOS
+              matrix: macos
+              runs-on:
+                arm: [macOS, ARM64]
+                intel: [macos-latest]
+            python:
+              major-dot-minor: '3.8'
+              cibw-build: 'cp38-*'
+              matrix: '3.8'
+            arch:
+              name: ARM
+              matrix: arm
+
+    steps:
+    - name: Clean workspace
+      uses: Chia-Network/actions/clean-workspace@main
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: chia-network/actions/setup-python@main
+      with:
+        python-version: ${{ matrix.python.major-dot-minor }}
+
+    - name: Install pipx
+      run: |
+        pip install pipx
+    - name: Build and test
+      uses: pypa/cibuildwheel@v2.7.0
+      with:
+        output-dir: dist
+      env:
+        CIBW_BUILD_VERBOSITY_MACOS: 0
+        CIBW_BUILD_VERBOSITY_LINUX: 0
+        CIBW_BUILD_VERBOSITY_WINDOWS: 0
+        CIBW_BUILD: ${{ matrix.python.cibw-build }}
+        CIBW_SKIP: '*-manylinux_i686 *-win32 *-musllinux_*'
+        CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+        CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010
+        CIBW_ENVIRONMENT_LINUX: "PATH=/project/cmake-3.17.3-Linux-`uname -m`/bin:$PATH"
+        CIBW_BEFORE_ALL_LINUX: >
+          yum -y install epel-release
+          && echo "epel-release installed"
+          && yum -y install lzip
+          && echo "lzip installed"
+          && curl -L https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-`uname -m`.sh > cmake.sh
+          && yes | sh cmake.sh | cat
+          && rm -f /usr/bin/cmake
+          && curl -L https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz | tar x --lzip
+          && cp contrib/gmp-patch-6.2.1/longlong.h gmp-6.2.1/
+          && cp contrib/gmp-patch-6.2.1/compat.c gmp-6.2.1/
+          && cd gmp-6.2.1 && ./configure --enable-fat
+          && make && make install && cd .. && rm -rf gmp-6.2.1
+          && cmake --version
+          && uname -a
+        CIBW_BEFORE_BUILD_LINUX: >
+          python -m pip install --upgrade pip
+        CIBW_ARCHS_MACOS: ${{ matrix.os.cibw-archs-macos[matrix.arch.matrix] }}
+        CIBW_BEFORE_ALL_MACOS: >
+          brew install gmp boost cmake
+        CIBW_BEFORE_BUILD_MACOS: >
+          python -m pip install --upgrade pip
+        CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.14"
+        CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+          pip uninstall -y delocate && pip install git+https://github.com/Chia-Network/delocate.git
+          && delocate-listdeps {wheel} && delocate-wheel -v {wheel}
+          && cp {wheel} {dest_dir}
+        CIBW_BEFORE_ALL_WINDOWS: >
+          curl -L https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable-msvc.zip > libsodium-1.0.18-stable-msvc.zip
+          && 7z x libsodium-1.0.18-stable-msvc.zip
+          && git clone https://github.com/Chia-Network/relic_ietf_64.git
+          && ls -l relic_ietf_64
+          && git clone https://github.com/Chia-Network/mpir_gc_x64.git
+          && ls -l mpir_gc_x64
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+          ls -l mpir_gc_x64 && pip uninstall -y delocate
+          && pip install git+https://github.com/Chia-Network/delocate.git
+          && delocate-wheel -v -i mpir_gc_x64/mpir.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_gc.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_broadwell.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_broadwell_avx.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_bulldozer.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_haswell.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_piledriver.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_sandybridge.dll {wheel}
+          && delocate-wheel -v -i mpir_gc_x64/mpir_skylake_avx.dll {wheel}
+          && cp {wheel} {dest_dir}
+        CIBW_TEST_REQUIRES: pytest
+        CIBW_TEST_COMMAND: py.test -v {project}/python-bindings/test.py
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: ./dist
+
+  build-sdist:
+    name: sdist - ${{ matrix.os.name }} ${{ matrix.python.major-dot-minor }} ${{ matrix.arch.name }}
+    runs-on: ${{ matrix.os.runs-on[matrix.arch.matrix] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: Ubuntu
+            matrix: ubuntu
+            runs-on:
+              arm: [Linux, ARM64]
+              intel: [ubuntu-latest]
+        python:
+          - major-dot-minor: '3.9'
+            matrix: '3.9'
+        arch:
+          - name: Intel
+            matrix: intel
+
+    steps:
+    - name: Clean workspace
+      uses: Chia-Network/actions/clean-workspace@main
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: Chia-Network/actions/setup-python@main
+      with:
+        python-version: ${{ matrix.python.major-dot-minor }}
+
+    - name: Build source distribution
+      run: |
+        pip install build
+        python -m build --sdist --outdir dist .
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: ./dist
+
+  check:
+    name: Check - ${{ matrix.os.name }} ${{ matrix.python.major-dot-minor }} ${{ matrix.arch.name }}
+    runs-on: ${{ matrix.os.runs-on[matrix.arch.matrix] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: Ubuntu
+            matrix: ubuntu
+            runs-on:
+              arm: [Linux, ARM64]
+              intel: [ubuntu-latest]
+        python:
+          - major-dot-minor: '3.9'
+            matrix: '3.9'
+        arch:
+          - name: Intel
+            matrix: intel
+
+    steps:
+    - name: Clean workspace
+      uses: Chia-Network/actions/clean-workspace@main
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: Chia-Network/actions/setup-python@main
+      with:
+        python-version: ${{ matrix.python.major-dot-minor }}
+
+    - name: flake8
+      run: |
+        pip install flake8
+        flake8 src setup.py python-bindings python-impl
+    - name: mypy
+      run: |
+        pip install mypy
+        mypy --config-file mypi.ini python-bindings python-impl
+  upload:
+    name: Upload to PyPI - ${{ matrix.os.name }} ${{ matrix.python.major-dot-minor }} ${{ matrix.arch.name }}
+    runs-on: ${{ matrix.os.runs-on[matrix.arch.matrix] }}
+    needs:
+      - build-wheels
+      - build-sdist
+      - check
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: Ubuntu
+            matrix: ubuntu
+            runs-on:
+              arm: [Linux, ARM64]
+              intel: [ubuntu-latest]
+        python:
+          - major-dot-minor: '3.9'
+            matrix: '3.9'
+        arch:
+          - name: Intel
+            matrix: intel
+
+    steps:
+    - name: Clean workspace
+      uses: Chia-Network/actions/clean-workspace@main
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: Chia-Network/actions/setup-python@main
+      with:
+        python-version: ${{ matrix.python.major-dot-minor }}
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: packages
+        path: ./dist
+
+    - name: Test for secrets access
+      id: check_secrets
+      shell: bash
+      run: |
+        unset HAS_SECRET
+        if [ -n "$SECRET" ]; then HAS_SECRET='true' ; fi
+        echo ::set-output name=HAS_SECRET::${HAS_SECRET}
+      env:
+        SECRET: "${{ secrets.test_pypi_password }}"
+
+    - name: Install twine
+      run: pip install twine
+
+    - name: Publish distribution to PyPI
+      if: startsWith(github.event.ref, 'refs/tags') && steps.check_secrets.outputs.HAS_SECRET
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_PASSWORD: ${{ secrets.pypi_password }}
+      run: twine upload --non-interactive --skip-existing --verbose 'dist/*'
+
+    - name: Publish distribution to Test PyPI
+      if: steps.check_secrets.outputs.HAS_SECRET
+      env:
+        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        TWINE_USERNAME: __token__
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
+      run: twine upload --non-interactive --skip-existing --verbose 'dist/*'

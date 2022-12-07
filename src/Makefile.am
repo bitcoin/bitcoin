@@ -24,18 +24,9 @@ TESTS =
 BENCHMARKS =
 
 SYSCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
-SYSCOIN_INCLUDES += $(LIBCHIABLS_CFLAGS)
-SYSCOIN_INCLUDES+=-I$(srcdir)/bls-dash/include -I$(srcdir)/bls-dash/depends/relic/include -I$(srcdir)/bls-dash/depends/minialloc/include
+SYSCOIN_INCLUDES+=-I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 SYSCOIN_INCLUDES+=-I$(srcdir)/immer
 
-if EMBEDDED_CHIABLS
-LIBCHIA = bls-dash/build/src/libbls-dash.a
-LIBCHIABLS =$(LIBCHIA) $(LIBRELIC_LIBS) $(GMP_LIBS)
-$(LIBCHIA):
-	cd $(srcdir)/bls-dash/build && $(MAKE) $(AM_MAKEFLAGS)
-else
-LIBCHIABLS =$(LIBCHIABLS_LIBS) $(LIBRELIC_LIBS) $(GMP_LIBS)
-endif
 
 LIBSYSCOIN_NODE=libsyscoin_node.a
 LIBSYSCOIN_COMMON=libsyscoin_common.a
@@ -45,8 +36,8 @@ LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.la
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+LIBDASHBLS=dashbls/libdashbls.la
 LIBNEVM=nevm/libnevm.a
-LIBSYSCOIN_BLS=libsyscoin_bls.a
 if ENABLE_ZMQ
 LIBSYSCOIN_ZMQ=libsyscoin_zmq.a
 endif
@@ -80,6 +71,9 @@ LIBSYSCOIN_CRYPTO += $(LIBSYSCOIN_CRYPTO_ARM_SHANI)
 endif
 noinst_LTLIBRARIES += $(LIBSYSCOIN_CRYPTO)
 
+$(LIBDASHBLS):
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D)
+
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
@@ -96,7 +90,7 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBNEVM) \
-  $(LIBSYSCOIN_BLS)
+  $(LIBDASHBLS)
 
 
 if BUILD_SYSCOIND
@@ -438,40 +432,6 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
   nevm/nevm.h \
   nevm/vector_ref.h
 
-
- # BLS
- libsyscoin_bls_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
- libsyscoin_bls_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
- libsyscoin_bls_a_SOURCES = \
-  bls/bls.h \
-  bls/bls_batchverifier.h \
-  bls/bls_ies.h \
-  bls/bls_worker.h \
-  bls/bls.cpp \
-  bls/bls_ies.cpp \
-  bls/bls_worker.cpp \
-  bls-dash/src/bls.hpp \
-  bls-dash/src/bls.cpp \
-  bls-dash/src/privatekey.hpp \
-  bls-dash/src/privatekey.cpp \
-  bls-dash/src/chaincode.hpp \
-  bls-dash/src/chaincode.cpp \
-  bls-dash/src/extendedprivatekey.hpp \
-  bls-dash/src/extendedprivatekey.cpp \
-  bls-dash/src/extendedpublickey.hpp \
-  bls-dash/src/extendedpublickey.cpp \
-  bls-dash/src/util.hpp \
-  bls-dash/src/elements.hpp \
-  bls-dash/src/elements.cpp \
-  bls-dash/src/hdkeys.hpp \
-  bls-dash/src/hkdf.hpp \
-  bls-dash/src/legacy.hpp \
-  bls-dash/src/legacy.cpp \
-  bls-dash/src/schemes.hpp \
-  bls-dash/src/schemes.cpp \
-  bls-dash/src/threshold.hpp \
-  bls-dash/src/threshold.cpp \
-  $(SYSCOIN_CORE_H)
 
 
 # node #
@@ -927,10 +887,9 @@ endif
 syscoin_bin_ldadd = \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_NODE) \
-  $(LIBSYSCOIN_BLS) \
+  $(LIBDASHBLS) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBCHIABLS) \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_ZMQ) \
   $(LIBSYSCOIN_CONSENSUS) \
@@ -940,7 +899,7 @@ syscoin_bin_ldadd = \
   $(LIBSECP256K1) \
   $(LIBNEVM)
 
-syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(GMP_LIBS) $(SQLITE_LIBS)
 
 syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
@@ -972,7 +931,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(EVENT_LIBS)
+syscoin_cli_LDADD += $(EVENT_LIBS) $(GMP_LIBS)
 #
 
 # syscoin-tx binary #
@@ -988,15 +947,15 @@ endif
 syscoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_BLS) \
+  $(LIBDASHBLS) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBCHIABLS) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBNEVM)
+  $(LIBNEVM) \
+  $(GMP_LIBS)
 #
 
 # syscoin-wallet binary #
@@ -1048,7 +1007,7 @@ if BUILD_SYSCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBSYSCOINKERNEL)
 
 libsyscoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(MINISKETCH_LIBS) $(LIBSYSCOIN_ZMQ) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET) $(LIBSYSCOIN_BLS) $(LIBCHIABLS)
+libsyscoinkernel_la_LIBADD = $(LIBSYSCOIN_CRYPTO) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(MINISKETCH_LIBS) $(LIBSYSCOIN_ZMQ) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_NODE) $(LIBSYSCOIN_WALLET) $(LIBDASHBLS) $(GMP_LIBS)
 libsyscoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(SYSCOIN_INCLUDES)
 
 # libsyscoinkernel requires default symbol visibility, explicitly specify that
@@ -1164,9 +1123,9 @@ libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_
 
 
 libsyscoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libsyscoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libsyscoinconsensus_la_LIBADD = $(LIBDASHBLS) $(LIBSECP256K1) $(GMP_LIBS)
 libsyscoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_SYSCOIN_INTERNAL
-libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/bls-dash/include -I$(srcdir)/bls-dash/depends/relic/include -I$(srcdir)/bls-dash/depends/minialloc/include
+libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 libsyscoinconsensus_la_CPPFLAGS += -I$(srcdir)/immer
 libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
@@ -1223,18 +1182,14 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-BLSDASH_DIST = bls-dash/CMakeLists.txt
-BLSDASH_DIST += bls-dash/README.md
-BLSDASH_DIST += bls-dash/build/.configure-custom.sh
-BLSDASH_DIST += bls-dash/build/configure
-BLSDASH_DIST += bls-dash/cmake_modules
-BLSDASH_DIST += bls-dash/contrib
-BLSDASH_DIST += bls-dash/src
 
 IMMER_DIST = immer/immer
+LIBDASHBLS_DIST = dashbls
 
-EXTRA_DIST = $(CTAES_DIST) $(BLSDASH_DIST) $(IMMER_DIST)
-
+EXTRA_DIST = \
+  $(CTAES_DIST)   \
+  $(IMMER_DIST)   \
+  $(LIBDASHBLS_DIST)
 
 config/syscoin-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
@@ -1244,12 +1199,11 @@ $(top_srcdir)/$(subdir)/config/syscoin-config.h.in:  $(am__configure_deps)
 	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/syscoin-config.h.in
 
 clean-local:
+  -$(MAKE) -C dashbls clean
 	-$(MAKE) -C secp256k1 clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
-	-rm -f bls-dash/build/*.a bls-dash/src/*.o
-	-rm -rf bls-dash/build/_deps bls-dash/build/src bls-dash/build/object_bls-dashtmp bls-dash/build/object_relic_s bls-dash/build/object_sodium
 
 .rc.o:
 	@test -f $(WINDRES)

@@ -62,9 +62,8 @@ bench_bench_syscoin_LDADD = \
   $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_BLS) \
+  $(LIBDASHBLS) \
   $(LIBSYSCOIN_UTIL) \
-  $(LIBCHIABLS) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
@@ -75,7 +74,8 @@ bench_bench_syscoin_LDADD = \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS) \
   $(MINIUPNPC_LIBS) \
-  $(NATPMP_LIBS)
+  $(NATPMP_LIBS) \
+  $(GMP_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)

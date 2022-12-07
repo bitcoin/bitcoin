@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 120
+exclude = ./typings/**/* python-impl/fields.py
+ignore = E203,W503,E501

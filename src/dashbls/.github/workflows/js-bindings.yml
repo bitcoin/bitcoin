@@ -1,0 +1,60 @@
+name: Build & Publish JS Bindings
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  # SHA is added to the end if on `main` to let all main workflows run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ (github.ref == 'refs/heads/main') && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+  js_bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v11
+
+      - name: Get the version
+        id: version_info
+        run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
+      - name: Update version in package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{ github.workspace }}/js-bindings
+        env:
+          SOURCE_TAG: ${{ steps.version_info.outputs.SOURCE_TAG }}
+        run: |
+          jq --arg VER "$SOURCE_TAG" '.version=$VER' package.json > temp.json && mv temp.json package.json
+
+      - name: Build JS
+        run: ./js_build.sh
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ${{ github.workspace }}/js_build/js-bindings
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          npm publish --access public
+
+      - name: Cleanup
+        if: always()
+        run:
+          rm ${{ github.workspace }}/js_build/js-bindings/.npmrc || true
