@@ -27,6 +27,8 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import bytes_to_wif
 
+ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
+                               "Please allow other inputs to be automatically selected or include more coins manually"
 
 def get_unspent(listunspent, amount):
     for utx in listunspent:
@@ -328,7 +330,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal("00", dec_tx['vin'][0]['scriptSig']['hex'])
 
         # Should fail without add_inputs:
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
         # add_inputs is enabled by default
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
 
@@ -360,7 +362,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
         # Should fail without add_inputs:
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {"add_inputs": True})
 
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
@@ -394,7 +396,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
         # Should fail without add_inputs:
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, self.nodes[2].fundrawtransaction, rawtx, {"add_inputs": False})
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {"add_inputs": True})
 
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
@@ -987,7 +989,9 @@ class RawTransactionsTest(BitcoinTestFramework):
             outputs[recipient.getnewaddress()] = 0.1
         wallet.sendmany("", outputs)
         self.generate(self.nodes[0], 10)
-        assert_raises_rpc_error(-4, "Insufficient funds", recipient.fundrawtransaction, rawtx)
+        assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight. "
+                                    "Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
+                                recipient.fundrawtransaction, rawtx)
         self.nodes[0].unloadwallet("large")
 
     def test_external_inputs(self):
@@ -1128,7 +1132,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 }
             ]
         }
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{addr1: 8}], options=options)
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.send, outputs=[{addr1: 8}], options=options)
 
         # Case (3), Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount)
         options["add_inputs"] = True
@@ -1156,7 +1160,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # 6. Explicit add_inputs=false, no preset inputs:
         options = {"add_inputs": False}
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.send, outputs=[{addr1: 3}], options=options)
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.send, outputs=[{addr1: 3}], options=options)
 
         ################################################
 
@@ -1173,7 +1177,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             "vout": 1  # change position was hardcoded to index 0
         }]
         outputs = {self.nodes[1].getnewaddress(): 8}
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, inputs=inputs, outputs=outputs)
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.walletcreatefundedpsbt, inputs=inputs, outputs=outputs)
 
         # Case (3), Explicit add_inputs=true and preset inputs (with preset inputs not-covering the target amount)
         options["add_inputs"] = True
@@ -1200,7 +1204,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Case (6). Explicit add_inputs=false, no preset inputs:
         options = {"add_inputs": False}
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, inputs=[], outputs=outputs, options=options)
+        assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.walletcreatefundedpsbt, inputs=[], outputs=outputs, options=options)
 
         self.nodes[2].unloadwallet("test_preset_inputs")
 
