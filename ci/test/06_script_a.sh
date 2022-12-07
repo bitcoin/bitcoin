@@ -58,7 +58,7 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
   MAYBE_TOKEN="--"
 fi
 
-CI_EXEC "${MAYBE_BEAR}" "${MAYBE_TOKEN}" make "$MAKEJOBS" "$GOAL" V=1 || ( echo "Build failure. Verbose build follows." && CI_EXEC make "$GOAL" V=1 ; false )
+CI_EXEC "${MAYBE_BEAR}" "${MAYBE_TOKEN}" make "$MAKEJOBS" "$GOAL" || ( echo "Build failure. Verbose build follows." && CI_EXEC make "$GOAL" V=1 ; false )
 
 CI_EXEC "${PRINT_CCACHE_STATISTICS}"
 CI_EXEC du -sh "${DEPENDS_DIR}"/*/
