@@ -1,2 +1,2 @@
 # false-positive in mcl
-use-of-uninitialized-value:bls*/
+use-of-uninitialized-value:test/blsct/
