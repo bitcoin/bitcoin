@@ -447,7 +447,7 @@ CBlock getBlock13b8a()
 }
 
 // Suppress memory sanitizer                                                    
-#if defined(__has_feature) && defined(HAVE_SYS_GETRANDOM)
+#if defined(__has_feature)
 #  if __has_feature(memory_sanitizer)
 __attribute__((no_sanitize("memory")))
 #  endif
