@@ -40,3 +40,9 @@ Utilities to generate test vectors for the data-driven Syscoin tests.
 
 ### [Verify Binaries](/contrib/verifybinaries) ###
 This script attempts to download and verify the signature file SHA256SUMS.asc from syscoin.org.
+
+Command Line Tools
+---------------------
+
+### [Completions](/contrib/completions) ###
+Shell completions for bash and fish.
