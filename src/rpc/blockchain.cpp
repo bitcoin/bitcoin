@@ -162,7 +162,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     return result;
 }
 
-UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity)
+UniValue blockToJSON(const BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, TxVerbosity verbosity)
 {
     UniValue result = blockheaderToJSON(tip, blockindex);
 
@@ -580,7 +580,7 @@ static RPCHelpMan getblockheader()
     };
 }
 
-static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblockindex)
+static CBlock GetBlockChecked(const BlockManager& blockman, const CBlockIndex* pblockindex)
 {
     CBlock block;
     {
@@ -600,7 +600,7 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblocki
     return block;
 }
 
-static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblockindex)
+static CBlockUndo GetUndoChecked(const BlockManager& blockman, const CBlockIndex* pblockindex)
 {
     CBlockUndo blockUndo;
 
