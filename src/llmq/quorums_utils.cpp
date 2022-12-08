@@ -303,7 +303,25 @@ bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
 const Consensus::LLMQParams& GetLLMQParams(uint8_t llmqType)
 {
     if(!Params().GetConsensus().llmqs.count(llmqType)) {
-        return {};
+        static Consensus::LLMQParams llmq_test = {
+            .type = Consensus::LLMQ_TEST,
+            .name = "llmq_test",
+            .size = 3,
+            .minSize = 2,
+            .threshold = 2,
+
+            .dkgInterval = 24, // one DKG per hour
+            .dkgPhaseBlocks = 2,
+            .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+            .dkgMiningWindowEnd = 18,
+            .dkgBadVotesThreshold = 2,
+
+            .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
+
+            .keepOldConnections = 5,
+            .recoveryMembers = 3,
+        };
+        return llmq_test;
     }
     return Params().GetConsensus().llmqs.at(llmqType);
 }

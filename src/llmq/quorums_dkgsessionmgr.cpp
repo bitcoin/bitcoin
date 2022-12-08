@@ -31,7 +31,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman
     if(Params().GetConsensus().llmqs.empty()) {
         return;
     }
-    const auto &llmq = Params().GetConsensus().llmqs.at(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60);
+    const auto &llmq = GetLLMQParams(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60);
     dkgSessionHandlers.emplace(std::piecewise_construct,
             std::forward_as_tuple(llmq.type),
             std::forward_as_tuple(llmq, blsWorker, *this, peerman, _chainman));
