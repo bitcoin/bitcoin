@@ -1,7 +1,7 @@
-23.1rc2 Release Notes Draft
-===============================
+23.1 Release Notes
+==================
 
-Bitcoin Core version 23.1rc2 is now available from:
+Bitcoin Core version 23.1 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-23.1/>
 
@@ -74,17 +74,17 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
-Andrew Chow
-brunoerg
-Hennadii Stepanov
-John Moffett
-MacroFake
-Martin Zumsande
-Michael Ford
-muxator
-Pavol Rusnak
-Sebastian Falbesoner
-W. J. van der Laan
+- Andrew Chow
+- brunoerg
+- Hennadii Stepanov
+- John Moffett
+- MacroFake
+- Martin Zumsande
+- Michael Ford
+- muxator
+- Pavol Rusnak
+- Sebastian Falbesoner
+- W. J. van der Laan
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
