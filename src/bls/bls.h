@@ -14,11 +14,11 @@
 // dashbls uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
 #undef DEBUG
-#include <dashbls/src/bls.hpp>
-#include <dashbls/src/privatekey.hpp>
-#include <dashbls/src/elements.hpp>
-#include <dashbls/src/schemes.hpp>
-#include <dashbls/src/threshold.hpp>
+#include <dashbls/bls.hpp>
+#include <dashbls/privatekey.hpp>
+#include <dashbls/elements.hpp>
+#include <dashbls/schemes.hpp>
+#include <dashbls/threshold.hpp>
 #undef DOUBLE
 #undef SEED
 
