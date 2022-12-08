@@ -62,7 +62,8 @@ REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
     "src/secp256k1/",
     "src/minisketch/",
     "src/tinyformat.h",
-    "src/dashbls/"
+    "src/dashbls/",
+    "src/immer/"
 ]
 
 LOCALE_DEPENDENT_FUNCTIONS = [

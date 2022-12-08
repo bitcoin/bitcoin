@@ -62,7 +62,6 @@ bench_bench_syscoin_LDADD = \
   $(LIBSYSCOIN_NODE) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_COMMON) \
-  $(LIBDASHBLS) \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_CRYPTO) \
@@ -74,8 +73,7 @@ bench_bench_syscoin_LDADD = \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS) \
   $(MINIUPNPC_LIBS) \
-  $(NATPMP_LIBS) \
-  $(GMP_LIBS)
+  $(NATPMP_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
@@ -86,7 +84,7 @@ bench_bench_syscoin_SOURCES += bench/coin_selection.cpp
 bench_bench_syscoin_SOURCES += bench/wallet_balance.cpp
 bench_bench_syscoin_SOURCES += bench/wallet_loading.cpp
 bench_bench_syscoin_SOURCES += bench/wallet_create_tx.cpp
-bench_bench_syscoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
+bench_bench_syscoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
 endif
 
 CLEAN_SYSCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)

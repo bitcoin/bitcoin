@@ -106,7 +106,7 @@ def main():
     if len(sys.argv) > 1:
         flake8_files = sys.argv[1:]
     else:
-        files_args = ['git', 'ls-files', '*.py']
+        files_args = ['git', 'ls-files', '*.py', 'grep', '-vE', '"src/(immer|dashbls)/']
         flake8_files = subprocess.check_output(files_args).decode("utf-8").splitlines()
 
     flake8_args = ['flake8', '--ignore=B,C,E,F,I,N,W', f'--select={ENABLED}'] + flake8_files
