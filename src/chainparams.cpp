@@ -589,6 +589,8 @@ public:
         vSporkAddresses = {"tsys1qc28aan6qkuhuj30cpx3jet3l0mrr9sfp8a9typ"};
         nMinSporkKeys = 1;
         // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
