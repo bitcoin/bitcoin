@@ -2,5 +2,5 @@
 # false-positive in mcl
 #src:test/blsct/*
 #src:*/mcl/
-fun:*
+fun:*mcl*
 
