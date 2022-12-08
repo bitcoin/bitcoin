@@ -200,7 +200,7 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
         return "PUT";
     case HTTPRequest::UNKNOWN:
         return "unknown";
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
