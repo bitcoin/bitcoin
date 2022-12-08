@@ -129,11 +129,11 @@ public:
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyMasternodeListChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyMasternodeListChanged_connect(fn));
     }
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
