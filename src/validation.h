@@ -743,6 +743,9 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    std::chrono::microseconds m_last_write{0};
+    std::chrono::microseconds m_last_flush{0};
+
     friend ChainstateManager;
 };
 
