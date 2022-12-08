@@ -28,6 +28,9 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman
 {
     db = std::make_unique<CDBWrapper>(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe);
     MigrateDKG();
+    if(Params().GetConsensus().llmqs.empty()) {
+        return;
+    }
     const auto &llmq = Params().GetConsensus().llmqs.at(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60);
     dkgSessionHandlers.emplace(std::piecewise_construct,
             std::forward_as_tuple(llmq.type),

@@ -163,6 +163,9 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
+    if(Params().GetConsensus().llmqs.empty()) {
+        return;
+    }
     EnsureQuorumConnections(Params().GetConsensus().llmqs.at(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60), pindexNew);
 }
 
