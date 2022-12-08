@@ -15,11 +15,6 @@
 #include <stdexcept>
 #include <string>
 
-#ifdef WIN32
-#include <codecvt>
-#include <locale>
-#endif
-
 #ifdef USE_POLL
 #include <poll.h>
 #endif
@@ -416,15 +411,12 @@ void Sock::Close()
     m_socket = INVALID_SOCKET;
 }
 
-#ifdef WIN32
 std::string NetworkErrorString(int err)
 {
+#if defined(WIN32)
     return Win32ErrorString(err);
-}
 #else
-std::string NetworkErrorString(int err)
-{
     // On BSD sockets implementations, NetworkErrorString is the same as SysErrorString.
     return SysErrorString(err);
-}
 #endif
+}
