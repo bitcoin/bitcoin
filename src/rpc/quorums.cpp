@@ -768,6 +768,7 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request)
             "To get help on individual commands, use \"help quorum command\".\n"
             "\nAvailable commands:\n"
             "  list              - List of on-chain quorums\n"
+            "  listextended      - Extended list of on-chain quorums\n"
             "  info              - Return information about a quorum\n"
             "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
             "  dkgstatus         - Return the status of the current DKG process\n"
