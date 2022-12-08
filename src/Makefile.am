@@ -1198,7 +1198,7 @@ $(top_srcdir)/$(subdir)/config/syscoin-config.h.in:  $(am__configure_deps)
 	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/syscoin-config.h.in
 
 clean-local:
-  -$(MAKE) -C dashbls clean
+	-$(MAKE) -C dashbls clean
 	-$(MAKE) -C secp256k1 clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h

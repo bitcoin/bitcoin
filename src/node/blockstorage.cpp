@@ -979,7 +979,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
 
         if (fMasternodeMode) {
             assert(activeMasternodeManager);
-            activeMasternodeManager->Init(chainman.ActiveChain().Tip());
+            activeMasternodeManager->Init(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
         }
         g_wallet_init_interface.AutoLockMasternodeCollaterals(node);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
