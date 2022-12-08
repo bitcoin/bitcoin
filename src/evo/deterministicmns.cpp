@@ -720,7 +720,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
         }
         for(const auto& commitment: qc.commitments) {
-            if (!commitment.IsNull()) {
+            if (!commitment.IsNull() && Params().GetConsensus().llmqs.count(commitment.llmqType)) {
                 const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
                 uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
                 auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);

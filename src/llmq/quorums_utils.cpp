@@ -289,6 +289,9 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
 
 bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
 {
+    if(!Params().GetConsensus().llmqs.count(llmqType)) {
+        return false;
+    }
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     // sig shares and recovered sigs are only accepted from recent/active quorums
@@ -299,6 +302,9 @@ bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
 }
 const Consensus::LLMQParams& GetLLMQParams(uint8_t llmqType)
 {
+    if(!Params().GetConsensus().llmqs.count(llmqType)) {
+        return {};
+    }
     return Params().GetConsensus().llmqs.at(llmqType);
 }
 } // namespace llmq

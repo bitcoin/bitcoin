@@ -219,6 +219,9 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
+    if(!Params().GetConsensus().llmqs.count(qc.llmqType)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid-type");
+    }
     auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
 
     uint256 quorumHash = GetQuorumBlockHash(chainman, qc.llmqType, nHeight);
@@ -371,6 +374,9 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(uint8_t llmqType, int nHeight) 
 uint256 CQuorumBlockProcessor::GetQuorumBlockHash(ChainstateManager& chainman, uint8_t llmqType, int nHeight)
 {
     AssertLockHeld(cs_main);
+    if(!Params().GetConsensus().llmqs.count(llmqType)) {
+        return {};
+    }
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     int quorumStartHeight = nHeight - (nHeight % params.dkgInterval);

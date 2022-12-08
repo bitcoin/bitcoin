@@ -105,6 +105,9 @@ std::string CBatchedSigShares::ToInvString() const
 template<typename T>
 static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, T& from)
 {
+    if(!Params().GetConsensus().llmqs.count(from.llmqType)) {
+        return ;
+    }
     const auto& params = Params().GetConsensus().llmqs.at(from.llmqType);
 
     s.llmqType = from.llmqType;
@@ -340,6 +343,9 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(const CNode* pfrom, const CSigSe
 
 bool CSigSharesManager::VerifySigSharesInv(uint8_t llmqType, const CSigSharesInv& inv)
 {
+    if(!Params().GetConsensus().llmqs.count(llmqType)) {
+        return false;
+    }
     size_t quorumSize = (size_t)Params().GetConsensus().llmqs.at(llmqType).size;
 
     if (inv.inv.size() != quorumSize) {
@@ -916,7 +922,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
                     invMap = &sigSharesToRequest[nodeId];
                 }
                 auto& inv = (*invMap)[signHash];
-                if (inv.inv.empty()) {
+                if (inv.inv.empty() && Params().GetConsensus().llmqs.count(session.llmqType)) {
                     const auto& params = Params().GetConsensus().llmqs.at(session.llmqType);
                     inv.Init((size_t)params.size);
                 }
@@ -1055,7 +1061,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
             }
 
             auto& inv = sigSharesToAnnounce[nodeId][signHash];
-            if (inv.inv.empty()) {
+            if (inv.inv.empty() && Params().GetConsensus().llmqs.count(sigShare->llmqType)) {
                 const auto& params = Params().GetConsensus().llmqs.at(sigShare->llmqType);
                 inv.Init((size_t)params.size);
             }

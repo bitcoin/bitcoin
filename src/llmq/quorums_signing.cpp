@@ -1075,6 +1075,9 @@ bool CSigningManager::GetVoteForId(uint8_t llmqType, const uint256& id, uint256&
 
 CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight, int signOffset)
 {
+    if(!Params().GetConsensus().llmqs.count(llmqType)) {
+        return {};
+    }
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
     CBlockIndex* pindexStart;
