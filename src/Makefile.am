@@ -35,8 +35,8 @@ LIBSYSCOIN_CLI=libsyscoin_cli.a
 LIBSYSCOIN_UTIL=libsyscoin_util.a
 LIBSYSCOIN_CRYPTO_BASE=crypto/libsyscoin_crypto_base.la
 LIBSYSCOINQT=qt/libsyscoinqt.a
-LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBDASHBLS=dashbls/libdashbls.la
+LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBNEVM=nevm/libnevm.a
 if ENABLE_ZMQ
 LIBSYSCOIN_ZMQ=libsyscoin_zmq.a
@@ -89,8 +89,7 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_ZMQ) \
-  $(LIBNEVM) \
-  $(LIBDASHBLS)
+  $(LIBNEVM)
 
 
 if BUILD_SYSCOIND

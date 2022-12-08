@@ -1,4 +1,4 @@
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 define(_CLIENT_VERSION_MAJOR, 4)
 define(_CLIENT_VERSION_MINOR, 4)
 define(_CLIENT_VERSION_BUILD, 0)
@@ -7,7 +7,7 @@ define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2022)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Syscoin Core]])
-AC_INIT([Syscoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/syscoin/syscoin/issues],[syscoin],[https://syscoincore.org/])
+AC_INIT([Syscoin Core],[m4_join(., _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, 0, , rc_CLIENT_VERSION_RC)],[https://github.com/syscoin/syscoin/issues],[syscoin],[https://syscoincore.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/syscoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -1724,6 +1724,10 @@ if test "$build_multiprocess" != "no"; then
   AC_SUBST(MPGEN_PREFIX)
 fi
 
+dnl check if libgmp is present
+AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
+AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
+
 AC_MSG_CHECKING([whether to build syscoind])
 AM_CONDITIONAL([BUILD_SYSCOIND], [test $build_syscoind = "yes"])
 AC_MSG_RESULT($build_syscoind)
@@ -2027,6 +2031,7 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(GMP_LIBS)
 AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
 AC_SUBST(HAVE_GMTIME_R)
@@ -2069,14 +2074,8 @@ LIBS_TEMP="$LIBS"
 unset LIBS
 LIBS="$LIBS_TEMP"
 
-dnl check if libgmp is present
-AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
-AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp3-dev missing))
-AC_SUBST(GMP_LIBS)
-
-
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig"
-AC_CONFIG_SUBDIRS([src/secp256k1])
+AC_CONFIG_SUBDIRS([src/dashbls src/secp256k1])
 
 AC_OUTPUT
 
