@@ -15,7 +15,7 @@ import sys
 
 DEPS = ['flake8', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
-FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
+FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py', '--', ':(exclude)src/dashbls/', ':(exclude)src/immer/']
 
 ENABLED = (
     'E101,'  # indentation contains mixed spaces and tabs
@@ -106,7 +106,7 @@ def main():
     if len(sys.argv) > 1:
         flake8_files = sys.argv[1:]
     else:
-        files_args = ['git', 'ls-files', '*.py', 'grep', '-vE', '"src/(immer|dashbls)/']
+        files_args = ['git', 'ls-files', '*.py']
         flake8_files = subprocess.check_output(files_args).decode("utf-8").splitlines()
 
     flake8_args = ['flake8', '--ignore=B,C,E,F,I,N,W', f'--select={ENABLED}'] + flake8_files

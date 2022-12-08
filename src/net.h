@@ -838,16 +838,16 @@ public:
     void SetNetworkActive(bool active);
     // SYSCOIN
     enum class MasternodeConn {
-        IsNotConnection,
-        IsConnection,
+        Is_Not_Connection,
+        Is_Connection,
     };
 
     enum class MasternodeProbeConn {
-        IsNotConnection,
-        IsConnection,
+        Is_Not_Connection,
+        Is_Connection,
     };
-    void OpenMasternodeConnection(const CAddress& addrConnect, MasternodeProbeConn probe = MasternodeProbeConn::IsConnection);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn masternode_connection = MasternodeConn::IsNotConnection, MasternodeProbeConn masternode_probe_connection = MasternodeProbeConn::IsNotConnection);
+    void OpenMasternodeConnection(const CAddress& addrConnect, MasternodeProbeConn probe = MasternodeProbeConn::Is_Connection);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn masternode_connection = MasternodeConn::Is_Not_Connection, MasternodeProbeConn masternode_probe_connection = MasternodeProbeConn::Is_Not_Connection);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);

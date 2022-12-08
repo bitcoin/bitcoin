@@ -2033,7 +2033,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         // NOTE: Process only one pending masternode at a time
 
-        MasternodeProbeConn isProbe = MasternodeProbeConn::IsNotConnection;
+        MasternodeProbeConn isProbe = MasternodeProbeConn::Is_Not_Connection;
         const auto &nTimeSeconds = GetTime<std::chrono::seconds>().count();
         const auto &getPendingQuorumNodes = [&]() {
             LOCK2(m_nodes_mutex, cs_vPendingMasternodes);
@@ -2127,7 +2127,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                 // not-null
                 auto dmn = pending[GetRand(pending.size())];
                 masternodePendingProbes.erase(dmn->proTxHash);
-                isProbe = MasternodeProbeConn::IsConnection;
+                isProbe = MasternodeProbeConn::Is_Connection;
 
                 LogPrint(BCLog::NET, "CConnman::%s -- probing masternode %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString());
                 return dmn;
@@ -2289,7 +2289,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         //  - if multiple ports for the same IP are allowed,
         //  - for probe connections
         // Search for IP-only match otherwise
-        bool searchIPPort = fRegTest || masternode_probe_connection == MasternodeProbeConn::IsConnection;
+        bool searchIPPort = fRegTest || masternode_probe_connection == MasternodeProbeConn::Is_Connection;
         bool skip = searchIPPort ?
                 FindNode(static_cast<CService>(addrConnect)) :
                 FindNode(static_cast<CNetAddr>(addrConnect));
@@ -2308,11 +2308,11 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         grantOutbound->MoveTo(pnode->grantOutbound);
 
     // SYSCOIN
-    if (masternode_connection == MasternodeConn::IsConnection) {
+    if (masternode_connection == MasternodeConn::Is_Connection) {
         LOCK(pnode->cs_mnauth);
         pnode->m_masternode_connection = true;    
     }    
-    if (masternode_probe_connection == MasternodeProbeConn::IsConnection)
+    if (masternode_probe_connection == MasternodeProbeConn::Is_Connection)
         pnode->m_masternode_probe_connection = true;
 
     m_msgproc->InitializeNode(*pnode, nLocalServices);
@@ -2323,7 +2323,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, MasternodeProbeConn probe) {
-    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn::IsConnection, probe);
+    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, MasternodeConn::Is_Connection, probe);
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;

@@ -104,8 +104,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
 
     {
         // First test case:
-        // Erase all the crypted keys from db and unlock the wallet.
-        // The wallet will only re-write the crypted keys to db if any checksum is missing at load time.
+        // Erase all the encrypted keys from db and unlock the wallet.
+        // The wallet will only re-write the encrypted keys to db if any checksum is missing at load time.
         // So, if any 'ckey' record re-appears on db, then the checksums were not properly calculated, and we are re-writing
         // the records every time that 'CWallet::Unlock' gets called, which is not good.
 
@@ -124,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
 
     {
         // Second test case:
-        // Verify that loading up a 'ckey' with no checksum triggers a complete re-write of the crypted keys.
+        // Verify that loading up a 'ckey' with no checksum triggers a complete re-write of the encrypted keys.
         std::unique_ptr<WalletDatabase> db = get_db(dbs);
         {
             std::unique_ptr<DatabaseBatch> batch = db->MakeBatch(false);
