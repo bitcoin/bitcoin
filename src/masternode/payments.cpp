@@ -12,6 +12,7 @@
 #include <governance/governance.h>
 #include <key_io.h>
 #include <logging.h>
+#include <llmq/utils.h>
 #include <masternode/sync.h>
 #include <primitives/block.h>
 #include <script/standard.h>
@@ -19,6 +20,7 @@
 #include <util/ranges.h>
 #include <util/system.h>
 #include <validation.h>
+#include <evo/creditpool.h>
 
 #include <string>
 
@@ -32,14 +34,23 @@ static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, st
 {
     voutMasternodePaymentsRet.clear();
 
+    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, Params().GetConsensus().BRRHeight);
+
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive()[nBlockHeight - 1]);
+    bool fMNRewardReallocated =  llmq::utils::IsMNRewardReallocationActive(pindex);
+
+    if (fMNRewardReallocated) {
+        LogPrintf("CMasternodePayments::%s -- MN reward %lld reallocated to credit pool\n", __func__, masternodeReward);
+        voutMasternodePaymentsRet.emplace_back(masternodeReward, CScript() << OP_RETURN);
+        return true;
+    }
+
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee(pindex);
     if (!dmnPayee) {
         return false;
     }
 
     CAmount operatorReward = 0;
-    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, Params().GetConsensus().BRRHeight);
 
     if (dmnPayee->nOperatorReward != 0 && dmnPayee->pdmnState->scriptOperatorPayout != CScript()) {
         // This calculation might eventually turn out to result in 0 even if an operator reward percentage is given.

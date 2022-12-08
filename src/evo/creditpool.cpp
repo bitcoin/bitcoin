@@ -7,9 +7,8 @@
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 
-#include <llmq/utils.h>
-
 #include <chain.h>
+#include <llmq/utils.h>
 #include <logging.h>
 #include <validation.h>
 #include <node/blockstorage.h>
@@ -213,9 +212,15 @@ CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb)
 
 CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams) :
     pool(std::move(starter)),
-    pindex(pindex)
+    pindex(pindex),
+    params(consensusParams)
 {
     assert(pindex);
+}
+
+void CCreditPoolDiff::AddRewardRealloced(const CAmount reward) {
+    assert(MoneyRange(reward));
+    masternodeReward += reward;
 }
 
 bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state)
@@ -225,9 +230,20 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-payload");
     }
 
-    if (cbTx.nVersion == 3) {
-        targetBalance = cbTx.creditPoolBalance;
+    if (cbTx.nVersion != 3) return true;
+
+    targetBalance = cbTx.creditPoolBalance;
+
+
+    if (!llmq::utils::IsMNRewardReallocationActive(pindex)) return true;
+
+    CAmount blockReward = 0;
+    for (const CTxOut& txout : tx.vout) {
+        blockReward += txout.nValue;
     }
+    masternodeReward = GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight);
+    LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, masternodeReward);
+
     return true;
 }
 

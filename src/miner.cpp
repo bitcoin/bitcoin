@@ -231,6 +231,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 assert(creditPoolDiff != std::nullopt);
+
+                bool fMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
+                if (fMNRewardReallocated) {
+                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockReward, Params().GetConsensus().BRRHeight);
+                    LogPrintf("CreateNewBlock() add MN reward %lld to credit pool\n", masternodeReward);
+                    creditPoolDiff->AddRewardRealloced(masternodeReward);
+                }
                 cbTx.creditPoolBalance = creditPoolDiff->GetTotalLocked();
             }
         }
