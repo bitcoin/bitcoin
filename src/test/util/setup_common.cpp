@@ -446,7 +446,6 @@ CBlock getBlock13b8a()
     return block;
 }
 
-__attribute__((no_sanitize("memory")))
 MclTestingSetup::MclTestingSetup()
 {
     MclInitializer::Init();

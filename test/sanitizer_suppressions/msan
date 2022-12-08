@@ -1,5 +1,6 @@
 [memory]
 # false-positive in mcl
-src:test/blsct/*
-src:*/mcl/
+#src:test/blsct/*
+#src:*/mcl/
+fun:*
 
