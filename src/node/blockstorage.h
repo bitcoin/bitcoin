@@ -181,7 +181,7 @@ public:
     uint64_t CalculateCurrentUsage();
 
     //! Returns last CBlockIndex* that is a checkpoint
-    const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Find the first block that is not pruned
     const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

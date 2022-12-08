@@ -371,7 +371,7 @@ bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
     return true;
 }
 
-const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
+const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data) const
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
