@@ -151,9 +151,9 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
     return true;
 }
 
-std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
+std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, const node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     bool success = [&]() -> bool {
