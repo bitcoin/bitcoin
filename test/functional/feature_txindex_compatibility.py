@@ -14,7 +14,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class TxindexCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [
@@ -33,7 +33,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
             versions=[
                 160300,  # Last release with legacy txindex
                 None,  # For MiniWallet, without migration code
-                200100,  # Any release with migration code (0.17.x - 22.x)
+                220000,  # Last release with migration code (0.17.x - 22.x)
             ],
         )
         self.start_nodes()
@@ -89,4 +89,4 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    MempoolCompatibilityTest().main()
+    TxindexCompatibilityTest().main()
