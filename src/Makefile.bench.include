@@ -74,8 +74,7 @@ bench_bench_syscoin_LDADD = \
   $(EVENT_LIBS) \
   $(MINIUPNPC_LIBS) \
   $(NATPMP_LIBS) \
-  $(LIBDASHBLS) \
-  $(GMP_LIBS)
+  $(LIBDASHBLS)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
