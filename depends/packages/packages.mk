@@ -1,4 +1,4 @@
-packages:=boost libevent cmake gmp
+packages:=boost libevent
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode

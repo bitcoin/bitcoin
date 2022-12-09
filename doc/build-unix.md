@@ -55,11 +55,14 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 cmake
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 cmake libgmp-dev
+
+Note that for for Alpine Linux you may need to install `gmp-dev` instead of `libgmp-dev`
+
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-dev libgmp3-dev
+    sudo apt-get install libevent-dev libboost-dev
 
 SQLite is required for the descriptor wallet:
 
