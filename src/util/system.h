@@ -43,6 +43,7 @@ extern bool fSigNet;
 extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
 extern bool fNEVMConnection;
+extern std::string fNEVMSub;
 extern bool fGethSynced;
 extern std::atomic_bool fLoaded;
 extern bool fAssetIndex;

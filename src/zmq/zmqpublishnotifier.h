@@ -52,23 +52,23 @@ public:
 class CZMQPublishNEVMBlockInfoNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) override;
+    bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state) override;
 };
 class CZMQPublishNEVMBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) override;
+    bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state) override;
 };
 
 class CZMQPublishNEVMBlockConnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) override;
+    bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) override;
 };
 class CZMQPublishNEVMBlockDisconnectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
+    bool NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash) override;
 };
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
 {
@@ -102,25 +102,15 @@ public:
 class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote) override;
+    bool NotifyGovernanceVote(const uint256 &vote) override;
 };
 
 class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) override;
-};
-class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
+    bool NotifyGovernanceObject(const uint256 &object) override;
 };
 
-class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
-};
 class CZMQPublishSequenceNotifier : public CZMQAbstractPublishNotifier
 {
 public:

@@ -41,12 +41,12 @@ protected:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, ChainstateManager& chainman, bool fInitialDownload) override;
     // SYSCOIN
-    void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
-    void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
-    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) override;
-    void NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) override;
-    void NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState& state) override;
-    void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState& state) override;
+    void NotifyGovernanceVote(const uint256& vote) override;
+    void NotifyGovernanceObject(const uint256& object) override;
+    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) override;
+    void NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash) override;
+    void NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string& state) override;
+    void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string& state) override;
     void NotifyNEVMComms(const std::string& commMessage, bool &bResponse) override;
 private:
     CZMQNotificationInterface();

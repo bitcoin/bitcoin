@@ -2075,8 +2075,20 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     if(bSkipValidation) {
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
     }
+    std::string stateStr;
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+        if(!stateStr.empty()) {
+            state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
+            if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
+                // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
+                const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+                if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
+                    StartShutdown();
+                    return true;
+                }
+            }
+        }
     }
     bool res = state.IsValid();
     // try to bring connection back alive if its not connected for some reason
@@ -2087,7 +2099,18 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             if(!bResponse) {
                 if(RestartGethNode()) {
                     // try again after resetting connection
-                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, state, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation);
+                    if(!stateStr.empty()) {
+                        state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
+                        if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
+                            // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
+                            const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
+                            if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
+                                StartShutdown();
+                                return true;
+                            }
+                        }
+                    }
                     res = state.IsValid();
                 }
             }
@@ -2109,7 +2132,11 @@ bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> 
         return false; // state filled by GetNEVMData
     }
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockDisconnect(state, nBlockHash);
+        std::string stateStr;
+        GetMainSignals().NotifyNEVMBlockDisconnect(stateStr, nBlockHash);
+        if(!stateStr.empty()) {
+            state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
+        }
     }
     bool res = state.IsValid() || !fNEVMConnection;
     if(res) {
@@ -6342,14 +6369,12 @@ std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs
         cmdLineRet.push_back("--syscoin");
     }
     // Geth should subscribe to our publisher
-    const std::string &strPub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
     cmdLineRet.push_back("--nevmpub");
-    cmdLineRet.push_back(strPub);
+    cmdLineRet.push_back(fNEVMSub);
     return cmdLineRet;
 }
 bool Chainstate::RestartGethNode() {
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
-    if(NEVMSub.empty()) {
+    if(fNEVMSub.empty()) {
         LogPrintf("RestartGethNode: Could not start Geth. zmqpubnevm not defined\n");
         return false;
     }

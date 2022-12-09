@@ -13,12 +13,9 @@ class CBlockIndex;
 class CTransaction;
 class CZMQAbstractNotifier;
 // SYSCOIN
-class CGovernanceObject;
-class CGovernanceVote;
 class CNEVMBlock;
 class CNEVMHeader;
 class CBlock;
-class BlockValidationState;
 class uint256;
 class CNEVMData;
 typedef std::vector<std::vector<uint8_t> > NEVMDataVec;
@@ -68,12 +65,12 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
     // SYSCOIN
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
-    virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
-    virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
-    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation);
-    virtual bool NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash);
-    virtual bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state);
-    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state);
+    virtual bool NotifyGovernanceVote(const uint256& vote);
+    virtual bool NotifyGovernanceObject(const uint256& object);
+    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation);
+    virtual bool NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash);
+    virtual bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state);
+    virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state);
     virtual bool NotifyNEVMComms(const std::string& commMessage, bool &bResponse);
 
 protected:

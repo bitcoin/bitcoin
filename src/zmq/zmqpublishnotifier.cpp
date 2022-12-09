@@ -32,14 +32,6 @@
 #include <optional>
 #include <string>
 #include <utility>
-// SYSCOIN
-#include <governance/governancevote.h>
-#include <governance/governanceobject.h>
-#include <services/assetconsensus.h>
-#include <core_io.h>
-#include <validationinterface.h>
-#include <shutdown.h>
-#include <validation.h>
 #include <vector>
 
 namespace Consensus {
@@ -47,7 +39,7 @@ struct Params;
 }
 
 using node::ReadBlockFromDisk;
-
+extern int RPCSerializationFlags();
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 static bool bFirstTime = true;
 static const char *MSG_HASHBLOCK = "hashblock";
@@ -360,17 +352,17 @@ bool CZMQPublishNEVMCommsNotifier::NotifyNEVMComms(const std::string &commMessag
     }
     return true;
 }
-bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation)
+bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation)
 {
     LOCK(cs_nevm);
-    // clear state so subsequent calls can rely on new state being set if error
-    state = BlockValidationState();
+    state = "";
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+            state = "nevm-not-connected";
+            return false;
         }
     }
     if(psocketsub) {
@@ -379,6 +371,7 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
         if (rc != 0) {
             zmqError("Failed to set ZMQ_RCVTIMEO");
             zmq_close(psocketsub);
+            state = "ZMQ_RCVTIMEO";
             return false;
         }
     }
@@ -387,47 +380,41 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut;
-    if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size()))
-        return bSkipValidation? true: state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-not-sent");
-
+    if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size())) {
+        state = "nevm-connect-not-sent";
+        return false;
+    }
     if(ReceiveZmqMessage(parts)) {
         if(parts.size() != 2) {
-            return bSkipValidation? true: state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");   
+            state = "nevm-response-invalid-parts";
+            return false;
         }
         if(parts[0] != MSG_NEVMBLOCKCONNECT) {
-            return bSkipValidation? true: state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+            state = "nevm-response-wrong-command";
+            return false;
         }
         if(!bSkipValidation && parts[1] != "connected") {
             LogPrint(BCLog::SYS, "NotifyNEVMBlockConnect: %s\n", parts[1]);
-            // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
-            const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
-            if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
-                StartShutdown();
-                return state.Error("nevm-connect-response-invalid-data");
-            }
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-connect-response-invalid-data");
+            state = "nevm-connect-response-invalid-data";
+            return false;
         }
     } else if (!bSkipValidation) {
-        // if exitwhensynced is set on geth we likely have shutdown the geth node so we should also shut syscoin down here
-        const std::vector<std::string> &cmdLine = gArgs.GetArgs("-gethcommandline");
-        if(std::find(cmdLine.begin(), cmdLine.end(), "--exitwhensynced") != cmdLine.end()) {
-            StartShutdown();
-            return state.Error("nevm-response-not-found");
-        }
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+        state = "nevm-response-not-found";
+        return false;
     }
 
     return true;
 }
-bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nSYSBlockHash)
+bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::string &state, const uint256& nSYSBlockHash)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+            state = "nevm-not-connected";
+            return false;
         }
     }
     if(psocketsub) {
@@ -436,6 +423,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockVali
         if (rc != 0) {
             zmqError("Failed to set ZMQ_RCVTIMEO");
             zmq_close(psocketsub);
+            state = "ZMQ_RCVTIMEO";
             return false;
         }
     }
@@ -443,78 +431,95 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(BlockVali
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << nSYSBlockHash;
-    if(!SendZmqMessageNEVM(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size()))
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-not-sent");
+    if(!SendZmqMessageNEVM(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size())) {
+        state = "nevm-disconnect-not-sent";
+        return false;
+    }
     if(ReceiveZmqMessage(parts)) {
         if(parts.size() != 2) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");   
+            state = "nevm-response-invalid-parts";
+            return false;   
         }
         if(parts[0] != MSG_NEVMBLOCKDISCONNECT) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+            state = "nevm-response-wrong-command";
+            return false;
         }
         if(parts[1] != "disconnected") {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-disconnect-response-invalid-data");
+            state = "nevm-disconnect-response-invalid-data";
+            return false;
         }
         return true;
     } else {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+        state = "nevm-response-not-found";
+        return false;
     }
     return true;
 }
-bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state)
+bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+            state = "nevm-not-connected";
+            return false;
         }
     }
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block info to %s, subscriber %s\n", this->address, this->addresssub);
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKINFO, MSG_NEVMBLOCKINFO, strlen(MSG_NEVMBLOCKINFO))) {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-header-not-sent");
+        state = "nevm-header-not-sent";
+        return false;
     }
     std::vector<std::string> parts;
     if(ReceiveZmqMessage(parts)) {
         if(parts.size() != 2) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");
+            state = "nevm-response-invalid-parts";
+            return false;
         }
         if(parts[0] != MSG_NEVMBLOCKINFO) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+            state = "nevm-response-wrong-command";
+            return false;
         }
-        if(!ParseUInt64(parts[1], &nHeight))
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
+        if(!ParseUInt64(parts[1], &nHeight)) {
+            state = "nevm-response-unserialize";
+            return false;
+        }
             
     } else {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+        state = "nevm-response-not-found";
+        return false;
     }
     return true;
 }
 
-bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)
+bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state)
 {
     LOCK(cs_nevm);
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
-        GetMainSignals().NotifyNEVMComms("status", bResponse);
+        NotifyNEVMComms("status", bResponse);
         if(!bResponse) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-not-connected");
+            state = "nevm-not-connected";
+            return false;
         }
     }
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block to %s, subscriber %s\n", this->address, this->addresssub);
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCK, MSG_NEVMBLOCK, strlen(MSG_NEVMBLOCK))) {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-header-not-sent");
+        state = "nevm-header-not-sent";
+        return false;
     }
     std::vector<std::string> parts;
     if(ReceiveZmqMessage(parts)) {
         if(parts.size() != 2) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-parts");
+            state = "nevm-response-invalid-parts";
+            return false;
         }
         if(parts[0] != MSG_NEVMBLOCK) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-wrong-command");
+            state = "nevm-response-wrong-command";
+            return false;
         }
         const std::vector<unsigned char> evmData{parts[1].begin(), parts[1].end()};
         // SYSCOIN
@@ -522,22 +527,28 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, Bloc
         try {
             ss >> evmBlock;
         } catch (const std::exception& e) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-unserialize");
+            state = "nevm-response-unserialize";
+            return false;
         }
         if(evmBlock.nBlockHash.IsNull()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-parse-hash");
+            state = "nevm-response-parse-hash";
+            return false;
         }
         if(evmBlock.nTxRoot.IsNull()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-txroot");
+            state = "nevm-response-invalid-txroot";
+            return false;
         }
         if(evmBlock.nReceiptRoot.IsNull()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-invalid-receiptroot");
+            state = "nevm-response-invalid-receiptroot";
+            return false;
         }
         if(evmBlock.vchNEVMBlockData.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-empty-data");
+            state = "nevm-response-empty-data";
+            return false;
         }
     } else {
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "nevm-response-not-found");
+        state = "nevm-response-not-found";
+        return false;
     }
     return true;
 }
@@ -588,9 +599,8 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendZmqMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 // SYSCOIN
-bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote)
+bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const uint256& hash)
 {
-    const uint256 &hash = vote->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernancevote %s\n", hash.GetHex());
     uint8_t data[32];
     for (unsigned int i = 0; i < 32; i++)
@@ -598,32 +608,15 @@ bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shar
     return SendZmqMessage(MSG_HASHGVOTE, data, 32);
 }
 
-bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object)
+bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const uint256& hash)
 {
-    const uint256 &hash = object->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernanceobject %s\n", hash.GetHex());
     uint8_t data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
     return SendZmqMessage(MSG_HASHGOBJ, data, 32);
 }
-bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote)
-{
-    uint256 nHash = vote->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, vote = %d\n", nHash.ToString(), vote->ToString());
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << vote;
-    return SendZmqMessage(MSG_RAWGVOTE, &(*ss.begin()), ss.size());
-}
 
-bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& govobj)
-{
-    uint256 nHash = govobj->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), govobj->GetObjectType());
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << govobj;
-    return SendZmqMessage(MSG_RAWGOBJ, &(*ss.begin()), ss.size());
-}
 bool CZMQPublishRawMempoolTransactionNotifier::NotifyTransactionMempool(const CTransaction &transaction)
 {
     uint256 hash = transaction.GetHash();

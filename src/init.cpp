@@ -1635,8 +1635,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
     // SYSCOIN
     // by default win won't run or validate NEVM (if not a masternode)
-    const auto &NEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
-    fNEVMConnection = !NEVMSub.empty();
+    fNEVMSub = gArgs.GetArg("-zmqpubnevm", GetDefaultPubNEVM());
+    fNEVMConnection = !fNEVMSub.empty();
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
     if(fNEVMConnection) {
@@ -1812,8 +1812,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage("Loading Geth...");
         UninterruptibleSleep(std::chrono::milliseconds{5000});
         uint64_t nHeightFromGeth;
+        std::string stateStr;
         BlockValidationState state;
-        GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, state);
+        GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
+        if(!stateStr.empty()) {
+            state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
+        }
         if(state.IsValid()) {
             int64_t nHeightLocalGeth;
             {

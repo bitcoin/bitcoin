@@ -229,10 +229,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     if(NEVMActive_context && fNEVMConnection) {
         CNEVMBlock nevmBlock;
-        BlockValidationState state;
-        GetMainSignals().NotifyGetNEVMBlock(nevmBlock, state);
-        if(state.IsInvalid()) {
-            throw std::runtime_error(strprintf("Could not fetch NEVM block %s", state.ToString()));
+        std::string stateStr;
+        GetMainSignals().NotifyGetNEVMBlock(nevmBlock, stateStr);
+        if(!stateStr.empty()) {
+            throw std::runtime_error(strprintf("Could not fetch NEVM block %s", stateStr));
         }
         // block data stored in block which is a mutable field that is only sent over network
         pblock->vchNEVMBlockData = std::move(nevmBlock.vchNEVMBlockData);

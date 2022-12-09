@@ -7,8 +7,6 @@
 #include <cassert>
 #include <uint256.h>
 #include <logging.h>
-// SYSCOIN
-#include <primitives/block.h>
 const int CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM;
 
 CZMQAbstractNotifier::~CZMQAbstractNotifier()
@@ -16,11 +14,11 @@ CZMQAbstractNotifier::~CZMQAbstractNotifier()
     assert(!psocket);
 }
 // SYSCOIN
-bool CZMQAbstractNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& /*object*/)
+bool CZMQAbstractNotifier::NotifyGovernanceObject(const uint256& /*object*/)
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& /*vote*/)
+bool CZMQAbstractNotifier::NotifyGovernanceVote(const uint256& /*vote*/)
 {
     return true;
 }
@@ -28,19 +26,19 @@ bool CZMQAbstractNotifier::NotifyNEVMComms(const std::string& commMessage, bool 
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation)
+bool CZMQAbstractNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation)
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash)
+bool CZMQAbstractNotifier::NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash)
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state)
+bool CZMQAbstractNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state)
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state)
+bool CZMQAbstractNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state)
 {
     return true;
 }

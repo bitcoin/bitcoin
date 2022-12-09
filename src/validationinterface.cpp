@@ -270,10 +270,10 @@ void CMainSignals::NotifyHeaderTip(const CBlockIndex *pindexNew) {
 void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork); });
 }
-void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {
+void CMainSignals::NotifyGovernanceVote(const uint256& vote) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
 }
-void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) {
+void CMainSignals::NotifyGovernanceObject(const uint256& object) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
 }
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
@@ -282,15 +282,15 @@ void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMN
 void CMainSignals::NotifyNEVMComms(const std::string& commMessage, bool &bResponse) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMComms(commMessage, bResponse); });
 }
-void CMainSignals::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, BlockValidationState &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) {
+void CMainSignals::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockConnect(evmBlock, block, state, nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation); });
 }
-void CMainSignals::NotifyNEVMBlockDisconnect(BlockValidationState &state, const uint256& nBlockHash) {
+void CMainSignals::NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyNEVMBlockDisconnect(state, nBlockHash); });
 }
-void CMainSignals::NotifyGetNEVMBlockInfo(uint64_t &nHeight, BlockValidationState &state) {
+void CMainSignals::NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGetNEVMBlockInfo(nHeight, state);});
 }
-void CMainSignals::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, BlockValidationState &state) {
+void CMainSignals::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGetNEVMBlock(evmBlock, state);});
 }

@@ -252,7 +252,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             peerman.ForgetTxHash(pfrom->GetId(), nHash);
         }
         // SEND NOTIFICATION TO SCRIPT/ZMQ
-        GetMainSignals().NotifyGovernanceVote(std::make_shared<const CGovernanceVote>(vote));
+        GetMainSignals().NotifyGovernanceVote(nHash);
     }
 }
 
@@ -338,7 +338,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
         CheckOrphanVotes(govobj, peerman);
     }
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceObject(std::make_shared<const CGovernanceObject>(govobj));
+    GetMainSignals().NotifyGovernanceObject(nHash);
 }
 
 void CGovernanceManager::UpdateCachesAndClean()
