@@ -55,7 +55,7 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 cmake libgmp-dev
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libgmp-dev
 
 Note that for for Alpine Linux you may need to install `gmp-dev` instead of `libgmp-dev`
 
