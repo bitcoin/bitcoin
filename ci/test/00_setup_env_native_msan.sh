@@ -20,4 +20,5 @@ export GOAL="install"
 export SYSCOIN_CONFIG="--with-sanitizers=memory --disable-hardening --with-asm=no --prefix=${DEPENDS_DIR}/x86_64-pc-linux-gnu/ CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
+export RUN_UNIT_TESTS="false" # SYSCOIN false-positive for use-of-uninitialized-value in bls-tests
 export CCACHE_SIZE=250M
