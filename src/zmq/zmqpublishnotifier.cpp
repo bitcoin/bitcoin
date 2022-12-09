@@ -55,8 +55,6 @@ static const char *MSG_NEVMBLOCKINFO  = "nevmblockinfo";
 static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
-static const char *MSG_RAWGVOTE      = "rawgovernancevote";
-static const char *MSG_RAWGOBJ       = "rawgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
 RecursiveMutex cs_nevm;
 // Internal function to send multipart message
