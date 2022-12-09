@@ -1,4 +1,4 @@
 [memory]
 # false-positive in mcl
-fun:*mcl*
-
+#fun:*mcl*
+src:src/bls/mcl
