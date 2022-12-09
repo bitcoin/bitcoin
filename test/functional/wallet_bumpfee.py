@@ -88,6 +88,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
+        test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_address, dest_address)
         test_dust_to_fee(self, rbf_node, dest_address)
         test_watchonly_psbt(self, peer_node, rbf_node, dest_address)
         test_rebumping(self, rbf_node, dest_address)
@@ -283,6 +284,35 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     miniwallet.scan_tx(tx)
     miniwallet.send_self_transfer(from_node=rbf_node)
     assert_raises_rpc_error(-8, "Transaction has descendants in the mempool", rbf_node.bumpfee, parent_id)
+    self.clear_mempool()
+
+
+def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_address, dest_address):
+    self.log.info('Test that fee can be bumped when it has abandoned descendant')
+    # parent is send-to-self, so we don't have to check which output is change when creating the child tx
+    parent_id = spend_one_input(rbf_node, rbf_node_address)
+    # Submit child transaction with low fee
+    child_id = rbf_node.send(outputs={dest_address: 0.00020000},
+                             options={"inputs": [{"txid": parent_id, "vout": 0}], "fee_rate": 2})["txid"]
+    assert child_id in rbf_node.getrawmempool()
+
+    # Restart the node with higher min relay fee so the descendant tx is no longer in mempool so that we can abandon it
+    self.restart_node(1, ['-minrelaytxfee=0.00005'] + self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
+    assert parent_id in rbf_node.getrawmempool()
+    assert child_id not in rbf_node.getrawmempool()
+    # Should still raise an error even if not in mempool
+    assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
+    # Now abandon the child transaction and bump the original
+    rbf_node.abandontransaction(child_id)
+    bumped_result = rbf_node.bumpfee(parent_id, {"fee_rate": HIGH})
+    assert bumped_result['txid'] in rbf_node.getrawmempool()
+    assert parent_id not in rbf_node.getrawmempool()
+    # Cleanup
+    self.restart_node(1, self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
     self.clear_mempool()
 
 
