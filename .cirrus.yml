@@ -69,7 +69,7 @@ task:
   container:
     image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
     cpu: 1
-    memory: 2G
+    memory: 1G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   lint_script:
@@ -83,115 +83,108 @@ task:
   container:
     image: ubuntu:jammy
     cpu: 2
-    memory: 8G
+    memory: 5G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
 
-# task:
-#   name: "Win64 native [vs2022]"
-#   << : *FILTER_TEMPLATE
-#   windows_container:
-#     cpu: 6
-#     memory: 12G
-#     image: cirrusci/windowsservercore:visualstudio2022
-#   timeout_in: 120m
-#   env:
-#     PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin;%PATH%'
-#     PYTHONUTF8: 1
-#     CI_VCPKG_TAG: '2022.06.16.1'
-#     VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
-#     VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
-#     CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
-#     WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
-#     QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.5/single/qt-everywhere-opensource-src-5.15.5.zip'
-#     QT_LOCAL_PATH: 'C:\qt-everywhere-opensource-src-5.15.5.zip'
-#     QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.5'
-#     QTBASEDIR: 'C:\Qt_static'
-#     x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
-#     QT_CONFIGURE_COMMAND: '..\configure -release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
-#     IgnoreWarnIntDirInTempDetected: 'true'
-#   merge_script:
-#     - git config --global user.email "ci@ci.ci"
-#     - git config --global user.name "ci"
-#     # Windows filesystem loses the executable bit, and all of the executable
-#     # files are considered "modified" now. It will break the following `git merge`
-#     # command. The next two commands make git ignore this issue.
-#     - git config core.filemode false
-#     - git reset --hard
-#     - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL $env:CIRRUS_BASE_BRANCH; git merge FETCH_HEAD; }
-#   msvc_qt_built_cache:
-#     folder: "%QTBASEDIR%"
-#     reupload_on_changes: false
-#     fingerprint_script:
-#       - echo %QT_DOWNLOAD_URL% %QT_CONFIGURE_COMMAND%
-#       - msbuild -version
-#     populate_script:
-#       - curl -L -o C:\jom.zip http://download.qt.io/official_releases/jom/jom.zip
-#       - mkdir C:\jom
-#       - tar -xf C:\jom.zip -C C:\jom
-#       - curl -L -o %QT_LOCAL_PATH% %QT_DOWNLOAD_URL%
-#       - tar -xf %QT_LOCAL_PATH% -C C:\
-#       - '%x64_NATIVE_TOOLS%'
-#       - cd %QT_SOURCE_DIR%
-#       - mkdir build
-#       - cd build
-#       - '%QT_CONFIGURE_COMMAND% -prefix %QTBASEDIR%'
-#       - jom
-#       - jom install
-#   vcpkg_tools_cache:
-#     folder: '%VCPKG_DOWNLOADS%\tools'
-#     reupload_on_changes: false
-#     fingerprint_script:
-#       - echo %CI_VCPKG_TAG%
-#       - msbuild -version
-#   vcpkg_binary_cache:
-#     folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
-#     reupload_on_changes: true
-#     fingerprint_script:
-#       - echo %CI_VCPKG_TAG%
-#       - type build_msvc\vcpkg.json
-#       - msbuild -version
-#     populate_script:
-#       - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
-#   ccache_cache:
-#     folder: '%CCACHE_DIR%'
-#   install_tools_script:
-#     - choco install --yes --no-progress ccache --version=4.6.1
-#     - choco install --yes --no-progress python3 --version=3.9.6
-#     - pip install zmq
-#     - ccache --version
-#     - python -VV
-#   install_vcpkg_script:
-#     - cd ..
-#     - git clone --quiet https://github.com/microsoft/vcpkg.git
-#     - cd vcpkg
-#     - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
-#     - .\bootstrap-vcpkg -disableMetrics
-#     - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
-#     - .\vcpkg integrate install
-#     - .\vcpkg version
-#   build_script:
-#     - '%x64_NATIVE_TOOLS%'
-#     - cd %CIRRUS_WORKING_DIR%
-#     - ccache --zero-stats --max-size=%CCACHE_SIZE%
-#     - python build_msvc\msvc-autogen.py
-#     - msbuild build_msvc\syscoin.sln -property:CLToolExe=%WRAPPED_CL% -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
-#     - ccache --show-stats
-#   unit_tests_script:
-#     - src\test_syscoin.exe -l test_suite
-#     - src\bench_syscoin.exe > NUL
-#     - python test\util\test_runner.py
-#     - python test\util\rpcauth-test.py
-#   functional_tests_script:
-#     # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
-#     # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
-#     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
-#     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
-#     # Exclude feature_dbcrash for now due to timeout
-#     - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=4 --timeout-factor=8 --extended --exclude feature_dbcrash
+task:
+  name: "Win64 native [vs2022]"
+  << : *FILTER_TEMPLATE
+  windows_container:
+    cpu: 6
+    memory: 12G
+    image: cirrusci/windowsservercore:visualstudio2022
+  timeout_in: 120m
+  env:
+    PATH: 'C:\jom;C:\Python39;C:\Python39\Scripts;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin;%PATH%'
+    PYTHONUTF8: 1
+    CI_VCPKG_TAG: '2022.09.27'
+    VCPKG_DOWNLOADS: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\downloads'
+    VCPKG_DEFAULT_BINARY_CACHE: 'C:\Users\ContainerAdministrator\AppData\Local\vcpkg\archives'
+    CCACHE_DIR: 'C:\Users\ContainerAdministrator\AppData\Local\ccache'
+    WRAPPED_CL: 'C:\Users\ContainerAdministrator\AppData\Local\Temp\cirrus-ci-build\ci\test\wrapped-cl.bat'
+    QT_DOWNLOAD_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.5/single/qt-everywhere-opensource-src-5.15.5.zip'
+    QT_LOCAL_PATH: 'C:\qt-everywhere-opensource-src-5.15.5.zip'
+    QT_SOURCE_DIR: 'C:\qt-everywhere-src-5.15.5'
+    QTBASEDIR: 'C:\Qt_static'
+    x64_NATIVE_TOOLS: '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"'
+    QT_CONFIGURE_COMMAND: '..\configure -release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
+    IgnoreWarnIntDirInTempDetected: 'true'
+  merge_script:
+    - PowerShell -NoLogo -Command if ($env:CIRRUS_PR -ne $null) { git fetch $env:CIRRUS_REPO_CLONE_URL pull/$env:CIRRUS_PR/merge; git reset --hard FETCH_HEAD; }
+  msvc_qt_built_cache:
+    folder: "%QTBASEDIR%"
+    reupload_on_changes: false
+    fingerprint_script:
+      - echo %QT_DOWNLOAD_URL% %QT_CONFIGURE_COMMAND%
+      - msbuild -version
+    populate_script:
+      - curl -L -o C:\jom.zip http://download.qt.io/official_releases/jom/jom.zip
+      - mkdir C:\jom
+      - tar -xf C:\jom.zip -C C:\jom
+      - curl -L -o %QT_LOCAL_PATH% %QT_DOWNLOAD_URL%
+      - tar -xf %QT_LOCAL_PATH% -C C:\
+      - '%x64_NATIVE_TOOLS%'
+      - cd %QT_SOURCE_DIR%
+      - mkdir build
+      - cd build
+      - '%QT_CONFIGURE_COMMAND% -prefix %QTBASEDIR%'
+      - jom
+      - jom install
+  vcpkg_tools_cache:
+    folder: '%VCPKG_DOWNLOADS%\tools'
+    reupload_on_changes: false
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - msbuild -version
+  vcpkg_binary_cache:
+    folder: '%VCPKG_DEFAULT_BINARY_CACHE%'
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo %CI_VCPKG_TAG%
+      - type build_msvc\vcpkg.json
+      - msbuild -version
+    populate_script:
+      - mkdir %VCPKG_DEFAULT_BINARY_CACHE%
+  ccache_cache:
+    folder: '%CCACHE_DIR%'
+  install_tools_script:
+    - choco install --yes --no-progress ccache --version=4.6.1
+    - choco install --yes --no-progress python3 --version=3.9.6
+    - pip install zmq
+    - ccache --version
+    - python -VV
+  install_vcpkg_script:
+    - cd ..
+    - git clone --quiet https://github.com/microsoft/vcpkg.git
+    - cd vcpkg
+    - git -c advice.detachedHead=false checkout %CI_VCPKG_TAG%
+    - .\bootstrap-vcpkg -disableMetrics
+    - echo set(VCPKG_BUILD_TYPE release) >> triplets\x64-windows-static.cmake
+    - .\vcpkg integrate install
+    - .\vcpkg version
+  build_script:
+    - '%x64_NATIVE_TOOLS%'
+    - cd %CIRRUS_WORKING_DIR%
+    - ccache --zero-stats --max-size=%CCACHE_SIZE%
+    - python build_msvc\msvc-autogen.py
+    - msbuild build_msvc\syscoin.sln -property:CLToolExe=%WRAPPED_CL%;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+    - ccache --show-stats
+  check_script:
+    - src\test_syscoin.exe -l test_suite
+    - src\bench_syscoin.exe --sanity-check > NUL
+    - python test\util\test_runner.py
+    - python test\util\rpcauth-test.py
+  functional_tests_script:
+    # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
+    # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
+    - netsh int ipv4 set dynamicport tcp start=1025 num=64511
+    - netsh int ipv6 set dynamicport tcp start=1025 num=64511
+    # Exclude feature_dbcrash for now due to timeout
+    - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=4000 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
   name: 'ARM [unit tests, no functional tests] [bullseye]'
@@ -203,7 +196,7 @@ task:
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
-    QEMU_USER_CMD: "" # Disable qemu and run the test natively
+    QEMU_USER_CMD: ""  # Disable qemu and run the test natively
 
 task:
   name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [jammy]'
@@ -215,16 +208,23 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
-  # For faster CI feedback, immediately schedule a task that compiles most modules
-  << : *CREDITS_TEMPLATE
+  name: '32-bit + dash [gui] [CentOS 8]'
   << : *GLOBAL_TASK_TEMPLATE
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
   container:
-    image: debian:buster
+    image: quay.io/centos/centos:stream8
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    PACKAGE_MANAGER_INSTALL: "yum install -y"
+    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+
+task:
+  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [buster]'
+  previous_releases_cache:
+    folder: "releases"
+  << : *GLOBAL_TASK_TEMPLATE
+  << : *PERSISTENT_WORKER_TEMPLATE
+  env:
+    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
@@ -260,7 +260,6 @@ task:
     image: family/ubuntu-2204-lts # when upgrading, check if we can drop "ADD_UNTRUSTED_BPFCC_PPA"
     cpu: 4
     memory: 12G
-    disk: 200
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     HOME: /root/  # Only needed for compute_engine_instance
@@ -268,11 +267,10 @@ task:
     MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
-  name: '[fuzzer,address,undefined,integer, no depends] [focal]'
-  only_if: $CIRRUS_BRANCH == $CIRRUS_DEFAULT_BRANCH || $CIRRUS_BASE_BRANCH == $CIRRUS_DEFAULT_BRANCH
+  name: '[fuzzer,address,undefined,integer, no depends] [jammy]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: ubuntu:jammy
     cpu: 4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
@@ -284,20 +282,20 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 6
-    memory: 24G  # The default memory is sometimes just a bit too small, so double everything
+    cpu: 4
+    memory: 16G  # The default memory is sometimes just a bit too small, so double everything
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
 
-# task:
-#    name: '[no wallet, libsyscoinkernel] [bionic]'
-#    << : *GLOBAL_TASK_TEMPLATE
-#    container:
-#      image: ubuntu:bionic
-#    env:
-#      << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-#      FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
+task:
+  name: '[no wallet, libsyscoinkernel] [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libsyscoinkernel.sh"
 
 task:
   name: 'macOS 10.15 [gui, no tests] [focal]'
@@ -325,18 +323,18 @@ task:
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
     FILE_ENV: "./ci/test/00_setup_env_mac_native_arm64.sh"
 
-# task:
-#   name: 'ARM64 Android APK [focal]'
-#   << : *BASE_TEMPLATE
-#   android_sdk_cache:
-#     folder: "depends/SDKs/android"
-#     fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
-#   depends_sources_cache:
-#     folder: "depends/sources"
-#     fingerprint_script: git rev-list -1 HEAD ./depends
-#   << : *MAIN_TEMPLATE
-#   container:
-#     image: ubuntu:focal
-#   env:
-#     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-#     FILE_ENV: "./ci/test/00_setup_env_android.sh"
+task:
+  name: 'ARM64 Android APK [focal]'
+  << : *BASE_TEMPLATE
+  android_sdk_cache:
+    folder: "depends/SDKs/android"
+    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
+  depends_sources_cache:
+    folder: "depends/sources"
+    fingerprint_script: git rev-list -1 HEAD ./depends
+  << : *MAIN_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_android.sh"
