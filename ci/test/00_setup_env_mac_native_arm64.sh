@@ -16,7 +16,5 @@ export NO_DEPENDS=1
 export OSX_SDK=""
 export CCACHE_SIZE=300M
 export CPATH="/opt/homebrew/include"
-export PATH=/opt/homebrew/bin:$PATH
-export PATH=/opt/homebrew/sbin:$PATH
-
+export LDFLAGS="-L/opt/homebrew/lib -L/opt/homebrew/opt $LDFLAGS"
 
