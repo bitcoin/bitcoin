@@ -1,5 +1,23 @@
 AC_PREREQ([2.60])
-AC_INIT([libdashbls],[1.2.4])
+# The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
+# the API. All changes in experimental modules are treated as
+# backwards-compatible and therefore at most increase the minor version.
+define(_PKG_VERSION_MAJOR, 1)
+define(_PKG_VERSION_MINOR, 2)
+define(_PKG_VERSION_BUILD, 4)
+define(_PKG_VERSION_IS_RELEASE, false)
+
+# The library version is based on libtool versioning of the ABI. The set of
+# rules for updating the version can be found here:
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# All changes in experimental modules are treated as if they don't affect the
+# interface and therefore only increase the revision.
+define(_LIB_VERSION_CURRENT, 0)
+define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_AGE, 0)
+
+AC_INIT([libdashbls],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_BUILD)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-pre]),[https://github.com/syscoin/syscoin/issues],[libdashbls],[https://github.com/syscoin/syscoin])
+
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -453,13 +471,21 @@ case $host in
 esac
 
 if test x$use_pkgconfig = xyes; then
-  m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR(PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh.)])
-  m4_ifdef([PKG_PROG_PKG_CONFIG], [
+  m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh])])
   PKG_PROG_PKG_CONFIG
-  if test x"$PKG_CONFIG" = "x"; then
-    AC_MSG_ERROR(pkg-config not found.)
+  if test "$PKG_CONFIG" = ""; then
+    AC_MSG_ERROR([pkg-config not found])
   fi
-  ])
+
+  # When compiling with depends, the `PKG_CONFIG_PATH` and `PKG_CONFIG_LIBDIR` variables,
+  # being set in a `config.site` file, are not exported to let the `--config-cache` option
+  # work properly.
+  if test -n "$PKG_CONFIG_PATH"; then
+    PKG_CONFIG="env PKG_CONFIG_PATH=$PKG_CONFIG_PATH $PKG_CONFIG"
+  fi
+  if test -n "$PKG_CONFIG_LIBDIR"; then
+    PKG_CONFIG="env PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR $PKG_CONFIG"
+  fi
 fi
 
 saved_CFLAGS="$CFLAGS"
