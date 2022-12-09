@@ -723,7 +723,31 @@ case $host in
      ;;
   *darwin*)
      TARGET_OS=darwin
+     if  test $cross_compiling != "yes"; then
+       BUILD_OS=darwin
+       AC_CHECK_PROG([BREW], [brew], [brew])
+       if test "$BREW" = "brew"; then
+         dnl These Homebrew packages may be keg-only, meaning that they won't be found
+         dnl in expected paths because they may conflict with system files. Ask
+         dnl Homebrew where each one is located, then adjust paths accordingly.
+         dnl It's safe to add these paths even if the functionality is disabled by
+         dnl the user (--without-wallet or --without-gui for example).
 
+         dnl Homebrew may create symlinks in /usr/local/include for some packages.
+         dnl Because MacOS's clang internally adds "-I /usr/local/include" to its search
+         dnl paths, this will negate efforts to use -isystem for those packages, as they
+         dnl will be found first in /usr/local. Use the internal "-internal-isystem"
+         dnl option to system-ify all /usr/local/include paths without adding it to the list
+         dnl of search paths in case it's not already there.
+         if test "$suppress_external_warnings" != "no"; then
+           AX_CHECK_PREPROC_FLAG([-Xclang -internal-isystem/usr/local/include], [CORE_CPPFLAGS="$CORE_CPPFLAGS -Xclang -internal-isystem/usr/local/include"], [], [$CXXFLAG_WERROR])
+         fi
+
+         if $BREW list --versions qt@5 >/dev/null; then
+           export PKG_CONFIG_PATH="$($BREW --prefix qt@5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
+         fi
+        fi
+      fi
      AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [])
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
