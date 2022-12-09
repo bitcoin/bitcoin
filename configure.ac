@@ -1724,6 +1724,10 @@ if test "$build_multiprocess" != "no"; then
   AC_SUBST(MPGEN_PREFIX)
 fi
 
+dnl check if libgmp is present
+AC_CHECK_HEADER([gmp.h],, AC_MSG_ERROR(libgmp headers missing))
+AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
+
 AC_MSG_CHECKING([whether to build syscoind])
 AM_CONDITIONAL([BUILD_SYSCOIND], [test $build_syscoind = "yes"])
 AC_MSG_RESULT($build_syscoind)
@@ -2027,6 +2031,7 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(GMP_LIBS)
 AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
 AC_SUBST(HAVE_GMTIME_R)
