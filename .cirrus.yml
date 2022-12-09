@@ -69,7 +69,7 @@ task:
   container:
     image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
     cpu: 1
-    memory: 1G
+    memory: 2G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   lint_script:
@@ -83,7 +83,7 @@ task:
   container:
     image: ubuntu:jammy
     cpu: 2
-    memory: 5G
+    memory: 8G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
   env:
