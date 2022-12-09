@@ -94,6 +94,7 @@ AC_ARG_ENABLE([hardening],
   [use_hardening=$enableval],
   [use_hardening=auto])
 
+
 dnl Define enum mappings for relic config
 AC_DEFINE([RLC_VERSION], ["0.5.0"], [Relic Version])
 
@@ -727,28 +728,31 @@ case $host in
        BUILD_OS=darwin
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
-         dnl These Homebrew packages may be keg-only, meaning that they won't be found
-         dnl in expected paths because they may conflict with system files. Ask
-         dnl Homebrew where each one is located, then adjust paths accordingly.
-         dnl It's safe to add these paths even if the functionality is disabled by
-         dnl the user (--without-wallet or --without-gui for example).
-
-         dnl Homebrew may create symlinks in /usr/local/include for some packages.
-         dnl Because MacOS's clang internally adds "-I /usr/local/include" to its search
-         dnl paths, this will negate efforts to use -isystem for those packages, as they
-         dnl will be found first in /usr/local. Use the internal "-internal-isystem"
-         dnl option to system-ify all /usr/local/include paths without adding it to the list
-         dnl of search paths in case it's not already there.
-         if test "$suppress_external_warnings" != "no"; then
-           AX_CHECK_PREPROC_FLAG([-Xclang -internal-isystem/usr/local/include], [CORE_CPPFLAGS="$CORE_CPPFLAGS -Xclang -internal-isystem/usr/local/include"], [], [$CXXFLAG_WERROR])
-         fi
-
          if $BREW list --versions qt@5 >/dev/null; then
            export PKG_CONFIG_PATH="$($BREW --prefix qt@5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
          fi
-        fi
-      fi
-     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [])
+       fi
+     else
+       case $build_os in
+         *darwin*)
+           BUILD_OS=darwin
+           ;;
+         *)
+           AC_PATH_TOOL([DSYMUTIL], [dsymutil], [dsymutil])
+           AC_PATH_TOOL([INSTALL_NAME_TOOL], [install_name_tool], [install_name_tool])
+           AC_PATH_TOOL([OTOOL], [otool], [otool])
+           AC_PATH_PROGS([XORRISOFS], [xorrisofs], [xorrisofs])
+
+           dnl libtool will try to strip the static lib, which is a problem for
+           dnl cross-builds because strip attempts to call a hard-coded ld,
+           dnl which may not exist in the path. Stripping the .a is not
+           dnl necessary, so just disable it.
+           old_striplib=
+           ;;
+       esac
+     fi
+
+     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
