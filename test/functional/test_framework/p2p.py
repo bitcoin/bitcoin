@@ -82,6 +82,7 @@ from test_framework.util import (
 )
 from test_framework.v2_p2p import (
     EncryptedP2PState,
+    SHORTID,
 )
 
 logger = logging.getLogger("TestFramework.p2p")
@@ -297,23 +298,46 @@ class P2PConnection(asyncio.Protocol):
         the on_message callback for processing."""
         try:
             while True:
-                if len(self.recvbuf) < 4:
-                    return
-                if self.recvbuf[:4] != self.magic_bytes:
-                    raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
-                if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                    return
-                msgtype = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
-                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                checksum = self.recvbuf[4+12+4:4+12+4+4]
-                if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
-                    return
-                msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
-                th = sha256(msg)
-                h = sha256(th)
-                if checksum != h[:4]:
-                    raise ValueError("got bad checksum " + repr(self.recvbuf))
-                self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
+                if self.supports_v2_p2p:
+                    # v2 P2P messages are read
+                    msglen, msg = self.v2_state.v2_receive_packet(self.recvbuf)
+                    if msglen == -1:
+                        raise ValueError("invalid v2 mac tag " + repr(self.recvbuf))
+                    elif msglen == 0:  # need to receive more bytes in recvbuf
+                        return
+                    self.recvbuf = self.recvbuf[msglen:]
+
+                    assert msg  # application layer messages (which aren't decoy messages) are non-empty
+                    shortid = msg[0]  # 1-byte short message type ID
+                    if shortid == 0:
+                        # next 12 bytes are interpreted as ASCII message type if shortid is b'\x00'
+                        if len(msg) < 13:
+                            raise IndexError("msg needs minimum required length of 13 bytes")
+                        msgtype = msg[1:13].rstrip(b'\x00')
+                        msg = msg[13:]  # msg is set to be payload
+                    else:
+                        # a 1-byte short message type ID
+                        msgtype = SHORTID.get(shortid, f"unknown-{shortid}")
+                        msg = msg[1:]
+                else:
+                    # v1 P2P messages are read
+                    if len(self.recvbuf) < 4:
+                        return
+                    if self.recvbuf[:4] != self.magic_bytes:
+                        raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
+                        return
+                    msgtype = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
+                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                    checksum = self.recvbuf[4+12+4:4+12+4+4]
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
+                        return
+                    msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
+                    th = sha256(msg)
+                    h = sha256(th)
+                    if checksum != h[:4]:
+                        raise ValueError("got bad checksum " + repr(self.recvbuf))
+                    self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
                 if msgtype not in MESSAGEMAP:
                     raise ValueError("Received unknown msgtype from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, msgtype, repr(msg)))
                 f = BytesIO(msg)
