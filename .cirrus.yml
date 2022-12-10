@@ -233,7 +233,7 @@ task:
   container:
     image: ubuntu:jammy
     cpu: 6  # Increase CPU and Memory to avoid timeout
-    memory: 24G
+    memory: 32G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
