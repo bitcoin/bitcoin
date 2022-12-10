@@ -1651,11 +1651,8 @@ RPCHelpMan walletcreatefundedpsbt()
 
     CAmount fee;
     int change_position;
-    bool rbf{wallet.m_signal_rbf};
     const UniValue &replaceable_arg = options["replaceable"];
-    if (!replaceable_arg.isNull()) {
-        rbf = replaceable_arg.isTrue();
-    }
+    const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can

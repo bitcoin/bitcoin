@@ -307,6 +307,9 @@ class NetTest(BitcoinTestFramework):
         assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
         assert_equal(node.getnodeaddresses(count=0), [])
 
+        self.log.debug("Test that non-bool tried fails")
+        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
+
         self.log.debug("Test that adding an address with invalid port fails")
         assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
         assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress,address="1.2.3.4", port=65536)
