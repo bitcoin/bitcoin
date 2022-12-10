@@ -189,7 +189,7 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
                                CDKGSessionManager& _dkgManager) :
     connman(_connman),
-    evoDb(_evoDb),
+    m_evoDb(_evoDb),
     blsWorker(_blsWorker),
     quorumBlockProcessor(_quorumBlockProcessor),
     dkgManager(_dkgManager)
@@ -377,11 +377,11 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 
     bool hasValidVvec = false;
-    if (quorum->ReadContributions(evoDb)) {
+    if (quorum->ReadContributions(m_evoDb)) {
         hasValidVvec = true;
     } else {
         if (BuildQuorumContributions(quorum->qc, quorum)) {
-            quorum->WriteContributions(evoDb);
+            quorum->WriteContributions(m_evoDb);
             hasValidVvec = true;
         } else {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- llmqType[%d] quorumIndex[%d] quorum.ReadContributions and BuildQuorumContributions for quorumHash[%s] failed\n", __func__, uint8_t(llmqType), quorum->qc->quorumIndex, quorum->qc->quorumHash.ToString());
@@ -792,7 +792,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& msg_type, C
                 return;
             }
         }
-        pQuorum->WriteContributions(evoDb);
+        pQuorum->WriteContributions(m_evoDb);
         return;
     }
 }

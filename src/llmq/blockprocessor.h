@@ -32,7 +32,7 @@ using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 class CQuorumBlockProcessor
 {
 private:
-    CEvoDB& evoDb;
+    CEvoDB& m_evoDb;
     CConnman& connman;
 
     // TODO cleanup

@@ -216,12 +216,13 @@ class CQuorumSnapshotManager
 private:
     mutable CCriticalSection snapshotCacheCs;
 
-    CEvoDB& evoDb;
+    CEvoDB& m_evoDb;
 
     unordered_lru_cache<uint256, CQuorumSnapshot, StaticSaltedHasher> quorumSnapshotCache GUARDED_BY(snapshotCacheCs);
 
 public:
-    explicit CQuorumSnapshotManager(CEvoDB& _evoDb);
+    explicit CQuorumSnapshotManager(CEvoDB& evoDb) :
+        m_evoDb(evoDb), quorumSnapshotCache(32) {}
 
     std::optional<CQuorumSnapshot> GetSnapshotForBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     void StoreSnapshotForBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, const CQuorumSnapshot& snapshot);

@@ -205,7 +205,7 @@ private:
 class CQuorumManager
 {
 private:
-    CEvoDB& evoDb;
+    CEvoDB& m_evoDb;
     CConnman& connman;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
