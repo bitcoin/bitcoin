@@ -702,7 +702,7 @@ class TestNode():
             self.addconnection('%s:%d' % (address, port), connection_type)
 
         p2p_conn.p2p_connected_to_node = False
-        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p, **kwargs)()
+        p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p, reconnect=False, **kwargs)()
 
         if connection_type == "feeler":
             # feeler connections are closed as soon as the node receives a `version` message
