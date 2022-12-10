@@ -315,6 +315,8 @@ class P2PConnection(asyncio.Protocol):
                         return
                     self.recvbuf = self.recvbuf[msglen:]
 
+                    if msg is None:  # ignore decoy messages
+                        return
                     assert msg  # application layer messages (which aren't decoy messages) are non-empty
                     shortid = msg[0]  # 1-byte short message type ID
                     if shortid == 0:
@@ -364,13 +366,13 @@ class P2PConnection(asyncio.Protocol):
 
     # Socket write methods
 
-    def send_message(self, message):
+    def send_message(self, message, is_decoy=False):
         """Send a P2P message over the socket.
 
         This method takes a P2P payload, builds the P2P header and adds
         the message to the send buffer to be sent over the socket."""
         with self._send_lock:
-            tmsg = self.build_message(message)
+            tmsg = self.build_message(message, is_decoy)
             self._log_message("send", message)
             return self.send_raw_message(tmsg)
 
@@ -388,7 +390,7 @@ class P2PConnection(asyncio.Protocol):
 
     # Class utility methods
 
-    def build_message(self, message):
+    def build_message(self, message, is_decoy=False):
         """Build a serialized P2P message"""
         msgtype = message.msgtype
         data = message.serialize()
@@ -400,7 +402,7 @@ class P2PConnection(asyncio.Protocol):
                 tmsg += msgtype
                 tmsg += b"\x00" * (12 - len(msgtype))
             tmsg += data
-            return self.v2_state.v2_enc_packet(tmsg)
+            return self.v2_state.v2_enc_packet(tmsg, ignore=is_decoy)
         else:
             tmsg = self.magic_bytes
             tmsg += msgtype
@@ -825,7 +827,7 @@ class P2PDataStore(P2PInterface):
         if response is not None:
             self.send_message(response)
 
-    def send_blocks_and_test(self, blocks, node, *, success=True, force_send=False, reject_reason=None, expect_disconnect=False, timeout=60):
+    def send_blocks_and_test(self, blocks, node, *, success=True, force_send=False, reject_reason=None, expect_disconnect=False, timeout=60, is_decoy=False):
         """Send blocks to test node and test whether the tip advances.
 
          - add all blocks to our block_store
@@ -844,9 +846,11 @@ class P2PDataStore(P2PInterface):
 
         reject_reason = [reject_reason] if reject_reason else []
         with node.assert_debug_log(expected_msgs=reject_reason):
+            if is_decoy:  # since decoy messages are ignored by the recipient - no need to wait for response
+                force_send = True
             if force_send:
                 for b in blocks:
-                    self.send_message(msg_block(block=b))
+                    self.send_message(msg_block(block=b), is_decoy)
             else:
                 self.send_message(msg_headers([CBlockHeader(block) for block in blocks]))
                 self.wait_until(
