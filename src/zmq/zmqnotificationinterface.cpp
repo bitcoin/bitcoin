@@ -20,8 +20,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-// SYSCOIN
-extern std::string fNEVMSub;
 CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr), pcontextsub(nullptr)
 {
 }
