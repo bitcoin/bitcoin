@@ -73,7 +73,7 @@ bool fSigNet = false;
 bool fAssetIndex = false;
 uint32_t fGethCurrentHeight = 0;
 bool fNEVMConnection = false;
-std::string fNEVMSub = "";
+std::string fNEVMSub;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = true;
 std::atomic_bool fLoaded = false;
