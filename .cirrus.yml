@@ -232,7 +232,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:jammy
-    cpu: 6  # Increase CPU and Memory to avoid timeout
+    cpu: 8  # Increase CPU and Memory to avoid timeout
     memory: 32G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
