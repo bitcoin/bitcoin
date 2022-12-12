@@ -48,6 +48,7 @@ DIST_SHARE = \
   $(top_srcdir)/share/rpcauth
 
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
+           $(top_srcdir)/contrib/devtools/special-instruction-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py \
            $(top_srcdir)/contrib/devtools/utils.py
 
