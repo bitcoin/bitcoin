@@ -30,23 +30,6 @@ std::string GetAllOutputTypes()
     return Join(ret, ", ");
 }
 
-void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValueType>& typesExpected,
-                  bool fAllowNull)
-{
-    unsigned int i = 0;
-    for (const UniValueType& t : typesExpected) {
-        if (params.size() <= i)
-            break;
-
-        const UniValue& v = params[i];
-        if (!(fAllowNull && v.isNull())) {
-            RPCTypeCheckArgument(v, t);
-        }
-        i++;
-    }
-}
-
 void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected)
 {
     if (!typeExpected.typeAny && value.type() != typeExpected.type) {
@@ -579,6 +562,9 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
+    for (size_t i{0}; i < m_args.size(); ++i) {
+        m_args.at(i).MatchesType(request.params[i]);
+    }
     UniValue ret = m_fun(*this, request);
     if (gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
         CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [&ret](const RPCResult& res) { return res.MatchesType(ret); }));
@@ -675,6 +661,44 @@ UniValue RPCHelpMan::GetArgMap() const
         }
     }
     return arr;
+}
+
+void RPCArg::MatchesType(const UniValue& request) const
+{
+    if (m_opts.skip_type_check) return;
+    if (IsOptional() && request.isNull()) return;
+    switch (m_type) {
+    case Type::STR_HEX:
+    case Type::STR: {
+        RPCTypeCheckArgument(request, UniValue::VSTR);
+        return;
+    }
+    case Type::NUM: {
+        RPCTypeCheckArgument(request, UniValue::VNUM);
+        return;
+    }
+    case Type::AMOUNT: {
+        // VNUM or VSTR, checked inside AmountFromValue()
+        return;
+    }
+    case Type::RANGE: {
+        // VNUM or VARR, checked inside ParseRange()
+        return;
+    }
+    case Type::BOOL: {
+        RPCTypeCheckArgument(request, UniValue::VBOOL);
+        return;
+    }
+    case Type::OBJ:
+    case Type::OBJ_USER_KEYS: {
+        RPCTypeCheckArgument(request, UniValue::VOBJ);
+        return;
+    }
+    case Type::ARR: {
+        RPCTypeCheckArgument(request, UniValue::VARR);
+        return;
+    }
+    } // no default case, so the compiler can warn about missing cases
 }
 
 std::string RPCArg::GetFirstName() const

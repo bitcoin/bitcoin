@@ -195,8 +195,6 @@ static RPCHelpMan getdescriptorinfo()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            RPCTypeCheck(request.params, {UniValue::VSTR});
-
             FlatSigningProvider provider;
             std::string error;
             auto desc = Parse(request.params[0].get_str(), provider, error);
@@ -247,7 +245,6 @@ static RPCHelpMan deriveaddresses()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
             const std::string desc_str = request.params[0].get_str();
 
             int64_t range_begin = 0;
