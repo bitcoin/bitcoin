@@ -17,6 +17,7 @@
 #include <optional>
 
 using wallet::CWallet;
+using wallet::CreateMockableWalletDatabase;
 using wallet::DatabaseFormat;
 using wallet::DatabaseOptions;
 using wallet::TxStateInactive;

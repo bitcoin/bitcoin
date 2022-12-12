@@ -6,6 +6,7 @@
 
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>

@@ -10,6 +10,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\init\bitcoin-qt.cpp" />
     <ClCompile Include="..\..\src\test\util\setup_common.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\util.cpp" />
     <ClCompile Include="..\..\src\qt\test\addressbooktests.cpp" />
     <ClCompile Include="..\..\src\qt\test\apptests.cpp" />
     <ClCompile Include="..\..\src\qt\test\optiontests.cpp" />

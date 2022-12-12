@@ -26,6 +26,7 @@
 #include <qt/walletmodel.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 #include <chrono>

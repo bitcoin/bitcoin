@@ -19,6 +19,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
+#include <wallet/test/util.h>
 #include <walletinitinterface.h>
 
 #include <chrono>

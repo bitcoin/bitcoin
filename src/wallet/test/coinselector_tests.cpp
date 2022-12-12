@@ -12,6 +12,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
+#include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 
