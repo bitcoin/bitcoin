@@ -107,7 +107,7 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("disconnectnode: fail to disconnect when calling with address and nodeid")
         address1 = self.nodes[0].getpeerinfo()[0]['addr']
-        node1 = self.nodes[0].getpeerinfo()[0]['addr']
+        node1 = self.nodes[0].getpeerinfo()[0]["id"]
         assert_raises_rpc_error(-32602, "Only one of address and nodeid should be provided.", self.nodes[0].disconnectnode, address=address1, nodeid=node1)
 
         self.log.info("disconnectnode: fail to disconnect when calling with junk address")
