@@ -146,20 +146,28 @@ class MiniWallet:
             self.scan_tx(tx)
 
     def sign_tx(self, tx, fixed_length=True):
-        """Sign tx that has been created by MiniWallet in P2PK mode"""
-        assert_equal(self._mode, MiniWalletMode.RAW_P2PK)
-        (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
-        assert err is None
-        # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
-        # 65 bytes: high-R val (33 bytes) + low-S val (32 bytes)
-        # with the DER header/skeleton data of 6 bytes added, this leads to a target size of 71 bytes
-        der_sig = b''
-        while not len(der_sig) == 71:
-            der_sig = self._priv_key.sign_ecdsa(sighash)
-            if not fixed_length:
-                break
-        tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
-        tx.rehash()
+        if self._mode == MiniWalletMode.RAW_P2PK:
+            (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
+            assert err is None
+            # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
+            # 65 bytes: high-R val (33 bytes) + low-S val (32 bytes)
+            # with the DER header/skeleton data of 6 bytes added, this leads to a target size of 71 bytes
+            der_sig = b''
+            while not len(der_sig) == 71:
+                der_sig = self._priv_key.sign_ecdsa(sighash)
+                if not fixed_length:
+                    break
+            tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
+            tx.rehash()
+        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
+            for i in range(len(tx.vin)):
+                tx.vin[i].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
+        elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
+            tx.wit.vtxinwit = [CTxInWitness()] * len(tx.vin)
+            for i in range(len(tx.vin)):
+                tx.wit.vtxinwit[i].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
+        else:
+            assert False
 
     def generate(self, num_blocks, **kwargs):
         """Generate blocks with coinbase outputs to the internal address, and call rescan_utxos"""
@@ -273,17 +281,7 @@ class MiniWallet:
         tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
         tx.nLockTime = locktime
 
-        if self._mode == MiniWalletMode.RAW_P2PK:
-            self.sign_tx(tx)
-        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
-            for i in range(len(utxos_to_spend)):
-                tx.vin[i].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
-        elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            tx.wit.vtxinwit = [CTxInWitness()] * len(utxos_to_spend)
-            for i in range(len(utxos_to_spend)):
-                tx.wit.vtxinwit[i].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
-        else:
-            assert False
+        self.sign_tx(tx)
 
         if target_weight:
             self._bulk_tx(tx, target_weight)
