@@ -3303,39 +3303,20 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_num_preferred_download_peers += state->fPreferredDownload;
         }
 
-        // Self advertisement & GETADDR logic
-        if (!pfrom.IsInboundConn() && SetupAddressRelay(pfrom, *peer)) {
-            // For outbound peers, we try to relay our address (so that other
-            // nodes can try to find us more quickly, as we have no guarantee
-            // that an outbound peer is even aware of how to reach us) and do a
-            // one-time address fetch (to help populate/update our addrman). If
-            // we're starting up for the first time, our addrman may be pretty
-            // empty and no one will know who we are, so these mechanisms are
-            // important to help us connect to the network.
-            //
+        // Attempt to initialize address relay for outbound peers and use result
+        // to decide whether to send GETADDR, so that we don't send it to
+        // inbound or outbound block-relay-only peers.
+        bool send_getaddr{false};
+        if (!pfrom.IsInboundConn()) {
+            send_getaddr = SetupAddressRelay(pfrom, *peer);
+        }
+        if (send_getaddr) {
+            // Do a one-time address fetch to help populate/update our addrman.
+            // If we're starting up for the first time, our addrman may be pretty
+            // empty, so this mechanism is important to help us connect to the network.
             // We skip this for block-relay-only peers. We want to avoid
             // potentially leaking addr information and we do not want to
             // indicate to the peer that we will participate in addr relay.
-            if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload())
-            {
-                CAddress addr{GetLocalAddress(pfrom.addr), peer->m_our_services, Now<NodeSeconds>()};
-                FastRandomContext insecure_rand;
-                if (addr.IsRoutable())
-                {
-                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
-                    PushAddress(*peer, addr, insecure_rand);
-                } else if (IsPeerAddrLocalGood(&pfrom)) {
-                    // Override just the address with whatever the peer sees us as.
-                    // Leave the port in addr as it was returned by GetLocalAddress()
-                    // above, as this is an outbound connection and the peer cannot
-                    // observe our listening port.
-                    addr.SetIP(addrMe);
-                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
-                    PushAddress(*peer, addr, insecure_rand);
-                }
-            }
-
-            // Get recent addresses
             m_connman.PushMessage(&pfrom, CNetMsgMaker(greatest_common_version).Make(NetMsgType::GETADDR));
             peer->m_getaddr_sent = true;
             // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
@@ -5342,8 +5323,9 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
     if (node.IsBlockOnlyConn()) return false;
 
     if (!peer.m_addr_relay_enabled.exchange(true)) {
-        // First addr message we have received from the peer, initialize
-        // m_addr_known
+        // During version message processing (non-block-relay-only outbound peers)
+        // or on first addr-related message we have received (inbound peers), initialize
+        // m_addr_known.
         peer.m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
     }
 
