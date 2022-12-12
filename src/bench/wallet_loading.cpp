@@ -71,7 +71,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
         options.create_flags = WALLET_FLAG_DESCRIPTORS;
         options.require_format = DatabaseFormat::SQLITE;
     }
-    auto database = CreateMockWalletDatabase(options);
+    auto database = CreateMockableWalletDatabase();
     auto wallet = BenchLoadWallet(std::move(database), context, options);
 
     // Generate a bunch of transactions and addresses to put into the wallet

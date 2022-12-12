@@ -34,7 +34,7 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
 {
-    std::unique_ptr<WalletDatabase> database = CreateMockWalletDatabase();
+    std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
     {
         // Write unknown active descriptor
         WalletBatch batch(*database, false);
@@ -84,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
 
     {   // Context setup.
         // Create and encrypt legacy wallet
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockWalletDatabase()));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase()));
         LOCK(wallet->cs_wallet);
         auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));

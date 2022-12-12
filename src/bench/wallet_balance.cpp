@@ -15,7 +15,7 @@
 #include <optional>
 
 using wallet::CWallet;
-using wallet::CreateMockWalletDatabase;
+using wallet::CreateMockableWalletDatabase;
 using wallet::DBErrors;
 using wallet::GetBalance;
 using wallet::WALLET_FLAG_DESCRIPTORS;
@@ -28,7 +28,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
 
-    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockWalletDatabase()};
+    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);

@@ -119,7 +119,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
     {
-        CWallet wallet(m_node.chain.get(), "", CreateMockWalletDatabase());
+        CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
         {
             LOCK(wallet.cs_wallet);
             LOCK(Assert(m_node.chainman)->GetMutex());

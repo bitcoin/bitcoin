@@ -17,7 +17,7 @@
 namespace wallet {
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
+    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
@@ -47,7 +47,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, DatabaseOptions& options)
 {
-    auto new_database = CreateMockWalletDatabase(options);
+    auto new_database = CreateMockableWalletDatabase();
 
     // Get a cursor to the original database
     auto batch = database.MakeBatch();
