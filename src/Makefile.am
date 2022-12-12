@@ -133,6 +133,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coins.h \
   common/bloom.h \
+  common/license.h \
   common/run_command.h \
   common/url.h \
   compat/assumptions.h \
@@ -634,6 +635,7 @@ libbitcoin_common_a_SOURCES = \
   coins.cpp \
   common/bloom.cpp \
   common/interfaces.cpp \
+  common/license.cpp \
   common/run_command.cpp \
   compressor.cpp \
   core_read.cpp \

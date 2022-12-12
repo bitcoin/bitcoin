@@ -13,6 +13,7 @@
 #include <qt/guiutil.h>
 
 #include <clientversion.h>
+#include <common/license.h>
 #include <init.h>
 #include <util/system.h>
 #include <util/strencodings.h>

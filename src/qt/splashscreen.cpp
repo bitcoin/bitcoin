@@ -9,6 +9,7 @@
 #include <qt/splashscreen.h>
 
 #include <clientversion.h>
+#include <common/license.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>

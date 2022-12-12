@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/license.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <init.h>
