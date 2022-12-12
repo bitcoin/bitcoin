@@ -100,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
 
         DatabaseOptions options;
         for (int i=0; i < NUMBER_OF_TESTS; i++) {
-            dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase(), options));
+            dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase()));
         }
     }
 

@@ -79,7 +79,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
         AddTx(*wallet);
     }
 
-    database = DuplicateMockDatabase(wallet->GetDatabase(), options);
+    database = DuplicateMockDatabase(wallet->GetDatabase());
 
     // reload the wallet for the actual benchmark
     BenchUnloadWallet(std::move(wallet));
@@ -88,7 +88,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
         wallet = BenchLoadWallet(std::move(database), context, options);
 
         // Cleanup
-        database = DuplicateMockDatabase(wallet->GetDatabase(), options);
+        database = DuplicateMockDatabase(wallet->GetDatabase());
         BenchUnloadWallet(std::move(wallet));
     });
 }

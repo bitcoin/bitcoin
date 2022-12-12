@@ -45,28 +45,9 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     return wallet;
 }
 
-std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, DatabaseOptions& options)
+std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
 {
-    auto new_database = CreateMockableWalletDatabase();
-
-    // Get a cursor to the original database
-    auto batch = database.MakeBatch();
-    std::unique_ptr<wallet::DatabaseCursor> cursor = batch->GetNewCursor();
-
-    // Get a batch for the new database
-    auto new_batch = new_database->MakeBatch();
-
-    // Read all records from the original database and write them to the new one
-    while (true) {
-        DataStream key{};
-        DataStream value{};
-        DatabaseCursor::Status status = cursor->Next(key, value);
-        assert(status != DatabaseCursor::Status::FAIL);
-        if (status == DatabaseCursor::Status::DONE) break;
-        new_batch->Write(key, value);
-    }
-
-    return new_database;
+    return std::make_unique<MockableDatabase>(dynamic_cast<MockableDatabase&>(database).m_records);
 }
 
 std::string getnewaddress(CWallet& w)
