@@ -22,12 +22,7 @@ using node::AnalyzePSBT;
 using node::PSBTAnalysis;
 using node::PSBTInputAnalysis;
 
-void initialize_psbt()
-{
-    static const ECCVerifyHandle verify_handle;
-}
-
-FUZZ_TARGET_INIT(psbt, initialize_psbt)
+FUZZ_TARGET(psbt)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     PartiallySignedTransaction psbt_mut;

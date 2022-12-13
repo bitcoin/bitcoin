@@ -25,7 +25,6 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    const ECCVerifyHandle verify_handle;
     ECC_Start();
 
     struct PrevectorJob {
