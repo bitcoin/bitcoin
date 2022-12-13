@@ -87,7 +87,7 @@ constexpr static struct {
     {0, 0x4000b6b6}, {0, 0x6000ea25}, {0, 0x400989d9}, {0, 0xc000877f},
     {0, 0x6000d17c}, {0, 0xc0009228}, {0, 0x4002827f}, {0, 0x80056a85},
     {0, 0x40045af7}, {0, 0x6000df7a}, {0, 0xe00131a1}, {0, 0x40021386},
-    {0, 0xa00891b5}, {0, 0x60007854}, {0, 0x60021730}
+    {0, 0xa00891b5}, {0, 0x60007854}, {0, 0x602cee70}
 };
 constexpr static size_t blockinfo_size = sizeof(blockinfo) / sizeof(blockinfo[0]);
 
