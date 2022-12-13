@@ -399,7 +399,10 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     const std::vector<UniValue>& values = in.params.getValues();
     std::unordered_map<std::string, const UniValue*> argsIn;
     for (size_t i=0; i<keys.size(); ++i) {
-        argsIn[keys[i]] = &values[i];
+        auto [_, inserted] = argsIn.emplace(keys[i], &values[i]);
+        if (!inserted) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + keys[i] + " specified multiple times");
+        }
     }
     // Process expected parameters. If any parameters were left unspecified in
     // the request before a parameter that was specified, null values need to be
