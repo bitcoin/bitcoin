@@ -152,6 +152,34 @@ def download_binary(tag, args) -> int:
         return ret
 
     Path(tarball).unlink()
+
+    if tag >= "v23" and platform == "arm64-apple-darwin":
+        # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) macs, but they have to be signed to run
+        binary_path = f'{os.getcwd()}/{tag}/bin/'
+
+        for arm_binary in os.listdir(binary_path):
+            # Is it already signed?
+            ret = subprocess.run(
+                ['codesign', '-v', binary_path + arm_binary],
+                stderr=subprocess.DEVNULL,  # Suppress expected stderr output
+            ).returncode
+            if ret == 1:
+                # Have to self-sign the binary
+                ret = subprocess.run(
+                    ['codesign', '-s', '-', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to self-sign {tag} {arm_binary} arm64 binary")
+                    return 1
+
+                # Confirm success
+                ret = subprocess.run(
+                    ['codesign', '-v', binary_path + arm_binary]
+                ).returncode
+                if ret != 0:
+                    print(f"Failed to verify the self-signed {tag} {arm_binary} arm64 binary")
+                    return 1
+
     return 0
 
 
