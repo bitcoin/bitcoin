@@ -389,7 +389,6 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_full_rbf{opts.full_rbf},
       m_limits{opts.limits}
 {
-    _clear(); //lock free clear
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -625,26 +624,6 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
-}
-
-void CTxMemPool::_clear()
-{
-    vTxHashes.clear();
-    mapTx.clear();
-    mapNextTx.clear();
-    totalTxSize = 0;
-    m_total_fee = 0;
-    cachedInnerUsage = 0;
-    lastRollingFeeUpdate = GetTime();
-    blockSinceLastRollingFeeBump = false;
-    rollingMinimumFeeRate = 0;
-    ++nTransactionsUpdated;
-}
-
-void CTxMemPool::clear()
-{
-    LOCK(cs);
-    _clear();
 }
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const

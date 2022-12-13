@@ -77,7 +77,9 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
         LOCK(cs_main);
         BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() != block.GetHash());
     }
-    m_node.mempool->clear();
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 1U);
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->removeRecursive(CTransaction{spends[0]}, MemPoolRemovalReason::CONFLICT));
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
 
     // Test 3: ... and should be rejected if spend2 is in the memory pool
     BOOST_CHECK(ToMemPool(spends[1]));
@@ -86,7 +88,9 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
         LOCK(cs_main);
         BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() != block.GetHash());
     }
-    m_node.mempool->clear();
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 1U);
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->removeRecursive(CTransaction{spends[1]}, MemPoolRemovalReason::CONFLICT));
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
 
     // Final sanity test: first spend in *m_node.mempool, second in block, that's OK:
     std::vector<CMutableTransaction> oneSpend;
