@@ -67,6 +67,8 @@ file(GLOB SOURCE_FILES
         src/crypto/*.h
         src/evo/*.cpp
         src/evo/*.h
+        src/governance/*.cpp
+        src/governance/*.h
         src/leveldb/db/*.cc
         src/leveldb/db/*.h
         src/leveldb/include/*.h
