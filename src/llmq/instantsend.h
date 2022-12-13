@@ -58,6 +58,7 @@ struct CInstantSendLock
 
     uint256 GetRequestId() const;
     bool IsDeterministic() const { return nVersion != islock_version; }
+    bool TriviallyValid() const;
 };
 
 using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
@@ -280,7 +281,6 @@ private:
     void TrySignInstantSendLock(const CTransaction& tx) LOCKS_EXCLUDED(cs_creating);
 
     void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock);
-    static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
     bool ProcessPendingInstantSendLocks(bool deterministic) LOCKS_EXCLUDED(cs_pendingLocks);
 

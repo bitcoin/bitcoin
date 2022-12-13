@@ -787,7 +787,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
         fDIP0024IsActive = utils::IsDIP0024Active(::ChainActive().Tip());
     }
 
-    if (!PreVerifyInstantSendLock(*islock)) {
+    if (!islock->TriviallyValid()) {
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 100);
         return;
@@ -830,18 +830,17 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
 
 /**
  * Handles trivial ISLock verification
- * @param islock The islock message being undergoing verification
  * @return returns false if verification failed, otherwise true
  */
-bool CInstantSendManager::PreVerifyInstantSendLock(const llmq::CInstantSendLock& islock)
+bool CInstantSendLock::TriviallyValid() const
 {
-    if (islock.txid.IsNull() || islock.inputs.empty()) {
+    if (txid.IsNull() || inputs.empty()) {
         return false;
     }
 
     // Check that each input is unique
     std::set<COutPoint> dups;
-    for (const auto& o : islock.inputs) {
+    for (const auto& o : inputs) {
         if (!dups.emplace(o).second) {
             return false;
         }
