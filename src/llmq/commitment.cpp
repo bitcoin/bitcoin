@@ -24,9 +24,12 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 {
 }
 
-#define LogPrintfFinalCommitment(...) do { if (LogAcceptCategory(BCLog::LLMQ)) { \
-    LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
-} } while (false)
+template<typename... Types>
+void LogPrintfFinalCommitment(Types... out) {
+    if (LogAcceptCategory(BCLog::LLMQ)) {
+        LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(out...)));
+    }
+}
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
