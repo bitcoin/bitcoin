@@ -5,6 +5,7 @@
 
 #include <logging.h>
 #include <memusage.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/threadnames.h>
@@ -103,7 +104,6 @@ void BCLog::Logger::DisconnectTestLogger()
     m_cur_buffer_memusage = 0;
     m_buffer_lines_discarded = 0;
     m_msgs_before_open.clear();
-
 }
 
 void BCLog::Logger::DisableLogging()
@@ -120,7 +120,16 @@ void BCLog::Logger::DisableLogging()
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
-    m_categories |= flag;
+    switch (flag) {
+    case BCLog::NONE:
+        return;
+    case BCLog::ALL:
+        // with no argument, set() sets all the bits to true
+        m_categories.set();
+        return;
+    default: break;
+    }
+    if (Assume(flag < BCLog::ALL)) m_categories.set(flag);
 }
 
 bool BCLog::Logger::EnableCategory(std::string_view str)
@@ -133,7 +142,16 @@ bool BCLog::Logger::EnableCategory(std::string_view str)
 
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 {
-    m_categories &= ~flag;
+    switch (flag) {
+    case BCLog::NONE:
+        return;
+    case BCLog::ALL:
+        // set all the category flags to false
+        m_categories.reset();
+        return;
+    default: break;
+    }
+    if (Assume(flag < BCLog::ALL)) m_categories.reset(flag);
 }
 
 bool BCLog::Logger::DisableCategory(std::string_view str)
@@ -146,7 +164,10 @@ bool BCLog::Logger::DisableCategory(std::string_view str)
 
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 {
-    return (m_categories.load(std::memory_order_relaxed) & category) != 0;
+    if (Assume(category < BCLog::ALL)) {
+        return m_categories.test(category);
+    }
+    return false;
 }
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
@@ -164,7 +185,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_categories.is_none();
 }
 
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
