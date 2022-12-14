@@ -525,8 +525,9 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     if (results.size() > 0) return *std::min_element(results.begin(), results.end());
 
     // If we can't fund the transaction from any individual OutputType, run coin selection one last time
-    // over all available coins, which would allow mixing
-    if (allow_mixed_output_types) {
+    // over all available coins, which would allow mixing.
+    // If TypesCount() <= 1, there is nothing to mix.
+    if (allow_mixed_output_types && available_coins.TypesCount() > 1) {
         if (auto result{ChooseSelectionResult(wallet, nTargetValue, eligibility_filter, available_coins.All(), coin_selection_params)}) {
             return result;
         }
