@@ -49,6 +49,9 @@ public:
     void pasteEntry(const SendCoinsRecipient &rv);
     bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
+    // Only used for testing-purposes
+    wallet::CCoinControl* getCoinControl() { return m_coin_control.get(); }
+
 public Q_SLOTS:
     void clear();
     void reject() override;
