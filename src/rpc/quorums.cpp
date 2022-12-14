@@ -87,25 +87,28 @@ static void quorum_list_extended_help(const JSONRPCRequest& request)
     RPCHelpMan{"quorum listextended",
         "Extended list of on-chain quorums\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
+            {"height", RPCArg::Type::NUM, /* default */ "", "The height index. Will list active quorums at tip if \"height\" is not specified."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::OBJ_DYN, "quorumName", "List of quorum details per some quorum type",
+                {RPCResult::Type::ARR, "quorumName", "List of quorum details per quorum type",
                 {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
                         {RPCResult::Type::OBJ, "xxxx", "Quorum hash. Note: most recent quorums come first.",
-                         {
-                                 {RPCResult::Type::NUM, "creationHeight", "Block height where the DKG started."},
-                                 {RPCResult::Type::NUM, "quorumIndex", "Quorum index (applicable only to rotated quorums)."},
-                                 {RPCResult::Type::STR_HEX, "minedBlockHash", "Blockhash where the commitment was mined."}
-                         }},
+                        {
+                            {RPCResult::Type::NUM, "creationHeight", "Block height where the DKG started."},
+                            {RPCResult::Type::NUM, "quorumIndex", "Quorum index (applicable only to rotated quorums)."},
+                            {RPCResult::Type::STR_HEX, "minedBlockHash", "Blockhash where the commitment was mined."}
+                        }}
+                    }}
                 }}
             }},
             RPCExamples{
                 HelpExampleCli("quorum", "listextended")
-                + HelpExampleCli("quorum", "listextended 10")
-                + HelpExampleRpc("quorum", "listextended, 10")
+                + HelpExampleCli("quorum", "listextended 2500")
+                + HelpExampleRpc("quorum", "listextended, 2500")
             },
     }.Check(request);
 }
@@ -114,24 +117,24 @@ static UniValue quorum_list_extended(const JSONRPCRequest& request)
 {
     quorum_list_extended_help(request);
 
-    int count = -1;
+    int nHeight = -1;
     if (!request.params[0].isNull()) {
-        count = ParseInt32V(request.params[0], "count");
-        if (count < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
+        nHeight = ParseInt32V(request.params[0], "height");
+        if (nHeight < 0 || nHeight > WITH_LOCK(cs_main, return ::ChainActive().Height())) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
         }
     }
 
     UniValue ret(UniValue::VOBJ);
 
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return ::ChainActive().Tip());
+    CBlockIndex* pblockindex = nHeight != -1 ? WITH_LOCK(cs_main, return ::ChainActive()[nHeight]) : WITH_LOCK(cs_main, return ::ChainActive().Tip());
 
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pblockindex)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq_ctx.qman->ScanQuorums(type, pindexTip, count > -1 ? count : llmq_params.signingActiveQuorumCount);
+        auto quorums = llmq_ctx.qman->ScanQuorums(type, pblockindex, llmq_params.signingActiveQuorumCount);
         for (const auto& q : quorums) {
             UniValue obj(UniValue::VOBJ);
             {
