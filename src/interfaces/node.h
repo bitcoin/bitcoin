@@ -7,6 +7,7 @@
 
 #include <common/settings.h>
 #include <consensus/amount.h>          // For CAmount
+#include <logging.h>                   // For BCLog
 #include <net.h>                       // For NodeId
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
@@ -84,7 +85,7 @@ public:
     virtual int getExitStatus() = 0;
 
     // Get log flags.
-    virtual uint32_t getLogCategories() = 0;
+    virtual const BCLog::LogFlagsBitset& getLogCategories() = 0;
 
     //! Initialize app dependencies.
     virtual bool baseInitialize() = 0;

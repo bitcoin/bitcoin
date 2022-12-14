@@ -93,7 +93,7 @@ public:
     void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
     int getExitStatus() override { return Assert(m_context)->exit_status.load(); }
-    uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
+    const BCLog::LogFlagsBitset& getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
         if (!AppInitBasicSetup(args(), Assert(context())->exit_status)) return false;
