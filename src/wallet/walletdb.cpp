@@ -974,7 +974,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx)
+DBErrors WalletBatch::FindWalletTxHashes(std::vector<uint256>& tx_hashes)
 {
     DBErrors result = DBErrors::LOAD_OK;
 
@@ -1012,9 +1012,7 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
             if (strType == DBKeys::TX) {
                 uint256 hash;
                 ssKey >> hash;
-                vTxHash.push_back(hash);
-                vWtx.emplace_back(/*tx=*/nullptr, TxStateInactive{});
-                ssValue >> vWtx.back();
+                tx_hashes.push_back(hash);
             }
         }
     } catch (...) {
@@ -1027,10 +1025,9 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWal
 
 DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
 {
-    // build list of wallet TXs and hashes
+    // build list of wallet TX hashes
     std::vector<uint256> vTxHash;
-    std::list<CWalletTx> vWtx;
-    DBErrors err = FindWalletTx(vTxHash, vWtx);
+    DBErrors err = FindWalletTxHashes(vTxHash);
     if (err != DBErrors::LOAD_OK) {
         return err;
     }
