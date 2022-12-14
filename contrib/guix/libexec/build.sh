@@ -283,7 +283,7 @@ mkdir -p "$DISTSRC"
     sed -i.old 's/-lstdc++ //g' config.status libtool
 
     # Build Syscoin Core
-    # Sycoin: add '-O --no-print-directory' (see Depends Building)
+    # Syscoin: add '-O --no-print-directory' (see Depends Building)
     make -O --no-print-directory --jobs="$JOBS" ${V:+V=1}
 
     # Check that symbol/security checks tools are sane.
