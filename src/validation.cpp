@@ -555,6 +555,16 @@ public:
     PackageMempoolAcceptResult AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
+     * Submission of a subpackage.  If only 1 transaction exists in subpackage, calls
+     * AcceptSingleTransaction() with adjusted ATMPArgs to avoid additional package policy
+     * restrictions like PackageMempoolChecks() and disabled RBF, and creates a
+     * PackageMempoolAcceptResult wrapping the result. If multiple transactions exist in
+     * subpackage, calls AcceptMultipleTransactions() with the provided ATMPArgs.
+    */
+    PackageMempoolAcceptResult AcceptSubPackage(const std::vector<CTransactionRef>& subpackage, ATMPArgs& args)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+
+    /**
      * Package (more specific than just multiple transactions) acceptance. Package must be a child
      * with all of its unconfirmed parents, and topologically sorted.
      */
@@ -1326,6 +1336,23 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     return PackageMempoolAcceptResult(package_state, std::move(results));
 }
 
+PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTransactionRef>& subpackage, ATMPArgs& args)
+{
+    ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(m_pool.cs);
+    if (subpackage.size() > 1) {
+        return AcceptMultipleTransactions(subpackage, args);
+    }
+    const auto& tx = subpackage.front();
+    const auto single_res = AcceptSingleTransaction(tx, single_args);
+    PackageValidationState package_state_wrapped;
+    if (single_res.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+        package_state_wrapped.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+    }
+    return PackageMempoolAcceptResult(package_state_wrapped, {{tx->GetWitnessHash(), single_res}});
+}
+
 PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
@@ -1384,15 +1411,6 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     LOCK(m_pool.cs);
     // Stores final results that won't change
     std::map<const uint256, const MempoolAcceptResult> results_final;
-    // Node operators are free to set their mempool policies however they please, nodes may receive
-    // transactions in different orders, and malicious counterparties may try to take advantage of
-    // policy differences to pin or delay propagation of transactions. As such, it's possible for
-    // some package transaction(s) to already be in the mempool, and we don't want to reject the
-    // entire package in that case (as that could be a censorship vector). De-duplicate the
-    // transactions that are already in the mempool, and only call AcceptMultipleTransactions() with
-    // the new transactions. This ensures we don't double-count transaction counts and sizes when
-    // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
-    ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
     // Results from individual validation. "Nonfinal" because if a transaction fails by itself but
     // succeeds later (i.e. when evaluated with a fee-bumping child), the result changes (though not
     // reflected in this map). If a transaction fails more than once, we want to return the first
@@ -1408,6 +1426,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         // we know is that the inputs aren't available.
         if (m_pool.exists(GenTxid::Wtxid(wtxid))) {
             // Exact transaction already exists in the mempool.
+            // Node operators are free to set their mempool policies however they please, nodes may receive
+            // transactions in different orders, and malicious counterparties may try to take advantage of
+            // policy differences to pin or delay propagation of transactions. As such, it's possible for
+            // some package transaction(s) to already be in the mempool, and we don't want to reject the
+            // entire package in that case (as that could be a censorship vector). De-duplicate the
+            // transactions that are already in the mempool, and only call AcceptMultipleTransactions() with
+            // the new transactions. This ensures we don't double-count transaction counts and sizes when
+            // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
             auto iter = m_pool.GetIter(txid);
             assert(iter != std::nullopt);
             results_final.emplace(wtxid, MempoolAcceptResult::MempoolTx(iter.value()->GetTxSize(), iter.value()->GetFee()));
@@ -1426,7 +1452,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         } else {
             // Transaction does not already exist in the mempool.
             // Try submitting the transaction on its own.
-            const auto single_res = AcceptSingleTransaction(tx, single_args);
+            const auto single_package_res = AcceptSubPackage({tx}, args);
+            const auto& single_res = single_package_res.m_tx_results.at(wtxid);
             if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 // The transaction succeeded on its own and is now in the mempool. Don't include it
                 // in package validation, because its fees should only be "used" once.
@@ -1464,7 +1491,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     }
     // Validate the (deduplicated) transactions as a package. Note that submission_result has its
     // own PackageValidationState; package_state_quit_early is unused past this point.
-    auto submission_result = AcceptMultipleTransactions(txns_package_eval, args);
+    auto submission_result = AcceptSubPackage(txns_package_eval, args);
     // Include already-in-mempool transaction results in the final result.
     for (const auto& [wtxid, mempoolaccept_res] : results_final) {
         Assume(submission_result.m_tx_results.emplace(wtxid, mempoolaccept_res).second);
@@ -1472,7 +1499,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     }
     if (submission_result.m_state.GetResult() == PackageValidationResult::PCKG_TX) {
         // Package validation failed because one or more transactions failed. Provide a result for
-        // each transaction; if AcceptMultipleTransactions() didn't return a result for a tx,
+        // each transaction; if a transaction doesn't have an entry in submission_result,
         // include the previous individual failure reason.
         submission_result.m_tx_results.insert(individual_results_nonfinal.cbegin(),
                                               individual_results_nonfinal.cend());
