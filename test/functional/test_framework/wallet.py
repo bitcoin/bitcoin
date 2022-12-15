@@ -119,7 +119,7 @@ class MiniWallet:
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
 
-    def rescan_utxos(self):
+    def rescan_utxos(self, *, include_mempool=True):
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
@@ -132,6 +132,12 @@ class MiniWallet:
                                   height=utxo["height"],
                                   coinbase=utxo["coinbase"],
                                   confirmations=res["height"] - utxo["height"] + 1))
+        if include_mempool:
+            mempool = self._test_node.getrawmempool(verbose=True)
+            # Sort tx by ancestor count. See BlockAssembler::SortForBlock in src/node/miner.cpp
+            sorted_mempool = sorted(mempool.items(), key=lambda item: (item[1]["ancestorcount"], int(item[0], 16)))
+            for txid, _ in sorted_mempool:
+                self.scan_tx(self._test_node.getrawtransaction(txid=txid, verbose=True))
 
     def scan_tx(self, tx):
         """Scan the tx and adjust the internal list of owned utxos"""
