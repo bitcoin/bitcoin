@@ -15,6 +15,7 @@
 #include <netbase.h>
 #include <chainparams.h>
 #include <util/system.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <version.h>
 
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     uint16_t altPort = 12345;
-    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
+    BOOST_CHECK(gArgs.SoftSetArg("-port", ToString(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
 }

@@ -19,6 +19,7 @@
 #include <netbase.h>
 #include <txdb.h>       // for -dbcache defaults
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <util/string.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/options.h>
@@ -187,7 +188,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("nPruneSize", 2);
     // Convert prune size from GB to MiB:
     const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
-    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? std::to_string(nPruneSizeMiB) : "0")) {
+    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? ToString(nPruneSizeMiB) : "0")) {
         addOverriddenOption("-prune");
     }
 

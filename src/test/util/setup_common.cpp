@@ -37,6 +37,7 @@
 #include <spork.h>
 #include <txdb.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <util/vector.h>

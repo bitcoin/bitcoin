@@ -34,6 +34,7 @@
 #include <util/bip32.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -953,7 +954,7 @@ static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
             num &= ~0x80000000;
         }
 
-        keypath_str += std::to_string(num);
+        keypath_str += ToString(num);
         if (hardened) {
             keypath_str += "'";
         }

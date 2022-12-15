@@ -16,6 +16,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/check.h>
+#include <util/string.h>
 
 #include <type_traits>
 

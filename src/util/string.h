@@ -75,4 +75,16 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
+/**
+ * Locale-independent version of std::to_string
+ */
+template <typename T>
+std::string ToString(const T& t)
+{
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << t;
+    return oss.str();
+}
+
 #endif // BITCOIN_UTIL_STRING_H

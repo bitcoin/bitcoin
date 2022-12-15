@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <tinyformat.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 
 #include <boost/lexical_cast.hpp>
@@ -55,11 +56,11 @@ static void strings_1_numberToString(benchmark::Bench& bench)
     });
 }
 
-static void strings_1_to_string(benchmark::Bench& bench)
+static void strings_1_tostring(benchmark::Bench& bench)
 {
     int i{0};
     bench.run([&] {
-        std::to_string(++i);
+        ToString(++i);
     });
 }
 
@@ -94,11 +95,11 @@ static void strings_2_multi_numberToString(benchmark::Bench& bench)
     });
 }
 
-static void strings_2_multi_to_string(benchmark::Bench& bench)
+static void strings_2_multi_tostring(benchmark::Bench& bench)
 {
     int i{0};
     bench.run([&] {
-        std::to_string(i) + std::to_string(i+1) + std::to_string(i+2) + std::to_string(i+3) + std::to_string(i+4);
+        ToString(i) + ToString(i+1) + ToString(i+2) + ToString(i+3) + ToString(i+4);
         ++i;
     });
 }
@@ -117,9 +118,9 @@ BENCHMARK(int_lexical_cast);
 BENCHMARK(strings_1_itostr);
 BENCHMARK(strings_1_lexical_cast);
 BENCHMARK(strings_1_numberToString);
-BENCHMARK(strings_1_to_string);
+BENCHMARK(strings_1_tostring);
 BENCHMARK(strings_2_multi_itostr);
 BENCHMARK(strings_2_multi_lexical_cast);
 BENCHMARK(strings_2_multi_numberToString);
-BENCHMARK(strings_2_multi_to_string);
+BENCHMARK(strings_2_multi_tostring);
 BENCHMARK(strings_2_strptintf);

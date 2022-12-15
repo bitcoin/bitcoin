@@ -18,6 +18,7 @@
 #include <timedata.h>
 #include <util/message.h> // for MESSAGE_MAGIC
 #include <util/ranges.h>
+#include <util/string.h>
 #include <validation.h>
 
 #include <string>
@@ -371,7 +372,7 @@ bool CSporkMessage::Sign(const CKey& key)
             return false;
         }
     } else {
-        std::string strMessage = std::to_string(nSporkID) + std::to_string(nValue) + std::to_string(nTimeSigned);
+        std::string strMessage = ToString(nSporkID) + ToString(nValue) + ToString(nTimeSigned);
 
         if (!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
             LogPrintf("CSporkMessage::Sign -- SignMessage() failed\n");
@@ -398,7 +399,7 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
             return false;
         }
     } else {
-        std::string strMessage = std::to_string(nSporkID) + std::to_string(nValue) + std::to_string(nTimeSigned);
+        std::string strMessage = ToString(nSporkID) + ToString(nValue) + ToString(nTimeSigned);
 
         if (!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)) {
             LogPrint(BCLog::SPORK, "CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
@@ -418,7 +419,7 @@ std::optional<CKeyID> CSporkMessage::GetSignerKeyID() const
             return std::nullopt;
         }
     } else {
-        std::string strMessage = std::to_string(nSporkID) + std::to_string(nValue) + std::to_string(nTimeSigned);
+        std::string strMessage = ToString(nSporkID) + ToString(nValue) + ToString(nTimeSigned);
         CHashWriter ss(SER_GETHASH, 0);
         ss << MESSAGE_MAGIC;
         ss << strMessage;

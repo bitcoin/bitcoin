@@ -11,6 +11,7 @@
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <validation.h>
 
@@ -177,7 +178,7 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
         }
     } else {
         std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                 std::to_string(nVoteSignal) + "|" + std::to_string(nVoteOutcome) + "|" + std::to_string(nTime);
+                                 ::ToString(nVoteSignal) + "|" + ::ToString(nVoteOutcome) + "|" + ::ToString(nTime);
 
         if (!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
             LogPrintf("CGovernanceVote::Sign -- SignMessage() failed\n");
@@ -205,9 +206,9 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
         }
     } else {
         std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                 std::to_string(nVoteSignal) + "|" +
-                                 std::to_string(nVoteOutcome) + "|" +
-                                 std::to_string(nTime);
+                                 ::ToString(nVoteSignal) + "|" +
+                                 ::ToString(nVoteOutcome) + "|" +
+                                 ::ToString(nTime);
 
         if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
