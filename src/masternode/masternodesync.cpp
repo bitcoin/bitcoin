@@ -213,7 +213,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
                     for (auto pNodeTmp : vNodesCopy) {
                         bool fRequestedEarlier = netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                        if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
+                        if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
                             netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                             connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
                             LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
