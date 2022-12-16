@@ -5829,8 +5829,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
                 // SYSCOIN avoid deadlock because mempool is used inside, should be locked outside of cs_tx_inventory, invalidateblock will lock mempool first and then cs_tx_inventory
                 LOCK2(m_mempool.cs, tx_relay->m_tx_inventory_mutex);
-                // Check whether periodic sends should happen
-                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
+                // SYSCOIN Check whether periodic sends should happen
+                // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
+                // because we never produce any txes ourselves i.e. no privacy is lost in this case.
+                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan) || fMasternodeMode;
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
