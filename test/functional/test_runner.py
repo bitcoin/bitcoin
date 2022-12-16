@@ -85,6 +85,7 @@ EXTENDED_SCRIPTS = [
     'feature_pruning.py',
     'feature_dbcrash.py',
     'feature_index_prune.py',
+    'wallet_pruning.py --legacy-wallet',
 ]
 
 BASE_SCRIPTS = [
