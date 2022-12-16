@@ -23,5 +23,5 @@ export PACKAGES="systemtap-sdt-dev clang llvm python3-zmq qtbase5-dev qttools5-d
 export DOCKER_NAME_TAG=ubuntu:22.04
 export NO_DEPENDS=1
 export GOAL="install"
-export TEST_RUNNER_EXTRA="--exclude interface_zmq_nevm,feature_deterministicmns,feature_llmqdkgerrors,feature_llmqconnections,feature_llmqsigning,feature_llmqsimplepose"
+export TEST_RUNNER_EXTRA="--exclude interface_zmq_nevm"
 export SYSCOIN_CONFIG="--enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
