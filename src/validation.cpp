@@ -1482,6 +1482,12 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
                 // parent, and should still be considered.
                 continue;
             }
+            if (wtxid == child->GetWitnessHash() && !quit_early) {
+                Assume(tx == package.back());
+                txns_package_eval.push_back(tx);
+                // Unless we're quitting early, validate the child outside of this loop.
+                break;
+            }
             // Try submitting the transaction on its own.
             const auto single_res = AcceptSingleTransaction(tx, single_args);
             if (single_res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
