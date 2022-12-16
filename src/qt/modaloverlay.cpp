@@ -12,13 +12,10 @@
 #include <QPropertyAnimation>
 #include <QResizeEvent>
 
-ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
-QWidget(parent),
-ui(new Ui::ModalOverlay),
-bestHeaderHeight(0),
-bestHeaderDate(QDateTime()),
-layerIsVisible(false),
-userClosed(false)
+ModalOverlay::ModalOverlay(bool enable_wallet, QWidget* parent)
+    : QWidget(parent),
+      ui(new Ui::ModalOverlay),
+      bestHeaderDate(QDateTime())
 {
     ui->setupUi(this);
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);

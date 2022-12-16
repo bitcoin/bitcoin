@@ -60,7 +60,7 @@ private:
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
-    int curAlignment;
+    int curAlignment{0};
 
     interfaces::Node* m_node = nullptr;
     bool m_shutdown = false;

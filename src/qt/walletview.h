@@ -50,7 +50,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 private:
-    ClientModel *clientModel;
+    ClientModel* clientModel{nullptr};
 
     //!
     //! The wallet model represents a bitcoin wallet, and offers access to

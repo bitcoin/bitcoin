@@ -97,16 +97,16 @@ protected:
 
 private:
     std::optional<InitExecutor> m_executor;
-    OptionsModel *optionsModel;
-    ClientModel *clientModel;
-    BitcoinGUI *window;
-    QTimer *pollShutdownTimer;
+    OptionsModel* optionsModel{nullptr};
+    ClientModel* clientModel{nullptr};
+    BitcoinGUI* window{nullptr};
+    QTimer* pollShutdownTimer{nullptr};
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
     WalletController* m_wallet_controller{nullptr};
 #endif
-    int returnValue;
-    const PlatformStyle *platformStyle;
+    int returnValue{0};
+    const PlatformStyle* platformStyle{nullptr};
     std::unique_ptr<QWidget> shutdownWindow;
     SplashScreen* m_splash = nullptr;
     std::unique_ptr<interfaces::Node> m_node;

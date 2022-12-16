@@ -37,14 +37,14 @@ public Q_SLOTS:
 private:
     void paintPath(QPainterPath &path, QQueue<float> &samples);
 
-    QTimer *timer;
-    float fMax;
+    QTimer* timer{nullptr};
+    float fMax{0.0f};
     std::chrono::minutes m_range{0};
     QQueue<float> vSamplesIn;
     QQueue<float> vSamplesOut;
-    quint64 nLastBytesIn;
-    quint64 nLastBytesOut;
-    ClientModel *clientModel;
+    quint64 nLastBytesIn{0};
+    quint64 nLastBytesOut{0};
+    ClientModel* clientModel{nullptr};
 };
 
 #endif // BITCOIN_QT_TRAFFICGRAPHWIDGET_H

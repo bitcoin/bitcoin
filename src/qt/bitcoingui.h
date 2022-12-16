@@ -333,8 +333,8 @@ protected:
     void changeEvent(QEvent* e) override;
 
 private:
-    OptionsModel *optionsModel;
-    QMenu* menu;
+    OptionsModel* optionsModel{nullptr};
+    QMenu* menu{nullptr};
     const PlatformStyle* m_platform_style;
 
     /** Shows context menu with Display Unit options by the mouse coordinates */

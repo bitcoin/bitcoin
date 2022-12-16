@@ -73,7 +73,7 @@ protected:
 private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
-    WalletModel *model;
+    WalletModel* model{nullptr};
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
