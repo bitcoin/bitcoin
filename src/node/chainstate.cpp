@@ -93,6 +93,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     pblockindexdb.reset(new CBlockIndexDB(cache_sizes.evo_db, options.block_tree_db_in_memory, options.fReindexGeth));
     // PoDA data cannot be deleted from disk on reindex because chain on disk does not have PoDA information to recreate it
     pnevmdatadb.reset(new CNEVMDataDB(cache_sizes.coins_db, options.block_tree_db_in_memory));
+    pnevmdatadb->ClearZeroMPT();
     if (!evoDb->CommitRootTransaction()) {
         return {ChainstateLoadStatus::FAILURE, _("Failed to commit EvoDB")};
     }

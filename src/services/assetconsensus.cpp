@@ -1318,3 +1318,31 @@ bool CNEVMDataDB::Prune(const int64_t nMedianTime) {
     }
     return WriteBatch(batch, true);
 }
+bool CNEVMDataDB::ClearZeroMPT() {
+    CDBBatch batch(*this);
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    std::pair<std::vector<unsigned char>, bool> pair;
+    int64_t nTime;
+    while (pcursor->Valid()) {
+        try {
+            nTime = 0;
+            // check if expired if so delete data
+            if(pcursor->GetKey(pair) && pair.second == false && pcursor->GetValue(nTime) && nTime == 0) {
+                // erase both pairs
+                batch.Erase(pair);
+                pair.second = true;
+                if(Exists(pair)) {  
+                    batch.Erase(pair);
+                }
+                // erase size
+                batch.Erase(pair.first);
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    return WriteBatch(batch, true);
+}
