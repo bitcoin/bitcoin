@@ -206,6 +206,32 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     return wallet;
 }
 
+struct MiniGUI {
+public:
+    SendCoinsDialog sendCoinsDialog;
+    TransactionView transactionView;
+    OptionsModel optionsModel;
+    std::unique_ptr<ClientModel> clientModel;
+    std::unique_ptr<WalletModel> walletModel;
+
+    MiniGUI(interfaces::Node& node, const PlatformStyle* platformStyle) : sendCoinsDialog(platformStyle), transactionView(platformStyle), optionsModel(node) {
+        bilingual_str error;
+        QVERIFY(optionsModel.Init(error));
+        clientModel = std::make_unique<ClientModel>(node, &optionsModel);
+    }
+
+    void initModelForWallet(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet, const PlatformStyle* platformStyle)
+    {
+        WalletContext& context = *node.walletLoader().context();
+        AddWallet(context, wallet);
+        walletModel = std::make_unique<WalletModel>(interfaces::MakeWallet(context, wallet), *clientModel, platformStyle);
+        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
+        sendCoinsDialog.setModel(walletModel.get());
+        transactionView.setModel(walletModel.get());
+    }
+
+};
+
 //! Simple qt wallet tests.
 //
 // Test widgets can be debugged interactively calling show() on them and
@@ -223,18 +249,11 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
 {
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCoinsDialog sendCoinsDialog(platformStyle.get());
-    TransactionView transactionView(platformStyle.get());
-    OptionsModel optionsModel(node);
-    bilingual_str error;
-    QVERIFY(optionsModel.Init(error));
-    ClientModel clientModel(node, &optionsModel);
-    WalletContext& context = *node.walletLoader().context();
-    AddWallet(context, wallet);
-    WalletModel walletModel(interfaces::MakeWallet(context, wallet), clientModel, platformStyle.get());
-    RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
-    sendCoinsDialog.setModel(&walletModel);
-    transactionView.setModel(&walletModel);
+    MiniGUI mini_gui(node, platformStyle.get());
+    mini_gui.initModelForWallet(node, wallet, platformStyle.get());
+    WalletModel& walletModel = *mini_gui.walletModel;
+    SendCoinsDialog& sendCoinsDialog = mini_gui.sendCoinsDialog;
+    TransactionView& transactionView = mini_gui.transactionView;
 
     // Update walletModel cached balance which will trigger an update for the 'labelBalance' QLabel.
     walletModel.pollBalanceChanged();
