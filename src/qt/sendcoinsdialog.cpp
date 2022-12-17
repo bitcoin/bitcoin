@@ -403,7 +403,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psbtx;
     GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-    QMessageBox msgBox;
+    QMessageBox msgBox(this);
     //: Caption of "PSBT has been copied" messagebox
     msgBox.setText(tr("Unsigned Transaction", "PSBT copied"));
     msgBox.setInformativeText(tr("The PSBT has been copied to the clipboard. You can also save it."));
