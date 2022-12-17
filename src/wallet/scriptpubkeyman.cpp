@@ -1707,9 +1707,9 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
-    if(IsCrypted()) {
+    if (IsCrypted() && !cryptedHDChain.IsNull()) {
         hdChainRet = cryptedHDChain;
-        return !cryptedHDChain.IsNull();
+        return true;
     }
 
     hdChainRet = hdChain;
