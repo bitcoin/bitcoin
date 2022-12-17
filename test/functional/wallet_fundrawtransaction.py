@@ -983,6 +983,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # are selected, the transaction will end up being too large, so it
         # shouldn't use BnB and instead fall back to Knapsack but that behavior
         # is not implemented yet. For now we just check that we get an error.
+        # First, force the wallet to bulk-generate the addresses we'll need.
+        recipient.keypoolrefill(1500)
         for _ in range(1500):
             outputs[recipient.getnewaddress()] = 0.1
         wallet.sendmany("", outputs)

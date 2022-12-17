@@ -320,6 +320,10 @@ class SendallTest(BitcoinTestFramework):
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
         self.log.info("Test that sendall fails if resulting transaction is too large")
+
+        # Force the wallet to bulk-generate the addresses we'll need
+        self.wallet.keypoolrefill(1600)
+
         # create many inputs
         outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(1600)}
         self.def_wallet.sendmany(amounts=outputs)
