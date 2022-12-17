@@ -45,8 +45,9 @@ class QuorumDataRecoveryTest(DashTestFramework):
         if qdata_recovery_enabled:
             # trigger recovery threads and wait for them to start
             self.nodes[0].generate(1)
+
             self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
-            time.sleep(self.quorum_data_thread_request_timeout_seconds + 1)
+            time.sleep(1)
         self.sync_blocks()
 
     def restart_mns(self, mns=None, exclude=[], reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
