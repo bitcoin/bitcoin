@@ -88,7 +88,7 @@ FUZZ_TARGET(coinselection)
     GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/false, group_all);
 
     // Run coinselection algorithms
-    const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change);
+    const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change, MAX_STANDARD_TX_WEIGHT);
 
     auto result_srd = SelectCoinsSRD(group_pos, target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);

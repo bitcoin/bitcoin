@@ -87,11 +87,17 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
     available_coins.Add(OutputType::BECH32, {COutPoint(wtx.GetHash(), nInput), txout, nAge, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate});
 }
 
-// Helper
+// Helpers
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
                                               CAmount change_target, FastRandomContext& rng)
 {
     auto res{KnapsackSolver(groups, nTargetValue, change_target, rng, MAX_STANDARD_TX_WEIGHT)};
+    return res ? std::optional<SelectionResult>(*res) : std::nullopt;
+}
+
+std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+{
+    auto res{SelectCoinsBnB(utxo_pool, selection_target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
     return res ? std::optional<SelectionResult>(*res) : std::nullopt;
 }
 

@@ -71,11 +71,13 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
+                                             int max_weight)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
     std::vector<size_t> curr_selection; // selected utxo indexes
+    int curr_selection_weight = 0; // sum of selected utxo weight
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
@@ -97,6 +99,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     CAmount best_waste = MAX_MONEY;
 
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
+    bool max_tx_weight_exceeded = false;
 
     // Depth First search loop for choosing the UTXOs
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
@@ -105,6 +108,9 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
             curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
+            backtrack = true;
+        } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
+            max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
             curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
@@ -135,6 +141,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
             curr_value -= utxo.GetSelectionAmount();
             curr_waste -= utxo.fee - utxo.long_term_fee;
+            curr_selection_weight -= utxo.m_weight;
             curr_selection.pop_back();
         } else { // Moving forwards, continuing down this branch
             OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
@@ -154,13 +161,14 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
                 curr_selection.push_back(utxo_pool_index);
                 curr_value += utxo.GetSelectionAmount();
                 curr_waste += utxo.fee - utxo.long_term_fee;
+                curr_selection_weight += utxo.m_weight;
             }
         }
     }
 
     // Check for solution
     if (best_selection.empty()) {
-        return util::Error();
+        return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
     }
 
     // Set output set
