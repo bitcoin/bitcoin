@@ -87,6 +87,14 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
     available_coins.Add(OutputType::BECH32, {COutPoint(wtx.GetHash(), nInput), txout, nAge, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate});
 }
 
+// Helper
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+                                              CAmount change_target, FastRandomContext& rng)
+{
+    auto res{KnapsackSolver(groups, nTargetValue, change_target, rng, MAX_STANDARD_TX_WEIGHT)};
+    return res ? std::optional<SelectionResult>(*res) : std::nullopt;
+}
+
 /** Check if SelectionResult a is equivalent to SelectionResult b.
  * Equivalent means same input values, but maybe different inputs (i.e. same value, different prevout) */
 static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
@@ -987,7 +995,10 @@ BOOST_AUTO_TEST_CASE(check_max_weight)
             chain);
 
         BOOST_CHECK(result);
-        BOOST_CHECK(has_coin(result->GetInputSet(), CAmount(50 * COIN)));
+        // Verify that only the 50 BTC UTXO was selected
+        const auto& selection_res = result->GetInputSet();
+        BOOST_CHECK(selection_res.size() == 1);
+        BOOST_CHECK((*selection_res.begin())->GetEffectiveValue() == 50 * COIN);
     }
 
     {

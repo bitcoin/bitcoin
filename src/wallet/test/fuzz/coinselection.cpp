@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -43,6 +44,9 @@ static void GroupCoins(FuzzedDataProvider& fuzzed_data_provider, const std::vect
     }
     if (valid_outputgroup) output_groups.push_back(output_group);
 }
+
+// Returns true if the result contains an error and the message is not empty
+static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
 FUZZ_TARGET(coinselection)
 {
@@ -90,12 +94,12 @@ FUZZ_TARGET(coinselection)
     if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
-    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context);
+    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_knapsack) result_knapsack->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
 
     // If the total balance is sufficient for the target and we are not using
-    // effective values, Knapsack should always find a solution.
-    if (total_balance >= target && subtract_fee_outputs) {
+    // effective values, Knapsack should always find a solution (unless the selection exceeded the max tx weight).
+    if (total_balance >= target && subtract_fee_outputs && !HasErrorMsg(result_knapsack)) {
         assert(result_knapsack);
     }
 }

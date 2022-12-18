@@ -422,7 +422,7 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
 
 // Original coin selection algorithm as a fallback
 util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                              CAmount change_target, FastRandomContext& rng);
+                                             CAmount change_target, FastRandomContext& rng, int max_weight);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H

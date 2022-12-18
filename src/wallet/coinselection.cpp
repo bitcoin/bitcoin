@@ -15,6 +15,13 @@
 #include <optional>
 
 namespace wallet {
+// Common selection error across the algorithms
+static util::Result<SelectionResult> ErrorMaxWeightExceeded()
+{
+    return util::Error{_("The inputs size exceeds the maximum weight. "
+                         "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
+}
+
 // Descending order comparator
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
@@ -253,7 +260,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
 }
 
 util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                              CAmount change_target, FastRandomContext& rng)
+                                             CAmount change_target, FastRandomContext& rng, int max_weight)
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
@@ -311,6 +318,16 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             if (vfBest[i]) {
                 result.AddInput(applicable_groups[i]);
             }
+        }
+
+        // If the result exceeds the maximum allowed size, return closest UTXO above the target
+        if (result.GetWeight() > max_weight) {
+            // No coin above target, nothing to do.
+            if (!lowest_larger) return ErrorMaxWeightExceeded();
+
+            // Return closest UTXO above target
+            result.Clear();
+            result.AddInput(*lowest_larger);
         }
 
         if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
