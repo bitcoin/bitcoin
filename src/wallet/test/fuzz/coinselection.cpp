@@ -90,7 +90,7 @@ FUZZ_TARGET(coinselection)
     // Run coinselection algorithms
     const auto result_bnb = SelectCoinsBnB(group_pos, target, cost_of_change);
 
-    auto result_srd = SelectCoinsSRD(group_pos, target, fast_random_context);
+    auto result_srd = SelectCoinsSRD(group_pos, target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
     if (result_srd) result_srd->ComputeAndSetWaste(cost_of_change, cost_of_change, 0);
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};

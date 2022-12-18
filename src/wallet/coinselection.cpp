@@ -13,6 +13,7 @@
 
 #include <numeric>
 #include <optional>
+#include <queue>
 
 namespace wallet {
 // Common selection error across the algorithms
@@ -172,9 +173,20 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     return result;
 }
 
-util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
+class MinOutputGroupComparator
+{
+public:
+    int operator() (const OutputGroup& group1, const OutputGroup& group2) const
+    {
+        return group1.GetSelectionAmount() > group2.GetSelectionAmount();
+    }
+};
+
+util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng,
+                                             int max_weight)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
+    std::priority_queue<OutputGroup, std::vector<OutputGroup>, MinOutputGroupComparator> heap;
 
     // Include change for SRD as we want to avoid making really small change if the selection just
     // barely meets the target. Just use the lower bound change target instead of the randomly
@@ -188,16 +200,40 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
     Shuffle(indexes.begin(), indexes.end(), rng);
 
     CAmount selected_eff_value = 0;
+    int weight = 0;
+    bool max_tx_weight_exceeded = false;
     for (const size_t i : indexes) {
         const OutputGroup& group = utxo_pool.at(i);
         Assume(group.GetSelectionAmount() > 0);
+
+        // Add group to selection
+        heap.push(group);
         selected_eff_value += group.GetSelectionAmount();
-        result.AddInput(group);
+        weight += group.m_weight;
+
+        // If the selection weight exceeds the maximum allowed size, remove the least valuable inputs until we
+        // are below max weight.
+        if (weight > max_weight) {
+            max_tx_weight_exceeded = true; // mark it in case we don't find any useful result.
+            do {
+                const OutputGroup& to_remove_group = heap.top();
+                selected_eff_value -= to_remove_group.GetSelectionAmount();
+                weight -= to_remove_group.m_weight;
+                heap.pop();
+            } while (!heap.empty() && weight > max_weight);
+        }
+
+        // Now check if we are above the target
         if (selected_eff_value >= target_value) {
+            // Result found, add it.
+            while (!heap.empty()) {
+                result.AddInput(heap.top());
+                heap.pop();
+            }
             return result;
         }
     }
-    return util::Error();
+    return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
 }
 
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
