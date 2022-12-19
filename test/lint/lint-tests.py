@@ -27,16 +27,13 @@ def grep_boost_fixture_test_suite():
 
 
 def check_matching_test_names(test_suite_list):
-    not_matching = [
-        x
-        for x in test_suite_list
-        if re.search(r"/(.*?)\.cpp:BOOST_FIXTURE_TEST_SUITE\(\1, .*\)", x) is None
-    ]
+    _test_suite_list = [test.split(".cpp")[0] for test in test_suite_list]
+    not_matching = [f"{test}.cpp" for test in _test_suite_list if not test.endswith("_tests")]
     if len(not_matching) > 0:
         not_matching = "\n".join(not_matching)
         error_msg = (
             "The test suite in file src/test/foo_tests.cpp should be named\n"
-            '"foo_tests". Please make sure the following test suites follow\n'
+            "\"foo_tests\". Please make sure the following test suites follow\n"
             "that convention:\n\n"
             f"{not_matching}\n"
         )
