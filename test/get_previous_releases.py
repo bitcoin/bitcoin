@@ -148,7 +148,8 @@ def download_binary(tag, args) -> int:
     ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
                           '--strip-components=1',
                           'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
-    if ret:
+    if ret != 0:
+        print(f"Failed to extract the {tag} tarball")
         return ret
 
     Path(tarball).unlink()
