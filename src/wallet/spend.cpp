@@ -590,21 +590,9 @@ util::Result<SelectionResult> ChooseSelectionResult(const CAmount& nTargetValue,
         return errors.empty() ? util::Error() : errors.front();
     }
 
-    std::vector<SelectionResult> eligible_results;
-    std::copy_if(results.begin(), results.end(), std::back_inserter(eligible_results), [coin_selection_params](const SelectionResult& result) {
-        const auto initWeight{coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR};
-        return initWeight + result.GetWeight() <= static_cast<int>(MAX_STANDARD_TX_WEIGHT);
-    });
-
-    if (eligible_results.empty()) {
-        return util::Error{_("The inputs size exceeds the maximum weight. "
-                             "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
-    }
-
     // Choose the result with the least waste
     // If the waste is the same, choose the one which spends more inputs.
-    auto& best_result = *std::min_element(eligible_results.begin(), eligible_results.end());
-    return best_result;
+    return *std::min_element(results.begin(), results.end());
 }
 
 util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,
