@@ -420,16 +420,6 @@
        <string>Amount</string>
       </property>
      </column>
-    <column>
-      <property name="text">
-       <string>Asset Amount</string>
-      </property>
-     </column>
-    <column>
-      <property name="text">
-       <string>Asset</string>
-      </property>
-     </column>
      <column>
       <property name="text">
        <string>Received with label</string>

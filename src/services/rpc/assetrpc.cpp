@@ -865,8 +865,8 @@ static RPCHelpMan listnevmblobdata()
             RPCExamples{
             HelpExampleCli("listnevmblobdata", "0")
             + HelpExampleCli("listnevmblobdata", "10 10")
-            + HelpExampleCli("listnevmblobdata", "0 0 '{\"getdata\":\true}'")
-            + HelpExampleRpc("listnevmblobdata", "0, 0, '{\"getdata\":\false}'")
+            + HelpExampleCli("listnevmblobdata", "0 0 '{\"getdata\":true}'")
+            + HelpExampleRpc("listnevmblobdata", "0, 0, '{\"getdata\":false}'")
             },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
