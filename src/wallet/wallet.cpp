@@ -3576,6 +3576,11 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         CExtKey master_key;
         master_key.SetSeed(seed_key);
 
+        // Store the master key as our active hd key
+        if (!SetActiveHDKey(master_key)) {
+            throw std::runtime_error(std::string(__func__) + ": Unable to set new Active HD key");
+        }
+
         SetupDescriptorScriptPubKeyMans(master_key);
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
@@ -4362,5 +4367,31 @@ bool CWallet::LoadActiveHDPubKey(const CExtPubKey& xpub, const std::optional<CKe
 
     // We should have had either a key or a crypted key. Having neither is an error.
     return Assume(false);
+}
+
+bool CWallet::SetActiveHDKey(const CExtKey& xprv)
+{
+    AssertLockHeld(cs_wallet);
+    std::optional<CKey> key;
+    std::vector<unsigned char> crypted_key;
+    if (IsCrypted()) {
+        if (IsLocked()) {
+            return false;
+        }
+        CKeyingMaterial secret(xprv.key.begin(), xprv.key.end());
+        if (!EncryptSecret(GetEncryptionKey(), secret, xprv.key.GetPubKey().GetHash(), crypted_key)) {
+            return false;
+        }
+    } else {
+        key = xprv.key;
+    }
+    return SetActiveHDKey(xprv.Neuter(), key, crypted_key);
+}
+
+bool CWallet::SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key)
+{
+    AssertLockHeld(cs_wallet);
+    LoadActiveHDPubKey(xpub, key, crypted_key);
+    return WalletBatch(GetDatabase()).WriteActiveHDKey(xpub, IsCrypted());
 }
 } // namespace wallet

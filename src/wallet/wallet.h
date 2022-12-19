@@ -1046,6 +1046,8 @@ public:
 
     //! Handling wallet HD Master Keys that are used for new automatic descriptors. No derivation will be performed.
     bool LoadActiveHDPubKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SetActiveHDKey(const CExtKey& xprv) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
