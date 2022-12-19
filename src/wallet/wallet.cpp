@@ -3637,6 +3637,25 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     }
 }
 
+uint256 CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
+{
+    AssertLockHeld(cs_wallet);
+    auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
+    if (IsCrypted()) {
+        if (IsLocked()) {
+            throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
+        }
+        if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, nullptr)) {
+            throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
+        }
+    }
+    spk_manager->SetupDescriptorGeneration(batch, master_key, output_type, internal);
+    uint256 id = spk_manager->GetID();
+    AddScriptPubKeyMan(id, std::move(spk_manager));
+    AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
+    return id;
+}
+
 void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
@@ -3647,19 +3666,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
-            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
-            if (IsCrypted()) {
-                if (IsLocked()) {
-                    throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
-                }
-                if (!spk_manager->CheckDecryptionKey(vMasterKey) && !spk_manager->Encrypt(vMasterKey, &batch)) {
-                    throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
-                }
-            }
-            spk_manager->SetupDescriptorGeneration(batch, master_key, t, internal);
-            uint256 id = spk_manager->GetID();
-            AddScriptPubKeyMan(id, std::move(spk_manager));
-            AddActiveScriptPubKeyManWithDb(batch, id, t, internal);
+            SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
         }
     }
 
