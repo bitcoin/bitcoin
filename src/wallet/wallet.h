@@ -569,6 +569,9 @@ public:
     //! Upgrade DescriptorCaches
     void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Upgrade to global HD key
+    void UpgradeToGlobalHDKey(const std::map<CPubKey, CKey>& desc_keys, const std::map<CPubKey, std::vector<unsigned char>>& desc_crypt_keys, bool encryption_status) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 
     //! Marks destination as previously spent.

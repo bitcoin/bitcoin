@@ -805,10 +805,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     std::optional<CExtPubKey> wallet_xpub;
     std::optional<CKey> wallet_key;
     std::vector<unsigned char> wallet_crypted_key;
+    bool enc_status = false;
     LoadResult active_hdkey_res = LoadRecords(pwallet, batch, DBKeys::ACTIVEHDKEY,
-        [&wallet_xpub] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        [&wallet_xpub, &enc_status] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
         std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
-        bool enc_status = false;
         value >> xpub;
         value >> enc_status;
         CExtPubKey extpub;
@@ -825,8 +825,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     // Load descriptor record
     int num_keys = 0;
     int num_ckeys= 0;
+    std::map<CPubKey, CKey> desc_keys;
+    std::map<CPubKey, std::vector<unsigned char>> desc_crypt_keys;
     LoadResult desc_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTOR,
-        [&batch, &num_keys, &num_ckeys, &last_client, &wallet_xpub, &wallet_key, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        [&batch, &num_keys, &num_ckeys, &last_client, &wallet_xpub, &wallet_key, &wallet_crypted_key, &desc_keys, &desc_crypt_keys] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
         DBErrors result = DBErrors::LOAD_OK;
 
         uint256 id;
@@ -913,7 +915,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Get unencrypted keys
         prefix = PrefixStream(DBKeys::WALLETDESCRIPTORKEY, id);
         LoadResult key_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTORKEY, prefix,
-            [&id, &spk_man, &wallet_xpub, &wallet_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+            [&id, &spk_man, &wallet_xpub, &wallet_key, &desc_keys] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
             uint256 desc_id;
             CPubKey pubkey;
             key >> desc_id;
@@ -952,6 +954,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             if (wallet_xpub && pubkey == wallet_xpub->pubkey) {
                 wallet_key = privkey;
             }
+            desc_keys.emplace(pubkey, privkey);
             return DBErrors::LOAD_OK;
         });
         result = std::max(result, key_res.m_result);
@@ -960,7 +963,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Get encrypted keys
         prefix = PrefixStream(DBKeys::WALLETDESCRIPTORCKEY, id);
         LoadResult ckey_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTORCKEY, prefix,
-            [&id, &spk_man, &wallet_xpub, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+            [&id, &spk_man, &wallet_xpub, &wallet_crypted_key, &desc_crypt_keys] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
             uint256 desc_id;
             CPubKey pubkey;
             key >> desc_id;
@@ -978,6 +981,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             if (wallet_xpub && pubkey == wallet_xpub->pubkey) {
                 wallet_crypted_key = privkey;
             }
+            desc_crypt_keys.emplace(pubkey, privkey);
             return DBErrors::LOAD_OK;
         });
         result = std::max(result, ckey_res.m_result);
@@ -997,6 +1001,9 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Only log if there are no critical errors
         pwallet->WalletLogPrintf("Descriptors: %u, Descriptor Keys: %u plaintext, %u encrypted, %u total.\n",
                desc_res.m_records, num_keys, num_ckeys, num_keys + num_ckeys);
+
+        // Upgrade the wallet to have a global HD key
+        pwallet->UpgradeToGlobalHDKey(desc_keys, desc_crypt_keys, enc_status);
     }
 
     return result;
