@@ -141,6 +141,10 @@ class MiniWallet:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
                 self._utxos.append(self._create_utxo(txid=tx["txid"], vout=out["n"], value=out["value"], height=0))
 
+    def scan_txs(self, txs):
+        for tx in txs:
+            self.scan_tx(tx)
+
     def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
         assert_equal(self._mode, MiniWalletMode.RAW_P2PK)
