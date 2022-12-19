@@ -794,8 +794,19 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     DBErrors result = DBErrors::LOAD_OK;
 
     // Get Active HD Key
+    // This is the xpub of the xprv that was used for the descriptors that were
+    // automatically generated. When the automatically generated descriptors
+    // are rotated (e.g. during wallet encryption), this record is updated
+    // to the xpub of the new master key.
+    // The xprv is not stored as it will be retrieved from any descriptor
+    // which uses it.
+    // Note that this field does not need to exist; watchonly wallets and
+    // wallets that started out blank will not contain this field.
+    std::optional<CExtPubKey> wallet_xpub;
+    std::optional<CKey> wallet_key;
+    std::vector<unsigned char> wallet_crypted_key;
     LoadResult active_hdkey_res = LoadRecords(pwallet, batch, DBKeys::ACTIVEHDKEY,
-        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        [&wallet_xpub] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
         std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
         bool enc_status = false;
         value >> xpub;
@@ -806,7 +817,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             err = "Error reading wallet database: CExtPubKey corrupt";
             return DBErrors::CORRUPT;
         }
-        // TODO: Load extpub into the wallet
+        wallet_xpub = extpub;
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, active_hdkey_res.m_result);
@@ -815,7 +826,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     int num_keys = 0;
     int num_ckeys= 0;
     LoadResult desc_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTOR,
-        [&batch, &num_keys, &num_ckeys, &last_client] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        [&batch, &num_keys, &num_ckeys, &last_client, &wallet_xpub, &wallet_key, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
         DBErrors result = DBErrors::LOAD_OK;
 
         uint256 id;
@@ -902,7 +913,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Get unencrypted keys
         prefix = PrefixStream(DBKeys::WALLETDESCRIPTORKEY, id);
         LoadResult key_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTORKEY, prefix,
-            [&id, &spk_man] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+            [&id, &spk_man, &wallet_xpub, &wallet_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
             uint256 desc_id;
             CPubKey pubkey;
             key >> desc_id;
@@ -938,6 +949,9 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
                 return DBErrors::CORRUPT;
             }
             spk_man->AddKey(pubkey.GetID(), privkey);
+            if (wallet_xpub && pubkey == wallet_xpub->pubkey) {
+                wallet_key = privkey;
+            }
             return DBErrors::LOAD_OK;
         });
         result = std::max(result, key_res.m_result);
@@ -946,7 +960,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Get encrypted keys
         prefix = PrefixStream(DBKeys::WALLETDESCRIPTORCKEY, id);
         LoadResult ckey_res = LoadRecords(pwallet, batch, DBKeys::WALLETDESCRIPTORCKEY, prefix,
-            [&id, &spk_man] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+            [&id, &spk_man, &wallet_xpub, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
             uint256 desc_id;
             CPubKey pubkey;
             key >> desc_id;
@@ -961,6 +975,9 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             value >> privkey;
 
             spk_man->AddCryptedKey(pubkey.GetID(), pubkey, privkey);
+            if (wallet_xpub && pubkey == wallet_xpub->pubkey) {
+                wallet_crypted_key = privkey;
+            }
             return DBErrors::LOAD_OK;
         });
         result = std::max(result, ckey_res.m_result);
@@ -969,6 +986,12 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         return result;
     });
     result = std::max(result, desc_res.m_result);
+
+    // Load the active hd key
+    if (wallet_xpub && !pwallet->LoadActiveHDPubKey(*wallet_xpub, wallet_key, wallet_crypted_key)) {
+        pwallet->WalletLogPrintf("Error: Unable to load active hd pubkey\n");
+        return DBErrors::CORRUPT;
+    }
 
     if (result <= DBErrors::NONCRITICAL_ERROR) {
         // Only log if there are no critical errors
