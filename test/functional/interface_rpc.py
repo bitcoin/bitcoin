@@ -25,7 +25,7 @@ def expect_http_status(expected_http_status, expected_rpc_code,
 def test_work_queue_getblock(node, got_exceeded_error):
     while not got_exceeded_error:
         try:
-            node.cli('getrpcinfo').send_cli()
+            node.cli("waitfornewblock", "500").send_cli()
         except subprocess.CalledProcessError as e:
             assert_equal(e.output, 'error: Server response: Work queue depth exceeded\n')
             got_exceeded_error.append(True)

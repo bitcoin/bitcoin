@@ -23,7 +23,7 @@ from test_framework.wallet import MiniWallet
 
 
 def small_txpuzzle_randfee(
-    wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment
+    wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
 ):
     """Create and send a transaction with a random fee using MiniWallet.
 
@@ -57,8 +57,11 @@ def small_txpuzzle_randfee(
     tx.vout[0].nValue = int((total_in - amount - fee) * COIN)
     tx.vout.append(deepcopy(tx.vout[0]))
     tx.vout[1].nValue = int(amount * COIN)
+    tx.rehash()
+    txid = tx.hash
+    tx_hex = tx.serialize().hex()
 
-    txid = from_node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
+    batch_reqs.append(from_node.sendrawtransaction.get_request(hexstring=tx_hex, maxfeerate=0))
     unconflist.append({"txid": txid, "vout": 0, "value": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "value": amount})
 
@@ -115,13 +118,12 @@ def check_estimates(node, fees_seen):
     check_smart_estimates(node, fees_seen)
 
 
-def send_tx(wallet, node, utxo, feerate):
-    """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
-    return wallet.send_self_transfer(
-        from_node=node,
+def make_tx(wallet, utxo, feerate):
+    """Create a 1in-1out transaction with a specific input and feerate (sat/vb)."""
+    return wallet.create_self_transfer(
         utxo_to_spend=utxo,
         fee_rate=Decimal(feerate * 1000) / COIN,
-    )['txid']
+    )
 
 
 class EstimateFeeTest(BitcoinTestFramework):
@@ -156,6 +158,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # resorting to tx's that depend on the mempool when those run out
         for _ in range(numblocks):
             random.shuffle(self.confutxo)
+            batch_sendtx_reqs = []
             for _ in range(random.randrange(100 - 50, 100 + 50)):
                 from_index = random.randint(1, 2)
                 (tx_bytes, fee) = small_txpuzzle_randfee(
@@ -166,9 +169,12 @@ class EstimateFeeTest(BitcoinTestFramework):
                     Decimal("0.005"),
                     min_fee,
                     min_fee,
+                    batch_sendtx_reqs,
                 )
                 tx_kbytes = tx_bytes / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
+            for node in self.nodes:
+                node.batch(batch_sendtx_reqs)
             self.sync_mempools(wait=0.1)
             mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
             # update which txouts are confirmed
@@ -245,14 +251,20 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_greater_than_or_equal(len(utxos), 250)
         for _ in range(5):
             # Broadcast 45 low fee transactions that will need to be RBF'd
+            txs = []
             for _ in range(45):
                 u = utxos.pop(0)
-                txid = send_tx(self.wallet, node, u, low_feerate)
+                tx = make_tx(self.wallet, u, low_feerate)
                 utxos_to_respend.append(u)
-                txids_to_replace.append(txid)
+                txids_to_replace.append(tx["txid"])
+                txs.append(tx)
             # Broadcast 5 low fee transaction which don't need to
             for _ in range(5):
-                send_tx(self.wallet, node, utxos.pop(0), low_feerate)
+                tx = make_tx(self.wallet, utxos.pop(0), low_feerate)
+                txs.append(tx)
+            batch_send_tx = [node.sendrawtransaction.get_request(tx["hex"]) for tx in txs]
+            for n in self.nodes:
+                n.batch(batch_send_tx)
             # Mine the transactions on another node
             self.sync_mempools(wait=0.1, nodes=[node, miner])
             for txid in txids_to_replace:
@@ -261,7 +273,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             # RBF the low-fee transactions
             while len(utxos_to_respend) > 0:
                 u = utxos_to_respend.pop(0)
-                send_tx(self.wallet, node, u, high_feerate)
+                tx = make_tx(self.wallet, u, high_feerate)
+                node.sendrawtransaction(tx["hex"])
+                txs.append(tx)
+            dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
+            self.wallet.scan_txs(dec_txs)
+
 
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
