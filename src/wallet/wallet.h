@@ -1048,6 +1048,7 @@ public:
     bool LoadActiveHDPubKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool SetActiveHDKey(const CExtKey& xprv) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::optional<CExtPubKey> GetActiveHDPubKey() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**

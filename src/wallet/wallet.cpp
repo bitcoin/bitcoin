@@ -4394,4 +4394,10 @@ bool CWallet::SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& 
     LoadActiveHDPubKey(xpub, key, crypted_key);
     return WalletBatch(GetDatabase()).WriteActiveHDKey(xpub, IsCrypted());
 }
+
+std::optional<CExtPubKey> CWallet::GetActiveHDPubKey()
+{
+    AssertLockHeld(cs_wallet);
+    return m_xpub;
+}
 } // namespace wallet
