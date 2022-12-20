@@ -328,6 +328,15 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
             continue;
 
+        // if any input of this tx was selected for spending, skip the outputs.
+        // The tx is being replaced and the outputs are no longer going to exist.
+        if (coinControl && coinControl->HasSelected()) {
+            if (std::any_of(wtx.tx->vin.begin(), wtx.tx->vin.end(), [&coinControl](const CTxIn& input) {
+                return coinControl->IsSelected(input.prevout); })) {
+                continue; // skip tx.
+            }
+        }
+
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < 0)
             continue;

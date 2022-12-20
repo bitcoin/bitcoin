@@ -1462,16 +1462,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         raw_tx2 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {target_address: 1})
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
 
-        self.log.info("Fail to broadcast a new TX with maxconf 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
-        # Now fund 'raw_tx2' to fulfill the total target (1 BTC) by using all the wallet unconfirmed outputs.
-        # As it was created with the first unconfirmed output, 'raw_tx2' only has 0.1 BTC covered (need to fund 0.9 BTC more).
-        # So, the selection process, to cover the amount, will pick up the 'final_tx1' output as well, which is an output of the tx that this
-        # new tx is replacing!. So, once we send it to the mempool, it will return a "bad-txns-spends-conflicting-tx"
-        # because the input will no longer exist once the first tx gets replaced by this new one).
-        funded_invalid = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'maxconf': 0, 'fee_rate': 10})['hex']
-        final_invalid = wallet.signrawtransactionwithwallet(funded_invalid)['hex']
-        assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, final_invalid)
-
         self.log.info("Craft a replacement adding inputs with highest depth possible")
         funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['hex']
         tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
