@@ -385,10 +385,6 @@ void SyscoinGUI::createActions()
     m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M));
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
-    // SYSCOIN
-    openRepairAction = new QAction(platformStyle->SingleColorIcon(":/icons/options"), tr("Wallet &Repair"), this);
-    openRepairAction->setStatusTip(tr("Show wallet repair options"));
-    openRepairAction->setEnabled(false);
     connect(quitAction, &QAction::triggered, this, &SyscoinGUI::quitRequested);
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
@@ -511,7 +507,6 @@ void SyscoinGUI::createMenuBar()
         file->addAction(openAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
-        file->addAction(openRepairAction);
         file->addAction(m_load_psbt_action);
         file->addAction(m_load_psbt_clipboard_action);
         file->addSeparator();
@@ -1375,7 +1370,6 @@ void SyscoinGUI::showEvent(QShowEvent *event)
     openRPCConsoleAction->setEnabled(true);
     aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
-    openRepairAction->setEnabled(true);
 }
 
 #ifdef ENABLE_WALLET

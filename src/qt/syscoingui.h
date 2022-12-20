@@ -175,7 +175,6 @@ private:
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
-    QAction *openRepairAction = nullptr;
 
     QMenu* m_network_context_menu = new QMenu(this);
 
