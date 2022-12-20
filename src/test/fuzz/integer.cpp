@@ -78,9 +78,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)FormatISO8601DateTime(i64);
     // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
     if (i64 != std::numeric_limits<int64_t>::min()) {
-        int64_t parsed_money;
-        if (ParseMoney(FormatMoney(i64), parsed_money)) {
-            assert(parsed_money == i64);
+        if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
+            assert(parsed.value() == i64);
         }
     }
     (void)GetSizeOfCompactSize(u64);
@@ -127,9 +126,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)ToUpper(ch);
     // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
     if (i64 != std::numeric_limits<int64_t>::min()) {
-        int64_t parsed_money;
-        if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
-            assert(parsed_money == i64);
+        if (std::optional<CAmount> parsed = ParseMoney(ValueFromAmount(i64).getValStr())) {
+            assert(parsed.value() == i64);
         }
     }
     const std::chrono::seconds seconds{i64};
