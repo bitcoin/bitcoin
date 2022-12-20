@@ -133,6 +133,7 @@ class KeyPoolTest(BitcoinTestFramework):
 
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
+        assert_raises_rpc_error(-8, "Invalid parameter, expected valid size.", nodes[0].keypoolrefill, -1)
         wi = nodes[0].getwalletinfo()
         if self.options.descriptors:
             assert_equal(wi['keypoolsize_hd_internal'], 400)
