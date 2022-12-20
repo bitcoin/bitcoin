@@ -150,6 +150,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_feerate_rounding()
         self.test_input_confs_control()
         self.test_duplicate_outputs()
+        self.test_coin_selection_for_replacement_tx()
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
@@ -1476,6 +1477,65 @@ class RawTransactionsTest(BitcoinTestFramework):
         mempool = self.nodes[0].getrawmempool()
         assert txid1 not in mempool
         assert txid2 in mempool
+
+        wallet.unloadwallet()
+
+    # returns the index of the first output that sends coins to the wallet
+    def get_first_recv_vout(self, wallet, txid):
+        for info in wallet.gettransaction(txid)['details']:
+            if info['category'] == 'receive':
+                return info['vout']
+        return -1
+
+    def test_coin_selection_for_replacement_tx(self):
+        self.log.info("Test wallet tx creation, must not select any output belonging to the tx that is being replaced")
+
+        self.nodes[0].createwallet("invalid_replacement_tx")
+        wallet = self.nodes[0].get_wallet_rpc("invalid_replacement_tx")
+
+        # Fund wallet with 1 BTC
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.nodes[2], 1)
+
+        # Create an unconfirmed tx, destination 0.6 BTC, change 0.4 BTC.
+        unconfirmed_txid = wallet.sendtoaddress(wallet.getnewaddress(), 0.6)
+        unconfirmed_tx_vout = self.get_first_recv_vout(wallet, unconfirmed_txid)
+        assert unconfirmed_tx_vout != -1
+
+        self.log.info("Crafting tx using unconfirmed input")
+        target_address = self.nodes[2].getnewaddress()
+        options = {
+            "inputs": [{'txid': unconfirmed_txid, 'vout': unconfirmed_tx_vout}],
+            "add_inputs": False,
+            "fee_rate": 1,
+            "add_to_wallet": False
+        }
+        original_tx = wallet.send(outputs=[{target_address: 0.1}], options=options)['hex']
+
+        # Make sure we only had the one input
+        original_tx_inputs = self.nodes[0].decoderawtransaction(original_tx)['vin']
+        assert_equal(len(original_tx_inputs), 1)
+        assert unconfirmed_txid == original_tx_inputs[0]['txid']
+
+        # Relay original_tx and check that is on the mempool
+        assert self.nodes[0].sendrawtransaction(original_tx) in self.nodes[0].getrawmempool()
+
+        # Test case 1 #
+        # Craft a replacement tx and verify that the wallet does not select any output of the
+        # transaction being replaced as input for the replacement.
+
+        self.log.info("Crafting replacement tx")
+        # Create a replacement tx for the 'original_tx' that has 1 BTC target instead of 0.1.
+        replacement_tx = wallet.createrawtransaction([{'txid': unconfirmed_txid, 'vout': unconfirmed_tx_vout}], {target_address: 1})
+
+        # Now try to fund 'replacement_tx' to fulfill the total target (1 BTC).
+        # As it was created with the first unconfirmed output, 'replacement_tx' only covers 0.6 BTC, need to fund 0.4 BTC more.
+        # So, the wallet coin selection process must fail, because there are no other available coins to fund the
+        # remaining 0.4 BTC.
+        # The wallet only contains the output of 'tx1'; which is the transaction that is being replaced, which must
+        # be skipped (because otherwise the generated transaction will be invalid due be spending an output of the
+        # transaction that is replacing).
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, replacement_tx, {'add_inputs': True, 'fee_rate': 10})
 
         wallet.unloadwallet()
 
