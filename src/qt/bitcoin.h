@@ -86,7 +86,6 @@ Q_SIGNALS:
     void requestedInitialize();
     void requestedRestart(QStringList args);
     void requestedShutdown();
-    void splashFinished();
     void windowShown(BitcoinGUI* window);
 
 protected:

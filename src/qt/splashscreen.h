@@ -37,9 +37,6 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 public Q_SLOTS:
-    /** Hide the splash screen window and schedule the splash screen object for deletion */
-    void finish();
-
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
