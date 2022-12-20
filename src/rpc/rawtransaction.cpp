@@ -80,6 +80,17 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     }
 }
 
+static std::vector<RPCResult> ScriptPubKeyDoc() {
+    return
+         {
+             {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
+             {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+             {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
+             {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+             {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
+         };
+}
+
 static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
 {
     return {
@@ -115,14 +126,7 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
             {
                 {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::NUM, "n", "index"},
-                {RPCResult::Type::OBJ, "scriptPubKey", "",
-                {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
-                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                    {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
-                    {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
-                    {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
-                }},
+                {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
             }},
         }},
     };
@@ -177,8 +181,8 @@ static RPCHelpMan getrawtransaction()
                 "Hint: Use gettransaction for wallet transactions.\n\n"
 
                 "If verbosity is 0 or omitted, returns the serialized transaction as a hex-encoded string.\n"
-                "If verbosity is 1, returns a JSON Object with information about transaction.\n"
-                "If verbosity is 2, returns a JSON Object with information about transaction, including fee and prevout information.",
+                "If verbosity is 1, returns a JSON Object with information about the transaction.\n"
+                "If verbosity is 2, returns a JSON Object with information about the transaction, including fee and prevout information.",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                     {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout"},
@@ -189,7 +193,6 @@ static RPCHelpMan getrawtransaction()
                          RPCResult::Type::STR, "data", "The serialized transaction as a hex-encoded string for 'txid'"
                      },
                      RPCResult{"if verbosity is set to 1",
-                         // When updating this documentation, update `decoderawtransaction` in the same way.
                          RPCResult::Type::OBJ, "", "",
                          Cat<std::vector<RPCResult>>(
                          {
@@ -206,25 +209,18 @@ static RPCHelpMan getrawtransaction()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                            {RPCResult::Type::NUM, "fee", /* optional */ true, "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
+                            {RPCResult::Type::NUM, "fee", /*optional=*/true, "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                             {RPCResult::Type::ARR, "vin", "",
                             {
-                                {RPCResult::Type::OBJ, "", /* optional */ true, "utxo being spent, omitted if block undo data is not available",
+                                {RPCResult::Type::OBJ, "", "utxo being spent, omitted if block undo data is not available",
                                 {
                                     {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                                    {RPCResult::Type::OBJ, "prevout", "Only if undo information is available)",
+                                    {RPCResult::Type::OBJ, "prevout", /*optional=*/true, "Only if undo information is available)",
                                     {
                                         {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
                                         {RPCResult::Type::NUM, "height", "The height of the prevout"},
                                         {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
-                                        {RPCResult::Type::OBJ, "scriptPubKey", "",
-                                        {
-                                             {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
-                                             {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                                             {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
-                                             {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
-                                             {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
-                                        }},
+                                        {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
                                     }},
                                 }},
                             }},
