@@ -293,7 +293,22 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
 bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     LOCK(wallet.cs_wallet);
-    return wallet.SignTransaction(mtx);
+
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+        // Make a blank psbt
+        PartiallySignedTransaction psbtx(mtx);
+
+        // First fill transaction with our data without signing,
+        // so external signers are not asked to sign more than once.
+        bool complete;
+        wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        const TransactionError err = wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */);
+        if (err != TransactionError::OK) return false;
+        complete = FinalizeAndExtractPSBT(psbtx, mtx);
+        return complete;
+    } else {
+        return wallet.SignTransaction(mtx);
+    }
 }
 
 Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, uint256& bumped_txid)
