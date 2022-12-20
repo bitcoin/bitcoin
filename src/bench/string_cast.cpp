@@ -21,7 +21,7 @@ static void int_atoi(benchmark::Bench& bench)
 {
     int value;
     bench.run([&] {
-        value = atoi("1");
+        value = LocaleIndependentAtoi<int>("1");
     });
 }
 

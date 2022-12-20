@@ -16,6 +16,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <univalue.h>
+#include <util/strencodings.h>
 #include <spork.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -322,7 +323,7 @@ static UniValue masternode_winners(const JSONRPCRequest& request)
     std::string strFilter = "";
 
     if (!request.params[0].isNull()) {
-        nCount = atoi(request.params[0].get_str());
+        nCount = LocaleIndependentAtoi<int>(request.params[0].get_str());
     }
 
     if (!request.params[1].isNull()) {

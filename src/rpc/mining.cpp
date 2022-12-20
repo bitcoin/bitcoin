@@ -736,7 +736,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             std::string lpstr = lpval.get_str();
 
             hashWatchedChain.SetHex(lpstr.substr(0, 64));
-            nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
+            nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
         }
         else
         {

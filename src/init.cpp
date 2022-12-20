@@ -57,6 +57,7 @@
 #include <util/asmap.h>
 #include <util/error.h>
 #include <util/moneystr.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -878,7 +879,7 @@ static void CleanupBlockRevFiles()
     // start removing block files.
     int nContigCounter = 0;
     for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
+        if (LocaleIndependentAtoi<int>(item.first) == nContigCounter) {
             nContigCounter++;
             continue;
         }

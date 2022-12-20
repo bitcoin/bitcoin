@@ -8,6 +8,7 @@
 #include <evo/specialtx.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>

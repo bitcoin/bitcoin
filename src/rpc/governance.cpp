@@ -18,6 +18,7 @@
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
 #include <wallet/rpcwallet.h>
@@ -950,7 +951,7 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     if (!request.params[1].isNull() && !request.params[2].isNull()) {
         uint256 txid = ParseHashV(request.params[1], "Masternode Collateral hash");
         std::string strVout = request.params[2].get_str();
-        mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
+        mnCollateralOutpoint = COutPoint(txid, LocaleIndependentAtoi<uint32_t>(strVout));
     }
 
     // FIND OBJECT USER IS LOOKING FOR

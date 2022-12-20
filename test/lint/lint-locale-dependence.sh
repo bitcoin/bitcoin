@@ -5,31 +5,22 @@
 
 export LC_ALL=C
 
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent stoul/strtol with locale
+#       independent ToIntegral<T>(...).
+# TODO: Reduce KNOWN_VIOLATIONS by replacing uses of locale dependent snprintf with strprintf.
 KNOWN_VIOLATIONS=(
-    "src/bench/string_cast.cpp.*atoi"
     "src/bitcoin-tx.cpp.*stoul"
     "src/bitcoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"
-    "src/init.cpp:.*atoi"
-    "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
-    "src/rpc/blockchain.cpp.*atoi"
-    "src/rpc/governance.cpp.*atoi"
-    "src/rpc/masternode.cpp.*atoi"
     "src/statsd_client.cpp:.*snprintf"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
-    "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/test/fuzz/string.cpp"
-    "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*atoi"
     "src/util/strencodings.cpp:.*strtoll"
-    "src/util/strencodings.h:.*atoi"
-    "src/wallet/wallet.cpp:.*atoi"
-    "src/util/system.cpp:.*atoi"
     "src/util/system.cpp:.*fprintf"
 )
 
