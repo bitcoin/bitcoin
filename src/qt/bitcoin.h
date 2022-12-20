@@ -89,7 +89,6 @@ public Q_SLOTS:
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
-    void splashFinished();
     void windowShown(BitcoinGUI* window);
 
 protected:
