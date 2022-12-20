@@ -371,6 +371,23 @@ bool BlockManager::LoadBlockIndexDB(const Consensus::Params& consensus_params)
     return true;
 }
 
+void BlockManager::ScanAndUnlinkAlreadyPrunedFiles()
+{
+    AssertLockHeld(::cs_main);
+    if (!m_have_pruned) {
+        return;
+    }
+
+    std::set<int> block_files_to_prune;
+    for (int file_number = 0; file_number < m_last_blockfile; file_number++) {
+        if (m_blockfile_info[file_number].nSize == 0) {
+            block_files_to_prune.insert(file_number);
+        }
+    }
+
+    UnlinkPrunedFiles(block_files_to_prune);
+}
+
 const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
@@ -556,11 +573,14 @@ uint64_t BlockManager::CalculateCurrentUsage()
 
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 {
+    std::error_code ec;
     for (std::set<int>::iterator it = setFilesToPrune.begin(); it != setFilesToPrune.end(); ++it) {
         FlatFilePos pos(*it, 0);
-        fs::remove(BlockFileSeq().FileName(pos));
-        fs::remove(UndoFileSeq().FileName(pos));
-        LogPrint(BCLog::BLOCKSTORE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+        const bool removed_blockfile{fs::remove(BlockFileSeq().FileName(pos), ec)};
+        const bool removed_undofile{fs::remove(UndoFileSeq().FileName(pos), ec)};
+        if (removed_blockfile || removed_undofile) {
+            LogPrint(BCLog::BLOCKSTORE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+        }
     }
 }
 
