@@ -6366,7 +6366,7 @@ std::vector<std::string> SanitizeGethCmdLine(const fs::path& binaryURL, const fs
     if(fTestNet || fRegTest) {
         cmdLineRet.push_back("--tanenbaum");
     } else {
-        cmdLineRet.push_back("--syscoin");
+        cmdLineRet.push_back("--mainnet");
     }
     // Geth should subscribe to our publisher
     cmdLineRet.push_back("--nevmpub");

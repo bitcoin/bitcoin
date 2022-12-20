@@ -1752,63 +1752,6 @@
        </item>
       </layout>
      </widget>
-    <widget class="QWidget" name="tab_repair">
-      <attribute name="title">
-       <string>&amp;Wallet Repair</string>
-      </attribute>
-      <widget class="QLabel" name="label_repair_header">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>711</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Wallet repair options.</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btn_reindex">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>350</y>
-         <width>301</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Rebuild index</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_repair_reindex">
-       <property name="geometry">
-        <rect>
-         <x>330</x>
-         <y>340</y>
-         <width>411</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>-reindex: Rebuild block chain index from current blk000??.dat files.</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </widget>
     </widget>
    </item>
   </layout>

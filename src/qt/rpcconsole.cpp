@@ -49,10 +49,6 @@
 #include <QTimer>
 #include <QVariant>
 #include <chrono>
-// SYSCOIN
-// Repair parameters
-const QString REINDEX("-reindex");
-
 
 const int CONSOLE_HISTORY = 50;
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
@@ -562,9 +558,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->WalletSelector->setVisible(false);
     ui->WalletSelectorLabel->setVisible(false);
 
-    // SYSCOIN Wallet Repair Buttons
-    connect(ui->btn_reindex, &QPushButton::clicked, this, &RPCConsole::walletReindex);
-
     // Register RPC timer interface
     rpcTimerInterface = new QtRPCTimerInterface();
     // avoid accidentally overwriting an existing, non QTThread
@@ -853,45 +846,6 @@ void RPCConsole::setFontSize(int newSize)
     clear(/*keep_prompt=*/true);
     ui->messagesWidget->setHtml(str);
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
-}
-// SYSCOIN
-/** Restart wallet with "-reindex" */
-void RPCConsole::walletReindex()
-{
-    buildParameterlist(REINDEX);
-}
-
-/** Build command-line parameter list for restart */
-void RPCConsole::buildParameterlist(QString arg)
-{
-    // Get command-line arguments and remove the application name
-    QStringList args;
-    for (const auto& [key, values] : gArgs.GetCommandLineArgs()) {
-        for (const util::SettingsValue& value : values) {
-            if (value.empty()) {
-                args << QString::fromStdString(key);
-            } else {
-                std::string valStr;
-                if(value.isFalse())
-                    valStr = "0";
-                else if(value.isTrue())
-                    valStr = "1";
-                else
-                    valStr = value.get_str();
-
-                args << QString::fromStdString(key + "=" + valStr);
-            }
-        }
-    }
-
-    // Remove existing repair-options
-    args.removeAll(REINDEX);
-
-    // Append repair parameter to command line.
-    args.append(arg);
-
-    // Send command-line arguments to SyscoinGUI::handleRestart()
-    Q_EMIT handleRestart(args);
 }
 void RPCConsole::clear(bool keep_prompt)
 {
@@ -1424,7 +1378,6 @@ QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
     case TabTypes::CONSOLE: return QKeySequence(tr("Ctrl+T"));
     case TabTypes::GRAPH: return QKeySequence(tr("Ctrl+N"));
     case TabTypes::PEERS: return QKeySequence(tr("Ctrl+P"));
-    case TabTypes::TAB_REPAIR: return QKeySequence(tr("Ctrl+R"));
     } // no default case, so the compiler can warn about missing cases
 
     assert(false);

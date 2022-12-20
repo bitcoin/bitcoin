@@ -72,8 +72,7 @@ public:
         INFO,
         CONSOLE,
         GRAPH,
-        PEERS,
-        TAB_REPAIR
+        PEERS
     };
 
     std::vector<TabTypes> tabs() const { return {TabTypes::INFO, TabTypes::CONSOLE, TabTypes::GRAPH, TabTypes::PEERS}; }
@@ -115,9 +114,6 @@ public Q_SLOTS:
     void fontSmaller();
     void setFontSize(int newSize);
 
-    /** SYSCOIN Wallet repair options */
-    void walletReindex();
-
     /** Append the message to the message widget */
     void message(int category, const QString &msg) { message(category, msg, false); }
     void message(int category, const QString &message, bool html);
@@ -144,9 +140,6 @@ public Q_SLOTS:
     /** set which tab has the focus (is visible) */
     void setTabFocus(enum TabTypes tabType);
 
-Q_SIGNALS: 
-    /** SYSCOIN Get restart command-line parameters and handle restart */
-    void handleRestart(const QStringList &args);
 private:
     struct TranslatedStrings {
         const QString yes{tr("Yes")}, no{tr("No")}, to{tr("To")}, from{tr("From")},

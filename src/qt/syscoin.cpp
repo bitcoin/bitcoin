@@ -341,8 +341,6 @@ void SyscoinApplication::startThread()
     connect(&m_executor.value(), &InitExecutor::runawayException, this, &SyscoinApplication::handleRunawayException);
     connect(this, &SyscoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
     connect(this, &SyscoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
-    // SYSCOIN
-    connect(window, &SyscoinGUI::requestedRestart, &m_executor.value(), &InitExecutor::restart);
 }
 
 void SyscoinApplication::parameterSetup()

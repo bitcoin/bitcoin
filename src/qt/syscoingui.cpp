@@ -397,11 +397,6 @@ void SyscoinGUI::createActions()
     connect(openRPCConsoleAction, &QAction::triggered, this, &SyscoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
-    // SYSCOIN
-    connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
-
-    // Get restart command-line parameters and handle restart
-    connect(rpcConsole, &RPCConsole::handleRestart, this, &SyscoinGUI::handleRestart);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -418,8 +413,6 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
-        // SYSCOIN
-        connect(openRepairAction, &QAction::triggered, this, &SyscoinGUI::showRepair);
 
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
@@ -491,8 +484,6 @@ void SyscoinGUI::createActions()
 
     connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
     connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
-    // SYSCOIN
-    connect(new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R), this), &QShortcut::activated, this, &SyscoinGUI::showRepair);
 }
 
 void SyscoinGUI::createMenuBar()
@@ -937,12 +928,6 @@ void SyscoinGUI::showDebugWindow()
 {
     GUIUtil::bringToFront(rpcConsole);
     Q_EMIT consoleShown(rpcConsole);
-}
-// SYSCOIN
-void SyscoinGUI::showRepair()
-{
-    rpcConsole->setTabFocus(RPCConsole::TabTypes::TAB_REPAIR);
-    showDebugWindow();
 }
 void SyscoinGUI::showDebugWindowActivateConsole()
 {
@@ -1622,13 +1607,6 @@ static bool ThreadSafeMessageBox(SyscoinGUI* gui, const bilingual_str& message, 
                                Q_ARG(QString, detailed_message));
     assert(invoked);
     return ret;
-}
-
-/** Get restart command-line parameters and request restart */
-void SyscoinGUI::handleRestart(const QStringList &args)
-{
-    if (!m_node.shutdownRequested())
-        Q_EMIT requestedRestart(args);
 }
 
 void SyscoinGUI::subscribeToCoreSignals()
