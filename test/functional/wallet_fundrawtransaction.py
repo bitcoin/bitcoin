@@ -32,11 +32,16 @@ from test_framework.wallet_util import generate_keypair, WalletUnlock
 ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
                                "Please allow other inputs to be automatically selected or include more coins manually"
 
-def get_unspent(listunspent, amount):
+# Return the first utxo that has any amount in the 'amounts' array
+def get_unspent_with_amount(listunspent, amounts):
     for utx in listunspent:
-        if utx['amount'] == amount:
+        if utx['amount'] in amounts:
             return utx
-    raise AssertionError('Could not find unspent with amount={}'.format(amount))
+    raise AssertionError('Could not find unspent with amount={}'.format(amounts))
+
+
+def get_unspent(listunspent, amount):
+    return get_unspent_with_amount(listunspent, [amount])
 
 class RawTransactionsTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -1193,6 +1198,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         options = {"add_inputs": False}
         assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.send, outputs=[{addr1: 3}], **options)
 
+        # Reset state by generating a block
+        self.sync_mempools()
+        self.generate(self.nodes[0], 1)
+
         ################################################
 
         # Case (1), 'walletcreatefundedpsbt' command
@@ -1203,9 +1212,13 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Case (2), 'walletcreatefundedpsbt' command
         # Default add_inputs value with preset inputs (add_inputs=false).
+
+        # Note: depending on coin selection internals, we could either have a 5 BTC or 3 BTC UTXO at this point (which
+        # for the following testing purposes, doesn't matter).
+        utxo = get_unspent_with_amount(wallet.listunspent(), [5, 3])
         inputs = [{
-            "txid": source_tx["txid"],
-            "vout": 1  # change position was hardcoded to index 0
+            "txid": utxo["txid"],
+            "vout": utxo["vout"]
         }]
         outputs = {self.nodes[1].getnewaddress(): 8}
         assert_raises_rpc_error(-4, ERR_NOT_ENOUGH_PRESET_INPUTS, wallet.walletcreatefundedpsbt, inputs=inputs, outputs=outputs)
@@ -1215,16 +1228,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert "psbt" in wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, **options)
 
         # Case (4), Explicit add_inputs=true and preset inputs (with preset inputs covering the target amount)
+        utxo_2 = get_unspent(wallet.listunspent(), 8)
         inputs.append({
-            "txid": source_tx["txid"],
-            "vout": 2  # change position was hardcoded to index 0
+            "txid": utxo_2["txid"],
+            "vout": utxo_2["vout"]
         })
-        psbt_tx = wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, **options)
-        # Check that only the preset inputs were added to the tx
+        # 'inputs' at this point contains 2 UTXO: first could either be 5 or 3 BTC, and the second one 8 BTC.
+        psbt_tx = wallet.walletcreatefundedpsbt(outputs=[{addr1: 9}], inputs=inputs, **options)
+        # Check that only the selected preset inputs were added to the tx
         decoded_psbt_inputs = self.nodes[0].decodepsbt(psbt_tx["psbt"])['tx']['vin']
         assert_equal(len(decoded_psbt_inputs), 2)
-        for input in decoded_psbt_inputs:
-            assert_equal(input["txid"], source_tx["txid"])
+        assert utxo["txid"] == decoded_psbt_inputs[0]["txid"]
+        assert utxo_2["txid"] == decoded_psbt_inputs[1]["txid"]
 
         # Case (5), 'walletcreatefundedpsbt' command
         # Explicit add_inputs=true, no preset inputs
@@ -1493,9 +1508,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].createwallet("invalid_replacement_tx")
         wallet = self.nodes[0].get_wallet_rpc("invalid_replacement_tx")
 
-        # Fund wallet with 1 BTC
+        # Fund wallet with 2 BTC
         self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        txid_to_lock = self.nodes[2].sendtoaddress(address=wallet.getnewaddress(), amount=1)
         self.generate(self.nodes[2], 1)
+
+        # Lock second tx, so it doesn't affect the first test case.
+        vout_to_lock = self.get_first_recv_vout(wallet, txid_to_lock)
+        assert wallet.lockunspent(unlock=False, transactions=[{"txid": txid_to_lock, 'vout': vout_to_lock}])
 
         # Create an unconfirmed tx, destination 0.6 BTC, change 0.4 BTC.
         unconfirmed_txid = wallet.sendtoaddress(wallet.getnewaddress(), 0.6)
@@ -1536,6 +1556,22 @@ class RawTransactionsTest(BitcoinTestFramework):
         # be skipped (because otherwise the generated transaction will be invalid due be spending an output of the
         # transaction that is replacing).
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, replacement_tx, {'add_inputs': True, 'fee_rate': 10})
+
+        # Test case 2 #
+        # Add new unconfirmed input to the replacement transaction.
+        # This must fail due BIP125 verification rules (specifically rule 2).
+        # Only inputs from the original transaction are allowed to be used in the replacement.
+
+        # first, unlock the available coin and create an unconfirmed output with it
+        wallet.lockunspent(unlock=True, transactions=[{"txid": txid_to_lock, 'vout': vout_to_lock}])
+        assert wallet.sendtoaddress(wallet.getnewaddress(), 0.8) in self.nodes[0].getrawmempool()
+
+        # Now verify wallet not selecting the new unconfirmed output to fund the replacement tx.
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, replacement_tx, {'add_inputs': True, 'fee_rate': 10})
+
+        # todo: add coverage for crafting a tx with a preset external input that replaces another one in the mempool.
+        #  The tx creation process should not add any new unconfirmed output to the replacement tx. Only use the ones
+        #  available in the original tx.
 
         wallet.unloadwallet()
 
