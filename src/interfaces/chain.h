@@ -204,6 +204,9 @@ public:
     //! Check if transaction is in mempool.
     virtual bool isInMempool(const uint256& txid) = 0;
 
+    //! Check if outpoint was spent in the mempool
+    virtual bool isSpentInMempool(const COutPoint& outpoint) = 0;
+
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 
