@@ -194,6 +194,18 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
     return nullptr;
 }
 
+bool TxOrphanage::HaveTxToReconsider(NodeId peer)
+{
+    LOCK(m_mutex);
+
+    auto work_set_it = m_peer_work_set.find(peer);
+    if (work_set_it != m_peer_work_set.end()) {
+        auto& work_set = work_set_it->second;
+        return !work_set.empty();
+    }
+    return false;
+}
+
 void TxOrphanage::EraseForBlock(const CBlock& block)
 {
     LOCK(m_mutex);
