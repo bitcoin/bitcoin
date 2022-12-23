@@ -8,7 +8,8 @@
 #include <noui.h>
 #include <tinyformat.h>
 
-#include <stdexcept>
+#include <cstdlib>
+#include <iostream>
 
 DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
     : m_message{std::move(message)}, m_match(std::move(match))
@@ -21,11 +22,12 @@ DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
     noui_test_redirect();
 }
 
-void DebugLogHelper::check_found()
+DebugLogHelper::~DebugLogHelper()
 {
     noui_reconnect();
     LogInstance().DeleteCallback(m_print_connection);
     if (!m_found && m_match(nullptr)) {
-        throw std::runtime_error(strprintf("'%s' not found in debug log\n", m_message));
+        tfm::format(std::cerr, "Fatal error: expected message not found in the debug log: '%s'\n", m_message);
+        std::abort();
     }
 }
