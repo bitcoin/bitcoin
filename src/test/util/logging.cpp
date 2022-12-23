@@ -7,7 +7,9 @@
 #include <logging.h>
 #include <noui.h>
 #include <tinyformat.h>
+#include <util/check.h>
 
+#include <iostream>
 #include <stdexcept>
 
 DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
@@ -19,13 +21,23 @@ DebugLogHelper::DebugLogHelper(std::string message, MatchFn match)
             m_found = s.find(m_message) != std::string::npos && m_match(&s);
         });
     noui_test_redirect();
+    m_receiving_log = true;
 }
 
-void DebugLogHelper::check_found()
+DebugLogHelper::~DebugLogHelper()
 {
-    noui_reconnect();
-    LogInstance().DeleteCallback(m_print_connection);
+    StopReceivingLog();
     if (!m_found && m_match(nullptr)) {
-        throw std::runtime_error(strprintf("'%s' not found in debug log\n", m_message));
+        std::cerr << "Fatal error: expected message not found in the debug log: " << m_message << "\n";
+        std::abort();
+    }
+}
+
+void DebugLogHelper::StopReceivingLog()
+{
+    if (m_receiving_log) {
+        noui_reconnect();
+        LogInstance().DeleteCallback(m_print_connection);
+        m_receiving_log = false;
     }
 }
