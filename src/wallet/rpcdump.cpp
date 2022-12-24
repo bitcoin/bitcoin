@@ -26,8 +26,6 @@
 #include <stdint.h>
 #include <tuple>
 
-#include <boost/algorithm/string.hpp>
-
 #include <univalue.h>
 
 std::string static EncodeDumpString(const std::string &str) {
@@ -533,8 +531,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             if (line.empty() || line[0] == '#')
                 continue;
 
-            std::vector<std::string> vstr;
-            boost::split(vstr, line, boost::is_any_of(" "));
+            std::vector<std::string> vstr = SplitString(line, ' ');
             if (vstr.size() < 2)
                 continue;
             CKey key = DecodeSecret(vstr[0]);
@@ -696,8 +693,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             std::getline(file, line);
             if (line.empty() || line == "address,private_key")
                 continue;
-            std::vector<std::string> vstr;
-            boost::split(vstr, line, boost::is_any_of(","));
+            std::vector<std::string> vstr = SplitString(line, ',');
             if (vstr.size() < 2)
                 continue;
             std::vector<std::string> vstr2;
