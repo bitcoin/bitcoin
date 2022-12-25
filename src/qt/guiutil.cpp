@@ -25,6 +25,8 @@
 #include <ui_interface.h>
 #include <util/system.h>
 
+#include <cmath>
+
 #ifdef WIN32
 #ifdef _WIN32_IE
 #undef _WIN32_IE

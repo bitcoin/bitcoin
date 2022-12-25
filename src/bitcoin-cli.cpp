@@ -18,6 +18,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <optional>

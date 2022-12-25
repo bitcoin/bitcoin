@@ -164,7 +164,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
     m_node.scheduler = std::make_unique<CScheduler>();
-    threadGroup.create_thread([&] { TraceThread("scheduler", [&] { m_node.scheduler->serviceQueue(); }); });
+    m_node.scheduler->m_service_thread = std::thread([&] { TraceThread("scheduler", [&] { m_node.scheduler->serviceQueue(); }); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
@@ -198,8 +198,6 @@ ChainTestingSetup::~ChainTestingSetup()
     deterministicMNManager.reset();
     m_node.llmq_ctx->Interrupt();
     m_node.llmq_ctx->Stop();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();

@@ -66,6 +66,7 @@
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #define MICRO 0.000001
 #define MILLI 0.001

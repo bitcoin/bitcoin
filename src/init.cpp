@@ -100,6 +100,8 @@
 #include <stdio.h>
 #include <memory>
 #include <set>
+#include <thread>
+#include <vector>
 
 #include <bls/bls.h>
 
@@ -111,7 +113,6 @@
 #endif
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread/thread.hpp>
 
 #if ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
@@ -192,8 +193,6 @@ static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 static std::thread g_load_block;
 
-static boost::thread_group threadGroup;
-
 void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
@@ -256,8 +255,6 @@ void PrepareShutdown(NodeContext& node)
     // CScheduler/checkqueue, threadGroup and load block thread.
     if (node.scheduler) node.scheduler->stop();
     if (g_load_block.joinable()) g_load_block.join();
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
     StopScriptCheckWorkerThreads();
 
     // After there are no more peers/RPC left to give us new data which may generate
@@ -989,7 +986,7 @@ void PeriodicStats(ArgsManager& args)
     assert(args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
     ::ChainstateActive().ForceFlushStateToDisk();
-    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, boost::this_thread::interruption_point))) {
+    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, RpcInterruptionPoint))) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -1721,7 +1718,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.scheduler = std::make_unique<CScheduler>();
 
     // Start the lightweight task scheduler thread
-    threadGroup.create_thread([&] { TraceThread("scheduler", [&] { node.scheduler->serviceQueue(); }); });
+    node.scheduler->m_service_thread = std::thread([&] { TraceThread("scheduler", [&] { node.scheduler->serviceQueue(); }); });
 
     // Gather some entropy once per minute.
     node.scheduler->scheduleEvery([]{
