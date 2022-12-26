@@ -516,7 +516,7 @@ public:
      */
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true, bool rescanning_old_block = false);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void transactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override;
+    void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;

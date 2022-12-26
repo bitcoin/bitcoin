@@ -420,7 +420,7 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx, mempool_sequence);
+        m_notifications->transactionAddedToMempool(tx);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
@@ -779,7 +779,7 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx(), 0 /* mempool_sequence */);
+            notifications.transactionAddedToMempool(entry.GetSharedTx());
         }
     }
     bool hasAssumedValidChain() override
