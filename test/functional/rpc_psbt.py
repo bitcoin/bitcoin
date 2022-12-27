@@ -79,9 +79,12 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
         # feeRate of 0.1 DASH / KB produces a total fee slightly below -maxtxfee (~0.06650000):
-        res = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 0.1})
+        res = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos},{"txid":txid,"vout":p2sh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 0.1}, False)
         assert_greater_than(res["fee"], 0.06)
         assert_greater_than(0.07, res["fee"])
+        decoded_psbt = self.nodes[0].decodepsbt(res['psbt'])
+        for psbt_in in decoded_psbt["inputs"]:
+            assert "bip32_derivs" not in psbt_in
 
         # feeRate of 10 DASH / KB produces a total fee well above -maxtxfee
         # previously this was silently capped at -maxtxfee
@@ -216,7 +219,9 @@ class PSBTTest(BitcoinTestFramework):
         # Test that psbts with p2pkh outputs are created properly
         p2pkh = self.nodes[0].getnewaddress()
         psbt = self.nodes[1].walletcreatefundedpsbt([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
-        self.nodes[0].decodepsbt(psbt['psbt'])
+        decoded_psbt = self.nodes[0].decodepsbt(psbtx)
+        for psbt_in in decoded_psbt["inputs"]:
+            assert "bip32_derivs" in psbt_in
 
         # Test decoding error: invalid base64
         assert_raises_rpc_error(-22, "TX decode failed invalid base64", self.nodes[0].decodepsbt, ";definitely not base64;")
