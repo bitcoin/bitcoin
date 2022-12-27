@@ -37,10 +37,33 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     assert(cache.count(pindexPrev));
     ThresholdState state = cache[pindexPrev];
 
+    auto pindex_search = pindexPrev;
+    auto state_search = state;
+    bool do_search{true};
     int nStartHeight{std::numeric_limits<int>::max()};
-    for (const auto& pair : cache) {
-        if (pair.second == ThresholdState::STARTED && nStartHeight > pair.first->nHeight + 1) {
-            nStartHeight = pair.first->nHeight + 1;
+    while (do_search) {
+        switch (state_search) {
+            case ThresholdState::DEFINED: {
+                // not started yet, nothinig to do
+                do_search = false;
+                break;
+            }
+            case ThresholdState::STARTED: {
+                nStartHeight = std::min(nStartHeight, pindex_search->nHeight + 1);
+                // we can walk back here because the only way for STARTED state to exist
+                // in cache already is to be calculated in previous runs via "walk forward"
+                // loop below starting from DEFINED state.
+                pindex_search = pindex_search->GetAncestor(pindex_search->nHeight - nPeriod);
+                state_search = cache[pindex_search];
+                break;
+            }
+            case ThresholdState::LOCKED_IN:
+            case ThresholdState::FAILED:
+            case ThresholdState::ACTIVE: {
+                // too late, nothing to do
+                do_search = false;
+                break;
+            }
         }
     }
 

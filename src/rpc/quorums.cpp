@@ -23,6 +23,8 @@
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 
+#include <iomanip>
+
 namespace llmq {
 extern const std::string CLSIG_REQUESTID_PREFIX;
 }
@@ -87,25 +89,30 @@ static void quorum_list_extended_help(const JSONRPCRequest& request)
     RPCHelpMan{"quorum listextended",
         "Extended list of on-chain quorums\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
+            {"height", RPCArg::Type::NUM, /* default */ "", "The height index. Will list active quorums at tip if \"height\" is not specified."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::OBJ_DYN, "quorumName", "List of quorum details per some quorum type",
+                {RPCResult::Type::ARR, "quorumName", "List of quorum details per quorum type",
                 {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
                         {RPCResult::Type::OBJ, "xxxx", "Quorum hash. Note: most recent quorums come first.",
-                         {
-                                 {RPCResult::Type::NUM, "creationHeight", "Block height where the DKG started."},
-                                 {RPCResult::Type::NUM, "quorumIndex", "Quorum index (applicable only to rotated quorums)."},
-                                 {RPCResult::Type::STR_HEX, "minedBlockHash", "Blockhash where the commitment was mined."}
-                         }},
+                        {
+                            {RPCResult::Type::NUM, "creationHeight", "Block height where the DKG started."},
+                            {RPCResult::Type::NUM, "quorumIndex", "Quorum index (applicable only to rotated quorums)."},
+                            {RPCResult::Type::STR_HEX, "minedBlockHash", "Blockhash where the commitment was mined."},
+                            {RPCResult::Type::NUM, "numValidMembers", "The total of valid members."},
+                            {RPCResult::Type::STR_AMOUNT, "healthRatio", "The ratio of healthy members to quorum size. Range [0.0 - 1.0]."}
+                        }}
+                    }}
                 }}
             }},
             RPCExamples{
                 HelpExampleCli("quorum", "listextended")
-                + HelpExampleCli("quorum", "listextended 10")
-                + HelpExampleRpc("quorum", "listextended, 10")
+                + HelpExampleCli("quorum", "listextended 2500")
+                + HelpExampleRpc("quorum", "listextended, 2500")
             },
     }.Check(request);
 }
@@ -114,25 +121,30 @@ static UniValue quorum_list_extended(const JSONRPCRequest& request)
 {
     quorum_list_extended_help(request);
 
-    int count = -1;
+    int nHeight = -1;
     if (!request.params[0].isNull()) {
-        count = ParseInt32V(request.params[0], "count");
-        if (count < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
+        nHeight = ParseInt32V(request.params[0], "height");
+        if (nHeight < 0 || nHeight > WITH_LOCK(cs_main, return ::ChainActive().Height())) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
         }
     }
 
     UniValue ret(UniValue::VOBJ);
 
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
-    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return ::ChainActive().Tip());
+    CBlockIndex* pblockindex = nHeight != -1 ? WITH_LOCK(cs_main, return ::ChainActive()[nHeight]) : WITH_LOCK(cs_main, return ::ChainActive().Tip());
 
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
+    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pblockindex)) {
         const auto& llmq_params = llmq::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq_ctx.qman->ScanQuorums(type, pindexTip, count > -1 ? count : llmq_params.signingActiveQuorumCount);
+        auto quorums = llmq_ctx.qman->ScanQuorums(type, pblockindex, llmq_params.signingActiveQuorumCount);
         for (const auto& q : quorums) {
+            size_t num_members = q->members.size();
+            size_t num_valid_members = std::count_if(q->qc->validMembers.begin(), q->qc->validMembers.begin() + num_members, [](auto val){return val;});
+            double health_ratio = num_members > 0 ? double(num_valid_members) / double(num_members) : 0.0;
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2) << health_ratio;
             UniValue obj(UniValue::VOBJ);
             {
                 UniValue j(UniValue::VOBJ);
@@ -141,6 +153,8 @@ static UniValue quorum_list_extended(const JSONRPCRequest& request)
                 }
                 j.pushKV("creationHeight", q->m_quorum_base_block_index->nHeight);
                 j.pushKV("minedBlockHash", q->minedBlockHash.ToString());
+                j.pushKV("numValidMembers", (int32_t)num_valid_members);
+                j.pushKV("healthRatio", ss.str());
                 obj.pushKV(q->qc->quorumHash.ToString(),j);
             }
             v.push_back(obj);
