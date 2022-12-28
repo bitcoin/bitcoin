@@ -842,7 +842,7 @@ private:
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
     Mutex m_most_recent_block_mutex;
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
+    std::shared_future<CSerializedNetMsg> m_most_recent_compact_block_msg_fut GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
@@ -1854,8 +1854,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
  */
 void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock)
 {
-    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock);
-    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+    auto pcmpctblock = std::make_unique<const CBlockHeaderAndShortTxIDs>(*pblock);
 
     LOCK(cs_main);
 
@@ -1867,13 +1866,17 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+        std::async(std::launch::deferred, [pcmpctblock = std::move(pcmpctblock)] {
+            const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+            return msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock);
+        })
+    };
 
     {
         LOCK(m_most_recent_block_mutex);
         m_most_recent_block_hash = hashBlock;
         m_most_recent_block = pblock;
-        m_most_recent_compact_block = pcmpctblock;
+        m_most_recent_compact_block_msg_fut = lazy_ser;
     }
 
     m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
@@ -2087,11 +2090,11 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
 void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
 {
     std::shared_ptr<const CBlock> a_recent_block;
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
+    std::shared_future<CSerializedNetMsg> a_recent_compact_block_msg_fut;
     {
         LOCK(m_most_recent_block_mutex);
         a_recent_block = m_most_recent_block;
-        a_recent_compact_block = m_most_recent_compact_block;
+        a_recent_compact_block_msg_fut = m_most_recent_compact_block_msg_fut;
     }
 
     bool need_activate_chain = false;
@@ -2205,8 +2208,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // and we don't feel like constructing the object for them, so
             // instead we respond with the full, non-compact block.
             if (CanDirectFetch() && pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
-                if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
+                if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
+                    m_connman.PushMessage(&pfrom, a_recent_compact_block_msg_fut.get().Copy());
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock};
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
@@ -5505,7 +5508,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = msgMaker.Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                            cached_cmpctblock_msg = m_most_recent_compact_block_msg_fut.get().Copy();
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
