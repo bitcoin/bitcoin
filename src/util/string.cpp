@@ -4,6 +4,7 @@
 
 #include <util/string.h>
 
+#include <map>
 #include <regex>
 #include <string>
 

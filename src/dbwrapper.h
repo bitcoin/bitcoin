@@ -12,18 +12,21 @@
 #include <span.h>
 #include <streams.h>
 
-#include <cstddef>
-#include <cstdint>
-#include <exception>
 #include <leveldb/db.h>
 #include <leveldb/iterator.h>
 #include <leveldb/options.h>
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
 namespace leveldb {
 class Env;
 }

@@ -8,6 +8,7 @@
 #include <attributes.h>
 
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 std::string StrFormatInternalBug(const char* msg, const char* file, int line, const char* func);

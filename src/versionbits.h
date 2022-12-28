@@ -6,6 +6,7 @@
 #define BITCOIN_VERSIONBITS_H
 
 #include <chain.h>
+#include <consensus/params.h>
 #include <sync.h>
 
 #include <map>

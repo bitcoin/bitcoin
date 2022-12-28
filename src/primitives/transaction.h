@@ -22,6 +22,9 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#if __cplusplus >= 202002L
+#include <compare>
+#endif
 
 /**
  * A flag that is ORed into the protocol version to designate that a transaction

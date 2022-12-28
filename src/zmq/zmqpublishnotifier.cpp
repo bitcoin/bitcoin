@@ -16,7 +16,6 @@
 #include <rpc/server.h>
 #include <serialize.h>
 #include <streams.h>
-#include <sync.h>
 #include <uint256.h>
 #include <version.h>
 #include <zmq/zmqutil.h>

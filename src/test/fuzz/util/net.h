@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_NET_H
 #define BITCOIN_TEST_FUZZ_UTIL_NET_H
 
+#include <compat/compat.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>

@@ -3,8 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <span.h>
 #include <util/strencodings.h>
+
+#include <span.h>
 
 #include <array>
 #include <cassert>
@@ -14,6 +15,9 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#if __cplusplus >= 202002L
+#include <compare>
+#endif
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
