@@ -13,6 +13,7 @@
 #include <util/message.h>
 
 #include <string>
+#include <variant>
 
 static RPCHelpMan verifymessage()
 {

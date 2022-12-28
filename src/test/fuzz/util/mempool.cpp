@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <limits>

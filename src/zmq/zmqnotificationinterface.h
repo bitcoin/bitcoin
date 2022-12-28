@@ -15,6 +15,7 @@
 class CBlock;
 class CBlockIndex;
 class CZMQAbstractNotifier;
+enum class MemPoolRemovalReason;
 
 class CZMQNotificationInterface final : public CValidationInterface
 {

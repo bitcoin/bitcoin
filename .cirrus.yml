@@ -78,10 +78,10 @@ task:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'tidy [jammy]'
+  name: 'tidy [kinetic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:jammy
+    image: ubuntu:kinetic
     cpu: 2
     memory: 5G
   # For faster CI feedback, immediately schedule the linters

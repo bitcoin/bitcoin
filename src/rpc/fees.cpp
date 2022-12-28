@@ -19,6 +19,7 @@
 #include <array>
 #include <cmath>
 #include <string>
+#include <variant>
 
 namespace node {
 struct NodeContext;

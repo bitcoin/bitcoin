@@ -18,6 +18,7 @@
 #include <util/check.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <utility>

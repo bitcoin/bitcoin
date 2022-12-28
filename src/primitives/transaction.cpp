@@ -14,6 +14,7 @@
 #include <util/strencodings.h>
 #include <version.h>
 
+#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 

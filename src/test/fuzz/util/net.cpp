@@ -14,6 +14,7 @@
 #include <util/time.h>
 #include <version.h>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cerrno>

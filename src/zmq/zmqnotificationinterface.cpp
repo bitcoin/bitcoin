@@ -8,7 +8,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <util/system.h>
-#include <validationinterface.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <zmq/zmqutil.h>
@@ -20,6 +19,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+enum class MemPoolRemovalReason;
 
 CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
 {
