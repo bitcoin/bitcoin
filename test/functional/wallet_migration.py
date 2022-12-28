@@ -257,7 +257,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         imports0 = self.nodes[0].get_wallet_rpc("imports0")
         assert_equal(imports0.getwalletinfo()["descriptors"], False)
 
-        # Exteranl address label
+        # External address label
         imports0.setlabel(default.getnewaddress(), "external")
 
         # Normal non-watchonly tx
@@ -309,6 +309,13 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(watchonly.getbalance(), watchonly_bal)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
         assert_equal(len(watchonly.listtransactions(include_watchonly=True)), 3)
+
+        # Check that labels were migrated and persisted to watchonly wallet
+        self.nodes[0].unloadwallet("imports0_watchonly")
+        self.nodes[0].loadwallet("imports0_watchonly")
+        labels = watchonly.listlabels()
+        assert "external" in labels
+        assert "imported" in labels
 
     def test_no_privkeys(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
