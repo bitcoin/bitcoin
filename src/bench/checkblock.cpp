@@ -5,11 +5,15 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 
+#include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <streams.h>
 #include <util/system.h>
 #include <validation.h>
+#include <net.h>
+#include <netmessagemaker.h>
+#include <future>
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
@@ -50,5 +54,43 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     });
 }
 
+static void SerializeNetMsg(benchmark::Bench& bench)
+{
+    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    std::byte a{0};
+    stream.write({&a, 1});
+    CBlock block;
+    stream >> block;
+    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(block);
+    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+    bench.run([&] {
+        CSerializedNetMsg msg{msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock)};
+        ankerl::nanobench::doNotOptimizeAway(msg);
+    });
+}
+
+static void CacheSerializeNetMsg(benchmark::Bench& bench)
+{
+    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    std::byte a{0};
+    stream.write({&a, 1});
+    CBlock block;
+    stream >> block;
+    auto pcmpctblock = std::make_unique<const CBlockHeaderAndShortTxIDs>(block);
+    const std::shared_future<CSerializedNetMsg> lazy_ser{
+        std::async(std::launch::deferred, [pcmpctblock = move(pcmpctblock)] {
+            const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+            return msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock);
+        }
+    )};
+
+    bench.run([&] {
+        CSerializedNetMsg msg{lazy_ser.get().Copy()};
+        ankerl::nanobench::doNotOptimizeAway(msg);
+    });
+}
+
 BENCHMARK(DeserializeBlockTest, benchmark::PriorityLevel::HIGH);
 BENCHMARK(DeserializeAndCheckBlockTest, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SerializeNetMsg, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CacheSerializeNetMsg, benchmark::PriorityLevel::HIGH);
