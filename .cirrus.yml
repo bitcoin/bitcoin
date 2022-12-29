@@ -180,7 +180,7 @@ task:
     - python test\util\rpcauth-test.py
   functional_tests_script:
     # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
-    # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
+    # See: https://learn.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # Exclude feature_dbcrash for now due to timeout
