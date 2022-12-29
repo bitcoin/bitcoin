@@ -68,6 +68,24 @@ static RPCHelpMan sendrawtransaction()
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
             }
+            // SYSCOIN
+            if(IsSyscoinNEVMDataTx(mtx.nVersion)) {
+                CNEVMData nevmData(CTransaction(mtx), PROTOCOL_VERSION | SERIALIZE_TRANSACTION_PODA);
+                if(nevmData.vchNEVMData && nevmData.vchNEVMData->size() > 0) {
+                    auto nOut = GetSyscoinDataOutput(mtx);
+                    if (nOut != -1) {
+                        mtx.vout[nOut].vchNEVMData = *nevmData.vchNEVMData;
+                    }
+                    // we stuffed the data in the data script but it was signed without so clear data so signed tx can succeed
+                    std::vector<unsigned char> data;
+                    nevmData.SerializeData(data);
+                    CScript scriptData;
+                    scriptData << OP_RETURN << data;
+                    mtx.vout[nOut].scriptPubKey = scriptData;
+                    // clear memory allocated for vchNEVMData
+                    nevmData.SetNull();
+                }
+            }
             CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
             const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?

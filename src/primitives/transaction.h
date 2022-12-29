@@ -44,7 +44,8 @@ using CompressedScript = prevector<33, unsigned char>;
  * or with `ADDRV2_FORMAT`.
  */
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
-// SYSCOIN (1/100)
+// SYSCOIN
+static const int SERIALIZE_TRANSACTION_PODA = 0x04000000;
 static const float NEVM_DATA_SCALE_FACTOR = 0.01;
 enum {
     ASSET_UPDATE_DATA=1, // can you update public data field?
@@ -443,6 +444,7 @@ public:
         SetNull();
     }
     explicit CNEVMData(const CScript &script);
+    explicit CNEVMData(const CTransaction &tx, const int nVersion);
     explicit CNEVMData(const CTransaction &tx);
     explicit CNEVMData(const std::vector<uint8_t> &vchVersionHashIn, const std::vector<uint8_t> &vchNEVMDataIn): vchVersionHash(vchVersionHashIn) {
         vchNEVMData = new std::vector<uint8_t>{vchNEVMDataIn};
@@ -454,15 +456,26 @@ public:
         }
         vchNEVMData = nullptr;
     }
-    SERIALIZE_METHODS(CNEVMData, obj) {
-        READWRITE(obj.vchVersionHash);
+    template<typename Stream>
+    void Ser(Stream &s) {
+        s << vchVersionHash;
+    }
+
+    template<typename Stream>
+    void Unser(Stream &s) {
+        s >> vchVersionHash;
+        const bool fAllowPoDA = (s.GetVersion() & SERIALIZE_TRANSACTION_PODA);
+        if(fAllowPoDA) {
+            std::vector<uint8_t> vchNEVMDataIn;
+            s >> vchVersionHash;
+            vchNEVMData = new std::vector<uint8_t>{vchNEVMDataIn};
+        }
     }
     inline void SetNull() { ClearData(); }
     inline bool IsNull() const { return (vchVersionHash.empty()); }
-    bool UnserializeFromTx(const CTransaction &tx);
-    bool UnserializeFromTx(const CMutableTransaction &mtx);
+    bool UnserializeFromTx(const CTransaction &tx, const int nVersion);
     bool UnserializeFromScript(const CScript& script);
-    int UnserializeFromData(const std::vector<unsigned char> &vchData);
+    int UnserializeFromData(const std::vector<unsigned char> &vchData, const int nVersion);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 /** An output of a transaction.  It contains the public key that the next input

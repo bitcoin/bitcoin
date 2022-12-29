@@ -796,15 +796,21 @@ void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
     const auto &bytesVec = MakeUCharSpan(dsAsset);
 	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
-CNEVMData::CNEVMData(const CTransaction &tx) {
+CNEVMData::CNEVMData(const CTransaction &tx, const int nVersion) {
     SetNull();
-    UnserializeFromTx(tx);
+    UnserializeFromTx(tx, nVersion);
 }
-int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload) {
+CNEVMData::CNEVMData(const CTransaction &tx):CNEVMData(tx, PROTOCOL_VERSION) {
+}
+int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload, const int nVersion) {
     try {
-		CDataStream dsNEVMData(vchPayload, SER_NETWORK, PROTOCOL_VERSION);
-		Unserialize(dsNEVMData);
+		CDataStream dsNEVMData(vchPayload, SER_NETWORK, nVersion);
+		Unser(dsNEVMData);
         if(vchVersionHash.size() != 32) {
+            SetNull();
+            return -1;
+        }
+        if(vchNEVMData && vchNEVMData->size() > MAX_NEVM_DATA_BLOB) {
             SetNull();
             return -1;
         }
@@ -818,7 +824,7 @@ CNEVMData::CNEVMData(const CScript &script) {
     SetNull();
     UnserializeFromScript(script);
 }
-bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
+bool CNEVMData::UnserializeFromTx(const CTransaction &tx, const int nVersion) {
 	std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(tx, vchData, nOut))
@@ -826,7 +832,7 @@ bool CNEVMData::UnserializeFromTx(const CTransaction &tx) {
 		SetNull();
 		return false;
 	}
-	if(UnserializeFromData(vchData) != 0)
+	if(UnserializeFromData(vchData, nVersion) != 0)
 	{	
 		SetNull();
 		return false;
@@ -849,7 +855,7 @@ bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
 		SetNull();
 		return false;
 	}
-	if(UnserializeFromData(vchData) != 0)
+	if(UnserializeFromData(vchData, PROTOCOL_VERSION) != 0)
 	{	
 		SetNull();
 		return false;
@@ -858,7 +864,7 @@ bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
 }
 void CNEVMData::SerializeData(std::vector<unsigned char> &vchData) {
     CDataStream dsNEVMAsset(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsNEVMAsset);
+    Ser(dsNEVMAsset);
     const auto &bytesVec = MakeUCharSpan(dsNEVMAsset);
 	vchData = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 }
