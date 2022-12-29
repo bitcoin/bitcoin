@@ -1,0 +1,17 @@
+BasedOnStyle: Google
+UseTab: Never
+ColumnLimit: 80
+IndentWidth: 4
+TabWidth: 4
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+AccessModifierOffset: -4
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: AlwaysBreak
+IndentCaseLabels: true
+AllowAllParametersOfDeclarationOnNextLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterFunction: true
+PenaltyReturnTypeOnItsOwnLine: 1000

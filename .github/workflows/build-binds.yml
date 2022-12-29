@@ -1,0 +1,85 @@
+name: Build and test binds
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  # SHA is added to the end if on `main` to let all main workflows run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ (github.ref == 'refs/heads/main') && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}, Python ${{ matrix.python }}, Go ${{ matrix.golang }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        golang: [ '1.17' ]
+        python: ['3.7', '3.8', '3.9', '3.10']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v2
+      name: Install Python
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Test Python implementation
+      run: |
+        python python-impl/impl-test.py
+
+    - name: Install Emscripten SDK
+      uses: mymindstorm/setup-emsdk@v11
+
+    - name: Build JavaScript bindings
+      run: |
+        emcc -v
+        sh emsdk_build.sh
+
+    - name: Test JavaScript bindings
+      run: |
+        sh js_test.sh
+
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^${{ matrix.golang }}
+
+    - name: Prepare build system for Ubuntu
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get install -qq --yes snap libgmp-dev
+        sudo apt-get remove --purge cmake -y
+        sudo snap install cmake --classic
+        hash -r
+        cmake --version
+
+    - name: Prepare build system for macOS
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        ls -l
+        export MACOSX_DEPLOYMENT_TARGET=10.14
+        brew install gmp
+
+    - name: Build library using CMake
+      run: |
+        mkdir -p build && cd build
+        cmake ..
+        cmake --build . -- -j 6
+
+    - name: Build Go bindings
+      run: |
+        cd go-bindings
+        make

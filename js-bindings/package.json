@@ -1,0 +1,62 @@
+{
+  "name": "bls-signatures",
+  "version": "0.2.1-beta.0",
+  "description": "The most advanced BLS library for JavaScript",
+  "main": "blsjs.js",
+  "types": "blsjs.d.ts",
+  "files": [
+    "blsjs.js",
+    "blsjs.wasm",
+    "blsjs.d.ts"
+  ],
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npm run test:node && npm run test:browser",
+    "test:typings": "tsc --esModuleInterop ./tests/typings.spec.ts",
+    "test:node": "npm run test:typings && mocha ./tests/*.spec.js",
+    "test:browser": "npm run test:typings && ./node_modules/.bin/karma start ./tests/karma.conf.js --single-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Chia-Network/bls-signatures.git"
+  },
+  "homepage": "https://github.com/Chia-Network/bls-signatures/tree/master/js-bindings",
+  "author": {
+    "name": "Anton Suprunchuk",
+    "email": "antouhou@gmail.com",
+    "url": "https://github.com/antouhou"
+  },
+  "keywords": [
+    "bls",
+    "BLS",
+    "threshold",
+    "signature",
+    "crypto",
+    "cryptography"
+  ],
+  "devDependencies": {
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^11.15.18",
+    "assert": "^2.0.0",
+    "babel-polyfill": "^6.26.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "karma": "^6.3.4",
+    "karma-firefox-launcher": "^1.3.0",
+    "karma-mocha": "^2.0.1",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-webpack": "^5.0.0",
+    "mime": "1.4.1",
+    "mocha": "^8.4.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "typescript": "^3.6.5",
+    "webpack": "^5.39.0"
+  },
+  "dependencies": {
+    "binascii": "0.0.2"
+  }
+}

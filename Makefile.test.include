@@ -1,0 +1,27 @@
+# Copyright (c) 2021 The PIVX developers
+# Copyright (c) 2022 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING.MIT or http://www.opensource.org/licenses/mit-license.php.
+
+DASHBLS_RUNTEST = runtest
+
+RUNTEST_INCLUDES = \
+	-I$(top_srcdir)/depends/catch2/include
+
+RUNTEST_H = \
+	depends/catch2/include/catch2/catch.hpp
+
+runtest_SOURCES = \
+	$(DASHBLS_H) \
+	$(RELIC_H) \
+	$(RUNTEST_H) \
+	src/test.cpp \
+	src/test-utils.hpp
+
+runtest_CPPFLAGS = $(AM_CPPFLAGS) $(DASHBLS_INCLUDES) $(RELIC_INCLUDES) $(RUNTEST_INCLUDES)
+runtest_CXXFLAGS = $(AM_CXXFLAGS)
+runtest_LDFLAGS  = -static $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+runtest_LDADD = $(LIBDASHBLS)
+
+noinst_PROGRAMS += $(DASHBLS_RUNTEST)

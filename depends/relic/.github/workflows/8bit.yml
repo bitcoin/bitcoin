@@ -1,0 +1,48 @@
+name: Basic configuration (8 bits)
+
+on:
+  push:
+    branches:
+      - '**'         # all branches
+  pull_request:
+    branches:
+      - '**'         # all branches
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Ubuntu Latest - GCC",
+            artifact: "linux-gcc.tar.xz",
+            os: ubuntu-latest,
+            cc: "gcc",
+          }
+          - {
+            name: "Ubuntu Latest - Clang",
+            artifact: "linux-clang.tar.xz",
+            os: ubuntu-latest,
+            cc: "clang",
+          }
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run CMake (standard)
+        if: ${{ !(runner.os == 'Windows') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_C_COMPILER=${{ matrix.config.cc }} -DWSIZE=8 -DSEED= -DBENCH=0 -DTESTS=10 ..
+
+      - name: CMake Build
+        run: cmake --build build
+
+      - name: CMake Test
+        run: |
+          cd build
+          ctest --verbose .

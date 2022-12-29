@@ -1,0 +1,78 @@
+name:  Build and Test with Relic Nightly
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+concurrency:
+  # SHA is added to the end if on `main` to let all main workflows run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ (github.ref == 'refs/heads/main') && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels:
+    name: Build and Test with Relic Nightly
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Ubuntu build C++ and test Relic at origin/main
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        echo "Relic origin/main commit:"
+        curl -H "application/vnd.github.v3.sha" \
+        https://api.github.com/repos/relic-toolkit/relic/commits/main | \
+        head -10
+        sudo apt-get update
+        sudo apt-get install snap -y
+        sudo apt-get remove --purge cmake -y
+        sudo snap install cmake --classic
+        hash -r
+        cmake --version
+        export RELIC_MAIN=1
+        mkdir -p build
+        cd build
+        cmake ../
+        cmake --build . -- -j 6
+        echo "Running ./src/runtest"
+        ./src/runtest
+
+    - name: Mac OS build C++ and test
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        ls -l
+        export MACOSX_DEPLOYMENT_TARGET=10.14
+        export RELIC_MAIN=1
+        mkdir -p build
+        ls -l build
+        cd build
+        cmake ../
+        cmake --build . -- -j 6
+        echo "Running ./src/runtest"
+        ./src/runtest
+
+    - uses: actions/setup-python@v2
+      name: Install Python
+      with:
+        python-version: '3.8'
+
+    - name: Test pure python implementation
+      run: |
+        python python-impl/impl-test.py
+
+    - name: Install emsdk
+      uses: mymindstorm/setup-emsdk@v11
+
+    - name: Test javascript bindings
+      run: |
+        emcc -v
+        export RELIC_MAIN=1
+        sh emsdk_build.sh
+        sh js_test.sh
