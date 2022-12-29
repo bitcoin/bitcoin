@@ -1,0 +1,74 @@
+name: Build and test library
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  # SHA is added to the end if on `main` to let all main workflows run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}-${{ (github.ref == 'refs/heads/main') && github.sha || '' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}, ${{ matrix.builder }}, ${{ matrix.compiler.cc }}, ${{ matrix.backend }} backend
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-11, ubuntu-20.04 ]
+        builder: [ cmake, autotools ]
+        compiler:
+          - cc: gcc
+            cxx: g++
+          - cc: clang
+            cxx: clang++
+        backend: [ easy, gmp ]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Prepare build system for Ubuntu
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get install -qq --yes valgrind snap libgmp-dev libsodium-dev
+        sudo apt-get remove --purge cmake -y
+        sudo snap install cmake --classic
+        hash -r
+        cmake --version
+
+    - name: Prepare build system for macOS
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        ls -l
+        export MACOSX_DEPLOYMENT_TARGET=10.14
+        brew install autoconf automake gmp
+
+    - name: Build library using CMake
+      if: startsWith(matrix.builder, 'cmake')
+      run: |
+        mkdir -p build && cd build
+        CC=${{ matrix.compiler.cc }} CXX=${{ matrix.compiler.cxx }} cmake .. -DBUILD_BLS_PYTHON_BINDINGS=0 -DARITH=${{ matrix.backend }}
+        cmake --build . -- -j 6
+        mv src/runtest ..
+
+    - name: Build library using GNU Autotools
+      if: startsWith(matrix.builder, 'autotools')
+      run: |
+        ./autogen.sh
+        CC=${{ matrix.compiler.cc }} CXX=${{ matrix.compiler.cxx }} ./configure --with-backend=${{ matrix.backend }}
+        make -j8
+
+    - name: Run tests
+      run: ./runtest
+
+    - name: Run valgrind on Ubuntu
+      if: startsWith(matrix.os, 'ubuntu')
+      run: valgrind --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all ./runtest

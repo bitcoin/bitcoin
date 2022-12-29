@@ -1,0 +1,470 @@
+# Copyright (c) 2021 The PIVX developers
+# Copyright (c) 2022 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING.MIT or http://www.opensource.org/licenses/mit-license.php.
+
+LIBRELIC = librelic.la
+
+RELIC_INCLUDES = \
+	-I$(top_srcdir)/depends/relic/include \
+	-I$(top_srcdir)/depends/relic/include/low \
+	-I$(top_srcdir)/depends/relic/src/tmpl
+
+RELIC_H = \
+	depends/relic/include/relic.h \
+	depends/relic/include/relic_alloc.h \
+	depends/relic/include/relic_arch.h \
+	depends/relic/include/relic_bc.h \
+	depends/relic/include/relic_bench.h \
+	depends/relic/include/relic_bn.h \
+	depends/relic/include/relic_conf.h \
+	depends/relic/include/relic_core.h \
+	depends/relic/include/relic_cp.h \
+	depends/relic/include/relic_dv.h \
+	depends/relic/include/relic_eb.h \
+	depends/relic/include/relic_ec.h \
+	depends/relic/include/relic_ed.h \
+	depends/relic/include/relic_ep.h \
+	depends/relic/include/relic_epx.h \
+	depends/relic/include/relic_err.h \
+	depends/relic/include/relic_fb.h \
+	depends/relic/include/relic_fbx.h \
+	depends/relic/include/relic_fp.h \
+	depends/relic/include/relic_fpx.h \
+	depends/relic/include/relic_label.h \
+	depends/relic/include/relic_md.h \
+	depends/relic/include/relic_mpc.h \
+	depends/relic/include/relic_multi.h \
+	depends/relic/include/relic_pc.h \
+	depends/relic/include/relic_pp.h \
+	depends/relic/include/relic_rand.h \
+	depends/relic/include/relic_test.h \
+	depends/relic/include/relic_types.h \
+	depends/relic/include/relic_util.h \
+	depends/relic/include/low/relic_bn_low.h \
+	depends/relic/include/low/relic_dv_low.h \
+	depends/relic/include/low/relic_fb_low.h \
+	depends/relic/include/low/relic_fp_low.h \
+	depends/relic/include/low/relic_fpx_low.h \
+	depends/relic/src/arch/lzcnt.inc \
+	depends/relic/src/tmpl/relic_tmpl_map.h
+
+RELIC_SOURCES = \
+	depends/relic/src/relic_err.c \
+	depends/relic/src/relic_core.c \
+	depends/relic/src/relic_conf.c \
+	depends/relic/src/relic_util.c
+
+BN_SOURCES = \
+	depends/relic/src/bn/relic_bn_add.c \
+	depends/relic/src/bn/relic_bn_cmp.c \
+	depends/relic/src/bn/relic_bn_div.c \
+	depends/relic/src/bn/relic_bn_factor.c \
+	depends/relic/src/bn/relic_bn_gcd.c \
+	depends/relic/src/bn/relic_bn_inv.c \
+	depends/relic/src/bn/relic_bn_lcm.c \
+	depends/relic/src/bn/relic_bn_mem.c \
+	depends/relic/src/bn/relic_bn_mod.c \
+	depends/relic/src/bn/relic_bn_mul.c \
+	depends/relic/src/bn/relic_bn_mxp.c \
+	depends/relic/src/bn/relic_bn_prime.c \
+	depends/relic/src/bn/relic_bn_rec.c \
+	depends/relic/src/bn/relic_bn_shift.c \
+	depends/relic/src/bn/relic_bn_smb.c \
+	depends/relic/src/bn/relic_bn_sqr.c \
+	depends/relic/src/bn/relic_bn_srt.c \
+	depends/relic/src/bn/relic_bn_util.c
+
+FP_SOURCES = \
+	depends/relic/src/fp/relic_fp_add.c \
+	depends/relic/src/fp/relic_fp_cmp.c \
+	depends/relic/src/fp/relic_fp_exp.c \
+	depends/relic/src/fp/relic_fp_inv.c \
+	depends/relic/src/fp/relic_fp_mul.c \
+	depends/relic/src/fp/relic_fp_param.c \
+	depends/relic/src/fp/relic_fp_prime.c \
+	depends/relic/src/fp/relic_fp_rdc.c \
+	depends/relic/src/fp/relic_fp_shift.c \
+	depends/relic/src/fp/relic_fp_sqr.c \
+	depends/relic/src/fp/relic_fp_srt.c \
+	depends/relic/src/fp/relic_fp_util.c
+
+FPX_SOURCES = \
+	depends/relic/src/fpx/relic_fp2_mul.c \
+	depends/relic/src/fpx/relic_fp2_sqr.c \
+	depends/relic/src/fpx/relic_fp3_mul.c \
+	depends/relic/src/fpx/relic_fp3_sqr.c \
+	depends/relic/src/fpx/relic_fp4_mul.c \
+	depends/relic/src/fpx/relic_fp4_sqr.c \
+	depends/relic/src/fpx/relic_fp6_mul.c \
+	depends/relic/src/fpx/relic_fp6_sqr.c \
+	depends/relic/src/fpx/relic_fp8_mul.c \
+	depends/relic/src/fpx/relic_fp8_sqr.c \
+	depends/relic/src/fpx/relic_fp9_mul.c \
+	depends/relic/src/fpx/relic_fp9_sqr.c \
+	depends/relic/src/fpx/relic_fp12_mul.c \
+	depends/relic/src/fpx/relic_fp12_sqr.c \
+	depends/relic/src/fpx/relic_fp18_mul.c \
+	depends/relic/src/fpx/relic_fp18_sqr.c \
+	depends/relic/src/fpx/relic_fp24_mul.c \
+	depends/relic/src/fpx/relic_fp24_sqr.c \
+	depends/relic/src/fpx/relic_fp48_mul.c \
+	depends/relic/src/fpx/relic_fp48_sqr.c \
+	depends/relic/src/fpx/relic_fp54_mul.c \
+	depends/relic/src/fpx/relic_fp54_sqr.c \
+	depends/relic/src/fpx/relic_fpx_add.c \
+	depends/relic/src/fpx/relic_fpx_cmp.c \
+	depends/relic/src/fpx/relic_fpx_cyc.c \
+	depends/relic/src/fpx/relic_fpx_exp.c \
+	depends/relic/src/fpx/relic_fpx_field.c \
+	depends/relic/src/fpx/relic_fpx_frb.c \
+	depends/relic/src/fpx/relic_fpx_inv.c \
+	depends/relic/src/fpx/relic_fpx_pck.c \
+	depends/relic/src/fpx/relic_fpx_rdc.c \
+	depends/relic/src/fpx/relic_fpx_srt.c \
+	depends/relic/src/fpx/relic_fpx_util.c
+
+FB_SOURCES = \
+	depends/relic/src/fb/relic_fb_add.c \
+	depends/relic/src/fb/relic_fb_cmp.c \
+	depends/relic/src/fb/relic_fb_exp.c \
+	depends/relic/src/fb/relic_fb_inv.c \
+	depends/relic/src/fb/relic_fb_itr.c \
+	depends/relic/src/fb/relic_fb_mul.c \
+	depends/relic/src/fb/relic_fb_param.c \
+	depends/relic/src/fb/relic_fb_poly.c \
+	depends/relic/src/fb/relic_fb_rdc.c \
+	depends/relic/src/fb/relic_fb_shift.c \
+	depends/relic/src/fb/relic_fb_slv.c \
+	depends/relic/src/fb/relic_fb_sqr.c \
+	depends/relic/src/fb/relic_fb_srt.c \
+	depends/relic/src/fb/relic_fb_trc.c \
+	depends/relic/src/fb/relic_fb_util.c
+
+EP_SOURCES = \
+	depends/relic/src/ep/relic_ep_add.c \
+	depends/relic/src/ep/relic_ep_cmp.c \
+	depends/relic/src/ep/relic_ep_curve.c \
+	depends/relic/src/ep/relic_ep_dbl.c \
+	depends/relic/src/ep/relic_ep_map.c \
+	depends/relic/src/ep/relic_ep_mul.c \
+	depends/relic/src/ep/relic_ep_mul_fix.c \
+	depends/relic/src/ep/relic_ep_mul_sim.c \
+	depends/relic/src/ep/relic_ep_neg.c \
+	depends/relic/src/ep/relic_ep_norm.c \
+	depends/relic/src/ep/relic_ep_param.c \
+	depends/relic/src/ep/relic_ep_pck.c \
+	depends/relic/src/ep/relic_ep_psi.c \
+	depends/relic/src/ep/relic_ep_util.c
+
+EPX_SOURCES = \
+	depends/relic/src/epx/relic_ep2_add.c \
+	depends/relic/src/epx/relic_ep2_cmp.c \
+	depends/relic/src/epx/relic_ep2_curve.c \
+	depends/relic/src/epx/relic_ep2_dbl.c \
+	depends/relic/src/epx/relic_ep2_frb.c \
+	depends/relic/src/epx/relic_ep2_map.c \
+	depends/relic/src/epx/relic_ep2_mul.c \
+	depends/relic/src/epx/relic_ep2_mul_cof.c \
+	depends/relic/src/epx/relic_ep2_mul_fix.c \
+	depends/relic/src/epx/relic_ep2_mul_sim.c \
+	depends/relic/src/epx/relic_ep2_neg.c \
+	depends/relic/src/epx/relic_ep2_norm.c \
+	depends/relic/src/epx/relic_ep2_pck.c \
+	depends/relic/src/epx/relic_ep2_util.c \
+	depends/relic/src/epx/relic_ep4_add.c \
+	depends/relic/src/epx/relic_ep4_cmp.c \
+	depends/relic/src/epx/relic_ep4_curve.c \
+	depends/relic/src/epx/relic_ep4_dbl.c \
+	depends/relic/src/epx/relic_ep4_frb.c \
+	depends/relic/src/epx/relic_ep4_map.c \
+	depends/relic/src/epx/relic_ep4_mul.c \
+	depends/relic/src/epx/relic_ep4_mul_cof.c \
+	depends/relic/src/epx/relic_ep4_mul_fix.c \
+	depends/relic/src/epx/relic_ep4_mul_sim.c \
+	depends/relic/src/epx/relic_ep4_neg.c \
+	depends/relic/src/epx/relic_ep4_norm.c \
+	depends/relic/src/epx/relic_ep4_util.c
+
+EB_SOURCES = \
+	depends/relic/src/eb/relic_eb_add.c \
+	depends/relic/src/eb/relic_eb_cmp.c \
+	depends/relic/src/eb/relic_eb_curve.c \
+	depends/relic/src/eb/relic_eb_dbl.c \
+	depends/relic/src/eb/relic_eb_frb.c \
+	depends/relic/src/eb/relic_eb_hlv.c \
+	depends/relic/src/eb/relic_eb_map.c \
+	depends/relic/src/eb/relic_eb_mul.c \
+	depends/relic/src/eb/relic_eb_mul_fix.c \
+	depends/relic/src/eb/relic_eb_mul_sim.c \
+	depends/relic/src/eb/relic_eb_neg.c \
+	depends/relic/src/eb/relic_eb_norm.c \
+	depends/relic/src/eb/relic_eb_param.c \
+	depends/relic/src/eb/relic_eb_pck.c \
+	depends/relic/src/eb/relic_eb_util.c
+
+ED_SOURCES = \
+	depends/relic/src/ed/relic_ed_add.c \
+	depends/relic/src/ed/relic_ed_cmp.c \
+	depends/relic/src/ed/relic_ed_curve.c \
+	depends/relic/src/ed/relic_ed_dbl.c \
+	depends/relic/src/ed/relic_ed_map.c \
+	depends/relic/src/ed/relic_ed_mul.c \
+	depends/relic/src/ed/relic_ed_mul_fix.c \
+	depends/relic/src/ed/relic_ed_mul_sim.c \
+	depends/relic/src/ed/relic_ed_neg.c \
+	depends/relic/src/ed/relic_ed_norm.c \
+	depends/relic/src/ed/relic_ed_param.c \
+	depends/relic/src/ed/relic_ed_pck.c \
+	depends/relic/src/ed/relic_ed_util.c
+
+PP_SOURCES = \
+	depends/relic/src/pp/relic_pp_add_k2.c \
+	depends/relic/src/pp/relic_pp_add_k8.c \
+	depends/relic/src/pp/relic_pp_add_k12.c \
+	depends/relic/src/pp/relic_pp_add_k24.c \
+	depends/relic/src/pp/relic_pp_add_k48.c \
+	depends/relic/src/pp/relic_pp_add_k54.c \
+	depends/relic/src/pp/relic_pp_dbl_k2.c \
+	depends/relic/src/pp/relic_pp_dbl_k8.c \
+	depends/relic/src/pp/relic_pp_dbl_k12.c \
+	depends/relic/src/pp/relic_pp_dbl_k24.c \
+	depends/relic/src/pp/relic_pp_dbl_k48.c \
+	depends/relic/src/pp/relic_pp_dbl_k54.c \
+	depends/relic/src/pp/relic_pp_exp_k2.c \
+	depends/relic/src/pp/relic_pp_exp_k8.c \
+	depends/relic/src/pp/relic_pp_exp_k12.c \
+	depends/relic/src/pp/relic_pp_exp_k24.c \
+	depends/relic/src/pp/relic_pp_exp_k48.c \
+	depends/relic/src/pp/relic_pp_exp_k54.c \
+	depends/relic/src/pp/relic_pp_map.c \
+	depends/relic/src/pp/relic_pp_map_k2.c \
+	depends/relic/src/pp/relic_pp_map_k8.c \
+	depends/relic/src/pp/relic_pp_map_k12.c \
+	depends/relic/src/pp/relic_pp_map_k24.c \
+	depends/relic/src/pp/relic_pp_map_k48.c \
+	depends/relic/src/pp/relic_pp_map_k54.c \
+	depends/relic/src/pp/relic_pp_norm.c
+
+PC_SOURCES = \
+	depends/relic/src/pc/relic_pc_core.c \
+	depends/relic/src/pc/relic_pc_exp.c \
+	depends/relic/src/pc/relic_pc_util.c
+
+MD_SOURCES = \
+	depends/relic/src/md/blake2.h \
+	depends/relic/src/md/blake2-impl.h \
+	depends/relic/src/md/blake2s-ref.c \
+	depends/relic/src/md/relic_md_blake2s.c \
+	depends/relic/src/md/relic_md_hmac.c \
+	depends/relic/src/md/relic_md_kdf.c \
+	depends/relic/src/md/relic_md_mgf.c \
+	depends/relic/src/md/relic_md_sha224.c \
+	depends/relic/src/md/relic_md_sha256.c \
+	depends/relic/src/md/relic_md_sha384.c \
+	depends/relic/src/md/relic_md_sha512.c \
+	depends/relic/src/md/relic_md_xmd.c \
+	depends/relic/src/md/sha.h \
+	depends/relic/src/md/sha224-256.c \
+	depends/relic/src/md/sha384-512.c \
+	depends/relic/src/md/sha_private.h
+
+EXTRA_DIST += \
+	depends/relic/src/arch/relic_arch_arm.c \
+	depends/relic/src/arch/relic_arch_none.c \
+	depends/relic/src/arch/relic_arch_x64.c \
+	depends/relic/src/arch/relic_arch_x86.c
+
+RELIC_SOURCES += \
+	depends/relic/src/arch/relic_arch_@CPU_ARCH@.c \
+	depends/relic/src/rand/relic_rand_call.c \
+	depends/relic/src/rand/relic_rand_core.c \
+	depends/relic/src/rand/relic_rand_hashd.c \
+	depends/relic/src/rand/relic_rand_udev.c
+
+if WITH_DV
+RELIC_SOURCES += \
+	depends/relic/src/dv/relic_dv_mem.c \
+	depends/relic/src/dv/relic_dv_util.c
+endif
+
+if ARITH_EASY
+if WITH_BN
+RELIC_SOURCES += $(BN_SOURCES) \
+	depends/relic/src/low/easy/relic_bn_add_low.c \
+	depends/relic/src/low/easy/relic_bn_div_low.c \
+	depends/relic/src/low/easy/relic_bn_mod_low.c \
+	depends/relic/src/low/easy/relic_bn_mul_low.c \
+	depends/relic/src/low/easy/relic_bn_shift_low.c \
+	depends/relic/src/low/easy/relic_bn_sqr_low.c
+endif
+
+if WITH_FP
+RELIC_SOURCES += $(FP_SOURCES) \
+	depends/relic/src/low/easy/relic_fp_add_low.c   \
+	depends/relic/src/low/easy/relic_fp_inv_low.c   \
+	depends/relic/src/low/easy/relic_fp_mul_low.c   \
+	depends/relic/src/low/easy/relic_fp_rdc_low.c   \
+	depends/relic/src/low/easy/relic_fp_shift_low.c \
+	depends/relic/src/low/easy/relic_fp_sqr_low.c
+endif
+
+if WITH_FPX
+RELIC_SOURCES += $(FPX_SOURCES) \
+	depends/relic/src/low/easy/relic_fpx_add_low.c \
+	depends/relic/src/low/easy/relic_fpx_mul_low.c \
+	depends/relic/src/low/easy/relic_fpx_rdc_low.c \
+	depends/relic/src/low/easy/relic_fpx_sqr_low.c
+endif
+
+if WITH_FB
+RELIC_SOURCES += $(FB_SOURCES) \
+	depends/relic/src/low/easy/relic_fb_add_low.c \
+	depends/relic/src/low/easy/relic_fb_inv_low.c \
+	depends/relic/src/low/easy/relic_fb_itr_low.c \
+	depends/relic/src/low/easy/relic_fb_mul_low.c \
+	depends/relic/src/low/easy/relic_fb_rdc_low.c \
+	depends/relic/src/low/easy/relic_fb_shift_low.c \
+	depends/relic/src/low/easy/relic_fb_slv_low.c \
+	depends/relic/src/low/easy/relic_fb_sqr_low.c \
+	depends/relic/src/low/easy/relic_fb_srt_low.c \
+	depends/relic/src/low/easy/relic_fb_trc_low.c
+endif
+endif
+
+if ARITH_GMP
+if WITH_BN
+RELIC_SOURCES += $(BN_SOURCES) \
+	depends/relic/src/low/gmp/relic_bn_add_low.c   \
+	depends/relic/src/low/gmp/relic_bn_div_low.c   \
+	depends/relic/src/low/gmp/relic_bn_mod_low.c   \
+	depends/relic/src/low/gmp/relic_bn_mul_low.c   \
+	depends/relic/src/low/gmp/relic_bn_shift_low.c \
+	depends/relic/src/low/gmp/relic_bn_sqr_low.c
+endif
+
+if WITH_FP
+RELIC_SOURCES += $(FP_SOURCES) \
+	depends/relic/src/low/gmp/relic_fp_add_low.c   \
+	depends/relic/src/low/gmp/relic_fp_inv_low.c   \
+	depends/relic/src/low/gmp/relic_fp_mul_low.c   \
+	depends/relic/src/low/gmp/relic_fp_rdc_low.c   \
+	depends/relic/src/low/gmp/relic_fp_shift_low.c \
+	depends/relic/src/low/gmp/relic_fp_sqr_low.c
+endif
+
+if WITH_FPX
+RELIC_SOURCES += $(FPX_SOURCES) \
+	depends/relic/src/low/easy/relic_fpx_add_low.c \
+	depends/relic/src/low/easy/relic_fpx_mul_low.c \
+	depends/relic/src/low/easy/relic_fpx_rdc_low.c \
+	depends/relic/src/low/easy/relic_fpx_sqr_low.c
+endif
+
+if WITH_FB
+RELIC_SOURCES += $(FB_SOURCES) \
+	depends/relic/src/low/gmp/relic_fb_add_low.c   \
+	depends/relic/src/low/easy/relic_fb_inv_low.c  \
+	depends/relic/src/low/easy/relic_fb_itr_low.c  \
+	depends/relic/src/low/easy/relic_fb_mul_low.c  \
+	depends/relic/src/low/easy/relic_fb_rdc_low.c  \
+	depends/relic/src/low/gmp/relic_fb_shift_low.c \
+	depends/relic/src/low/easy/relic_fb_slv_low.c  \
+	depends/relic/src/low/easy/relic_fb_sqr_low.c  \
+	depends/relic/src/low/easy/relic_fb_srt_low.c  \
+	depends/relic/src/low/easy/relic_fb_trc_low.c
+endif
+endif
+
+if WITH_FBX
+RELIC_SOURCES += \
+	depends/relic/src/fbx/relic_fb2_inv.c \
+	depends/relic/src/fbx/relic_fb2_mul.c \
+	depends/relic/src/fbx/relic_fb2_slv.c \
+	depends/relic/src/fbx/relic_fb2_sqr.c
+endif
+
+if WITH_EP
+RELIC_SOURCES += $(EP_SOURCES)
+endif
+
+if WITH_EPX
+RELIC_SOURCES += $(EPX_SOURCES)
+endif
+
+if WITH_EB
+RELIC_SOURCES += $(EB_SOURCES)
+endif
+
+if WITH_ED
+RELIC_SOURCES += $(ED_SOURCES)
+endif
+
+if WITH_PP
+RELIC_SOURCES += $(PP_SOURCES)
+endif
+
+if WITH_PC
+RELIC_SOURCES += $(PC_SOURCES)
+endif
+
+if WITH_CP
+RELIC_SOURCES += \
+	depends/relic/src/cp/relic_cp_bbs.c \
+	depends/relic/src/cp/relic_cp_bdpe.c \
+	depends/relic/src/cp/relic_cp_bgn.c \
+	depends/relic/src/cp/relic_cp_bls.c \
+	depends/relic/src/cp/relic_cp_cls.c \
+	depends/relic/src/cp/relic_cp_cmlhs.c \
+	depends/relic/src/cp/relic_cp_ecdh.c \
+	depends/relic/src/cp/relic_cp_ecdsa.c \
+	depends/relic/src/cp/relic_cp_ecies.c \
+	depends/relic/src/cp/relic_cp_ecmqv.c \
+	depends/relic/src/cp/relic_cp_ecss.c \
+	depends/relic/src/cp/relic_cp_ers.c \
+	depends/relic/src/cp/relic_cp_etrs.c \
+	depends/relic/src/cp/relic_cp_ghpe.c \
+	depends/relic/src/cp/relic_cp_ibe.c \
+	depends/relic/src/cp/relic_cp_mklhs.c \
+	depends/relic/src/cp/relic_cp_mpss.c \
+	depends/relic/src/cp/relic_cp_pcdel.c \
+	depends/relic/src/cp/relic_cp_phpe.c \
+	depends/relic/src/cp/relic_cp_pok.c \
+	depends/relic/src/cp/relic_cp_pss.c \
+	depends/relic/src/cp/relic_cp_rabin.c \
+	depends/relic/src/cp/relic_cp_rsa.c \
+	depends/relic/src/cp/relic_cp_sok.c \
+	depends/relic/src/cp/relic_cp_sokaka.c \
+	depends/relic/src/cp/relic_cp_vbnn.c \
+	depends/relic/src/cp/relic_cp_zss.c
+endif
+
+if WITH_BC
+RELIC_SOURCES += \
+	depends/relic/src/bc/relic_bc_aes.c \
+	depends/relic/src/bc/rijndael-alg-fst.c \
+	depends/relic/src/bc/rijndael-alg-fst.h \
+	depends/relic/src/bc/rijndael-api-fst.c \
+	depends/relic/src/bc/rijndael-api-fst.h
+endif
+
+if WITH_MD
+RELIC_SOURCES += $(MD_SOURCES)
+endif
+
+if WITH_MPC
+RELIC_SOURCES += \
+	depends/relic/src/mpc/relic_mt_mpc.c \
+	depends/relic/src/mpc/relic_pc_mpc.c
+endif
+
+librelic_la_SOURCES = \
+	$(RELIC_SOURCES) \
+	$(RELIC_H)
+
+librelic_la_CPPFLAGS = $(AM_CPPFLAGS) $(RELIC_CPPFLAGS) $(RELIC_INCLUDES)
+librelic_la_CXXFLAGS = $(AM_CXXFLAGS)
+librelic_la_CFLAGS   = $(AM_CFLAGS) $(WARN_CFLAGS) $(NOWARN_CFLAGS)
+librelic_la_LDFLAGS  = $(AM_LDFLAGS)
+
+noinst_LTLIBRARIES += $(LIBRELIC)

@@ -1,0 +1,7 @@
+# top-most EditorConfig file
+root = true
+
+# 4 space indentation
+[*.{cmake,c,h}]
+indent_style = tab
+indent_size = 4

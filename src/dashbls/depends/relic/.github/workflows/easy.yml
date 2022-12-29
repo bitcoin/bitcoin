@@ -1,0 +1,97 @@
+name: Basic configuration
+
+on:
+  push:
+    branches:
+      - '**'         # all branches
+  pull_request:
+    branches:
+      - '**'         # all branches
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Windows Latest - MSVC",
+            artifact: "windows-msvc.tar.xz",
+            os: windows-latest,
+            cc: "cl",
+          }
+          - {
+            name: "Windows Latest - MinGW",
+            artifact: "windows-mingw.tar.xz",
+            os: windows-latest,
+            cc: "gcc"
+          }
+          - {
+            name: "Ubuntu Latest - GCC",
+            artifact: "linux-gcc.tar.xz",
+            os: ubuntu-latest,
+            cc: "gcc",
+          }
+          - {
+            name: "Ubuntu Latest - Clang",
+            artifact: "linux-clang.tar.xz",
+            os: ubuntu-latest,
+            cc: "clang",
+          }
+          - {
+            name: "MacOS Latest",
+            os: macos-latest,
+            cc: "clang",
+          }
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set Windows enviroment
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'cl') }}
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set MinGW enviroment
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'gcc') }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            git
+            base-devel
+            gcc
+            cmake
+          update: true
+
+      - name: Run CMake (Win)
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'cl') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DSEED= -DBENCH=0 -G "NMake Makefiles" ..
+
+      - name: Run CMake (MingW)
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'gcc') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DSEED= -DBENCH=0 -G "MinGW Makefiles" ..
+
+      - name: Run CMake (standard)
+        if: ${{ !(runner.os == 'Windows') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_C_COMPILER=${{ matrix.config.cc }} -DSEED= -DBENCH=0 ..
+
+      - name: CMake Build
+        run: cmake --build build
+
+      - name: CMake Test
+        run: |
+          cd build
+          ctest --verbose .

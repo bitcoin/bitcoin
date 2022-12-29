@@ -1,0 +1,91 @@
+name: BLS12-381 configuration (ASM)
+
+on:
+  push:
+    branches:
+      - '**'         # all branches
+  pull_request:
+    branches:
+      - '**'         # all branches
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          #- {
+            #name: "Windows Latest - MinGW",
+            #artifact: "windows-mingw.tar.xz",
+            #os: windows-latest,
+            #cc: "gcc"
+          #}
+          - {
+            name: "Ubuntu Latest - GCC",
+            artifact: "linux-gcc.tar.xz",
+            os: ubuntu-latest,
+            cc: "gcc",
+          }
+          - {
+            name: "Ubuntu Latest - Clang",
+            artifact: "linux-clang.tar.xz",
+            os: ubuntu-latest,
+            cc: "clang",
+          }
+          - {
+            name: "MacOS Latest",
+            os: macos-latest,
+            cc: "clang",
+          }
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt install libgmp-dev
+
+      - name: Install MacOS Dependencies
+        if: runner.os == 'MacOS'
+        run: brew install gmp
+
+      - name: Set MinGW enviroment
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'gcc') }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            git
+            base-devel
+            gcc
+            cmake
+            gmp
+          update: true
+
+      - name: Run CMake (MingW)
+        if: ${{ (runner.os == 'Windows') && (matrix.config.cc == 'gcc') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" ..
+          ../preset/x64-pbc-bls12-381.sh .
+          cmake  -DSEED= -DBENCH=0 -DSTBIN=off -DRAND=HASHD .
+
+      - name: Run CMake (standard)
+        if: ${{ !(runner.os == 'Windows') }}
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          ../preset/x64-pbc-bls12-381.sh ../
+          cmake -DCMAKE_C_COMPILER=${{ matrix.config.cc }} -DSEED= -DBENCH=0 .
+
+      - name: CMake Build
+        run: cmake --build build
+
+      - name: CMake Test
+        run: |
+          cd build
+          ctest --verbose .
