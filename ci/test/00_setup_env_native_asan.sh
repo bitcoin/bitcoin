@@ -24,4 +24,4 @@ export DOCKER_NAME_TAG=ubuntu:22.04
 export NO_DEPENDS=1
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude interface_zmq_nevm"
-export SYSCOIN_CONFIG="--enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
+export SYSCOIN_CONFIG="--enable-c++20 --enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
