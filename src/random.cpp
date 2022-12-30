@@ -10,7 +10,7 @@
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
-#include <compat/compat.h>
+#include <windows.h>
 #include <wincrypt.h>
 #endif
 #include <logging.h>
