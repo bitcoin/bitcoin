@@ -23,10 +23,13 @@ namespace llmq
 class CFinalCommitment
 {
 public:
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr auto SPECIALTX_TYPE = SYSCOIN_TX_VERSION_MN_REGISTER;
 
-public:
-    uint16_t nVersion{CURRENT_VERSION};
+    static constexpr uint16_t LEGACY_BLS_NON_INDEXED_QUORUM_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_NON_INDEXED_QUORUM_VERSION = 3;
+
+    uint16_t nVersion{LEGACY_BLS_NON_INDEXED_QUORUM_VERSION};
+
     uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     std::vector<bool> signers;
@@ -54,13 +57,28 @@ public:
     bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
-
-public:
-    SERIALIZE_METHODS(CFinalCommitment, obj) {
-        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers), 
-        obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
+    [[nodiscard]] static constexpr uint16_t GetVersion(const bool is_basic_scheme_active)
+    {
+        return is_basic_scheme_active ? BASIC_BLS_NON_INDEXED_QUORUM_VERSION : LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
     }
 
+public:
+    SERIALIZE_METHODS(CFinalCommitment, obj)
+    {
+        READWRITE(
+                obj.nVersion,
+                obj.llmqType,
+                obj.quorumHash
+        );
+        READWRITE(
+                DYNBITSET(obj.signers),
+                DYNBITSET(obj.validMembers),
+                CBLSPublicKeyVersionWrapper(const_cast<CBLSPublicKey&>(obj.quorumPublicKey), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION)),
+                obj.quorumVvecHash,
+                CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.quorumSig), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION)),
+                CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.membersSig), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION))
+        );
+    }
 public:
     bool IsNull() const
     {
@@ -87,10 +105,10 @@ public:
         obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
         obj.pushKV("validMembersCount", CountValidMembers());
         obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
-        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
+        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION));
         obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString());
-        obj.pushKV("membersSig", membersSig.ToString());
+        obj.pushKV("quorumSig", quorumSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION));
+        obj.pushKV("membersSig", membersSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION));
     }
 };
 using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;

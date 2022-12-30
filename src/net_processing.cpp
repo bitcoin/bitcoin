@@ -3517,8 +3517,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             pfrom.fSuccessfullyConnected = true;
             return;
         }
-
-        CMNAuth::PushMNAUTH(&pfrom, m_connman);
+        int nHeight = WITH_LOCK(m_chainman.GetMutex(), return m_chainman.ActiveHeight());
+        CMNAuth::PushMNAUTH(&pfrom, m_connman, nHeight);
 
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
             // Tell our peer we are willing to provide version 2 cmpctblocks.
@@ -5009,7 +5009,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         governance->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::MNAUTH) {
-        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_chainman, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::QFCOMMITMENT) {
         llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, *this);

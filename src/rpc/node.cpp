@@ -31,6 +31,8 @@
 #include <masternode/masternodesync.h>
 #include <spork.h>
 #include <bls/bls.h>
+#include <llmq/quorums_utils.h>
+#include <validation.h>
 using node::NodeContext;
 static RPCHelpMan mnsync()
 {
@@ -171,14 +173,16 @@ static RPCHelpMan mnauth()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
-
+    auto& chainman = EnsureAnyChainman(request.context);
     int nodeId = request.params[0].getInt<int>();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
     }
     CBLSPublicKey publicKey;
-    publicKey.SetHexStr(request.params[2].get_str());
+    int nHeight = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
+    bool bls_legacy_scheme = !llmq::CLLMQUtils::IsV19Active(nHeight);
+    publicKey.SetHexStr(request.params[2].get_str(), bls_legacy_scheme);
     if (!publicKey.IsValid()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }

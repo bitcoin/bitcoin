@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70016;
+static const int PROTOCOL_VERSION = 70017;
 
 //! Version when we switched to a size-based "headers" limit.
 static const int SIZE_HEADERS_LIMIT_VERSION = 70015;
@@ -48,6 +48,8 @@ static const int INVALID_CB_NO_BAN_VERSION = 70015;
 //! "wtxidrelay" command for wtxid-based relay starts with this version
 static const int WTXID_RELAY_VERSION = 70016;
 
+//! BLS scheme was introduced in this version
+static const int BLS_SCHEME_PROTO_VERSION = 70017;
 // Make sure that none of the values above collide with
 // `SERIALIZE_TRANSACTION_NO_WITNESS` or `ADDRV2_FORMAT`.
 

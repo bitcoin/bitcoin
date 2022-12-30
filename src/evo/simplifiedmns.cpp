@@ -53,6 +53,8 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
     obj.pushKV("votingAddress", EncodeDestination(WitnessV0KeyHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
+    obj.pushKV("nVersion", nVersion);
+
 }
 
 CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries)
@@ -164,6 +166,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
         mnListArr.push_back(eObj);
     }
     obj.pushKV("mnList", mnListArr);
+    obj.pushKV("nVersion", nVersion);
 
     UniValue deletedQuorumsArr(UniValue::VARR);
     for (const auto& e : deletedQuorums) {
@@ -213,11 +216,11 @@ bool BuildSimplifiedMNListDiff(ChainstateManager& chainman, const uint256& baseB
         errorRet = strprintf("base block %s is higher then block %s", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }
-    
+    const int nHeight = chainman.ActiveHeight();
     LOCK(deterministicMNManager->cs);
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
     auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
-    mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList);
+    mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList, nHeight);
     // We need to return the value that was provided by the other peer as it otherwise won't be able to recognize the
     // response. This will usually be identical to the block found in baseBlockIndex. The only difference is when a
     // null block hash was provided to get the diff from the genesis block.

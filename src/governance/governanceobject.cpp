@@ -19,6 +19,7 @@
 #include <univalue.h>
 #include <timedata.h>
 #include <net_processing.h>
+#include <llmq/quorums_utils.h>
 using node::GetTransaction;
 CGovernanceObject::CGovernanceObject() :
     cs(),
@@ -99,7 +100,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
 {
 }
 
-bool CGovernanceObject::ProcessVote(CNode* pfrom,
+bool CGovernanceObject::ProcessVote(const CBlockIndex* pindex, CNode* pfrom,
     const CGovernanceVote& vote,
     CGovernanceException& exception)
 {
@@ -188,7 +189,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     bool onlyVotingKeyAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
-    if (!vote.IsValid(onlyVotingKeyAllowed)) {
+    if (!vote.IsValid(pindex, onlyVotingKeyAllowed)) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
@@ -233,8 +234,9 @@ void CGovernanceObject::ClearMasternodeVotes()
     }
 }
 
-std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpoint)
+std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const CBlockIndex *pindex, const COutPoint& mnOutpoint)
 {
+    
     LOCK(cs);
 
     auto it = mapCurrentMNVotes.find(mnOutpoint);
@@ -243,7 +245,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         return {};
     }
 
-    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, nObjectType == GOVERNANCE_OBJECT_PROPOSAL);
+    auto removedVotes = fileVotes.RemoveInvalidVotes(pindex, mnOutpoint, nObjectType == GOVERNANCE_OBJECT_PROPOSAL);
     if (removedVotes.empty()) {
         return {};
     }
@@ -310,9 +312,13 @@ bool CGovernanceObject::Sign(const CBLSSecretKey& key)
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
+bool CGovernanceObject::CheckSignature(const CBlockIndex* pindexIn, const CBLSPublicKey& pubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
+    CBLSSignature sig;
+    const auto pindex = llmq::CLLMQUtils::V19ActivationIndex(pindexIn);
+    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->nTime;
+    sig.SetByteVector(vchSig, is_bls_legacy_scheme);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
         LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
@@ -488,9 +494,9 @@ bool CGovernanceObject::IsValidLocally(ChainstateManager &chainman, std::string&
             strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint;
             return false;
         }
-
+        const CBlockIndex *pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
         // Check that we have a valid MN signature
-        if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+        if (!CheckSignature(pindex, dmn->pdmnState->pubKeyOperator.Get())) {
             strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
             return false;
         }

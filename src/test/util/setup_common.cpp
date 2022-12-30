@@ -166,6 +166,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
+    bls::bls_legacy_scheme.store(true);
 }
 
 BasicTestingSetup::~BasicTestingSetup()
@@ -327,7 +328,7 @@ TestChain100Setup::TestChain100Setup(
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
-    // SYSCOIN Generate a 100-block chain:
+    // SYSCOIN Generate an n-block chain:
     this->mineBlocks(count);
     {
         LOCK(::cs_main);
@@ -337,6 +338,8 @@ TestChain100Setup::TestChain100Setup(
             "722b456b5005377859a8320f3b3001c8a941643a246d7e5da64c8beeb17b3254" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "7b923c7931fbbd3e65e1737a4986810935ca4b911e3e9d527d9c62a512bf7f63" ||
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+            "7383b494222fa9469b77c948638fb595afb6a3762ae58ef28f16f236ccf041f6" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  );
     }

@@ -32,6 +32,7 @@ class FakeMNAUTHTest(DashTestFramework):
         p2p_masternode.wait_for_verack()
 
         protx_hash = masternode.proTxHash
+        #TODO: Fix that with basic BLS
         public_key = masternode.pubKeyOperator
 
         # The peerinfo should not yet contain verified_proregtx_hash/verified_pubkey_hash

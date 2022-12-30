@@ -1762,6 +1762,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 LogPrintfCategory(BCLog::PRUNE, "pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                   MIN_BLOCKS_TO_KEEP);
             }
+            int nHeight = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
+            if (llmq::CLLMQUtils::IsV19Active(nHeight))
+                bls::bls_legacy_scheme.store(false);
             std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
             if (status == node::ChainstateLoadStatus::SUCCESS) {
                 fLoaded = true;

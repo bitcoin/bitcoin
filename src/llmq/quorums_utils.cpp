@@ -20,8 +20,18 @@
 #include <util/system.h>
 namespace llmq
 {
-
-
+bool CLLMQUtils::IsV19Active(const int nHeight)
+{
+    return nHeight >= Params().GetConsensus().nPODAStartBlock; 
+}
+const CBlockIndex* CLLMQUtils::V19ActivationIndex(const CBlockIndex* pindex)
+{
+    assert(pindex);
+    if(!IsV19Active(pindex->nHeight)) {
+        return nullptr;
+    }
+    return pindex->GetAncestor(Params().GetConsensus().nPODAStartBlock);
+}
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex)
 {
     static RecursiveMutex cs_members;

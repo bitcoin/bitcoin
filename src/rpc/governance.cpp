@@ -625,7 +625,7 @@ static RPCHelpMan voteraw()
     node::NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hashMnCollateralTx = ParseHashV(request.params[0], "mn collateral tx hash");
     int nMnCollateralTxIndex = request.params[1].getInt<int>();
     COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
@@ -675,8 +675,8 @@ static RPCHelpMan voteraw()
     vote.SetSignature(*vchSig);
 
     bool onlyVotingKeyAllowed = govObjType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
-
-    if (!vote.IsValid(onlyVotingKeyAllowed)) {
+    const CBlockIndex* pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
+    if (!vote.IsValid(pindex, onlyVotingKeyAllowed)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 

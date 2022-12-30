@@ -28,6 +28,8 @@ namespace llmq
 class CLLMQUtils
 {
 public:
+    static bool IsV19Active(const int nHeight);
+    static const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex);
     // includes members which failed DKG
     static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexQuorum);
     static uint256 BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);

@@ -208,6 +208,12 @@ struct TestChainDIP3Setup : public TestChain100Setup
 {
     TestChainDIP3Setup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 549) {}
 };
+
+struct TestChainDIP3V19Setup : public TestChain100Setup
+{
+    TestChainDIP3V19Setup() :TestChain100Setup(CBaseChainParams::REGTEST, {}, 900) {}
+};
+
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
 {
     TestChainDIP3BeforeActivationSetup() : TestChain100Setup(CBaseChainParams::REGTEST, {}, 548) {}

@@ -309,10 +309,12 @@ public:
 class ConstCBLSPublicKeyVersionWrapper {
 private:
     bool legacy;
+    bool checkMalleable;
     const CBLSPublicKey& obj;
 public:
-    ConstCBLSPublicKeyVersionWrapper(const CBLSPublicKey& obj, bool legacy)
+    ConstCBLSPublicKeyVersionWrapper(const CBLSPublicKey& obj, bool legacy, bool checkMalleable = true)
             : legacy(legacy)
+            , checkMalleable(checkMalleable)
             , obj(obj)
     {}
     template <typename Stream>
@@ -372,10 +374,12 @@ public:
 class CBLSSignatureVersionWrapper {
 private:
     bool legacy;
+    bool checkMalleable;
     CBLSSignature& obj;
 public:
-    CBLSSignatureVersionWrapper(CBLSSignature& obj, bool legacy)
+    CBLSSignatureVersionWrapper(CBLSSignature& obj, bool legacy, bool checkMalleable = true)
             : legacy(legacy)
+            , checkMalleable(checkMalleable)
             , obj(obj)
     {}
     template <typename Stream>
@@ -462,7 +466,6 @@ public:
         }
         // SYSCOIN
         s.write(MakeByteSpan(vecBytes));
-
     }
 
     template<typename Stream>

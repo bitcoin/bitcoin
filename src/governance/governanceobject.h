@@ -241,7 +241,7 @@ public:
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
     bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    bool CheckSignature(const CBlockIndex* pindex, const CBLSPublicKey& pubKey) const;
 
     uint256 GetSignatureHash() const;
 
@@ -309,7 +309,7 @@ public:
     void LoadData();
     void GetData(UniValue& objResult);
 
-    bool ProcessVote(CNode* pfrom,
+    bool ProcessVote(const CBlockIndex *pindex, CNode* pfrom,
         const CGovernanceVote& vote,
         CGovernanceException& exception);
 
@@ -320,7 +320,7 @@ public:
     // This is the case for DIP3 MNs that changed voting or operator keys and
     // also for MNs that were removed from the list completely.
     // Returns deleted vote hashes.
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& mnOutpoint);
+    std::set<uint256> RemoveInvalidVotes(const CBlockIndex *pindex, const COutPoint& mnOutpoint);
 };
 
 

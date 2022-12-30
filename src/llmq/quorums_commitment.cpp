@@ -32,10 +32,13 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const
 {
-    if (nVersion == 0 || nVersion > CURRENT_VERSION) {
+    uint16_t expected_nversion{CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION};
+    expected_nversion = CLLMQUtils::IsV19Active(pQuorumBaseBlockIndex->nHeight) ? CFinalCommitment::BASIC_BLS_NON_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
+    
+    if (nVersion == 0 || nVersion != expected_nversion) {
+        LogPrintfFinalCommitment("q[%s] invalid nVersion=%d expectednVersion\n", quorumHash.ToString(), nVersion, expected_nversion);
         return false;
     }
-
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
         return false;

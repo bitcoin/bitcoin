@@ -258,13 +258,13 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, PeerManager& peerman)
 {
+    const CBlockIndex *pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
     AssertLockHeld(cs);
     uint256 nHash = govobj.GetHash();
     std::vector<vote_time_pair_t> vecVotePairs;
     cmmapOrphanVotes.GetAll(nHash, vecVotePairs);
 
     ScopedLockBool guard(cs, fRateChecksEnabled, false);
-
     int64_t nNow = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
     for (auto& pairVote : vecVotePairs) {
         bool fRemove = false;
@@ -272,7 +272,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, PeerManager
         CGovernanceException e;
         if (pairVote.second < nNow) {
             fRemove = true;
-        } else if (govobj.ProcessVote(nullptr, vote, e)) {
+        } else if (govobj.ProcessVote(pindex, nullptr, vote, e)) {
             vote.Relay(peerman);
             fRemove = true;
         }
@@ -601,9 +601,8 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
     int nVoteCount = 0;
 
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
-
+    const CBlockIndex* pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, pnode->GetId(), nProp.ToString());
-
     LOCK(cs);
 
     // single valid object and its valid votes
@@ -629,8 +628,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
         const uint256 &nVoteHash = vote.GetHash();
 
         bool onlyVotingKeyAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
-
-        if (filter.contains(nVoteHash) || !vote.IsValid(onlyVotingKeyAllowed)) {
+        if (filter.contains(nVoteHash) || !vote.IsValid(pindex, onlyVotingKeyAllowed)) {
             continue;
         }
         PeerRef peer = peerman.GetPeerRef(pnode->GetId());
@@ -799,6 +797,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
 bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
 {
+    const CBlockIndex *pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
     ENTER_CRITICAL_SECTION(cs)
     const uint256 &nHashVote = vote.GetHash();
     const uint256 &nHashGovobj = vote.GetParentHash();
@@ -845,8 +844,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         LEAVE_CRITICAL_SECTION(cs)
         return false;
     }
-
-    bool fOk = govobj.ProcessVote(pfrom, vote, exception) && cmapVoteToObject.Insert(nHashVote, &govobj);
+    bool fOk = govobj.ProcessVote(pindex, pfrom, vote, exception) && cmapVoteToObject.Insert(nHashVote, &govobj);
     LEAVE_CRITICAL_SECTION(cs)
     return fOk;
 }
@@ -1263,7 +1261,7 @@ void CGovernanceManager::RemoveInvalidVotes()
     if (!masternodeSync.IsSynced()) {
         return;
     }
-
+    const CBlockIndex *pindex = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
     LOCK(cs);
 
     auto curMNList = deterministicMNManager->GetListAtChainTip();
@@ -1285,7 +1283,7 @@ void CGovernanceManager::RemoveInvalidVotes()
 
     for (const auto& outpoint : changedKeyMNs) {
         for (auto& p : mapObjects) {
-            auto removed = p.second.RemoveInvalidVotes(outpoint);
+            auto removed = p.second.RemoveInvalidVotes(pindex, outpoint);
             if (removed.empty()) {
                 continue;
             }

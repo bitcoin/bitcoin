@@ -63,7 +63,7 @@ public:
     std::vector<CGovernanceVote> GetVotes() const;
 
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal);
+    std::set<uint256> RemoveInvalidVotes(const CBlockIndex *pindex, const COutPoint& outpointMasternode, bool fProposal);
 
     template<typename Stream>
     void Serialize(Stream& s) const

@@ -533,6 +533,7 @@ public:
 
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
+    bool IsPayToWitnessPubKeyHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */

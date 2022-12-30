@@ -31,6 +31,8 @@
 #include <node/transaction.h>
 #include <wallet/rpc/spend.h>
 #include <wallet/rpc/wallet.h>
+#include <rpc/server_util.h>
+#include <llmq/quorums_utils.h>
 using namespace wallet;
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
@@ -42,10 +44,11 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
     return ToKeyID(*keyID);
 }
 
-static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName)
+static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName, bool is_bls_legacy_scheme = true, bool specific_legacy_bls_scheme = false)
 {
     CBLSPublicKey pubKey;
-    if (!pubKey.SetHexStr(hexKey)) {
+    bool use_bls_scheme = specific_legacy_bls_scheme || is_bls_legacy_scheme;
+    if (!pubKey.SetHexStr(hexKey, use_bls_scheme)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;
@@ -208,6 +211,7 @@ static RPCHelpMan protx_register()
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
+                    {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
                 },
                 RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
                 RPCExamples{
@@ -225,13 +229,25 @@ static RPCHelpMan protx_register()
     EnsureWalletIsUnlocked(*pwallet);
     
     size_t paramIdx = 0;
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
 
     CProRegTx ptx;
-    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 10) {
+        specific_legacy_bls_scheme = request.params[9].get_bool();
+    }
+    if (specific_legacy_bls_scheme)
+        ptx.nVersion = CProRegTx::LEGACY_BLS_VERSION;
+    else
+        ptx.nVersion = CProRegTx::GetVersion(v19active);
 
     uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
     int32_t collateralIndex = request.params[paramIdx + 1].getInt<int>();
@@ -255,7 +271,7 @@ static RPCHelpMan protx_register()
         }
 
         ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
-        CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
+        CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme);
         CKeyID keyIDVoting = ptx.keyIDOwner;
         if (request.params[paramIdx + 3].get_str() != "") {
             keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
@@ -360,6 +376,7 @@ static RPCHelpMan protx_register_fund()
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
+                    {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
                 },
                 RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
                 RPCExamples{
@@ -376,15 +393,27 @@ static RPCHelpMan protx_register_fund()
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
     
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     size_t paramIdx = 0;
 
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
-
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
     CProRegTx ptx;
-    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 10) {
+        specific_legacy_bls_scheme = request.params[9].get_bool();
+    }
+    if (specific_legacy_bls_scheme) {
+        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
+    } else {
+        ptx.nVersion = CProUpServTx::GetVersion(v19active);
+    }
 
 
     CTxDestination collateralDest = DecodeDestination(request.params[paramIdx].get_str());
@@ -406,7 +435,7 @@ static RPCHelpMan protx_register_fund()
     }
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
-    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
+    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme);
     CKeyID keyIDVoting = ptx.keyIDOwner;
     if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
@@ -490,6 +519,7 @@ static RPCHelpMan protx_register_prepare()
                 {"fundAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
+                {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
             },
             RPCResult{RPCResult::Type::ANY, "", "Unsigned ProTX transaction object"},
             RPCExamples{
@@ -505,13 +535,25 @@ static RPCHelpMan protx_register_prepare()
     pwallet->BlockUntilSyncedToCurrentChain();
 
     size_t paramIdx = 0;
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     CMutableTransaction tx;
     tx.nVersion = SYSCOIN_TX_VERSION_MN_REGISTER;
-
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
     CProRegTx ptx;
-    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 10) {
+        specific_legacy_bls_scheme = request.params[9].get_bool();
+    }
+    if (specific_legacy_bls_scheme) {
+        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
+    } else {
+        ptx.nVersion = CProUpServTx::GetVersion(v19active);
+    }
 
     uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
     int32_t collateralIndex = request.params[paramIdx + 1].getInt<int>();
@@ -535,7 +577,7 @@ static RPCHelpMan protx_register_prepare()
         }
 
         ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
-        CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
+        CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme);
         CKeyID keyIDVoting = ptx.keyIDOwner;
         if (request.params[paramIdx + 3].get_str() != "") {
             keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
@@ -671,6 +713,7 @@ static RPCHelpMan protx_update_service()
                 {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
+                {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
             },
             RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
@@ -686,9 +729,22 @@ static RPCHelpMan protx_update_service()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpServTx ptx;
-    ptx.nVersion = CProUpServTx::CURRENT_VERSION;
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 6) {
+        specific_legacy_bls_scheme = request.params[5].get_bool();
+    }
+    if (specific_legacy_bls_scheme) {
+        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
+    } else {
+        ptx.nVersion = CProUpServTx::GetVersion(v19active);
+    }
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     if (!Lookup(request.params[1].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
@@ -770,6 +826,7 @@ static RPCHelpMan protx_update_registrar()
                 {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
+                {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
             },
             RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
@@ -785,9 +842,22 @@ static RPCHelpMan protx_update_registrar()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
     EnsureWalletIsUnlocked(*pwallet);
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpRegTx ptx;
-    ptx.nVersion = CProUpRegTx::CURRENT_VERSION;
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 6) {
+        specific_legacy_bls_scheme = request.params[5].get_bool();
+    }
+    if (specific_legacy_bls_scheme) {
+        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
+    } else {
+        ptx.nVersion = CProUpServTx::GetVersion(v19active);
+    }
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto dmn = mnList.GetMN(ptx.proTxHash);
@@ -799,7 +869,7 @@ static RPCHelpMan protx_update_registrar()
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
     if (request.params[1].get_str() != "") {
-        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address");
+        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme);
     }
     if (request.params[2].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[2].get_str(), "voting address");
@@ -864,6 +934,7 @@ static RPCHelpMan protx_revoke()
                 {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
+                {"legacy", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Use Legacy BLS scheme (false by default"},
             },
             RPCResult{RPCResult::Type::STR_HEX, "", "The transaction hash in hex"},
             RPCExamples{
@@ -880,9 +951,22 @@ static RPCHelpMan protx_revoke()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CProUpRevTx ptx;
-    ptx.nVersion = CProUpRevTx::CURRENT_VERSION;
+    bool v19active;
+    {
+        LOCK(cs_main);
+        v19active = llmq::CLLMQUtils::IsV19Active(chainman.ActiveHeight());
+    }
+    bool specific_legacy_bls_scheme{!v19active};
+    if(request.params.size() >= 5) {
+        specific_legacy_bls_scheme = request.params[4].get_bool();
+    }
+    if (specific_legacy_bls_scheme) {
+        ptx.nVersion = CProUpServTx::LEGACY_BLS_VERSION;
+    } else {
+        ptx.nVersion = CProUpServTx::GetVersion(v19active);
+    }
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");

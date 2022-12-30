@@ -16,7 +16,7 @@
 #include <timedata.h>
 #include <unordered_set>
 #include <util/system.h>
-void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
+void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman, const int nHeight)
 {
     LOCK(activeMasternodeInfoCs);
     if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
@@ -38,10 +38,12 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     if (fRegTest && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
+    bool isV19active = llmq::CLLMQUtils::IsV19Active(nHeight);
+    const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !isV19active);
     if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->IsInboundConn()));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, pnode->IsInboundConn()));
     } else {
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->IsInboundConn(), nOurNodeVersion));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, pnode->IsInboundConn(), nOurNodeVersion));
     }
 
     CMNAuth mnauth;
@@ -53,7 +55,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     connman.PushMessage(pnode, CNetMsgMaker(pnode->GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
+void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, ChainstateManager &chainman, CConnman& connman, PeerManager& peerman)
 {
     if (strCommand != NetMsgType::MNAUTH || !masternodeSync.IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
@@ -104,11 +106,14 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     if (fRegTest && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
+    int nHeight = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
+    bool isV19active = llmq::CLLMQUtils::IsV19Active(nHeight);
+    ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !isV19active);
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
     if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-        signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->GetSentMNAuthChallenge(), !pnode->IsInboundConn()));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, pnode->GetSentMNAuthChallenge(), !pnode->IsInboundConn()));
     } else {
-        signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->GetSentMNAuthChallenge(), !pnode->IsInboundConn(), pnode->nVersion.load()));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, pnode->GetSentMNAuthChallenge(), !pnode->IsInboundConn(), pnode->nVersion.load()));
     }
     LogPrint(BCLog::NET, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, pnode->nVersion, pnode->GetId());
     if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,15 +13,15 @@
 #include <threadsafety.h>
 
 #include <immer/map.hpp>
-
 #include <unordered_map>
 #include <unordered_set>
 #include <script/standard.h>
 #include <interfaces/chain.h>
 #include <bls/bls.h>
-class CBlock;
-class CBlockIndex;
-class BlockValidationState;
+class CProRegTx;
+class UniValue;
+
+class CDeterministicMNState;
 class CSimplifiedMNListDiff;
 namespace llmq
 {
@@ -75,9 +75,23 @@ public:
 
     SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
-         READWRITE(obj.nRegisteredHeight, obj.nLastPaidHeight, obj.nPoSePenalty, obj.nPoSeRevivedHeight, obj.nPoSeBanHeight,
-         obj.nRevocationReason, obj.confirmedHash, obj.confirmedHashWithProRegTxHash, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
-         obj.addr, obj.scriptPayout, obj.scriptOperatorPayout, obj.nCollateralHeight);
+        READWRITE(
+                obj.nRegisteredHeight,
+                obj.nLastPaidHeight,
+                obj.nPoSePenalty,
+                obj.nPoSeRevivedHeight,
+                obj.nPoSeBanHeight,
+                obj.nRevocationReason,
+                obj.confirmedHash,
+                obj.confirmedHashWithProRegTxHash,
+                obj.keyIDOwner,
+                obj.pubKeyOperator,
+                obj.keyIDVoting,
+                obj.addr,
+                obj.scriptPayout,
+                obj.scriptOperatorPayout,
+                obj.nCollateralHeight
+                );
     }
 
     void ResetOperatorFields()
@@ -174,13 +188,20 @@ public:
         DMN_STATE_DIFF_ALL_FIELDS
 #undef DMN_STATE_DIFF_LINE
     }
-    SERIALIZE_METHODS(CDeterministicMNStateDiff, obj) {
+
+    SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
+    {
         READWRITE(VARINT(obj.fields));
-        #define DMN_STATE_DIFF_LINE(f) if (obj.fields & Field_##f) READWRITE(obj.state.f);
+#define DMN_STATE_DIFF_LINE(f) \
+        if (obj.fields & Field_pubKeyOperator) {\
+            /* TODO: implement migration to Basic BLS after the fork */ \
+            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), true)); \
+        } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
+
         DMN_STATE_DIFF_ALL_FIELDS
-        #undef DMN_STATE_DIFF_LINE
+#undef DMN_STATE_DIFF_LINE
     }
-    
+
     void ApplyToState(CDeterministicMNState& target) const
     {
 #define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) target.f = state.f;
@@ -430,7 +451,7 @@ public:
     void PoSeDecrease(const uint256& proTxHash);
 
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
-    CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
+    CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, const int nHeight) const;
     CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
@@ -612,5 +633,4 @@ private:
 };
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-
-#endif // SYSCOIN_EVO_DETERMINISTICMNS_H
+#endif //SYSCOIN_EVO_DETERMINISTICMNS_H

@@ -1195,6 +1195,8 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         fqc.quorumPublicKey = first.quorumPublicKey;
         fqc.quorumVvecHash = first.quorumVvecHash;
 
+        fqc.nVersion = CLLMQUtils::IsV19Active(m_quorum_base_block_index->nHeight) ? CFinalCommitment::BASIC_BLS_NON_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
+
         uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
 
         std::vector<CBLSSignature> aggSigs;

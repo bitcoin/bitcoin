@@ -389,19 +389,24 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
     return diffRet;
 }
 
-CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to) const
+CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to, const int nHeight) const
 {
     CSimplifiedMNListDiff diffRet;
     diffRet.baseBlockHash = blockHash;
     diffRet.blockHash = to.blockHash;
+    diffRet.nVersion = llmq::CLLMQUtils::IsV19Active(nHeight) ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
     to.ForEachMN(false, [&](auto& toPtr) {
         auto fromPtr = GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
+            CSimplifiedMNListEntry sme(toPtr);
+            sme.nVersion = diffRet.nVersion;
             diffRet.mnList.emplace_back(toPtr);
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
+            sme1.nVersion = diffRet.nVersion;
+            sme2.nVersion = diffRet.nVersion;
             if (sme1 != sme2) {
                 diffRet.mnList.emplace_back(toPtr);
             }

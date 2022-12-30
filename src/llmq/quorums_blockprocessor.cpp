@@ -155,7 +155,8 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     }
     bool NEVMContext = pindex->nHeight >= Params().GetConsensus().nNEVMStartBlock;
 
-
+    if (CLLMQUtils::IsV19Active(pindex->pprev->nHeight))
+        bls::bls_legacy_scheme.store(false);
     std::map<uint8_t, CFinalCommitment> qcs;
     if (!GetCommitmentsFromBlock(block, pindex->nHeight, qcs, state)) {
         return false;
@@ -288,7 +289,8 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-
+    if (!CLLMQUtils::IsV19Active(pindex->pprev->nHeight))
+        bls::bls_legacy_scheme.store(true);
     std::map<uint8_t, CFinalCommitment> qcs;
     BlockValidationState dummy;
     if (!GetCommitmentsFromBlock(block, pindex->nHeight, qcs, dummy)) {
@@ -533,7 +535,7 @@ bool CQuorumBlockProcessor::GetMinableCommitment(uint8_t llmqType, int nHeight, 
         // no commitment required
         return false;
     }
-
+    bool basic_bls_enabled = CLLMQUtils::IsV19Active(nHeight);
     uint256 quorumHash = GetQuorumBlockHash(chainman, llmqType, nHeight);
     if (quorumHash.IsNull()) {
         return false;
@@ -546,6 +548,7 @@ bool CQuorumBlockProcessor::GetMinableCommitment(uint8_t llmqType, int nHeight, 
         if (it == minableCommitmentsByQuorum.end()) {
             // null commitment required
             ret = CFinalCommitment(Params().GetConsensus().llmqs.at(llmqType), quorumHash);
+            ret.nVersion = CFinalCommitment::GetVersion(basic_bls_enabled);
             return true;
         }
 

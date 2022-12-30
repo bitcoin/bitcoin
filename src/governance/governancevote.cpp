@@ -12,6 +12,7 @@
 #include <timedata.h>
 #include <evo/deterministicmns.h>
 #include <net_processing.h>
+#include <llmq/quorums_utils.h>
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
@@ -191,16 +192,20 @@ bool CGovernanceVote::Sign(const CBLSSecretKey& key)
     return true;
 }
 
-bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
+bool CGovernanceVote::CheckSignature(const CBlockIndex* pindexIn, const CBLSPublicKey& pubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
+    CBLSSignature sig;
+    const auto pindex = llmq::CLLMQUtils::V19ActivationIndex(pindexIn);
+    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->nTime;
+    sig.SetByteVector(vchSig, is_bls_legacy_scheme);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
     return true;
 }
 
-bool CGovernanceVote::IsValid(bool useVotingKey) const
+bool CGovernanceVote::IsValid(const CBlockIndex* pindex, bool useVotingKey) const
 {
     if (nTime > TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60));
@@ -228,7 +233,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
     if (useVotingKey) {
         return CheckSignature(dmn->pdmnState->keyIDVoting);
     } else {
-        return CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
+        return CheckSignature(pindex, dmn->pdmnState->pubKeyOperator.Get());
     }
 }
 
