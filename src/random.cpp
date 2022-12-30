@@ -634,7 +634,7 @@ bool Random_SanityCheck()
      * GetOSRand() overwrites all 32 bytes of the output given a maximum
      * number of tries.
      */
-    static const ssize_t MAX_TRIES = 1024;
+    static constexpr int MAX_TRIES{1024};
     uint8_t data[NUM_OS_RANDOM_BYTES];
     bool overwritten[NUM_OS_RANDOM_BYTES] = {}; /* Tracks which bytes have been overwritten at least once */
     int num_overwritten;
