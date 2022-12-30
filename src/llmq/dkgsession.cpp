@@ -1207,9 +1207,10 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         fqc.quorumVvecHash = first.quorumVvecHash;
 
         if (utils::IsQuorumRotationEnabled(fqc.llmqType, m_quorum_base_block_index)) {
-            fqc.nVersion = CFinalCommitment::INDEXED_QUORUM_VERSION;
+            fqc.nVersion = utils::IsV19Active(m_quorum_base_block_index) ? CFinalCommitment::BASIC_BLS_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_INDEXED_QUORUM_VERSION;
             fqc.quorumIndex = quorumIndex;
         } else {
+            fqc.nVersion = utils::IsV19Active(m_quorum_base_block_index) ? CFinalCommitment::BASIC_BLS_NON_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
             fqc.quorumIndex = 0;
         }
 

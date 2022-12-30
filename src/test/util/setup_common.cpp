@@ -140,6 +140,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         noui_connect();
         noui_connected = true;
     }
+    bls::bls_legacy_scheme.store(true);
 }
 
 BasicTestingSetup::~BasicTestingSetup()

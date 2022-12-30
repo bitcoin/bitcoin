@@ -7,10 +7,12 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <key.h>
+#include <llmq/utils.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <evo/deterministicmns.h>
 
@@ -228,7 +230,11 @@ bool CGovernanceVote::Sign(const CBLSSecretKey& key)
 
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
+    CBLSSignature sig;
+    const auto pindex = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
+    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->nTime;
+    sig.SetByteVector(vchSig, is_bls_legacy_scheme);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }

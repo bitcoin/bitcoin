@@ -10,6 +10,7 @@
 #include <consensus/validation.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
+#include <llmq/utils.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
@@ -55,7 +56,8 @@ bool CCoinJoinQueue::Sign()
     if (!sig.IsValid()) {
         return false;
     }
-    vchSig = sig.ToByteVector();
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    vchSig = sig.ToByteVector(legacy_bls_scheme);
 
     return true;
 }
@@ -97,12 +99,12 @@ bool CCoinJoinBroadcastTx::Sign()
     if (!fMasternodeMode) return false;
 
     uint256 hash = GetSignatureHash();
-
     CBLSSignature sig = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsKeyOperator->Sign(hash));
     if (!sig.IsValid()) {
         return false;
     }
-    vchSig = sig.ToByteVector();
+    bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
+    vchSig = sig.ToByteVector(legacy_bls_scheme);
 
     return true;
 }

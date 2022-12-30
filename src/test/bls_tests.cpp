@@ -33,6 +33,30 @@ void FuncSign(const bool legacy_scheme)
     return;
 }
 
+void FuncSerialize(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSSecretKey sk;
+    CDataStream ds2(SER_DISK, CLIENT_VERSION), ds3(SER_DISK, CLIENT_VERSION);
+    uint256 msgHash = uint256::ONE;
+
+    sk.MakeNewKey();
+    CBLSSignature sig1 = sk.Sign(msgHash);
+    ds2 << sig1;
+    ds3 << CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(sig1), !legacy_scheme);
+
+    CBLSSignature sig2;
+    ds2 >> sig2;
+    BOOST_CHECK(sig1 == sig2);
+
+    CBLSSignature sig3;
+    ds3 >> CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(sig3), !legacy_scheme);
+    BOOST_CHECK(sig1 == sig3);
+
+    return;
+}
+
 void FuncSetHexStr(const bool legacy_scheme)
 {
     bls::bls_legacy_scheme.store(legacy_scheme);
@@ -337,6 +361,12 @@ BOOST_AUTO_TEST_CASE(bls_sethexstr_tests)
 {
     FuncSetHexStr(true);
     FuncSetHexStr(false);
+}
+
+BOOST_AUTO_TEST_CASE(bls_serialize_tests)
+{
+    FuncSerialize(true);
+    FuncSerialize(false);
 }
 
 BOOST_AUTO_TEST_CASE(bls_sig_tests)

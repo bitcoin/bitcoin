@@ -32,9 +32,15 @@ class CProRegTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
-    uint16_t nVersion{CURRENT_VERSION};                    // message version
+    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    {
+        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+    }
+
+    uint16_t nVersion{LEGACY_BLS_VERSION};                 // message version
     uint16_t nType{0};                                     // only 0 supported for now
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
@@ -50,18 +56,24 @@ public:
     SERIALIZE_METHODS(CProRegTx, obj)
     {
         READWRITE(
-                obj.nVersion,
+                obj.nVersion
+        );
+        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+            // unknown version, bail out early
+            return;
+        }
+        READWRITE(
                 obj.nType,
                 obj.nMode,
                 obj.collateralOutpoint,
                 obj.addr,
                 obj.keyIDOwner,
-                obj.pubKeyOperator,
+                CBLSPublicKeyVersionWrapper(const_cast<CBLSPublicKey&>(obj.pubKeyOperator), (obj.nVersion == LEGACY_BLS_VERSION)),
                 obj.keyIDVoting,
                 obj.nOperatorReward,
                 obj.scriptPayout,
                 obj.inputsHash
-                );
+        );
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(obj.vchSig);
         }
@@ -88,22 +100,28 @@ public:
         if (ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
-        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION));
         obj.pushKV("operatorReward", (double)nOperatorReward / 100);
 
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid() const;
+    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
 };
 
 class CProUpServTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_SERVICE;
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
-    uint16_t nVersion{CURRENT_VERSION}; // message version
+    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    {
+        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+    }
+
+    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
     uint256 proTxHash;
     CService addr;
     CScript scriptOperatorPayout;
@@ -112,9 +130,23 @@ public:
 
     SERIALIZE_METHODS(CProUpServTx, obj)
     {
-        READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
+        READWRITE(
+                obj.nVersion
+        );
+        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+            // unknown version, bail out early
+            return;
+        }
+        READWRITE(
+                obj.proTxHash,
+                obj.addr,
+                obj.scriptOperatorPayout,
+                obj.inputsHash
+        );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.sig);
+            READWRITE(
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION), true)
+            );
         }
     }
 
@@ -134,16 +166,22 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid() const;
+    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
 };
 
 class CProUpRegTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
-    uint16_t nVersion{CURRENT_VERSION}; // message version
+    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    {
+        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+    }
+
+    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
     CBLSPublicKey pubKeyOperator;
@@ -155,16 +193,24 @@ public:
     SERIALIZE_METHODS(CProUpRegTx, obj)
     {
         READWRITE(
-                obj.nVersion,
+                obj.nVersion
+        );
+        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+            // unknown version, bail out early
+            return;
+        }
+        READWRITE(
                 obj.proTxHash,
                 obj.nMode,
-                obj.pubKeyOperator,
+                CBLSPublicKeyVersionWrapper(const_cast<CBLSPublicKey&>(obj.pubKeyOperator), (obj.nVersion == LEGACY_BLS_VERSION)),
                 obj.keyIDVoting,
                 obj.scriptPayout,
                 obj.inputsHash
-                );
+        );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.vchSig);
+            READWRITE(
+                    obj.vchSig
+            );
         }
     }
 
@@ -181,18 +227,24 @@ public:
         if (ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
-        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION));
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid() const;
+    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
 };
 
 class CProUpRevTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REVOKE;
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_VERSION = 2;
+
+    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    {
+        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+    }
 
     // these are just informational and do not have any effect on the revocation
     enum {
@@ -203,7 +255,7 @@ public:
         REASON_LAST = REASON_CHANGE_OF_KEYS
     };
 
-    uint16_t nVersion{CURRENT_VERSION}; // message version
+    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
@@ -211,9 +263,22 @@ public:
 
     SERIALIZE_METHODS(CProUpRevTx, obj)
     {
-        READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
+        READWRITE(
+                obj.nVersion
+        );
+        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+            // unknown version, bail out early
+            return;
+        }
+        READWRITE(
+                obj.proTxHash,
+                obj.nReason,
+                obj.inputsHash
+        );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.sig);
+            READWRITE(
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION), true)
+            );
         }
     }
 
@@ -229,7 +294,7 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 
-    maybe_error IsTriviallyValid() const;
+    maybe_error IsTriviallyValid(bool is_bls_legacy_scheme) const;
 };
 
 template <typename ProTx>

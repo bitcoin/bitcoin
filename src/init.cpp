@@ -2191,6 +2191,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             break;
                         }
 
+                        if (llmq::utils::IsV19Active(tip))
+                            bls::bls_legacy_scheme.store(false);
+
                         // Only verify the DB of the active chainstate. This is fixed in later
                         // work when we allow VerifyDB to be parameterized by chainstate.
                         if (&::ChainstateActive() == chainstate &&

@@ -354,14 +354,19 @@ CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDetermini
     CSimplifiedMNListDiff diffRet;
     diffRet.baseBlockHash = blockHash;
     diffRet.blockHash = to.blockHash;
+    diffRet.nVersion = llmq::utils::IsV19Active(::ChainActive().Tip()) ? CSimplifiedMNListDiff::BASIC_BLS_VERSION : CSimplifiedMNListDiff::LEGACY_BLS_VERSION;
 
     to.ForEachMN(false, [&](auto& toPtr) {
         auto fromPtr = GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
+            CSimplifiedMNListEntry sme(toPtr);
+            sme.nVersion = diffRet.nVersion;
             diffRet.mnList.emplace_back(toPtr);
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
+            sme1.nVersion = diffRet.nVersion;
+            sme2.nVersion = diffRet.nVersion;
             if (sme1 != sme2) {
                 diffRet.mnList.emplace_back(toPtr);
             } else if (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout)) {
@@ -1136,7 +1141,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+    if (auto maybe_err = ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev)); maybe_err.did_err) {
         return state.Invalid(maybe_err.reason, false, REJECT_INVALID, std::string(maybe_err.error_str));
     }
 
@@ -1241,7 +1246,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+    if (auto maybe_err = ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev)); maybe_err.did_err) {
         return state.Invalid(maybe_err.reason, false, REJECT_INVALID, std::string(maybe_err.error_str));
     }
 
@@ -1296,7 +1301,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+    if (auto maybe_err = ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev)); maybe_err.did_err) {
         return state.Invalid(maybe_err.reason, false, REJECT_INVALID, std::string(maybe_err.error_str));
     }
 
@@ -1369,7 +1374,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-payload");
     }
 
-    if (auto maybe_err = ptx.IsTriviallyValid(); maybe_err.did_err) {
+    if (auto maybe_err = ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev)); maybe_err.did_err) {
         return state.Invalid(maybe_err.reason, false, REJECT_INVALID, std::string(maybe_err.error_str));
     }
 

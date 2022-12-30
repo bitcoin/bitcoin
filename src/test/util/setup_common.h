@@ -144,6 +144,11 @@ struct TestChainDIP3Setup : public TestChainSetup
     TestChainDIP3Setup() : TestChainSetup(431) {}
 };
 
+struct TestChainDIP3V19Setup : public TestChainSetup
+{
+    TestChainDIP3V19Setup() : TestChainSetup(900) {}
+};
+
 struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
 {
     TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}

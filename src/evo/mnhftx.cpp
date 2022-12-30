@@ -20,7 +20,7 @@ extern const std::string CBLSIG_REQUESTID_PREFIX = "clsig";
 
 bool MNHFTx::Verify(const CBlockIndex* pQuorumIndex) const
 {
-    if (nVersion == 0 || nVersion > CURRENT_VERSION) {
+    if (nVersion == 0 || nVersion > (llmq::utils::IsV19Active(pQuorumIndex) ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION)) {
         return false;
     }
 

@@ -2769,7 +2769,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
 
         if (!pfrom->m_masternode_probe_connection) {
-            CMNAuth::PushMNAUTH(*pfrom, *connman);
+            CMNAuth::PushMNAUTH(*pfrom, *connman, ::ChainActive().Tip());
         }
 
         // Tell our peer we prefer to receive headers rather than inv's

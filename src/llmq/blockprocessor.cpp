@@ -131,6 +131,9 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         return true;
     }
 
+    if (utils::IsV19Active(pindex->pprev))
+        bls::bls_legacy_scheme.store(false);
+
     llmq::utils::PreComputeQuorumMembers(pindex);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
@@ -283,6 +286,9 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
+
+    if (!utils::IsV19Active(pindex->pprev))
+        bls::bls_legacy_scheme.store(true);
 
     llmq::utils::PreComputeQuorumMembers(pindex, true);
 
@@ -725,6 +731,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     const auto *const pindex = ::ChainActive().Height() < nHeight ? ::ChainActive().Tip() : ::ChainActive().Tip()->GetAncestor(nHeight);
 
     bool rotation_enabled = utils::IsQuorumRotationEnabled(llmqParams.type, pindex);
+    bool basic_bls_enabled = utils::IsV19Active(pindex);
     size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
 
     std::stringstream ss;
@@ -746,9 +753,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
             // null commitment required
             cf = CFinalCommitment(llmqParams, quorumHash);
             cf.quorumIndex = static_cast<int16_t>(quorumIndex);
-            if (rotation_enabled) {
-                cf.nVersion = CFinalCommitment::INDEXED_QUORUM_VERSION;
-            }
+            cf.nVersion = CFinalCommitment::GetVersion(rotation_enabled, basic_bls_enabled);
             ss << "{ created nversion[" << cf.nVersion << "] quorumIndex[" << cf.quorumIndex << "] }";
         } else {
             cf = minableCommitments.at(it->second);

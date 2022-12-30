@@ -146,8 +146,10 @@ class DashZMQTest (DashTestFramework):
             self.test_getzmqnotifications()
             self.test_instantsend_publishers(False)
             self.activate_dip0024()
-            self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
             self.log.info("Activated DIP0024 at height:" + str(self.nodes[0].getblockcount()))
+            # Test for CL 8 blocks after dip24 activation because along with dip24, the BLS scheme is activted
+            self.generate_blocks(8)
+            self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
             self.test_instantsend_publishers(False)
             # At this point, we need to move forward 3 cycles (3 x 24 blocks) so the first 3 quarters can be created (without DKG sessions)
             self.move_to_next_cycle()
@@ -162,6 +164,12 @@ class DashZMQTest (DashTestFramework):
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
             self.zmq_context.destroy(linger=None)
+
+    def generate_blocks(self, num_blocks):
+        mninfos_online = self.mninfo.copy()
+        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        self.nodes[0].generate(num_blocks)
+        self.sync_blocks(nodes)
 
     def subscribe(self, publishers):
         import zmq

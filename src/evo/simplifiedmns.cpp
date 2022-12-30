@@ -67,6 +67,7 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
     obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
     obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
     obj.pushKV("isValid", isValid);
+    obj.pushKV("nVersion", nVersion);
 
     if (!extended) return;
 
@@ -193,6 +194,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
         mnListArr.push_back(eObj);
     }
     obj.pushKV("mnList", mnListArr);
+    obj.pushKV("nVersion", nVersion);
 
     UniValue deletedQuorumsArr(UniValue::VARR);
     for (const auto& e : deletedQuorums) {

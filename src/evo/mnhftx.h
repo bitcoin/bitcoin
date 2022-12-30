@@ -19,9 +19,10 @@ extern CCriticalSection cs_main;
 class MNHFTx
 {
 public:
-    static constexpr uint16_t CURRENT_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
+    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
-    uint16_t nVersion{CURRENT_VERSION};
+    uint16_t nVersion{LEGACY_BLS_VERSION};
     uint256 quorumHash;
     CBLSSignature sig;
 
@@ -30,7 +31,8 @@ public:
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
-        READWRITE(obj.nVersion, obj.quorumHash, obj.sig);
+        READWRITE(obj.nVersion, obj.quorumHash);
+        READWRITE(CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION)));
     }
 
     std::string ToString() const;

@@ -5,6 +5,7 @@
 #include <test/util/setup_common.h>
 
 #include <chainparams.h>
+#include <bls/bls.h>
 #include <consensus/validation.h>
 #include <messagesigner.h>
 #include <miner.h>
@@ -120,6 +121,7 @@ static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOM
     operatorKeyRet.MakeNewKey();
 
     CProRegTx proTx;
+    proTx.nVersion = CProRegTx::GetVersion(!bls::bls_legacy_scheme);
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();

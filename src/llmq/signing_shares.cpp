@@ -1165,7 +1165,6 @@ bool CSigSharesManager::SendMessages()
                 }
                 totalSigsCount += inv.sigShares.size();
                 msgs.emplace_back(inv);
-
             }
             if (!msgs.empty()) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, std::move(msgs)));

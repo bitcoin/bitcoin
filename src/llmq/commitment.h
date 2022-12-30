@@ -25,11 +25,14 @@ namespace llmq
 class CFinalCommitment
 {
 public:
-    static constexpr uint16_t CURRENT_VERSION = 1;
-    static constexpr uint16_t INDEXED_QUORUM_VERSION = 2;
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
 
-public:
-    uint16_t nVersion{CURRENT_VERSION};
+    static constexpr uint16_t LEGACY_BLS_NON_INDEXED_QUORUM_VERSION = 1;
+    static constexpr uint16_t LEGACY_BLS_INDEXED_QUORUM_VERSION = 2;
+    static constexpr uint16_t BASIC_BLS_NON_INDEXED_QUORUM_VERSION = 3;
+    static constexpr uint16_t BASIC_BLS_INDEXED_QUORUM_VERSION = 4;
+
+    uint16_t nVersion{LEGACY_BLS_NON_INDEXED_QUORUM_VERSION};
     Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
     uint256 quorumHash;
     int16_t quorumIndex{0};
@@ -59,30 +62,36 @@ public:
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
+    [[nodiscard]] static constexpr uint16_t GetVersion(const bool is_rotation_enabled, const bool is_basic_scheme_active)
+    {
+        if (is_rotation_enabled)
+            return is_basic_scheme_active ? BASIC_BLS_INDEXED_QUORUM_VERSION : LEGACY_BLS_INDEXED_QUORUM_VERSION;
+        else
+            return is_basic_scheme_active ? BASIC_BLS_NON_INDEXED_QUORUM_VERSION : LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
+    }
+
 public:
+
     SERIALIZE_METHODS(CFinalCommitment, obj)
     {
         READWRITE(
                 obj.nVersion,
                 obj.llmqType,
                 obj.quorumHash
-                );
-
-        int16_t _quorumIndex = 0;
-        SER_WRITE(obj, _quorumIndex = obj.quorumIndex);
-        if (obj.nVersion == CFinalCommitment::INDEXED_QUORUM_VERSION) {
-            READWRITE(_quorumIndex);
+        );
+        if (obj.nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION || obj.nVersion == BASIC_BLS_INDEXED_QUORUM_VERSION) {
+            READWRITE(
+                    obj.quorumIndex
+            );
         }
-        SER_READ(obj, obj.quorumIndex = _quorumIndex);
-
         READWRITE(
                 DYNBITSET(obj.signers),
                 DYNBITSET(obj.validMembers),
-                obj.quorumPublicKey,
+                CBLSPublicKeyVersionWrapper(const_cast<CBLSPublicKey&>(obj.quorumPublicKey), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || obj.nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION)),
                 obj.quorumVvecHash,
-                obj.quorumSig,
-                obj.membersSig
-                );
+                CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.quorumSig), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || obj.nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION)),
+                CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.membersSig), (obj.nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || obj.nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION))
+        );
     }
 
 public:
@@ -112,10 +121,10 @@ public:
         obj.pushKV("signers", BitsVectorToHexStr(signers));
         obj.pushKV("validMembersCount", CountValidMembers());
         obj.pushKV("validMembers", BitsVectorToHexStr(validMembers));
-        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
+        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
         obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString());
-        obj.pushKV("membersSig", membersSig.ToString());
+        obj.pushKV("quorumSig", quorumSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
+        obj.pushKV("membersSig", membersSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
     }
 
 private:
