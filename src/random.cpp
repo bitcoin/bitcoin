@@ -8,23 +8,22 @@
 #include <compat/cpuid.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
-#include <support/cleanse.h>
-#ifdef WIN32
-#include <windows.h>
-#include <wincrypt.h>
-#endif
 #include <logging.h>
 #include <randomenv.h>
-#include <support/allocators/secure.h>
 #include <span.h>
-#include <sync.h>     // for Mutex
-#include <util/time.h> // for GetTimeMicros()
+#include <support/allocators/secure.h>
+#include <support/cleanse.h>
+#include <sync.h>
+#include <util/time.h>
 
 #include <cmath>
 #include <cstdlib>
 #include <thread>
 
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#include <wincrypt.h>
+#else
 #include <fcntl.h>
 #include <sys/time.h>
 #endif
