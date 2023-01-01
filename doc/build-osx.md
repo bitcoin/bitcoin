@@ -7,11 +7,6 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on m
 ## Preparation
 
 The commands in this guide should be executed in a Terminal application.
-macOS comes with a built-in Terminal located in:
-
-```
-/Applications/Utilities/Terminal.app
-```
 
 ### 1. Xcode Command Line Tools
 
