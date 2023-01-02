@@ -19,8 +19,11 @@ interface, which can be optionally built.
 Three official BritanniaCoin branches are maintained:
 
 **britanniacoin-current**: Most recent BritanniaCoin codebase files
+
 **britanniacoin-2.0**: Most recent official release version
+
 **britanniacoin-1.0v2**: release version 2 (December 2022)
+
 **britanniacoin-1.0**: release version 1 (April 2022)
 
 
