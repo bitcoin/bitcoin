@@ -763,13 +763,17 @@ RPCHelpMan fundrawtransaction()
                             },
                             {"input_weights", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Inputs and their corresponding weights",
                                 {
-                                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
-                                    {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output index"},
-                                    {"weight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The maximum weight for this input, "
-                                        "including the weight of the outpoint and sequence number. "
-                                        "Note that serialized signature sizes are not guaranteed to be consistent, "
-                                        "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."
-                                        "Remember to convert serialized sizes to weight units when necessary."},
+                                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                        {
+                                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                            {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output index"},
+                                            {"weight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The maximum weight for this input, "
+                                                "including the weight of the outpoint and sequence number. "
+                                                "Note that serialized signature sizes are not guaranteed to be consistent, "
+                                                "so the maximum DER signatures size of 73 bytes should be used when considering ECDSA signatures."
+                                                "Remember to convert serialized sizes to weight units when necessary."},
+                                        },
+                                    },
                                 },
                              },
                         },
