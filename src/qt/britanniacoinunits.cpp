@@ -1,8 +1,9 @@
 // Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2022-2023 The BritanniaCoin Development Team (Britannia Coin Ltd)
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/bitcoinunits.h>
+#include <qt/britanniacoinunits.h>
 
 #include <consensus/amount.h>
 
@@ -18,9 +19,9 @@ BritanniaCoinUnits::BritanniaCoinUnits(QObject *parent):
 {
 }
 
-QList<BitcoinUnit> BritanniaCoinUnits::availableUnits()
+QList<BritanniaCoinUnit> BritanniaCoinUnits::availableUnits()
 {
-    QList<BitcoinUnit> unitlist;
+    QList<BritanniaCoinUnit> unitlist;
     unitlist.append(Unit::BRT);
     return unitlist;
 }
@@ -76,7 +77,7 @@ QString BritanniaCoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Se
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
-        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BTC - num_decimals, ' ');
+        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BRT - num_decimals, ' ');
     }
 
     // Use SI-style thin space separators as these are locale independent and can't be
@@ -214,12 +215,12 @@ namespace {
 qint8 ToQint8(BritanniaCoinUnit unit)
 {
     switch (unit) {
-    case BitcoinUnit::BRT: return 0;
+    case BritanniaCoinUnit::BRT: return 0;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
-BitcoinUnit FromQint8(qint8 num)
+BritanniaCoinUnit FromQint8(qint8 num)
 {
     switch (num) {
     case 0: return BritanniaCoinUnit::BRT;
