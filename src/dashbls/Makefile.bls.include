@@ -5,7 +5,7 @@
 
 LIBDASHBLS = libdashbls.la
 
-DASHBLS_CPPFLAGS = -DBLSALLOC_MINIALLOC=1
+DASHBLS_CPPFLAGS = -DBLSALLOC_MIMALLOC=1
 
 DASHBLS_INCLUDES = \
 	-I$(builddir) \
@@ -40,19 +40,19 @@ libdashbls_la_SOURCES = \
 
 libdashbls_la_SOURCES += \
 	$(DASHBLS_H) \
-	$(MINIALLOC_H) \
+	$(MIMALLOC_H) \
 	$(RELIC_H)
 
 libdashbls_la_LIBADD = \
-	$(LIBMINIALLOC) \
+	$(LIBMIMALLOC) \
 	$(LIBRELIC) \
 	$(GMP_LIBS)
 
-libdashbls_la_CPPFLAGS = $(AM_CPPFLAGS) $(RELIC_INCLUDES) $(MINIALLOC_INCLUDES) $(DASHBLS_INCLUDES) $(DASHBLS_CPPFLAGS)
+libdashbls_la_CPPFLAGS = $(AM_CPPFLAGS) $(RELIC_INCLUDES) $(MIMALLOC_INCLUDES) $(DASHBLS_INCLUDES) $(DASHBLS_CPPFLAGS)
 libdashbls_la_CXXFLAGS = $(AM_CXXFLAGS)
 libdashbls_la_LDFLAGS  = $(AM_LDFLAGS)
 
-include Makefile.minialloc.include
+include Makefile.mimalloc.include
 include Makefile.relic.include
 
 if USE_TESTS

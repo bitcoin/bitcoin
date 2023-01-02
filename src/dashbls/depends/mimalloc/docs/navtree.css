@@ -1,0 +1,146 @@
+#nav-tree .children_ul {
+  margin:0;
+  padding:4px;
+}
+
+#nav-tree ul {
+  list-style:none outside none;
+  margin:0px;
+  padding:0px;
+}
+
+#nav-tree li {
+  white-space:nowrap;
+  margin:0px;
+  padding:0px;
+}
+
+#nav-tree .plus {
+  margin:0px;
+}
+
+#nav-tree .selected {
+  background-image: url('tab_a.png');
+  background-repeat:repeat-x;
+  color: #fff;
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 1.0);
+}
+
+#nav-tree img {
+  margin:0px;
+  padding:0px;
+  border:0px;
+  vertical-align: middle;
+}
+
+#nav-tree a {
+  text-decoration:none;
+  padding:0px;
+  margin:0px;
+  outline:none;
+}
+
+#nav-tree .label {
+  margin:0px;
+  padding:0px;
+  font: 12px 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
+}
+
+#nav-tree .label a {
+  padding:2px;
+}
+
+#nav-tree .selected a {
+  text-decoration:none;
+  color:#fff;
+}
+
+#nav-tree .children_ul {
+  margin:0px;
+  padding:0px;
+}
+
+#nav-tree .item {
+  margin:0px;
+  padding:0px;
+}
+
+#nav-tree {
+  padding: 0px 0px;
+  background-color: #FAFAFF; 
+  font-size:14px;
+  overflow:auto;
+}
+
+#doc-content {
+  overflow:auto;
+  display:block;
+  padding:0px;
+  margin:0px;
+  -webkit-overflow-scrolling : touch; /* iOS 5+ */
+}
+
+#side-nav {
+  padding:0 6px 0 0;
+  margin: 0px;
+  display:block;
+  position: absolute;
+  left: 0px;
+  width: 180px;
+}
+
+.ui-resizable .ui-resizable-handle {
+  display:block;
+}
+
+.ui-resizable-e {
+  background-image:url("splitbar.png");
+  background-size:100%;
+  background-repeat:repeat-y;
+  background-attachment: scroll;
+  cursor:ew-resize;
+  height:100%;
+  right:0;
+  top:0;
+  width:6px;
+}
+
+.ui-resizable-handle {
+  display:none;
+  font-size:0.1px;
+  position:absolute;
+  z-index:1;
+}
+
+#nav-tree-contents {
+  margin: 6px 0px 0px 0px;
+}
+
+#nav-tree {
+  background-image:url('nav_h.png');
+  background-repeat:repeat-x;
+  background-color: #F2F3F3;
+  -webkit-overflow-scrolling : touch; /* iOS 5+ */
+}
+
+#nav-sync {
+  position:absolute;
+  top:5px;
+  right:24px;
+  z-index:0;
+}
+
+#nav-sync img {
+  opacity:0.3;
+}
+
+#nav-sync img:hover {
+  opacity:0.9;
+}
+
+@media print
+{
+  #nav-tree { display: none; }
+  div.ui-resizable-handle { display: none; position: relative; }
+}
+
