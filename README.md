@@ -1,7 +1,7 @@
 Official BritanniaCoin Public Codebase and Development Tree
 =====================================
 
-IMPORTANT NOTICE: This public repository for BritanniaCoin's source code is currently undergoing integration with various project development codebase files and is not yet complete or operational.
+**IMPORTANT NOTICE: This public repository for BritanniaCoin's source code is currently undergoing integration with various project development codebase files and is not yet complete or operational.**
 
 Once all files have been properly integrated the official version 2.0, 1.0v2 and 1.0 releases will be made available.
 
