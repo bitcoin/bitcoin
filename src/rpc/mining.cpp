@@ -33,6 +33,7 @@
 #include <txmempool.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/validation.h>
 #include <validation.h>
@@ -735,7 +736,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             std::string lpstr = lpval.get_str();
 
             hashWatchedChain.SetHex(lpstr.substr(0, 64));
-            nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
+            nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
         }
         else
         {
@@ -907,7 +908,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->GetValueOut());
-    result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", aMutable);

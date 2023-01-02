@@ -61,7 +61,7 @@ struct CLockLocation {
     {
         return strprintf(
             "'%s' in %s:%s%s (in thread '%s')",
-            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+            mutexName, sourceFile, sourceLine, (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
     std::string Name() const

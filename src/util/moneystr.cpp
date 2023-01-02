@@ -5,9 +5,12 @@
 
 #include <util/moneystr.h>
 
+#include <amount.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+
+#include <optional>
 
 std::string FormatMoney(const CAmount& n)
 {
@@ -31,21 +34,19 @@ std::string FormatMoney(const CAmount& n)
 }
 
 
-bool ParseMoney(const std::string& str, CAmount& nRet)
+std::optional<CAmount> ParseMoney(const std::string& money_string)
 {
-    if (!ValidAsCString(str)) {
-        return false;
+    if (!ValidAsCString(money_string)) {
+        return std::nullopt;
     }
-    return ParseMoney(str.c_str(), nRet);
-}
+    const std::string str = TrimString(money_string);
+    if (str.empty()) {
+        return std::nullopt;
+    }
 
-bool ParseMoney(const char* pszIn, CAmount& nRet)
-{
     std::string strWhole;
     int64_t nUnits = 0;
-    const char* p = pszIn;
-    while (IsSpace(*p))
-        p++;
+    const char* p = str.c_str();
     for (; *p; p++)
     {
         if (*p == '.')
@@ -60,21 +61,24 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
             break;
         }
         if (IsSpace(*p))
-            break;
+            return std::nullopt;
         if (!IsDigit(*p))
-            return false;
+            return std::nullopt;
         strWhole.insert(strWhole.end(), *p);
     }
-    for (; *p; p++)
-        if (!IsSpace(*p))
-            return false;
+    if (*p) {
+        return std::nullopt;
+    }
     if (strWhole.size() > 10) // guard against 63 bit overflow
-        return false;
+        return std::nullopt;
     if (nUnits < 0 || nUnits > COIN)
-        return false;
-    int64_t nWhole = atoi64(strWhole);
-    CAmount nValue = nWhole*COIN + nUnits;
+        return std::nullopt;
+    int64_t nWhole = LocaleIndependentAtoi<int64_t>(strWhole);
+    CAmount value = nWhole * COIN + nUnits;
 
-    nRet = nValue;
-    return true;
+    if (!MoneyRange(value)) {
+        return std::nullopt;
+    }
+
+    return value;
 }

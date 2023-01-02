@@ -10,6 +10,7 @@
 #include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <util/system.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -151,7 +152,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
     if (v.isBool())
         return v.get_bool();
     else if (v.isNum())
-        strBool = itostr(v.get_int());
+        strBool = ToString(v.get_int());
     else if (v.isStr())
         strBool = v.get_str();
 
@@ -493,7 +494,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(std::to_string(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString());
+        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString());
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args

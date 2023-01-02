@@ -57,6 +57,7 @@
 #include <util/asmap.h>
 #include <util/error.h>
 #include <util/moneystr.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -878,7 +879,7 @@ static void CleanupBlockRevFiles()
     // start removing block files.
     int nContigCounter = 0;
     for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
+        if (LocaleIndependentAtoi<int>(item.first) == nContigCounter) {
             nContigCounter++;
             continue;
         }
@@ -1431,10 +1432,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (args.IsArgSet("-incrementalrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-incrementalrelayfee", ""), n))
+        if (std::optional<CAmount> inc_relay_fee = ParseMoney(args.GetArg("-incrementalrelayfee", ""))) {
+            ::incrementalRelayFee = CFeeRate{inc_relay_fee.value()};
+        } else {
             return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
-        incrementalRelayFee = CFeeRate(n);
+        }
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
@@ -1473,12 +1475,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (args.IsArgSet("-minrelaytxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-minrelaytxfee", ""), n)) {
+        if (std::optional<CAmount> min_relay_fee = ParseMoney(args.GetArg("-minrelaytxfee", ""))) {
+            // High fee check is done afterward in CWallet::Create()
+            ::minRelayTxFee = CFeeRate{min_relay_fee.value()};
+        } else {
             return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
         }
-        // High fee check is done afterward in CWallet::CreateWalletFromFile()
-        ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
         ::minRelayTxFee = incrementalRelayFee;
@@ -1488,18 +1490,19 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
     if (args.IsArgSet("-blockmintxfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""), n))
+        if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+        }
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
     if (args.IsArgSet("-dustrelayfee")) {
-        CAmount n = 0;
-        if (!ParseMoney(args.GetArg("-dustrelayfee", ""), n))
+        if (std::optional<CAmount> parsed = ParseMoney(args.GetArg("-dustrelayfee", ""))) {
+            dustRelayFee = CFeeRate{parsed.value()};
+        } else {
             return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
-        dustRelayFee = CFeeRate(n);
+        }
     }
 
     fRequireStandard = !args.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());

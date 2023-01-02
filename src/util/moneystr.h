@@ -12,13 +12,14 @@
 #include <amount.h>
 #include <attributes.h>
 
+#include <optional>
 #include <string>
 
 /* Do not use these functions to represent or parse monetary amounts to or from
  * JSON but use AmountFromValue and ValueFromAmount for that.
  */
 std::string FormatMoney(const CAmount& n);
-[[nodiscard]] bool ParseMoney(const std::string& str, CAmount& nRet);
-[[nodiscard]] bool ParseMoney(const char* pszIn, CAmount& nRet);
+/** Parse an amount denoted in full coins. E.g. "0.0034" supplied on the command line. **/
+std::optional<CAmount> ParseMoney(const std::string& str);
 
 #endif // BITCOIN_UTIL_MONEYSTR_H

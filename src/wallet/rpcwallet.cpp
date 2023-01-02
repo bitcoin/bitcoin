@@ -1831,7 +1831,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
         "\nFills the keypool."+
                 HELP_REQUIRING_PASSPHRASE,
         {
-            {"newsize", RPCArg::Type::NUM, /* default */ itostr(DEFAULT_KEYPOOL_SIZE), "The new keypool size"},
+            {"newsize", RPCArg::Type::NUM, /* default */ ToString(DEFAULT_KEYPOOL_SIZE), "The new keypool size"},
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -2329,8 +2329,8 @@ static UniValue setcoinjoinrounds(const JSONRPCRequest& request)
         "\nSet the number of rounds for CoinJoin.\n",
         {
             {"rounds", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "The default number of rounds is " + std::to_string(DEFAULT_COINJOIN_ROUNDS) +
-                " Cannot be more than " + std::to_string(MAX_COINJOIN_ROUNDS) + " nor less than " + std::to_string(MIN_COINJOIN_ROUNDS)},
+                "The default number of rounds is " + ToString(DEFAULT_COINJOIN_ROUNDS) +
+                " Cannot be more than " + ToString(MAX_COINJOIN_ROUNDS) + " nor less than " + ToString(MIN_COINJOIN_ROUNDS)},
         },
         RPCResults{},
         RPCExamples{
@@ -2358,8 +2358,8 @@ static UniValue setcoinjoinamount(const JSONRPCRequest& request)
         "\nSet the goal amount in " + CURRENCY_UNIT + " for CoinJoin.\n",
         {
             {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "The default amount is " + std::to_string(DEFAULT_COINJOIN_AMOUNT) +
-                " Cannot be more than " + std::to_string(MAX_COINJOIN_AMOUNT) + " nor less than " + std::to_string(MIN_COINJOIN_AMOUNT)},
+                "The default amount is " + ToString(DEFAULT_COINJOIN_AMOUNT) +
+                " Cannot be more than " + ToString(MAX_COINJOIN_AMOUNT) + " nor less than " + ToString(MIN_COINJOIN_AMOUNT)},
         },
         RPCResults{},
         RPCExamples{
