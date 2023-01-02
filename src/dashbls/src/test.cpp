@@ -1515,6 +1515,55 @@ TEST_CASE("CheckValid")
     }
 }
 
+TEST_CASE("CheckValid for Legacy")
+{
+    SECTION("Invalid G1 points should throw in CheckValid but not in FromBytes")
+    {
+        std::map<std::string, bool> vecPointsHex{
+            {"11df3a748b713460f9b21083315c0dca1742b7962ca98685be4094d302e84b0884a04c1a55beb0ed921dae1dd66c0111", true},
+            {"11df3a748b713460f9b21083315c0dca1742b7962ca98685be4094d302e84b0884a04c1a55beb0ed921dae1dd66c0a11", false},
+        };
+
+        for (const auto& pair : vecPointsHex) {
+            const auto& strPointHex = pair.first;
+            const auto& valid = pair.second;
+
+            // FromBytes does not throw
+            G1Element::FromBytes(Bytes(Util::HexToBytes(strPointHex)), true);
+            // FromBytesUnchecked does not throw
+            G1Element pk = G1Element::FromBytesUnchecked(Bytes(Util::HexToBytes(strPointHex)), true);
+
+            REQUIRE(pk.IsValid() == valid);
+            if (!valid) {
+                REQUIRE_THROWS(pk.CheckValid());
+            }
+        }
+    }
+
+    SECTION("Invalid G2 points should throw in CheckValid but not in FromBytes")
+    {
+        std::map<std::string, bool> vecPointsHex{
+            {"0888879c99852460912fd28c7a9138926c1e87fd6609fd2d3d307764e49feb85702fd8f9b3b836bc11f7ce151b769dc70b760879d26f8c33a29e24f69297f45ef028f0794e63ddb0610db7de1a608b6d6a2129ada62b845004a408f651fd44a5", true},
+            {"0888879c99852460912fd28c7a9138926c1e87fd6609fd2d3d307764e49feb85702fd8f9b3b836bc11f7ce151b769dc70b760879d26f8c33a29e24f69297f45ef028f0794e63ddb0610db7de1a608b6d6a2129ada62b845004a408f651fd44a6", false},
+        };
+
+        for (const auto& pair : vecPointsHex) {
+            const auto& strPointHex = pair.first;
+            const auto& valid = pair.second;
+
+            // FromBytes does not throw
+            G2Element::FromBytes(Bytes(Util::HexToBytes(strPointHex)), true);
+            // FromBytesUnchecked does not throw
+            G2Element sig = G2Element::FromBytesUnchecked(Bytes(Util::HexToBytes(strPointHex)), true);
+
+            REQUIRE(sig.IsValid() == valid);
+            if (!valid) {
+                REQUIRE_THROWS(sig.CheckValid());
+            }
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     int result = Catch::Session().run(argc, argv);

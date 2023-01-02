@@ -1,0 +1,44 @@
+# Copyright (c) 2022 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING.MIT or http://www.opensource.org/licenses/mit-license.php.
+
+LIBMIMALLOC = libmimalloc-secure.la
+
+MIMALLOC_CFLAGS = \
+	-DMI_SECURE=4 \
+    -DNDEBUG
+
+MIMALLOC_INCLUDES = \
+	-I$(top_srcdir)/depends/mimalloc/include \
+	-I$(top_srcdir)/depends/mimalloc/src
+
+MIMALLOC_H = \
+	depends/mimalloc/include/mimalloc.h \
+	depends/mimalloc/include/mimalloc-atomic.h \
+	depends/mimalloc/include/mimalloc-internal.h \
+	depends/mimalloc/include/mimalloc-new-delete.h \
+	depends/mimalloc/include/mimalloc-override.h \
+	depends/mimalloc/include/mimalloc-track.h \
+	depends/mimalloc/include/mimalloc-types.h \
+	depends/mimalloc/src/bitmap.h
+
+libmimalloc_secure_la_SOURCES = \
+	$(MIMALLOC_H) \
+    depends/mimalloc/src/stats.c \
+    depends/mimalloc/src/random.c \
+    depends/mimalloc/src/os.c \
+    depends/mimalloc/src/bitmap.c \
+    depends/mimalloc/src/arena.c \
+    depends/mimalloc/src/segment-cache.c \
+    depends/mimalloc/src/segment.c \
+    depends/mimalloc/src/page.c \
+    depends/mimalloc/src/alloc.c \
+    depends/mimalloc/src/alloc-aligned.c \
+    depends/mimalloc/src/alloc-posix.c \
+    depends/mimalloc/src/heap.c \
+    depends/mimalloc/src/options.c \
+    depends/mimalloc/src/init.c
+
+libmimalloc_secure_la_CFLAGS = $(AM_CFLAGS) $(MIMALLOC_INCLUDES) $(MIMALLOC_CFLAGS)
+
+noinst_LTLIBRARIES += $(LIBMIMALLOC)

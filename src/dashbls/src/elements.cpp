@@ -23,7 +23,9 @@ const size_t G1Element::SIZE;
 
 G1Element G1Element::FromBytes(Bytes const bytes, bool fLegacy) {
     G1Element ele = G1Element::FromBytesUnchecked(bytes, fLegacy);
-    ele.CheckValid();
+    if (!fLegacy) {
+        ele.CheckValid();
+    }
     return ele;
 }
 
@@ -229,7 +231,9 @@ const size_t G2Element::SIZE;
 
 G2Element G2Element::FromBytes(Bytes const bytes, const bool fLegacy) {
     G2Element ele = G2Element::FromBytesUnchecked(bytes, fLegacy);
-    ele.CheckValid();
+    if (!fLegacy) {
+        ele.CheckValid();
+    }
     return ele;
 }
 
