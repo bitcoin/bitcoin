@@ -145,9 +145,9 @@ private:
 
     /** Decay of .962 is a half-life of 18 blocks or about 45 minutes */
     static constexpr double SHORT_DECAY = .962;
-    /** Decay of .998 is a half-life of 144 blocks or about 6 hours */
+    /** Decay of .9952 is a half-life of 144 blocks or about 6 hours */
     static constexpr double MED_DECAY = .9952;
-    /** Decay of .9995 is a half-life of 1008 blocks or about 2 days */
+    /** Decay of .99931 is a half-life of 1008 blocks or about 2 days */
     static constexpr double LONG_DECAY = .99931;
 
     /** Require greater than 60% of X feerate transactions to be confirmed within Y/2 blocks*/
