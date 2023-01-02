@@ -22,9 +22,9 @@ Three official BritanniaCoin branches are maintained:
 
 **britanniacoin-2.0: Current official release version**
 
-**britanniacoin-1.0v2**: release version 2 (December 2022)
+**britanniacoin-1.0v2**: Release Version 2 (December 2022)
 
-**britanniacoin-1.0**: release version 1 (April 2022)
+**britanniacoin-1.0**: Release Version 1 (April 2022)
 
 
 
