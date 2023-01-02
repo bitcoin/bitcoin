@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2022-2023 The BritanniaCoin Development Team (Britannia Coin Ltd)
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,11 +46,11 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
     if (chain == CBaseChainParams::MAIN) {
         return std::make_unique<CBaseChainParams>("", 8332, 8334);
     } else if (chain == CBaseChainParams::TESTNET) {
-        return std::make_unique<CBaseChainParams>("testnet3", 18332, 18334);
+        return std::make_unique<CBaseChainParams>("testnet3", 81332, 81334);
     } else if (chain == CBaseChainParams::SIGNET) {
-        return std::make_unique<CBaseChainParams>("signet", 38332, 38334);
+        return std::make_unique<CBaseChainParams>("signet", 81332, 81334);
     } else if (chain == CBaseChainParams::REGTEST) {
-        return std::make_unique<CBaseChainParams>("regtest", 18443, 18445);
+        return std::make_unique<CBaseChainParams>("regtest", 81443, 81445);
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
