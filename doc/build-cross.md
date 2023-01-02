@@ -6,9 +6,9 @@ the `HOST` parameter when building the dependencies and then specifying another 
 
 The following instructions are only tested on Debian Stretch and Ubuntu Bionic.
 
-MacOSX Cross-compilation
+macOS Cross-compilation
 ------------------------
-Cross-compiling to MacOSX requires a few additional packages to be installed:
+Cross-compiling to macOS requires a few additional packages to be installed:
 
 ```bash
 $ sudo apt-get install python3-setuptools libcap-dev zlib1g-dev libbz2-dev cmake
