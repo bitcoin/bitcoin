@@ -68,8 +68,6 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
 std::string EncodeBase32(const std::string& str, bool pad = true);
 
 void SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut);
-std::string i64tostr(int64_t n);
-std::string itostr(int n);
 int64_t atoi64(const char* psz);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);

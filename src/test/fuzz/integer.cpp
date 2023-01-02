@@ -28,6 +28,7 @@
 #include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <version.h>
@@ -92,11 +93,10 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     }
     (void)HexDigit(ch);
     (void)MoneyRange(i64);
-    (void)i64tostr(i64);
+    (void)ToString(i64);
     (void)IsDigit(ch);
     (void)IsSpace(ch);
     (void)IsSwitchChar(ch);
-    (void)itostr(i32);
     (void)memusage::DynamicUsage(ch);
     (void)memusage::DynamicUsage(i16);
     (void)memusage::DynamicUsage(i32);

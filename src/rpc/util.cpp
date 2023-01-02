@@ -151,7 +151,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
     if (v.isBool())
         return v.get_bool();
     else if (v.isNum())
-        strBool = itostr(v.get_int());
+        strBool = ToString(v.get_int());
     else if (v.isStr())
         strBool = v.get_str();
 

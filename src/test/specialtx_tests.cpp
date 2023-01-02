@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
     BOOST_CHECK(ag_sk.IsValid());
     BOOST_CHECK(ag_pk.IsValid());
 
-    uint256 verHash = uint256S(itostr(ver));
+    uint256 verHash = uint256S(ToString(ver));
     auto sig = ag_sk.Sign(verHash);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, verHash));
 

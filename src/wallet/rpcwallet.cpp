@@ -1831,7 +1831,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
         "\nFills the keypool."+
                 HELP_REQUIRING_PASSPHRASE,
         {
-            {"newsize", RPCArg::Type::NUM, /* default */ itostr(DEFAULT_KEYPOOL_SIZE), "The new keypool size"},
+            {"newsize", RPCArg::Type::NUM, /* default */ ToString(DEFAULT_KEYPOOL_SIZE), "The new keypool size"},
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{

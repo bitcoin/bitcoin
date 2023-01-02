@@ -32,14 +32,6 @@ static void int_lexical_cast(benchmark::Bench& bench)
     });
 }
 
-static void strings_1_itostr(benchmark::Bench& bench)
-{
-    int i{0};
-    bench.run([&] {
-        itostr(++i);
-    });
-}
-
 static void strings_1_lexical_cast(benchmark::Bench& bench)
 {
     int i{0};
@@ -61,15 +53,6 @@ static void strings_1_tostring(benchmark::Bench& bench)
     int i{0};
     bench.run([&] {
         ToString(++i);
-    });
-}
-
-static void strings_2_multi_itostr(benchmark::Bench& bench)
-{
-    int i{0};
-    bench.run([&] {
-        itostr(i) + itostr(i+1) + itostr(i+2) + itostr(i+3) + itostr(i+4);
-        ++i;
     });
 }
 
@@ -115,11 +98,9 @@ static void strings_2_strptintf(benchmark::Bench& bench)
 
 BENCHMARK(int_atoi);
 BENCHMARK(int_lexical_cast);
-BENCHMARK(strings_1_itostr);
 BENCHMARK(strings_1_lexical_cast);
 BENCHMARK(strings_1_numberToString);
 BENCHMARK(strings_1_tostring);
-BENCHMARK(strings_2_multi_itostr);
 BENCHMARK(strings_2_multi_lexical_cast);
 BENCHMARK(strings_2_multi_numberToString);
 BENCHMARK(strings_2_multi_tostring);

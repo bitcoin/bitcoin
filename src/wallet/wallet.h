@@ -14,6 +14,7 @@
 #include <saltedhasher.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <validationinterface.h>
@@ -224,7 +225,7 @@ static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
 {
     if (nOrderPos == -1)
         return;
-    mapValue["n"] = i64tostr(nOrderPos);
+    mapValue["n"] = ToString(nOrderPos);
 }
 
 struct COutputEntry
