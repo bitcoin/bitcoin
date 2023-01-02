@@ -14,8 +14,8 @@
 
 #include "bls.hpp"
 
-#if BLSALLOC_MINIALLOC
-#include <minialloc.h>
+#if BLSALLOC_MIMALLOC
+#include "mimalloc.h"
 #endif
 
 #if BLSALLOC_SODIUM
@@ -49,8 +49,8 @@ bool BLS::Init()
     if (ALLOC != AUTO) {
         throw std::runtime_error("Must have ALLOC == AUTO");
     }
-#if BLSALLOC_MINIALLOC
-    SetSecureAllocator(msecure_malloc, msecure_free);
+#if BLSALLOC_MIMALLOC
+    SetSecureAllocator(mi_malloc, mi_free);
 #elif BLSALLOC_SODIUM
     if (sodium_init() < 0) {
         throw std::runtime_error("libsodium init failed");

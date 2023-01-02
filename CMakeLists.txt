@@ -100,8 +100,15 @@ set(QUIET "on" CACHE STRING "Relic - Build with printing disabled")
 set(PP_EXT "LAZYR" CACHE STRING "")
 set(PP_METHD "LAZYR;OATEP" CACHE STRING "")
 
+# Disable mimalloc shared libraries and tests, enable secure mode
+set(MI_SECURE       "on" CACHE STRING "")
+
+set(MI_BUILD_SHARED "off" CACHE STRING "")
+set(MI_BUILD_TESTS  "off" CACHE STRING "")
+set(MI_OVERRIDE     "off" CACHE STRING "")
+
 add_subdirectory(depends/relic)
-add_subdirectory(depends/minialloc)
+add_subdirectory(depends/mimalloc)
 
 add_subdirectory(src)
 
