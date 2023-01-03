@@ -458,8 +458,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(addr, '91cA4fLGaDCr6b9W2c5j1ph9PDpq9WbEhk') # Derived at m/84'/0'/0'/1
         change_addr = wmulti_pub.getrawchangeaddress() # uses receive 2
         assert_equal(change_addr, '8y2sLiPQnB81bAeiRvwbjozJXnCCNH2nHb')
-        assert(send_txid in self.nodes[0].getrawmempool(True))
-        assert(send_txid in (x['txid'] for x in wmulti_pub.listunspent(0)))
+        assert send_txid in self.nodes[0].getrawmempool(True)
+        assert send_txid in (x['txid'] for x in wmulti_pub.listunspent(0))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
 
         # generate some utxos for next tests

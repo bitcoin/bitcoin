@@ -75,9 +75,10 @@ RUN set -ex; \
 ENV UV_SYSTEM_PYTHON=1
 
 # Install Python packages
+# NOTE: if versions are changed, update ci/lint/04_install.sh
 RUN uv pip install --system --break-system-packages \
-    codespell==2.1.0 \
-    flake8==4.0.1 \
+    codespell==2.2.1 \
+    flake8==5.0.4 \
     jinja2 \
     lief==0.13.2 \
     multiprocess \

@@ -368,8 +368,8 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
             assert_equal(expected["mode"], FLUSHMODE_NAME[event.mode])
             possible_cache_sizes.remove(event.size)  # fails if size not in set
             # sanity checks only
-            assert(event.memory > 0)
-            assert(event.duration > 0)
+            assert event.memory > 0
+            assert event.duration > 0
             handle_flush_succeeds += 1
 
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)

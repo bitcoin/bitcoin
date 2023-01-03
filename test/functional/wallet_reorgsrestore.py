@@ -94,11 +94,11 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         tx_after_reorg = self.nodes[1].gettransaction(txid)
         # Check that normal confirmed tx is confirmed again but with different blockhash
         assert_equal(tx_after_reorg["confirmations"], 2)
-        assert(tx_before_reorg["blockhash"] != tx_after_reorg["blockhash"])
+        assert tx_before_reorg["blockhash"] != tx_after_reorg["blockhash"]
         conflicted_after_reorg = self.nodes[1].gettransaction(conflicted_txid)
         # Check that conflicted tx is confirmed again with blockhash different than previously conflicting tx
         assert_equal(conflicted_after_reorg["confirmations"], 1)
-        assert(conflicting["blockhash"] != conflicted_after_reorg["blockhash"])
+        assert conflicting["blockhash"] != conflicted_after_reorg["blockhash"]
 
 if __name__ == '__main__':
     ReorgsRestoreTest().main()
