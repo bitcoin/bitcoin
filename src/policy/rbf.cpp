@@ -22,8 +22,6 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {
     AssertLockHeld(pool.cs);
 
-    CTxMemPool::setEntries ancestors;
-
     // First check the transaction itself.
     if (SignalsOptInRBF(tx)) {
         return RBFTransactionState::REPLACEABLE_BIP125;
@@ -37,9 +35,9 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 
     // If all the inputs have nSequence >= maxint-1, it still might be
     // signaled for RBF if any unconfirmed parents have signaled.
-    std::string dummy;
-    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
-    pool.CalculateMemPoolAncestors(entry, ancestors, CTxMemPool::Limits::NoLimits(), dummy, false);
+    const CTxMemPoolEntry entry{*pool.mapTx.find(tx.GetHash())};
+    auto ancestors{pool.AssumeCalculateMemPoolAncestors(__func__, entry, CTxMemPool::Limits::NoLimits(),
+                                                        /*fSearchForParents=*/false)};
 
     for (CTxMemPool::txiter it : ancestors) {
         if (SignalsOptInRBF(it->GetTx())) {
