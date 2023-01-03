@@ -76,7 +76,6 @@ using node::BlockManager;
 using node::BlockMap;
 using node::CBlockIndexHeightOnlyComparator;
 using node::CBlockIndexWorkComparator;
-using node::fImporting;
 using node::fPruneMode;
 using node::fReindex;
 using node::ReadBlockFromDisk;
@@ -1573,8 +1572,9 @@ bool Chainstate::IsInitialBlockDownload() const
     LOCK(cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
-    if (fImporting || fReindex)
+    if (m_chainman.m_blockman.LoadingBlocks()) {
         return true;
+    }
     if (m_chain.Tip() == nullptr)
         return true;
     if (m_chain.Tip()->nChainWork < m_chainman.MinimumChainWork()) {

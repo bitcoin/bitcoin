@@ -176,6 +176,11 @@ public:
     /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
+    [[nodiscard]] bool LoadingBlocks() const
+    {
+        return fImporting || fReindex;
+    }
+
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();
 
