@@ -26,7 +26,6 @@
 #include <unordered_map>
 
 namespace node {
-std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
@@ -867,7 +866,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
     ScheduleBatchPriority();
 
     {
-        ImportingNow imp{fImporting};
+        ImportingNow imp{chainman.m_blockman.m_importing};
 
         // -reindex
         if (fReindex) {

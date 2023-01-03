@@ -47,7 +47,6 @@ static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** Size of header written by WriteBlockToDisk before a serialized CBlock */
 static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = CMessageHeader::MESSAGE_START_SIZE + sizeof(unsigned int);
 
-extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
@@ -148,6 +147,8 @@ public:
         : m_prune_mode{opts.prune_target > 0},
           m_opts{std::move(opts)} {};
 
+    std::atomic<bool> m_importing{false};
+
     BlockMap m_block_index GUARDED_BY(cs_main);
 
     std::vector<CBlockIndex*> GetAllBlockIndices() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -195,10 +196,7 @@ public:
     /** Attempt to stay below this number of bytes of block files. */
     [[nodiscard]] uint64_t GetPruneTarget() const { return m_opts.prune_target; }
 
-    [[nodiscard]] bool LoadingBlocks() const
-    {
-        return fImporting || fReindex;
-    }
+    [[nodiscard]] bool LoadingBlocks() const { return m_importing || fReindex; }
 
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();
