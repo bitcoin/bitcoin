@@ -448,7 +448,8 @@ void SelectionResult::Clear()
 
 void SelectionResult::AddInput(const OutputGroup& group)
 {
-    util::insert(m_selected_inputs, group.m_outputs);
+    // As it can fail, combine inputs first
+    InsertInputs(group.m_outputs);
     m_use_effective = !group.m_subtract_fee_outputs;
 
     m_weight += group.m_weight;
@@ -456,7 +457,8 @@ void SelectionResult::AddInput(const OutputGroup& group)
 
 void SelectionResult::AddInputs(const std::set<COutput>& inputs, bool subtract_fee_outputs)
 {
-    util::insert(m_selected_inputs, inputs);
+    // As it can fail, combine inputs first
+    InsertInputs(inputs);
     m_use_effective = !subtract_fee_outputs;
 
     m_weight += std::accumulate(inputs.cbegin(), inputs.cend(), 0, [](int sum, const auto& coin) {
@@ -466,16 +468,14 @@ void SelectionResult::AddInputs(const std::set<COutput>& inputs, bool subtract_f
 
 void SelectionResult::Merge(const SelectionResult& other)
 {
-    // Obtain the expected selected inputs count after the merge (for now, duplicates are not allowed)
-    const size_t expected_count = m_selected_inputs.size() + other.m_selected_inputs.size();
+    // As it can fail, combine inputs first
+    InsertInputs(other.m_selected_inputs);
 
     m_target += other.m_target;
     m_use_effective |= other.m_use_effective;
     if (m_algo == SelectionAlgorithm::MANUAL) {
         m_algo = other.m_algo;
     }
-    util::insert(m_selected_inputs, other.m_selected_inputs);
-    assert(m_selected_inputs.size() == expected_count);
 
     m_weight += other.m_weight;
 }
