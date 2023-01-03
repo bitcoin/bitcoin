@@ -36,7 +36,7 @@ def check_implicit_transactions(implicit_keys, implicit_node):
         pubkey = implicit_keys[a]
         for b in address_types:
             b_address = key_to_address(pubkey, b)
-            assert(('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs))
+            assert ('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs)
 
 class ImplicitSegwitTest(BitcoinTestFramework):
     def add_options(self, parser):
