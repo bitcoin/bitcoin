@@ -388,6 +388,7 @@ struct Sections {
         const auto indent = std::string(current_indent, ' ');
         const auto indent_next = std::string(current_indent + 2, ' ');
         const bool push_name{outer_type == OuterType::OBJ}; // Dictionary keys must have a name
+        const bool is_top_level_arg{outer_type == OuterType::NONE}; // True on the first recursion
 
         switch (arg.m_type) {
         case RPCArg::Type::STR_HEX:
@@ -396,7 +397,7 @@ struct Sections {
         case RPCArg::Type::AMOUNT:
         case RPCArg::Type::RANGE:
         case RPCArg::Type::BOOL: {
-            if (outer_type == OuterType::NONE) return; // Nothing more to do for non-recursive types on first recursion
+            if (is_top_level_arg) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
             if (arg.m_opts.type_str.size() != 0 && push_name) {
                 left += "\"" + arg.GetName() + "\": " + arg.m_opts.type_str.at(0);
@@ -409,7 +410,7 @@ struct Sections {
         }
         case RPCArg::Type::OBJ:
         case RPCArg::Type::OBJ_USER_KEYS: {
-            const auto right = outer_type == OuterType::NONE ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString();
             PushSection({indent + (push_name ? "\"" + arg.GetName() + "\": " : "") + "{", right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
@@ -417,20 +418,20 @@ struct Sections {
             if (arg.m_type != RPCArg::Type::OBJ) {
                 PushSection({indent_next + "...", ""});
             }
-            PushSection({indent + "}" + (outer_type != OuterType::NONE ? "," : ""), ""});
+            PushSection({indent + "}" + (is_top_level_arg ? "" : ","), ""});
             break;
         }
         case RPCArg::Type::ARR: {
             auto left = indent;
             left += push_name ? "\"" + arg.GetName() + "\": " : "";
             left += "[";
-            const auto right = outer_type == OuterType::NONE ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString();
             PushSection({left, right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::ARR);
             }
             PushSection({indent_next + "...", ""});
-            PushSection({indent + "]" + (outer_type != OuterType::NONE ? "," : ""), ""});
+            PushSection({indent + "]" + (is_top_level_arg ? "" : ","), ""});
             break;
         }
         } // no default case, so the compiler can warn about missing cases
