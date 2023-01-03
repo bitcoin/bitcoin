@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Buttcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_FEERATE_H
-#define BITCOIN_POLICY_FEERATE_H
+#ifndef Buttcoin_POLICY_FEERATE_H
+#define Buttcoin_POLICY_FEERATE_H
 
 #include <amount.h>
 #include <serialize.h>
@@ -70,4 +70,4 @@ public:
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
 
-#endif //  BITCOIN_POLICY_FEERATE_H
+#endif //  Buttcoin_POLICY_FEERATE_H

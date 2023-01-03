@@ -45,19 +45,19 @@ before_build:
       }
 - cmd: python build_msvc\msvc-autogen.py
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false build_msvc\Buttcoin.sln /m /v:q /nologo
 after_build:
-#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+#- 7z a Buttcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
-- cmd: src\test_bitcoin.exe -l test_suite
-- cmd: src\bench_bitcoin.exe > NUL
-- ps:  python test\util\bitcoin-util-test.py
+- cmd: src\test_Buttcoin.exe -l test_suite
+- cmd: src\bench_Buttcoin.exe > NUL
+- ps:  python test\util\Buttcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
 # functional tests disabled for now. See
-# https://github.com/bitcoin/bitcoin/pull/18626#issuecomment-613396202
-# https://github.com/bitcoin/bitcoin/issues/18623
+# https://github.com/Buttcoin/Buttcoin/pull/18626#issuecomment-613396202
+# https://github.com/Buttcoin/Buttcoin/issues/18623
 # - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 artifacts:
-#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
+#- path: Buttcoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off

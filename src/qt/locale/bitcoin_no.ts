@@ -63,8 +63,8 @@
         <translation>Mottar adresser </translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dette er dine Bitcoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
+        <source>These are your Buttcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dette er dine Buttcoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -93,7 +93,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>ButtcoinGUI</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -217,6 +217,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>Buttcoin-core</name>
     </context>
 </TS>

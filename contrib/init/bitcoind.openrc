@@ -2,41 +2,41 @@
 
 # backward compatibility for existing gentoo layout 
 #
-if [ -d "/var/lib/bitcoin/.bitcoin" ]; then
-	BITCOIND_DEFAULT_DATADIR="/var/lib/bitcoin/.bitcoin"
+if [ -d "/var/lib/Buttcoin/.Buttcoin" ]; then
+	ButtcoinD_DEFAULT_DATADIR="/var/lib/Buttcoin/.Buttcoin"
 else
-	BITCOIND_DEFAULT_DATADIR="/var/lib/bitcoind"
+	ButtcoinD_DEFAULT_DATADIR="/var/lib/Buttcoind"
 fi
 
-BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
-BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/bitcoind}
-BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
-BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
-BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-bitcoin}}
-BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
-BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
-BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
-BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
+ButtcoinD_CONFIGFILE=${ButtcoinD_CONFIGFILE:-/etc/Buttcoin/Buttcoin.conf}
+ButtcoinD_PIDDIR=${ButtcoinD_PIDDIR:-/var/run/Buttcoind}
+ButtcoinD_PIDFILE=${ButtcoinD_PIDFILE:-${ButtcoinD_PIDDIR}/Buttcoind.pid}
+ButtcoinD_DATADIR=${ButtcoinD_DATADIR:-${ButtcoinD_DEFAULT_DATADIR}}
+ButtcoinD_USER=${ButtcoinD_USER:-${Buttcoin_USER:-Buttcoin}}
+ButtcoinD_GROUP=${ButtcoinD_GROUP:-Buttcoin}
+ButtcoinD_BIN=${ButtcoinD_BIN:-/usr/bin/Buttcoind}
+ButtcoinD_NICE=${ButtcoinD_NICE:-${NICELEVEL:-0}}
+ButtcoinD_OPTS="${ButtcoinD_OPTS:-${Buttcoin_OPTS}}"
 
-name="Bitcoin Core Daemon"
-description="Bitcoin cryptocurrency P2P network daemon"
+name="Buttcoin Core Daemon"
+description="Buttcoin cryptocurrency P2P network daemon"
 
-command="/usr/bin/bitcoind"
-command_args="-pid=\"${BITCOIND_PIDFILE}\" \
-		-conf=\"${BITCOIND_CONFIGFILE}\" \
-		-datadir=\"${BITCOIND_DATADIR}\" \
+command="/usr/bin/Buttcoind"
+command_args="-pid=\"${ButtcoinD_PIDFILE}\" \
+		-conf=\"${ButtcoinD_CONFIGFILE}\" \
+		-datadir=\"${ButtcoinD_DATADIR}\" \
 		-daemon \
-		${BITCOIND_OPTS}"
+		${ButtcoinD_OPTS}"
 
-required_files="${BITCOIND_CONFIGFILE}"
-start_stop_daemon_args="-u ${BITCOIND_USER} \
-			-N ${BITCOIND_NICE} -w 2000"
-pidfile="${BITCOIND_PIDFILE}"
+required_files="${ButtcoinD_CONFIGFILE}"
+start_stop_daemon_args="-u ${ButtcoinD_USER} \
+			-N ${ButtcoinD_NICE} -w 2000"
+pidfile="${ButtcoinD_PIDFILE}"
 
 # The retry schedule to use when stopping the daemon. Could be either
 # a timeout in seconds or multiple signal/timeout pairs (like
 # "SIGKILL/180 SIGTERM/300")
-retry="${BITCOIND_SIGTERM_TIMEOUT}"
+retry="${ButtcoinD_SIGTERM_TIMEOUT}"
 
 depend() {
 	need localmount net
@@ -50,29 +50,29 @@ start_pre() {
 	checkpath \
 	-d \
 	--mode 0750 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
-	"${BITCOIND_DATADIR}"
+	--owner "${ButtcoinD_USER}:${ButtcoinD_GROUP}" \
+	"${ButtcoinD_DATADIR}"
 
 	checkpath \
 	-d \
 	--mode 0755 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
-	"${BITCOIND_PIDDIR}"
+	--owner "${ButtcoinD_USER}:${ButtcoinD_GROUP}" \
+	"${ButtcoinD_PIDDIR}"
 
 	checkpath -f \
-	-o ${BITCOIND_USER}:${BITCOIND_GROUP} \
+	-o ${ButtcoinD_USER}:${ButtcoinD_GROUP} \
 	-m 0660 \
-	${BITCOIND_CONFIGFILE}
+	${ButtcoinD_CONFIGFILE}
 
 	checkconfig || return 1
 }
 
 checkconfig()
 {
-	if ! grep -qs '^rpcpassword=' "${BITCOIND_CONFIGFILE}" ; then
+	if ! grep -qs '^rpcpassword=' "${ButtcoinD_CONFIGFILE}" ; then
 		eerror ""
-		eerror "ERROR: You must set a secure rpcpassword to run bitcoind."
-		eerror "The setting must appear in ${BITCOIND_CONFIGFILE}"
+		eerror "ERROR: You must set a secure rpcpassword to run Buttcoind."
+		eerror "The setting must appear in ${ButtcoinD_CONFIGFILE}"
 		eerror ""
 		eerror "This password is security critical to securing wallets "
 		eerror "and must not be the same as the rpcuser setting."
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Bitcoin Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Buttcoin Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

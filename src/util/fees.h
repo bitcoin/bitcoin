@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Buttcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_UTIL_FEES_H
-#define BITCOIN_UTIL_FEES_H
+#ifndef Buttcoin_UTIL_FEES_H
+#define Buttcoin_UTIL_FEES_H
 
 #include <string>
 
@@ -15,4 +15,4 @@ std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 const std::string InvalidEstimateModeErrorMessage();
 
-#endif // BITCOIN_UTIL_FEES_H
+#endif // Buttcoin_UTIL_FEES_H

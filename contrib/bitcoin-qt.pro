@@ -19,4 +19,4 @@ FORMS += \
     ../src/qt/forms/createwalletdialog.ui
 
 RESOURCES += \
-    ../src/qt/bitcoin.qrc
+    ../src/qt/Buttcoin.qrc

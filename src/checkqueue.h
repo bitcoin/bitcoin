@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Buttcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHECKQUEUE_H
-#define BITCOIN_CHECKQUEUE_H
+#ifndef Buttcoin_CHECKQUEUE_H
+#define Buttcoin_CHECKQUEUE_H
 
 #include <sync.h>
 
@@ -210,4 +210,4 @@ public:
     }
 };
 
-#endif // BITCOIN_CHECKQUEUE_H
+#endif // Buttcoin_CHECKQUEUE_H

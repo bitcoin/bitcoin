@@ -758,7 +758,7 @@ be5bgcpo4ooux5qy.onion:8333
 bgla4m6zetvtv7ls.onion:8333
 bh32gzw3nyckzqut.onion:8333
 bho4kodpehn7xr3x.onion:8333
-bitcoin4rlfa4wqx.onion:8333
+Buttcoin4rlfa4wqx.onion:8333
 biw7s6jf6r2mf3cu.onion:8333
 bk7yp6epnmcllq72.onion:8333
 blcktrgve5vetjsk.onion:8333

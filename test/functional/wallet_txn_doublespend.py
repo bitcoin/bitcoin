@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Buttcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import ButtcoinTestFramework
 from test_framework.util import (
     assert_equal,
     find_output,
 )
 
-class TxnMallTest(BitcoinTestFramework):
+class TxnMallTest(ButtcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.supports_cli = False

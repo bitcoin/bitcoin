@@ -84,7 +84,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>ButtcoinGUI</name>
     <message>
         <source>Wallet:</source>
         <translation>Aningaasivik:</translation>
@@ -100,7 +100,7 @@
     <message>
         <source>Amount: %1
 </source>
-        <translation>Bitcoin amerlassusaa: %1
+        <translation>Buttcoin amerlassusaa: %1
 </translation>
     </message>
     </context>
@@ -116,7 +116,7 @@
     </message>
     <message>
         <source>Amount</source>
-        <translation>Bitcoin amerlassusaa</translation>
+        <translation>Buttcoin amerlassusaa</translation>
     </message>
     <message>
         <source>Date</source>
@@ -165,8 +165,8 @@
         <translation>Tikilluarit uunga %1</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Buttcoin</source>
+        <translation>Buttcoin</translation>
     </message>
     </context>
 <context>
@@ -342,6 +342,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>Buttcoin-core</name>
     </context>
 </TS>
