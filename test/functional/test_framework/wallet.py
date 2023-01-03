@@ -354,38 +354,31 @@ class MiniWallet:
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
         return txid
 
-    def create_self_transfer_chain(self, *, chain_length):
+    def create_self_transfer_chain(self, *, chain_length, utxo_to_spend=None):
         """
         Create a "chain" of chain_length transactions. The nth transaction in
         the chain is a child of the n-1th transaction and parent of the n+1th transaction.
-
-        Returns a dic  {"chain_hex": chain_hex, "chain_txns" : chain_txns}
-
-        "chain_hex" is a list representing the chain's transactions in hexadecimal.
-        "chain_txns" is a list representing the chain's transactions in the CTransaction object.
         """
-        chaintip_utxo = self.get_utxo()
-        chain_hex = []
-        chain_txns = []
+        chaintip_utxo = utxo_to_spend or self.get_utxo()
+        chain = []
 
         for _ in range(chain_length):
             tx = self.create_self_transfer(utxo_to_spend=chaintip_utxo)
             chaintip_utxo = tx["new_utxo"]
-            chain_hex.append(tx["hex"])
-            chain_txns.append(tx["tx"])
+            chain.append(tx)
 
-        return {"chain_hex": chain_hex, "chain_txns" : chain_txns}
+        return chain
 
-    def send_self_transfer_chain(self, *, from_node, chain_length, utxo_to_spend=None):
+    def send_self_transfer_chain(self, *, from_node, **kwargs):
         """Create and send a "chain" of chain_length transactions. The nth transaction in
         the chain is a child of the n-1th transaction and parent of the n+1th transaction.
 
-        Returns the chaintip (nth) utxo
+        Returns a list of objects for each tx (see create_self_transfer_multi).
         """
-        chaintip_utxo = utxo_to_spend or self.get_utxo()
-        for _ in range(chain_length):
-            chaintip_utxo = self.send_self_transfer(utxo_to_spend=chaintip_utxo, from_node=from_node)["new_utxo"]
-        return chaintip_utxo
+        chain = self.create_self_transfer_chain(**kwargs)
+        for t in chain:
+            self.sendrawtransaction(from_node=from_node, tx_hex=t["hex"])
+        return chain
 
 
 def getnewdestination(address_type='bech32m'):

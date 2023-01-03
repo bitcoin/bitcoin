@@ -128,8 +128,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         chain = self.wallet.create_self_transfer_chain(chain_length=25)
-        chain_hex = chain["chain_hex"]
-        chain_txns = chain["chain_txns"]
+        chain_hex = [t["hex"] for t in chain]
+        chain_txns = [t["tx"] for t in chain]
 
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
         assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
@@ -374,7 +374,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         self.log.info("Submitpackage only allows packages of 1 child with its parents")
         # Chain of 3 transactions has too many generations
-        chain_hex = self.wallet.create_self_transfer_chain(chain_length=25)["chain_hex"]
+        chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=25)]
         assert_raises_rpc_error(-25, "not-child-with-parents", node.submitpackage, chain_hex)
 
 
