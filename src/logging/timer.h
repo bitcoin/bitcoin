@@ -28,14 +28,14 @@ public:
         std::string prefix,
         std::string end_msg,
         BCLog::LogFlags log_category = BCLog::LogFlags::ALL,
-        bool msg_on_completion = true) :
-            m_prefix(std::move(prefix)),
-            m_title(std::move(end_msg)),
-            m_log_category(log_category),
-            m_message_on_completion(msg_on_completion)
+        bool msg_on_completion = true)
+        : m_prefix(std::move(prefix)),
+          m_title(std::move(end_msg)),
+          m_log_category(log_category),
+          m_message_on_completion(msg_on_completion)
     {
         this->Log(strprintf("%s started", m_title));
-        m_start_t = GetTime<std::chrono::microseconds>();
+        m_start_t = std::chrono::steady_clock::now();
     }
 
     ~Timer()
@@ -60,8 +60,8 @@ public:
 
     std::string LogMsg(const std::string& msg)
     {
-        const auto end_time = GetTime<std::chrono::microseconds>() - m_start_t;
-        if (m_start_t.count() <= 0) {
+        const auto end_time{std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_start_t)};
+        if (m_start_t == decltype(m_start_t){}) {
             return strprintf("%s: %s", m_prefix, msg);
         }
 
@@ -77,7 +77,7 @@ public:
     }
 
 private:
-    std::chrono::microseconds m_start_t{};
+    std::chrono::steady_clock::time_point m_start_t{};
 
     //! Log prefix; usually the name of the function this was created in.
     const std::string m_prefix;
