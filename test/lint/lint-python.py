@@ -35,7 +35,6 @@ ENABLED = (
     'E272,'  # multiple spaces before keyword
     'E273,'  # tab after keyword
     'E274,'  # tab before keyword
-    'E275,'  # missing whitespace after keyword
     'E304,'  # blank lines found after function decorator
     'E306,'  # expected 1 blank line before a nested definition
     'E401,'  # multiple imports on one line
