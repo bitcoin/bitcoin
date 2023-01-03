@@ -6,6 +6,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
+#include <attributes.h>
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
@@ -165,6 +166,39 @@ public:
 };
 
 /** Reads data from an underlying stream, while hashing the read data. */
+template <typename Source>
+class HashVerifier : public HashWriter
+{
+private:
+    Source& m_source;
+
+public:
+    explicit HashVerifier(Source& source LIFETIMEBOUND) : m_source{source} {}
+
+    void read(Span<std::byte> dst)
+    {
+        m_source.read(dst);
+        this->write(dst);
+    }
+
+    void ignore(size_t num_bytes)
+    {
+        std::byte data[1024];
+        while (num_bytes > 0) {
+            size_t now = std::min<size_t>(num_bytes, 1024);
+            read({data, now});
+            num_bytes -= now;
+        }
+    }
+
+    template <typename T>
+    HashVerifier<Source>& operator>>(T&& obj)
+    {
+        ::Unserialize(*this, obj);
+        return *this;
+    }
+};
+
 template<typename Source>
 class CHashVerifier : public CHashWriter
 {
