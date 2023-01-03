@@ -123,7 +123,6 @@ using node::ShouldPersistMempool;
 using node::NodeContext;
 using node::ThreadImport;
 using node::VerifyLoadedChainstate;
-using node::fPruneMode;
 using node::fReindex;
 
 static constexpr bool DEFAULT_PROXYRANDOMIZE{true};

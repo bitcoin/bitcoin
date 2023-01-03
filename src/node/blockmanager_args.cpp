@@ -18,12 +18,10 @@ std::optional<bilingual_str> ApplyArgsManOptions(const ArgsManager& args, BlockM
     uint64_t nPruneTarget{uint64_t(nPruneArg) * 1024 * 1024};
     if (nPruneArg == 1) { // manual pruning: -prune=1
         nPruneTarget = std::numeric_limits<uint64_t>::max();
-        fPruneMode = true;
     } else if (nPruneTarget) {
         if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
             return strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024);
         }
-        fPruneMode = true;
     }
     opts.prune_target = nPruneTarget;
 
