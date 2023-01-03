@@ -70,13 +70,13 @@ def name_to_bip155(addr):
                 if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
                     continue
                 x += 1 # :: skips to suffix
-                assert(x < 2)
+                assert x < 2
             else: # two bytes per component
                 val = int(comp, 16)
                 sub[x].append(val >> 8)
                 sub[x].append(val & 0xff)
         nullbytes = 16 - len(sub[0]) - len(sub[1])
-        assert((x == 0 and nullbytes == 0) or (x == 1 and nullbytes > 0))
+        assert (x == 0 and nullbytes == 0) or (x == 1 and nullbytes > 0)
         addr_bytes = bytes(sub[0] + ([0] * nullbytes) + sub[1])
         if addr_bytes[0] == 0xfc:
             # Assume that seeds with fc00::/8 addresses belong to CJDNS,
