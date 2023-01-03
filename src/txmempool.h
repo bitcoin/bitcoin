@@ -11,6 +11,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -28,6 +29,7 @@
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
+#include <util/result.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -428,24 +430,20 @@ private:
 
     /**
      * Helper function to calculate all in-mempool ancestors of staged_ancestors and apply ancestor
-     * and descendant limits (including staged_ancestors thsemselves, entry_size and entry_count).
+     * and descendant limits (including staged_ancestors themselves, entry_size and entry_count).
      *
      * @param[in]   entry_size          Virtual size to include in the limits.
      * @param[in]   entry_count         How many entries to include in the limits.
-     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
      * @param[in]   staged_ancestors    Should contain entries in the mempool.
      * @param[in]   limits              Maximum number and size of ancestors and descendants
-     * @param[out]  errString           Populated with error reason if any limits are hit
      *
-     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
-     * otherwise
+     * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    bool CalculateAncestorsAndCheckLimits(size_t entry_size,
-                                          size_t entry_count,
-                                          setEntries& setAncestors,
-                                          CTxMemPoolEntry::Parents &staged_ancestors,
-                                          const Limits& limits,
-                                          std::string &errString) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    util::Result<setEntries> CalculateAncestorsAndCheckLimits(size_t entry_size,
+                                                              size_t entry_count,
+                                                              CTxMemPoolEntry::Parents &staged_ancestors,
+                                                              const Limits& limits
+                                                              ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
@@ -558,21 +556,36 @@ public:
      * (these are all calculated including the tx itself)
      *
      * @param[in]   entry               CTxMemPoolEntry of which all in-mempool ancestors are calculated
-     * @param[out]  setAncestors        Will be populated with all mempool ancestors.
      * @param[in]   limits              Maximum number and size of ancestors and descendants
-     * @param[out]  errString           Populated with error reason if any limits are hit
      * @param[in]   fSearchForParents   Whether to search a tx's vin for in-mempool parents, or look
      *                                  up parents from mapLinks. Must be true for entries not in
      *                                  the mempool
      *
-     * @return true if no limits were hit and all in-mempool ancestors were calculated, false
-     * otherwise
+     * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
-                                   setEntries& setAncestors,
+    util::Result<setEntries> CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
                                    const Limits& limits,
-                                   std::string& errString,
                                    bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /**
+     * Same as CalculateMemPoolAncestors, but always returns a (non-optional) setEntries.
+     * Should only be used when it is assumed CalculateMemPoolAncestors would not fail. If
+     * CalculateMemPoolAncestors does unexpectedly fail, an empty setEntries is returned and the
+     * error is logged to BCLog::MEMPOOL with level BCLog::Level::Error. In debug builds, failure
+     * of CalculateMemPoolAncestors will lead to shutdown due to assertion failure.
+     *
+     * @param[in]   calling_fn_name     Name of calling function so we can properly log the call site
+     *
+     * @return a setEntries corresponding to the result of CalculateMemPoolAncestors or an empty
+     *         setEntries if it failed
+     *
+     * @see CTXMemPool::CalculateMemPoolAncestors()
+     */
+    setEntries AssumeCalculateMemPoolAncestors(
+        std::string_view calling_fn_name,
+        const CTxMemPoolEntry &entry,
+        const Limits& limits,
+        bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
      * check ancestor and descendant limits. Heuristics are used to estimate the ancestor and
