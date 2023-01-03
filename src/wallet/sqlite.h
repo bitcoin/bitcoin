@@ -22,7 +22,7 @@ public:
     explicit SQLiteCursor() {}
     ~SQLiteCursor() override;
 
-    Status Next(CDataStream& key, CDataStream& value) override;
+    Status Next(DataStream& key, DataStream& value) override;
 };
 
 /** RAII class that provides access to a WalletDatabase */
@@ -38,10 +38,10 @@ private:
 
     void SetupSQLStatements();
 
-    bool ReadKey(CDataStream&& key, CDataStream& value) override;
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
-    bool EraseKey(CDataStream&& key) override;
-    bool HasKey(CDataStream&& key) override;
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);

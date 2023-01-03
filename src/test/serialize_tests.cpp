@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(varints)
 {
     // encode
 
-    CDataStream ss(SER_DISK, 0);
-    CDataStream::size_type size = 0;
+    DataStream ss{};
+    DataStream::size_type size = 0;
     for (int i = 0; i < 100000; i++) {
         ss << VARINT_MODE(i, VarIntMode::NONNEGATIVE_SIGNED);
         size += ::GetSerializeSize(VARINT_MODE(i, VarIntMode::NONNEGATIVE_SIGNED), 0);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(varints)
 
 BOOST_AUTO_TEST_CASE(varints_bitpatterns)
 {
-    CDataStream ss(SER_DISK, 0);
+    DataStream ss{};
     ss << VARINT_MODE(0, VarIntMode::NONNEGATIVE_SIGNED); BOOST_CHECK_EQUAL(HexStr(ss), "00"); ss.clear();
     ss << VARINT_MODE(0x7f, VarIntMode::NONNEGATIVE_SIGNED); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
     ss << VARINT_MODE(int8_t{0x7f}, VarIntMode::NONNEGATIVE_SIGNED); BOOST_CHECK_EQUAL(HexStr(ss), "7f"); ss.clear();
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(varints_bitpatterns)
 
 BOOST_AUTO_TEST_CASE(compactsize)
 {
-    CDataStream ss(SER_DISK, 0);
+    DataStream ss{};
     std::vector<char>::size_type i, j;
 
     for (i = 1; i <= MAX_SIZE; i *= 2)
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(noncanonical)
 {
     // Write some non-canonical CompactSize encodings, and
     // make sure an exception is thrown when read back.
-    CDataStream ss(SER_DISK, 0);
+    DataStream ss{};
     std::vector<char>::size_type n;
 
     // zero encoded with three bytes:

@@ -61,7 +61,7 @@ static void PrevectorResize(benchmark::Bench& bench)
 template <typename T>
 static void PrevectorDeserialize(benchmark::Bench& bench)
 {
-    CDataStream s0(SER_NETWORK, 0);
+    DataStream s0{};
     prevector<28, T> t0;
     t0.resize(28);
     for (auto x = 0; x < 900; ++x) {

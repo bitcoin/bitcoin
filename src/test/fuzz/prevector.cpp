@@ -59,8 +59,8 @@ public:
             --pos;
             assert(v == real_vector[pos]);
         }
-        CDataStream ss1(SER_DISK, 0);
-        CDataStream ss2(SER_DISK, 0);
+        DataStream ss1{};
+        DataStream ss2{};
         ss1 << real_vector;
         ss2 << pre_vector;
         assert(ss1.size() == ss2.size());

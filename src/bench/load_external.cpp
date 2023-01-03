@@ -27,7 +27,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     // Create a single block as in the blocks files (magic bytes, block size,
     // block data) as a stream object.
     const fs::path blkfile{testing_setup.get()->m_path_root / "blk.dat"};
-    CDataStream ss(SER_DISK, 0);
+    DataStream ss{};
     auto params{testing_setup->m_node.chainman->GetParams()};
     ss << params.MessageStart();
     ss << static_cast<uint32_t>(benchmark::data::block413567.size());
