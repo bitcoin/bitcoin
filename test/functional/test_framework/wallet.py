@@ -321,6 +321,7 @@ class MiniWallet:
                 confirmations=0,
             ) for i in range(len(tx.vout))],
             "txid": txid,
+            "wtxid": tx.getwtxid(),
             "hex": tx.serialize().hex(),
             "tx": tx,
         }
@@ -344,8 +345,9 @@ class MiniWallet:
         tx = self.create_self_transfer_multi(utxos_to_spend=[utxo_to_spend], locktime=locktime, sequence=sequence, amount_per_output=int(COIN * send_value), target_weight=target_weight)
         if not target_weight:
             assert_equal(tx["tx"].get_vsize(), vsize)
+        tx["new_utxo"] = tx.pop("new_utxos")[0]
 
-        return {"txid": tx["txid"], "wtxid": tx["tx"].getwtxid(), "hex": tx["hex"], "tx": tx["tx"], "new_utxo": tx["new_utxos"][0]}
+        return tx
 
     def sendrawtransaction(self, *, from_node, tx_hex, maxfeerate=0, **kwargs):
         txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
