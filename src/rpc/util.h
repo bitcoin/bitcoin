@@ -178,10 +178,10 @@ struct RPCArg {
     const RPCArgOptions m_opts;
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
         RPCArgOptions opts = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
@@ -193,11 +193,11 @@ struct RPCArg {
     }
 
     RPCArg(
-        const std::string name,
-        const Type type,
-        const Fallback fallback,
-        const std::string description,
-        const std::vector<RPCArg> inner,
+        std::string name,
+        Type type,
+        Fallback fallback,
+        std::string description,
+        std::vector<RPCArg> inner,
         RPCArgOptions opts = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
@@ -263,12 +263,12 @@ struct RPCResult {
     const std::string m_cond;
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
@@ -282,19 +282,19 @@ struct RPCResult {
     }
 
     RPCResult(
-        const std::string cond,
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {})
-        : RPCResult{cond, type, m_key_name, false, description, inner} {}
+        std::string cond,
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {})
+        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner)} {}
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const bool optional,
-        const std::string description,
-        const std::vector<RPCResult> inner = {},
+        Type type,
+        std::string m_key_name,
+        bool optional,
+        std::string description,
+        std::vector<RPCResult> inner = {},
         bool skip_type_check = false)
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
@@ -308,12 +308,12 @@ struct RPCResult {
     }
 
     RPCResult(
-        const Type type,
-        const std::string m_key_name,
-        const std::string description,
-        const std::vector<RPCResult> inner = {},
+        Type type,
+        std::string m_key_name,
+        std::string description,
+        std::vector<RPCResult> inner = {},
         bool skip_type_check = false)
-        : RPCResult{type, m_key_name, false, description, inner, skip_type_check} {}
+        : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), skip_type_check} {}
 
     /** Append the sections of the result. */
     void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, const int current_indent = 0) const;
