@@ -298,6 +298,9 @@ class MiniWallet:
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
+        assert amount_per_output > 0
+        outputs_value_total = amount_per_output * num_outputs
+        fee = Decimal(inputs_value_total - outputs_value_total) / COIN
 
         # create tx
         tx = CTransaction()
@@ -320,6 +323,7 @@ class MiniWallet:
                 coinbase=False,
                 confirmations=0,
             ) for i in range(len(tx.vout))],
+            "fee": fee,
             "txid": txid,
             "wtxid": tx.getwtxid(),
             "hex": tx.serialize().hex(),
@@ -339,7 +343,6 @@ class MiniWallet:
         else:
             assert False
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
-        assert send_value > 0
 
         # create tx
         tx = self.create_self_transfer_multi(utxos_to_spend=[utxo_to_spend], locktime=locktime, sequence=sequence, amount_per_output=int(COIN * send_value), target_weight=target_weight)
