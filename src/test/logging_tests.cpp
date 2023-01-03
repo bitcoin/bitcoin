@@ -75,9 +75,9 @@ struct LogSetup : public BasicTestingSetup {
 
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
-    auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
-    const std::string_view result_prefix{"tests: msg ("};
-    BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
+    BCLog::Timer timer{"topic", "end_msg"};
+    const std::string_view result_prefix{"topic: msg ("};
+    BOOST_CHECK_EQUAL(timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)

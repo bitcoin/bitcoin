@@ -18,7 +18,6 @@
 namespace BCLog {
 
 //! RAII-style object that outputs timing information to logs.
-template <typename TimeType>
 class Timer
 {
 public:
@@ -60,20 +59,14 @@ public:
 
     std::string LogMsg(const std::string& msg)
     {
-        const auto end_time{std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_start_t)};
+        const auto dur{std::chrono::steady_clock::now() - m_start_t};
         if (m_start_t == decltype(m_start_t){}) {
             return strprintf("%s: %s", m_prefix, msg);
         }
-
-        if constexpr (std::is_same<TimeType, std::chrono::microseconds>::value) {
-            return strprintf("%s: %s (%iμs)", m_prefix, msg, end_time.count());
-        } else if constexpr (std::is_same<TimeType, std::chrono::milliseconds>::value) {
-            return strprintf("%s: %s (%.2fms)", m_prefix, msg, end_time.count() * 0.001);
-        } else if constexpr (std::is_same<TimeType, std::chrono::seconds>::value) {
-            return strprintf("%s: %s (%.2fs)", m_prefix, msg, end_time.count() * 0.000001);
-        } else {
-            static_assert(ALWAYS_FALSE<TimeType>, "Error: unexpected time type");
+        if (dur < 10ms) {
+            return strprintf("%s: %s (%.6fs)", m_prefix, msg, Ticks<SecondsDouble>(dur));
         }
+        return strprintf("%s: %s (%.3fs)", m_prefix, msg, Ticks<SecondsDouble>(dur));
     }
 
 private:
@@ -96,14 +89,12 @@ private:
 } // namespace BCLog
 
 
-#define LOG_TIME_MICROS_WITH_CATEGORY(end_msg, log_category) \
-    BCLog::Timer<std::chrono::microseconds> UNIQUE_NAME(logging_timer)(__func__, end_msg, log_category)
-#define LOG_TIME_MILLIS_WITH_CATEGORY(end_msg, log_category) \
-    BCLog::Timer<std::chrono::milliseconds> UNIQUE_NAME(logging_timer)(__func__, end_msg, log_category)
-#define LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(end_msg, log_category) \
-    BCLog::Timer<std::chrono::milliseconds> UNIQUE_NAME(logging_timer)(__func__, end_msg, log_category, /* msg_on_completion=*/false)
-#define LOG_TIME_SECONDS(end_msg) \
-    BCLog::Timer<std::chrono::seconds> UNIQUE_NAME(logging_timer)(__func__, end_msg)
+#define LOG_TIME(end_msg) \
+    BCLog::Timer UNIQUE_NAME(logging_timer)(__func__, end_msg)
+#define LOG_TIME_WITH_CATEGORY(end_msg, log_category) \
+    BCLog::Timer UNIQUE_NAME(logging_timer)(__func__, end_msg, log_category)
+#define LOG_TIME_WITH_CATEGORY_MSG_ONCE(end_msg, log_category) \
+    BCLog::Timer UNIQUE_NAME(logging_timer)(__func__, end_msg, log_category, /*msg_on_completion=*/false)
 
 
 #endif // BITCOIN_LOGGING_TIMER_H

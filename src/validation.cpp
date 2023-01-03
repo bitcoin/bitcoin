@@ -2391,11 +2391,11 @@ bool Chainstate::FlushStateToDisk(
             }
 
             if (nManualPruneHeight > 0) {
-                LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
+                LOG_TIME_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
 
                 m_blockman.FindFilesToPruneManual(setFilesToPrune, std::min(last_prune, nManualPruneHeight), m_chain.Height());
             } else {
-                LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
+                LOG_TIME_WITH_CATEGORY("find files to prune", BCLog::BENCH);
 
                 m_blockman.FindFilesToPrune(setFilesToPrune, m_chainman.GetParams().PruneAfterHeight(), m_chain.Height(), last_prune, IsInitialBlockDownload());
                 m_blockman.m_check_for_pruning = false;
@@ -2433,7 +2433,7 @@ bool Chainstate::FlushStateToDisk(
                 return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
             }
             {
-                LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
+                LOG_TIME_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
 
                 // First make sure all block and undo data is flushed to disk.
                 m_blockman.FlushBlockFile();
@@ -2441,7 +2441,7 @@ bool Chainstate::FlushStateToDisk(
 
             // Then update all block file information (which may refer to block and undo files).
             {
-                LOG_TIME_MILLIS_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
+                LOG_TIME_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
 
                 if (!m_blockman.WriteBlockIndexDB()) {
                     return AbortNode(state, "Failed to write to block index database");
@@ -2449,7 +2449,7 @@ bool Chainstate::FlushStateToDisk(
             }
             // Finally remove any pruned files
             if (fFlushForPrune) {
-                LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
+                LOG_TIME_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
 
                 UnlinkPrunedFiles(setFilesToPrune);
             }
@@ -2457,7 +2457,7 @@ bool Chainstate::FlushStateToDisk(
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
-            LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fkB)",
+            LOG_TIME_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fkB)",
                 coins_count, coins_mem_usage / 1000), BCLog::BENCH);
 
             // Typical Coin structures on disk are around 48 bytes in size.
@@ -4995,7 +4995,7 @@ bool ChainstateManager::ActivateSnapshot(
 
 static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
 {
-    LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
+    LOG_TIME_WITH_CATEGORY_MSG_ONCE(
         strprintf("%s (%.2f MB)",
                   snapshot_loaded ? "saving snapshot chainstate" : "flushing coins cache",
                   coins_cache.DynamicMemoryUsage() / (1000 * 1000)),

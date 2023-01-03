@@ -159,7 +159,7 @@ private:
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
         if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
+        LOG_TIME_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
 #endif
         Base::lock();
     }

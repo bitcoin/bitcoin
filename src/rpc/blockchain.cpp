@@ -2615,7 +2615,7 @@ UniValue CreateUTXOSnapshot(
         tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(maybe_stats->hashBlock));
     }
 
-    LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
+    LOG_TIME(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 

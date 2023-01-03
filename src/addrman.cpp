@@ -981,7 +981,7 @@ int AddrManImpl::CheckAddrman() const
 {
     AssertLockHeld(cs);
 
-    LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
+    LOG_TIME_WITH_CATEGORY_MSG_ONCE(
         strprintf("new %i, tried %i, total %u", nNew, nTried, vRandom.size()), BCLog::ADDRMAN);
 
     std::unordered_set<int> setTried;
