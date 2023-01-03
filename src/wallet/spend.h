@@ -121,9 +121,11 @@ std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<C
  * param@[in]  coin_selection_params     Parameters for the coin selection
  * param@[in]  allow_mixed_output_types  Relax restriction that SelectionResults must be of the same OutputType
  * returns                               If successful, a SelectionResult containing the input set
- *                                       If failed, a nullopt
+ *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
+ *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                  result that surpassed the tx max weight size).
  */
-std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const CoinsResult& available_coins,
+util::Result<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const CoinsResult& available_coins,
                         const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types);
 
 /**
@@ -137,9 +139,11 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
  * param@[in]  available_coins           The struct of coins, organized by OutputType, available for selection prior to filtering
  * param@[in]  coin_selection_params     Parameters for the coin selection
  * returns                               If successful, a SelectionResult containing the input set
- *                                       If failed, a nullopt
+ *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
+ *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                  result that surpassed the tx max weight size).
  */
-std::optional<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins,
+util::Result<SelectionResult> ChooseSelectionResult(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::vector<COutput>& available_coins,
                         const CoinSelectionParams& coin_selection_params);
 
 // User manually selected inputs that must be part of the transaction
@@ -177,18 +181,20 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
  * param@[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
  *                                     and whether to subtract the fee from the outputs.
  * returns                             If successful, a SelectionResult containing the selected coins
- *                                     If failed, a nullopt.
+ *                                     If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
+ *                                                or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                result that surpassed the tx max weight size).
  */
-std::optional<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Select all coins from coin_control, and if coin_control 'm_allow_other_inputs=true', call 'AutomaticCoinSelection' to
  * select a set of coins such that nTargetValue - pre_set_inputs.total_amount is met.
  */
-std::optional<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,
-                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
-                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const PreSelectedInputs& pre_set_inputs,
+                                          const CAmount& nTargetValue, const CCoinControl& coin_control,
+                                          const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 struct CreatedTransactionResult
 {
