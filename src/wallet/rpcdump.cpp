@@ -696,8 +696,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             std::vector<std::string> vstr = SplitString(line, ',');
             if (vstr.size() < 2)
                 continue;
-            std::vector<std::string> vstr2;
-            boost::split(vstr2, vstr[1], boost::is_any_of(":"));
+            std::vector<std::string> vstr2 = SplitString(vstr[1], ':');
             CKey key;
             if (vstr2.size() < 1 || vstr2.size() > 2) {
                 continue;
@@ -742,8 +741,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             pwallet->ShowProgress("", std::max(1, std::min(99, int(i*100/data.size()))));
             if(!data[vKeys[i]].isStr())
                 continue;
-            std::vector<std::string> vstr2;
-            boost::split(vstr2, data[vKeys[i]].get_str(), boost::is_any_of(":"));
+            std::vector<std::string> vstr2 = SplitString(data[vKeys[i]].get_str(), ':');
             CKey key;
             if (vstr2.size() < 1 || vstr2.size() > 2) {
                 continue;

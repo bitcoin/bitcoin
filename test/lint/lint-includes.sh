@@ -49,10 +49,7 @@ if [[ ${INCLUDED_CPP_FILES} != "" ]]; then
 fi
 
 EXPECTED_BOOST_INCLUDES=(
-    boost/algorithm/string.hpp
-    boost/algorithm/string/classification.hpp
     boost/algorithm/string/replace.hpp
-    boost/algorithm/string/split.hpp
     boost/date_time/posix_time/posix_time.hpp
     boost/filesystem.hpp
     boost/filesystem/fstream.hpp
