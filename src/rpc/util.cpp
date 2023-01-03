@@ -405,12 +405,12 @@ struct Sections {
                 left += push_name ? arg.ToStringObj(/*oneline=*/false) : arg.ToString(/*oneline=*/false);
             }
             left += ",";
-            PushSection({left, arg.ToDescriptionString()});
+            PushSection({left, arg.ToDescriptionString(/*is_named_arg=*/push_name)});
             break;
         }
         case RPCArg::Type::OBJ:
         case RPCArg::Type::OBJ_USER_KEYS: {
-            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString(/*is_named_arg=*/push_name);
             PushSection({indent + (push_name ? "\"" + arg.GetName() + "\": " : "") + "{", right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
@@ -425,7 +425,7 @@ struct Sections {
             auto left = indent;
             left += push_name ? "\"" + arg.GetName() + "\": " : "";
             left += "[";
-            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString();
+            const auto right = is_top_level_arg ? "" : arg.ToDescriptionString(/*is_named_arg=*/push_name);
             PushSection({left, right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::ARR);
@@ -628,7 +628,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString());
+        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
@@ -722,7 +722,7 @@ bool RPCArg::IsOptional() const
     }
 }
 
-std::string RPCArg::ToDescriptionString() const
+std::string RPCArg::ToDescriptionString(bool is_named_arg) const
 {
     std::string ret;
     ret += "(";
@@ -768,12 +768,10 @@ std::string RPCArg::ToDescriptionString() const
         ret += ", optional, default=" + std::get<RPCArg::Default>(m_fallback).write();
     } else {
         switch (std::get<RPCArg::Optional>(m_fallback)) {
+        case RPCArg::Optional::OMITTED_NAMED_ARG: // Deprecated alias for OMITTED, can be removed
         case RPCArg::Optional::OMITTED: {
+            if (is_named_arg) ret += ", optional"; // Default value is "null" in dicts. Otherwise,
             // nothing to do. Element is treated as if not present and has no default value
-            break;
-        }
-        case RPCArg::Optional::OMITTED_NAMED_ARG: {
-            ret += ", optional"; // Default value is "null"
             break;
         }
         case RPCArg::Optional::NO: {

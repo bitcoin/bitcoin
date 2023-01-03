@@ -154,21 +154,24 @@ struct RPCArg {
         /** Required arg */
         NO,
         /**
+         * The arg is optional for one of two reasons:
+         *
          * Optional arg that is a named argument and has a default value of
-         * `null`. When possible, the default value should be specified.
-         */
-        OMITTED_NAMED_ARG,
-        /**
+         * `null`.
+         *
          * Optional argument with default value omitted because they are
-         * implicitly clear. That is, elements in an array or object may not
+         * implicitly clear. That is, elements in an array may not
          * exist by default.
          * When possible, the default value should be specified.
          */
         OMITTED,
+        OMITTED_NAMED_ARG, // Deprecated alias for OMITTED, can be removed
     };
+    /** Hint for default value */
     using DefaultHint = std::string;
+    /** Default constant value */
     using Default = UniValue;
-    using Fallback = std::variant<Optional, /* hint for default value */ DefaultHint, /* default constant value */ Default>;
+    using Fallback = std::variant<Optional, DefaultHint, Default>;
 
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
@@ -234,7 +237,7 @@ struct RPCArg {
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
-    std::string ToDescriptionString() const;
+    std::string ToDescriptionString(bool is_named_arg) const;
 };
 
 struct RPCResult {
