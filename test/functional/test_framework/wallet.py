@@ -180,12 +180,12 @@ class MiniWallet:
             tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
             tx.rehash()
         elif self._mode == MiniWalletMode.RAW_OP_TRUE:
-            for i in range(len(tx.vin)):
-                tx.vin[i].scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
+            for i in tx.vin:
+                i.scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
         elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
             tx.wit.vtxinwit = [CTxInWitness()] * len(tx.vin)
-            for i in range(len(tx.vin)):
-                tx.wit.vtxinwit[i].scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
+            for i in tx.wit.vtxinwit:
+                i.scriptWitness.stack = [CScript([OP_TRUE]), bytes([LEAF_VERSION_TAPSCRIPT]) + self._internal_key]
         else:
             assert False
 
@@ -301,7 +301,7 @@ class MiniWallet:
 
         # create tx
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=seq) for utxo_to_spend,seq in zip(utxos_to_spend, sequence)]
+        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=seq) for utxo_to_spend, seq in zip(utxos_to_spend, sequence)]
         tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
         tx.nLockTime = locktime
 
