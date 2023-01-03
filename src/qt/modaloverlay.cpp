@@ -1,4 +1,5 @@
 // Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2023 The BritanniaCoin Development Team (Britannia Coin Ltd)
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,6 +23,17 @@ userClosed(false)
 {
     ui->setupUi(this);
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
+
+    ui->progressIncreasePerH->setVisible(false);
+    ui->numberOfBlocksLeft->setVisible(false);
+    ui->labelSyncDone->setVisible(false);
+    ui->labelProgressIncrease->setVisible(false);
+    ui->labelNumberOfBlocksLeft->setVisible(false);
+    ui->labelLastBlockTime->setVisible(false);
+    ui->labelEstimatedTimeLeft->setVisible(false);
+    ui->expectedTimeLeft->setVisible(false);
+    ui->percentageProgress->setVisible(false);
+
     if (parent) {
         parent->installEventFilter(this);
         raise();

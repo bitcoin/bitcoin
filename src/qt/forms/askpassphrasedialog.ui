@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>598</width>
-    <height>222</height>
+    <height>256</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,6 +22,11 @@
     <height>0</height>
    </size>
   </property>
+  <property name="font">
+   <font>
+    <family>Open Sans</family>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Passphrase Dialog</string>
   </property>
@@ -30,7 +35,25 @@
     <enum>QLayout::SetMinimumSize</enum>
    </property>
    <item>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <family>Open Sans</family>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Change Wallet Password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="warningLabel">
+     <property name="font">
+      <font>
+       <family>Open Sans</family>
+      </font>
+     </property>
      <property name="text">
       <string notr="true">Placeholder text</string>
      </property>
@@ -52,8 +75,13 @@
      </property>
      <item row="0" column="0">
       <widget class="QLabel" name="passLabel1">
+       <property name="font">
+        <font>
+         <family>Open Sans</family>
+        </font>
+       </property>
        <property name="text">
-        <string>Enter passphrase</string>
+        <string>Enter password</string>
        </property>
       </widget>
      </item>
@@ -66,8 +94,13 @@
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="passLabel2">
+       <property name="font">
+        <font>
+         <family>Open Sans</family>
+        </font>
+       </property>
        <property name="text">
-        <string>New passphrase</string>
+        <string>New password</string>
        </property>
       </widget>
      </item>
@@ -80,8 +113,13 @@
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="passLabel3">
+       <property name="font">
+        <font>
+         <family>Open Sans</family>
+        </font>
+       </property>
        <property name="text">
-        <string>Repeat new passphrase</string>
+        <string>Repeat new password</string>
        </property>
       </widget>
      </item>
@@ -94,8 +132,13 @@
      </item>
      <item row="3" column="1">
       <widget class="QCheckBox" name="toggleShowPasswordButton">
+       <property name="font">
+        <font>
+         <family>Open Sans</family>
+        </font>
+       </property>
        <property name="text">
-        <string>Show passphrase</string>
+        <string>Show password</string>
        </property>
       </widget>
      </item>
@@ -103,6 +146,7 @@
       <widget class="QLabel" name="capsLabel">
        <property name="font">
         <font>
+         <family>Open Sans</family>
          <weight>75</weight>
          <bold>true</bold>
         </font>
