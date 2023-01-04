@@ -23,7 +23,7 @@ class CBlockIndex;
 
 class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
-
+class CMasternodeSync;
 
 namespace llmq
 {
@@ -210,6 +210,7 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
     mutable CCriticalSection cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
@@ -221,7 +222,7 @@ private:
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   CDKGSessionManager& _dkgManager);
+                   CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mnSync);
     ~CQuorumManager() { Stop(); };
 
     void Start();

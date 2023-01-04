@@ -17,7 +17,7 @@ class CDSNotificationInterface : public CValidationInterface
 {
 public:
     explicit CDSNotificationInterface(CConnman& _connman,
-                                      std::unique_ptr<CMasternodeSync>& _mnsync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
+                                      std::unique_ptr<CMasternodeSync>& _mn_sync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
                                       std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<LLMQContext>& _llmq_ctx);
     virtual ~CDSNotificationInterface() = default;
 
@@ -40,7 +40,7 @@ protected:
 private:
     CConnman& connman;
 
-    std::unique_ptr<CMasternodeSync>& mnsync;
+    std::unique_ptr<CMasternodeSync>& m_mn_sync;
     std::unique_ptr<CDeterministicMNManager>& dmnman;
     std::unique_ptr<CGovernanceManager>& govman;
 

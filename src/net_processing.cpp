@@ -4091,7 +4091,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 #endif // ENABLE_WALLET
         coinJoinServer->ProcessMessage(*pfrom, msg_type, vRecv);
         sporkManager->ProcessSporkMessages(*pfrom, msg_type, vRecv, *connman);
-        masternodeSync->ProcessMessage(*pfrom, msg_type, vRecv);
+        ::masternodeSync->ProcessMessage(*pfrom, msg_type, vRecv);
         governance->ProcessMessage(*pfrom, msg_type, vRecv, *connman);
         CMNAuth::ProcessMessage(*pfrom, msg_type, vRecv, *connman);
         llmq_ctx.quorum_block_processor->ProcessMessage(*pfrom, msg_type, vRecv);

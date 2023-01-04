@@ -22,9 +22,9 @@
 #include <llmq/quorums.h>
 
 CDSNotificationInterface::CDSNotificationInterface(CConnman& _connman,
-    std::unique_ptr<CMasternodeSync>& _mnsync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
+    std::unique_ptr<CMasternodeSync>& _mn_sync, std::unique_ptr<CDeterministicMNManager>& _dmnman,
     std::unique_ptr<CGovernanceManager>& _govman, std::unique_ptr<LLMQContext>& _llmq_ctx
-) : connman(_connman), mnsync(_mnsync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx) {}
+) : connman(_connman), m_mn_sync(_mn_sync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx) {}
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -35,14 +35,14 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
     llmq_ctx->clhandler->AcceptedBlockHeader(pindexNew);
-    if (mnsync != nullptr) {
-        mnsync->AcceptedBlockHeader(pindexNew);
+    if (m_mn_sync != nullptr) {
+        m_mn_sync->AcceptedBlockHeader(pindexNew);
     }
 }
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    mnsync->NotifyHeaderTip(pindexNew, fInitialDownload);
+    m_mn_sync->NotifyHeaderTip(pindexNew, fInitialDownload);
 }
 
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -58,7 +58,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
 
-    mnsync->UpdatedBlockTip(pindexNew, fInitialDownload);
+    m_mn_sync->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     // Update global DIP0001 activation status
     fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
@@ -66,7 +66,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    CCoinJoin::UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler);
+    CCoinJoin::UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
 #ifdef ENABLE_WALLET
     for (auto& pair : coinJoinClientManagers) {
         pair.second->UpdatedBlockTip(pindexNew);
@@ -125,5 +125,5 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
     llmq_ctx->isman->NotifyChainLock(pindex);
-    CCoinJoin::NotifyChainLock(pindex, *llmq_ctx->clhandler);
+    CCoinJoin::NotifyChainLock(pindex, *llmq_ctx->clhandler, m_mn_sync);
 }

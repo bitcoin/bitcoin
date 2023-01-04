@@ -19,6 +19,7 @@
 #include <unordered_set>
 
 class CSporkManager;
+class CMasternodeSync;
 
 namespace llmq
 {
@@ -208,6 +209,7 @@ private:
     CSigningManager& sigman;
     CSigSharesManager& shareman;
     CChainLocksHandler& clhandler;
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -255,10 +257,11 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
 public:
-    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CQuorumManager& _qman,
-                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CChainLocksHandler& _clhandler, bool unitTests, bool fWipe) :
+    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
+                                 CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
+                                 CChainLocksHandler& _clhandler, const std::unique_ptr<CMasternodeSync>& mn_sync, bool unitTests, bool fWipe) :
         db(unitTests, fWipe), mempool(_mempool), connman(_connman), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
-        clhandler(_clhandler)
+        clhandler(_clhandler), m_mn_sync(mn_sync)
     {
         workInterrupt.reset();
     }

@@ -22,6 +22,7 @@ class CConnman;
 class CNode;
 
 class UniValue;
+class CMasternodeSync;
 
 
 // The main object for accessing mixing
@@ -70,6 +71,8 @@ public:
 class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+
     std::vector<COutPoint> vecOutPointLocked;
 
     bilingual_str strLastMessage;
@@ -118,8 +121,8 @@ private:
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(CWallet& pwallet) :
-        mixingWallet(pwallet)
+    explicit CCoinJoinClientSession(CWallet& pwallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+        mixingWallet(pwallet), m_mn_sync(mn_sync)
     {
     }
 
@@ -152,10 +155,11 @@ class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
 private:
     CConnman& connman;
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
 public:
-    explicit CCoinJoinClientQueueManager(CConnman& _connman) :
-        connman(_connman) {};
+    explicit CCoinJoinClientQueueManager(CConnman& _connman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+        connman(_connman), m_mn_sync(mn_sync) {};
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
     void ProcessDSQueue(const CNode& peer, CDataStream& vRecv);
@@ -169,6 +173,8 @@ class CCoinJoinClientManager
 private:
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
+
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
     mutable Mutex cs_deqsessions;
     // TODO: or map<denom, CCoinJoinClientSession> ??
@@ -198,8 +204,8 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(CWallet& wallet) :
-        mixingWallet(wallet) {}
+    explicit CCoinJoinClientManager(CWallet& wallet, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+        mixingWallet(wallet), m_mn_sync(mn_sync) {}
 
     void ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman) LOCKS_EXCLUDED(cs_deqsessions);
 

@@ -15,9 +15,9 @@
 #include <util/ranges.h>
 
 
-void CMasternodeUtils::DoMaintenance(CConnman& connman)
+void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& mn_sync)
 {
-    if (masternodeSync == nullptr || !masternodeSync->IsBlockchainSynced()) return;
+    if (!mn_sync.IsBlockchainSynced()) return;
     if (ShutdownRequested()) return;
 
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet

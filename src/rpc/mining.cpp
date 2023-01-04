@@ -716,7 +716,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (AreSuperblocksEnabled(*sporkManager)
-        && !masternodeSync->IsSynced()
+        && !::masternodeSync->IsSynced()
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is syncing with network...");
 

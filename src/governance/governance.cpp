@@ -90,14 +90,14 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
 void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv, CConnman& connman)
 {
     if (fDisableGovernance) return;
-    if (masternodeSync == nullptr || !masternodeSync->IsBlockchainSynced()) return;
+    if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (msg_type == NetMsgType::MNGOVERNANCESYNC) {
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
         // but this is a heavy one so it's better to finish sync first.
-        if (!masternodeSync->IsSynced()) return;
+        if (!::masternodeSync->IsSynced()) return;
 
         uint256 nProp;
         CBloomFilter filter;
@@ -129,7 +129,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, 
             EraseObjectRequest(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
         }
 
-        if (!masternodeSync->IsBlockchainSynced()) {
+        if (!::masternodeSync->IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
             return;
         }
@@ -198,7 +198,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, 
         }
 
         // Ignore such messages until masternode list is synced
-        if (!masternodeSync->IsBlockchainSynced()) {
+        if (!::masternodeSync->IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
             return;
         }
@@ -216,11 +216,11 @@ void CGovernanceManager::ProcessMessage(CNode& peer, std::string_view msg_type, 
         CGovernanceException exception;
         if (ProcessVote(&peer, vote, exception, connman)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
-            masternodeSync->BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
+            ::masternodeSync->BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
             vote.Relay(connman);
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
-            if ((exception.GetNodePenalty() != 0) && masternodeSync->IsSynced()) {
+            if ((exception.GetNodePenalty() != 0) && ::masternodeSync->IsSynced()) {
                 LOCK(cs_main);
                 Misbehaving(peer.GetId(), exception.GetNodePenalty());
             }
@@ -302,7 +302,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     // Update the rate buffer
     MasternodeRateUpdate(govobj);
 
-    masternodeSync->BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
+    ::masternodeSync->BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
 
     // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
 
@@ -315,7 +315,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 void CGovernanceManager::UpdateCachesAndClean()
 {
     // Return on initial sync, spammed the debug.log and provided no use
-    if (masternodeSync == nullptr || !masternodeSync->IsBlockchainSynced()) return;
+    if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean\n");
 
@@ -506,7 +506,7 @@ struct sortProposalsByVotes {
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
     if (fDisableGovernance) return;
-    if (masternodeSync == nullptr || !masternodeSync->IsSynced()) return;
+    if (::masternodeSync == nullptr || !::masternodeSync->IsSynced()) return;
     if (ShutdownRequested()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
@@ -520,7 +520,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 {
     // do not request objects until it's time to sync
-    if (!masternodeSync->IsBlockchainSynced()) return false;
+    if (!::masternodeSync->IsBlockchainSynced()) return false;
 
     LOCK(cs);
 
@@ -573,7 +573,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
 {
     // do not provide any data until our node is synced
-    if (!masternodeSync->IsSynced()) return;
+    if (!::masternodeSync->IsSynced()) return;
 
     int nVoteCount = 0;
 
@@ -622,7 +622,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
 void CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 {
     // do not provide any data until our node is synced
-    if (!masternodeSync->IsSynced()) return;
+    if (!::masternodeSync->IsSynced()) return;
 
     if (netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
@@ -715,7 +715,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
     fRateCheckBypassed = false;
 
-    if (!masternodeSync->IsSynced() || !fRateChecksEnabled) {
+    if (!::masternodeSync->IsSynced() || !fRateChecksEnabled) {
         return true;
     }
 
@@ -829,7 +829,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 
 void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
-    if (!masternodeSync->IsSynced()) return;
+    if (!::masternodeSync->IsSynced()) return;
 
     LOCK2(cs_main, ::mempool.cs); // Lock mempool because of GetTransaction deep inside
     LOCK(cs);
@@ -1234,7 +1234,7 @@ void CGovernanceManager::CleanOrphanObjects()
 
 void CGovernanceManager::RemoveInvalidVotes()
 {
-    if (!masternodeSync->IsSynced()) {
+    if (!::masternodeSync->IsSynced()) {
         return;
     }
 

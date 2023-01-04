@@ -24,6 +24,7 @@ class CBlockIndex;
 class CScheduler;
 class CTxMemPool;
 class CSporkManager;
+class CMasternodeSync;
 
 namespace llmq
 {
@@ -45,6 +46,7 @@ private:
     CSporkManager& spork_manager;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
+    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
     mutable CCriticalSection cs;
@@ -77,7 +79,7 @@ private:
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
-    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman);
+    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager, CSigningManager& _sigman, CSigSharesManager& _shareman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CChainLocksHandler();
 
     void Start();

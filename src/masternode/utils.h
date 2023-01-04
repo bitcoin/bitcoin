@@ -6,11 +6,12 @@
 #define BITCOIN_MASTERNODE_UTILS_H
 
 class CConnman;
+class CMasternodeSync;
 
 class CMasternodeUtils
 {
 public:
-    static void DoMaintenance(CConnman &connman);
+    static void DoMaintenance(CConnman &connman, const CMasternodeSync& mn_sync);
 };
 
 #endif // BITCOIN_MASTERNODE_UTILS_H
