@@ -6,9 +6,8 @@
 
 export LC_ALL=C
 
-GIT_HEAD=$(git rev-parse HEAD)
 if [ -n "$CIRRUS_PR" ]; then
-  COMMIT_RANGE="${CIRRUS_BASE_SHA}..$GIT_HEAD"
+  COMMIT_RANGE="HEAD~..HEAD"
   echo
   git log --no-merges --oneline "$COMMIT_RANGE"
   echo

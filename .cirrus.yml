@@ -29,6 +29,7 @@ base_template: &BASE_TEMPLATE
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
+                               # Also, the merge commit is used to lint COMMIT_RANGE="HEAD~..HEAD"
 
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
