@@ -1267,7 +1267,6 @@ public:
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
 
     const CKeyingMaterial& GetEncryptionKey() const override;
-    CKeyingMaterial& GetEncryptionKeyMutable() override;
     bool HasEncryptionKeys() const override;
 
     // Temporary LegacyScriptPubKeyMan accessors and aliases.

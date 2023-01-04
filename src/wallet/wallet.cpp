@@ -4982,9 +4982,8 @@ bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly, b
             if (!m_spk_man->CheckDecryptionKey(vMasterKeyIn, accept_no_keys)) {
                 return false;
             }
-        } else {
-            vMasterKey = vMasterKeyIn;
         }
+        vMasterKey = vMasterKeyIn;
         fOnlyMixingAllowed = fForMixingOnly;
     }
     NotifyStatusChanged(this);
@@ -5012,11 +5011,6 @@ LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
 }
 
 const CKeyingMaterial& CWallet::GetEncryptionKey() const
-{
-    return vMasterKey;
-}
-
-CKeyingMaterial& CWallet::GetEncryptionKeyMutable()
 {
     return vMasterKey;
 }

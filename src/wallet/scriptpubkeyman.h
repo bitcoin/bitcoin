@@ -30,7 +30,6 @@ public:
     virtual bool CanSupportFeature(enum WalletFeature) const = 0;
     virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr, bool = false) = 0;
     virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
-    virtual CKeyingMaterial& GetEncryptionKeyMutable() = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked(bool fForMixing = false) const = 0;
 };
@@ -399,7 +398,7 @@ public:
      */
 
     bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(CHDChain& hdChainRet) const;
+    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
     bool SetHDChain(const CHDChain& chain);
     bool GetHDChain(CHDChain& hdChainRet) const;
     bool SetCryptedHDChain(const CHDChain& chain);
