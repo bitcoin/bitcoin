@@ -319,14 +319,14 @@ protected:
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* const minerPolicyEstimator;
 
-    uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
-    CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
-    uint64_t cachedInnerUsage GUARDED_BY(cs); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    uint64_t totalTxSize GUARDED_BY(cs){0};      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    CAmount m_total_fee GUARDED_BY(cs){0};       //!< sum of all mempool tx's fees (NOT modified fee)
+    uint64_t cachedInnerUsage GUARDED_BY(cs){0}; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs);
-    mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs);
-    mutable double rollingMinimumFeeRate GUARDED_BY(cs); //!< minimum fee to get into the pool, decreases exponentially
-    mutable Epoch m_epoch GUARDED_BY(cs);
+    mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs){GetTime()};
+    mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs){false};
+    mutable double rollingMinimumFeeRate GUARDED_BY(cs){0}; //!< minimum fee to get into the pool, decreases exponentially
+    mutable Epoch m_epoch GUARDED_BY(cs){};
 
     // In-memory counter for external mempool tracking purposes.
     // This number is incremented once every time a transaction
@@ -500,8 +500,6 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void clear();
-    void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
     void queryHashes(std::vector<uint256>& vtxid) const;
     bool isSpent(const COutPoint& outpoint) const;
