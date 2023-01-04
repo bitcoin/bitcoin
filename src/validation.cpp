@@ -64,6 +64,7 @@
 #include <numeric>
 #include <optional>
 #include <string>
+#include <utility>
 
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
@@ -867,11 +868,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         m_limits.descendant_size_vbytes += conflict->GetSizeWithDescendants();
     }
 
-    std::string errString;
-    if (!m_pool.CalculateMemPoolAncestors(*entry, ws.m_ancestors, m_limits, errString)) {
-        ws.m_ancestors.clear();
+    auto ancestors{m_pool.CalculateMemPoolAncestors(*entry, m_limits)};
+    if (!ancestors) {
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
-        std::string dummy_err_string;
         // Contracting/payment channels CPFP carve-out:
         // If the new transaction is relatively small (up to 40k weight)
         // and has at most one ancestor (ie ancestor limit of 2, including
@@ -889,13 +888,15 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             .descendant_count = m_limits.descendant_count + 1,
             .descendant_size_vbytes = m_limits.descendant_size_vbytes + EXTRA_DESCENDANT_TX_SIZE_LIMIT,
         };
-        if (ws.m_vsize > EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
-                !m_pool.CalculateMemPoolAncestors(*entry, ws.m_ancestors,
-                                                  cpfp_carve_out_limits,
-                                                  dummy_err_string)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
+        const auto error_message{util::ErrorString(ancestors).original};
+        if (ws.m_vsize > EXTRA_DESCENDANT_TX_SIZE_LIMIT) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", error_message);
         }
+        ancestors = m_pool.CalculateMemPoolAncestors(*entry, cpfp_carve_out_limits);
+        if (!ancestors) return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", error_message);
     }
+
+    ws.m_ancestors = *ancestors;
 
     // A transaction that spends outputs that would be replaced by it is invalid. Now
     // that we have the set of all ancestors we can detect this
@@ -1111,15 +1112,18 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
 
         // Re-calculate mempool ancestors to call addUnchecked(). They may have changed since the
         // last calculation done in PreChecks, since package ancestors have already been submitted.
-        std::string unused_err_string;
-        if(!m_pool.CalculateMemPoolAncestors(*ws.m_entry, ws.m_ancestors, m_limits, unused_err_string)) {
-            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
-            // Since PreChecks() and PackageMempoolChecks() both enforce limits, this should never fail.
-            Assume(false);
-            all_submitted = false;
-            package_state.Invalid(PackageValidationResult::PCKG_MEMPOOL_ERROR,
-                                  strprintf("BUG! Mempool ancestors or descendants were underestimated: %s",
-                                            ws.m_ptx->GetHash().ToString()));
+        {
+            auto ancestors{m_pool.CalculateMemPoolAncestors(*ws.m_entry, m_limits)};
+            if(!ancestors) {
+                results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
+                // Since PreChecks() and PackageMempoolChecks() both enforce limits, this should never fail.
+                Assume(false);
+                all_submitted = false;
+                package_state.Invalid(PackageValidationResult::PCKG_MEMPOOL_ERROR,
+                                    strprintf("BUG! Mempool ancestors or descendants were underestimated: %s",
+                                                ws.m_ptx->GetHash().ToString()));
+            }
+            ws.m_ancestors = std::move(ancestors).value_or(ws.m_ancestors);
         }
         // If we call LimitMempoolSize() for each individual Finalize(), the mempool will not take
         // the transaction's descendant feerate into account because it hasn't seen them yet. Also,

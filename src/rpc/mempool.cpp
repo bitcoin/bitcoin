@@ -23,6 +23,8 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 
+#include <utility>
+
 using kernel::DumpMempool;
 
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
@@ -449,19 +451,17 @@ static RPCHelpMan getmempoolancestors()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    CTxMemPool::setEntries setAncestors;
-    std::string dummy;
-    mempool.CalculateMemPoolAncestors(*it, setAncestors, CTxMemPool::Limits::NoLimits(), dummy, false);
+    auto ancestors{mempool.AssumeCalculateMemPoolAncestors(__func__, *it, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : ancestors) {
             o.push_back(ancestorIt->GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : setAncestors) {
+        for (CTxMemPool::txiter ancestorIt : ancestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);

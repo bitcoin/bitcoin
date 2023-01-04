@@ -49,7 +49,7 @@ class AddrReceiver(P2PInterface):
     def on_addr(self, message):
         for addr in message.addrs:
             self.num_ipv4_received += 1
-            if(self.test_addr_contents):
+            if self.test_addr_contents:
                 # relay_tests checks the content of the addr messages match
                 # expectations based on the message creation in setup_addr_msg
                 assert_equal(addr.nServices, 9)

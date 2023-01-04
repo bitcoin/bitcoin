@@ -303,12 +303,8 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), self.nodes[0].loadwallet, 'wallets')
 
         # Fail to load duplicate wallets
-        path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "w1", "wallet.dat")
-        if self.options.descriptors:
-            assert_raises_rpc_error(-4, f"Wallet file verification failed. SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?", self.nodes[0].loadwallet, wallet_names[0])
-        else:
-            assert_raises_rpc_error(-35, "Wallet file verification failed. Refusing to load database. Data file '{}' is already loaded.".format(path), self.nodes[0].loadwallet, wallet_names[0])
-
+        assert_raises_rpc_error(-35, "Wallet \"w1\" is already loaded.", self.nodes[0].loadwallet, wallet_names[0])
+        if not self.options.descriptors:
             # This tests the default wallet that BDB makes, so SQLite wallet doesn't need to test this
             # Fail to load duplicate wallets by different ways (directory and filepath)
             path = os.path.join(self.options.tmpdir, "node0", "regtest", "wallets", "wallet.dat")

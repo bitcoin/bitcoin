@@ -279,11 +279,11 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Don't broadcast...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
-        assert(res["hex"])
+        assert res["hex"]
 
         self.log.info("Return PSBT...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, psbt=True)
-        assert(res["psbt"])
+        assert res["psbt"]
 
         self.log.info("Create transaction that spends to address, but don't broadcast...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
@@ -412,10 +412,12 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
         utxo1 = w0.listunspent()[0]
         assert_equal(utxo1["amount"], 50)
+        ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
+                                       "Please allow other inputs to be automatically selected or include more coins manually"
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1],
-                       expect_error=(-4, "Insufficient funds"))
+                       expect_error=(-4, ERR_NOT_ENOUGH_PRESET_INPUTS))
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1], add_inputs=False,
-                       expect_error=(-4, "Insufficient funds"))
+                       expect_error=(-4, ERR_NOT_ENOUGH_PRESET_INPUTS))
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1], add_inputs=True, add_to_wallet=False)
         assert res["complete"]
 

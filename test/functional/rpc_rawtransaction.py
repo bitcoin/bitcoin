@@ -216,13 +216,13 @@ class RawTransactionsTest(BitcoinTestFramework):
             if missing_fields:
                 raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
 
-            assert(len(gottx['vin']) > 0)
+            assert len(gottx['vin']) > 0
             if v == 1:
-                assert('fee' not in gottx)
-                assert('prevout' not in gottx['vin'][0])
+                assert 'fee' not in gottx
+                assert 'prevout' not in gottx['vin'][0]
             if v == 2:
-                assert(isinstance(gottx['fee'], Decimal))
-                assert('prevout' in gottx['vin'][0])
+                assert isinstance(gottx['fee'], Decimal)
+                assert 'prevout' in gottx['vin'][0]
                 prevout = gottx['vin'][0]['prevout']
                 script_pub_key = prevout['scriptPubKey']
 
@@ -235,11 +235,11 @@ class RawTransactionsTest(BitcoinTestFramework):
                     raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
 
         # check verbosity 2 without blockhash but with txindex
-        assert('fee' in self.nodes[0].getrawtransaction(txid=tx, verbosity=2))
+        assert 'fee' in self.nodes[0].getrawtransaction(txid=tx, verbosity=2)
         # check that coinbase has no fee or does not throw any errors for verbosity 2
         coin_base = self.nodes[1].getblock(block1)['tx'][0]
         gottx = self.nodes[1].getrawtransaction(txid=coin_base, verbosity=2, blockhash=block1)
-        assert('fee' not in gottx)
+        assert 'fee' not in gottx
 
     def createrawtransaction_tests(self):
         self.log.info("Test createrawtransaction")
