@@ -12,6 +12,7 @@ from os import path as os_path, remove
 from pathlib import Path
 from shutil import which
 from subprocess import run
+from sys import executable
 
 exit_code = 0
 mod_path = Path(__file__).parent
@@ -28,7 +29,7 @@ if which("parallel") and which("column"):
         remove(logfile)
 else:
     for lint in lints:
-        result = run([lint])
+        result = run([executable, lint])
         if result.returncode != 0:
             print(f"^---- failure generated from {lint.split('/')[-1]}")
             exit_code |= result.returncode
