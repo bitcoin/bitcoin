@@ -63,7 +63,7 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
@@ -78,7 +78,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
         curr_available_value += utxo.GetSelectionAmount();
     }
     if (curr_available_value < selection_target) {
-        return std::nullopt;
+        return util::Error();
     }
 
     // Sort the utxo_pool
@@ -152,7 +152,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 
     // Check for solution
     if (best_selection.empty()) {
-        return std::nullopt;
+        return util::Error();
     }
 
     // Set output set
@@ -165,7 +165,7 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     return result;
 }
 
-std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
+util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, FastRandomContext& rng)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
 
@@ -190,7 +190,7 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
             return result;
         }
     }
-    return std::nullopt;
+    return util::Error();
 }
 
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
@@ -252,7 +252,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
     }
 }
 
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
                                               CAmount change_target, FastRandomContext& rng)
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
@@ -286,7 +286,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     }
 
     if (nTotalLower < nTargetValue) {
-        if (!lowest_larger) return std::nullopt;
+        if (!lowest_larger) return util::Error();
         result.AddInput(*lowest_larger);
         return result;
     }
