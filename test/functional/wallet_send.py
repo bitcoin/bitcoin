@@ -14,7 +14,7 @@ from test_framework.messages import (
     ser_compact_size,
     WITNESS_SCALE_FACTOR,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -24,7 +24,7 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import bytes_to_wif
 
-class WalletSendTest(BitcoinTestFramework):
+class WalletSendTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -355,7 +355,7 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
                 expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
-        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+        for target, mode in product([-1, 0], ["brt/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
         for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
@@ -421,7 +421,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Manual change address and position...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, change_address="not an address",
-                       expect_error=(-5, "Change address must be a valid bitcoin address"))
+                       expect_error=(-5, "Change address must be a valid britanniacoin address"))
         change_address = w0.getnewaddress()
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address)
         assert res["complete"]

@@ -12,11 +12,11 @@ from test_framework.messages import (
     from_hex,
 )
 from test_framework.muhash import MuHash3072
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
-class UTXOSetHashTest(BitcoinTestFramework):
+class UTXOSetHashTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

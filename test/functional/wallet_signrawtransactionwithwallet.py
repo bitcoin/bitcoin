@@ -10,7 +10,7 @@ from test_framework.blocktools import (
 from test_framework.address import (
     script_to_p2wsh,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -33,7 +33,7 @@ from decimal import (
     getcontext,
 )
 
-class SignRawTransactionWithWalletTest(BitcoinTestFramework):
+class SignRawTransactionWithWalletTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

@@ -9,11 +9,11 @@ Previous releases are required by this test, see test/README.md.
 
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 
-class UnsupportedUtxoDbTest(BitcoinTestFramework):
+class UnsupportedUtxoDbTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

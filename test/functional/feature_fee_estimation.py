@@ -11,7 +11,7 @@ import random
 from test_framework.messages import (
     COIN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -126,7 +126,7 @@ def make_tx(wallet, utxo, feerate):
     )
 
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # Force fSendTrickle to true (via whitelist.noban)

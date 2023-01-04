@@ -8,7 +8,7 @@ from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
@@ -19,7 +19,7 @@ from test_framework.wallet_util import bytes_to_wif
 
 from decimal import Decimal
 
-class ListSinceBlockTest(BitcoinTestFramework):
+class ListSinceBlockTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

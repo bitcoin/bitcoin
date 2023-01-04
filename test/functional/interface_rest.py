@@ -18,7 +18,7 @@ from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -49,7 +49,7 @@ def filter_output_indices_by_value(vouts, value):
         if vout['value'] == value:
             yield vout['n']
 
-class RESTTest (BitcoinTestFramework):
+class RESTTest (BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-rest", "-blockfilterindex=1"], []]

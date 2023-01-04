@@ -62,11 +62,11 @@
         <translation type="unfinished">接收地址</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">这是你的比特币发币地址。发送前请确认发送数量和接收地址</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">这是你的比特币接收地址。点击接收选项卡中“创建新的接收地址”按钮来创建新的地址。
 签名只能使用“传统”类型的地址。</translation>
@@ -155,7 +155,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">确认钱包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">注意:如果你加密了钱包又忘记了密码，你将会丢失所有的比特币！</translation>
     </message>
     <message>
@@ -235,7 +235,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -243,7 +243,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

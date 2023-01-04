@@ -66,8 +66,8 @@
         <translation type="unfinished">អាសយដ្ឋានសម្រាប់ទទួល</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">ទាំងនេះ​គឺជាអាសយដ្ឋាន Bitcoin របស់អ្នកសម្រាប់ធ្វើការផ្ញើការបង់ប្រាក់។ តែងតែពិនិត្យមើលចំនួនប្រាក់ និងអាសយដ្ឋានដែលទទួល មុនពេលផ្ញើប្រាក់។</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">ទាំងនេះ​គឺជាអាសយដ្ឋាន BritanniaCoin របស់អ្នកសម្រាប់ធ្វើការផ្ញើការបង់ប្រាក់។ តែងតែពិនិត្យមើលចំនួនប្រាក់ និងអាសយដ្ឋានដែលទទួល មុនពេលផ្ញើប្រាក់។</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -148,8 +148,8 @@
         <translation type="unfinished">បញ្ជាក់ការអ៊ិនគ្រីបកាបូបចល័ត</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">ការព្រមាន៖ ប្រសិនបើអ្នកអ៊ិនគ្រីបកាបូបចល័តរបស់អ្នក ហើយអ្នកភ្លេចបាត់ឃ្លាសម្ងាត់ នោះអ្នកនិង &lt;b&gt;បាត់បង់ BITCOINS របស់អ្នកទាំងអស់&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">ការព្រមាន៖ ប្រសិនបើអ្នកអ៊ិនគ្រីបកាបូបចល័តរបស់អ្នក ហើយអ្នកភ្លេចបាត់ឃ្លាសម្ងាត់ នោះអ្នកនិង &lt;b&gt;បាត់បង់ BRITANNIACOINS របស់អ្នកទាំងអស់&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -273,7 +273,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished">-maxtxfee មានតំម្លៃខ្ពស់ពេក។​ តំម្លៃនេះ អាចគួរត្រូវបានបង់សម្រាប់មួយប្រត្តិបត្តិការ។</translation>
@@ -388,7 +388,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">ទិដ្ឋភាពទូទៅ</translation>
@@ -443,8 +443,8 @@
         <translation type="unfinished">ប្រូកស៊ី ត្រូវបាន &lt;b&gt;អនុញ្ញាត&lt;/b&gt;៖ %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន Bitcoin មួយ</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន BritanniaCoin មួយ</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -467,11 +467,11 @@
         <translation type="unfinished">បំលែងលេខសំម្ងាត់សម្រាប់កាបូបអេឡិចត្រូនិច របស់អ្នកឲ្យទៅជាភាសាកុំព្យូទ័រ </translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">ចុះហត្ថលេខាលើសារ អាសយដ្ឋានប៊ីតខញរបស់អ្នក ដើម្បីបញ្ចាក់ថាអ្នកជាម្ចាស់</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
         <translation type="unfinished">ធ្វើការបញ្ចាក់សារ ដើម្បីធានាថាសារទាំំងនោះបានចុះហត្ថលេខា ជាមួយអាសយដ្ខានប៊ីតខញ</translation>
     </message>
     <message>
@@ -491,7 +491,7 @@
         <translation type="unfinished">ធូបារថេប</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
         <translation type="unfinished">សំណើរទូរទាត់​(បង្កើតកូដ QR និង ប៊ីតខញ: URLs)</translation>
     </message>
     <message>
@@ -534,11 +534,11 @@
         <translation type="unfinished">ទាន់ពេល និង ទាន់សម័យ</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
+        <source>Load Partially Signed BritanniaCoin Transaction</source>
         <translation type="unfinished">បង្ហាញប្រត្តិបត្តិការប៊ីតខញដែលបានចុះហត្ថលេខាដោយផ្នែក</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
         <translation type="unfinished">បង្ហាញប្រត្តិបត្តិការប៊ីតខញដែលបានចុះហត្ថលេខាដោយផ្នែកពីក្ដារតម្រៀប</translation>
     </message>
     <message>
@@ -546,7 +546,7 @@
         <translation type="unfinished">&amp;អាសយដ្ឋានទទួល</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
+        <source>Open a britanniacoin: URI</source>
         <translation type="unfinished">បើកប៊ីតខញមួយៈ URl</translation>
     </message>
     <message>
@@ -574,7 +574,7 @@
         <translation type="unfinished">&amp;វិនដូ</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -808,7 +808,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">ប៊ីតខញ</translation>
     </message>
     <message numerus="yes">
@@ -857,11 +857,11 @@
         <translation type="unfinished">ទម្រង់</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
         <translation type="unfinished">ប្រត្តិបត្តិការថ្មីៗនេះប្រហែលជាមិនអាចមើលឃើញ ហេតុដូច្នេះសមតុល្យនៅក្នងកាបូបអេឡិចត្រូនិចរបស់អ្នកប្រហែលជាមិនត្រឹមត្រូវ។ ព័ត៌មានត្រឹមត្រូវនៅពេលដែលកាបូបអេឡិចត្រូនិចរបស់អ្នកបានធ្វើសមកាលកម្មជាមួយបណ្តាញប៊ឺតខញ  សូមពិនិត្យព័ត៌មានលំម្អិតខាងក្រោម។</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation type="unfinished">ព្យាយាមក្នុងការចំណាយប៊ីតខញដែលទទួលរងឥទ្ឋិពលពីប្រត្តិបត្តិការមិនទាន់ធ្វើការបង្ហាញ នឹងមិនត្រូវទទួលស្គាល់ពីបណ្តាញ។</translation>
     </message>
     <message>
@@ -896,7 +896,7 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open bitcoin URI</source>
+        <source>Open britanniacoin URI</source>
         <translation type="unfinished">បើកប៊ីតខញ​URl</translation>
     </message>
     <message>
@@ -944,7 +944,7 @@
         <translation type="unfinished">អនុញ្ញាតឲ្យមានការតភ្ជាប់ដែលចូលមក</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
         <translation type="unfinished">ភ្ជាប់ទៅកាន់បណ្តាញប៊ឺតខញតាមរយៈ​ SOCKS5 proxy។</translation>
     </message>
     <message>
@@ -997,7 +997,7 @@
         <translation type="unfinished">ទម្រង់</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">ព័ត៏មានបានបង្ហាញអាចហួសសពុលភាព។ កាបូបអេឡិចត្រូនិចរបស់អ្នកធ្វើសមកាលកម្មជាមួយនឹងបណ្តាញប៊ីតខញដោយស្វ័យប្រវត្ត បន្ទាប់ពីមានការតភ្ជាប់ ប៉ុន្តែដំណើរការនេះមិនទាន់បានបញ្ចប់នៅឡើយ។</translation>
     </message>
     <message>
@@ -1345,7 +1345,7 @@
         <translation type="unfinished">&amp;សារ</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
         <translation type="unfinished">សារជាជម្រើសមួយក្នុងការភ្ជាប់ទៅនឹងសំណើរទូរទាត់ប្រាក់ ដែលនឹងត្រូវបង្ហាញនៅពេលដែលសំណើរត្រូវបានបើក។ កំណត់ចំណាំៈ សារនេះនឹងមិនត្រូវបានបញ្ចូនជាមួយការទូរទាត់ប្រាក់នៅលើបណ្តាញប៊ីតខញ។</translation>
     </message>
     <message>
@@ -1629,7 +1629,7 @@
         <translation type="unfinished">ជ្រើសរើសអាសយដ្ឋានដែលបានប្រើពីមុន</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The BritanniaCoin address to send the payment to</source>
         <translation type="unfinished">អាសយដ្ឋានប៊ីតខញក្នុងការបញ្ចូនការទូរទាត់ប្រាក់ទៅកាន់</translation>
     </message>
     <message>
@@ -1687,7 +1687,7 @@
         <translation type="unfinished">&amp;ចុះហត្ថលេខា សារ</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The BritanniaCoin address to sign the message with</source>
         <translation type="unfinished">អាសយដ្ឋានប៊ីតខញនេះ ចុះហត្ថលេខានៅលើសារ</translation>
     </message>
     <message>
@@ -1711,7 +1711,7 @@
         <translation type="unfinished">ចម្លងហត្ថលេខដែលមានបច្ចុប្បន្នទៅកាន់ប្រព័ន្ធក្តារតមៀប</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">ចុះហត្ថលេខាលើសារនេះដើម្បីបង្ហាញថាលោកអ្នកជាម្ចាស់អាសយដ្ឋានប៊ីតខញ</translation>
     </message>
     <message>
@@ -1739,7 +1739,7 @@
         <translation type="unfinished">ហត្ថលេខាត្រូវបានផ្តល់នៅពេលដែលសារត្រូវបានចុះហត្ថលេខា</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
         <translation type="unfinished">ផ្ទៀងផ្ទាត់សារដើម្បីធានាថាវាត្រូវបានចុះហត្ថលេខាជាមួយនឹងអាសយដ្ឋានប៊ីតខញជាក់លាក់។</translation>
     </message>
     <message>

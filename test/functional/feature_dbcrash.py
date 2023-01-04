@@ -34,7 +34,7 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
     COIN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -44,7 +44,7 @@ from test_framework.wallet import (
 )
 
 
-class ChainstateWriteCrashTest(BitcoinTestFramework):
+class ChainstateWriteCrashTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.rpc_timeout = 480

@@ -67,7 +67,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Transactions</source>
         <translation type="unfinished">&amp;Транзакциялар</translation>
@@ -108,7 +108,7 @@
         <translation type="unfinished">&amp;Терезе</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

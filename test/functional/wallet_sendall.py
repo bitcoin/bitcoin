@@ -6,7 +6,7 @@
 
 from decimal import Decimal, getcontext
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -24,7 +24,7 @@ def cleanup(func):
             assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
     return wrapper
 
-class SendallTest(BitcoinTestFramework):
+class SendallTest(BritanniaCoinTestFramework):
     # Setup and helpers
     def add_options(self, parser):
         self.add_wallet_options(parser)

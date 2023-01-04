@@ -20,7 +20,7 @@ from test_framework.script import (
     CScript,
     OP_NOP,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
@@ -34,7 +34,7 @@ from test_framework.wallet_util import (
 )
 
 
-class ImportMultiTest(BitcoinTestFramework):
+class ImportMultiTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, descriptors=False)
 

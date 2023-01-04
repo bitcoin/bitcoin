@@ -858,7 +858,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
                   </widget>
                  </item>
                  <item>
-                  <widget class="BitcoinAmountField" name="customFee"/>
+                  <widget class="BritanniaCoinAmountField" name="customFee"/>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_6">
@@ -883,7 +883,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
                     <bool>true</bool>
                    </property>
                    <property name="toolTip">
-                    <string>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
+                    <string>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</string>
                    </property>
                    <property name="text">
                     <string>A too low fee might result in a never confirming transaction (read the tooltip)</string>
@@ -1120,7 +1120,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <string>S&amp;end</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../britanniacoin.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
        <property name="autoDefault">
@@ -1146,7 +1146,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <string>Clear &amp;All</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../britanniacoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -1163,7 +1163,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../britanniacoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -1234,14 +1234,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>BritanniaCoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>qt/bitcoinamountfield.h</header>
+   <header>qt/britanniacoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../britanniacoin.qrc"/>
  </resources>
  <connections/>
  <buttongroups>

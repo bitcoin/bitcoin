@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BITCOIN_H
-#define BITCOIN_QT_BITCOIN_H
+#ifndef BRITANNIACOIN_QT_BRITANNIACOIN_H
+#define BRITANNIACOIN_QT_BRITANNIACOIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/britanniacoin-config.h>
 #endif
 
 #include <interfaces/node.h>
@@ -18,7 +18,7 @@
 
 #include <QApplication>
 
-class BitcoinGUI;
+class BritanniaCoinGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -33,12 +33,12 @@ class Init;
 
 
 /** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
+class BritanniaCoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication();
-    ~BitcoinApplication();
+    explicit BritanniaCoinApplication();
+    ~BritanniaCoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -89,7 +89,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
-    void windowShown(BitcoinGUI* window);
+    void windowShown(BritanniaCoinGUI* window);
 
 protected:
     bool event(QEvent* e) override;
@@ -98,7 +98,7 @@ private:
     std::optional<InitExecutor> m_executor;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-    BitcoinGUI *window;
+    BritanniaCoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};

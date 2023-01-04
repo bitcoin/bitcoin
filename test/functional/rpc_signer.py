@@ -10,14 +10,14 @@ See also wallet_signer.py for tests that require wallet context.
 import os
 import platform
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
 
-class RPCSignerTest(BitcoinTestFramework):
+class RPCSignerTest(BritanniaCoinTestFramework):
     def mock_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
         if platform.system() == "Windows":
@@ -51,7 +51,7 @@ class RPCSignerTest(BitcoinTestFramework):
     def run_test(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")
 
-        assert_raises_rpc_error(-1, 'Error: restart bitcoind with -signer=<cmd>',
+        assert_raises_rpc_error(-1, 'Error: restart britanniacoind with -signer=<cmd>',
             self.nodes[0].enumeratesigners
         )
 

@@ -50,7 +50,7 @@ from test_framework.script import (
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     softfork_active,
@@ -91,7 +91,7 @@ def all_rlt_txs(txs):
 CSV_ACTIVATION_HEIGHT = 432
 
 
-class BIP68_112_113Test(BitcoinTestFramework):
+class BIP68_112_113Test(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

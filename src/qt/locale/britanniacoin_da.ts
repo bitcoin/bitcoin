@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Vælg adresse at sende bitcoins til</translation>
+        <translation type="unfinished">Vælg adresse at sende britanniacoins til</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Vælg adresse at modtage bitcoins med</translation>
+        <translation type="unfinished">Vælg adresse at modtage britanniacoins med</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -66,13 +66,13 @@
         <translation type="unfinished">Modtagelsesadresser</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Disse er dine Bitcoin-adresser til afsendelse af betalinger. Tjek altid beløb og modtagelsesadresse, inden du sender bitcoins.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Disse er dine BritanniaCoin-adresser til afsendelse af betalinger. Tjek altid beløb og modtagelsesadresse, inden du sender britanniacoins.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Disse er dine Bitcoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser.</translation>
+        <translation type="unfinished">Disse er dine BritanniaCoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -163,8 +163,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bekræft tegnebogskryptering</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE BITCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE BRITANNIACOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -183,8 +183,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Indtast den gamle adgangskode og en ny adgangskode til tegnebogen.</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine britanniacoins mod at blive stjålet af malware på din computer.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -243,7 +243,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">Der skete en fatal fejl. %1 kan ikke længere fortsætte sikkert og vil afslutte.</translation>
@@ -276,8 +276,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Beløb</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Indtast en Bitcoin-adresse (fx %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">Indtast en BritanniaCoin-adresse (fx %1)</translation>
     </message>
     <message>
         <source>Internal</source>
@@ -359,14 +359,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">Udviklerne af %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s beskadiget. Prøv at bruge pung-værktøjet bitcoin-wallet til, at bjærge eller gendanne en sikkerhedskopi.</translation>
+        <source>%s corrupt. Try using the wallet tool britanniacoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s beskadiget. Prøv at bruge pung-værktøjet britanniacoin-wallet til, at bjærge eller gendanne en sikkerhedskopi.</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -834,7 +834,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Oversigt</translation>
@@ -897,8 +897,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Proxy er &lt;b&gt;aktiveret&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Send bitcoins til en Bitcoin-adresse</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Send britanniacoins til en BritanniaCoin-adresse</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -929,16 +929,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Sikkerhedskopiér Tegnebog</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Signér beskeder med dine Bitcoin-adresser for at bevise, at de tilhører dig</translation>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
+        <translation type="unfinished">Signér beskeder med dine BritanniaCoin-adresser for at bevise, at de tilhører dig</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">&amp;Verificér besked...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verificér beskeder for at sikre, at de er signeret med de angivne Bitcoin-adresser</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Verificér beskeder for at sikre, at de er signeret med de angivne BritanniaCoin-adresser</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -977,8 +977,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Forbinder til knuder...</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Anmod om betalinger (genererer QR-koder og “bitcoin:”-URI'er)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Anmod om betalinger (genererer QR-koder og “britanniacoin:”-URI'er)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -1028,12 +1028,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Opdateret</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Indlæs Partvist Signeret Bitcoin-Transaktion</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction</source>
+        <translation type="unfinished">Indlæs Partvist Signeret BritanniaCoin-Transaktion</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Indlæs Partvist Signeret Bitcoin-Transaktion fra udklipsholder</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
+        <translation type="unfinished">Indlæs Partvist Signeret BritanniaCoin-Transaktion fra udklipsholder</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -1052,8 +1052,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Modtageradresser</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Åbn en bitcoin:-URI</translation>
+        <source>Open a britanniacoin: URI</source>
+        <translation type="unfinished">Åbn en britanniacoin:-URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1072,8 +1072,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Luk alle tegnebøgerne </translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Vis %1 hjælpebesked for at få en liste over mulige tilvalg for Bitcoin kommandolinje</translation>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
+        <translation type="unfinished">Vis %1 hjælpebesked for at få en liste over mulige tilvalg for BritanniaCoin kommandolinje</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -1104,7 +1104,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1-klient</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1493,8 +1493,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Redigér afsendelsesadresse</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Den indtastede adresse “%1” er ikke en gyldig Bitcoin-adresse.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">Den indtastede adresse “%1” er ikke en gyldig BritanniaCoin-adresse.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1555,8 +1555,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 vil downloade og gemme en kopi af Bitcoin-blokkæden.</translation>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
+        <translation type="unfinished">%1 vil downloade og gemme en kopi af BritanniaCoin-blokkæden.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1632,12 +1632,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Formular</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Nylige transaktioner er måske ikke synlige endnu, og derfor kan din tegnebogs saldo være ukorrekt. Denne information vil være korrekt, når din tegnebog er færdig med at synkronisere med bitcoin-netværket, som detaljerne herunder viser.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
+        <translation type="unfinished">Nylige transaktioner er måske ikke synlige endnu, og derfor kan din tegnebogs saldo være ukorrekt. Denne information vil være korrekt, når din tegnebog er færdig med at synkronisere med britanniacoin-netværket, som detaljerne herunder viser.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Forsøg på at bruge bitcoin, som er indeholdt i endnu-ikke-viste transaktioner, accepteres ikke af netværket.</translation>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">Forsøg på at bruge britanniacoin, som er indeholdt i endnu-ikke-viste transaktioner, accepteres ikke af netværket.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1679,8 +1679,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open bitcoin URI</source>
-        <translation type="unfinished">Åbn bitcoin-URI</translation>
+        <source>Open britanniacoin URI</source>
+        <translation type="unfinished">Åbn britanniacoin-URI</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1779,8 +1779,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Brug ubekræftede byttepenge</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Åbn automatisk Bitcoin-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Åbn automatisk BritanniaCoin-klientens port på routeren. Dette virker kun, når din router understøtter UPnP, og UPnP er aktiveret.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1795,8 +1795,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Tillad &amp;indkommende forbindelser</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Forbind til Bitcoin-netværket gennem en SOCKS5-proxy.</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Forbind til BritanniaCoin-netværket gennem en SOCKS5-proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1848,15 +1848,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished">Vælg standard for underopdeling af enhed, som skal vises i brugergrænsefladen og ved afsendelse af bitcoins.</translation>
+        <translation type="unfinished">Vælg standard for underopdeling af enhed, som skal vises i brugergrænsefladen og ved afsendelse af britanniacoins.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Hvorvidt egenskaber for coin-styring skal vises eller ej.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Opret forbindelse til Bitcoin-netværk igennem en separat SOCKS5 proxy til Tor-onion-tjenester.</translation>
+        <source>Connect to the BritanniaCoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Opret forbindelse til BritanniaCoin-netværk igennem en separat SOCKS5 proxy til Tor-onion-tjenester.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1932,8 +1932,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Formular</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Den viste information kan være forældet. Din tegnebog synkroniserer automatisk med Bitcoin-netværket, når en forbindelse etableres, men denne proces er ikke gennemført endnu.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Den viste information kan være forældet. Din tegnebog synkroniserer automatisk med BritanniaCoin-netværket, når en forbindelse etableres, men denne proces er ikke gennemført endnu.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -2122,20 +2122,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Fejl i betalingsanmodning</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Kan ikke starte bitcoin: click-to-pay-håndtering</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">Kan ikke starte britanniacoin: click-to-pay-håndtering</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">URI-håndtering</translation>
     </message>
     <message>
-        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">'bitcoin://' er ikke et gyldigt URI. Brug 'bitcoin:' istedet.</translation>
+        <source>'britanniacoin://' is not a valid URI. Use 'britanniacoin:' instead.</source>
+        <translation type="unfinished">'britanniacoin://' er ikke et gyldigt URI. Brug 'britanniacoin:' istedet.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI kan ikke tolkes! Dette kan skyldes en ugyldig Bitcoin-adresse eller forkert udformede URL-parametre.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI kan ikke tolkes! Dette kan skyldes en ugyldig BritanniaCoin-adresse eller forkert udformede URL-parametre.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2512,8 +2512,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Besked:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">En valgfri besked, der føjes til betalingsanmodningen, og som vil vises, når anmodningen åbnes. Bemærk: Beskeden vil ikke sendes sammen med betalingen over Bitcoin-netværket.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
+        <translation type="unfinished">En valgfri besked, der føjes til betalingsanmodningen, og som vil vises, når anmodningen åbnes. Bemærk: Beskeden vil ikke sendes sammen med betalingen over BritanniaCoin-netværket.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2662,7 +2662,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Send bitcoins</translation>
+        <translation type="unfinished">Send britanniacoins</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2765,8 +2765,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Skjul indstillinger for transaktionsgebyr</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation type="unfinished">På tidspunkter, hvor der er færre transaktioner, end der er plads til i nye blokke, kan minere og videresendende knuder gennemtvinge et minimumsgebyr. Du kan vælge kun at betale dette minimumsgebyr, men vær opmærksom på, at det kan resultere i en transaktion, der aldrig bliver bekræftet, hvis mængden af nye bitcoin-transaktioner stiger til mere, end hvad netværket kan behandle ad gangen.</translation>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
+        <translation type="unfinished">På tidspunkter, hvor der er færre transaktioner, end der er plads til i nye blokke, kan minere og videresendende knuder gennemtvinge et minimumsgebyr. Du kan vælge kun at betale dette minimumsgebyr, men vær opmærksom på, at det kan resultere i en transaktion, der aldrig bliver bekræftet, hvis mængden af nye britanniacoin-transaktioner stiger til mere, end hvad netværket kan behandle ad gangen.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -2865,9 +2865,9 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Du kan øge gebyret senere (signalerer erstat-med-gebyr, BIP-125).</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
-        <translation type="unfinished">Gennemse venligst dit transaktionsforslag. Dette vil producere en Partvist Signeret Bitcoin Transaktion (PSBT), som du kan gemme eller kopiere, og så signere med f.eks. en offline %1 pung, eller en PSBT-kompatibel maskinelpung.</translation>
+        <translation type="unfinished">Gennemse venligst dit transaktionsforslag. Dette vil producere en Partvist Signeret BritanniaCoin Transaktion (PSBT), som du kan gemme eller kopiere, og så signere med f.eks. en offline %1 pung, eller en PSBT-kompatibel maskinelpung.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2888,7 +2888,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation type="unfinished">Bekræft afsendelse af bitcoins</translation>
+        <translation type="unfinished">Bekræft afsendelse af britanniacoins</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -2934,8 +2934,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Advarsel: Ugyldig Bitcoin-adresse</translation>
+        <source>Warning: Invalid BritanniaCoin address</source>
+        <translation type="unfinished">Advarsel: Ugyldig BritanniaCoin-adresse</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2973,8 +2973,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Vælg tidligere brugt adresse</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Bitcoin-adresse, som betalingen skal sendes til</translation>
+        <source>The BritanniaCoin address to send the payment to</source>
+        <translation type="unfinished">BritanniaCoin-adresse, som betalingen skal sendes til</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2989,8 +2989,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Beløbet der skal afsendes i den valgte enhed</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Gebyret vil blive trukket fra det sendte beløb. Modtageren vil modtage færre bitcoin, end du indtaster i beløbfeltet. Hvis flere modtagere vælges, vil gebyret deles ligeligt.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation type="unfinished">Gebyret vil blive trukket fra det sendte beløb. Modtageren vil modtage færre britanniacoin, end du indtaster i beløbfeltet. Hvis flere modtagere vælges, vil gebyret deles ligeligt.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -3017,8 +3017,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Indtast et mærkat for denne adresse for at føje den til listen over brugte adresser</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">En besked, som blev føjet til “bitcoin:”-URI'en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over Bitcoin-netværket.</translation>
+        <source>A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
+        <translation type="unfinished">En besked, som blev føjet til “britanniacoin:”-URI'en, som vil gemmes med transaktionen til din reference. Bemærk: Denne besked vil ikke blive sendt over BritanniaCoin-netværket.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -3047,12 +3047,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Singér besked</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Du kan signere beskeder/aftaler med dine adresser for at bevise, at du kan modtage bitcoin, der bliver sendt til adresserne. Vær forsigtig med ikke at signere noget vagt eller tilfældigt, da eventuelle phishing-angreb kan snyde dig til at overlade din identitet til dem. Signér kun fuldt ud detaljerede udsagn, som du er enig i.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive britanniacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Du kan signere beskeder/aftaler med dine adresser for at bevise, at du kan modtage britanniacoin, der bliver sendt til adresserne. Vær forsigtig med ikke at signere noget vagt eller tilfældigt, da eventuelle phishing-angreb kan snyde dig til at overlade din identitet til dem. Signér kun fuldt ud detaljerede udsagn, som du er enig i.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Bitcoin-adresse, som beskeden skal signeres med</translation>
+        <source>The BritanniaCoin address to sign the message with</source>
+        <translation type="unfinished">BritanniaCoin-adresse, som beskeden skal signeres med</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3075,8 +3075,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopiér den nuværende signatur til systemets udklipsholder</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Signér denne besked for at bevise, at Bitcoin-adressen tilhører dig</translation>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
+        <translation type="unfinished">Signér denne besked for at bevise, at BritanniaCoin-adressen tilhører dig</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3099,8 +3099,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Indtast modtagerens adresse, besked (vær sikker på at kopiere linjeskift, mellemrum, tabuleringer, etc. præcist) og signatur herunder for at verificere beskeden. Vær forsigtig med ikke at læse noget ud fra signaturen, som ikke står i selve beskeden, for at undgå at blive snydt af et eventuelt man-in-the-middle-angreb. Bemærk, at dette kun beviser, at den signerende person kan modtage med adressen; det kan ikke bevise hvem der har sendt en given transaktion!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Bitcoin-adressen, som beskeden blev signeret med</translation>
+        <source>The BritanniaCoin address the message was signed with</source>
+        <translation type="unfinished">BritanniaCoin-adressen, som beskeden blev signeret med</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -3111,8 +3111,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Signaturen som blev givet da meddelelsen blev signeret</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Verificér beskeden for at sikre, at den er signeret med den angivne Bitcoin-adresse</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Verificér beskeden for at sikre, at den er signeret med den angivne BritanniaCoin-adresse</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3321,7 +3321,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished">Minede bitcoins skal modne %1 blokke, før de kan bruges. Da du genererede denne blok, blev den transmitteret til netværket for at blive føjet til blokkæden. Hvis det ikke lykkes at få den i kæden, vil dens tilstand ændres til “ikke accepteret”, og den vil ikke kunne bruges. Dette kan ske nu og da, hvis en anden knude udvinder en blok inden for nogle få sekunder fra din.</translation>
+        <translation type="unfinished">Minede britanniacoins skal modne %1 blokke, før de kan bruges. Da du genererede denne blok, blev den transmitteret til netværket for at blive føjet til blokkæden. Hvis det ikke lykkes at få den i kæden, vil dens tilstand ændres til “ikke accepteret”, og den vil ikke kunne bruges. Dette kan ske nu og da, hvis en anden knude udvinder en blok inden for nogle få sekunder fra din.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3605,7 +3605,7 @@ Gå til Fil &gt; Åbn Pung for, at indlæse en pung.
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation type="unfinished">Send bitcoins</translation>
+        <translation type="unfinished">Send britanniacoins</translation>
     </message>
     <message>
         <source>Fee bump error</source>

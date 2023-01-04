@@ -38,7 +38,7 @@ from .util import (
     EncodeDecimal,
 )
 
-BITCOIND_PROC_WAIT_TIMEOUT = 60
+BRITANNIACOIND_PROC_WAIT_TIMEOUT = 60
 
 
 class FailedToStartError(Exception):
@@ -65,7 +65,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
+    def __init__(self, i, datadir, *, chain, rpchost, timewait, timeout_factor, britanniacoind, britanniacoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -75,13 +75,13 @@ class TestNode():
         self.index = i
         self.p2p_conn_index = 1
         self.datadir = datadir
-        self.bitcoinconf = os.path.join(self.datadir, "bitcoin.conf")
+        self.britanniacoinconf = os.path.join(self.datadir, "britanniacoin.conf")
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.chain = chain
         self.rpchost = rpchost
         self.rpc_timeout = timewait
-        self.binary = bitcoind
+        self.binary = britanniacoind
         self.coverage_dir = coverage_dir
         self.cwd = cwd
         self.descriptors = descriptors
@@ -125,7 +125,7 @@ class TestNode():
         if self.version_is_at_least(239000):
             self.args.append("-loglevel=trace")
 
-        self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
+        self.cli = TestNodeCLI(britanniacoin_cli, self.datadir)
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -217,7 +217,7 @@ class TestNode():
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug("britanniacoind started, waiting for RPC to come up")
 
         if self.start_perf:
             self._start_perf()
@@ -229,7 +229,7 @@ class TestNode():
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 raise FailedToStartError(self._node_msg(
-                    'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
+                    'britanniacoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 rpc = get_rpc_proxy(
                     rpc_url(self.datadir, self.index, self.chain, self.rpchost),
@@ -287,7 +287,7 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+        self._raise_assertion_error("Unable to connect to britanniacoind after {}s".format(self.rpc_timeout))
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""
@@ -384,7 +384,7 @@ class TestNode():
         self.log.debug("Node stopped")
         return True
 
-    def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
+    def wait_until_stopped(self, timeout=BRITANNIACOIND_PROC_WAIT_TIMEOUT):
         wait_until_helper(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
 
     @property
@@ -504,7 +504,7 @@ class TestNode():
 
         if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
             self.log.warning(
-                "perf output won't be very useful without debug symbols compiled into bitcoind")
+                "perf output won't be very useful without debug symbols compiled into britanniacoind")
 
         output_path = tempfile.NamedTemporaryFile(
             dir=self.datadir,
@@ -556,7 +556,7 @@ class TestNode():
             try:
                 self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 ret = self.process.wait(timeout=self.rpc_timeout)
-                self.log.debug(self._node_msg(f'bitcoind exited with status {ret} during initialization'))
+                self.log.debug(self._node_msg(f'britanniacoind exited with status {ret} during initialization'))
                 assert ret != 0  # Exit code must indicate failure
                 self.running = False
                 self.process = None
@@ -580,7 +580,7 @@ class TestNode():
                 self.process.kill()
                 self.running = False
                 self.process = None
-                assert_msg = f'bitcoind should have exited within {self.rpc_timeout}s '
+                assert_msg = f'britanniacoind should have exited within {self.rpc_timeout}s '
                 if expected_msg is None:
                     assert_msg += "with an error"
                 else:
@@ -698,7 +698,7 @@ class TestNodeCLI():
         self.binary = binary
         self.datadir = datadir
         self.input = None
-        self.log = logging.getLogger('TestFramework.bitcoincli')
+        self.log = logging.getLogger('TestFramework.britanniacoincli')
 
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
@@ -729,7 +729,7 @@ class TestNodeCLI():
         if command is not None:
             p_args += [command]
         p_args += pos_args + named_args
-        self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
+        self.log.debug("Running britanniacoin-cli {}".format(p_args[2:]))
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()

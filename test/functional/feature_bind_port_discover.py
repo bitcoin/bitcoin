@@ -6,7 +6,7 @@
 Test that -discover does not add all interfaces' addresses if we listen on only some of them
 """
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BritanniaCoinTestFramework, SkipTest
 from test_framework.util import assert_equal
 
 # We need to bind to a routable address for this test to exercise the relevant code
@@ -24,7 +24,7 @@ ADDR2 = '2.2.2.2'
 
 BIND_PORT = 31001
 
-class BindPortDiscoverTest(BitcoinTestFramework):
+class BindPortDiscoverTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         # Avoid any -bind= on the command line. Force the framework to avoid adding -bind=127.0.0.1.
         self.setup_clean_chain = True

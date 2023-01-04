@@ -16,7 +16,7 @@ from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 I2P_ADDR = "c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p"
@@ -32,7 +32,7 @@ for i in range(10):
         addr.ip = I2P_ADDR
     else:
         addr.ip = f"123.123.123.{i % 256}"
-    addr.port = 8333 + i
+    addr.port = 8827 + i
     ADDRS.append(addr)
 
 
@@ -52,7 +52,7 @@ class AddrReceiver(P2PInterface):
         self.wait_until(lambda: "addrv2" in self.last_message)
 
 
-class AddrTest(BitcoinTestFramework):
+class AddrTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

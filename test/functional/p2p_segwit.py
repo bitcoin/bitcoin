@@ -82,7 +82,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     softfork_active,
@@ -211,7 +211,7 @@ class TestP2PConn(P2PInterface):
         self.wait_for_block(blockhash, timeout)
         return self.last_message["block"].block
 
-class SegWitTest(BitcoinTestFramework):
+class SegWitTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

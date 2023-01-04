@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/britanniacoin-config.h>
 #endif
 
 #include <qt/optionsmodel.h>
 
-#include <qt/bitcoinunits.h>
+#include <qt/britanniacoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
@@ -165,15 +165,15 @@ bool OptionsModel::Init(bilingual_str& error)
     fMinimizeOnClose = settings.value("fMinimizeOnClose").toBool();
 
     // Display
-    if (!settings.contains("DisplayBitcoinUnit")) {
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(BitcoinUnit::BTC));
+    if (!settings.contains("DisplayBritanniaCoinUnit")) {
+        settings.setValue("DisplayBritanniaCoinUnit", QVariant::fromValue(BritanniaCoinUnit::BRT));
     }
-    QVariant unit = settings.value("DisplayBitcoinUnit");
-    if (unit.canConvert<BitcoinUnit>()) {
-        m_display_bitcoin_unit = unit.value<BitcoinUnit>();
+    QVariant unit = settings.value("DisplayBritanniaCoinUnit");
+    if (unit.canConvert<BritanniaCoinUnit>()) {
+        m_display_britanniacoin_unit = unit.value<BritanniaCoinUnit>();
     } else {
-        m_display_bitcoin_unit = BitcoinUnit::BTC;
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+        m_display_britanniacoin_unit = BritanniaCoinUnit::BRT;
+        settings.setValue("DisplayBritanniaCoinUnit", QVariant::fromValue(m_display_britanniacoin_unit));
     }
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -412,7 +412,7 @@ QVariant OptionsModel::getOption(OptionID option) const
         return m_sub_fee_from_amount;
 #endif
     case DisplayUnit:
-        return QVariant::fromValue(m_display_bitcoin_unit);
+        return QVariant::fromValue(m_display_britanniacoin_unit);
     case ThirdPartyTxUrls:
         return strThirdPartyTxUrls;
     case Language:
@@ -621,11 +621,11 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
 
 void OptionsModel::setDisplayUnit(const QVariant& new_unit)
 {
-    if (new_unit.isNull() || new_unit.value<BitcoinUnit>() == m_display_bitcoin_unit) return;
-    m_display_bitcoin_unit = new_unit.value<BitcoinUnit>();
+    if (new_unit.isNull() || new_unit.value<BritanniaCoinUnit>() == m_display_britanniacoin_unit) return;
+    m_display_britanniacoin_unit = new_unit.value<BritanniaCoinUnit>();
     QSettings settings;
-    settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
-    Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
+    settings.setValue("DisplayBritanniaCoinUnit", QVariant::fromValue(m_display_britanniacoin_unit));
+    Q_EMIT displayUnitChanged(m_display_britanniacoin_unit);
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)

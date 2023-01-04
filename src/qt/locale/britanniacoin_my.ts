@@ -121,7 +121,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -149,7 +149,7 @@
         <translation type="unfinished">ချဲ့</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

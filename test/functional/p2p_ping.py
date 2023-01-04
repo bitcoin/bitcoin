@@ -9,7 +9,7 @@ import time
 
 from test_framework.messages import msg_pong
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -27,7 +27,7 @@ class NodeNoPong(P2PInterface):
         pass
 
 
-class PingPongTest(BitcoinTestFramework):
+class PingPongTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

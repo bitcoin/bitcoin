@@ -7,10 +7,10 @@
 import sys
 
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BritanniaCoinTestFramework, SkipTest
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
 
-class RPCBindTest(BitcoinTestFramework):
+class RPCBindTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.bind_to_localhost_only = False

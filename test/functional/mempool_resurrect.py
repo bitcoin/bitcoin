@@ -5,12 +5,12 @@
 """Test resurrection of mined transactions when the blockchain is re-organized."""
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
 
-class MempoolCoinbaseTest(BitcoinTestFramework):
+class MempoolCoinbaseTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

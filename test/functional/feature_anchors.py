@@ -7,14 +7,14 @@
 import os
 
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import check_node_connections
 
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
 
 
-class AnchorsTest(BitcoinTestFramework):
+class AnchorsTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.disable_autoconnect = False

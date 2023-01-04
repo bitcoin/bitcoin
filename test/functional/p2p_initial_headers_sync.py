@@ -9,7 +9,7 @@ is close to caught up), and that each block announcement results in only one
 additional peer receiving a getheaders message.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.messages import (
     CInv,
     MSG_BLOCK,
@@ -25,7 +25,7 @@ from test_framework.util import (
 )
 import random
 
-class HeadersSyncTest(BitcoinTestFramework):
+class HeadersSyncTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

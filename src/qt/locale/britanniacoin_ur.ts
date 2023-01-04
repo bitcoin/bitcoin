@@ -66,11 +66,11 @@
         <translation type="unfinished">پتے موصول ہورہے ہیں</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">یہ آپ کے ادائیگی بھیجنے کے لئے بٹ کوائن ایڈریس ہیں.سکے بھیجنے سے پہلے ہمیشہ رقم اور وصول کنندہ پتہ چیک کریں۔</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ادائیگیوں کے لئے آپ کے بٹ کوائن ایڈریس ہیں۔ نئے پتے بنانے کے لئے وصول کنندہ ٹیب میں 'نیا وصول کنندہ پتہ بنائیں' بٹن کا استعمال کریں۔دستخط صرف 'میراثی' قسم کے پتے کے ساتھ ہی ممکن ہے۔</translation>
     </message>
@@ -163,7 +163,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">پرس کی خفیہ کاری کی تصدیق کریں</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">انتباہ: اگر آپ اپنا بٹوہ انکرپٹ کرتے ہیں اور اپنا پاس فریز کھو دیتے ہیں تو ، آپ اپنے تمام بٹکوئنز کھو دیں گے.</translation>
     </message>
     <message>
@@ -183,7 +183,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">پرس کے لئے پرانا پاسفریج اور نیا پاسفریز درج کریں۔</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">یاد رکھیں کہ آپ کے پرس کو خفیہ کرنا آپ کے بٹ کوائنز کو میلویئر/چور سے آپ کے کمپیوٹر میں انفیکشن لگانے کے ذریعہ چوری ہونے سے پوری طرح محفوظ نہیں رکھ سکتا ہے۔</translation>
     </message>
     <message>
@@ -243,7 +243,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">بھگوڑے رعایت</translation>
@@ -332,14 +332,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">ناکافی فنڈز</translation>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">اور جائزہ</translation>
@@ -402,7 +402,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">پراکسی &lt;b&gt;فعال&lt;/b&gt; ہے:%1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a BritanniaCoin address</source>
         <translation type="unfinished">بٹ کوائن ایڈریس پر سکے بھیجیں</translation>
     </message>
     <message>
@@ -442,7 +442,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">سائن اور پیغام…</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">اپنے ویکیپیڈیا پتوں کے ساتھ پیغامات پر دستخط کریں تاکہ آپ ان کے مالک ہوں</translation>
     </message>
     <message>
@@ -450,7 +450,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">پیغام کی توثیق کریں…</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
         <translation type="unfinished">پیغامات کی توثیق کریں تاکہ یہ یقینی بن سکے کہ ان پر بٹ کوائن کے مخصوص پتوں پر دستخط ہوئے ہیں</translation>
     </message>
     <message>
@@ -477,7 +477,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">نقص</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

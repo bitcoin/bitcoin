@@ -8,7 +8,7 @@ import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -45,7 +45,7 @@ def create_transactions(node, address, amt, fees):
 
     return txs
 
-class WalletTest(BitcoinTestFramework):
+class WalletTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

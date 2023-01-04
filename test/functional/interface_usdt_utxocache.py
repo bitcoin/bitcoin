@@ -14,7 +14,7 @@ try:
 except ImportError:
     pass
 from test_framework.messages import COIN
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
@@ -130,7 +130,7 @@ class UTXOCacheFlush(ctypes.Structure):
         return f"UTXOCacheFlush(duration={self.duration}, mode={FLUSHMODE_NAME[self.mode]}, size={self.size}, memory={self.memory}, for_prune={self.for_prune})"
 
 
-class UTXOCacheTracepointTest(BitcoinTestFramework):
+class UTXOCacheTracepointTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
@@ -138,7 +138,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_britanniacoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 

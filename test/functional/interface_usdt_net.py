@@ -16,7 +16,7 @@ except ImportError:
     pass
 from test_framework.messages import msg_version
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 # Tor v3 addresses are 62 chars + 6 chars for the port (':12345').
@@ -80,13 +80,13 @@ int trace_outbound_message(struct pt_regs *ctx) {
 """
 
 
-class NetTracepointTest(BitcoinTestFramework):
+class NetTracepointTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_britanniacoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
@@ -152,7 +152,7 @@ class NetTracepointTest(BitcoinTestFramework):
         bpf["inbound_messages"].open_perf_buffer(handle_inbound)
         bpf["outbound_messages"].open_perf_buffer(handle_outbound)
 
-        self.log.info("connect a P2P test node to our bitcoind node")
+        self.log.info("connect a P2P test node to our britanniacoind node")
         test_node = P2PInterface()
         self.nodes[0].add_p2p_connection(test_node)
         bpf.perf_buffer_poll(timeout=200)

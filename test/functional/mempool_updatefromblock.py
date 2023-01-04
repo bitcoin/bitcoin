@@ -10,14 +10,14 @@ when transactions have been re-added from a disconnected block to the mempool.
 import time
 
 from decimal import Decimal
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.address import key_to_p2pkh
 from test_framework.wallet_util import bytes_to_wif
 from test_framework.key import ECKey
 
 
-class MempoolUpdateFromBlockTest(BitcoinTestFramework):
+class MempoolUpdateFromBlockTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', '-limitancestorcount=100']]

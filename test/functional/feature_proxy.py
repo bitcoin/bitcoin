@@ -42,7 +42,7 @@ addnode connect to a CJDNS address
 import socket
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
@@ -61,7 +61,7 @@ NET_CJDNS = "cjdns"
 NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS})
 
 
-class ProxyTest(BitcoinTestFramework):
+class ProxyTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 5
         self.setup_clean_chain = True

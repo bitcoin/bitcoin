@@ -66,11 +66,11 @@
         <translation type="unfinished">收款地址</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">您可以给这些比特币地址付款。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">这是您用来收款的比特币地址。使用“接收”标签页中的“创建新收款地址”按钮来创建新的收款地址。
 只有“传统（legacy）”类型的地址支持签名。</translation>
@@ -164,7 +164,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">确认钱包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">警告: 如果把钱包加密后又忘记密码，你就会从此&lt;b&gt;失去其中所有的比特币了&lt;/b&gt;！</translation>
     </message>
     <message>
@@ -184,7 +184,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">输入此钱包的旧密码和新密码。</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">请注意，当您的计算机感染恶意软件时，加密钱包并不能完全规避您的比特币被偷窃的可能。</translation>
     </message>
     <message>
@@ -244,7 +244,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">未捕获的异常</translation>
@@ -289,7 +289,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">金额</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
         <translation type="unfinished">请输入一个比特币地址 (例如 %1)</translation>
     </message>
     <message>
@@ -409,14 +409,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s 开发者</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s损坏。请尝试用bitcoin-wallet钱包工具来对其进行急救。或者用一个备份进行还原。</translation>
+        <source>%s corrupt. Try using the wallet tool britanniacoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s损坏。请尝试用britanniacoin-wallet钱包工具来对其进行急救。或者用一个备份进行还原。</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -451,8 +451,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">错误: 转储文件标识符记录不正确。得到的是 "%s"，而预期本应得到的是 "%s"。</translation>
     </message>
     <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">错误: 转储文件版本不被支持。这个版本的 bitcoin-wallet 只支持版本为 1 的转储文件。得到的转储文件版本却是%s</translation>
+        <source>Error: Dumpfile version is not supported. This version of britanniacoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">错误: 转储文件版本不被支持。这个版本的 britanniacoin-wallet 只支持版本为 1 的转储文件。得到的转储文件版本却是%s</translation>
     </message>
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
@@ -1012,7 +1012,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">概况(&amp;O)</translation>
@@ -1075,7 +1075,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">代理服务器已&lt;b&gt;启用&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a BritanniaCoin address</source>
         <translation type="unfinished">向一个比特币地址发币</translation>
     </message>
     <message>
@@ -1119,7 +1119,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">签名消息(&amp;M)</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">用比特币地址关联的私钥为消息签名，以证明您拥有这个比特币地址</translation>
     </message>
     <message>
@@ -1127,7 +1127,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">验证消息(&amp;V)</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
         <translation type="unfinished">校验消息，确保该消息是由指定的比特币地址所有者签名的</translation>
     </message>
     <message>
@@ -1191,8 +1191,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">连接到节点...</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">请求支付 (生成二维码和 bitcoin: URI)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">请求支付 (生成二维码和 britanniacoin: URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -1245,11 +1245,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">已是最新</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
+        <source>Load Partially Signed BritanniaCoin Transaction</source>
         <translation type="unfinished">加载部分签名比特币交易（PSBT）</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
         <translation type="unfinished">从剪贴板中加载部分签名比特币交易（PSBT）</translation>
     </message>
     <message>
@@ -1269,8 +1269,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">收款地址(&amp;R)</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">打开bitcoin:开头的URI</translation>
+        <source>Open a britanniacoin: URI</source>
+        <translation type="unfinished">打开britanniacoin:开头的URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1289,7 +1289,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">关闭所有钱包</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
         <translation type="unfinished">显示 %1 帮助信息，获取可用命令行选项列表</translation>
     </message>
     <message>
@@ -1325,7 +1325,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 客户端</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1766,7 +1766,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">编辑付款地址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
         <translation type="unfinished">输入的地址 %1 并不是有效的比特币地址。</translation>
     </message>
     <message>
@@ -1812,7 +1812,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">比特币</translation>
     </message>
     <message>
@@ -1839,7 +1839,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
         <translation type="unfinished">%1 将会下载并存储比特币区块链。</translation>
     </message>
     <message>
@@ -1928,11 +1928,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">窗体</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
         <translation type="unfinished">近期交易可能尚未显示，因此当前余额可能不准确。以上信息将在与比特币网络完全同步后更正。详情如下</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation type="unfinished">尝试使用受未可见交易影响的余额将不被网络接受。</translation>
     </message>
     <message>
@@ -1979,7 +1979,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open bitcoin URI</source>
+        <source>Open britanniacoin URI</source>
         <translation type="unfinished">打开比特币URI</translation>
     </message>
     <message>
@@ -2091,11 +2091,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">外部签名器脚本路径(&amp;E)</translation>
     </message>
     <message>
-        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">指向兼容Bitcoin Core的脚本的完整路径 (例如 C:\Downloads\hwi.exe 或者 /Users/you/Downloads/hwi.py )。注意: 恶意软件可能会偷窃您的币！</translation>
+        <source>Full path to a BritanniaCoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">指向兼容BritanniaCoin Core的脚本的完整路径 (例如 C:\Downloads\hwi.exe 或者 /Users/you/Downloads/hwi.py )。注意: 恶意软件可能会偷窃您的币！</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished">自动在路由器中为比特币客户端打开端口。只有当您的路由器开启了 UPnP 选项时此功能才会有用。</translation>
     </message>
     <message>
@@ -2103,7 +2103,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">使用 &amp;UPnP 映射端口</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
         <translation type="unfinished">自动在路由器中为比特币客户端打开端口。只有当您的路由器支持 NAT-PMP 功能并开启它，这个功能才会正常工作。外边端口可以是随机的。</translation>
     </message>
     <message>
@@ -2119,7 +2119,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">允许传入连接(&amp;G)</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
         <translation type="unfinished">通过 SOCKS5 代理连接比特币网络。</translation>
     </message>
     <message>
@@ -2191,7 +2191,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">是否显示手动选币功能。</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <source>Connect to the BritanniaCoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <translation type="unfinished">连接比特币网络时专门为Tor onion服务使用另一个 SOCKS5 代理。</translation>
     </message>
     <message>
@@ -2285,7 +2285,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">窗体</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">现在显示的消息可能是过期的。在连接上比特币网络节点后，您的钱包将自动与网络同步，但是这个过程还没有完成。</translation>
     </message>
     <message>
@@ -2488,16 +2488,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">支付请求出错</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">无法启动 bitcoin: 协议的“一键支付”处理程序</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">无法启动 britanniacoin: 协议的“一键支付”处理程序</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">URI 处理</translation>
     </message>
     <message>
-        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">‘bitcoin://’不是合法的URI。请改用'bitcoin:'。</translation>
+        <source>'britanniacoin://' is not a valid URI. Use 'britanniacoin:' instead.</source>
+        <translation type="unfinished">‘britanniacoin://’不是合法的URI。请改用'bitcoin:'。</translation>
     </message>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.
@@ -2508,7 +2508,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
 如果您看到了这个错误，您应该要求商家提供兼容BIP21的URI。</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
         <translation type="unfinished">无法解析 URI 地址！可能是因为比特币地址无效，或是 URI 参数格式错误。</translation>
     </message>
     <message>
@@ -3021,7 +3021,7 @@ For more information on using this console, type %6.
         <translation type="unfinished">消息(&amp;M):</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
         <translation type="unfinished">可在支付请求上备注一条信息，在打开支付请求时可以看到。注意:该消息不是通过比特币网络传送。</translation>
     </message>
     <message>
@@ -3306,7 +3306,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
 附注：因为矿工费是按字节计费的，所以如果费率是“每kvB支付100聪”，那么对于一笔500虚拟字节 (1kvB的一半) 的交易，最终将只会产生50聪的矿工费。（译注：这里就是提醒单位是字节，而不是千字节，如果搞错的话，矿工费会过低，导致交易长时间无法确认，或者压根无法发出）</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
         <translation type="unfinished">当交易量小于可用区块空间时，矿工和中继节点可能会执行最低手续费率限制。按照这个最低费率来支付手续费也是可以的，但请注意，一旦交易需求超出比特币网络能处理的限度，你的交易可能永远也无法确认。</translation>
     </message>
     <message>
@@ -3396,7 +3396,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">创建未签名交易(&amp;E)</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Creates a Partially Signed BritanniaCoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">创建一个“部分签名比特币交易”（PSBT），以用于诸如离线%1钱包，或是兼容PSBT的硬件钱包这类用途。</translation>
     </message>
     <message>
@@ -3455,7 +3455,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">你可以后来再追加手续费（打上支持BIP-125手续费追加的标记）</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">请务必仔细检查您的交易请求。这会产生一个部分签名比特币交易(PSBT)，可以把保存下来或复制出去，然后就可以对它进行签名，比如用离线%1钱包，或是用兼容PSBT的硬件钱包。</translation>
     </message>
@@ -3523,7 +3523,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid BritanniaCoin address</source>
         <translation type="unfinished">警告: 比特币地址无效</translation>
     </message>
     <message>
@@ -3562,7 +3562,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">选择以前用过的地址</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The BritanniaCoin address to send the payment to</source>
         <translation type="unfinished">付款目的地址</translation>
     </message>
     <message>
@@ -3578,7 +3578,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">用被选单位表示的待发送金额</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation type="unfinished">交易费将从发送金额中扣除。接收人收到的比特币将会比您在金额框中输入的更少。如果选中了多个收件人，交易费平分。</translation>
     </message>
     <message>
@@ -3606,8 +3606,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">请为此地址输入一个标签以将它加入已用地址列表</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">bitcoin: URI 附带的备注信息，将会和交易一起存储，备查。 注意：该消息不会通过比特币网络传输。</translation>
+        <source>A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
+        <translation type="unfinished">britanniacoin: URI 附带的备注信息，将会和交易一起存储，备查。 注意：该消息不会通过比特币网络传输。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -3640,11 +3640,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">消息签名(&amp;S)</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive britanniacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation type="unfinished">您可以用你的地址对消息/协议进行签名，以证明您可以接收发送到该地址的比特币。注意不要对任何模棱两可或者随机的消息进行签名，以免遭受钓鱼式攻击。请确保消息内容准确的表达了您的真实意愿。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The BritanniaCoin address to sign the message with</source>
         <translation type="unfinished">用来对消息签名的地址</translation>
     </message>
     <message>
@@ -3668,7 +3668,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">复制当前签名至剪贴板</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">签名消息，以证明这个地址属于您</translation>
     </message>
     <message>
@@ -3692,7 +3692,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">请在下面输入接收者地址、消息（确保换行符、空格符、制表符等完全相同）和签名以验证消息。请仔细核对签名信息，以提防中间人攻击。请注意，这只是证明接收方可以用这个地址签名，它不能证明任何交易！</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The BritanniaCoin address the message was signed with</source>
         <translation type="unfinished">用来签名消息的地址</translation>
     </message>
     <message>
@@ -3704,7 +3704,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">对消息进行签署得到的签名数据</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
         <translation type="unfinished">验证消息，确保消息是由指定的比特币地址签名过的。</translation>
     </message>
     <message>

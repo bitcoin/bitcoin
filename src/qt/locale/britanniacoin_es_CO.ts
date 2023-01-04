@@ -66,13 +66,13 @@
         <translation type="unfinished">Recibiendo direcciones</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estas son tus direcciones de Bitcoin para recibir pagos. Siempre revise el monto y la dirección de envío antes de enviar criptomonedas.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estas son tus direcciones de BritanniaCoin para recibir pagos. Siempre revise el monto y la dirección de envío antes de enviar criptomonedas.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Estas son tus direcciones Bitcoin para recibir pagos. Usa el botón 'Crear una nueva dirección para recibir' en la pestaña 'Recibir' para crear nuevas direcciones.
+        <translation type="unfinished">Estas son tus direcciones BritanniaCoin para recibir pagos. Usa el botón 'Crear una nueva dirección para recibir' en la pestaña 'Recibir' para crear nuevas direcciones.
 Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     </message>
     <message>
@@ -164,8 +164,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Confirmar cifrado del monedero</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Advertencia: Si encriptas tu billetera y pierdes tu contraseña, vas a ¡&lt;b&gt;PERDER TODOS TUS BITCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Advertencia: Si encriptas tu billetera y pierdes tu contraseña, vas a ¡&lt;b&gt;PERDER TODOS TUS BRITANNIACOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -184,8 +184,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Ingresa la antigua frase de contraseña y la nueva frase de contraseña para la billetera.</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Recuerda que cifrar tu billetera no garantiza total protección de robo de tus bitcoins si tu ordenador es infectado con malware.</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Recuerda que cifrar tu billetera no garantiza total protección de robo de tus britanniacoins si tu ordenador es infectado con malware.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -244,7 +244,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">Error interno</translation>
@@ -265,8 +265,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Cantidad</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Ingresa una dirección de Bitcoin (Ejemplo: %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">Ingresa una dirección de BritanniaCoin (Ejemplo: %1)</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -330,7 +330,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">Los desarrolladores de %s</translation>
@@ -545,7 +545,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Vista general</translation>
@@ -608,8 +608,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Proxy &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Enviar monedas a una dirección bitcoin</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Enviar monedas a una dirección britanniacoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -644,7 +644,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Firmar &amp;mensaje...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">Firmar un mensaje para provar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -652,8 +652,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">&amp;Verificar mensaje...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verificar mensajes comprobando que están firmados con direcciones Bitcoin concretas</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Verificar mensajes comprobando que están firmados con direcciones BritanniaCoin concretas</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -684,8 +684,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Barra de pestañas</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Pide pagos (genera codigos QR and bitcoin: URls)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Pide pagos (genera codigos QR and britanniacoin: URls)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -731,8 +731,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Actualizado</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Cargar una transacción de Bitcoin parcialmente firmada desde el Portapapeles</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
+        <translation type="unfinished">Cargar una transacción de BritanniaCoin parcialmente firmada desde el Portapapeles</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -751,8 +751,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">&amp;Direcciones de entrega</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Abrir un bitcoin: URI</translation>
+        <source>Open a britanniacoin: URI</source>
+        <translation type="unfinished">Abrir un britanniacoin: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -771,8 +771,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Cerrar todas las billeteras</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de Bitcoin</translation>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
+        <translation type="unfinished">Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de BritanniaCoin</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -800,7 +800,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">%1 cliente</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1140,8 +1140,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Editar dirección de envio</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">La dirección introducida "%1" no es una dirección Bitcoin valida.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">La dirección introducida "%1" no es una dirección BritanniaCoin valida.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1194,8 +1194,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 descargará y almacenará una copia del blockchain de Bitcoin.</translation>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
+        <translation type="unfinished">%1 descargará y almacenará una copia del blockchain de BritanniaCoin.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1271,12 +1271,12 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Formulario</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Las transacciones recientes aún no pueden ser visibles, y por lo tanto el saldo de su monedero podría ser incorrecto. Esta información será correcta cuando su monedero haya terminado de sincronizarse con la red de bitcoin, como se detalla abajo.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
+        <translation type="unfinished">Las transacciones recientes aún no pueden ser visibles, y por lo tanto el saldo de su monedero podría ser incorrecto. Esta información será correcta cuando su monedero haya terminado de sincronizarse con la red de britanniacoin, como se detalla abajo.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">La red no aceptará el intentar gastar bitcoins que están afectados por transacciones aún no mostradas.</translation>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">La red no aceptará el intentar gastar britanniacoins que están afectados por transacciones aún no mostradas.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1394,8 +1394,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Gastar cambio sin confirmar</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Abre automáticamente el puerto del cliente Bitcoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Abre automáticamente el puerto del cliente BritanniaCoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1410,8 +1410,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Permitir conexiones entrantes</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Conectar a la red de Bitcoin a través de un proxy SOCKS5</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Conectar a la red de BritanniaCoin a través de un proxy SOCKS5</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1528,8 +1528,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">La información entregada puede estar desactualizada. Tu billetera se sincroniza automáticamente con la red de Bitcoin después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">La información entregada puede estar desactualizada. Tu billetera se sincroniza automáticamente con la red de BritanniaCoin después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1626,16 +1626,16 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Error en la solicitud de pago</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">No se puede iniciar Bitcoin: controlador de clic para pagar</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">No se puede iniciar BritanniaCoin: controlador de clic para pagar</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">Manejo de URI</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">¡URI no puede ser analizado! Esto puede deberse a una dirección de Bitcoin no válida o a parámetros de URI mal formados.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
+        <translation type="unfinished">¡URI no puede ser analizado! Esto puede deberse a una dirección de BritanniaCoin no válida o a parámetros de URI mal formados.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1943,8 +1943,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">&amp;mensaje</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Mensaje opcional adjunto a la solicitud de pago, que será mostrado cuando la solicitud sea abierta. Nota: Este mensaje no será enviado con el pago a través de la red Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
+        <translation type="unfinished">Mensaje opcional adjunto a la solicitud de pago, que será mostrado cuando la solicitud sea abierta. Nota: Este mensaje no será enviado con el pago a través de la red BritanniaCoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2273,8 +2273,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Peligro: Dirección de Bitcoin inválida</translation>
+        <source>Warning: Invalid BritanniaCoin address</source>
+        <translation type="unfinished">Peligro: Dirección de BritanniaCoin inválida</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2312,8 +2312,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Seleccionar dirección usada anteriormente</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Dirección Bitcoin a enviar el pago</translation>
+        <source>The BritanniaCoin address to send the payment to</source>
+        <translation type="unfinished">Dirección BritanniaCoin a enviar el pago</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2370,8 +2370,8 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Dirección Bitcoin con la que firmar el mensaje</translation>
+        <source>The BritanniaCoin address to sign the message with</source>
+        <translation type="unfinished">Dirección BritanniaCoin con la que firmar el mensaje</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2394,7 +2394,7 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -2414,12 +2414,12 @@ Firmar solo es posible con direcciones del tipo 'Legacy'.</translation>
         <translation type="unfinished">&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">La dirección Bitcoin con la que se firmó el mensaje</translation>
+        <source>The BritanniaCoin address the message was signed with</source>
+        <translation type="unfinished">La dirección BritanniaCoin con la que se firmó el mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Verifica el mensaje para asegurar que fue firmado con la dirección de Bitcoin especificada.</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Verifica el mensaje para asegurar que fue firmado con la dirección de BritanniaCoin especificada.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

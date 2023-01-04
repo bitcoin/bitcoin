@@ -19,7 +19,7 @@ importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.address import AddressType
 from test_framework.util import (
     assert_equal,
@@ -146,7 +146,7 @@ def get_rand_amount():
     return Decimal(str(round(r, 8)))
 
 
-class ImportRescanTest(BitcoinTestFramework):
+class ImportRescanTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, descriptors=False)
 

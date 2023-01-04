@@ -6,7 +6,7 @@
 
 import os
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
 from threading import Thread
 import subprocess
@@ -31,7 +31,7 @@ def test_work_queue_getblock(node, got_exceeded_error):
             got_exceeded_error.append(True)
 
 
-class RPCInterfaceTest(BitcoinTestFramework):
+class RPCInterfaceTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

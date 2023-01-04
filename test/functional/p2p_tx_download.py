@@ -19,7 +19,7 @@ from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -53,7 +53,7 @@ NUM_INBOUND = 10
 MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
 
 
-class TxDownloadTest(BitcoinTestFramework):
+class TxDownloadTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

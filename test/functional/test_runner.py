@@ -168,8 +168,8 @@ BASE_SCRIPTS = [
     'wallet_fast_rescan.py --descriptors',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
-    'interface_bitcoin_cli.py --legacy-wallet',
-    'interface_bitcoin_cli.py --descriptors',
+    'interface_britanniacoin_cli.py --legacy-wallet',
+    'interface_britanniacoin_cli.py --descriptors',
     'feature_bind_extra.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
@@ -416,9 +416,9 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
+    enable_britanniacoind = config["components"].getboolean("ENABLE_BITCOIND")
 
-    if not enable_bitcoind:
+    if not enable_britanniacoind:
         print("No functional tests to run.")
         print("Rerun ./configure with --with-daemon and then make")
         sys.exit(0)
@@ -503,8 +503,8 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # Warn if bitcoind is already running
     try:
         # pgrep exits with code zero when one or more matching processes found
-        if subprocess.run(["pgrep", "-x", "bitcoind"], stdout=subprocess.DEVNULL).returncode == 0:
-            print("%sWARNING!%s There is already a bitcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.run(["pgrep", "-x", "britanniacoind"], stdout=subprocess.DEVNULL).returncode == 0:
+            print("%sWARNING!%s There is already a britanniacoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except OSError:
         # pgrep not supported
         pass

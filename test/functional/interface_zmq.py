@@ -14,7 +14,7 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.messages import (
     CTransaction,
     hash256,
@@ -100,7 +100,7 @@ class ZMQTestSetupBlock:
         )
 
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # This test isn't testing txn relay/timing, so set whitelist on the
@@ -109,7 +109,7 @@ class ZMQTest (BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
-        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_britanniacoind_zmq()
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

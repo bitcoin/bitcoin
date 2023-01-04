@@ -5,7 +5,7 @@
 """Test Miniscript descriptors integration in the wallet."""
 
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -21,7 +21,7 @@ MINISCRIPTS = [
 ]
 
 
-class WalletMiniscriptTest(BitcoinTestFramework):
+class WalletMiniscriptTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
 

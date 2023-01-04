@@ -7,10 +7,10 @@
 import itertools
 
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 
 
-class P2PDNSSeeds(BitcoinTestFramework):
+class P2PDNSSeeds(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -56,7 +56,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
     def existing_outbound_connections_test(self):
         # Make sure addrman is populated to enter the conditional where we
         # delay and potentially skip DNS seeding.
-        self.nodes[0].addpeeraddress("192.0.0.8", 8333)
+        self.nodes[0].addpeeraddress("192.0.0.8", 8827)
 
         self.log.info("Check that we *do not* query DNS seeds if we have 2 outbound connections")
 
@@ -69,7 +69,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
         # Make sure addrman is populated to enter the conditional where we
         # delay and potentially skip DNS seeding. No-op when run after
         # existing_outbound_connections_test.
-        self.nodes[0].addpeeraddress("192.0.0.8", 8333)
+        self.nodes[0].addpeeraddress("192.0.0.8", 8827)
 
         self.log.info("Check that we *do* query DNS seeds if we only have 2 block-relay-only connections")
 
@@ -99,7 +99,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
         # Populate addrman with < 1000 addresses
         for i in range(5):
             a = f"192.0.0.{i}"
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 8827)
 
         # The delay should be 11 seconds
         with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 11 seconds before querying DNS seeds.\n"]):
@@ -111,7 +111,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
             second_octet = i % 256
             third_octet = i % 100
             a = f"{first_octet}.{second_octet}.{third_octet}.1"
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 8827)
             if (i > 1000 and i % 100 == 0):
                 # The addrman size is non-deterministic because new addresses
                 # are sorted into buckets, potentially displacing existing

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
+    <width>1128</width>
     <height>500</height>
    </rect>
   </property>
@@ -40,8 +40,9 @@
         <widget class="QLabel" name="labelCoinControlQuantityText">
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -51,6 +52,13 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlQuantity">
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -69,8 +77,9 @@
         <widget class="QLabel" name="labelCoinControlBytesText">
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -80,6 +89,13 @@
        </item>
        <item row="1" column="1">
         <widget class="QLabel" name="labelCoinControlBytes">
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -114,8 +130,9 @@
         <widget class="QLabel" name="labelCoinControlAmountText">
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -125,6 +142,13 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlAmount">
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -132,7 +156,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 BRT</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -146,8 +170,9 @@
          </property>
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -159,6 +184,13 @@
         <widget class="QLabel" name="labelCoinControlLowOutput">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
          </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -194,8 +226,9 @@
         <widget class="QLabel" name="labelCoinControlFeeText">
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -205,6 +238,13 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlFee">
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -212,7 +252,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 BRT</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -239,8 +279,9 @@
         <widget class="QLabel" name="labelCoinControlAfterFeeText">
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -250,6 +291,13 @@
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="labelCoinControlAfterFee">
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -257,7 +305,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 BRT</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -271,8 +319,9 @@
          </property>
          <property name="font">
           <font>
-           <weight>75</weight>
-           <bold>true</bold>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
           </font>
          </property>
          <property name="text">
@@ -285,6 +334,13 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="font">
+          <font>
+           <family>Open Sans</family>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -292,7 +348,7 @@
           <enum>Qt::ActionsContextMenu</enum>
          </property>
          <property name="text">
-          <string notr="true">0.00 BTC</string>
+          <string notr="true">0.00 BRT</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -310,6 +366,11 @@
        <width>0</width>
        <height>40</height>
       </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Open Sans</family>
+      </font>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -331,6 +392,11 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="font">
+           <font>
+            <family>Open Sans</family>
+           </font>
+          </property>
           <property name="text">
            <string>(un)select all</string>
           </property>
@@ -347,6 +413,11 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="font">
+           <font>
+            <family>Open Sans</family>
+           </font>
+          </property>
           <property name="text">
            <string>Tree mode</string>
           </property>
@@ -360,6 +431,11 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="font">
+           <font>
+            <family>Open Sans</family>
+           </font>
+          </property>
           <property name="text">
            <string>List mode</string>
           </property>
@@ -370,6 +446,11 @@
         </item>
         <item>
          <widget class="QLabel" name="labelLocked">
+          <property name="font">
+           <font>
+            <family>Open Sans</family>
+           </font>
+          </property>
           <property name="text">
            <string notr="true">(1 locked)</string>
           </property>
@@ -377,6 +458,11 @@
         </item>
         <item>
          <spacer name="horizontalSpacer">
+          <property name="font">
+           <font>
+            <family>Open Sans</family>
+           </font>
+          </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -395,6 +481,11 @@
    </item>
    <item>
     <widget class="CoinControlTreeWidget" name="treeWidget">
+     <property name="font">
+      <font>
+       <family>Open Sans</family>
+      </font>
+     </property>
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
@@ -467,6 +558,11 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="font">
+      <font>
+       <family>Open Sans</family>
+      </font>
+     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>

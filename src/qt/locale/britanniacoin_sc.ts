@@ -54,8 +54,8 @@
         <translation type="unfinished">Incarreramentu destinatàriu</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Custus funt is incarreramentu Bitcoin tuus po mandai pagamentus. Càstia sempri sa cantidadi e s'incarreramentu destinatàriu antis de inviais is monedas</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Custus funt is incarreramentu BritanniaCoin tuus po mandai pagamentus. Càstia sempri sa cantidadi e s'incarreramentu destinatàriu antis de inviais is monedas</translation>
     </message>
     </context>
 <context>
@@ -98,7 +98,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -106,7 +106,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

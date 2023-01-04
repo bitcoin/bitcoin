@@ -13,7 +13,7 @@ from test_framework.messages import (
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -25,7 +25,7 @@ from test_framework.wallet import (
 )
 
 
-class RPCPackagesTest(BitcoinTestFramework):
+class RPCPackagesTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

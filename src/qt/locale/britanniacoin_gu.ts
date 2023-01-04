@@ -66,11 +66,11 @@
         <translation type="unfinished">મેળવવા માટે ના સરનામાં</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">આ તમારા ચુકવણી કરવા માટે ના સરનામાં છે, હંમેશા કિંમત અને મોકલવાના ના સરનામાં ચકાસી લેવા સિક્કા આપતા પહેલા.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">આ તમારુ ચૂકવણું લેવા માટે નું સરનામા છે. નવું સરનામું બનાવા માટે "મેળવવા" માટે ની ટેબ માં "ચૂકવણું લેવા માટે નવું સરનામુ બનાવો" બટન વાપરો.
 ડિજિટલી સહી કરવા માટે 'legacy એટલેકે જુના પ્રકાર નુ' પ્રકાર નું સરનામું હોવું જરૂરી છે.</translation>
@@ -154,7 +154,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">એન્ક્રિપ્શન ખાતરી કરો </translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">ચેતવણી: જો તમે તમારું વletલેટ એન્ક્રિપ્ટ કરો છો અને તમારો પાસફ્રેઝ ખોવાઈ જાય છે, તો તમે તમારા બધા બિટકોઇન્સ ગુમાવશો!</translation>
     </message>
     <message>
@@ -212,7 +212,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -221,7 +221,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

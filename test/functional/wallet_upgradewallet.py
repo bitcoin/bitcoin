@@ -19,7 +19,7 @@ from io import BytesIO
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.bdb import dump_bdb_kv
 from test_framework.messages import deser_compact_size, deser_string
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
@@ -44,7 +44,7 @@ def deser_keymeta(f):
         has_key_orig = bool(f.read(1))
     return ver, create_time, kp_str, seed_id, fpr, path_len, path, has_key_orig
 
-class UpgradeWalletTest(BitcoinTestFramework):
+class UpgradeWalletTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, descriptors=False)
 

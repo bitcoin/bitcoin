@@ -126,7 +126,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>Wallet:</source>
         <translation type="unfinished">Aningaasivik:</translation>
@@ -143,7 +143,7 @@
         <translation type="unfinished">Ammaruk aningaasivik</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -153,7 +153,7 @@
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">Bitcoin amerlassusaa: %1
+        <translation type="unfinished">BritanniaCoin amerlassusaa: %1
 </translation>
     </message>
     </context>

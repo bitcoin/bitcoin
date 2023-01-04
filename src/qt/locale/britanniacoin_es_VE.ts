@@ -66,8 +66,8 @@
         <translation type="unfinished">Direcciones de recepción</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estas son sus direcciones Bitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Estas son sus direcciones BritanniaCoin para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -153,8 +153,8 @@
         <translation type="unfinished">Confirme cifrado del monedero</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Atención: Si cifra su monedero y pierde la contraseña, perderá ¡&lt;b&gt;TODOS SUS BITCOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Atención: Si cifra su monedero y pierde la contraseña, perderá ¡&lt;b&gt;TODOS SUS BRITANNIACOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -271,7 +271,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation type="unfinished">Esta es una compilación de prueba pre-lanzamiento - use bajo su propio riesgo - no utilizar para aplicaciones de minería o mercantes</translation>
@@ -362,7 +362,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Vista general</translation>
@@ -405,8 +405,8 @@
         <translation type="unfinished">Actividad de red deshabilitada.</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Enviar monedas a una dirección Bitcoin</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Enviar monedas a una dirección BritanniaCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -429,12 +429,12 @@
         <translation type="unfinished">Cifrar las claves privadas de su monedero</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Firmar mensajes con sus direcciones Bitcoin para demostrar la propiedad</translation>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
+        <translation type="unfinished">Firmar mensajes con sus direcciones BritanniaCoin para demostrar la propiedad</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Verificar mensajes comprobando que están firmados con direcciones Bitcoin concretas</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Verificar mensajes comprobando que están firmados con direcciones BritanniaCoin concretas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -453,8 +453,8 @@
         <translation type="unfinished">Barra de pestañas</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Solicitar pagos (genera codigo QR y URL's de Bitcoin)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Solicitar pagos (genera codigo QR y URL's de BritanniaCoin)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -516,7 +516,7 @@
         <translation type="unfinished">&amp;Ventana</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -711,8 +711,8 @@
         <translation type="unfinished">Editar dirección de envío</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">La dirección introducida "%1" no es una dirección Bitcoin válida.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">La dirección introducida "%1" no es una dirección BritanniaCoin válida.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -842,8 +842,8 @@
         <translation type="unfinished">Experto</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Abrir automáticamente el puerto del cliente Bitcoin en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Abrir automáticamente el puerto del cliente BritanniaCoin en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -941,8 +941,8 @@
         <translation type="unfinished">Desde</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red Bitcoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red BritanniaCoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1330,8 +1330,8 @@
         <translation type="unfinished">Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Firmar el mensaje para demostrar que se posee esta dirección Bitcoin</translation>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
+        <translation type="unfinished">Firmar el mensaje para demostrar que se posee esta dirección BritanniaCoin</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -1350,8 +1350,8 @@
         <translation type="unfinished">&amp;Verificar mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Verificar el mensaje para comprobar que fue firmado con la dirección Bitcoin indicada</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Verificar el mensaje para comprobar que fue firmado con la dirección BritanniaCoin indicada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

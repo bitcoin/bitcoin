@@ -66,8 +66,8 @@
         <translation type="unfinished">收款地址</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">這些是你要付款過去的 Bitcoin 位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">這些是你要付款過去的 BritanniaCoin 位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -153,8 +153,8 @@
         <translation type="unfinished">確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">警告: 如果你將錢包加密後又忘記密碼，你就會&lt;b&gt;失去所有 Bitcoin 了&lt;/b&gt;！</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">警告: 如果你將錢包加密後又忘記密碼，你就會&lt;b&gt;失去所有 BritanniaCoin 了&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -173,8 +173,8 @@
         <translation type="unfinished">請輸入舊密碼和新密碼至錢包。</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">請記得將錢包加密不能完全防止你的 Bitcoins 經被入侵電腦的惡意程式偷取。</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">請記得將錢包加密不能完全防止你的 BritanniaCoins 經被入侵電腦的惡意程式偷取。</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -233,7 +233,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">內部錯誤</translation>
@@ -246,8 +246,8 @@
         <translation type="unfinished">錯誤: %1</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">輸入一個 Bitcoin 位址 (例如 %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">輸入一個 BritanniaCoin 位址 (例如 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -315,7 +315,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">總覽 &amp;O</translation>
@@ -369,8 +369,8 @@
         <translation type="unfinished">錢包:</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">付款至一個 Bitcoin 位址</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">付款至一個 BritanniaCoin 位址</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -401,8 +401,8 @@
         <translation type="unfinished">說明 &amp;H</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">要求付款 (產生QR碼 bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">要求付款 (產生QR碼 britanniacoin: URIs)</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -443,7 +443,7 @@
         <translation type="unfinished">主視窗</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

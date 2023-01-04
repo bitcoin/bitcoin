@@ -10,7 +10,7 @@ import struct
 
 from test_framework.messages import ser_uint256, hash256
 from test_framework.p2p import MAGIC_BYTES
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
 
@@ -48,7 +48,7 @@ def write_addrman(peers_dat, **kwargs):
         f.write(serialize_addrman(**kwargs))
 
 
-class AddrmanTest(BitcoinTestFramework):
+class AddrmanTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

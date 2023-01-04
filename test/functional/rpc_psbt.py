@@ -31,7 +31,7 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
 )
 from test_framework.script import CScript, OP_TRUE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -47,7 +47,7 @@ import json
 import os
 
 
-class PSBTTest(BitcoinTestFramework):
+class PSBTTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -223,7 +223,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 
-        self.log.info("Test walletcreatefundedpsbt fee rate of 10000 sat/vB and 0.1 BTC/kvB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
+        self.log.info("Test walletcreatefundedpsbt fee rate of 10000 sat/vB and 0.1 BRT/kvB produces a total fee at or slightly below -maxtxfee (~0.05290000)")
         res1 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"fee_rate": 10000, "add_inputs": True})
         assert_approx(res1["fee"], 0.055, 0.005)
         res2 = self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {"feeRate": "0.1", "add_inputs": True})
@@ -257,7 +257,7 @@ class PSBTTest(BitcoinTestFramework):
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": invalid_value, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
+        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BRT/kvB)",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": 0.1, "feeRate": 0.1, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and estimate_mode passed")

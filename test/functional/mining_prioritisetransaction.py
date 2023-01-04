@@ -11,7 +11,7 @@ from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -21,7 +21,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
-class PrioritiseTransactionTest(BitcoinTestFramework):
+class PrioritiseTransactionTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[

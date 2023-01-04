@@ -66,7 +66,7 @@
         <translation type="unfinished">स्वीकृती पत्ते</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">पैसे पाठविण्यासाठीचे हे तुमचे बिटकॉईन पत्त्ते आहेत. नाणी पाठविण्यापूर्वी नेहमी रक्कम आणि प्राप्त होणारा पत्ता तपासून पहा.</translation>
     </message>
     <message>
@@ -151,7 +151,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -160,7 +160,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />

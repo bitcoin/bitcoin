@@ -13,14 +13,14 @@ Previous releases are required by this test, see test/README.md.
 import os
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

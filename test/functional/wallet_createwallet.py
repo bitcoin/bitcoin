@@ -8,14 +8,14 @@
 from test_framework.address import key_to_p2wpkh
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import bytes_to_wif, generate_wif_key
 
-class CreateWalletTest(BitcoinTestFramework):
+class CreateWalletTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

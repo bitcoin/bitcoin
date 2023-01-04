@@ -54,7 +54,7 @@ from decimal import Decimal
 import itertools
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.descriptors import (
     descsum_create,
     descsum_check,
@@ -65,7 +65,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class AddressTypeTest(BitcoinTestFramework):
+class AddressTypeTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

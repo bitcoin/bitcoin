@@ -149,7 +149,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Преглед</translation>
@@ -179,7 +179,7 @@
         <translation type="unfinished">Прикажи информации за Qt</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a BritanniaCoin address</source>
         <translation type="unfinished">Испрати биткоини на Биткоин адреса</translation>
     </message>
     <message>
@@ -231,7 +231,7 @@
         <translation type="unfinished">&amp;Прозорец</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -337,7 +337,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">Биткоин</translation>
     </message>
     <message numerus="yes">

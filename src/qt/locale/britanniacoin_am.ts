@@ -62,7 +62,7 @@
         <translation type="unfinished">የመቀበያ አድራሻዎች</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">እነኚ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
     </message>
     <message>
@@ -145,7 +145,7 @@
         <translation type="unfinished">የቢትኮይን ቦርሳዎን ማመስጠር ያረጋግጡ</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">ማስጠንቀቂያ: የቢትኮይን ቦርሳዎን አመስጥረው የይለፍ-ሐረግዎን ካጡት&lt;b&gt;ቢትኮይኖቾን በሙሉ ያጣሉ&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -254,7 +254,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;አጠቃላይ እይታ</translation>
@@ -363,7 +363,7 @@
         <translation type="unfinished">እሳድግ</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -480,7 +480,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">ቢትኮይን</translation>
     </message>
     <message numerus="yes">

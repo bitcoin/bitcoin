@@ -14,7 +14,7 @@ from test_framework.key import ECKey
 from test_framework.messages import (
     COIN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -34,7 +34,7 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -280,7 +280,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
-        assert_raises_rpc_error(-5, "Change address must be a valid bitcoin address", self.nodes[2].fundrawtransaction, rawtx, {'changeAddress':'foobar'})
+        assert_raises_rpc_error(-5, "Change address must be a valid britanniacoin address", self.nodes[2].fundrawtransaction, rawtx, {'changeAddress':'foobar'})
 
     def test_valid_change_address(self):
         self.log.info("Test fundrawtxn with a provided change address")
@@ -766,7 +766,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         wwatch.unloadwallet()
 
     def test_option_feerate(self):
-        self.log.info("Test fundrawtxn with explicit fee rates (fee_rate sat/vB and feeRate BTC/kvB)")
+        self.log.info("Test fundrawtxn with explicit fee rates (fee_rate sat/vB and feeRate BRT/kvB)")
         node = self.nodes[3]
         # Make sure there is exactly one input so coin selection can't skew the result.
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
@@ -775,10 +775,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = node.createrawtransaction(inputs, outputs)
 
         result = node.fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
-        btc_kvb_to_sat_vb = 100000  # (1e5)
-        result1 = node.fundrawtransaction(rawtx, {"fee_rate": str(2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee)})
+        brt_kvb_to_sat_vb = 100000  # (1e5)
+        result1 = node.fundrawtransaction(rawtx, {"fee_rate": str(2 * brt_kvb_to_sat_vb * self.min_relay_tx_fee)})
         result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
-        result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
+        result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * brt_kvb_to_sat_vb * self.min_relay_tx_fee})
         result4 = node.fundrawtransaction(rawtx, {"feeRate": str(10 * self.min_relay_tx_fee)})
 
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
@@ -836,7 +836,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         node.fundrawtransaction(rawtx, {"feeRate": 0.00000999, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
+        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BRT/kvB)",
             node.fundrawtransaction, rawtx, {"fee_rate": 0.1, "feeRate": 0.1, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and estimate_mode passed")
@@ -899,12 +899,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(change[3] + result[3]['fee'], change[4])
 
         # Test subtract fee from outputs with fee_rate (sat/vB)
-        btc_kvb_to_sat_vb = 100000  # (1e5)
+        brt_kvb_to_sat_vb = 100000  # (1e5)
         result = [self.nodes[3].fundrawtransaction(rawtx),  # uses self.min_relay_tx_fee (set by settxfee)
             self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": []}),  # empty subtraction list
             self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0]}),  # uses self.min_relay_tx_fee (set by settxfee)
-            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee}),
-            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee, "subtractFeeFromOutputs": [0]}),]
+            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * brt_kvb_to_sat_vb * self.min_relay_tx_fee}),
+            self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 2 * brt_kvb_to_sat_vb * self.min_relay_tx_fee, "subtractFeeFromOutputs": [0]}),]
         dec_tx = [self.nodes[3].decoderawtransaction(tx_['hex']) for tx_ in result]
         output = [d['vout'][1 - r['changepos']]['value'] for d, r in zip(dec_tx, result)]
         change = [d['vout'][r['changepos']]['value'] for d, r in zip(dec_tx, result)]

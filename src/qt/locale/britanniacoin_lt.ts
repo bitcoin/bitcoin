@@ -66,8 +66,8 @@
         <translation type="unfinished">Gavimo adresai</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Tai yra jūsų Bitcoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Tai yra jūsų BritanniaCoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -153,8 +153,8 @@
         <translation type="unfinished">Patvirtinkite piniginės užšifravimą</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Dėmesio: jei užšifruosite savo piniginę ir pamesite slaptafrazę, jūs&lt;b&gt;PRARASITE VISUS SAVO BITCOINUS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Dėmesio: jei užšifruosite savo piniginę ir pamesite slaptafrazę, jūs&lt;b&gt;PRARASITE VISUS SAVO BRITANNIACOINUS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -225,7 +225,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">Vidinė klaida</translation>
@@ -254,8 +254,8 @@
         <translation type="unfinished">Suma</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Įveskite Bitcoin adresą (pvz., %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">Įveskite BritanniaCoin adresą (pvz., %1)</translation>
     </message>
     <message>
         <source>Internal</source>
@@ -338,7 +338,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">%s kūrėjai</translation>
@@ -489,7 +489,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Apžvalga</translation>
@@ -552,8 +552,8 @@
         <translation type="unfinished">Tarpinis serveris yra &lt;b&gt;įgalintas&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Siųsti monetas Bitcoin adresui</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Siųsti monetas BritanniaCoin adresui</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -576,12 +576,12 @@
         <translation type="unfinished">Užšifruoti privačius raktus, kurie priklauso jūsų piniginei</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Pasirašydami žinutes su savo Bitcoin adresais įrodysite jog esate jų savininkas</translation>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
+        <translation type="unfinished">Pasirašydami žinutes su savo BritanniaCoin adresais įrodysite jog esate jų savininkas</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas Bitcoin adresas</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas BritanniaCoin adresas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -600,8 +600,8 @@
         <translation type="unfinished">Kortelių įrankinė</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Reikalauti mokėjimų (sukuria QR kodus ir bitcoin: URI)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Reikalauti mokėjimų (sukuria QR kodus ir britanniacoin: URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -652,12 +652,12 @@
         <translation type="unfinished">Atnaujinta</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Užkraukite dalinai pasirašytą Bitcoin transakciją</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction</source>
+        <translation type="unfinished">Užkraukite dalinai pasirašytą BritanniaCoin transakciją</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Užkraukite dalinai pasirašytas Bitcoin transakcijas iš iškarpinės...</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
+        <translation type="unfinished">Užkraukite dalinai pasirašytas BritanniaCoin transakcijas iš iškarpinės...</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -688,8 +688,8 @@
         <translation type="unfinished">Uždaryti visas pinigines</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Rodyti %1 pagalbos žinutę su Bitcoin pasirinkimo komandomis</translation>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
+        <translation type="unfinished">Rodyti %1 pagalbos žinutę su BritanniaCoin pasirinkimo komandomis</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -716,7 +716,7 @@
         <translation type="unfinished">%1 klientas</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1084,8 +1084,8 @@
         <translation type="unfinished">Keisti siuntimo adresą</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Įvestas adresas „%1“ nėra galiojantis Bitcoin adresas.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">Įvestas adresas „%1“ nėra galiojantis BritanniaCoin adresas.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1147,8 +1147,8 @@
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 bus atsisiųsta ir išsaugota Bitcoin blokų grandinės kopiją.</translation>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
+        <translation type="unfinished">%1 bus atsisiųsta ir išsaugota BritanniaCoin blokų grandinės kopiją.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1228,12 +1228,12 @@
         <translation type="unfinished">Forma</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Naujausi sandoriai gali būti dar nematomi, todėl jūsų piniginės likutis gali būti neteisingas. Ši informacija bus teisinga, kai jūsų piniginė bus baigta sinchronizuoti su bitcoin tinklu, kaip nurodyta žemiau.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
+        <translation type="unfinished">Naujausi sandoriai gali būti dar nematomi, todėl jūsų piniginės likutis gali būti neteisingas. Ši informacija bus teisinga, kai jūsų piniginė bus baigta sinchronizuoti su britanniacoin tinklu, kaip nurodyta žemiau.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Tinklas nepriims bandymų išleisti bitcoinus, kurie yra vis dar nematomi.</translation>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">Tinklas nepriims bandymų išleisti britanniacoinus, kurie yra vis dar nematomi.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1367,8 +1367,8 @@
         <translation type="unfinished">&amp;Išleiskite nepatvirtintus pakeitimus</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Automatiškai atidaryti Bitcoin kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Automatiškai atidaryti BritanniaCoin kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1383,8 +1383,8 @@
         <translation type="unfinished">Leisti gaunamu&amp;s ryšius</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Prisijunkite prie „Bitcoin“ tinklo per SOCKS5 proxy.</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Prisijunkite prie „BritanniaCoin“ tinklo per SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1516,8 +1516,8 @@
         <translation type="unfinished">Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Rodoma informacija gali būti pasenusi. Piniginė automatiškai sinchronizuojasi su „Bitcoin“ tinklu po ryšio užmezgimo, tačiau šis procesas dar nebaigtas.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Rodoma informacija gali būti pasenusi. Piniginė automatiškai sinchronizuojasi su „BritanniaCoin“ tinklu po ryšio užmezgimo, tačiau šis procesas dar nebaigtas.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1614,20 +1614,20 @@
         <translation type="unfinished">Mokėjimo užklausos klaida</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Negalima paleisti bitcoin: paspauskite sumokėti tvarkytojui</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">Negalima paleisti britanniacoin: paspauskite sumokėti tvarkytojui</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">URI tvarkymas</translation>
     </message>
     <message>
-        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">„bitcoin: //“ nėra galiojantis URI. Vietoj to naudokite „bitcoin:“.</translation>
+        <source>'britanniacoin://' is not a valid URI. Use 'britanniacoin:' instead.</source>
+        <translation type="unfinished">„britanniacoin: //“ nėra galiojantis URI. Vietoj to naudokite „bitcoin:“.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI negalima perskaityti! Tai gali sukelti negaliojantys „Bitcoin“ adresas arba netinkami URI parametrai.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI negalima perskaityti! Tai gali sukelti negaliojantys „BritanniaCoin“ adresas arba netinkami URI parametrai.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1984,8 +1984,8 @@
         <translation type="unfinished">Žinutė:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Neprivalomas pranešimas, pridedamas prie mokėjimo prašymo, kuris bus rodomas atidarius užklausą. Pastaba: pranešimas nebus išsiųstas su mokėjimu per „Bitcoin“ tinklą.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
+        <translation type="unfinished">Neprivalomas pranešimas, pridedamas prie mokėjimo prašymo, kuris bus rodomas atidarius užklausą. Pastaba: pranešimas nebus išsiųstas su mokėjimu per „BritanniaCoin“ tinklą.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2197,8 +2197,8 @@
         <translation type="unfinished">Dulkės:</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation type="unfinished">Kai sandorių apimtis yra mažesnė nei erdvės blokuose, kasėjai ir perduodantys mazgai gali užtikrinti minimalų mokestį. Mokėti tik šį minimalų mokestį yra galima, tačiau atkreipkite dėmesį, kad dėl to gali atsirasti niekada nepatvirtinamas sandoris, kai bus daugiau paklausos bitcoin operacijoms, nei tinklas gali apdoroti.</translation>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
+        <translation type="unfinished">Kai sandorių apimtis yra mažesnė nei erdvės blokuose, kasėjai ir perduodantys mazgai gali užtikrinti minimalų mokestį. Mokėti tik šį minimalų mokestį yra galima, tačiau atkreipkite dėmesį, kad dėl to gali atsirasti niekada nepatvirtinamas sandoris, kai bus daugiau paklausos britanniacoin operacijoms, nei tinklas gali apdoroti.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -2346,8 +2346,8 @@
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Įspėjimas: neteisingas Bitcoin adresas</translation>
+        <source>Warning: Invalid BritanniaCoin address</source>
+        <translation type="unfinished">Įspėjimas: neteisingas BritanniaCoin adresas</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2385,8 +2385,8 @@
         <translation type="unfinished">Pasirinkite anksčiau naudojamą adresą</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Bitcoin adresas, į kurį siunčiamas mokėjimas</translation>
+        <source>The BritanniaCoin address to send the payment to</source>
+        <translation type="unfinished">BritanniaCoin adresas, į kurį siunčiamas mokėjimas</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2397,8 +2397,8 @@
         <translation type="unfinished">Pašalinti šį įrašą</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Mokestis bus atimamas iš siunčiamos sumos. Gavėjas gaus mažiau bitcoinų nei įvesite sumos lauke. Jei pasirenkami keli gavėjai, mokestis padalijamas lygiai.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation type="unfinished">Mokestis bus atimamas iš siunčiamos sumos. Gavėjas gaus mažiau britanniacoinų nei įvesite sumos lauke. Jei pasirenkami keli gavėjai, mokestis padalijamas lygiai.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2425,8 +2425,8 @@
         <translation type="unfinished">Įveskite šio adreso etiketę, kad ją pridėtumėte prie naudojamų adresų sąrašo</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Pranešimas, kuris buvo pridėtas prie bitcoin: URI, kuris bus saugomas kartu su sandoriu jūsų nuoroda. Pastaba: šis pranešimas nebus išsiųstas per „Bitcoin“ tinklą.</translation>
+        <source>A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
+        <translation type="unfinished">Pranešimas, kuris buvo pridėtas prie britanniacoin: URI, kuris bus saugomas kartu su sandoriu jūsų nuoroda. Pastaba: šis pranešimas nebus išsiųstas per „BritanniaCoin“ tinklą.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2455,8 +2455,8 @@
         <translation type="unfinished">&amp;Pasirašyti žinutę</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Bitcoin adresas, kuriuo bus pasirašytas pranešimas su</translation>
+        <source>The BritanniaCoin address to sign the message with</source>
+        <translation type="unfinished">BritanniaCoin adresas, kuriuo bus pasirašytas pranešimas su</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2479,7 +2479,7 @@
         <translation type="unfinished">Nukopijuokite dabartinį parašą į sistemos iškarpinę</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">Registruotis žinute įrodymuii, kad turite šį adresą</translation>
     </message>
     <message>
@@ -2499,12 +2499,12 @@
         <translation type="unfinished">&amp;Patikrinti žinutę</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Bitcoin adresas, kuriuo buvo pasirašytas pranešimas</translation>
+        <source>The BritanniaCoin address the message was signed with</source>
+        <translation type="unfinished">BritanniaCoin adresas, kuriuo buvo pasirašytas pranešimas</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas Bitcoin adresas</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas BritanniaCoin adresas</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

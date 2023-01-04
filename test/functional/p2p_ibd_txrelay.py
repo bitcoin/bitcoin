@@ -26,13 +26,13 @@ from test_framework.p2p import (
         P2PInterface,
         p2p_lock
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 
 MAX_FEE_FILTER = Decimal(9170997) / COIN
 NORMAL_FEE_FILTER = Decimal(100) / COIN
 
 
-class P2PIBDTxRelayTest(BitcoinTestFramework):
+class P2PIBDTxRelayTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

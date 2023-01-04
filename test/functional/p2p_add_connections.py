@@ -5,7 +5,7 @@
 """Test add_outbound_p2p_connection test framework functionality"""
 
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     check_node_connections,
@@ -19,7 +19,7 @@ class P2PFeelerReceiver(P2PInterface):
         # closed.
         pass
 
-class P2PAddConnections(BitcoinTestFramework):
+class P2PAddConnections(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

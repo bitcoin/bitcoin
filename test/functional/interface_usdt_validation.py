@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 
@@ -50,13 +50,13 @@ int trace_block_connected(struct pt_regs *ctx) {
 """
 
 
-class ValidationTracepointTest(BitcoinTestFramework):
+class ValidationTracepointTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_britanniacoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 

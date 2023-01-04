@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
-// Copyright (c) 2022-2023 The BritanniaCoin Development Team (Britannia Coin Ltd)
+// Copyright (c) 2011-2022 The BritanniaCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -341,7 +340,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
             a user can only create a PSBT. This string is displayed when private keys are disabled and an external
             signer is not available. */
         question_string.append(tr("Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.").arg(PACKAGE_NAME));
-    } else if (model->getOptionsModel()->getEnablePSBRTontrols()) {
+    } else if (model->getOptionsModel()->getEnablePSBTControls()) {
         /*: Text to inform a user attempting to create a transaction of their current options. At this stage,
             a user can send their transaction or create a PSBT. This string is displayed when both private keys
             and PSBT controls are enabled. */
@@ -486,7 +485,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
 
     const QString confirmation = tr("Confirm send coins");
     const bool enable_send{!model->wallet().privateKeysDisabled() || model->wallet().hasExternalSigner()};
-    const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBRTontrols()};
+    const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBTControls()};
     auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, this);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
@@ -702,46 +701,17 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
     if(model && model->getOptionsModel())
     {
         CAmount balance = balances.balance;
-
-        bool showMinedBalance = balances.immature_balance != 0;
-        bool showWatchOnlyMinedBalance = balances.immature_watch_only_balance != 0;
-
-        ui->labelImmature->setVisible(showMinedBalance || showWatchOnlyMinedBalance);
-        ui->labelImmatureText->setVisible(showMinedBalance || showWatchOnlyMinedBalance);
-
         if (model->wallet().hasExternalSigner()) {
-
-            ui->labelBalance->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.balance));
-            ui->labelUnconfirmed->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.unconfirmed_balance));
-            ui->labelImmature->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.immature_balance));
-            ui->labelTotal->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.balance + balances.unconfirmed_balance + balances.immature_balance));
-
-            //ui->labelBalanceName->setText(tr("External balance:"));
-
-
-
-
+            ui->labelBalanceName->setText(tr("External balance:"));
         } else if (model->wallet().privateKeysDisabled()) {
-
             balance = balances.watch_only_balance;
-            ui->labelBalance->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.watch_only_balance));
-            ui->labelUnconfirmed->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.unconfirmed_watch_only_balance));
-            ui->labelImmature->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.immature_watch_only_balance));
-            ui->labelTotal->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance));
-            //ui->labelBalanceName->setText(tr("Watch-only balance:"));
-
-
-
-        } else {
-            ui->labelBalance->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.balance));
-            ui->labelUnconfirmed->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.unconfirmed_balance));
-            ui->labelImmature->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.immature_balance));
-            ui->labelTotal->setText(britanniacoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balances.balance + balances.unconfirmed_balance + balances.immature_balance));
+            ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
+        ui->labelBalance->setText(BritanniaCoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
 
-void SendCoinsDialog::updateDisplayUnit()
+void SendCoinsDialog::refreshBalance()
 {
     setBalance(model->getCachedBalance());
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());

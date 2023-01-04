@@ -4,12 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet commands for signing and verifying messages."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class SignMessagesWithAddressTest(BitcoinTestFramework):
+class SignMessagesWithAddressTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

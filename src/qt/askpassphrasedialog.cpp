@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/britanniacoin-config.h>
 #endif
 
 #include <qt/askpassphrasedialog.h>
@@ -116,7 +116,7 @@ void AskPassphraseDialog::accept()
             if(newpass1 == newpass2)
             {
                 QString encryption_reminder = tr("Remember that encrypting your wallet cannot fully protect "
-                "your bitcoins from being stolen by malware infecting your computer.");
+                "your britanniacoins from being stolen by malware infecting your computer.");
                 if (m_passphrase_out) {
                     m_passphrase_out->assign(newpass1);
                     QMessageBox::warning(this, tr("Wallet to be encrypted"),

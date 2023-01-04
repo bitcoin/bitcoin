@@ -29,7 +29,7 @@ from test_framework.p2p import (
     msg_getdata,
     p2p_lock,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -73,7 +73,7 @@ def custom_function():
     pass
 
 
-class ExampleTest(BitcoinTestFramework):
+class ExampleTest(BritanniaCoinTestFramework):
     # Each functional test is a subclass of the BitcoinTestFramework class.
 
     # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()

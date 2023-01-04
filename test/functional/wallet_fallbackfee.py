@@ -5,10 +5,10 @@
 """Test wallet replace-by-fee capabilities in conjunction with the fallbackfee."""
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
-class WalletRBFTest(BitcoinTestFramework):
+class WalletRBFTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

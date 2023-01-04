@@ -1,6 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
-        <file alias="bitcoin">res/icons/bitcoin.png</file>
+        <file alias="britanniacoin">res/icons/britanniacoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="send">res/icons/send.png</file>
         <file alias="connect_0">res/icons/connect0.png</file>
@@ -44,6 +44,17 @@
         <file alias="hd_disabled">res/icons/hd_disabled.png</file>
         <file alias="network_disabled">res/icons/network_disabled.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
+        <file alias="britanniacoinbw">res/icons/britanniacoinbw.png</file>
+        <file alias="britanniacoinwhite">res/icons/britanniacoinwhite.png</file>
+        <file alias="sidebanner">res/icons/sidebanner.png</file>
+        <file alias="sendrecieveinactive">res/icons/sendrecieveinactive.png</file>
+        <file alias="homeactive">res/icons/homeactive.png</file>
+        <file alias="settings">res/icons/settings.png</file>
+        <file alias="homeinactive">res/icons/homeinactive.png</file>
+        <file alias="transactionsactive">res/icons/transactionsactive.png</file>
+        <file alias="transactionsinactive">res/icons/transactionsinactive.png</file>
+        <file alias="sendrecieveactive">res/icons/sendrecieveactive.png</file>
+        <file alias="toolbarempty">res/icons/toolbarempty.png</file>
     </qresource>
     <qresource prefix="/animation">
         <file alias="spinner-000">res/animation/spinner-000.png</file>

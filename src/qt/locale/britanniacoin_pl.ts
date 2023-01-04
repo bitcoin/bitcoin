@@ -66,13 +66,13 @@
         <translation type="unfinished">Odbierające adresy</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet. </translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Tutaj znajdują się adresy BritanniaCoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet. </translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">To są twoje adresy Bitcoin do otrzymywania płatności. Użyj przycisku 'Utwórz nowy adres odbioru' na karcie odbioru, aby utworzyć nowe adresy.
+        <translation type="unfinished">To są twoje adresy BritanniaCoin do otrzymywania płatności. Użyj przycisku 'Utwórz nowy adres odbioru' na karcie odbioru, aby utworzyć nowe adresy.
 Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
@@ -164,7 +164,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Potwierdź szyfrowanie portfela </translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">Ostrzeżenie: Jeśli zaszyfrujesz swój portfel i zgubisz hasło - &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCONY&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -184,7 +184,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Wprowadź stare i nowe hasło portfela. </translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Zwróć uwagę, że zaszyfrowanie portfela nie zabezpieczy się w pełni przed kradzieżą przez malware jakie może zainfekować twój komputer. </translation>
     </message>
     <message>
@@ -244,7 +244,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">Wystąpił krytyczny błąd. %1 nie może dalej bezpiecznie pracować i zostanie zakończony.</translation>
@@ -285,8 +285,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Kwota</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Wprowadź adres bitcoinowy (np. %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">Wprowadź adres britanniacoinowy (np. %1)</translation>
     </message>
     <message>
         <source>Internal</source>
@@ -369,14 +369,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>The %s developers</source>
         <translation type="unfinished">Deweloperzy %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s jest uszkodzony. Spróbuj użyć narzędzia bitcoin-portfel, aby uratować portfel lub przywrócić kopię zapasową.</translation>
+        <source>%s corrupt. Try using the wallet tool britanniacoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s jest uszkodzony. Spróbuj użyć narzędzia britanniacoin-portfel, aby uratować portfel lub przywrócić kopię zapasową.</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -809,7 +809,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">P&amp;odsumowanie</translation>
@@ -872,8 +872,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Proxy jest &lt;b&gt;włączone&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Wyślij monety na adres Bitcoin</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Wyślij monety na adres BritanniaCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -912,7 +912,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Podpisz &amp;wiadomość...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">Podpisz wiadomości swoim adresem, aby udowodnić jego posiadanie</translation>
     </message>
     <message>
@@ -920,8 +920,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">&amp;Zweryfikuj wiadomość...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem bitcoinowym.</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem britanniacoinowym.</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
@@ -956,8 +956,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Pasek zakładek</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Żądaj płatności (generuje kod QR oraz bitcoinowe URI)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Żądaj płatności (generuje kod QR oraz britanniacoinowe URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -1008,12 +1008,12 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Aktualny</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Załaduj częściowo podpisaną transakcję Bitcoin</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction</source>
+        <translation type="unfinished">Załaduj częściowo podpisaną transakcję BritanniaCoin</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Załaduj częściowo podpisaną transakcję Bitcoin ze schowka</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
+        <translation type="unfinished">Załaduj częściowo podpisaną transakcję BritanniaCoin ze schowka</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -1032,7 +1032,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">&amp;Adresy odbioru</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
+        <source>Open a britanniacoin: URI</source>
         <translation type="unfinished">Otwórz URI</translation>
     </message>
     <message>
@@ -1052,7 +1052,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Zamknij wszystkie portfele</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
         <translation type="unfinished">Pokaż pomoc %1 aby zobaczyć listę wszystkich opcji lnii poleceń.</translation>
     </message>
     <message>
@@ -1088,7 +1088,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">%1 klient</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1469,8 +1469,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Zmień adres wysyłania</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Wprowadzony adres "%1" nie jest prawidłowym adresem Bitcoin.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">Wprowadzony adres "%1" nie jest prawidłowym adresem BritanniaCoin.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1532,8 +1532,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 pobierze i zapisze lokalnie kopię łańcucha bloków Bitcoin.</translation>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
+        <translation type="unfinished">%1 pobierze i zapisze lokalnie kopię łańcucha bloków BritanniaCoin.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1613,12 +1613,12 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Formularz</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Świeże transakcje mogą nie być jeszcze widoczne, a zatem saldo portfela może być nieprawidłowe. Te detale będą poprawne, gdy portfel zakończy synchronizację z siecią bitcoin, zgodnie z poniższym opisem.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
+        <translation type="unfinished">Świeże transakcje mogą nie być jeszcze widoczne, a zatem saldo portfela może być nieprawidłowe. Te detale będą poprawne, gdy portfel zakończy synchronizację z siecią britanniacoin, zgodnie z poniższym opisem.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Próba wydania bitcoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć.</translation>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">Próba wydania britanniacoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1656,7 +1656,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open bitcoin URI</source>
+        <source>Open britanniacoin URI</source>
         <translation type="unfinished">Otwórz URI</translation>
     </message>
     <message>
@@ -1756,8 +1756,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Wydaj niepotwierdzoną re&amp;sztę</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Automatycznie otwiera port klienta Bitcoin na routerze. Ta opcja dzieła tylko jeśli twój router wspiera UPnP i jest ono włączone.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Automatycznie otwiera port klienta BritanniaCoin na routerze. Ta opcja dzieła tylko jeśli twój router wspiera UPnP i jest ono włączone.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1776,8 +1776,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Zezwól na &amp;połączenia przychodzące</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Połącz się z siecią Bitcoin poprzez proxy SOCKS5.</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Połącz się z siecią BritanniaCoin poprzez proxy SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1844,8 +1844,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR.</translation>
+        <source>Connect to the BritanniaCoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Połącz się z siecią BritanniaCoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -1917,8 +1917,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Formularz</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Wyświetlana informacja może być nieaktualna. Twój portfel synchronizuje się automatycznie z siecią bitcoin, zaraz po tym jak uzyskano połączenie, ale proces ten nie został jeszcze ukończony.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Wyświetlana informacja może być nieaktualna. Twój portfel synchronizuje się automatycznie z siecią britanniacoin, zaraz po tym jak uzyskano połączenie, ale proces ten nie został jeszcze ukończony.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -2103,20 +2103,20 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Błąd żądania płatności</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Nie można uruchomić protokołu bitcoin: kliknij-by-zapłacić</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">Nie można uruchomić protokołu britanniacoin: kliknij-by-zapłacić</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">Obsługa URI</translation>
     </message>
     <message>
-        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">'bitcoin://' nie jest poprawnym URI. Użyj 'bitcoin:'.</translation>
+        <source>'britanniacoin://' is not a valid URI. Use 'britanniacoin:' instead.</source>
+        <translation type="unfinished">'britanniacoin://' nie jest poprawnym URI. Użyj 'britanniacoin:'.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">Nie można przeanalizować identyfikatora URI! Może to być spowodowane nieważnym adresem Bitcoin lub nieprawidłowymi parametrami URI.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
+        <translation type="unfinished">Nie można przeanalizować identyfikatora URI! Może to być spowodowane nieważnym adresem BritanniaCoin lub nieprawidłowymi parametrami URI.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2506,8 +2506,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">&amp;Wiadomość:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Opcjonalna wiadomość do dołączenia do żądania płatności, która będzie wyświetlana, gdy żądanie zostanie otwarte. Uwaga: wiadomość ta nie zostanie wysłana wraz z płatnością w sieci Bitcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
+        <translation type="unfinished">Opcjonalna wiadomość do dołączenia do żądania płatności, która będzie wyświetlana, gdy żądanie zostanie otwarte. Uwaga: wiadomość ta nie zostanie wysłana wraz z płatnością w sieci BritanniaCoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2744,7 +2744,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Ukryj ustawienia opłat transakcyjnych</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
         <translation type="unfinished">Gdy ilość transakcji jest mniejsza niż ilość miejsca w bloku, górnicy i węzły przekazujące wymagają minimalnej opłaty. Zapłata tylko tej wartości jest dopuszczalna, lecz może skutkować transakcją która nigdy nie zostanie potwierdzona w sytuacji, gdy ilość transakcji przekroczy przepustowość sieci.</translation>
     </message>
     <message>
@@ -2816,7 +2816,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">&amp;Utwórz niepodpisaną transakcję</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Creates a Partially Signed BritanniaCoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">Tworzy częściowo podpisaną transakcję (ang. PSBT) używaną np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
     <message>
@@ -2852,7 +2852,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Możesz później zwiększyć opłatę (sygnalizuje podmień-przez-opłatę (RBF), BIP 125).</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
@@ -2922,8 +2922,8 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Ostrzeżenie: nieprawidłowy adres Bitcoin</translation>
+        <source>Warning: Invalid BritanniaCoin address</source>
+        <translation type="unfinished">Ostrzeżenie: nieprawidłowy adres BritanniaCoin</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2961,8 +2961,8 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Wybierz wcześniej użyty adres</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Adres Bitcoin gdzie wysłać płatność</translation>
+        <source>The BritanniaCoin address to send the payment to</source>
+        <translation type="unfinished">Adres BritanniaCoin gdzie wysłać płatność</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2977,8 +2977,8 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Kwota do wysłania w wybranej jednostce</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Opłata zostanie odjęta od kwoty wysyłane.Odbiorca otrzyma mniej niż bitcoins wpisz w polu kwoty. Jeśli wybrano kilku odbiorców, opłata jest podzielona równo.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation type="unfinished">Opłata zostanie odjęta od kwoty wysyłane.Odbiorca otrzyma mniej niż britanniacoins wpisz w polu kwoty. Jeśli wybrano kilku odbiorców, opłata jest podzielona równo.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -3005,8 +3005,8 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Wprowadź etykietę dla tego adresu by dodać go do listy użytych adresów</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Wiadomość, która została dołączona do URI bitcoin:, która będzie przechowywana wraz z transakcją w celach informacyjnych. Uwaga: Ta wiadomość nie będzie rozsyłana w sieci Bitcoin.</translation>
+        <source>A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
+        <translation type="unfinished">Wiadomość, która została dołączona do URI britanniacoin:, która będzie przechowywana wraz z transakcją w celach informacyjnych. Uwaga: Ta wiadomość nie będzie rozsyłana w sieci BritanniaCoin.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -3039,12 +3039,12 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Podpi&amp;sz Wiadomość</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive britanniacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation type="unfinished">Możesz podpisywać wiadomości swoimi adresami aby udowodnić, że jesteś ich właścicielem. Uważaj, aby nie podpisywać niczego co wzbudza Twoje podejrzenia, ponieważ ktoś może stosować phishing próbując nakłonić Cię do ich podpisania. Akceptuj i podpisuj tylko w pełni zrozumiałe komunikaty i wiadomości.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Adres Bitcoin, za pomocą którego podpisać wiadomość</translation>
+        <source>The BritanniaCoin address to sign the message with</source>
+        <translation type="unfinished">Adres BritanniaCoin, za pomocą którego podpisać wiadomość</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3067,7 +3067,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
         <translation type="unfinished">Kopiuje aktualny podpis do schowka systemowego</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">Podpisz wiadomość aby dowieść, że ten adres jest twój</translation>
     </message>
     <message>
@@ -3092,8 +3092,8 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
 Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Adres Bitcoin, którym została podpisana wiadomość</translation>
+        <source>The BritanniaCoin address the message was signed with</source>
+        <translation type="unfinished">Adres BritanniaCoin, którym została podpisana wiadomość</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -3104,8 +3104,8 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation type="unfinished">Sygnatura podawana przy podpisywaniu wiadomości</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem Bitcoin.</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem BritanniaCoin.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

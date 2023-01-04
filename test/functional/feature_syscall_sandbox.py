@@ -4,29 +4,29 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoind aborts if a disallowed syscall is used when compiled with the syscall sandbox."""
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BritanniaCoinTestFramework, SkipTest
 
 
-class SyscallSandboxTest(BitcoinTestFramework):
+class SyscallSandboxTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         if not self.is_syscall_sandbox_compiled():
-            raise SkipTest("bitcoind has not been built with syscall sandbox enabled.")
+            raise SkipTest("britanniacoind has not been built with syscall sandbox enabled.")
         if self.disable_syscall_sandbox:
             raise SkipTest("--nosandbox passed to test runner.")
 
     def run_test(self):
-        disallowed_syscall_terminated_bitcoind = False
+        disallowed_syscall_terminated_britanniacoind = False
         expected_log_entry = 'ERROR: The syscall "getgroups" (syscall number 115) is not allowed by the syscall sandbox'
         with self.nodes[0].assert_debug_log([expected_log_entry]):
             self.log.info("Invoking disallowed syscall")
             try:
                 self.nodes[0].invokedisallowedsyscall()
             except ConnectionError:
-                disallowed_syscall_terminated_bitcoind = True
-        assert disallowed_syscall_terminated_bitcoind
+                disallowed_syscall_terminated_britanniacoind = True
+        assert disallowed_syscall_terminated_britanniacoind
         self.nodes = []
 
 

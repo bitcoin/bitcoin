@@ -66,13 +66,13 @@
         <translation type="unfinished">Imenik prejemnih naslovov</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">To so vaši bitcoin-naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">To so vaši britanniacoin-naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">To so vaši bitcoin-naslovi, ki jih uporabljate za prejemanje plačil. Za tvorbo novega naslova uporabite gumb "Ustvari nov prejemni naslov" v zavihku Prejmi.
+        <translation type="unfinished">To so vaši britanniacoin-naslovi, ki jih uporabljate za prejemanje plačil. Za tvorbo novega naslova uporabite gumb "Ustvari nov prejemni naslov" v zavihku Prejmi.
 Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
     <message>
@@ -164,8 +164,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Potrdi šifriranje denarnice</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BITCOINE&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BRITANNIACOINE&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -184,8 +184,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Vnesite staro geslo in novo geslo za denarnico.</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Pomnite, da šifriranje denarnice ne more preprečiti morebitnim virusom na vašem računalniku, da bi ukradli vaše bitcoine.</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Pomnite, da šifriranje denarnice ne more preprečiti morebitnim virusom na vašem računalniku, da bi ukradli vaše britanniacoine.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -240,7 +240,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Pobegla izjema</translation>
@@ -292,8 +292,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Znesek</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">Vnesite bitcoin-naslov (npr. %1)</translation>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
+        <translation type="unfinished">Vnesite britanniacoin-naslov (npr. %1)</translation>
     </message>
     <message>
         <source>Internal</source>
@@ -402,7 +402,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">Nastavitvene datoteke ni bilo moč prebrati</translation>
@@ -416,8 +416,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Razvijalci %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s je okvarjena. Lahko jo poskusite popraviti z orodjem bitcoin-wallet ali pa jo obnovite iz varnostne kopije.</translation>
+        <source>%s corrupt. Try using the wallet tool britanniacoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s je okvarjena. Lahko jo poskusite popraviti z orodjem britanniacoin-wallet ali pa jo obnovite iz varnostne kopije.</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -456,8 +456,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Napaka: identifikator zapisa v izvozni (dump) datoteki je napačen. Vsebuje "%s", pričakovano "%s".</translation>
     </message>
     <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">Napaka: verzija izvozne (dump) datoteke ni podprta. Ta verzija ukaza bitcoin-wallet podpira le izvozne datoteke verzije 1, ta datoteka pa ima verzijo %s.</translation>
+        <source>Error: Dumpfile version is not supported. This version of britanniacoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">Napaka: verzija izvozne (dump) datoteke ni podprta. Ta verzija ukaza britanniacoin-wallet podpira le izvozne datoteke verzije 1, ta datoteka pa ima verzijo %s.</translation>
     </message>
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
@@ -1061,7 +1061,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">Pre&amp;gled</translation>
@@ -1128,8 +1128,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Posredniški strežnik je &lt;b&gt;omogočen&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Pošljite novce na bitcoin-naslov</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Pošljite novce na britanniacoin-naslov</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -1172,16 +1172,16 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">&amp;Podpiši sporočilo...</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Podpišite poljubno sporočilo z enim svojih bitcoin-naslovov, da prejemniku sporočila dokažete, da je ta naslov v vaši lasti.</translation>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
+        <translation type="unfinished">Podpišite poljubno sporočilo z enim svojih britanniacoin-naslovov, da prejemniku sporočila dokažete, da je ta naslov v vaši lasti.</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">P&amp;reveri podpis...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Preverite, če je bilo prejeto sporočilo podpisano z določenim bitcoin-naslovom.</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Preverite, če je bilo prejeto sporočilo podpisano z določenim britanniacoin-naslovom.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -1201,8 +1201,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Naloži DPBT z &amp;odložišča...</translation>
     </message>
     <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Naloži delno podpisano bitcoin-transakcijo z odložišča</translation>
+        <source>Load Partially Signed BritanniaCoin Transaction from clipboard</source>
+        <translation type="unfinished">Naloži delno podpisano britanniacoin-transakcijo z odložišča</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -1221,8 +1221,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">&amp;Naslovi za prejemanje</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Odpri URI tipa bitcoin:</translation>
+        <source>Open a britanniacoin: URI</source>
+        <translation type="unfinished">Odpri URI tipa britanniacoin:</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1241,7 +1241,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Zapri vse denarnice</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
         <translation type="unfinished">Pokaži %1 sporočilo za pomoč s seznamom vseh možnosti v ukazni vrstici</translation>
     </message>
     <message>
@@ -1273,13 +1273,13 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">&amp;Prikaži</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n aktivna povezava v omrežje bitcoin</numerusform>
-            <numerusform>%n aktivni povezavi v omrežje bitcoin</numerusform>
-            <numerusform>%n aktivne povezave v omrežje bitcoin</numerusform>
-            <numerusform>%n aktivnih povezav v omrežje bitcoin</numerusform>
+            <numerusform>%n aktivna povezava v omrežje britanniacoin</numerusform>
+            <numerusform>%n aktivni povezavi v omrežje britanniacoin</numerusform>
+            <numerusform>%n aktivne povezave v omrežje britanniacoin</numerusform>
+            <numerusform>%n aktivnih povezav v omrežje britanniacoin</numerusform>
         </translation>
     </message>
     <message>
@@ -1726,8 +1726,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Uredi naslov za pošiljanje</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Vnešeni naslov "%1" ni veljaven bitcoin-naslov.</translation>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
+        <translation type="unfinished">Vnešeni naslov "%1" ni veljaven britanniacoin-naslov.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1798,7 +1798,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
         <translation type="unfinished">%1 bo prenesel in shranil kopijo verige blokov.</translation>
     </message>
     <message>
@@ -1887,12 +1887,12 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Obrazec</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Zadnje transakcije morda še niso vidne, zato je prikazano dobroimetje v denarnici lahko napačno. Pravilni podatki bodo prikazani, ko bo vaša denarnica končala s sinhronizacijo z omrežjem bitcoin; glejte podrobnosti spodaj.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
+        <translation type="unfinished">Zadnje transakcije morda še niso vidne, zato je prikazano dobroimetje v denarnici lahko napačno. Pravilni podatki bodo prikazani, ko bo vaša denarnica končala s sinhronizacijo z omrežjem britanniacoin; glejte podrobnosti spodaj.</translation>
     </message>
     <message>
-        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Poskusa pošiljanja bitcoinov, na katere vplivajo še ne prikazane transakcije, omrežje ne bo sprejelo.</translation>
+        <source>Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">Poskusa pošiljanja britanniacoinov, na katere vplivajo še ne prikazane transakcije, omrežje ne bo sprejelo.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1938,8 +1938,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open bitcoin URI</source>
-        <translation type="unfinished">Odpri URI tipa bitcoin:</translation>
+        <source>Open britanniacoin URI</source>
+        <translation type="unfinished">Odpri URI tipa britanniacoin:</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -2090,20 +2090,20 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">&amp;Pot do zunanjega podpisnika</translation>
     </message>
     <message>
-        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Polna pot do datoteke s skripto, združljivo z Bitcoin Core (n.pr. C:\Downloads\hwi.exe ali /Users/jaz/Downloads/hwi.py). Previdno: zlonamerna programska oprema vam lahko ukrade novce!</translation>
+        <source>Full path to a BritanniaCoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Polna pot do datoteke s skripto, združljivo z BritanniaCoin Core (n.pr. C:\Downloads\hwi.exe ali /Users/jaz/Downloads/hwi.py). Previdno: zlonamerna programska oprema vam lahko ukrade novce!</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Samodejno odpiranje vrat za bitcoin-odjemalec na usmerjevalniku (routerju). To deluje le, če usmerjevalnik podpira UPnP in je ta funkcija na usmerjevalniku omogočena.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Samodejno odpiranje vrat za britanniacoin-odjemalec na usmerjevalniku (routerju). To deluje le, če usmerjevalnik podpira UPnP in je ta funkcija na usmerjevalniku omogočena.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation type="unfinished">Preslikaj vrata z uporabo &amp;UPnP</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Samodejno odpiranje vrat za bitcoin-odjemalec na usmerjevalniku. To deluje le, če usmerjevalnik podpira NAT-PMP in je ta funkcija na usmerjevalniku omogočena. Zunanja številka vrat je lahko naključna.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Samodejno odpiranje vrat za britanniacoin-odjemalec na usmerjevalniku. To deluje le, če usmerjevalnik podpira NAT-PMP in je ta funkcija na usmerjevalniku omogočena. Zunanja številka vrat je lahko naključna.</translation>
     </message>
     <message>
         <source>Map port using NA&amp;T-PMP</source>
@@ -2118,8 +2118,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Dovoli &amp;dohodne povezave</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Poveži se v omrežje Bitcoin preko posredniškega strežnika SOCKS5.</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">Poveži se v omrežje BritanniaCoin preko posredniškega strežnika SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -2198,8 +2198,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Omogoči dodatne možnosti podrobnega nadzora nad  kovanci v transakcijah.</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
-        <translation type="unfinished">Poveži se v omrežje Bitcoin prek ločenega posredniškega strežnika SOCKS5 za storitve onion (Tor).</translation>
+        <source>Connect to the BritanniaCoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Poveži se v omrežje BritanniaCoin prek ločenega posredniškega strežnika SOCKS5 za storitve onion (Tor).</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
@@ -2296,8 +2296,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Obrazec</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Prikazani podatki so morda zastareli. Program ob vzpostavitvi povezave samodejno sinhronizira denarnico z omrežjem Bitcoin, a trenutno ta proces še ni zaključen.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Prikazani podatki so morda zastareli. Program ob vzpostavitvi povezave samodejno sinhronizira denarnico z omrežjem BritanniaCoin, a trenutno ta proces še ni zaključen.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -2507,16 +2507,16 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Napaka pri zahtevku za plačilo</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Ni mogoče zagnati rokovalca plačilnih povezav tipa bitcoin:.</translation>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
+        <translation type="unfinished">Ni mogoče zagnati rokovalca plačilnih povezav tipa britanniacoin:.</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">Rokovanje z URI</translation>
     </message>
     <message>
-        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation type="unfinished">'bitcoin://' ni veljaven URI. Namesto tega uporabite 'bitcoin:' .</translation>
+        <source>'britanniacoin://' is not a valid URI. Use 'britanniacoin:' instead.</source>
+        <translation type="unfinished">'britanniacoin://' ni veljaven URI. Namesto tega uporabite 'britanniacoin:' .</translation>
     </message>
     <message>
         <source>Cannot process payment request because BIP70 is not supported.
@@ -2527,8 +2527,8 @@ Zaradi široko razširjenih varnostih hib v BIP70 vam toplo priporočamo, da mor
 Svetujemo, da prodajalca prosite, naj vam priskrbi URI na podlagi BIP21.</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">URI je nerazumljiv. Možno je, da je bitcoin-naslov neveljaven ali pa so parametri URI-ja napačno oblikovani.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI je nerazumljiv. Možno je, da je britanniacoin-naslov neveljaven ali pa so parametri URI-ja napačno oblikovani.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -3064,8 +3064,8 @@ Svetujemo, da prodajalca prosite, naj vam priskrbi URI na podlagi BIP21.</transl
         <translation type="unfinished">&amp;Sporočilo:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished">Neobvezno sporočilo kot priponka zahtevku za plačilo, ki bo prikazano, ko bo zahtevek odprt. Opomba: Opravljeno plačilo v omrežju bitcoin tega sporočila ne bo vsebovalo.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
+        <translation type="unfinished">Neobvezno sporočilo kot priponka zahtevku za plačilo, ki bo prikazano, ko bo zahtevek odprt. Opomba: Opravljeno plačilo v omrežju britanniacoin tega sporočila ne bo vsebovalo.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -3345,7 +3345,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
 Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB" za transakcijo velikosti 500 navideznih bajtov (polovica enega kvB) znašala le 50 satošijev.</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
         <translation type="unfinished">Kadar je v blokih manj prostora, kot je zahtev po transakcijah, lahko rudarji in posredovalna vozlišča zahtevajo minimalno provizijo. V redu, če plačate samo to minimalno provizijo, vendar se zavedajte, da se potem transakcija lahko nikoli ne potrdi, če bo povpraševanje po transakcijah večje, kot ga omrežje lahko obdela.</translation>
     </message>
     <message>
@@ -3435,8 +3435,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Ustvari n&amp;epodpisano</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Ustvari delno podpisano bitcoin-transakcijo (DPBT, angl. PSBT), ki jo lahko kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
+        <source>Creates a Partially Signed BritanniaCoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Ustvari delno podpisano britanniacoin-transakcijo (DPBT, angl. PSBT), ki jo lahko kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
     </message>
     <message>
         <source> from wallet '%1'</source>
@@ -3494,9 +3494,9 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Provizijo lahko zvišate kasneje (vsebuje Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
-        <translation type="unfinished">Prosimo, preglejte predlog za transakcijo. Ustvarjena bo delno podpisana bitcoin-transakcija (DPBT), ki jo lahko shranite ali kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
+        <translation type="unfinished">Prosimo, preglejte predlog za transakcijo. Ustvarjena bo delno podpisana britanniacoin-transakcija (DPBT), ki jo lahko shranite ali kopirate in potem podpišete n.pr. z nepovezano (offline) %1 denarnico ali pa s hardversko denarnico, ki podpira DPBT.</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3504,9 +3504,9 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Želite ustvariti takšno transakcijo?</translation>
     </message>
     <message>
-        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed BritanniaCoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
-        <translation type="unfinished">Prosimo, preglejte podrobnosti transakcije. Transakcijo lahko ustvarite in pošljete, lahko pa tudi ustvarite delno podpisano bitcoin-transakcijo (DPBT, angl. PSBT), ki jo lahko shranite ali kopirate na odložišče in kasneje prodpišete n.pr. z nepovezano %1 denarnico ali z denarnico, ki podpiral DPBT.</translation>
+        <translation type="unfinished">Prosimo, preglejte podrobnosti transakcije. Transakcijo lahko ustvarite in pošljete, lahko pa tudi ustvarite delno podpisano britanniacoin-transakcijo (DPBT, angl. PSBT), ki jo lahko shranite ali kopirate na odložišče in kasneje prodpišete n.pr. z nepovezano %1 denarnico ali z denarnico, ki podpiral DPBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3575,8 +3575,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished">Opozorilo: Neveljaven bitcoin-naslov</translation>
+        <source>Warning: Invalid BritanniaCoin address</source>
+        <translation type="unfinished">Opozorilo: Neveljaven britanniacoin-naslov</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -3614,8 +3614,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Izberite enega od že uporabljenih naslovov</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
-        <translation type="unfinished">Bitcoin-naslov, na katerega bo plačilo poslano</translation>
+        <source>The BritanniaCoin address to send the payment to</source>
+        <translation type="unfinished">BritanniaCoin-naslov, na katerega bo plačilo poslano</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -3630,7 +3630,7 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Znesek za pošiljanje v izbrani enoti</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation type="unfinished">Znesek plačila bo zmanjšan za znesek provizije. Prejemnik bo prejel manjši znesek, kot je bil vnešen. Če je prejemnikov več, bo provizija med njih enakomerno porazdeljena.</translation>
     </message>
     <message>
@@ -3658,8 +3658,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Če vnesete oznako za zgornji naslov, se bo skupaj z naslovom shranila v imenik že uporabljenih naslovov</translation>
     </message>
     <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished">Sporočilo, ki je bilo pripeto na URI tipa bitcoin: in bo shranjeno skupaj s podatki o transakciji. Opomba: Sporočilo ne bo poslano preko omrežja Bitcoin.</translation>
+        <source>A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
+        <translation type="unfinished">Sporočilo, ki je bilo pripeto na URI tipa britanniacoin: in bo shranjeno skupaj s podatki o transakciji. Opomba: Sporočilo ne bo poslano preko omrežja BritanniaCoin.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -3688,12 +3688,12 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">&amp;Podpiši sporočilo</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive britanniacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation type="unfinished">S svojimi naslovi lahko podpisujete sporočila ali dogovore in s tem dokazujete, da na teh naslovih lahko prejemate kovance. Bodite previdni in ne podpisujte ničesar nejasnega ali naključnega, ker vas zlikovci preko ribarjenja (phishing) lahko prelisičijo, da na njih prepišete svojo identiteto. Podpisujte samo podrobno opisane izjave, s katerimi se strinjate.</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
-        <translation type="unfinished">Bitcoin-naslov, s katerim podpisujete sporočilo</translation>
+        <source>The BritanniaCoin address to sign the message with</source>
+        <translation type="unfinished">BritanniaCoin-naslov, s katerim podpisujete sporočilo</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3716,7 +3716,7 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Kopirj trenutni podpis v sistemsko odložišče.</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">Podpišite sporočilo, da dokažete lastništvo zgornjega naslova.</translation>
     </message>
     <message>
@@ -3740,8 +3740,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Da preverite verodostojnost sporočila, spodaj vnesite: prejemnikov naslov, prejeto sporočilo (pazljivo skopirajte vse prelome vrstic, presledke, tabulatorje itd.) ter prejeti podpis. Da se izognete napadom tipa man-in-the-middle, vedite, da iz veljavnega podpisa ne sledi nič drugega, kot tisto, kar je navedeno v sporočilu. Podpis samo potrjuje dejstvo, da ima podpisnik v lasti prejemni naslov, ne more pa dokazati pošiljanja nobene transakcije!</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
-        <translation type="unfinished">Bitcoin-naslov, s katerim je bilo sporočilo podpisano</translation>
+        <source>The BritanniaCoin address the message was signed with</source>
+        <translation type="unfinished">BritanniaCoin-naslov, s katerim je bilo sporočilo podpisano</translation>
     </message>
     <message>
         <source>The signed message to verify</source>
@@ -3752,8 +3752,8 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Podpis, ustvarjen ob podpisovanju sporočila</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Preverite, ali je bilo sporočilo v resnici podpisano z navedenim bitcoin-naslovom.</translation>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
+        <translation type="unfinished">Preverite, ali je bilo sporočilo v resnici podpisano z navedenim britanniacoin-naslovom.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

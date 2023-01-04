@@ -3,9 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 
-class DeprecatedRpcTest(BitcoinTestFramework):
+class DeprecatedRpcTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

@@ -11,13 +11,13 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

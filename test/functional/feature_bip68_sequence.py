@@ -25,7 +25,7 @@ from test_framework.script import (
     CScript,
     OP_TRUE,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -43,7 +43,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "non-BIP68-final"
 
-class BIP68Test(BitcoinTestFramework):
+class BIP68Test(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

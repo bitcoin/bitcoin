@@ -6,7 +6,7 @@
 Test that the proper port is used for -externalip=
 """
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BritanniaCoinTestFramework, SkipTest
 from test_framework.util import assert_equal, p2p_port
 
 # We need to bind to a routable address for this test to exercise the relevant code.
@@ -37,7 +37,7 @@ EXPECTED = [
                                              f'-whitebind={ADDR}:30020'], 30020],
 ]
 
-class BindPortExternalIPTest(BitcoinTestFramework):
+class BindPortExternalIPTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         # Avoid any -bind= on the command line. Force the framework to avoid adding -bind=127.0.0.1.
         self.setup_clean_chain = True

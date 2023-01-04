@@ -18,7 +18,7 @@ import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
@@ -27,7 +27,7 @@ from test_framework.util import (
 )
 
 
-class BackwardsCompatibilityTest(BitcoinTestFramework):
+class BackwardsCompatibilityTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -226,7 +226,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
             node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
         else:
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
+            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of BritanniaCoin Core")
         self.start_node(node_v17.index)
 
         if not self.options.descriptors:

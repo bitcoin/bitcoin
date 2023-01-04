@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test error messages for 'getaddressinfo' and 'validateaddress' RPC commands."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 
 from test_framework.util import (
     assert_equal,
@@ -38,7 +38,7 @@ BASE58_INVALID_LENGTH = '2VKf7XKMrp4bVNVmuRbyCewkP8FhGLP2E54LHDPakr9Sq5mtU2'
 INVALID_ADDRESS = 'asfah14i8fajz0123f'
 INVALID_ADDRESS_2 = '1q049ldschfnwystcqnsvyfpj23mpsg3jcedq9xv'
 
-class InvalidAddressErrorMessageTest(BitcoinTestFramework):
+class InvalidAddressErrorMessageTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

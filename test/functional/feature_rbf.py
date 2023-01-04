@@ -11,7 +11,7 @@ from test_framework.messages import (
     COIN,
     SEQUENCE_FINAL,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -20,7 +20,7 @@ from test_framework.wallet import MiniWallet
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
-class ReplaceByFeeTest(BitcoinTestFramework):
+class ReplaceByFeeTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

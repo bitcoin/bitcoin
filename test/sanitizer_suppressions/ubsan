@@ -5,7 +5,7 @@
 # names can be used.
 # See https://github.com/google/sanitizers/issues/1364
 
-# https://github.com/bitcoin/bitcoin/pull/21798#issuecomment-829180719
+# https://github.com/britanniacoin/britanniacoin/pull/21798#issuecomment-829180719
 signed-integer-overflow:policy/feerate.cpp
 
 # -fsanitize=integer suppressions
@@ -58,7 +58,7 @@ implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
 implicit-integer-sign-change:policy/fees.cpp
 implicit-integer-sign-change:prevector.h
-implicit-integer-sign-change:script/bitcoinconsensus.cpp
+implicit-integer-sign-change:script/britanniacoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:txmempool.cpp

@@ -177,7 +177,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>Internal error</source>
         <translation type="unfinished">ข้อผิดพลาดภายใน</translation>
@@ -245,7 +245,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">ไม่สามารถอ่านไฟล์ตั้งค่าได้</translation>
@@ -268,7 +268,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;ภาพรวม</translation>
@@ -326,8 +326,8 @@
         <translation type="unfinished">กระเป๋าสตางค์:</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">ส่งเหรียญไปยังที่อยู่ Bitcoin</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">ส่งเหรียญไปยังที่อยู่ BritanniaCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -402,16 +402,16 @@
         <translation type="unfinished">กำลังซิงค์ข้อมูลกับทางเครือข่าย ...</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">เรียกเก็บ การชำระเงิน (สร้าง QR codes และ bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">เรียกเก็บ การชำระเงิน (สร้าง QR codes และ britanniacoin: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">แสดงรายการ ที่เก็บเงินที่จะส่ง bitcoin ออก และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
+        <translation type="unfinished">แสดงรายการ ที่เก็บเงินที่จะส่ง britanniacoin ออก และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">แสดงรายการ ที่เก็บเงินที่จะรับ bitcoin เข้า และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
+        <translation type="unfinished">แสดงรายการ ที่เก็บเงินที่จะรับ britanniacoin เข้า และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -472,10 +472,10 @@
         <translation type="unfinished">แสดง</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n การเชื่อมต่อที่ใช้งานได้ เพื่อเชื่อมกับเครือข่าย Bitcoin</numerusform>
+            <numerusform>%n การเชื่อมต่อที่ใช้งานได้ เพื่อเชื่อมกับเครือข่าย BritanniaCoin</numerusform>
         </translation>
     </message>
     <message>
@@ -944,16 +944,16 @@
         <translation type="unfinished">เปิดใช้งานการควบคุม &amp;PSBT</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">เปิด Bitcoin ไคล์เอ็นท์พอร์ต/client port บน router โดยอัตโนมัติ วิธีนี้ใช้ได้เมื่อ router สนับสนุน UPnP และสถานะเปิดใช้งาน</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">เปิด BritanniaCoin ไคล์เอ็นท์พอร์ต/client port บน router โดยอัตโนมัติ วิธีนี้ใช้ได้เมื่อ router สนับสนุน UPnP และสถานะเปิดใช้งาน</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation type="unfinished">จองพอร์ต โดยใช้ &amp;UPnP</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">เชื่อมต่อกับ Bitcoin เน็ตเวิร์ก ผ่านพร็อกซี่แบบ SOCKS5</translation>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">เชื่อมต่อกับ BritanniaCoin เน็ตเวิร์ก ผ่านพร็อกซี่แบบ SOCKS5</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>

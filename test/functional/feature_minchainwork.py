@@ -18,13 +18,13 @@ only succeeds past a given node once its nMinimumChainWork has been exceeded.
 import time
 
 from test_framework.p2p import P2PInterface, msg_getheaders
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
 REGTEST_WORK_PER_BLOCK = 2
 
-class MinimumChainWorkTest(BitcoinTestFramework):
+class MinimumChainWorkTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

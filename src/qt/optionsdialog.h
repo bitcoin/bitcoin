@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSDIALOG_H
-#define BITCOIN_QT_OPTIONSDIALOG_H
+#ifndef BRITANNIACOIN_QT_OPTIONSDIALOG_H
+#define BRITANNIACOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -55,7 +55,7 @@ private Q_SLOTS:
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
-    void on_openBitcoinConfButton_clicked();
+    void on_openBritanniaCoinConfButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
 

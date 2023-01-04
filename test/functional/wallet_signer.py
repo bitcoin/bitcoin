@@ -10,7 +10,7 @@ See also rpc_signer.py for tests without wallet context.
 import os
 import platform
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -18,7 +18,7 @@ from test_framework.util import (
 )
 
 
-class WalletSignerTest(BitcoinTestFramework):
+class WalletSignerTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
 

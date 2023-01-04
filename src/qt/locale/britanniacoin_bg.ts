@@ -62,11 +62,11 @@
         <translation type="unfinished">Адрес за получаване</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Тези са вашите Биткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+        <source>These are your BritanniaCoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">създавам</translation>
     </message>
@@ -154,7 +154,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Потвърди криптирането на порфейла</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОИНИ&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -230,7 +230,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>BitcoinApplication</name>
+    <name>BritanniaCoinApplication</name>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">Фатална грешка се появи. %1 не може да продължи безопастно и ще се затвори.</translation>
@@ -273,7 +273,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Количество</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a BritanniaCoin address (e.g. %1)</source>
         <translation type="unfinished">Въведете Биткойн адрес (например: %1)</translation>
     </message>
     <message>
@@ -374,7 +374,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">Файла с настройки не може да бъде прочетен.</translation>
@@ -441,7 +441,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">Преглед</translation>
@@ -508,7 +508,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Прокси е &lt;b&gt;разрешено&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a BritanniaCoin address</source>
         <translation type="unfinished">Изпращане към Биткоин адрес</translation>
     </message>
     <message>
@@ -552,7 +552,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Подпиши &amp;съобщение…</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <translation type="unfinished">Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
@@ -560,7 +560,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Потвърди съобщение…</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
         <translation type="unfinished">Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
     </message>
     <message>
@@ -592,7 +592,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Синхронизиране с мрежа</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
         <translation type="unfinished">Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
     </message>
     <message>
@@ -663,7 +663,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Затвори всички портфейли</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
         <translation type="unfinished">Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
     </message>
     <message>
@@ -691,7 +691,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 клиент</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -1052,7 +1052,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Редактиране на адрес за изпращане</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid BritanniaCoin address.</source>
         <translation type="unfinished">"%1" не е валиден Биткоин адрес.</translation>
     </message>
     <message>
@@ -1090,7 +1090,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">Биткоин</translation>
     </message>
     <message>
@@ -1110,7 +1110,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source>%1 will download and store a copy of the BritanniaCoin block chain.</source>
         <translation type="unfinished">%1 ще свали и съхрани копие на биткойн блокчейна.</translation>
     </message>
     <message>
@@ -1250,8 +1250,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Похарчете непотвърденото ресто</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Автоматично отваряне на входящия Bitcoin порт. Работи само с рутери поддържащи UPnP.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Автоматично отваряне на входящия BritanniaCoin порт. Работи само с рутери поддържащи UPnP.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1266,7 +1266,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Позволи входящи връзки</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
         <translation type="unfinished">Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
@@ -1378,7 +1378,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">форма</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
@@ -1440,7 +1440,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Възникна грешка по време назаявката за плащане</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start britanniacoin: click-to-pay handler</source>
         <translation type="unfinished">Биткойн не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
@@ -1983,7 +1983,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid BritanniaCoin address</source>
         <translation type="unfinished">Внимание: Невалиден Биткойн адрес</translation>
     </message>
     <message>
@@ -2069,7 +2069,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Копиране на текущия подпис</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
         <translation type="unfinished">Подпишете съобщение като доказателство, че притежавате определен адрес</translation>
     </message>
     <message>
@@ -2085,7 +2085,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Провери</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
         <translation type="unfinished">Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
     </message>
     <message>

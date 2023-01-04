@@ -8,7 +8,7 @@
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -16,7 +16,7 @@ from test_framework.util import (
 )
 
 
-class TransactionTimeRescanTest(BitcoinTestFramework):
+class TransactionTimeRescanTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -73,7 +73,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days)
         # send 10 btc to user's first watch-only address
-        self.log.info('Send 10 btc to user')
+        self.log.info('Send 10 brt to user')
         miner_wallet.sendtoaddress(wo1, 10)
 
         # generate blocks and check blockcount
@@ -84,7 +84,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days + ten_days)
         # send 5 btc to our second watch-only address
-        self.log.info('Send 5 btc to user')
+        self.log.info('Send 5 brt to user')
         miner_wallet.sendtoaddress(wo2, 5)
 
         # generate blocks and check blockcount
@@ -95,7 +95,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         self.sync_all()
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days)
         # send 1 btc to our third watch-only address
-        self.log.info('Send 1 btc to user')
+        self.log.info('Send 1 brt to user')
         miner_wallet.sendtoaddress(wo3, 1)
 
         # generate more blocks and check blockcount

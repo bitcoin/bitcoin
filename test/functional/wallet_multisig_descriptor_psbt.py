@@ -8,14 +8,14 @@ This is meant to be documentation as much as functional tests, so it is kept as 
 """
 
 from test_framework.address import base58_to_byte
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
 )
 
 
-class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
+class WalletMultisigDescriptorPSBTTest(BritanniaCoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
 

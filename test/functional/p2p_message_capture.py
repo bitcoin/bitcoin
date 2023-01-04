@@ -12,7 +12,7 @@ from io import BytesIO
 import os
 
 from test_framework.p2p import P2PDataStore, MESSAGEMAP
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 TIME_SIZE = 8
@@ -51,7 +51,7 @@ def mini_parser(dat_file):
 
 
 
-class MessageCaptureTest(BitcoinTestFramework):
+class MessageCaptureTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-capturemessages"]]

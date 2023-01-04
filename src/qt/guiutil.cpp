@@ -4,8 +4,8 @@
 
 #include <qt/guiutil.h>
 
-#include <qt/bitcoinaddressvalidator.h>
-#include <qt/bitcoinunits.h>
+#include <qt/britanniacoinaddressvalidator.h>
+#include <qt/britanniacoinunits.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsrecipient.h>
@@ -126,10 +126,10 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setFont(fixedPitchFont());
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a BritanniaCoin address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
-    widget->setValidator(new BitcoinAddressEntryValidator(parent));
-    widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
+    widget->setValidator(new BritanniaCoinAddressEntryValidator(parent));
+    widget->setCheckValidator(new BritanniaCoinAddressCheckValidator(parent));
 }
 
 void AddButtonShortcut(QAbstractButton* button, const QKeySequence& shortcut)
@@ -137,10 +137,10 @@ void AddButtonShortcut(QAbstractButton* button, const QKeySequence& shortcut)
     QObject::connect(new QShortcut(shortcut, button), &QShortcut::activated, [button]() { button->animateClick(); });
 }
 
-bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
+bool parseBritanniaCoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+    if(!uri.isValid() || uri.scheme() != QString("britanniacoin"))
         return false;
 
     SendCoinsRecipient rv;
@@ -176,7 +176,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if (!BitcoinUnits::parse(BitcoinUnit::BTC, i->second, &rv.amount)) {
+                if (!BritanniaCoinUnits::parse(BritanniaCoinUnit::BRT, i->second, &rv.amount)) {
                     return false;
                 }
             }
@@ -193,22 +193,22 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
+bool parseBritanniaCoinURI(QString uri, SendCoinsRecipient *out)
 {
     QUrl uriInstance(uri);
-    return parseBitcoinURI(uriInstance, out);
+    return parseBritanniaCoinURI(uriInstance, out);
 }
 
-QString formatBitcoinURI(const SendCoinsRecipient &info)
+QString formatBritanniaCoinURI(const SendCoinsRecipient &info)
 {
     bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
 
-    QString ret = QString("bitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
+    QString ret = QString("britanniacoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnit::BTC, info.amount, false, BitcoinUnits::SeparatorStyle::NEVER));
+        ret += QString("?amount=%1").arg(BritanniaCoinUnits::format(BritanniaCoinUnit::BRT, info.amount, false, BritanniaCoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }
 
@@ -426,9 +426,9 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathDebug)));
 }
 
-bool openBitcoinConf()
+bool openBritanniaCoinConf()
 {
-    fs::path pathConfig = GetConfigFile(gArgs.GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+    fs::path pathConfig = GetConfigFile(gArgs.GetPathArg("-conf", BRITANNIACOIN_CONF_FILENAME));
 
     /* Create the file */
     std::ofstream configFile{pathConfig, std::ios_base::app};
@@ -502,10 +502,10 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "BritanniaCoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / fs::u8path(strprintf("Bitcoin (%s).lnk", chain));
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "BritanniaCoin (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / fs::u8path(strprintf("BritanniaCoin (%s).lnk", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -585,8 +585,8 @@ fs::path static GetAutostartFilePath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "bitcoin.desktop";
-    return GetAutostartDir() / fs::u8path(strprintf("bitcoin-%s.desktop", chain));
+        return GetAutostartDir() / "britanniacoin.desktop";
+    return GetAutostartDir() / fs::u8path(strprintf("britanniacoin-%s.desktop", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -631,9 +631,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=Bitcoin\n";
+            optionFile << "Name=BritanniaCoin\n";
         else
-            optionFile << strprintf("Name=Bitcoin (%s)\n", chain);
+            optionFile << strprintf("Name=BritanniaCoin (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

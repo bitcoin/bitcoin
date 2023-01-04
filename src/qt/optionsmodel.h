@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
+#ifndef BRITANNIACOIN_QT_OPTIONSMODEL_H
+#define BRITANNIACOIN_QT_OPTIONSMODEL_H
 
 #include <cstdint>
-#include <qt/bitcoinunits.h>
+#include <qt/britanniacoinunits.h>
 #include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
@@ -90,7 +90,7 @@ public:
     bool getShowTrayIcon() const { return m_show_tray_icon; }
     bool getMinimizeToTray() const { return fMinimizeToTray; }
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
-    BitcoinUnit getDisplayUnit() const { return m_display_bitcoin_unit; }
+    BritanniaCoinUnit getDisplayUnit() const { return m_display_britanniacoin_unit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
@@ -114,7 +114,7 @@ private:
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
-    BitcoinUnit m_display_bitcoin_unit;
+    BritanniaCoinUnit m_display_britanniacoin_unit;
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
@@ -140,7 +140,7 @@ private:
     void checkAndMigrate();
 
 Q_SIGNALS:
-    void displayUnitChanged(BitcoinUnit unit);
+    void displayUnitChanged(BritanniaCoinUnit unit);
     void coinControlFeaturesChanged(bool);
     void showTrayIconChanged(bool);
     void useEmbeddedMonospacedFontChanged(bool);

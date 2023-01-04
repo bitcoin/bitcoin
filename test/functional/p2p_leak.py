@@ -23,7 +23,7 @@ from test_framework.p2p import (
     P2P_SERVICES,
     P2P_VERSION_RELAY,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -97,7 +97,7 @@ class P2PVersionStore(P2PInterface):
         self.version_received = msg
 
 
-class P2PLeakTest(BitcoinTestFramework):
+class P2PLeakTest(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[f"-peertimeout={PEER_TIMEOUT}"]]

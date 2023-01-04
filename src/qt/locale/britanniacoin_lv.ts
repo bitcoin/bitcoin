@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Izvēlies adresi uz kuru sūtīt bitcoins</translation>
+        <translation type="unfinished">Izvēlies adresi uz kuru sūtīt britanniacoins</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Izvēlies adresi ar kuru saņemt bitcoins</translation>
+        <translation type="unfinished">Izvēlies adresi ar kuru saņemt britanniacoins</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -66,8 +66,8 @@
         <translation type="unfinished">Adrešu saņemšana</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Šīs ir jūsu Bitcoin adreses, kuras izmantojamas maksājumu veikšanai. Vienmēr pārbaudiet summu un saņēmēja adresi pirms monētu nosūtīšanas.</translation>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Šīs ir jūsu BritanniaCoin adreses, kuras izmantojamas maksājumu veikšanai. Vienmēr pārbaudiet summu un saņēmēja adresi pirms monētu nosūtīšanas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -153,7 +153,7 @@
         <translation type="unfinished">Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <translation type="unfinished">Brīdinājums: Šifrējot Jūsu maciņu, gadījumā ja aizmirsīsiet savu paroli, Jūs NEATGRIEZENISKI ZAUDĒSIET VISUS SAVUS "BITKOINUS"!</translation>
     </message>
     <message>
@@ -257,7 +257,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Done loading</source>
         <translation type="unfinished">Ielāde pabeigta</translation>
@@ -288,7 +288,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;Pārskats</translation>
@@ -330,8 +330,8 @@
         <translation type="unfinished">Maciņš:</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Nosūtīt bitkoinus uz Bitcoin adresi</translation>
+        <source>Send coins to a BritanniaCoin address</source>
+        <translation type="unfinished">Nosūtīt bitkoinus uz BritanniaCoin adresi</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -354,12 +354,12 @@
         <translation type="unfinished">Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Parakstīt ziņojumus ar savām Bitcoin adresēm lai pierādītu ka tās pieder tev</translation>
+        <source>Sign messages with your BritanniaCoin addresses to prove you own them</source>
+        <translation type="unfinished">Parakstīt ziņojumus ar savām BritanniaCoin adresēm lai pierādītu ka tās pieder tev</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Bitcoin adresēm</translation>
+        <source>Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
+        <translation type="unfinished">Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām BritanniaCoin adresēm</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -378,8 +378,8 @@
         <translation type="unfinished">Ciļņu rīkjosla</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and britanniacoin: URIs)</source>
+        <translation type="unfinished">Pieprasīt maksājumus (izveido QR kodu un britanniacoin: URIs)</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -422,7 +422,7 @@
         <translation type="unfinished">&amp;Logs</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -660,15 +660,15 @@
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Ieslēgt bitcoin &amp;kontroles funkcijas</translation>
+        <translation type="unfinished">Ieslēgt britanniacoin &amp;kontroles funkcijas</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
+        <source>Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Uz rūtera automātiski atvērt BritanniaCoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -720,7 +720,7 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished">Vai rādīt Bitcoin kontroles funkcijas vai nē.</translation>
+        <translation type="unfinished">Vai rādīt BritanniaCoin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -758,8 +758,8 @@
         <translation type="unfinished">Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation type="unfinished">Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar BritanniaCoin tīklu, taču šis process vēl nav beidzies.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -967,7 +967,7 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation type="unfinished">Bitcoin Kontroles Funkcijas</translation>
+        <translation type="unfinished">BritanniaCoin Kontroles Funkcijas</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1120,8 +1120,8 @@
         <translation type="unfinished">Kopēt parakstu uz sistēmas starpliktuvi</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation type="unfinished">Parakstīt ziņojumu lai pierādītu, ka esi šīs Bitcoin adreses īpašnieks.</translation>
+        <source>Sign the message to prove you own this BritanniaCoin address</source>
+        <translation type="unfinished">Parakstīt ziņojumu lai pierādītu, ka esi šīs BritanniaCoin adreses īpašnieks.</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>

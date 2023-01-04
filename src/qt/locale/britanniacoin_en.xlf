@@ -72,11 +72,11 @@
         <context-group purpose="location"><context context-type="linenumber">103</context></context-group>
       </trans-unit>
       <trans-unit id="_msg17">
-        <source xml:space="preserve">These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source xml:space="preserve">These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <context-group purpose="location"><context context-type="linenumber">110</context></context-group>
       </trans-unit>
       <trans-unit id="_msg18">
-        <source xml:space="preserve">These are your Bitcoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
+        <source xml:space="preserve">These are your BritanniaCoin addresses for receiving payments. Use the &apos;Create new receiving address&apos; button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
       </trans-unit>
@@ -175,7 +175,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">110</context></context-group>
       </trans-unit>
       <trans-unit id="_msg39">
-        <source xml:space="preserve">Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source xml:space="preserve">Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BRITANNIACOINS&lt;/b&gt;!</source>
         <context-group purpose="location"><context context-type="linenumber">111</context></context-group>
       </trans-unit>
       <trans-unit id="_msg40">
@@ -196,7 +196,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">63</context></context-group>
       </trans-unit>
       <trans-unit id="_msg44">
-        <source xml:space="preserve">Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source xml:space="preserve">Remember that encrypting your wallet cannot fully protect your britanniacoins from being stolen by malware infecting your computer.</source>
         <context-group purpose="location"><context context-type="linenumber">118</context></context-group>
       </trans-unit>
       <trans-unit id="_msg45">
@@ -264,8 +264,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoin.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinApplication">
+  <file original="../britanniacoin.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="BritanniaCoinApplication">
       <trans-unit id="_msg58">
         <source xml:space="preserve">Settings file %1 might be corrupt or invalid.</source>
         <context-group purpose="location"><context context-type="linenumber">288</context></context-group>
@@ -315,7 +315,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">695</context></context-group>
       </trans-unit>
     </group>
-    <group restype="x-trolltech-linguist-context" resname="bitcoin-core">
+    <group restype="x-trolltech-linguist-context" resname="britanniacoin-core">
       <trans-unit id="_msg69">
         <source xml:space="preserve">Settings file could not be read</source>
         <context-group purpose="location"><context context-type="linenumber">176</context></context-group>
@@ -326,8 +326,8 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoingui.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="BitcoinGUI">
+  <file original="../britanniacoingui.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="BritanniaCoinGUI">
       <trans-unit id="_msg71">
         <source xml:space="preserve">&amp;Overview</source>
         <context-group purpose="location"><context context-type="linenumber">253</context></context-group>
@@ -394,7 +394,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1421</context></context-group>
       </trans-unit>
       <trans-unit id="_msg87">
-        <source xml:space="preserve">Send coins to a Bitcoin address</source>
+        <source xml:space="preserve">Send coins to a BritanniaCoin address</source>
         <context-group purpose="location"><context context-type="linenumber">261</context></context-group>
       </trans-unit>
       <trans-unit id="_msg88">
@@ -438,7 +438,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
       </trans-unit>
       <trans-unit id="_msg98">
-        <source xml:space="preserve">Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source xml:space="preserve">Sign messages with your BritanniaCoin addresses to prove you own them</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
       <trans-unit id="_msg99">
@@ -446,7 +446,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">319</context></context-group>
       </trans-unit>
       <trans-unit id="_msg100">
-        <source xml:space="preserve">Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source xml:space="preserve">Verify messages to ensure they were signed with specified BritanniaCoin addresses</source>
         <context-group purpose="location"><context context-type="linenumber">320</context></context-group>
       </trans-unit>
       <trans-unit id="_msg101">
@@ -510,7 +510,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">1101</context></context-group>
       </trans-unit>
       <trans-unit id="_msg116">
-        <source xml:space="preserve">Request payments (generates QR codes and bitcoin: URIs)</source>
+        <source xml:space="preserve">Request payments (generates QR codes and britanniacoin: URIs)</source>
         <context-group purpose="location"><context context-type="linenumber">268</context></context-group>
       </trans-unit>
       <trans-unit id="_msg117">
@@ -571,7 +571,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">296</context></context-group>
       </trans-unit>
       <trans-unit id="_msg130">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction</source>
+        <source xml:space="preserve">Load Partially Signed BritanniaCoin Transaction</source>
         <context-group purpose="location"><context context-type="linenumber">322</context></context-group>
       </trans-unit>
       <trans-unit id="_msg131">
@@ -579,7 +579,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">323</context></context-group>
       </trans-unit>
       <trans-unit id="_msg132">
-        <source xml:space="preserve">Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <source xml:space="preserve">Load Partially Signed BritanniaCoin Transaction from clipboard</source>
         <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
       </trans-unit>
       <trans-unit id="_msg133">
@@ -599,7 +599,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">334</context></context-group>
       </trans-unit>
       <trans-unit id="_msg137">
-        <source xml:space="preserve">Open a bitcoin: URI</source>
+        <source xml:space="preserve">Open a britanniacoin: URI</source>
         <context-group purpose="location"><context context-type="linenumber">338</context></context-group>
       </trans-unit>
       <trans-unit id="_msg138">
@@ -629,7 +629,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">359</context></context-group>
       </trans-unit>
       <trans-unit id="_msg144">
-        <source xml:space="preserve">Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <source xml:space="preserve">Show the %1 help message to get a list with possible BritanniaCoin command-line options</source>
         <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
       </trans-unit>
       <trans-unit id="_msg145">
@@ -700,10 +700,10 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">979</context></context-group>
         <note annotates="source" from="developer">A substring of the tooltip.</note>
         <trans-unit id="_msg160[0]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to BritanniaCoin network.</source>
         </trans-unit>
         <trans-unit id="_msg160[1]">
-          <source xml:space="preserve">%n active connection(s) to Bitcoin network.</source>
+          <source xml:space="preserve">%n active connection(s) to BritanniaCoin network.</source>
         </trans-unit>
       </group>
       <trans-unit id="_msg161">
@@ -1200,7 +1200,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">36</context></context-group>
       </trans-unit>
       <trans-unit id="_msg269">
-        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
+        <source xml:space="preserve">The entered address &quot;%1&quot; is not a valid BritanniaCoin address.</source>
         <context-group purpose="location"><context context-type="linenumber">113</context></context-group>
       </trans-unit>
       <trans-unit id="_msg270">
@@ -1246,7 +1246,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </group>
     <group restype="x-trolltech-linguist-context" resname="Intro">
       <trans-unit id="_msg279">
-        <source xml:space="preserve">Bitcoin</source>
+        <source xml:space="preserve">BritanniaCoin</source>
         <context-group purpose="location"><context context-type="linenumber">139</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
@@ -1295,7 +1295,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         </trans-unit>
       </group>
       <trans-unit id="_msg286">
-        <source xml:space="preserve">%1 will download and store a copy of the Bitcoin block chain.</source>
+        <source xml:space="preserve">%1 will download and store a copy of the BritanniaCoin block chain.</source>
         <context-group purpose="location"><context context-type="linenumber">392</context></context-group>
       </trans-unit>
       <trans-unit id="_msg287">
@@ -1393,11 +1393,11 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg307">
-        <source xml:space="preserve">Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <source xml:space="preserve">Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the britanniacoin network, as detailed below.</source>
         <context-group purpose="location"><context context-type="linenumber">133</context></context-group>
       </trans-unit>
       <trans-unit id="_msg308">
-        <source xml:space="preserve">Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source xml:space="preserve">Attempting to spend britanniacoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
       </trans-unit>
       <trans-unit id="_msg309">
@@ -1466,7 +1466,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
   <file original="../forms/openuridialog.ui" datatype="x-trolltech-designer-ui" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="OpenURIDialog">
       <trans-unit id="_msg322">
-        <source xml:space="preserve">Open bitcoin URI</source>
+        <source xml:space="preserve">Open britanniacoin URI</source>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg323">
@@ -1638,11 +1638,11 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">279</context></context-group>
       </trans-unit>
       <trans-unit id="_msg361">
-        <source xml:space="preserve">Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <source xml:space="preserve">Full path to a BritanniaCoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
         <context-group purpose="location"><context context-type="linenumber">289</context></context-group>
       </trans-unit>
       <trans-unit id="_msg362">
-        <source xml:space="preserve">Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source xml:space="preserve">Automatically open the BritanniaCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
       </trans-unit>
       <trans-unit id="_msg363">
@@ -1650,7 +1650,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
       </trans-unit>
       <trans-unit id="_msg364">
-        <source xml:space="preserve">Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <source xml:space="preserve">Automatically open the BritanniaCoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
         <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
       </trans-unit>
       <trans-unit id="_msg365">
@@ -1666,7 +1666,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">344</context></context-group>
       </trans-unit>
       <trans-unit id="_msg368">
-        <source xml:space="preserve">Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <source xml:space="preserve">Connect to the BritanniaCoin network through a SOCKS5 proxy.</source>
         <context-group purpose="location"><context context-type="linenumber">351</context></context-group>
       </trans-unit>
       <trans-unit id="_msg369">
@@ -1762,7 +1762,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">238</context></context-group>
       </trans-unit>
       <trans-unit id="_msg391">
-        <source xml:space="preserve">Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <source xml:space="preserve">Connect to the BritanniaCoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <context-group purpose="location"><context context-type="linenumber">538</context></context-group>
       </trans-unit>
       <trans-unit id="_msg392">
@@ -1878,7 +1878,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">14</context></context-group>
       </trans-unit>
       <trans-unit id="_msg415">
-        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source xml:space="preserve">The displayed information may be out of date. Your wallet automatically synchronizes with the BritanniaCoin network after a connection is established, but this process has not completed yet.</source>
         <context-group purpose="location"><context context-type="linenumber">76</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">411</context></context-group>
       </trans-unit>
@@ -2100,7 +2100,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
       </trans-unit>
       <trans-unit id="_msg466">
-        <source xml:space="preserve">Cannot start bitcoin: click-to-pay handler</source>
+        <source xml:space="preserve">Cannot start britanniacoin: click-to-pay handler</source>
         <context-group purpose="location"><context context-type="linenumber">153</context></context-group>
       </trans-unit>
       <trans-unit id="_msg467">
@@ -2111,7 +2111,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">230</context></context-group>
       </trans-unit>
       <trans-unit id="_msg468">
-        <source xml:space="preserve">&apos;bitcoin://&apos; is not a valid URI. Use &apos;bitcoin:&apos; instead.</source>
+        <source xml:space="preserve">&apos;britanniacoin://&apos; is not a valid URI. Use &apos;britanniacoin:&apos; instead.</source>
         <context-group purpose="location"><context context-type="linenumber">201</context></context-group>
       </trans-unit>
       <trans-unit id="_msg469">
@@ -2122,7 +2122,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <context-group purpose="location"><context context-type="linenumber">241</context></context-group>
       </trans-unit>
       <trans-unit id="_msg470">
-        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source xml:space="preserve">URI cannot be parsed! This can be caused by an invalid BritanniaCoin address or malformed URI parameters.</source>
         <context-group purpose="location"><context context-type="linenumber">231</context></context-group>
       </trans-unit>
       <trans-unit id="_msg471">
@@ -2199,7 +2199,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoinunits.cpp" datatype="cpp" source-language="en"><body>
+  <file original="../britanniacoinunits.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg484">
         <source xml:space="preserve">Amount</source>
@@ -2210,7 +2210,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
   <file original="../guiutil.cpp" datatype="cpp" source-language="en"><body>
     <group restype="x-trolltech-linguist-context" resname="QObject">
       <trans-unit id="_msg485">
-        <source xml:space="preserve">Enter a Bitcoin address (e.g. %1)</source>
+        <source xml:space="preserve">Enter a BritanniaCoin address (e.g. %1)</source>
         <context-group purpose="location"><context context-type="linenumber">129</context></context-group>
       </trans-unit>
       <trans-unit id="_msg486">
@@ -2943,7 +2943,7 @@ For more information on using this console, type %6.
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg635">
-        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <source xml:space="preserve">An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BritanniaCoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">50</context></context-group>
       </trans-unit>
       <trans-unit id="_msg636">
@@ -3239,7 +3239,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">851</context></context-group>
       </trans-unit>
       <trans-unit id="_msg703">
-        <source xml:space="preserve">When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source xml:space="preserve">When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for britanniacoin transactions than the network can process.</source>
         <context-group purpose="location"><context context-type="linenumber">886</context></context-group>
       </trans-unit>
       <trans-unit id="_msg704">
@@ -3333,7 +3333,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">219</context></context-group>
       </trans-unit>
       <trans-unit id="_msg725">
-        <source xml:space="preserve">Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Creates a Partially Signed BritanniaCoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">220</context></context-group>
       </trans-unit>
       <trans-unit id="_msg726">
@@ -3392,7 +3392,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
       </trans-unit>
       <trans-unit id="_msg739">
-        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction proposal. This will produce a Partially Signed BritanniaCoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">340</context></context-group>
         <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</note>
       </trans-unit>
@@ -3402,7 +3402,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <note annotates="source" from="developer">Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</note>
       </trans-unit>
       <trans-unit id="_msg741">
-        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <source xml:space="preserve">Please, review your transaction. You can create and send this transaction or create a Partially Signed BritanniaCoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <context-group purpose="location"><context context-type="linenumber">345</context></context-group>
         <note annotates="source" from="developer">Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</note>
       </trans-unit>
@@ -3469,7 +3469,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         </trans-unit>
       </group>
       <trans-unit id="_msg756">
-        <source xml:space="preserve">Warning: Invalid Bitcoin address</source>
+        <source xml:space="preserve">Warning: Invalid BritanniaCoin address</source>
         <context-group purpose="location"><context context-type="linenumber">973</context></context-group>
       </trans-unit>
       <trans-unit id="_msg757">
@@ -3509,7 +3509,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">60</context></context-group>
       </trans-unit>
       <trans-unit id="_msg765">
-        <source xml:space="preserve">The Bitcoin address to send the payment to</source>
+        <source xml:space="preserve">The BritanniaCoin address to send the payment to</source>
         <context-group purpose="location"><context context-type="linenumber">53</context></context-group>
       </trans-unit>
       <trans-unit id="_msg766">
@@ -3533,7 +3533,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">166</context></context-group>
       </trans-unit>
       <trans-unit id="_msg771">
-        <source xml:space="preserve">The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source xml:space="preserve">The fee will be deducted from the amount being sent. The recipient will receive less britanniacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <context-group purpose="location"><context context-type="linenumber">173</context></context-group>
       </trans-unit>
       <trans-unit id="_msg772">
@@ -3554,7 +3554,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
       </trans-unit>
       <trans-unit id="_msg776">
-        <source xml:space="preserve">A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <source xml:space="preserve">A message that was attached to the britanniacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BritanniaCoin network.</source>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
     </group>
@@ -3582,11 +3582,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">27</context></context-group>
       </trans-unit>
       <trans-unit id="_msg781">
-        <source xml:space="preserve">You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source xml:space="preserve">You can sign messages/agreements with your addresses to prove you can receive britanniacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <context-group purpose="location"><context context-type="linenumber">33</context></context-group>
       </trans-unit>
       <trans-unit id="_msg782">
-        <source xml:space="preserve">The Bitcoin address to sign the message with</source>
+        <source xml:space="preserve">The BritanniaCoin address to sign the message with</source>
         <context-group purpose="location"><context context-type="linenumber">51</context></context-group>
       </trans-unit>
       <trans-unit id="_msg783">
@@ -3621,7 +3621,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">140</context></context-group>
       </trans-unit>
       <trans-unit id="_msg790">
-        <source xml:space="preserve">Sign the message to prove you own this Bitcoin address</source>
+        <source xml:space="preserve">Sign the message to prove you own this BritanniaCoin address</source>
         <context-group purpose="location"><context context-type="linenumber">161</context></context-group>
       </trans-unit>
       <trans-unit id="_msg791">
@@ -3646,7 +3646,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">246</context></context-group>
       </trans-unit>
       <trans-unit id="_msg796">
-        <source xml:space="preserve">The Bitcoin address the message was signed with</source>
+        <source xml:space="preserve">The BritanniaCoin address the message was signed with</source>
         <context-group purpose="location"><context context-type="linenumber">267</context></context-group>
       </trans-unit>
       <trans-unit id="_msg797">
@@ -3660,7 +3660,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
       </trans-unit>
       <trans-unit id="_msg799">
-        <source xml:space="preserve">Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source xml:space="preserve">Verify the message to ensure it was signed with the specified BritanniaCoin address</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
       <trans-unit id="_msg800">
@@ -4376,14 +4376,14 @@ Go to File &gt; Open Wallet to load a wallet.
       </trans-unit>
     </group>
   </body></file>
-  <file original="../bitcoinstrings.cpp" datatype="cpp" source-language="en"><body>
-    <group restype="x-trolltech-linguist-context" resname="bitcoin-core">
+  <file original="../britanniacoinstrings.cpp" datatype="cpp" source-language="en"><body>
+    <group restype="x-trolltech-linguist-context" resname="britanniacoin-core">
       <trans-unit id="_msg956">
         <source xml:space="preserve">The %s developers</source>
         <context-group purpose="location"><context context-type="linenumber">12</context></context-group>
       </trans-unit>
       <trans-unit id="_msg957">
-        <source xml:space="preserve">%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <source xml:space="preserve">%s corrupt. Try using the wallet tool britanniacoin-wallet to salvage or restoring a backup.</source>
         <context-group purpose="location"><context context-type="linenumber">13</context></context-group>
       </trans-unit>
       <trans-unit id="_msg958">
@@ -4423,7 +4423,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">67</context></context-group>
       </trans-unit>
       <trans-unit id="_msg967">
-        <source xml:space="preserve">Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <source xml:space="preserve">Error: Dumpfile version is not supported. This version of britanniacoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <context-group purpose="location"><context context-type="linenumber">69</context></context-group>
       </trans-unit>
       <trans-unit id="_msg968">
@@ -4591,7 +4591,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <context-group purpose="location"><context context-type="linenumber">138</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1009">
-        <source xml:space="preserve">%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <source xml:space="preserve">%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any BritanniaCoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <context-group purpose="location"><context context-type="linenumber">16</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1010">

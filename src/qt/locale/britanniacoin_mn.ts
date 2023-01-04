@@ -62,7 +62,7 @@
         <translation type="unfinished">Хүлээн авах хаяг</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BritanniaCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Эдгээр Биткойн хаягууд нь илгээх хаягууд. Хүлээн авах хаяг болон тоо хэмжээг илгээхээсээ өмнө сайн нягталж үзэж байна уу</translation>
     </message>
     <message>
@@ -222,7 +222,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>britanniacoin-core</name>
     <message>
         <source>Done loading</source>
         <translation type="unfinished">Ачааллаж дууслаа</translation>
@@ -233,7 +233,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>BritanniaCoinGUI</name>
     <message>
         <source>&amp;Transactions</source>
         <translation type="unfinished">Гүйлгээнүүд</translation>
@@ -323,7 +323,7 @@
         <translation type="unfinished">Шинэчлэгдсэн</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network.</source>
+        <source>%n active connection(s) to BritanniaCoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
@@ -435,7 +435,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BritanniaCoin</source>
         <translation type="unfinished">Биткойн</translation>
     </message>
     <message numerus="yes">
@@ -749,7 +749,7 @@
         </translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid BritanniaCoin address</source>
         <translation type="unfinished">Анхаар:Буруу Биткойны хаяг байна</translation>
     </message>
     <message>

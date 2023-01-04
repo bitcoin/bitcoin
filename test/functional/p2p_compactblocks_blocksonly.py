@@ -18,11 +18,11 @@ from test_framework.messages import (
     msg_sendcmpct,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BritanniaCoinTestFramework
 from test_framework.util import assert_equal
 
 
-class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
+class P2PCompactBlocksBlocksOnly(BritanniaCoinTestFramework):
     def set_test_params(self):
         self.extra_args = [["-blocksonly"], [], [], []]
         self.num_nodes = 4
