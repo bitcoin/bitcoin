@@ -31,6 +31,7 @@ class StartupNotifyTest(BitcoinTestFramework):
         self.log.info("Test -startupnotify is executed once")
         with open(tmpdir_file, "r", encoding="utf8") as f:
             file_content = f.read()
+            self.log.debug(f"Read {file_content}")
             assert_equal(file_content.count(FILE_NAME), 1)
 
         self.log.info("Test node is fully started")
