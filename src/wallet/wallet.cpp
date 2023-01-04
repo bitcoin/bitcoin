@@ -472,8 +472,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
         error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
     }
     if (!wallet) {
-        fs::remove(wallet_file);
-        fs::remove(wallet_path);
+        fs::remove_all(wallet_path);
     }
 
     return wallet;
@@ -1355,7 +1354,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
     MarkInputsDirty(ptx);
 }
 
-void CWallet::transactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {
+void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
     LOCK(cs_wallet);
     SyncTransaction(tx, TxStateInMempool{});
 
@@ -1365,7 +1364,7 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx, uint64_t memp
     }
 }
 
-void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {
+void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(tx->GetHash());
     if (it != mapWallet.end()) {
@@ -1411,7 +1410,7 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
     m_last_block_processed = block.hash;
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
         SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
-        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK, /*mempool_sequence=*/0);
+        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
     }
 }
 

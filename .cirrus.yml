@@ -29,6 +29,7 @@ base_template: &BASE_TEMPLATE
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
+                               # Also, the merge commit is used to lint COMMIT_RANGE="HEAD~..HEAD"
 
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
@@ -180,7 +181,7 @@ task:
     - python test\util\rpcauth-test.py
   functional_tests_script:
     # Increase the dynamic port range to the maximum allowed value to mitigate "OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted".
-    # See: https://docs.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
+    # See: https://learn.microsoft.com/en-us/biztalk/technical-guides/settings-that-can-be-modified-to-improve-network-performance
     - netsh int ipv4 set dynamicport tcp start=1025 num=64511
     - netsh int ipv6 set dynamicport tcp start=1025 num=64511
     # Exclude feature_dbcrash for now due to timeout
