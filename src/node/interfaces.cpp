@@ -909,11 +909,11 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx, nAcceptTime, mempool_sequence);
+        m_notifications->transactionAddedToMempool(tx, nAcceptTime);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionRemovedFromMempool(tx, reason, mempool_sequence);
+        m_notifications->transactionRemovedFromMempool(tx, reason);
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
@@ -1303,7 +1303,7 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx(), /* nAcceptTime = */ 0, /* mempool_sequence = */ 0);
+            notifications.transactionAddedToMempool(entry.GetSharedTx(), /*nAcceptTime=*/0);
         }
     }
     bool hasAssumedValidChain() override

@@ -1329,7 +1329,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
     fAnonymizableTallyCachedNonDenom = false;
 }
 
-void CWallet::transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) {
+void CWallet::transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) {
     LOCK(cs_wallet);
     WalletBatch batch(GetDatabase());
     SyncTransaction(tx, TxStateInMempool{}, batch);
@@ -1340,7 +1340,7 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcce
     }
 }
 
-void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {
+void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {
     if (reason != MemPoolRemovalReason::CONFLICT) {
         LOCK(cs_wallet);
         auto it = mapWallet.find(tx->GetHash());
@@ -1391,7 +1391,7 @@ void CWallet::blockConnected(const CBlock& block, int height)
     WalletBatch batch(GetDatabase());
     for (size_t index = 0; index < block.vtx.size(); index++) {
         SyncTransaction(block.vtx[index], TxStateConfirmed{block_hash, height, static_cast<int>(index)}, batch);
-        transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::BLOCK, 0 /* mempool_sequence */);
+        transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::BLOCK);
     }
 
     // reset cache to make sure no longer immature coins are included
