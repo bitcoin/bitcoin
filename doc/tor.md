@@ -1,21 +1,21 @@
-# TOR SUPPORT IN BITCOIN
+# TOR SUPPORT IN BRITANNIACOIN
 
-It is possible to run Bitcoin Core as a Tor onion service, and connect to such services.
+It is possible to run BritanniaCoin Core as a Tor onion service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
 
 ## Compatibility
 
-- Starting with version 22.0, Bitcoin Core only supports Tor version 3 hidden
-  services (Tor v3). Tor v2 addresses are ignored by Bitcoin Core and neither
+- Starting with version 22.0, BritanniaCoin Core only supports Tor version 3 hidden
+  services (Tor v3). Tor v2 addresses are ignored by BritanniaCoin Core and neither
   relayed nor stored.
 
 - Tor removed v2 support beginning with version 0.4.6.
 
-## How to see information about your Tor configuration via Bitcoin Core
+## How to see information about your Tor configuration via BritanniaCoin Core
 
-There are several ways to see your local onion address in Bitcoin Core:
+There are several ways to see your local onion address in BritanniaCoin Core:
 - in the "Local addresses" output of CLI `-netinfo`
 - in the "localaddresses" output of RPC `getnetworkinfo`
 - in the debug log (grep for "AddLocal"; the Tor address ends in `.onion`)
@@ -30,9 +30,9 @@ e.g. for `-onlynet=onion`.
 To fetch a number of onion addresses that your node knows, for example seven
 addresses, use the `getnodeaddresses 7 onion` RPC.
 
-## 1. Run Bitcoin Core behind a Tor proxy
+## 1. Run BritanniaCoin Core behind a Tor proxy
 
-The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
+The first step is running BritanniaCoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
 
     -proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -65,22 +65,22 @@ outgoing connections, but more is possible.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
-    ./bitcoind -proxy=127.0.0.1:9050
+    ./britanniacoind -proxy=127.0.0.1:9050
 
-## 2. Automatically create a Bitcoin Core onion service
+## 2. Automatically create a BritanniaCoin Core onion service
 
-Bitcoin Core makes use of Tor's control socket API to create and destroy
+BritanniaCoin Core makes use of Tor's control socket API to create and destroy
 ephemeral onion services programmatically. This means that if Tor is running and
-proper authentication has been configured, Bitcoin Core automatically creates an
+proper authentication has been configured, BritanniaCoin Core automatically creates an
 onion service to listen on. The goal is to increase the number of available
 onion nodes.
 
-This feature is enabled by default if Bitcoin Core is listening (`-listen`) and
+This feature is enabled by default if BritanniaCoin Core is listening (`-listen`) and
 it requires a Tor connection to work. It can be explicitly disabled with
 `-listenonion=0`. If it is not disabled, it can be configured using the
 `-torcontrol` and `-torpassword` settings.
 
-To see verbose Tor information in the bitcoind debug log, pass `-debug=tor`.
+To see verbose Tor information in the britanniacoind debug log, pass `-debug=tor`.
 
 ### Control Port
 
@@ -108,20 +108,20 @@ DataDirectoryGroupReadable 1
 ### Authentication
 
 Connecting to Tor's control socket API requires one of two authentication
-methods to be configured: cookie authentication or bitcoind's `-torpassword`
+methods to be configured: cookie authentication or britanniacoind's `-torpassword`
 configuration option.
 
 #### Cookie authentication
 
-For cookie authentication, the user running bitcoind must have read access to
+For cookie authentication, the user running britanniacoind must have read access to
 the `CookieAuthFile` specified in the Tor configuration. In some cases this is
 preconfigured and the creation of an onion service is automatic. Don't forget to
-use the `-debug=tor` bitcoind configuration option to enable Tor debug logging.
+use the `-debug=tor` britanniacoind configuration option to enable Tor debug logging.
 
 If a permissions problem is seen in the debug log, e.g. `tor: Authentication
 cookie /run/tor/control.authcookie could not be opened (check permissions)`, it
 can be resolved by adding both the user running Tor and the user running
-bitcoind to the same Tor group and setting permissions appropriately.
+britanniacoind to the same Tor group and setting permissions appropriately.
 
 On Debian-derived systems, the Tor group will likely be `debian-tor` and one way
 to verify could be to list the groups and grep for a "tor" group name:
@@ -138,14 +138,14 @@ TORGROUP=$(stat -c '%G' /run/tor/control.authcookie)
 ```
 
 Once you have determined the `${TORGROUP}` and selected the `${USER}` that will
-run bitcoind, run this as root:
+run britanniacoind, run this as root:
 
 ```
 usermod -a -G ${TORGROUP} ${USER}
 ```
 
 Then restart the computer (or log out) and log in as the `${USER}` that will run
-bitcoind.
+britanniacoind.
 
 #### `torpassword` authentication
 
@@ -159,22 +159,22 @@ Manual](https://2019.www.torproject.org/docs/tor-manual.html.en) for more
 details).
 
 
-## 3. Manually create a Bitcoin Core onion service
+## 3. Manually create a BritanniaCoin Core onion service
 
 You can also manually configure your node to be reachable from the Tor network.
 Add these lines to your `/etc/tor/torrc` (or equivalent config file):
 
-    HiddenServiceDir /var/lib/tor/bitcoin-service/
-    HiddenServicePort 8333 127.0.0.1:8334
+    HiddenServiceDir /var/lib/tor/britanniacoin-service/
+    HiddenServicePort 8827 127.0.0.1:8334
 
 The directory can be different of course, but virtual port numbers should be equal to
-your bitcoind's P2P listen port (8333 by default), and target addresses and ports
+your britanniacoind's P2P listen port (8827 by default), and target addresses and ports
 should be equal to binding address and port for inbound Tor connections (127.0.0.1:8334 by default).
 
-    -externalip=X   You can tell bitcoin about its publicly reachable addresses using
+    -externalip=X   You can tell britanniacoin about its publicly reachable addresses using
                     this option, and this can be an onion address. Given the above
                     configuration, you can find your onion address in
-                    /var/lib/tor/bitcoin-service/hostname. For connections
+                    /var/lib/tor/britanniacoin-service/hostname. For connections
                     coming from unroutable addresses (such as 127.0.0.1, where the
                     Tor proxy typically runs), onion addresses are given
                     preference for your node to advertise itself with.
@@ -196,29 +196,29 @@ should be equal to binding address and port for inbound Tor connections (127.0.0
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-    ./bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
+    ./britanniacoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 
 (obviously, replace the .onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-    ./bitcoind ... -bind=127.0.0.1
+    ./britanniacoind ... -bind=127.0.0.1
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
-    ./bitcoind ... -discover
+    ./britanniacoind ... -discover
 
-and open port 8333 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
+and open port 8827 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-    ./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
+    ./britanniacoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
 ## 4. Privacy recommendations
 
-- Do not add anything but Bitcoin Core ports to the onion service created in section 3.
+- Do not add anything but BritanniaCoin Core ports to the onion service created in section 3.
   If you run a web service too, create a new onion service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 2) always have only one port

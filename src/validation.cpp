@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2022-2023 The BritanniaCoin Development Team (Britannia Coin Ltd)
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1459,17 +1460,32 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     return result;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
-{
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+//new block subsidy formula.
+//max 36 million coins, (28m pre mined over 100 blocks, then subsequently 8 distributed evenly over 1 million blocks)
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
+    CAmount nSubsidy;
+    if (nHeight == 10 || nHeight == 20 || nHeight == 30 || nHeight == 40 || nHeight == 50 || nHeight == 60 || nHeight == 70 || nHeight == 80 || nHeight == 90 || nHeight == 100)  {
+        nSubsidy = 2800000*COIN;   // premine 10x2.8m = 28,000,000 coins
+    } else {
+        if (nHeight <= 1000000) {
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+            if( (nHeight >= 211) and (nHeight <= 214) ) {
+
+                nSubsidy = 88 * COIN;
+
+            } else {
+
+                nSubsidy = 8 * COIN;
+            }
+
+        } else {
+
+            nSubsidy = 0;
+        }
+    }
+    printf("Current Block Reward at height: %i - %ld BRT \n",nHeight, nSubsidy);
     return nSubsidy;
+
 }
 
 CoinsViews::CoinsViews(

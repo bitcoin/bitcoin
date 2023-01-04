@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_CACHES_H
-#define BITCOIN_NODE_CACHES_H
+#ifndef BRITANNIACOIN_NODE_CACHES_H
+#define BRITANNIACOIN_NODE_CACHES_H
 
 #include <cstddef>
 #include <cstdint>

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ADDRMAN_IMPL_H
-#define BITCOIN_ADDRMAN_IMPL_H
+#ifndef BRITANNIACOIN_ADDRMAN_IMPL_H
+#define BRITANNIACOIN_ADDRMAN_IMPL_H
 
 #include <logging.h>
 #include <logging/timer.h>

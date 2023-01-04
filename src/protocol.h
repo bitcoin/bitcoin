@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PROTOCOL_H
-#define BITCOIN_PROTOCOL_H
+#ifndef BRITANNIACOIN_PROTOCOL_H
+#define BRITANNIACOIN_PROTOCOL_H
 
 #include <netaddress.h>
 #include <primitives/transaction.h>

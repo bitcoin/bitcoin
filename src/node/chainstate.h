@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_CHAINSTATE_H
-#define BITCOIN_NODE_CHAINSTATE_H
+#ifndef BRITANNIACOIN_NODE_CHAINSTATE_H
+#define BRITANNIACOIN_NODE_CHAINSTATE_H
 
 #include <util/translation.h>
 #include <validation.h>

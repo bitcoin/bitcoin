@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/britanniacoin-config.h>
 #endif
 
 #include <timedata.h>
@@ -37,17 +37,17 @@ NodeClock::time_point GetAdjustedTime()
     return NodeClock::now() + std::chrono::seconds{GetTimeOffset()};
 }
 
-#define BITCOIN_TIMEDATA_MAX_SAMPLES 200
+#define BRITANNIACOIN_TIMEDATA_MAX_SAMPLES 200
 
 static std::set<CNetAddr> g_sources;
-static CMedianFilter<int64_t> g_time_offsets{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+static CMedianFilter<int64_t> g_time_offsets{BRITANNIACOIN_TIMEDATA_MAX_SAMPLES, 0};
 static bool g_warning_emitted;
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(g_timeoffset_mutex);
     // Ignore duplicates
-    if (g_sources.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
+    if (g_sources.size() == BRITANNIACOIN_TIMEDATA_MAX_SAMPLES)
         return;
     if (!g_sources.insert(ip).second)
         return;
@@ -115,6 +115,6 @@ void TestOnlyResetTimeData()
     LOCK(g_timeoffset_mutex);
     nTimeOffset = 0;
     g_sources.clear();
-    g_time_offsets = CMedianFilter<int64_t>{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+    g_time_offsets = CMedianFilter<int64_t>{BRITANNIACOIN_TIMEDATA_MAX_SAMPLES, 0};
     g_warning_emitted = false;
 }

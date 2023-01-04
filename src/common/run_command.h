@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMMON_RUN_COMMAND_H
-#define BITCOIN_COMMON_RUN_COMMAND_H
+#ifndef BRITANNIACOIN_COMMON_RUN_COMMAND_H
+#define BRITANNIACOIN_COMMON_RUN_COMMAND_H
 
 #include <string>
 

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_EVENTS_H
-#define BITCOIN_SUPPORT_EVENTS_H
+#ifndef BRITANNIACOIN_SUPPORT_EVENTS_H
+#define BRITANNIACOIN_SUPPORT_EVENTS_H
 
 #include <ios>
 #include <memory>

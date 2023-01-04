@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SIGNET_H
-#define BITCOIN_SIGNET_H
+#ifndef BRITANNIACOIN_SIGNET_H
+#define BRITANNIACOIN_SIGNET_H
 
 #include <consensus/params.h>
 #include <primitives/block.h>

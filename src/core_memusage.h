@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CORE_MEMUSAGE_H
-#define BITCOIN_CORE_MEMUSAGE_H
+#ifndef BRITANNIACOIN_CORE_MEMUSAGE_H
+#define BRITANNIACOIN_CORE_MEMUSAGE_H
 
 #include <primitives/transaction.h>
 #include <primitives/block.h>

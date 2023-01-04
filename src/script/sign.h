@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SIGN_H
-#define BITCOIN_SCRIPT_SIGN_H
+#ifndef BRITANNIACOIN_SCRIPT_SIGN_H
+#define BRITANNIACOIN_SCRIPT_SIGN_H
 
 #include <attributes.h>
 #include <coins.h>

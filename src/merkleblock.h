@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MERKLEBLOCK_H
-#define BITCOIN_MERKLEBLOCK_H
+#ifndef BRITANNIACOIN_MERKLEBLOCK_H
+#define BRITANNIACOIN_MERKLEBLOCK_H
 
 #include <common/bloom.h>
 #include <primitives/block.h>

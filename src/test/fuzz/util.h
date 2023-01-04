@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_H
-#define BITCOIN_TEST_FUZZ_UTIL_H
+#ifndef BRITANNIACOIN_TEST_FUZZ_UTIL_H
+#define BRITANNIACOIN_TEST_FUZZ_UTIL_H
 
 #include <arith_uint256.h>
 #include <chainparamsbase.h>

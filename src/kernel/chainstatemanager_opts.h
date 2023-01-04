@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
-#define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
+#ifndef BRITANNIACOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
+#define BRITANNIACOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
 #include <arith_uint256.h>
 #include <uint256.h>

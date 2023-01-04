@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WARNINGS_H
-#define BITCOIN_WARNINGS_H
+#ifndef BRITANNIACOIN_WARNINGS_H
+#define BRITANNIACOIN_WARNINGS_H
 
 #include <string>
 

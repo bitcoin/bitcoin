@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_VALIDATION_H
-#define BITCOIN_CONSENSUS_VALIDATION_H
+#ifndef BRITANNIACOIN_CONSENSUS_VALIDATION_H
+#define BRITANNIACOIN_CONSENSUS_VALIDATION_H
 
 #include <string>
 #include <version.h>

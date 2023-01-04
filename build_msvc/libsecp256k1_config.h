@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef BITCOIN_LIBSECP256K1_CONFIG_H
-#define BITCOIN_LIBSECP256K1_CONFIG_H
+#ifndef BRITANNIACOIN_LIBSECP256K1_CONFIG_H
+#define BRITANNIACOIN_LIBSECP256K1_CONFIG_H
 
 #undef USE_ASM_X86_64
 

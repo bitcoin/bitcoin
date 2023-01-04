@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_POLICY_H
-#define BITCOIN_POLICY_POLICY_H
+#ifndef BRITANNIACOIN_POLICY_POLICY_H
+#define BRITANNIACOIN_POLICY_POLICY_H
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>

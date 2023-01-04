@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MAPPORT_H
-#define BITCOIN_MAPPORT_H
+#ifndef BRITANNIACOIN_MAPPORT_H
+#define BRITANNIACOIN_MAPPORT_H
 
 #ifdef USE_UPNP
 static constexpr bool DEFAULT_UPNP = USE_UPNP;

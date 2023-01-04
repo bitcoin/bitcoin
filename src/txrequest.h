@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXREQUEST_H
-#define BITCOIN_TXREQUEST_H
+#ifndef BRITANNIACOIN_TXREQUEST_H
+#define BRITANNIACOIN_TXREQUEST_H
 
 #include <primitives/transaction.h>
 #include <net.h> // For NodeId

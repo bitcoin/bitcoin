@@ -1,7 +1,7 @@
 // Taken from https://gist.github.com/arvidsson/7231973
 
-#ifndef BITCOIN_REVERSE_ITERATOR_H
-#define BITCOIN_REVERSE_ITERATOR_H
+#ifndef BRITANNIACOIN_REVERSE_ITERATOR_H
+#define BRITANNIACOIN_REVERSE_ITERATOR_H
 
 /**
  * Template used for reverse iteration in C++11 range-based for loops.

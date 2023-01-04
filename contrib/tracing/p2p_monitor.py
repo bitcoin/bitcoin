@@ -115,17 +115,17 @@ class Peer:
             self.total_outbound_msgs += 1
 
 
-def main(bitcoind_path):
+def main(britanniacoind_path):
     peers = dict()
 
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+    britanniacoind_with_usdts = USDT(path=str(britanniacoind_path))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
-    bitcoind_with_usdts.enable_probe(
+    britanniacoind_with_usdts.enable_probe(
         probe="inbound_message", fn_name="trace_inbound_message")
-    bitcoind_with_usdts.enable_probe(
+    britanniacoind_with_usdts.enable_probe(
         probe="outbound_message", fn_name="trace_outbound_message")
-    bpf = BPF(text=program, usdt_contexts=[bitcoind_with_usdts])
+    bpf = BPF(text=program, usdt_contexts=[britanniacoind_with_usdts])
 
     # BCC: perf buffer handle function for inbound_messages
     def handle_inbound(_, data, size):
@@ -247,7 +247,7 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/bitcoind")
+        print("USAGE:", sys.argv[0], "path/to/britanniacoind")
         exit()
     path = sys.argv[1]
     main(path)

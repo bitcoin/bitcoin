@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_AMOUNT_H
-#define BITCOIN_CONSENSUS_AMOUNT_H
+#ifndef BRITANNIACOIN_CONSENSUS_AMOUNT_H
+#define BRITANNIACOIN_CONSENSUS_AMOUNT_H
 
 #include <cstdint>
 

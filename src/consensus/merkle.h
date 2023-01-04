@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_MERKLE_H
-#define BITCOIN_CONSENSUS_MERKLE_H
+#ifndef BRITANNIACOIN_CONSENSUS_MERKLE_H
+#define BRITANNIACOIN_CONSENSUS_MERKLE_H
 
 #include <vector>
 

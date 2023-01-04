@@ -14,14 +14,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-util (CLI Bitcoin utility)"
+            VALUE "CompanyName",        "BritanniaCoin"
+            VALUE "FileDescription",    "britanniacoin-util (CLI BritanniaCoin utility)"
             VALUE "FileVersion",        PACKAGE_VERSION
-            VALUE "InternalName",       "bitcoin-util"
+            VALUE "InternalName",       "britanniacoin-util"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-util.exe"
-            VALUE "ProductName",        "bitcoin-util"
+            VALUE "OriginalFilename",   "britanniacoin-util.exe"
+            VALUE "ProductName",        "britanniacoin-util"
             VALUE "ProductVersion",     PACKAGE_VERSION
         END
     END

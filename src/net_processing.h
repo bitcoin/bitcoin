@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_PROCESSING_H
-#define BITCOIN_NET_PROCESSING_H
+#ifndef BRITANNIACOIN_NET_PROCESSING_H
+#define BRITANNIACOIN_NET_PROCESSING_H
 
 #include <net.h>
 #include <validationinterface.h>

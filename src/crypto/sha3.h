@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_SHA3_H
-#define BITCOIN_CRYPTO_SHA3_H
+#ifndef BRITANNIACOIN_CRYPTO_SHA3_H
+#define BRITANNIACOIN_CRYPTO_SHA3_H
 
 #include <span.h>
 

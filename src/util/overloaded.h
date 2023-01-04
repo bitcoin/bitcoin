@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_OVERLOADED_H
-#define BITCOIN_UTIL_OVERLOADED_H
+#ifndef BRITANNIACOIN_UTIL_OVERLOADED_H
+#define BRITANNIACOIN_UTIL_OVERLOADED_H
 
 namespace util {
 //! Overloaded helper for std::visit. This helper and std::visit in general are

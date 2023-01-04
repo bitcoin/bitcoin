@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_TRANSACTION_H
-#define BITCOIN_NODE_TRANSACTION_H
+#ifndef BRITANNIACOIN_NODE_TRANSACTION_H
+#define BRITANNIACOIN_NODE_TRANSACTION_H
 
 #include <policy/feerate.h>
 #include <primitives/transaction.h>

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BLOCKENCODINGS_H
-#define BITCOIN_BLOCKENCODINGS_H
+#ifndef BRITANNIACOIN_BLOCKENCODINGS_H
+#define BRITANNIACOIN_BLOCKENCODINGS_H
 
 #include <primitives/block.h>
 

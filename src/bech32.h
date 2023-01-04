@@ -11,8 +11,8 @@
 //
 // For more information, see BIP 173 and BIP 350.
 
-#ifndef BITCOIN_BECH32_H
-#define BITCOIN_BECH32_H
+#ifndef BRITANNIACOIN_BECH32_H
+#define BRITANNIACOIN_BECH32_H
 
 #include <stdint.h>
 #include <string>

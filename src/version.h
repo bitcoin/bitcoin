@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_VERSION_H
-#define BITCOIN_VERSION_H
+#ifndef BRITANNIACOIN_VERSION_H
+#define BRITANNIACOIN_VERSION_H
 
 /**
  * network protocol versioning

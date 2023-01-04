@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HEADERSSYNC_H
-#define BITCOIN_HEADERSSYNC_H
+#ifndef BRITANNIACOIN_HEADERSSYNC_H
+#define BRITANNIACOIN_HEADERSSYNC_H
 
 #include <arith_uint256.h>
 #include <chain.h>

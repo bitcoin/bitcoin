@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INDEX_COINSTATSINDEX_H
-#define BITCOIN_INDEX_COINSTATSINDEX_H
+#ifndef BRITANNIACOIN_INDEX_COINSTATSINDEX_H
+#define BRITANNIACOIN_INDEX_COINSTATSINDEX_H
 
 #include <crypto/muhash.h>
 #include <index/base.h>

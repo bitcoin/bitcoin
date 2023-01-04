@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_EVICTION_H
-#define BITCOIN_NODE_EVICTION_H
+#ifndef BRITANNIACOIN_NODE_EVICTION_H
+#define BRITANNIACOIN_NODE_EVICTION_H
 
 #include <node/connection_types.h>
 #include <net_permissions.h>

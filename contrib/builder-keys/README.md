@@ -30,4 +30,4 @@ FOR /F "tokens=1" %i IN (keys.txt) DO gpg --keyserver hkps://keys.openpgp.org --
 ```
 
 Add your key to the list if you provided Guix attestations for two major or
-minor releases of Bitcoin Core.
+minor releases of BritanniaCoin Core.

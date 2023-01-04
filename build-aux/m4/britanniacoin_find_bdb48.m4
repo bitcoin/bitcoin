@@ -1,8 +1,8 @@
-dnl Copyright (c) 2013-2015 The Bitcoin Core developers
+dnl Copyright (c) 2013-2015 The BritanniaCoin Core developers
 dnl Distributed under the MIT software license, see the accompanying
 dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-AC_DEFUN([BITCOIN_FIND_BDB48],[
+AC_DEFUN([BRITANNIACOIN_FIND_BDB48],[
   AC_ARG_VAR([BDB_CFLAGS], [C compiler flags for BerkeleyDB, bypasses autodetection])
   AC_ARG_VAR([BDB_LIBS], [Linker flags for BerkeleyDB, bypasses autodetection])
 
@@ -52,7 +52,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
       AC_MSG_WARN(AC_PACKAGE_NAME[ requires this library for BDB (legacy) wallet support])
       AC_MSG_WARN([Passing --without-bdb will suppress this warning])
     elif test "$bdb48path" = "X"; then
-      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
+      BRITANNIACOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdbpath}],db_cxx)
       AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 4.8])],[
         AC_MSG_WARN([Found Berkeley DB other than 4.8])
         AC_MSG_WARN([BDB (legacy) wallets opened by this build will not be portable!])
@@ -65,7 +65,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
         use_bdb=no
       ])
     else
-      BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
+      BRITANNIACOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
       bdbpath="${bdb48path}"
       use_bdb=yes
     fi

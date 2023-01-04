@@ -5,8 +5,8 @@
 
 // Compile-time verification of assumptions we make.
 
-#ifndef BITCOIN_COMPAT_ASSUMPTIONS_H
-#define BITCOIN_COMPAT_ASSUMPTIONS_H
+#ifndef BRITANNIACOIN_COMPAT_ASSUMPTIONS_H
+#define BRITANNIACOIN_COMPAT_ASSUMPTIONS_H
 
 #include <limits>
 
@@ -14,7 +14,7 @@
 // Example(s): We use assert(...) extensively with the assumption of it never
 //             being a noop at runtime.
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "BritanniaCoin cannot be compiled without assertions."
 #endif
 
 // Assumption: We assume a C++17 (ISO/IEC 14882:2017) compiler (minimum requirement).

@@ -6,8 +6,8 @@
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTIL_STRENCODINGS_H
-#define BITCOIN_UTIL_STRENCODINGS_H
+#ifndef BRITANNIACOIN_UTIL_STRENCODINGS_H
+#define BRITANNIACOIN_UTIL_STRENCODINGS_H
 
 #include <span.h>
 #include <util/string.h>

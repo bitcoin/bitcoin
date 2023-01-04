@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
 #
-#  bitcoind The bitcoin core server.
+#  britanniacoind The britanniacoin core server.
 #
 #
 # chkconfig: 345 80 20
-# description: bitcoind
-# processname: bitcoind
+# description: britanniacoind
+# processname: britanniacoind
 #
 
 # Source function library.
 . /etc/init.d/functions
 
-# you can override defaults in /etc/sysconfig/bitcoind, see below
-if [ -f /etc/sysconfig/bitcoind ]; then
-        . /etc/sysconfig/bitcoind
+# you can override defaults in /etc/sysconfig/britanniacoind, see below
+if [ -f /etc/sysconfig/britanniacoind ]; then
+        . /etc/sysconfig/britanniacoind
 fi
 
 RETVAL=0
 
-prog=bitcoind
-# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitcoind
-lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitcoind}
+prog=britanniacoind
+# you can override the lockfile via BRITANNIACOIND_LOCKFILE in /etc/sysconfig/britanniacoind
+lockfile=${BRITANNIACOIND_LOCKFILE-/var/lock/subsys/britanniacoind}
 
-# bitcoind defaults to /usr/bin/bitcoind, override with BITCOIND_BIN
-bitcoind=${BITCOIND_BIN-/usr/bin/bitcoind}
+# britanniacoind defaults to /usr/bin/britanniacoind, override with BRITANNIACOIND_BIN
+britanniacoind=${BRITANNIACOIND_BIN-/usr/bin/britanniacoind}
 
-# bitcoind opts default to -disablewallet, override with BITCOIND_OPTS
-bitcoind_opts=${BITCOIND_OPTS--disablewallet}
+# britanniacoind opts default to -disablewallet, override with BRITANNIACOIND_OPTS
+britanniacoind_opts=${BRITANNIACOIND_OPTS--disablewallet}
 
 start() {
     echo -n $"Starting $prog: "
-    daemon $DAEMONOPTS $bitcoind $bitcoind_opts
+    daemon $DAEMONOPTS $britanniacoind $britanniacoind_opts
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch $lockfile

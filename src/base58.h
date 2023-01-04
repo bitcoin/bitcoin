@@ -11,8 +11,8 @@
  * - E-mail usually won't line-break if there's no punctuation to break at.
  * - Double-clicking selects the whole string as one word if it's all alphanumeric.
  */
-#ifndef BITCOIN_BASE58_H
-#define BITCOIN_BASE58_H
+#ifndef BRITANNIACOIN_BASE58_H
+#define BRITANNIACOIN_BASE58_H
 
 #include <span.h>
 

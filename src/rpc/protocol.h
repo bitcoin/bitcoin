@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RPC_PROTOCOL_H
-#define BITCOIN_RPC_PROTOCOL_H
+#ifndef BRITANNIACOIN_RPC_PROTOCOL_H
+#define BRITANNIACOIN_RPC_PROTOCOL_H
 
 //! HTTP status codes
 enum HTTPStatusCode

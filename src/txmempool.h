@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef BRITANNIACOIN_TXMEMPOOL_H
+#define BRITANNIACOIN_TXMEMPOOL_H
 
 #include <atomic>
 #include <map>

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_MEMPOOL_H
-#define BITCOIN_TEST_FUZZ_UTIL_MEMPOOL_H
+#ifndef BRITANNIACOIN_TEST_FUZZ_UTIL_MEMPOOL_H
+#define BRITANNIACOIN_TEST_FUZZ_UTIL_MEMPOOL_H
 
 #include <kernel/mempool_entry.h>
 #include <validation.h>

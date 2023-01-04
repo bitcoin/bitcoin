@@ -5,8 +5,8 @@
 //! @file
 //! @brief Common init functions shared by bitcoin-node, bitcoin-wallet, etc.
 
-#ifndef BITCOIN_INIT_COMMON_H
-#define BITCOIN_INIT_COMMON_H
+#ifndef BRITANNIACOIN_INIT_COMMON_H
+#define BRITANNIACOIN_INIT_COMMON_H
 
 class ArgsManager;
 

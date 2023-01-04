@@ -28,7 +28,7 @@ cmd_usage() {
     cat <<EOF
 Synopsis:
 
-    env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> \\
+    env DETACHED_SIGS_REPO=<path/to/britanniacoin-detached-sigs> \\
       ./contrib/guix/guix-codesign
 
 EOF
@@ -273,7 +273,7 @@ cat << EOF
 INFO: Codesigning ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
       ...from worktree directory: '${PWD}'
-          ...bind-mounted in container to: '/bitcoin'
+          ...bind-mounted in container to: '/britanniacoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
       ...outputting in: '$(outdir_for_host "$HOST" codesigned)'
@@ -347,7 +347,7 @@ EOF
                                  --container \
                                  --pure \
                                  --no-cwd \
-                                 --share="$PWD"=/bitcoin \
+                                 --share="$PWD"=/britanniacoin \
                                  --share="$DISTSRC_BASE"=/distsrc-base \
                                  --share="$OUTDIR_BASE"=/outdir-base \
                                  --share="$DETACHED_SIGS_REPO"=/detached-sigs \
@@ -372,7 +372,7 @@ EOF
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                         DETACHED_SIGS_REPO=/detached-sigs \
                                         UNSIGNED_TARBALL="$(OUTDIR_BASE=/outdir-base && unsigned_tarball_for_host "$HOST")" \
-                                      bash -c "cd /bitcoin && bash contrib/guix/libexec/codesign.sh"
+                                      bash -c "cd /britanniacoin && bash contrib/guix/libexec/codesign.sh"
     )
 
 done

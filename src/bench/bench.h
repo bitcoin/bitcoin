@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BENCH_BENCH_H
-#define BITCOIN_BENCH_BENCH_H
+#ifndef BRITANNIACOIN_BENCH_BENCH_H
+#define BRITANNIACOIN_BENCH_BENCH_H
 
 #include <fs.h>
 #include <util/macros.h>

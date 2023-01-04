@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TIMEDATA_H
-#define BITCOIN_TIMEDATA_H
+#ifndef BRITANNIACOIN_TIMEDATA_H
+#define BRITANNIACOIN_TIMEDATA_H
 
 #include <util/time.h>
 

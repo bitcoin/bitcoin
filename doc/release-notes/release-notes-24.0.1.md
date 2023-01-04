@@ -4,57 +4,57 @@
 Due to last-minute issues (#26616), 24.0, although tagged, was never fully
 announced or released.
 
-Bitcoin Core version 24.0.1 is now available from:
+BritanniaCoin Core version 24.0.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-24.0.1/>
+  <https://britanniacoincore.org/bin/britanniacoin-core-24.0.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/britanniacoin/britanniacoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://britanniacoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/BritanniaCoin-Qt` (on macOS)
+or `britanniacoind`/`britanniacoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of BritanniaCoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of BritanniaCoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.15+, and Windows 7 and newer.  Bitcoin
+BritanniaCoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.15+, and Windows 7 and newer.  BritanniaCoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use BritanniaCoin Core on
 unsupported systems.
 
 Notice of new option for transaction replacement policies
 =========================================================
 
-This version of Bitcoin Core adds a new `mempoolfullrbf` configuration
+This version of BritanniaCoin Core adds a new `mempoolfullrbf` configuration
 option which allows users to change the policy their individual node
 will use for relaying and mining unconfirmed transactions.  The option
 defaults to the same policy that was used in previous releases and no
 changes to node policy will occur if everyone uses the default.
 
-Some Bitcoin services today expect that the first version of an
+Some BritanniaCoin services today expect that the first version of an
 unconfirmed transaction that they see will be the version of the
 transaction that ultimately gets confirmed---a transaction acceptance
 policy sometimes called "first-seen".
 
-The Bitcoin Protocol does not, and cannot, provide any assurance that
+The BritanniaCoin Protocol does not, and cannot, provide any assurance that
 the first version of an unconfirmed transaction seen by a particular
 node will be the version that gets confirmed.  If there are multiple
 versions of the same unconfirmed transaction available, only the miner
@@ -67,7 +67,7 @@ still make this assumption.
 There are several benefits to users from removing this *first-seen*
 simplification.  One key benefit, the ability for the sender of a
 transaction to replace it with an alternative version paying higher
-fees, was realized in [Bitcoin Core 0.12.0][] (February 2016) with the
+fees, was realized in [BritanniaCoin Core 0.12.0][] (February 2016) with the
 introduction of [BIP125][] opt-in Replace By Fee (RBF).
 
 Since then, there has been discussion about completely removing the
@@ -78,9 +78,9 @@ option that allows enabling full-RBF, although it defaults to off
 (allowing only opt-in RBF).
 
 Several alternative node implementations have already enabled full-RBF by
-default for years, and several contributors to Bitcoin Core are
+default for years, and several contributors to BritanniaCoin Core are
 advocating for enabling full-RBF by default in a future version of
-Bitcoin Core.
+BritanniaCoin Core.
 
 As more nodes that participate in relay and mining begin enabling
 full-RBF, replacement of unconfirmed transactions by ones offering higher
@@ -91,8 +91,8 @@ not accept unconfirmed transactions as final, and if they insist on doing so,
 to take the appropriate steps to ensure they have some recourse or plan for
 when their assumptions do not hold.
 
-[Bitcoin Core 0.12.0]: https://bitcoincore.org/en/releases/0.12.0/#opt-in-replace-by-fee-transactions
-[bip125]: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+[BritanniaCoin Core 0.12.0]: https://britanniacoincore.org/en/releases/0.12.0/#opt-in-replace-by-fee-transactions
+[bip125]: https://github.com/britanniacoin/bips/blob/master/bip-0125.mediawiki
 
 Notable changes
 ===============
@@ -211,13 +211,13 @@ Wallet
 
 - The `wsh()` output descriptor was extended with Miniscript support. You can import Miniscript
   descriptors for P2WSH in a watchonly wallet to track coins, but you can't spend from them using
-  the Bitcoin Core wallet yet.
-  You can find more about Miniscript on the [reference website](https://bitcoin.sipa.be/miniscript/). (#24148)
+  the BritanniaCoin Core wallet yet.
+  You can find more about Miniscript on the [reference website](https://britanniacoin.sipa.be/miniscript/). (#24148)
 
 - The `tr()` output descriptor now supports multisig scripts through the `multi_a()` and
   `sortedmulti_a()` functions. (#24043)
 
-- To help prevent fingerprinting transactions created by the Bitcoin Core wallet, change output
+- To help prevent fingerprinting transactions created by the BritanniaCoin Core wallet, change output
   amounts are now randomized. (#24494)
 
 - The `listtransactions`, `gettransaction`, and `listsinceblock`
@@ -237,25 +237,25 @@ Migrating Legacy Wallets to Descriptor Wallets
 
 An experimental RPC `migratewallet` has been added to migrate Legacy (non-descriptor) wallets to
 Descriptor wallets. More information about the migration process is available in the
-[documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/managing-wallets.md#migrating-legacy-wallets-to-descriptor-wallets).
+[documentation](https://github.com/britanniacoin/britanniacoin/blob/master/doc/managing-wallets.md#migrating-legacy-wallets-to-descriptor-wallets).
 
 GUI changes
 -----------
 
 - A new menu item to restore a wallet from a backup file has been added (gui#471).
 
-- Configuration changes made in the bitcoin GUI (such as the pruning setting,
+- Configuration changes made in the britanniacoin GUI (such as the pruning setting,
 proxy settings, UPNP preferences) are now saved to `<datadir>/settings.json`
 file rather than to the Qt settings backend (windows registry or unix desktop
-config files), so these settings will now apply to bitcoind, instead of being
+config files), so these settings will now apply to britanniacoind, instead of being
 ignored. (#15936, gui#602)
 
-- Also, the interaction between GUI settings and `bitcoin.conf` settings is
-simplified. Settings from `bitcoin.conf` are now displayed normally in the GUI
+- Also, the interaction between GUI settings and `britanniacoin.conf` settings is
+simplified. Settings from `britanniacoin.conf` are now displayed normally in the GUI
 settings dialog, instead of in a separate warning message ("Options set in this
 dialog are overridden by the configuration file: -setting=value"). And these
 settings can now be edited because `settings.json` values take precedence over
-`bitcoin.conf` values. (#15936)
+`britanniacoin.conf` values. (#15936)
 
 Low-level changes
 =================
@@ -388,4 +388,4 @@ Thanks to everyone who directly contributed to this release:
 - Yancy Ribbens
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://www.transifex.com/britanniacoin/britanniacoin/).

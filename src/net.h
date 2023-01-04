@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef BRITANNIACOIN_NET_H
+#define BRITANNIACOIN_NET_H
 
 #include <chainparams.h>
 #include <common/bloom.h>

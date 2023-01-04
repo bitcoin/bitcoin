@@ -1,8 +1,8 @@
 // Copyright (c) 2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_KERNEL_MEMPOOL_LIMITS_H
-#define BITCOIN_KERNEL_MEMPOOL_LIMITS_H
+#ifndef BRITANNIACOIN_KERNEL_MEMPOOL_LIMITS_H
+#define BRITANNIACOIN_KERNEL_MEMPOOL_LIMITS_H
 
 #include <policy/policy.h>
 

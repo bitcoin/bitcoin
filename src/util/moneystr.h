@@ -6,8 +6,8 @@
 /**
  * Money parsing/formatting utilities.
  */
-#ifndef BITCOIN_UTIL_MONEYSTR_H
-#define BITCOIN_UTIL_MONEYSTR_H
+#ifndef BRITANNIACOIN_UTIL_MONEYSTR_H
+#define BRITANNIACOIN_UTIL_MONEYSTR_H
 
 #include <consensus/amount.h>
 

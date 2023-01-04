@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SERFLOAT_H
-#define BITCOIN_UTIL_SERFLOAT_H
+#ifndef BRITANNIACOIN_UTIL_SERFLOAT_H
+#define BRITANNIACOIN_UTIL_SERFLOAT_H
 
 #include <cstdint>
 

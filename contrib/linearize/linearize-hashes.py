@@ -17,7 +17,7 @@ import os.path
 
 settings = {}
 
-class BitcoinRPC:
+class BritanniaCoinRPC:
     def __init__(self, host, port, username, password):
         authpair = "%s:%s" % (username, password)
         authpair = authpair.encode('utf-8')
@@ -59,7 +59,7 @@ class BitcoinRPC:
         return 'error' in resp_obj and resp_obj['error'] is not None
 
 def get_block_hashes(settings, max_blocks_per_call=10000):
-    rpc = BitcoinRPC(settings['host'], settings['port'],
+    rpc = BritanniaCoinRPC(settings['host'], settings['port'],
              settings['rpcuser'], settings['rpcpassword'])
 
     height = settings['min_height']

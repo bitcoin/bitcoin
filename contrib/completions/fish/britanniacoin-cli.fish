@@ -1,7 +1,7 @@
 # Disable files from being included in completions by default
-complete --command bitcoin-cli --no-files
+complete --command britanniacoin-cli --no-files
 
-function __fish_bitcoin_cli_get_commands_helper
+function __fish_britanniacoin_cli_get_commands_helper
     set --local cmd (commandline -oc)
 
     # Don't return commands if '-help or -?' in commandline
@@ -21,22 +21,22 @@ function __fish_bitcoin_cli_get_commands_helper
     end
 end
 
-function __fish_bitcoin_cli_get_commands
+function __fish_britanniacoin_cli_get_commands
     argparse 'nohelp' 'commandsonly' -- $argv
     set --local commands
 
     # Exclude description, exclude help
     if set -q _flag_nohelp; and set -q _flag_commandsonly
-        set --append commands (__fish_bitcoin_cli_get_commands_helper | string replace -r ' .*$' '' | string match --invert -r 'help')
+        set --append commands (__fish_britanniacoin_cli_get_commands_helper | string replace -r ' .*$' '' | string match --invert -r 'help')
     # Include description, exclude help
     else if set -q _flag_nohelp
-        set --append commands (__fish_bitcoin_cli_get_commands_helper | string replace ' ' \t | string match --invert -r 'help')
+        set --append commands (__fish_britanniacoin_cli_get_commands_helper | string replace ' ' \t | string match --invert -r 'help')
     # Exclude description, include help
     else if set -q _flag_commandsonly
-        set --append commands (__fish_bitcoin_cli_get_commands_helper | string replace -r ' .*$' '')
+        set --append commands (__fish_britanniacoin_cli_get_commands_helper | string replace -r ' .*$' '')
     # Include description, include help
     else
-        set --append commands (__fish_bitcoin_cli_get_commands_helper | string replace ' ' \t)
+        set --append commands (__fish_britanniacoin_cli_get_commands_helper | string replace ' ' \t)
     end
 
     if string match -q -r '^.*error.*$' $commands[1]
@@ -50,7 +50,7 @@ function __fish_bitcoin_cli_get_commands
 end
 
 
-function __fish_bitcoin_cli_get_options
+function __fish_britanniacoin_cli_get_options
     argparse 'nofiles' -- $argv
     set --local cmd (commandline -oc)
     # Don't return options if '-help or -?' in commandline
@@ -73,27 +73,27 @@ end
 # Add options with file completion
 # Don't offer after a command is given
 complete \
-    --command bitcoin-cli \
+    --command britanniacoin-cli \
     --no-files \
-    --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly)" \
-    --arguments "(__fish_bitcoin_cli_get_options)"
+    --condition "not __fish_seen_subcommand_from (__fish_britanniacoin_cli_get_commands --commandsonly)" \
+    --arguments "(__fish_britanniacoin_cli_get_options)"
 # Enable file completions only if the commandline now contains a `*.=` style option
-complete --command bitcoin-cli \
+complete --command britanniacoin-cli \
     --condition 'string match --regex -- ".*=" (commandline -pt)' \
     --force-files
 
 # Add options without file completion
 # Don't offer after a command is given
 complete \
-    --command bitcoin-cli \
+    --command britanniacoin-cli \
     --no-files \
-    --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly)" \
-    --arguments "(__fish_bitcoin_cli_get_options --nofiles)"
+    --condition "not __fish_seen_subcommand_from (__fish_britanniacoin_cli_get_commands --commandsonly)" \
+    --arguments "(__fish_britanniacoin_cli_get_options --nofiles)"
 
 # Add commands
-# Permit command completions after `bitcoin-cli help` but not after other commands
+# Permit command completions after `britanniacoin-cli help` but not after other commands
 complete \
-    --command bitcoin-cli \
+    --command britanniacoin-cli \
     --no-files \
-    --condition "not __fish_seen_subcommand_from (__fish_bitcoin_cli_get_commands --commandsonly --nohelp)" \
-    --arguments "(__fish_bitcoin_cli_get_commands)"
+    --condition "not __fish_seen_subcommand_from (__fish_britanniacoin_cli_get_commands --commandsonly --nohelp)" \
+    --arguments "(__fish_britanniacoin_cli_get_commands)"

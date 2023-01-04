@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_IO_H
-#define BITCOIN_KEY_IO_H
+#ifndef BRITANNIACOIN_KEY_IO_H
+#define BRITANNIACOIN_KEY_IO_H
 
 #include <chainparams.h>
 #include <key.h>

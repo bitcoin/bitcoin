@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HASH_H
-#define BITCOIN_HASH_H
+#ifndef BRITANNIACOIN_HASH_H
+#define BRITANNIACOIN_HASH_H
 
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>

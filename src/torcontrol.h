@@ -5,8 +5,8 @@
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef BITCOIN_TORCONTROL_H
-#define BITCOIN_TORCONTROL_H
+#ifndef BRITANNIACOIN_TORCONTROL_H
+#define BRITANNIACOIN_TORCONTROL_H
 
 #include <fs.h>
 #include <netaddress.h>

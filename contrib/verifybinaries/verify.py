@@ -19,11 +19,11 @@ import subprocess
 import sys
 from textwrap import indent
 
-WORKINGDIR = "/tmp/bitcoin_verify_binaries"
+WORKINGDIR = "/tmp/britanniacoin_verify_binaries"
 HASHFILE = "hashes.tmp"
-HOST1 = "https://bitcoincore.org"
-HOST2 = "https://bitcoin.org"
-VERSIONPREFIX = "bitcoin-core-"
+HOST1 = "https://britanniacoincore.org"
+HOST2 = "https://britanniacoin.org"
+VERSIONPREFIX = "britanniacoin-core-"
 SIGNATUREFILENAME = "SHA256SUMS.asc"
 
 
@@ -112,8 +112,8 @@ def main(args):
     sigfile2 = SIGNATUREFILENAME + ".2"
     success, output = download_with_wget(HOST2 + remote_sigfile, sigfile2)
     if not success:
-        print("bitcoin.org failed to provide signature file, "
-              "but bitcoincore.org did?")
+        print("britanniacoin.org failed to provide signature file, "
+              "but britanniacoincore.org did?")
         print("wget output:")
         print(indent(output, '\t'))
         remove_files([sigfile1])
@@ -121,7 +121,7 @@ def main(args):
 
     # ensure that both signature files are equal
     if not files_are_equal(sigfile1, sigfile2):
-        print("bitcoin.org and bitcoincore.org signature files were not equal?")
+        print("britanniacoin.org and britanniacoincore.org signature files were not equal?")
         print(f"See files {WORKINGDIR}/{sigfile1} and {WORKINGDIR}/{sigfile2}")
         return 6
 
@@ -131,7 +131,7 @@ def main(args):
         if retval == 1:
             print("Bad signature.")
         elif retval == 2:
-            print("gpg error. Do you have the Bitcoin Core binary release "
+            print("gpg error. Do you have the BritanniaCoin Core binary release "
                   "signing key installed?")
         print("gpg output:")
         print(indent(output, '\t'))

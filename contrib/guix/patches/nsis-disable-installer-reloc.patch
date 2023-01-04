@@ -15,7 +15,7 @@ produce contain them, and function correctly when under the same
 "Force randomization for images (Mandatory ASLR)" setting.
 
 See:
-https://github.com/bitcoin/bitcoin/issues/25726
+https://github.com/britanniacoin/britanniacoin/issues/25726
 https://sourceforge.net/p/nsis/bugs/1131/
 
 --- a/SCons/Config/gnu

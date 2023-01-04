@@ -43,7 +43,7 @@ NO_USDT ?=
 NO_NATPMP ?=
 MULTIPROCESS ?=
 LTO ?=
-FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
+FALLBACK_DOWNLOAD_PATH ?= https://britanniacoincore.org/depends-sources
 
 C_STANDARD ?= c11
 CXX_STANDARD ?= c++17

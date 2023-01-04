@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_VALIDATION_H
-#define BITCOIN_TEST_UTIL_VALIDATION_H
+#ifndef BRITANNIACOIN_TEST_UTIL_VALIDATION_H
+#define BRITANNIACOIN_TEST_UTIL_VALIDATION_H
 
 #include <validation.h>
 

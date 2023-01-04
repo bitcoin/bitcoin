@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HTTPSERVER_H
-#define BITCOIN_HTTPSERVER_H
+#ifndef BRITANNIACOIN_HTTPSERVER_H
+#define BRITANNIACOIN_HTTPSERVER_H
 
 #include <functional>
 #include <optional>

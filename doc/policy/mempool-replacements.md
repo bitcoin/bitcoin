@@ -14,7 +14,7 @@ other consensus and policy rules, each of the following conditions are met:
    signaling replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1).
 
    *Rationale*: See [BIP125
-   explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).
+   explanation](https://github.com/britanniacoin/bips/blob/master/bip-0125.mediawiki#motivation).
    Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
    opt-in signaling rule.
 
@@ -65,17 +65,17 @@ This set of rules is similar but distinct from BIP125.
 ## History
 
 * Opt-in full replace-by-fee (without inherited signaling) honoured in mempool and mining as of
-  **v0.12.0** ([PR 6871](https://github.com/bitcoin/bitcoin/pull/6871)).
+  **v0.12.0** ([PR 6871](https://github.com/britanniacoin/britanniacoin/pull/6871)).
 
-* [BIP125](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki) defined based on
-  Bitcoin Core implementation.
+* [BIP125](https://github.com/britanniacoin/bips/blob/master/bip-0125.mediawiki) defined based on
+  BritanniaCoin Core implementation.
 
 * The incremental relay feerate used to calculate the required additional fees is distinct from
   `-minrelaytxfee` and configurable using `-incrementalrelayfee`
-  ([PR #9380](https://github.com/bitcoin/bitcoin/pull/9380)).
+  ([PR #9380](https://github.com/britanniacoin/britanniacoin/pull/9380)).
 
 * RBF enabled by default in the wallet GUI as of **v0.18.1** ([PR
-  #11605](https://github.com/bitcoin/bitcoin/pull/11605)).
+  #11605](https://github.com/britanniacoin/britanniacoin/pull/11605)).
 
 * Full replace-by-fee enabled as a configurable mempool policy as of **v24.0** ([PR
-  #25353](https://github.com/bitcoin/bitcoin/pull/25353)).
+  #25353](https://github.com/britanniacoin/britanniacoin/pull/25353)).

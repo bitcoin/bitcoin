@@ -392,7 +392,7 @@ cd guix
 You will likely want to build the latest release, however, if the latest release
 when you're reading this is still 1.3.0 then you may want to use 998eda30 instead
 to avoid the issues described in [#25099](
-https://github.com/bitcoin/bitcoin/pull/25099).
+https://github.com/britanniacoin/britanniacoin/pull/25099).
 
 ```
 git branch -a -l 'origin/version-*'  # check for the latest release
@@ -475,7 +475,7 @@ in the Guix Reference Manual for more details.
 
 ## Optional setup
 
-At this point, you are set up to [use Guix to build Bitcoin
+At this point, you are set up to [use Guix to build BritanniaCoin
 Core](./README.md#usage). However, if you want to polish your setup a bit and
 make it "what Guix intended", then read the next few subsections.
 

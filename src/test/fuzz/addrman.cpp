@@ -113,7 +113,7 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
         const size_t num_addresses = fast_random_context.randrange(500) + 1; // [1..500]
 
         for (size_t j = 0; j < num_addresses; ++j) {
-            const auto addr = CAddress{CService{RandAddr(fuzzed_data_provider, fast_random_context), 8333}, NODE_NETWORK};
+            const auto addr = CAddress{CService{RandAddr(fuzzed_data_provider, fast_random_context), 8827}, NODE_NETWORK};
             const std::chrono::seconds time_penalty{fast_random_context.randrange(100000001)};
             addrman.Add({addr}, source, time_penalty);
 

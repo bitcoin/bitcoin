@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_LOAD_H
-#define BITCOIN_WALLET_LOAD_H
+#ifndef BRITANNIACOIN_WALLET_LOAD_H
+#define BRITANNIACOIN_WALLET_LOAD_H
 
 #include <string>
 #include <vector>

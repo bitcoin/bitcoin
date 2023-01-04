@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_SALVAGE_H
-#define BITCOIN_WALLET_SALVAGE_H
+#ifndef BRITANNIACOIN_WALLET_SALVAGE_H
+#define BRITANNIACOIN_WALLET_SALVAGE_H
 
 #include <fs.h>
 #include <streams.h>

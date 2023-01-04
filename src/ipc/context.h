@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_IPC_CONTEXT_H
-#define BITCOIN_IPC_CONTEXT_H
+#ifndef BRITANNIACOIN_IPC_CONTEXT_H
+#define BRITANNIACOIN_IPC_CONTEXT_H
 
 namespace ipc {
 //! Context struct used to give IPC protocol implementations or implementation

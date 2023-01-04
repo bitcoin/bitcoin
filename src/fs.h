@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_FS_H
-#define BITCOIN_FS_H
+#ifndef BRITANNIACOIN_FS_H
+#define BRITANNIACOIN_FS_H
 
 #include <tinyformat.h>
 

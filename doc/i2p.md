@@ -1,13 +1,13 @@
-# I2P support in Bitcoin Core
+# I2P support in BritanniaCoin Core
 
-It is possible to run Bitcoin Core as an
+It is possible to run BritanniaCoin Core as an
 [I2P (Invisible Internet Project)](https://en.wikipedia.org/wiki/I2P)
 service and connect to such services.
 
 This [glossary](https://geti2p.net/en/about/glossary) may be useful to get
 started with I2P terminology.
 
-## Run Bitcoin Core with an I2P router (proxy)
+## Run BritanniaCoin Core with an I2P router (proxy)
 
 A running I2P router (proxy) with [SAM](https://geti2p.net/en/docs/api/samv3)
 enabled is required. Options include:
@@ -24,7 +24,7 @@ enabled is required. Options include:
 Note the IP address and port the SAM proxy is listening to; usually, it is
 `127.0.0.1:7656`.
 
-Once an I2P router with SAM enabled is up and running, use the following Bitcoin
+Once an I2P router with SAM enabled is up and running, use the following BritanniaCoin
 Core configuration options:
 
 ```
@@ -44,13 +44,13 @@ Core configuration options:
 In a typical situation, this suffices:
 
 ```
-bitcoind -i2psam=127.0.0.1:7656
+britanniacoind -i2psam=127.0.0.1:7656
 ```
 
-The first time Bitcoin Core connects to the I2P router, if
+The first time BritanniaCoin Core connects to the I2P router, if
 `-i2pacceptincoming=1`, then it will automatically generate a persistent I2P
 address and its corresponding private key. The private key will be saved in a
-file named `i2p_private_key` in the Bitcoin Core data directory. The persistent
+file named `i2p_private_key` in the BritanniaCoin Core data directory. The persistent
 I2P address is used for accepting incoming connections and for making outgoing
 connections if `-i2pacceptincoming=1`. If `-i2pacceptincoming=0` then only
 outbound I2P connections are made and a different transient I2P address is used
@@ -63,7 +63,7 @@ connection initiator. This is unlike the Tor network where the recipient does
 not know who is connecting to them and can't tell if two connections are from
 the same peer or not.
 
-If an I2P node is not accepting incoming connections, then Bitcoin Core uses
+If an I2P node is not accepting incoming connections, then BritanniaCoin Core uses
 random, one-time, transient I2P addresses for itself for outbound connections
 to make it harder to discriminate, fingerprint or analyze it based on its I2P
 address.
@@ -75,7 +75,7 @@ address.
 ```
 
 Set the `debug=i2p` config logging option to see additional information in the
-debug log about your I2P configuration and connections. Run `bitcoin-cli help
+debug log about your I2P configuration and connections. Run `britanniacoin-cli help
 logging` for more information.
 
 ```
@@ -86,11 +86,11 @@ Make automatic outbound connections only to I2P addresses. Inbound and manual
 connections are not affected by this option. It can be specified multiple times
 to allow multiple networks, e.g. onlynet=onion, onlynet=i2p.
 
-I2P support was added to Bitcoin Core in version 22.0 and there may be fewer I2P
+I2P support was added to BritanniaCoin Core in version 22.0 and there may be fewer I2P
 peers than Tor or IP ones. Therefore, using I2P alone without other networks may
 make a node more susceptible to [Sybil
-attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack). You can use
-`bitcoin-cli -addrinfo` to see the number of I2P addresses known to your node.
+attacks](https://en.britanniacoin.it/wiki/Weaknesses#Sybil_attack). You can use
+`britanniacoin-cli -addrinfo` to see the number of I2P addresses known to your node.
 
 Another consideration with `onlynet=i2p` is that the initial blocks download
 phase when syncing up a new node can be very slow. This phase can be sped up by
@@ -100,39 +100,39 @@ In general, a node can be run with both onion and I2P hidden services (or
 any/all of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if
 one of the networks has issues.
 
-## I2P-related information in Bitcoin Core
+## I2P-related information in BritanniaCoin Core
 
-There are several ways to see your I2P address in Bitcoin Core if accepting
+There are several ways to see your I2P address in BritanniaCoin Core if accepting
 incoming I2P connections (`-i2pacceptincoming`):
 - in the "Local addresses" output of CLI `-netinfo`
 - in the "localaddresses" output of RPC `getnetworkinfo`
 - in the debug log (grep for `AddLocal`; the I2P address ends in `.b32.i2p`)
 
-To see which I2P peers your node is connected to, use `bitcoin-cli -netinfo 4`
-or the `getpeerinfo` RPC (e.g. `bitcoin-cli getpeerinfo`).
+To see which I2P peers your node is connected to, use `britanniacoin-cli -netinfo 4`
+or the `getpeerinfo` RPC (e.g. `britanniacoin-cli getpeerinfo`).
 
 To see which I2P addresses your node knows, use the `getnodeaddresses 0 i2p`
 RPC.
 
 ## Compatibility
 
-Bitcoin Core uses the [SAM v3.1](https://geti2p.net/en/docs/api/samv3) protocol
+BritanniaCoin Core uses the [SAM v3.1](https://geti2p.net/en/docs/api/samv3) protocol
 to connect to the I2P network. Any I2P router that supports it can be used.
 
-## Ports in I2P and Bitcoin Core
+## Ports in I2P and BritanniaCoin Core
 
-Bitcoin Core uses the [SAM v3.1](https://geti2p.net/en/docs/api/samv3)
+BritanniaCoin Core uses the [SAM v3.1](https://geti2p.net/en/docs/api/samv3)
 protocol. One particularity of SAM v3.1 is that it does not support ports,
 unlike newer versions of SAM (v3.2 and up) that do support them and default the
 port numbers to 0. From the point of view of peers that use newer versions of
 SAM or other protocols that support ports, a SAM v3.1 peer is connecting to them
 on port 0, from source port 0.
 
-To allow future upgrades to newer versions of SAM, Bitcoin Core sets its
+To allow future upgrades to newer versions of SAM, BritanniaCoin Core sets its
 listening port to 0 when listening for incoming I2P connections and advertises
 its own I2P address with port 0. Furthermore, it will not attempt to connect to
 I2P addresses with a non-zero port number because with SAM v3.1 the destination
-port (`TO_PORT`) is always set to 0 and is not in the control of Bitcoin Core.
+port (`TO_PORT`) is always set to 0 and is not in the control of BritanniaCoin Core.
 
 ## Bandwidth
 
@@ -154,7 +154,7 @@ transittunnels = 20
 ```
 
 If you prefer not to relay any public I2P traffic and only permit I2P traffic
-from programs which are connecting via the SAM proxy, e.g. Bitcoin Core, you
+from programs which are connecting via the SAM proxy, e.g. BritanniaCoin Core, you
 can set the `notransit` option to `true`.
 
 Similar bandwidth configuration options for the Java I2P router can be found in

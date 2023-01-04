@@ -16,12 +16,12 @@
 
 namespace init {
 namespace {
-const char* EXE_NAME = "bitcoin-gui";
+const char* EXE_NAME = "britanniacoin-gui";
 
-class BitcoinGuiInit : public interfaces::Init
+class BritanniaCoinGuiInit : public interfaces::Init
 {
 public:
-    BitcoinGuiInit(const char* arg0) : m_ipc(interfaces::MakeIpc(EXE_NAME, arg0, *this))
+    BritanniaCoinGuiInit(const char* arg0) : m_ipc(interfaces::MakeIpc(EXE_NAME, arg0, *this))
     {
         m_node.args = &gArgs;
         m_node.init = this;
@@ -43,6 +43,6 @@ public:
 namespace interfaces {
 std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[])
 {
-    return std::make_unique<init::BitcoinGuiInit>(argc > 0 ? argv[0] : "");
+    return std::make_unique<init::BritanniaCoinGuiInit>(argc > 0 ? argv[0] : "");
 }
 } // namespace interfaces

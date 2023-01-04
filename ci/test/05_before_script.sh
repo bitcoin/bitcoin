@@ -8,10 +8,10 @@ export LC_ALL=C.UTF-8
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > "${HOME}/Library/Application Support/Bitcoin"
+  echo > "${HOME}/Library/Application Support/BritanniaCoin"
 else
-  CI_EXEC echo \> \$HOME/.bitcoin
-  CI_EXEC_ROOT echo \> \$HOME/.bitcoin
+  CI_EXEC echo \> \$HOME/.britanniacoin
+  CI_EXEC_ROOT echo \> \$HOME/.britanniacoin
 fi
 
 CI_EXEC mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TRANSACTION_H
-#define BITCOIN_WALLET_TRANSACTION_H
+#ifndef BRITANNIACOIN_WALLET_TRANSACTION_H
+#define BRITANNIACOIN_WALLET_TRANSACTION_H
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>

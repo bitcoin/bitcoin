@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef BRITANNIACOIN_UINT256_H
+#define BRITANNIACOIN_UINT256_H
 
 #include <crypto/common.h>
 #include <span.h>

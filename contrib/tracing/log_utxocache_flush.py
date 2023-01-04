@@ -7,7 +7,7 @@ import sys
 import ctypes
 from bcc import BPF, USDT
 
-"""Example logging Bitcoin Core utxo set cache flushes utilizing
+"""Example logging BritanniaCoin Core utxo set cache flushes utilizing
     the utxocache:flush tracepoint."""
 
 # USAGE:  ./contrib/tracing/log_utxocache_flush.py path/to/bitcoind
@@ -70,14 +70,14 @@ def print_event(event):
     ))
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(britanniacoind_path):
+    britanniacoind_with_usdts = USDT(path=str(britanniacoind_path))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
-    bitcoind_with_usdts.enable_probe(
+    britanniacoind_with_usdts.enable_probe(
         probe="flush", fn_name="trace_flush")
-    b = BPF(text=program, usdt_contexts=[bitcoind_with_usdts])
+    b = BPF(text=program, usdt_contexts=[britanniacoind_with_usdts])
 
     def handle_flush(_, data, size):
         """ Coins Flush handler.
@@ -100,7 +100,7 @@ def main(bitcoind_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/bitcoind")
+        print("USAGE: ", sys.argv[0], "path/to/britanniacoind")
         exit(1)
 
     path = sys.argv[1]

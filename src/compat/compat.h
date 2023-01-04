@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPAT_COMPAT_H
-#define BITCOIN_COMPAT_COMPAT_H
+#ifndef BRITANNIACOIN_COMPAT_COMPAT_H
+#define BRITANNIACOIN_COMPAT_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/britanniacoin-config.h>
 #endif
 
 // Windows defines FD_SETSIZE to 64 (see _fd_types.h in mingw-w64),
