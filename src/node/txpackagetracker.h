@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_TXPACKAGETRACKER_H
 
 #include <net.h>
+#include <policy/packages.h>
 
 #include <cstdint>
 #include <map>
@@ -110,6 +111,36 @@ public:
     /** Record receipt of a notfound message for pkginfo. */
     void ForgetPkgInfo(NodeId nodeid, const uint256& rep_wtxid, PackageRelayVersions pkginfo_version);
 
+    struct PackageToValidate {
+        /** Who provided the package info. */
+        const NodeId m_info_provider;
+        /** Representative transaction, i.e. orphan in an ancestor package. */
+        const uint256 m_rep_wtxid;
+        /** Combined hash of all transactions in package info. Used to cache failure. */
+        const uint256 m_pkginfo_hash;
+        /** Transactions to submit for mempool validation. */
+        const Package m_unvalidated_txns;
+
+        PackageToValidate() = delete;
+        PackageToValidate(NodeId info_provider,
+                          const uint256& rep_wtxid,
+                          const uint256& pkginfo_hash,
+                          const Package& txns) :
+            m_info_provider{info_provider},
+            m_rep_wtxid{rep_wtxid},
+            m_pkginfo_hash{pkginfo_hash},
+            m_unvalidated_txns{txns}
+        {}
+    };
+
+    /** Record receipt of an ancpkginfo, and when to expire it. Returns one of three possibilities:
+     * - A PackageToValidate if all transactions are already present.
+     * - A list of wtxids to request if any transactions are missing.
+     * - An empty list of wtxids when nothing should be done. */
+    std::variant<PackageToValidate, std::vector<uint256>> ReceivedAncPkgInfo(NodeId nodeid,
+                                                                             const uint256& rep_wtxid,
+                                                                             const std::vector<std::pair<uint256, bool>>& txdata_status,
+                                                                             std::chrono::microseconds expiry);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXPACKAGETRACKER_H
