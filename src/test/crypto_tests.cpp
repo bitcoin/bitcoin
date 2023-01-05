@@ -723,14 +723,14 @@ BOOST_AUTO_TEST_CASE(countbits_tests)
             // Check handling of zero.
             BOOST_CHECK_EQUAL(CountBits(0), 0U);
         } else if (i < 10) {
-            for (uint64_t j = (uint64_t)1 << (i - 1); (j >> i) == 0; ++j) {
+            for (uint64_t j = uint64_t{1} << (i - 1); (j >> i) == 0; ++j) {
                 // Exhaustively test up to 10 bits
                 BOOST_CHECK_EQUAL(CountBits(j), i);
             }
         } else {
             for (int k = 0; k < 1000; k++) {
                 // Randomly test 1000 samples of each length above 10 bits.
-                uint64_t j = ((uint64_t)1) << (i - 1) | ctx.randbits(i - 1);
+                uint64_t j = (uint64_t{1}) << (i - 1) | ctx.randbits(i - 1);
                 BOOST_CHECK_EQUAL(CountBits(j), i);
             }
         }
