@@ -45,27 +45,6 @@ In a typical situation, this suffices:
 bitcoind -i2psam=127.0.0.1:7656
 ```
 
-The first time Bitcoin Core connects to the I2P router, if
-`-i2pacceptincoming=1`, then it will automatically generate a persistent I2P
-address and its corresponding private key. The private key will be saved in a
-file named `i2p_private_key` in the Bitcoin Core data directory. The persistent
-I2P address is used for accepting incoming connections and for making outgoing
-connections if `-i2pacceptincoming=1`. If `-i2pacceptincoming=0` then only
-outbound I2P connections are made and a different transient I2P address is used
-for each connection to improve privacy.
-
-## Persistent vs transient I2P addresses
-
-In I2P connections, the connection receiver sees the I2P address of the
-connection initiator. This is unlike the Tor network where the recipient does
-not know who is connecting to them and can't tell if two connections are from
-the same peer or not.
-
-If an I2P node is not accepting incoming connections, then Bitcoin Core uses
-random, one-time, transient I2P addresses for itself for outbound connections
-to make it harder to discriminate, fingerprint or analyze it based on its I2P
-address.
-
 ## Additional configuration options related to I2P
 
 ```
@@ -98,7 +77,29 @@ In general, a node can be run with both onion and I2P hidden services (or
 any/all of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if
 one of the networks has issues.
 
-## I2P-related information in Bitcoin Core
+## Persistent vs transient I2P addresses
+
+The first time Bitcoin Core connects to the I2P router, it automatically
+generates a persistent I2P address and its corresponding private key by default
+or if `-i2pacceptincoming=1` is set.  The private key is saved in a file named
+`i2p_private_key` in the Bitcoin Core data directory.  The persistent I2P
+address is used for making outbound connections and accepting inbound
+connections.
+
+In the I2P network, the receiver of an inbound connection sees the address of
+the initiator.  This is unlike the Tor network, where the recipient does not
+know who is connecting to it.
+
+If your node is configured by setting `-i2pacceptincoming=0` to not accept
+inbound I2P connections, then it will use a random transient I2P address for
+itself on each outbound connection to make it harder to discriminate,
+fingerprint or analyze it based on its I2P address.
+
+I2P addresses are designed to be long-lived.  Waiting for tunnels to be built
+for every peer connection adds delay to connection setup time.  Therefore, I2P
+listening should only be turned off if really needed.
+
+## Fetching I2P-related information from Bitcoin Core
 
 There are several ways to see your I2P address in Bitcoin Core if accepting
 incoming I2P connections (`-i2pacceptincoming`):
