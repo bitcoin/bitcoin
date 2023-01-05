@@ -2,11 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/arith/range_proof/config.h>
-// #include <blsct/arith/range_proof/range_proof_logic.h>
-#include <blsct/arith/range_proof/range_proof_with_transcript.h>
+#include <blsct/range_proof/config.h>
+#include <blsct/arith/mcl/mcl_g1point.h>
+#include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/range_proof/range_proof_with_transcript.h>
+#include <hash.h>
 
-RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof) {
+template <typename T>
+RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<T>& proof) {
+    using Scalar = typename T::Scalar;
+    using Scalars = Elements<Scalar>;
+
     // build transcript from proof in the same way it was built in Prove function
     CHashWriter transcript_gen(0,0);
 
@@ -34,7 +41,7 @@ RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof
 
     Scalar cx_factor = transcript_gen.GetHash();
 
-    auto num_rounds = RangeProofWithTranscript::RecoverNumRounds(proof.Vs.Size());
+    auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(proof.Vs.Size());
 
     // for each proof, generate w from Ls and Rs and store the inverse
     Scalars xs;
@@ -50,7 +57,7 @@ RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof
     size_t num_input_values_power_2 = Config::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());
     size_t concat_input_values_in_bits = num_input_values_power_2 * Config::m_input_value_bits;
 
-    return RangeProofWithTranscript(
+    return RangeProofWithTranscript<T>(
         proof,
         x,
         y,
@@ -62,8 +69,10 @@ RangeProofWithTranscript RangeProofWithTranscript::Build(const RangeProof& proof
         concat_input_values_in_bits
     );
 }
+template RangeProofWithTranscript<Mcl> RangeProofWithTranscript<Mcl>::Build(const RangeProof<Mcl>&);
 
-size_t RangeProofWithTranscript::RecoverNumRounds(const size_t& num_input_values)
+template <typename T>
+size_t RangeProofWithTranscript<T>::RecoverNumRounds(const size_t& num_input_values)
 {
     auto num_input_values_pow2 =
         Config::GetFirstPowerOf2GreaterOrEqTo(num_input_values);
@@ -73,3 +82,4 @@ size_t RangeProofWithTranscript::RecoverNumRounds(const size_t& num_input_values
 
     return num_rounds;
 }
+template size_t RangeProofWithTranscript<Mcl>::RecoverNumRounds(const size_t&);

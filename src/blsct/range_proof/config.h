@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H
-#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H
+#ifndef NAVCOIN_BLSCT_RANGE_PROOF_CONFIG_H
+#define NAVCOIN_BLSCT_RANGE_PROOF_CONFIG_H
 
 #include <cstddef>
 #include <cmath>
@@ -40,4 +40,4 @@ public:
     inline static const size_t m_max_prove_tries = 100;
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_CONFIG_H
+#endif // NAVCOIN_BLSCT_RANGE_PROOF_CONFIG_H

@@ -8,28 +8,38 @@
 #include <optional>
 #include <vector>
 
-#include <blsct/arith/range_proof/generators.h>
-#include <blsct/arith/range_proof/range_proof_with_transcript.h>
+#include <blsct/arith/elements.h>
+#include <blsct/range_proof/generators.h>
+#include <blsct/range_proof/range_proof_with_transcript.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
+#include <hash.h>
 
+template <typename T>
 struct AmountRecoveryRequest
 {
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
+    using Points = Elements<Point>;
+
     size_t id;
     Scalar x;
     Scalar z;
-    G1Points Vs;
-    G1Points Ls;
-    G1Points Rs;
+    Points Vs;
+    Points Ls;
+    Points Rs;
     Scalar mu;
     Scalar tau_x;
-    G1Point nonce;
+    Point nonce;
 
-    static AmountRecoveryRequest of(RangeProof& proof, size_t& index, G1Point& nonce);
+    static AmountRecoveryRequest<T> of(RangeProof<T>& proof, size_t& index, Point& nonce);
 };
 
+template <typename T>
 struct RecoveredAmount
 {
+    using Scalar = typename T::Scalar;
+
     RecoveredAmount(
         const size_t& id,
         const CAmount& amount,
@@ -43,73 +53,82 @@ struct RecoveredAmount
     std::string message;
 };
 
+template <typename T>
 struct AmountRecoveryResult
 {
     bool is_completed;  // done doesn't mean recovery success
-    std::vector<RecoveredAmount> amounts;
+    std::vector<RecoveredAmount<T>> amounts;
 
-    static AmountRecoveryResult failure();
+    static AmountRecoveryResult<T> failure();
 };
 
 // implementation of range proof algorithms described
 // based on the paper: https://eprint.iacr.org/2017/1066.pdf
+template <typename T>
 class RangeProofLogic
 {
+private:
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
+    using Scalars = Elements<Scalar>;
+    using Points = Elements<Point>;
+
 public:
     RangeProofLogic();
 
-    RangeProof Prove(
+    RangeProof<T> Prove(
         Scalars& vs,
-        G1Point& nonce,
+        Point& nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id
-    );
-
-    bool Verify(
-        const std::vector<RangeProof>& proofs,
         const TokenId& token_id
     ) const;
 
-    G1Point VerifyProofs(
-        const std::vector<RangeProofWithTranscript>& proof_transcripts,
-        const Generators& gens,
+    bool Verify(
+        const std::vector<RangeProof<T>>& proofs,
+        const TokenId& token_id
+    ) const;
+
+    Point VerifyProofs(
+        const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
+        const Generators<T>& gens,
         const size_t& max_mn
     ) const;
 
-    AmountRecoveryResult RecoverAmounts(
-        const std::vector<AmountRecoveryRequest>& reqs,
+    AmountRecoveryResult<T> RecoverAmounts(
+        const std::vector<AmountRecoveryRequest<T>>& reqs,
         const TokenId& token_id
     ) const;
 
     static void ValidateProofsBySizes(
-        const std::vector<RangeProof>& proofs
+        const std::vector<RangeProof<T>>& proofs
     );
 
 private:
     Scalar GetUint64Max() const;
 
-    G1Point GenerateBaseG1PointH(
-        const G1Point& p,
+    Point GenerateBaseG1PointH(
+        const Point& p,
         size_t index,
         TokenId token_id
     ) const;
 
     bool InnerProductArgument(
-        const size_t input_value_vec_len,
-        G1Points& Gi,
-        G1Points& Hi,
-        const G1Point& u,
+        const size_t concat_input_values_in_bits,
+        Points& Gi,
+        Points& Hi,
+        const Point& u,
         const Scalar& cx_factor,  // factor to multiply to cL and cR
         Scalars& a,
         Scalars& b,
         const Scalar& y,
-        RangeProof& proof,
+        RangeProof<T>& proof,
         CHashWriter& transcript_gen
-    );
+    ) const;
 
     // using pointers for Scalar and GeneratorsFactory to avoid default constructors to be called before mcl initialization
     // these variables are meant to be constant. do not make changes after initialization.
-    static GeneratorsFactory* m_gf;
+    static GeneratorsFactory<T>* m_gf;
+
     static Scalar* m_one;
     static Scalar* m_two;
     static Scalars* m_two_pows_64;
