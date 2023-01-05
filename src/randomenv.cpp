@@ -13,22 +13,21 @@
 #include <compat/cpuid.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
-#include <util/time.h> // for GetTime()
-#ifdef WIN32
-#include <windows.h>
-#include <winreg.h>
-#endif
+#include <util/time.h>
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <cstring>
 #include <chrono>
 #include <climits>
 #include <thread>
 #include <vector>
 
-#include <stdint.h>
-#include <string.h>
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#include <winreg.h>
+#else
 #include <sys/types.h> // must go before a number of other headers
 #include <fcntl.h>
 #include <netinet/in.h>
