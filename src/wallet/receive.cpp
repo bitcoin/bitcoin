@@ -5,6 +5,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <wallet/availablecoins.h>
+#include <wallet/coincontrol.h>
 #include <wallet/receive.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -208,31 +209,33 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
 Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
 {
-    Balance ret;
-    isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
+    Balance balances;
     {
         LOCK(wallet.cs_wallet);
         std::set<uint256> trusted_parents;
-        for (const auto& entry : wallet.mapWallet)
-        {
-            const CWalletTx& wtx = entry.second;
-            const bool is_trusted{CachedTxIsTrusted(wallet, wtx, trusted_parents)};
-            const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
-            const CAmount tx_credit_mine{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | reuse_filter)};
-            const CAmount tx_credit_watchonly{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_WATCH_ONLY | reuse_filter)};
-            if (is_trusted && tx_depth >= min_depth) {
-                ret.m_mine_trusted += tx_credit_mine;
-                ret.m_watchonly_trusted += tx_credit_watchonly;
-            }
-            if (!is_trusted && tx_depth == 0 && wtx.InMempool()) {
-                ret.m_mine_untrusted_pending += tx_credit_mine;
-                ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
-            }
-            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
-            ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
-        }
+        wallet::CCoinControl coin_control;
+        coin_control.m_include_unsafe_inputs = true;
+        coin_control.m_avoid_address_reuse = avoid_reuse;
+        coin_control.m_min_depth = min_depth;
+
+        CoinFilterParams coin_filter;
+        coin_filter.only_spendable = false;
+        coin_filter.include_immature_coinbase = true;
+        coin_filter.skip_locked = false;
+        coin_filter.include_tx_not_in_mempool = true;
+
+        auto res = wallet::AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coin_filter);
+
+        balances.m_mine_trusted = res.balances[std::make_pair(CoinOwnership::MINE,CoinStatus::TRUSTED)];
+        balances.m_mine_untrusted_pending = res.balances[std::make_pair(CoinOwnership::MINE,CoinStatus::UNTRUSTED_PENDING)];
+        balances.m_mine_immature = res.balances[std::make_pair(CoinOwnership::MINE,CoinStatus::IMMATURE)];
+
+        balances.m_watchonly_trusted = res.balances[std::make_pair(CoinOwnership::WATCH_ONLY,CoinStatus::TRUSTED)];
+        balances.m_watchonly_untrusted_pending = res.balances[std::make_pair(CoinOwnership::WATCH_ONLY,CoinStatus::UNTRUSTED_PENDING)];
+        balances.m_watchonly_immature = res.balances[std::make_pair(CoinOwnership::WATCH_ONLY,CoinStatus::IMMATURE)];
     }
-    return ret;
+
+    return balances;
 }
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)

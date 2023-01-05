@@ -14,6 +14,17 @@
 #include <optional>
 
 namespace wallet {
+enum class CoinStatus {
+    TRUSTED,
+    UNTRUSTED_PENDING,
+    IMMATURE
+};
+
+enum class CoinOwnership {
+    MINE,
+    WATCH_ONLY
+};
+
 /**
  * COutputs available for spending, stored by OutputType.
  * This struct is really just a wrapper around OutputType vectors with a convenient
@@ -24,6 +35,8 @@ namespace wallet {
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
+
+    std::map<std::pair<CoinOwnership,CoinStatus>, CAmount> balances;
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
@@ -37,6 +50,7 @@ struct CoinsResult {
     void Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher>& coins_to_remove);
     void Shuffle(FastRandomContext& rng_fast);
     void Add(OutputType type, const COutput& out);
+    void Add(CoinOwnership ownership, CoinStatus status, OutputType type, const COutput& out);
 
     CAmount GetTotalAmount() { return total_amount; }
     std::optional<CAmount> GetEffectiveTotalAmount() {return total_effective_amount; }
@@ -63,6 +77,9 @@ struct CoinFilterParams {
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
     bool skip_locked{true};
+    // By default, do not include coins from transactions that are not in our mempool
+    // Even with this option enabled, conflicted or inactive transactions will not be included
+    bool include_tx_not_in_mempool{false};
 };
 
 /**

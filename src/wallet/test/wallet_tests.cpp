@@ -976,8 +976,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     {
         // Cache and verify available balance for the wtx
         LOCK(wallet.cs_wallet);
-        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 1 * COIN);
+        const auto bal = GetBalance(wallet);
+        BOOST_CHECK_EQUAL(bal.m_mine_untrusted_pending, 1 * COIN);
     }
 
     // Now the good case:
@@ -990,14 +990,10 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     const uint256& good_tx_id = mtx.GetHash();
 
     {
-        // Verify balance update for the new tx and the old one
+        // Verify tx is spent and the balance is updated
         LOCK(wallet.cs_wallet);
-        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id);
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *new_wtx), 1 * COIN);
-
-        // Now the old wtx
-        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 0 * COIN);
+        const auto bal = GetBalance(wallet);
+        BOOST_CHECK_EQUAL(bal.m_mine_untrusted_pending, 0);
     }
 
     // Now the bad case:

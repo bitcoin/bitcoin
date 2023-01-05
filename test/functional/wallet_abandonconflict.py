@@ -173,6 +173,8 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[0].loadwallet("bob")
         bob = self.nodes[0].get_wallet_rpc("bob")
 
+        alice_balance_before_best_block = alice.getbalance()
+
         # Create a double spend of AB1 by spending again from only A's 10 output
         # Mine double spend from node 1
         inputs = []
@@ -235,10 +237,8 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Don't think C's should either
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = alice.getbalance()
-        #assert_equal(newbalance, balance - Decimal("10"))
-        self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
-        self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
-        assert_equal(balance, newbalance)
+        self.log.info("After invalidating the most recent block, alice's balance must be the same as it was in the previous block")
+        assert_equal(newbalance, alice_balance_before_best_block)
 
 
 if __name__ == '__main__':
