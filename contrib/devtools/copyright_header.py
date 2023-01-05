@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/MIT.
 
 import re
 import fnmatch
@@ -384,7 +384,7 @@ def update_updatable_copyright(filename):
                               "Copyright updated! -> %s" % last_git_change_year)
 
 def exec_update_header_year(base_directory):
-    url_before = "http://www.opensource.org/licenses/mit-license.php"
+    url_before = "https://opensource.org/licenses/MIT"
     url_after = "https://opensource.org/licenses/MIT"
     for filename in get_filenames_to_examine(base_directory):
         # Update URL

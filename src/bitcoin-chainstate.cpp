@@ -1,6 +1,6 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/MIT.
 //
 // The bitcoin-chainstate executable serves to surface the dependencies required
 // by a program wishing to use Bitcoin Core's consensus engine as it is right
