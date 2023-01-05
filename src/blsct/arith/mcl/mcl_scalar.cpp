@@ -364,7 +364,7 @@ void MclScalar::Serialize(Stream& s) const
 {
     ::Serialize(s, GetVch());
 }
-template void MclScalar::Serialize(CHashWriter& s) const
+template void MclScalar::Serialize(CHashWriter& s) const;
 
 template <typename Stream>
 void MclScalar::Unserialize(Stream& s)
