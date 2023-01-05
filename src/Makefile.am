@@ -156,17 +156,19 @@ BITCOIN_CORE_H = \
   bech32.h \
   blockencodings.h \
   blockfilter.h \
+  blsct/arith/mcl/mcl_g1point.h \
+  blsct/arith/mcl/mcl_initializer.h \
+  blsct/arith/mcl/mcl_scalar.h \
+  blsct/arith/mcl/mcl.h \
   blsct/arith/elements.h \
-  blsct/arith/g1point.h \
-  blsct/arith/mcl_initializer.h \
-  blsct/arith/range_proof/config.h \
-  blsct/arith/range_proof/range_proof.h \
-  blsct/arith/range_proof/range_proof_with_transcript.h \
-  blsct/arith/range_proof/generators.h \
-  blsct/arith/range_proof/lazy_g1point.h \
-  blsct/arith/range_proof/range_proof_logic.h \
-  blsct/arith/scalar.h \
+  blsct/arith/endianness.h \
   blsct/keys.h \
+  blsct/range_proof/config.h \
+  blsct/range_proof/generators.h \
+  blsct/range_proof/lazy_g1point.h \
+  blsct/range_proof/range_proof_logic.h \
+  blsct/range_proof/range_proof_with_transcript.h \
+  blsct/range_proof/range_proof.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -400,16 +402,16 @@ libbitcoin_node_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_initializer.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
-  blsct/arith/g1point.cpp \
-  blsct/arith/mcl_initializer.cpp \
-  blsct/arith/range_proof/config.cpp \
-  blsct/arith/range_proof/generators.cpp \
-  blsct/arith/range_proof/lazy_g1point.cpp \
-  blsct/arith/range_proof/range_proof_with_transcript.cpp \
-  blsct/arith/range_proof/range_proof_logic.cpp \
-  blsct/arith/scalar.cpp \
   blsct/keys.cpp \
+  blsct/range_proof/config.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/lazy_g1point.cpp \
+  blsct/range_proof/range_proof_logic.cpp \
+  blsct/range_proof/range_proof_with_transcript.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -938,10 +940,10 @@ libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_initializer.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
   blsct/arith/elements.cpp \
-  blsct/arith/g1point.cpp \
-  blsct/arith/mcl_initializer.cpp \
-  blsct/arith/scalar.cpp \
   blsct/keys.cpp \
   chain.cpp \
   chainparamsbase.cpp \

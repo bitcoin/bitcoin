@@ -449,5 +449,5 @@ CBlock getBlock13b8a()
 MclTestingSetup::MclTestingSetup()
 {
     MclInitializer::Init();
-    G1Point::Init();
+    MclG1Point::Init();
 }
