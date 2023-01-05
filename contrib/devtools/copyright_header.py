@@ -352,11 +352,6 @@ def parse_year_range(year_range):
         return start_year, start_year
     return start_year, year_split[1]
 
-def year_range_to_str(start_year, end_year):
-    if start_year == end_year:
-        return start_year
-    return "%s-%s" % (start_year, end_year)
-
 def create_updated_copyright_line(line, last_git_change_year):
     copyright_splitter = 'Copyright (c) '
     copyright_split = line.split(copyright_splitter)
@@ -368,10 +363,8 @@ def create_updated_copyright_line(line, last_git_change_year):
     space_split = after_copyright.split(' ')
     year_range = space_split[0]
     start_year, end_year = parse_year_range(year_range)
-    if end_year >= last_git_change_year:
-        return line
     return (before_copyright + copyright_splitter +
-            year_range_to_str(start_year, last_git_change_year) + ' ' +
+            f"{start_year}-present " +
             ' '.join(space_split[1:]))
 
 def update_updatable_copyright(filename):
@@ -445,7 +438,7 @@ def update_cmd(argv):
 
 def get_header_lines(header, start_year, end_year):
     lines = header.split('\n')[1:-1]
-    lines[0] = lines[0] % year_range_to_str(start_year, end_year)
+    lines[0] = lines[0] % f"{start_year}-present "
     return [line + '\n' for line in lines]
 
 CPP_HEADER = '''
