@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <wallet/availablecoins.h>
 #include <wallet/receive.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -26,26 +27,6 @@ bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefi
         if (!(InputIsMine(wallet, txin) & filter)) return false;
     }
     return true;
-}
-
-CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout, const isminefilter& filter)
-{
-    if (!MoneyRange(txout.nValue))
-        throw std::runtime_error(std::string(__func__) + ": value out of range");
-    LOCK(wallet.cs_wallet);
-    return ((wallet.IsMine(txout) & filter) ? txout.nValue : 0);
-}
-
-CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter)
-{
-    CAmount nCredit = 0;
-    for (const CTxOut& txout : tx.vout)
-    {
-        nCredit += OutputGetCredit(wallet, txout, filter);
-        if (!MoneyRange(nCredit))
-            throw std::runtime_error(std::string(__func__) + ": value out of range");
-    }
-    return nCredit;
 }
 
 bool ScriptIsChange(const CWallet& wallet, const CScript& script)
@@ -96,16 +77,6 @@ CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
     return nChange;
 }
 
-static CAmount GetCachableAmount(const CWallet& wallet, const CWalletTx& wtx, CWalletTx::AmountType type, const isminefilter& filter)
-{
-    auto& amount = wtx.m_amounts[type];
-    if (!amount.m_cached[filter]) {
-        amount.Set(filter, type == CWalletTx::DEBIT ? wallet.GetDebit(*wtx.tx, filter) : TxGetCredit(wallet, *wtx.tx, filter));
-        wtx.m_is_cache_empty = false;
-    }
-    return amount.m_value[filter];
-}
-
 CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -121,19 +92,6 @@ CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const ism
         credit += GetCachableAmount(wallet, wtx, CWalletTx::CREDIT, get_amount_filter);
     }
     return credit;
-}
-
-CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
-{
-    if (wtx.tx->vin.empty())
-        return 0;
-
-    CAmount debit = 0;
-    const isminefilter get_amount_filter{filter & ISMINE_ALL};
-    if (get_amount_filter) {
-        debit += GetCachableAmount(wallet, wtx, CWalletTx::DEBIT, get_amount_filter);
-    }
-    return debit;
 }
 
 CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx)
@@ -246,48 +204,6 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
             listReceived.push_back(output);
     }
 
-}
-
-bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
-{
-    return (CachedTxGetDebit(wallet, wtx, filter) > 0);
-}
-
-bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents)
-{
-    AssertLockHeld(wallet.cs_wallet);
-    int nDepth = wallet.GetTxDepthInMainChain(wtx);
-    if (nDepth >= 1) return true;
-    if (nDepth < 0) return false;
-    // using wtx's cached debit
-    if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx, ISMINE_ALL)) return false;
-
-    // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!wtx.InMempool()) return false;
-
-    // Trusted if all inputs are from us and are in the mempool:
-    for (const CTxIn& txin : wtx.tx->vin)
-    {
-        // Transactions not sent by us: not trusted
-        const CWalletTx* parent = wallet.GetWalletTx(txin.prevout.hash);
-        if (parent == nullptr) return false;
-        const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        // Check that this specific input being spent is trusted
-        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE) return false;
-        // If we've already trusted this parent, continue
-        if (trusted_parents.count(parent->GetHash())) continue;
-        // Recurse to check that the parent is also trusted
-        if (!CachedTxIsTrusted(wallet, *parent, trusted_parents)) return false;
-        trusted_parents.insert(parent->GetHash());
-    }
-    return true;
-}
-
-bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)
-{
-    std::set<uint256> trusted_parents;
-    LOCK(wallet.cs_wallet);
-    return CachedTxIsTrusted(wallet, wtx, trusted_parents);
 }
 
 Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)

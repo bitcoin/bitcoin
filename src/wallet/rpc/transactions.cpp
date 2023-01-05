@@ -7,6 +7,7 @@
 #include <policy/rbf.h>
 #include <rpc/util.h>
 #include <util/vector.h>
+#include <wallet/availablecoins.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
