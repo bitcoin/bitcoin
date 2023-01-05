@@ -44,7 +44,8 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         return false;
     }
 
-    auto ret = m_orphans.emplace(hash, OrphanTx{tx, GetTime() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size(), {peer}});
+    auto ret = m_orphans.try_emplace(hash, OrphanTx{tx, GetTime() + ORPHAN_TX_EXPIRE_TIME,
+                                                static_cast<int32_t>(m_orphan_list.size()), {peer}});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     // Allow for lookups in the orphan pool by wtxid, as well as txid
@@ -98,16 +99,21 @@ int TxOrphanage::EraseTxNoLock(const uint256& wtxid)
             m_outpoint_to_orphan_it.erase(itPrev);
     }
 
-    size_t old_pos = it->second.list_pos;
-    assert(m_orphan_list[old_pos] == it);
-    if (old_pos + 1 != m_orphan_list.size()) {
-        // Unless we're deleting the last entry in m_orphan_list, move the last
-        // entry to the position we're deleting.
-        auto it_last = m_orphan_list.back();
-        m_orphan_list[old_pos] = it_last;
-        it_last->second.list_pos = old_pos;
+    if (it->second.list_pos >= 0) {
+        size_t old_pos = it->second.list_pos;
+        assert(m_orphan_list[old_pos] == it);
+        if (old_pos + 1 != m_orphan_list.size()) {
+            // Unless we're deleting the last entry in m_orphan_list, move the last
+            // entry to the position we're deleting.
+            auto it_last = m_orphan_list.back();
+            m_orphan_list[old_pos] = it_last;
+            it_last->second.list_pos = old_pos;
+        }
+        m_orphan_list.pop_back();
+    } else {
+        // This orphan was protected.
+        m_total_protected_orphan_bytes -= it->second.tx->GetTotalSize();
     }
-    m_orphan_list.pop_back();
     m_wtxid_to_orphan_it.erase(it->second.tx->GetWitnessHash());
 
     m_orphans.erase(it);
@@ -188,8 +194,9 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans)
         if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
     }
     FastRandomContext rng;
-    while (m_orphans.size() > max_orphans || m_total_orphan_bytes > MAX_ORPHAN_TOTAL_SIZE)
-    {
+    // Trim until the unprotected orphans are within the maximum count and size limits.
+    while (m_orphan_list.size() > max_orphans ||
+           m_total_orphan_bytes - m_total_protected_orphan_bytes > MAX_ORPHAN_TOTAL_SIZE) {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
         EraseTxNoLock(m_orphan_list[randompos]->second.tx->GetWitnessHash());
@@ -295,4 +302,60 @@ std::vector<uint256> TxOrphanage::EraseForBlock(const CBlock& block)
         LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
     return vOrphanErase;
+}
+
+void TxOrphanage::ProtectOrphan(const uint256& wtxid)
+{
+    AssertLockNotHeld(m_mutex);
+    LOCK(m_mutex);
+    const auto it = m_wtxid_to_orphan_it.find(wtxid);
+    if (it == m_wtxid_to_orphan_it.end()) return;
+    // Already protected, increase its protection
+    if (it->second->second.list_pos < 0) {
+        it->second->second.list_pos -= 1;
+        m_total_protected_orphan_bytes += it->second->second.tx->GetTotalSize();
+        return;
+    }
+
+    auto old_pos = it->second->second.list_pos;
+    assert(m_orphan_list[old_pos] == it->second);
+    if (old_pos + 1 != static_cast<int32_t>(m_orphan_list.size())) {
+        // Unless we're deleting the last entry in m_orphan_list, move the last
+        // entry to the position we're deleting.
+        auto it_last = m_orphan_list.back();
+        m_orphan_list[old_pos] = it_last;
+        it_last->second.list_pos = old_pos;
+    }
+    m_orphan_list.pop_back();
+    // Set list_pos to -1 to indicate this orphan is protected.
+    it->second->second.list_pos = -1;
+}
+
+void TxOrphanage::UndoProtectOrphan(const uint256& wtxid)
+{
+    AssertLockNotHeld(m_mutex);
+    LOCK(m_mutex);
+    const auto it = m_wtxid_to_orphan_it.find(wtxid);
+    if (it == m_wtxid_to_orphan_it.end()) return;
+    // Already not protected, nothing to do
+    if (it->second->second.list_pos >= 0) {
+        Assume(false);
+        return;
+    }
+    // Protected by more than one peer. Remove one of the protections.
+    if (it->second->second.list_pos < -1) {
+        it->second->second.list_pos += 1;
+        return;
+    }
+    // Add to the end or m_orphan_list
+    it->second->second.list_pos = m_orphan_list.size();
+    m_orphan_list.push_back(it->second);
+    m_total_protected_orphan_bytes -= it->second->second.tx->GetTotalSize();
+}
+
+size_t TxOrphanage::NumProtected() const
+{
+    AssertLockNotHeld(m_mutex);
+    LOCK(m_mutex);
+    return m_orphans.size() - m_orphan_list.size();
 }
