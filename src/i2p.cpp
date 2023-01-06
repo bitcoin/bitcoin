@@ -380,7 +380,9 @@ void Session::CreateIfNotCreatedAlready()
         // in the reply in DESTINATION=.
         const Reply& reply = SendRequestAndGetReply(
             *sock,
-            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT SIGNATURE_TYPE=7", session_id));
+            strprintf("SESSION CREATE STYLE=STREAM ID=%s DESTINATION=TRANSIENT SIGNATURE_TYPE=7 "
+                      "inbound.quantity=1 outbound.quantity=1",
+                      session_id));
 
         m_private_key = DecodeI2PBase64(reply.Get("DESTINATION"));
     } else {
