@@ -32,8 +32,9 @@ from test_framework.messages import (
 )
 from test_framework.p2p import (
     NONPREF_PEER_TX_DELAY,
-    OVERLOADED_PEER_TX_DELAY,
     ORPHAN_ANCESTOR_GETDATA_INTERVAL,
+    ORPHANAGE_OVERLOAD_DELAY,
+    OVERLOADED_PEER_TX_DELAY,
     p2p_lock,
     P2PTxInvStore,
     TXID_RELAY_DELAY,
@@ -54,7 +55,7 @@ from test_framework.wallet import (
 # to an inv(tx), in seconds. This delay includes all possible delays + 1, so it should only be used
 # when the value of the delay is not interesting. If we want to test that the node waits x seconds
 # for one peer and y seconds for another, use specific values instead.
-TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + OVERLOADED_PEER_TX_DELAY + 1
+TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + 2 * TXID_RELAY_DELAY + OVERLOADED_PEER_TX_DELAY + ORPHANAGE_OVERLOAD_DELAY + 1
 
 # Time to fastfoward (using setmocktime) in between subtests to ensure they do not interfere with
 # one another, in seconds. Equal to 12 hours, which is enough to expire anything that may exist
@@ -142,6 +143,14 @@ class PackageRelayer(P2PTxInvStore):
             if not last_getdata:
                 return False
             return all([item.type == MSG_WITNESS_TX and item.hash in txids for item in last_getdata.inv])
+        self.wait_until(test_function, timeout=10)
+
+    def wait_for_getpkgtxns(self, wtxids):
+        def test_function():
+            last_getpkgtxns = self.last_message.get('getpkgtxns')
+            if not last_getpkgtxns:
+                return False
+            return last_getpkgtxns.hashes == wtxids
         self.wait_until(test_function, timeout=10)
 
     def wait_for_pkgtxns(self, wtxids):
@@ -269,12 +278,11 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_package_relayer = node.add_p2p_connection(PackageRelayer())
         orphan_inv = CInv(t=MSG_WTX, h=int(orphan_wtxid, 16))
         peer_package_relayer.send_and_ping(msg_inv([orphan_inv]))
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer_package_relayer.wait_for_getdata([int(orphan_wtxid, 16)])
         peer_package_relayer.send_and_ping(msg_tx(orphan_tx))
 
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
-        peer_package_relayer.sync_with_ping()
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer_package_relayer.wait_for_getancpkginfo(int(orphan_wtxid, 16))
         peer_package_relayer.send_and_ping(msg_ancpkginfo([int(wtxid, 16) for wtxid in package_wtxids]))
         self.wait_until(lambda: "ancpkginfo" in node.getpeerinfo()[0]["bytesrecv_per_msg"])
@@ -292,12 +300,12 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_outbound = node.add_outbound_p2p_connection(PackageRelayer(), p2p_idx=1)
 
         peer_inbound.send_and_ping(msg_inv([orphan_inv]))
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer_inbound.wait_for_getdata([int(orphan_wtxid, 16)])
         # Both send invs for the orphan, so the node an expect both to know its ancestors.
         peer_outbound.send_and_ping(msg_inv([orphan_inv]))
         peer_inbound.send_and_ping(msg_tx(orphan_tx))
-        self.fastforward(NONPREF_PEER_TX_DELAY)
+        peer_outbound.sync_with_ping()
 
         self.log.info("Test that the node prefers requesting ancpkginfo from outbound peers")
         # The outbound peer should be preferred for getting ancpkginfo
@@ -313,6 +321,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
     @cleanup
     def test_orphan_handling_prefer_ancpkginfo(self):
+        self.log.info("Test that the node prefers resolving orphans using package relay peers")
         node = self.nodes[0]
         package_hex, package_txns, package_wtxids = self.create_package()
         orphan_tx = package_txns[-1]
@@ -360,9 +369,11 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_package_relay2 = node.add_p2p_connection(PackageRelayer())
         # Sends an inv for the orphan while the node is requesting ancpkginfo
         peer_package_relay3 = node.add_p2p_connection(PackageRelayer())
+        # Sends an inv for the orphan while the node is requesting txdata using the ancpkginfo
+        peer_package_relay4 = node.add_p2p_connection(PackageRelayer())
 
         peer_package_relay1.send_and_ping(msg_inv([orphan_inv]))
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer_package_relay1.wait_for_getdata([int(orphan_wtxid, 16)])
 
         # Both send invs for the orphan, so the node an expect both to know its ancestors.
@@ -371,7 +382,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         peer2_prev_getdata = len(peer_package_relay2.getdata_received)
         peer3_prev_getdata = len(peer_package_relay3.getdata_received)
-        self.fastforward(NONPREF_PEER_TX_DELAY)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer_package_relay1.wait_for_getancpkginfo(int(orphan_wtxid, 16))
         peer_package_relay3.send_and_ping(msg_inv([orphan_inv]))
         # Peers 2 and 3 should not have received any getdata
@@ -387,11 +398,21 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_package_relay2.wait_for_getancpkginfo(int(orphan_wtxid, 16))
 
         self.log.info("Test that the node requests ancpkginfo from a different peer if peer disconnects")
-        # Peer 2 disconnected before responding
+        # Peer2 disconnected before responding
         peer_package_relay2.peer_disconnect()
         self.fastforward(1)
         peer_package_relay3.sync_with_ping()
         peer_package_relay3.wait_for_getancpkginfo(int(orphan_wtxid, 16))
+        # Peer3 provides ancpkginfo but doesn't respond to getpkgtxns request
+        ancpkginfo_message = msg_ancpkginfo([int(wtxid, 16) for wtxid in package_wtxids])
+        peer_package_relay3.send_and_ping(ancpkginfo_message)
+        self.fastforward(1)
+        peer_package_relay3.wait_for_getpkgtxns([int(wtxid, 16) for wtxid in package_wtxids[:-1]])
+        peer_package_relay4.send_and_ping(msg_inv([orphan_inv]))
+        # The getpkgtxns request to peer3 expires after 60sec.
+        self.fastforward(ORPHAN_ANCESTOR_GETDATA_INTERVAL)
+        peer_package_relay3.sync_with_ping()
+        peer_package_relay4.wait_for_getancpkginfo(int(orphan_wtxid, 16))
 
     @cleanup
     def test_ancpkginfo_received(self):
@@ -416,12 +437,106 @@ class PackageRelayTest(BitcoinTestFramework):
         orphan_inv = CInv(t=MSG_WTX, h=int(package_wtxids[-1], 16))
         peer2 = node.add_p2p_connection(PackageRelayer())
         peer2.send_and_ping(msg_inv([orphan_inv]))
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer2.wait_for_getdata([int(package_wtxids[-1], 16)])
         peer2.send_and_ping(msg_tx(package_txns[-1]))
-        self.fastforward(NONPREF_PEER_TX_DELAY + 1)
+        self.fastforward(TXREQUEST_TIME_SKIP)
         peer2.wait_for_getancpkginfo(int(package_wtxids[-1], 16))
         peer2.send_and_ping(ancpkginfo_message)
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        # The orphan should not be re-requested.
+        peer2.wait_for_getpkgtxns([int(wtxid, 16) for wtxid in package_wtxids[:-1]])
+        peer2.send_and_ping(msg_pkgtxns(txns=package_txns[:-1]))
+        peer2.sync_with_ping()
+        assert_equal(set(node.getrawmempool()), set([tx.rehash() for tx in package_txns]))
+
+    @cleanup
+    def test_ancpkginfo_invalid_ancestors(self):
+        node = self.nodes[0]
+        self.log.info("Test that peer does not request tx data if ancpkginfo indicates they won't pass")
+        # Nonstandard due to stuffed op_return
+        grandparent_nonstandard = self.wallet.create_self_transfer(target_weight=50000)
+        middle_tx = self.wallet.create_self_transfer(utxo_to_spend=grandparent_nonstandard["new_utxo"])
+        grandchild = self.wallet.create_self_transfer(utxo_to_spend=middle_tx["new_utxo"])
+        grandparent_wtxid = grandparent_nonstandard["tx"].getwtxid()
+        middle_wtxid = middle_tx["tx"].getwtxid()
+        grandchild_wtxid = grandchild["tx"].getwtxid()
+
+        peer_package_relay = node.add_p2p_connection(PackageRelayer())
+        # Relay the grandparent, it should be added to rejection filter
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(grandparent_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(grandparent_wtxid, 16)])
+        peer_package_relay.send_and_ping(msg_tx(grandparent_nonstandard["tx"]))
+        assert not grandparent_nonstandard["txid"] in node.getrawmempool()
+
+        # Relay the grandchild: ancpkginfo should be requested.
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(grandchild_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(grandchild_wtxid, 16)])
+        peer_package_relay.send_and_ping(msg_tx(grandchild["tx"]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getancpkginfo(int(grandchild["tx"].getwtxid(), 16))
+        ancpkginfo = msg_ancpkginfo([int(wtxid, 16) for wtxid in [grandparent_wtxid, middle_wtxid, grandchild_wtxid]])
+        # Once received, txdata should not be requested because the grandparent is in recent rejects.
+        peer_package_relay.send_and_ping(ancpkginfo)
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        assert "getpkgtxns" not in peer_package_relay.last_message
+
+        # Relay the parent: ancpkginfo should be requested (only grandparent wtxid was cached).
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(middle_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(middle_wtxid, 16)])
+        peer_package_relay.getdata_received.clear()
+        peer_package_relay.send_and_ping(msg_tx(middle_tx["tx"]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getancpkginfo(int(middle_wtxid, 16))
+
+        self.log.info("Test that failure cache resets after chain tip changes")
+        # After chain tip changes, all transactions can be reconsidered. For example, the
+        # nonstandard grandparent could have been included in the last block.
+        self.generate(node, 1)
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(middle_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(middle_wtxid, 16)])
+        peer_package_relay.send_and_ping(msg_tx(middle_tx["tx"]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getancpkginfo(int(middle_wtxid, 16))
+
+    @cleanup
+    def test_low_fee_caching(self):
+        node = self.nodes[0]
+        peer_package_relay = node.add_p2p_connection(PackageRelayer())
+        self.log.info("Test that low fee failures are cached but eligible for reconsideration in packages")
+        # If an ancestor has failed but is eligible for reconsideration (i.e. too low fee), the peer
+        # should request txdata.
+        parent_low_fee = self.wallet.create_self_transfer(fee=0, fee_rate=0)
+        node.prioritisetransaction(parent_low_fee["txid"], 0, -1)
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent_low_fee["new_utxo"])
+        parent_wtxid = parent_low_fee["tx"].getwtxid()
+        child_wtxid = child["tx"].getwtxid()
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(parent_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(parent_wtxid, 16)])
+        peer_package_relay.send_and_ping(msg_tx(parent_low_fee["tx"]))
+        assert not parent_low_fee["txid"] in node.getrawmempool()
+        # The low fee tx should not be downloaded again
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        prev_getdata = len(peer_package_relay.getdata_received)
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(parent_wtxid, 16))]))
+        assert_equal(len(peer_package_relay.getdata_received), prev_getdata)
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        # But it should be downloaded if part of a package, in this case as child's ancestor
+        peer_package_relay.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(child_wtxid, 16))]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getdata([int(child_wtxid, 16)])
+        peer_package_relay.send_and_ping(msg_tx(child["tx"]))
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getancpkginfo(int(child_wtxid, 16))
+        peer_package_relay.send_and_ping(msg_ancpkginfo([int(parent_wtxid, 16), int(child_wtxid, 16)]))
+        # The tx data should be requested even though the node has seen it before.
+        self.fastforward(TXREQUEST_TIME_SKIP)
+        peer_package_relay.wait_for_getpkgtxns([int(parent_wtxid, 16)])
 
     @cleanup
     def test_pkgtxns(self):
@@ -491,6 +606,8 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_orphan_handling_prefer_ancpkginfo()
         self.test_orphan_announcer_memory()
         self.test_ancpkginfo_received()
+        self.test_ancpkginfo_invalid_ancestors()
+        self.test_low_fee_caching()
         self.test_pkgtxns()
 
 

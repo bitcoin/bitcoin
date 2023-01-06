@@ -107,6 +107,8 @@ ORPHAN_ANCESTOR_GETDATA_INTERVAL = 60
 UNCONDITIONAL_RELAY_DELAY = 120
 # Delay for requesting transactions if the peer has MAX_PEER_TX_REQUEST_IN_FLIGHT or more requests
 OVERLOADED_PEER_TX_DELAY = 2
+# Delay for requesting transactions if the peer cannot protect this orphan
+ORPHANAGE_OVERLOAD_DELAY = 1
 
 MESSAGEMAP = {
     b"addr": msg_addr,

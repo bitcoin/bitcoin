@@ -598,6 +598,10 @@ private:
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
+    /** Validate package if any */
+    void ProcessPackage(CNode& node, const node::TxPackageTracker::PackageToValidate& package)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+
     /** Process a single headers message from a peer.
      *
      * @param[in]   pfrom     CNode of the peer
@@ -3174,6 +3178,78 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     return false;
 }
 
+void PeerManagerImpl::ProcessPackage(CNode& node, const node::TxPackageTracker::PackageToValidate& package)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    LOCK(cs_main);
+    // We won't re-validate the exact same transaction or package again.
+    if (m_recent_rejects_reconsiderable.contains(GetPackageHash(package.m_unvalidated_txns))) {
+        // Should we do anything else here?
+        return;
+    }
+    const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool,
+                                                package.m_unvalidated_txns, /*test_accept=*/false)};
+    if (package_result.m_state.IsInvalid()) {
+        // If another peer sends the same packageinfo again, we can immediately reject it without
+        // re-downloading the transactions. Note that state.IsInvalid() doesn't mean all
+        // transactions have been rejected.
+        m_recent_rejects_reconsiderable.insert(package.m_pkginfo_hash);
+    }
+    std::set<uint256> successful_txns;
+    std::set<uint256> invalid_final_txns;
+    for (const auto& tx : package.m_unvalidated_txns) {
+        const auto& txid = tx->GetHash();
+        const auto& wtxid = tx->GetWitnessHash();
+        const auto result{package_result.m_tx_results.find(wtxid)};
+        if (package_result.m_state.IsValid() ||
+            package_result.m_state.GetResult() == PackageValidationResult::PCKG_TX) {
+            // If PCKG_TX or valid, every tx should have a result.
+            Assume(result != package_result.m_tx_results.end());
+        }
+        if (result == package_result.m_tx_results.end()) break;
+        if (result->second.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+            LogPrint(BCLog::MEMPOOL, "\nProcessPackage: tx %s from peer=%d accepted\n", txid.ToString(), node.GetId());
+            successful_txns.insert(wtxid);
+            m_txrequest.ForgetTxHash(txid);
+            m_txrequest.ForgetTxHash(wtxid);
+            RelayTransaction(txid, wtxid);
+            node.m_last_tx_time = GetTime<std::chrono::seconds>();
+            for (const CTransactionRef& removedTx : result->second.m_replaced_transactions.value()) {
+                AddToCompactExtraTransactions(removedTx);
+            }
+        } else if (result->second.m_state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
+            if (result->second.m_state.GetResult() == TxValidationResult::TX_LOW_FEE) {
+                m_recent_rejects_reconsiderable.insert(wtxid);
+                // FIXME: also cache subpackage failure
+            } else {
+                m_recent_rejects.insert(wtxid);
+                if (result->second.m_state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && wtxid != txid) {
+                    m_recent_rejects.insert(txid);
+                    m_txrequest.ForgetTxHash(txid);
+                } else if (result->second.m_state.GetResult() == TxValidationResult::TX_CONSENSUS) {
+                    invalid_final_txns.insert(wtxid);
+                }
+            }
+            m_txrequest.ForgetTxHash(wtxid);
+            if (RecursiveDynamicUsage(*tx) < 100000) {
+                AddToCompactExtraTransactions(tx);
+            }
+            LogPrint(BCLog::MEMPOOLREJ, "\nProcessPackage: %s from peer=%d was not accepted: %s\n",
+                     wtxid.ToString(), node.GetId(), result->second.m_state.ToString());
+            MaybePunishNodeForTx(wtxid == package.m_rep_wtxid ? node.GetId() : package.m_info_provider, result->second.m_state);
+        }
+        m_txpackagetracker->EraseOrphanTx(wtxid);
+    }
+    m_txpackagetracker->FinalizeTransactions(successful_txns, invalid_final_txns);
+    // Do this last to avoid adding children that were already validated within this package.
+    for (const auto& tx : package.m_unvalidated_txns) {
+        auto iter{package_result.m_tx_results.find(tx->GetWitnessHash())};
+        if (iter != package_result.m_tx_results.end() && iter->second.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+            m_txpackagetracker->AddChildrenToWorkSet(*tx);
+        }
+    }
+}
+
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
                                                 BlockFilterType filter_type, uint32_t start_height,
                                                 const uint256& stop_hash, uint32_t max_height_diff,
@@ -4315,6 +4391,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
+        // Note: Multiple ancestor packages can have the same representative (different ancestors for
+        // honest or malicious reasons). But since we're only using this to resolve orphans, we
+        // should never be in a situation where we have multiple ancpkginfos out for the same wtxid
         const auto& rep_wtxid{package_wtxids.back()};
         if (package_wtxids.size() > MAX_PACKAGE_COUNT) {
             LogPrint(BCLog::NET, "discarding package info for tx %s, too many transactions\n", rep_wtxid.ToString());
@@ -4340,14 +4419,33 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 return;
             }
         }
-        // For now, just add these transactions as announcements.
-        const auto current_time{GetTime<std::chrono::microseconds>()};
+        std::vector<std::pair<uint256, bool>> txdata_status;
+        txdata_status.reserve(package_wtxids.size());
+        std::vector<uint256> pkgtxns_to_request;
         for (const auto& wtxid : package_wtxids) {
             AddKnownTx(*peer, wtxid);
-            if (!AlreadyHaveTx(GenTxid::Wtxid(wtxid)) && !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                AddTxAnnouncement(pfrom, GenTxid::Wtxid(wtxid), current_time);
+            if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_orphanage=*/false)) {
+                txdata_status.emplace_back(wtxid, false);
+            } else {
+                txdata_status.emplace_back(wtxid, true);
+                pkgtxns_to_request.push_back(wtxid);
             }
         }
+        const auto current_time{GetTime<std::chrono::microseconds>()};
+        // It is correct to continue asking another peer for ancpkginfo because this peer could
+        // have provided a false list of ancestors in order to get us to reject the tx.
+        Assume(txdata_status.size() == package_wtxids.size());
+        const auto result{m_txpackagetracker->ReceivedAncPkgInfo(pfrom.GetId(), rep_wtxid, txdata_status,
+                                               current_time + GETDATA_TX_INTERVAL)};
+        if (std::holds_alternative<node::TxPackageTracker::PackageToValidate>(result)) {
+            ProcessPackage(pfrom, std::get<node::TxPackageTracker::PackageToValidate>(result));
+        } else {
+            const auto& request_list{std::get<std::vector<uint256>>(result)};
+            if (!request_list.empty()) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::GETPKGTXNS, request_list));
+            }
+        }
+        return;
     }
 
     if (msg_type == NetMsgType::TX) {
@@ -5201,6 +5299,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                         pfrom.fDisconnect = true;
                     }
                     m_txpackagetracker->ForgetPkgInfo(pfrom.GetId(), inv.hash, node::PKG_RELAY_ANCPKG);
+                } else if (inv.IsMsgPkgTxns() && m_enable_package_relay) {
+                    m_txpackagetracker->ReceivedNotFound(pfrom.GetId(), inv.hash);
                 }
             }
         }
