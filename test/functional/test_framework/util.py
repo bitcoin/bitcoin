@@ -352,7 +352,7 @@ def rpc_port(n):
 
 def rpc_url(datadir, i, chain, rpchost):
     rpc_u, rpc_p = get_auth_cookie(datadir, chain)
-    host = "127.0.0.1"
+    host = LOCALHOST
     port = rpc_port(i)
     if rpchost:
         parts = rpchost.split(':')
@@ -390,6 +390,9 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
             f.write("{}=1\n".format(chain_name_conf_arg))
         if chain_name_conf_section:
             f.write("[{}]\n".format(chain_name_conf_section))
+        f.write(f"rpcbind={LOCALHOST}\n")
+        f.write(f"rpcconnect={LOCALHOST}\n")
+        f.write("rpcallowip=127.0.0.0/8\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("rpcdoccheck=1\n")

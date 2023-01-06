@@ -59,7 +59,7 @@ class RPCBindTest(BitcoinTestFramework):
         node_args = \
             ['-disablewallet', '-nolisten'] + \
             ['-rpcallowip='+x for x in allow_ips] + \
-            ['-rpcbind='+addr for addr in ['127.0.0.1', "%s:%d" % (rpchost, rpcport)]] # Bind to localhost as well so start_nodes doesn't hang
+            ['-rpcbind='+addr for addr in [LOCALHOST, "%s:%d" % (rpchost, rpcport)]] # Bind to localhost as well so start_nodes doesn't hang
         self.nodes[0].rpchost = None
         self.start_nodes([node_args])
         # connect to node through non-loopback interface
