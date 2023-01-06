@@ -8,7 +8,8 @@ import os
 
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import check_node_connections
+from test_framework.util import check_node_connections, LOCALHOST
+from test_framework.netutil import addr_to_hex
 
 INBOUND_CONNECTIONS = 5
 BLOCK_RELAY_CONNECTIONS = 2
@@ -42,10 +43,9 @@ class AnchorsTest(BitcoinTestFramework):
         self.log.info("Check node connections")
         check_node_connections(node=self.nodes[0], num_in=5, num_out=2)
 
-        # 127.0.0.1
-        ip = "7f000001"
+        ip = addr_to_hex("127.0.0.1")
 
-        # Since the ip is always 127.0.0.1 for this case,
+        # Since the ip is always the same for this case,
         # we store only the port to identify the peers
         block_relay_nodes_port = []
         inbound_nodes_port = []
