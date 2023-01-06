@@ -291,9 +291,10 @@ static RPCHelpMan masternode_sign()
     int nChainTipHeight = pindexTip->nHeight;
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
     bool bFoundActiveMN{false};
+    auto blsPubKeyOperator = WITH_LOCK(activeMasternodeInfoCs, return *(activeMasternodeInfo.blsPubKeyOperator.get()));
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
         const auto &payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
-        if(payee->pdmnState->pubKeyOperator.Get() == *(activeMasternodeInfo.blsPubKeyOperator.get())) {
+        if(payee->pdmnState->pubKeyOperator.Get() == blsPubKeyOperator) {
             bFoundActiveMN = true;
             break;
         }
@@ -303,7 +304,7 @@ static RPCHelpMan masternode_sign()
         const auto &projection = mnList.GetProjectedMNPayees(nCount*2);
         for (size_t i = 0; i < projection.size(); i++) {
             const auto &payee = projection[i];
-            if(payee->pdmnState->pubKeyOperator.Get() == *(activeMasternodeInfo.blsPubKeyOperator.get())) {
+            if(payee->pdmnState->pubKeyOperator.Get() == blsPubKeyOperator) {
                 bFoundActiveMN = true;
                 break;
             }
@@ -323,7 +324,7 @@ static RPCHelpMan masternode_sign()
     }
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("signature", sig.ToString());
-    obj.pushKV("blspubkey", activeMasternodeInfo.blsPubKeyOperator->ToString());
+    obj.pushKV("blspubkey", blsPubKeyOperator.ToString());
     return obj;
 },
     };

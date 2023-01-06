@@ -734,13 +734,14 @@ void CChainLocksHandler::TrySignChainTip()
     bool fMemberOfSomeQuorum{false};
     const auto heightHashKP = std::make_pair(nHeight, msgHash);
     signingState.BumpAttempt();
+    auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         int nQuorumIndex = (nHeight + i) % quorums_scanned.size();
         const CQuorumCPtr& quorum = quorums_scanned[nQuorumIndex];
         if (quorum == nullptr) {
             return;
         }
-        if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
+        if (!quorum->IsValidMember(proTxHash)) {
             continue;
         }
         fMemberOfSomeQuorum = true;
