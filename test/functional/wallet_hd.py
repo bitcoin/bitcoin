@@ -26,7 +26,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.extra_args = [[], ['-keypool=0']]
         # whitelist peers to speed up tx relay / mempool sync
         for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")
+            args.append(f"-whitelist=noban@{LOCALHOST}")
 
         self.supports_cli = False
 

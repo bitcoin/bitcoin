@@ -96,7 +96,7 @@ class FilterTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-peerbloomfilters',
-            '-whitelist=noban@127.0.0.1',  # immediate tx relay
+            f'-whitelist=noban@{LOCALHOST}',  # immediate tx relay
         ]]
 
     def generatetoscriptpubkey(self, scriptpubkey):

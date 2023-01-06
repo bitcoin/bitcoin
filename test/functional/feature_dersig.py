@@ -50,7 +50,7 @@ class BIP66Test(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             f'-testactivationheight=dersig@{DERSIG_HEIGHT}',
-            '-whitelist=noban@127.0.0.1',
+            f'-whitelist=noban@{LOCALHOST}',
             '-par=1',  # Use only one script thread to get the exact log msg for testing
         ]]
         self.setup_clean_chain = True

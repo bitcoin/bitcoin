@@ -48,7 +48,7 @@ class AddrTest(BitcoinTestFramework):
         self.onion_port1 = p2p_port(self.num_nodes)
         self.onion_port2 = p2p_port(self.num_nodes + 1)
         self.extra_args = [
-            [f"-bind=127.0.0.1:{self.onion_port1}=onion", f"-bind=127.0.0.1:{self.onion_port2}=onion"],
+            [f"-bind={LOCALHOST}:{self.onion_port1}=onion", f"-bind={LOCALHOST}:{self.onion_port2}=onion"],
         ]
 
     def run_test(self):

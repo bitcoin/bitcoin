@@ -37,16 +37,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.num_nodes = 10
         # Add new version after each release:
         self.extra_args = [
-            ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v23.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v22.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.21.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.19.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.17.2
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1", "-wallet=wallet.dat"], # v0.16.3
+            ["-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # Pre-release: use to mine blocks. noban for immediate tx relay
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # v23.0
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # v22.0
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # v0.21.0
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # v0.20.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist=noban@{LOCALHOST}"], # v0.19.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist={LOCALHOST}"], # v0.18.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist={LOCALHOST}"], # v0.17.2
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", f"-whitelist={LOCALHOST}", "-wallet=wallet.dat"], # v0.16.3
         ]
         self.wallet_names = [self.default_wallet_name]
 

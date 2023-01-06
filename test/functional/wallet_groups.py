@@ -32,7 +32,7 @@ class WalletGroupTest(BitcoinTestFramework):
         ]
 
         for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")   # whitelist peers to speed up tx relay / mempool sync
+            args.append(f"-whitelist=noban@{LOCALHOST}")   # whitelist peers to speed up tx relay / mempool sync
             args.append(f"-paytxfee={20 * 1e3 / 1e8}")  # apply feerate of 20 sats/vB across all nodes
 
         self.rpc_timeout = 480

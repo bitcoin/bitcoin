@@ -36,63 +36,63 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.checkpermission(
             # default permissions (no specific permissions)
-            ["-whitelist=127.0.0.1"],
+            [f"-whitelist={LOCALHOST}"],
             # Make sure the default values in the command line documentation match the ones here
             ["relay", "noban", "mempool", "download"])
 
         self.checkpermission(
             # no permission (even with forcerelay)
-            ["-whitelist=@127.0.0.1", "-whitelistforcerelay=1"],
+            [f"-whitelist=@{LOCALHOST}", "-whitelistforcerelay=1"],
             [])
 
         self.checkpermission(
             # relay permission removed (no specific permissions)
-            ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
+            [f"-whitelist={LOCALHOST}", "-whitelistrelay=0"],
             ["noban", "mempool", "download"])
 
         self.checkpermission(
             # forcerelay and relay permission added
             # Legacy parameter interaction which set whitelistrelay to true
             # if whitelistforcerelay is true
-            ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
+            [f"-whitelist={LOCALHOST}", "-whitelistforcerelay"],
             ["forcerelay", "relay", "noban", "mempool", "download"])
 
         # Let's make sure permissions are merged correctly
         # For this, we need to use whitebind instead of bind
         # by modifying the configuration file.
-        ip_port = f"127.0.0.1:{p2p_port(1)}"
-        self.replaceinconfig(1, "\nbind=127.0.0.1", "\nwhitebind=bloomfilter,forcerelay@" + ip_port)
+        ip_port = f"{LOCALHOST}:{p2p_port(1)}"
+        self.replaceinconfig(1, f"\nbind={LOCALHOST}", "\nwhitebind=bloomfilter,forcerelay@" + ip_port)
         self.checkpermission(
-            ["-whitelist=noban@127.0.0.1"],
+            [f"-whitelist=noban@{LOCALHOST}"],
             # Check parameter interaction forcerelay should activate relay
             ["noban", "bloomfilter", "forcerelay", "relay", "download"])
-        self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
+        self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, f"bind={LOCALHOST}")
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
-            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
+            [f"-whitelist=noban,mempool@{LOCALHOST}", "-whitelistrelay"],
             ["noban", "mempool", "download"])
 
         self.checkpermission(
             # legacy whitelistforcerelay should be ignored
-            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
+            [f"-whitelist=noban,mempool@{LOCALHOST}", "-whitelistforcerelay"],
             ["noban", "mempool", "download"])
 
         self.checkpermission(
             # missing mempool permission to be considered legacy whitelisted
-            ["-whitelist=noban@127.0.0.1"],
+            [f"-whitelist=noban@{LOCALHOST}"],
             ["noban", "download"])
 
         self.checkpermission(
             # all permission added
-            ["-whitelist=all@127.0.0.1"],
+            [f"-whitelist=all@{LOCALHOST}"],
             ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
 
         self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
-        self.nodes[1].assert_start_raises_init_error(["-whitelist=noban@127.0.0.1:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
-        self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
-        self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1", "-bind=127.0.0.1", "-listen=0"], "Cannot set -bind or -whitebind together with -listen=0", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error([f"-whitelist=oopsie@{LOCALHOST}"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error([f"-whitelist=noban@{LOCALHOST}:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error([f"-whitebind=noban@{LOCALHOST}/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error([f"-whitebind=noban@{LOCALHOST}", f"-bind={LOCALHOST}", "-listen=0"], "Cannot set -bind or -whitebind together with -listen=0", match=ErrorMatch.PARTIAL_REGEX)
 
     def check_tx_relay(self):
         block_op_true = self.nodes[0].getblock(self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_P2WSH_OP_TRUE)[0])
@@ -101,7 +101,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
         # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
         # currently not request a txid that is already in the mempool.
-        self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])
+        self.restart_node(1, extra_args=[f"-whitelist=forcerelay@{LOCALHOST}"])
         p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
 
         self.log.debug("Send a tx from the wallet initially")

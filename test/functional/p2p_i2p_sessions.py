@@ -15,8 +15,8 @@ class I2PSessions(BitcoinTestFramework):
         self.num_nodes = 2
         # The test assumes that an I2P SAM proxy is not listening here.
         self.extra_args = [
-            ["-i2psam=127.0.0.1:60000", "-i2pacceptincoming=1"],
-            ["-i2psam=127.0.0.1:60000", "-i2pacceptincoming=0"],
+            [f"-i2psam={LOCALHOST}:60000", "-i2pacceptincoming=1"],
+            [f"-i2psam={LOCALHOST}:60000", "-i2pacceptincoming=0"],
         ]
 
     def run_test(self):

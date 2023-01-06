@@ -144,11 +144,11 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['Chain'], blockchain_info['chain'])
 
         self.log.info("Test -getinfo and bitcoin-cli return all proxies")
-        self.restart_node(0, extra_args=["-proxy=127.0.0.1:9050", "-i2psam=127.0.0.1:7656"])
+        self.restart_node(0, extra_args=[f"-proxy={LOCALHOST}:9050", f"-i2psam={LOCALHOST}:7656"])
         network_info = self.nodes[0].getnetworkinfo()
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
-        assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)")
+        assert_equal(cli_get_info["Proxies"], f"{LOCALHOST}:9050 (ipv4, ipv6, onion, cjdns), {LOCALHOST}:7656 (i2p)")
 
         if self.is_specified_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")

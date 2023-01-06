@@ -21,7 +21,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
-                '-whitelist=noban@127.0.0.1',  # immediate tx relay
+                f'-whitelist=noban@{LOCALHOST}',  # immediate tx relay
             ],
             []
         ]

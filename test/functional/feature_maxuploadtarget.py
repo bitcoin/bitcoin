@@ -146,7 +146,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         self.log.info("Restarting node 0 with download permission and 1MB maxuploadtarget")
-        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
+        self.restart_node(0, [f"-whitelist=download@{LOCALHOST}", "-maxuploadtarget=1"])
 
         # Reconnect to self.nodes[0]
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())

@@ -43,7 +43,7 @@ class AnchorsTest(BitcoinTestFramework):
         self.log.info("Check node connections")
         check_node_connections(node=self.nodes[0], num_in=5, num_out=2)
 
-        ip = addr_to_hex("127.0.0.1")
+        ip = addr_to_hex(LOCALHOST)
 
         # Since the ip is always the same for this case,
         # we store only the port to identify the peers

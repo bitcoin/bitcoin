@@ -56,7 +56,7 @@ class FeeFilterTest(BitcoinTestFramework):
         self.extra_args = [[
             "-minrelaytxfee=0.00000100",
             "-mintxfee=0.00000100",
-            "-whitelist=noban@127.0.0.1",
+            f"-whitelist=noban@{LOCALHOST}",
         ]] * self.num_nodes
 
     def run_test(self):
@@ -69,7 +69,7 @@ class FeeFilterTest(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(FeefilterConn()).assert_feefilter_received(True)
 
         self.log.info('Check that peers with forcerelay permission do not get a feefilter message')
-        self.restart_node(0, extra_args=['-whitelist=forcerelay@127.0.0.1'])
+        self.restart_node(0, extra_args=[f'-whitelist=forcerelay@{LOCALHOST}'])
         self.nodes[0].add_p2p_connection(FeefilterConn()).assert_feefilter_received(False)
 
         # Restart to disconnect peers and load default extra_args

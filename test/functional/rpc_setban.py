@@ -26,21 +26,21 @@ class SetBanTests(BitcoinTestFramework):
         assert not "noban" in peerinfo["permissions"]
 
         # Node 0 get banned by Node 1
-        self.nodes[1].setban("127.0.0.1", "add")
+        self.nodes[1].setban(LOCALHOST, "add")
 
         # Node 0 should not be able to reconnect
         with self.nodes[1].assert_debug_log(expected_msgs=['dropped (banned)\n'], timeout=50):
             self.restart_node(1, [])
-            self.nodes[0].addnode("127.0.0.1:" + str(p2p_port(1)), "onetry")
+            self.nodes[0].addnode(f"{LOCALHOST}:" + str(p2p_port(1)), "onetry")
 
         # However, node 0 should be able to reconnect if it has noban permission
-        self.restart_node(1, ['-whitelist=127.0.0.1'])
+        self.restart_node(1, [f'-whitelist={LOCALHOST}'])
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert "noban" in peerinfo["permissions"]
 
         # If we remove the ban, Node 0 should be able to reconnect even without noban permission
-        self.nodes[1].setban("127.0.0.1", "remove")
+        self.nodes[1].setban(LOCALHOST, "remove")
         self.restart_node(1, [])
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]

@@ -37,7 +37,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.extra_args = [
             [
                 "-maxorphantx=1000",
-                "-whitelist=noban@127.0.0.1",  # immediate tx relay
+                f"-whitelist=noban@{LOCALHOST}",  # immediate tx relay
             ],
             [
                 "-maxorphantx=1000",

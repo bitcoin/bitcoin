@@ -116,12 +116,12 @@ class AddressInputTypeGrouping(BitcoinTestFramework):
         self.extra_args = [
             [
                 "-addresstype=bech32",
-                "-whitelist=noban@127.0.0.1",
+                f"-whitelist=noban@{LOCALHOST}",
                 "-txindex",
             ],
             [
                 "-addresstype=p2sh-segwit",
-                "-whitelist=noban@127.0.0.1",
+                f"-whitelist=noban@{LOCALHOST}",
                 "-txindex",
             ],
         ]

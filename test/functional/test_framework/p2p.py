@@ -617,7 +617,7 @@ class NetworkThread(threading.Thread):
             assert 0 < idx <= MAX_NODES
             port = p2p_port(MAX_NODES - idx)
         if addr is None:
-            addr = '127.0.0.1'
+            addr = LOCALHOST
 
         coroutine = cls.create_listen_server(addr, port, callback, p2p)
         cls.network_event_loop.call_soon_threadsafe(cls.network_event_loop.create_task, coroutine)

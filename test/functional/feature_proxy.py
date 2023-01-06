@@ -72,12 +72,12 @@ class ProxyTest(BitcoinTestFramework):
         # Create two proxies on different ports
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
-        self.conf1.addr = ('127.0.0.1', p2p_port(self.num_nodes))
+        self.conf1.addr = (LOCALHOST, p2p_port(self.num_nodes))
         self.conf1.unauth = True
         self.conf1.auth = False
         # ... one supporting authenticated and unauthenticated (Tor)
         self.conf2 = Socks5Configuration()
-        self.conf2.addr = ('127.0.0.1', p2p_port(self.num_nodes + 1))
+        self.conf2.addr = (LOCALHOST, p2p_port(self.num_nodes + 1))
         self.conf2.unauth = True
         self.conf2.auth = True
         if self.have_ipv6:
@@ -99,7 +99,7 @@ class ProxyTest(BitcoinTestFramework):
             self.serv3.start()
 
         # We will not try to connect to this.
-        self.i2p_sam = ('127.0.0.1', 7656)
+        self.i2p_sam = (LOCALHOST, 7656)
 
         # Note: proxies are not used to connect to local nodes. This is because the proxy to
         # use is based on CService.GetNetwork(), which returns NET_UNROUTABLE for localhost.

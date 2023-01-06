@@ -490,7 +490,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             )
 
         if self.bind_to_localhost_only:
-            extra_confs = [["bind=127.0.0.1"]] * num_nodes
+            extra_confs = [[f"bind={LOCALHOST}"]] * num_nodes
         else:
             extra_confs = [[]] * num_nodes
         if extra_args is None:
@@ -598,7 +598,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         to_connection = self.nodes[b]
         from_num_peers = 1 + len(from_connection.getpeerinfo())
         to_num_peers = 1 + len(to_connection.getpeerinfo())
-        ip_port = "127.0.0.1:" + str(p2p_port(b))
+        ip_port = f"{LOCALHOST}:" + str(p2p_port(b))
         from_connection.addnode(ip_port, "onetry")
         # poll until version handshake complete to avoid race conditions
         # with transaction relaying
@@ -781,7 +781,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     CACHE_NODE_ID,
                     cache_node_dir,
                     chain=self.chain,
-                    extra_conf=["bind=127.0.0.1"],
+                    extra_conf=[f"bind={LOCALHOST}"],
                     extra_args=['-disablewallet'],
                     rpchost=None,
                     timewait=self.rpc_timeout,

@@ -39,7 +39,7 @@ class BindExtraTest(BitcoinTestFramework):
         if not sys.platform.startswith('linux'):
             raise SkipTest("This test can only be run on Linux.")
 
-        loopback_ipv4 = addr_to_hex("127.0.0.1")
+        loopback_ipv4 = addr_to_hex(LOCALHOST)
 
         # Start custom ports by reusing unused p2p ports
         port = p2p_port(self.num_nodes)
@@ -50,7 +50,7 @@ class BindExtraTest(BitcoinTestFramework):
         # Node0, no normal -bind=... with -bind=...=onion, thus only the tor target.
         self.expected.append(
             [
-                [f"-bind=127.0.0.1:{port}=onion"],
+                [f"-bind={LOCALHOST}:{port}=onion"],
                 [(loopback_ipv4, port)]
             ],
         )
@@ -59,7 +59,7 @@ class BindExtraTest(BitcoinTestFramework):
         # Node1, both -bind=... and -bind=...=onion.
         self.expected.append(
             [
-                [f"-bind=127.0.0.1:{port}", f"-bind=127.0.0.1:{port + 1}=onion"],
+                [f"-bind={LOCALHOST}:{port}", f"-bind={LOCALHOST}:{port + 1}=onion"],
                 [(loopback_ipv4, port), (loopback_ipv4, port + 1)]
             ],
         )

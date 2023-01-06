@@ -29,7 +29,7 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("setban: successfully ban single IP address")
         assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # node1 should have 2 connections to node0 at this point
-        self.nodes[1].setban(subnet="127.0.0.1", command="add")
+        self.nodes[1].setban(subnet=LOCALHOST, command="add")
         self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0, timeout=10)
         assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # all nodes must be disconnected at this point
         assert_equal(len(self.nodes[1].listbanned()), 1)
@@ -41,14 +41,14 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("setban: fail to ban an already banned subnet")
         assert_equal(len(self.nodes[1].listbanned()), 1)
-        assert_raises_rpc_error(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
+        assert_raises_rpc_error(-23, "IP/Subnet already banned", self.nodes[1].setban, LOCALHOST, "add")
 
         self.log.info("setban: fail to ban an invalid subnet")
-        assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
+        assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, f"{LOCALHOST}/42", "add")
         assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
 
         self.log.info("setban remove: fail to unban a non-banned subnet")
-        assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
+        assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, LOCALHOST, "remove")
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
         self.log.info("setban remove: successfully unban subnet")

@@ -204,7 +204,7 @@ class TxDownloadTest(BitcoinTestFramework):
     def test_preferred_inv(self, preferred=False):
         if preferred:
             self.log.info('Check invs from preferred peers are downloaded immediately')
-            self.restart_node(0, extra_args=['-whitelist=noban@127.0.0.1'])
+            self.restart_node(0, extra_args=[f'-whitelist=noban@{LOCALHOST}'])
         else:
             self.log.info('Check invs from non-preferred peers are downloaded after {} s'.format(NONPREF_PEER_TX_DELAY))
         mock_time = int(time.time() + 1)
@@ -222,7 +222,7 @@ class TxDownloadTest(BitcoinTestFramework):
 
     def test_txid_inv_delay(self, glob_wtxid=False):
         self.log.info('Check that inv from a txid-relay peers are delayed by {} s, with a wtxid peer {}'.format(TXID_RELAY_DELAY, glob_wtxid))
-        self.restart_node(0, extra_args=['-whitelist=noban@127.0.0.1'])
+        self.restart_node(0, extra_args=[f'-whitelist=noban@{LOCALHOST}'])
         mock_time = int(time.time() + 1)
         self.nodes[0].setmocktime(mock_time)
         peer = self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=False))
@@ -239,7 +239,7 @@ class TxDownloadTest(BitcoinTestFramework):
 
     def test_large_inv_batch(self):
         self.log.info('Test how large inv batches are handled with relay permission')
-        self.restart_node(0, extra_args=['-whitelist=relay@127.0.0.1'])
+        self.restart_node(0, extra_args=[f'-whitelist=relay@{LOCALHOST}'])
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())
         peer.send_message(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
         peer.wait_until(lambda: peer.tx_getdata_count == MAX_PEER_TX_ANNOUNCEMENTS + 1)

@@ -145,8 +145,8 @@ class ConfArgsTest(BitcoinTestFramework):
                 '-addnode=some.node',
                 '-rpcauth=alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
                 '-rpcbind=127.1.1.1',
-                '-rpcbind=127.0.0.1',
-                "-rpcallowip=127.0.0.1",
+                f'-rpcbind={LOCALHOST}',
+                f"-rpcallowip={LOCALHOST}",
                 '-rpcpassword=',
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
@@ -220,7 +220,7 @@ class ConfArgsTest(BitcoinTestFramework):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
         assert time.time() - start < 60
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(['-dnsseed=1', '-onlynet=i2p', '-i2psam=127.0.0.1:7656'], "Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")
+        self.nodes[0].assert_start_raises_init_error(['-dnsseed=1', '-onlynet=i2p', f'-i2psam={LOCALHOST}:7656'], "Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")
 
         # No peers.dat exists and dns seeds are disabled.
         # We expect the node will not add fixed seeds when explicitly disabled.

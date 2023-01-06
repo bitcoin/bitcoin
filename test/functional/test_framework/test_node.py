@@ -596,7 +596,7 @@ class TestNode():
         if 'dstport' not in kwargs:
             kwargs['dstport'] = p2p_port(self.index)
         if 'dstaddr' not in kwargs:
-            kwargs['dstaddr'] = '127.0.0.1'
+            kwargs['dstaddr'] = LOCALHOST
 
         p2p_conn.peer_connect(**kwargs, net=self.chain, timeout_factor=self.timeout_factor)()
         self.p2ps.append(p2p_conn)
