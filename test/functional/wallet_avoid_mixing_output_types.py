@@ -30,6 +30,7 @@ but still know when to expect mixing due to the wallet being close to empty.
 import random
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.util import LOCALHOST
 
 ADDRESS_TYPES = [
     "bech32m",

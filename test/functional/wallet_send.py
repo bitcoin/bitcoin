@@ -21,6 +21,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     count_bytes,
+    LOCALHOST,
 )
 from test_framework.wallet_util import bytes_to_wif
 

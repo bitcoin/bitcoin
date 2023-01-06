@@ -26,6 +26,7 @@ from .authproxy import JSONRPCException
 from .descriptors import descsum_create
 from .p2p import P2P_SUBVERSION
 from .util import (
+    LOCALHOST,
     MAX_NODES,
     assert_equal,
     append_config,

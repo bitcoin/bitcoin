@@ -22,6 +22,7 @@ from test_framework.messages import (
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    LOCALHOST,
     p2p_port,
 )
 from test_framework.wallet import (

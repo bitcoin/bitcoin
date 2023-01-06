@@ -17,6 +17,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    LOCALHOST,
     satoshi_round,
 )
 from test_framework.wallet import MiniWallet

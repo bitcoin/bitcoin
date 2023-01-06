@@ -14,6 +14,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_process_error,
     assert_raises_rpc_error,
+    LOCALHOST,
     get_auth_cookie,
 )
 import time

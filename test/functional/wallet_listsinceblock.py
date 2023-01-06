@@ -14,6 +14,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
+    LOCALHOST,
 )
 from test_framework.wallet_util import bytes_to_wif
 

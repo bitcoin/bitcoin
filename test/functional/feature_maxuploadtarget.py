@@ -22,6 +22,7 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    LOCALHOST,
     mine_large_block,
 )
 from test_framework.wallet import MiniWallet

@@ -18,6 +18,7 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
+    LOCALHOST,
 )
 from test_framework.wallet import (
     DEFAULT_FEE,

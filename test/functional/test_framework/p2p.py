@@ -75,6 +75,7 @@ from test_framework.messages import (
     sha256,
 )
 from test_framework.util import (
+    LOCALHOST,
     MAX_NODES,
     p2p_port,
     wait_until_helper,

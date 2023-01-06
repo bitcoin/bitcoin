@@ -26,7 +26,7 @@ from test_framework.script import (
     OP_DROP,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, LOCALHOST
 from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,

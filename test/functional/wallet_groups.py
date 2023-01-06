@@ -12,6 +12,7 @@ from test_framework.messages import (
 from test_framework.util import (
     assert_approx,
     assert_equal,
+    LOCALHOST,
 )
 
 

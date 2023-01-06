@@ -7,6 +7,7 @@ Test whether persistent or transient I2P sessions are being used, based on `-i2p
 """
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import LOCALHOST
 
 
 class I2PSessions(BitcoinTestFramework):

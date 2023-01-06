@@ -87,6 +87,7 @@ from test_framework.util import (
     assert_equal,
     softfork_active,
     assert_raises_rpc_error,
+    LOCALHOST,
 )
 from test_framework.wallet import MiniWallet
 

@@ -9,7 +9,11 @@ that spend (directly or indirectly) coinbase transactions.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    LOCALHOST,
+)
 from test_framework.wallet import MiniWallet
 
 class MempoolCoinbaseTest(BitcoinTestFramework):

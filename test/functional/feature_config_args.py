@@ -8,7 +8,11 @@ import os
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework import util
+from test_framework.util import (
+    assert_equal,
+    LOCALHOST,
+    write_config,
+)
 
 
 class ConfArgsTest(BitcoinTestFramework):
@@ -28,7 +32,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Check that startup fails if conf= is set in bitcoin.conf or in an included conf file
         bad_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_bad.conf')
-        util.write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
+        write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
         conf_in_config_file_err = 'Error: Error reading configuration file: conf cannot be set in the configuration file; use includeconf= if you want to include additional config files'
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f'-conf={bad_conf_file_path}'],
@@ -71,7 +75,7 @@ class ConfArgsTest(BitcoinTestFramework):
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
 
         main_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_main.conf')
-        util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
+        write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('acceptnonstdtxn=1\n')
         self.nodes[0].assert_start_raises_init_error(extra_args=[f"-conf={main_conf_file_path}"], expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
@@ -180,7 +184,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # Only regtest has no fixed seeds. To avoid connections to random
         # nodes, regtest is the only network where it is safe to enable
         # -fixedseeds in tests
-        util.assert_equal(self.nodes[0].getblockchaininfo()['chain'],'regtest')
+        assert_equal(self.nodes[0].getblockchaininfo()['chain'],'regtest')
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=1

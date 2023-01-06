@@ -19,6 +19,7 @@ from test_framework.test_framework import (
 )
 from test_framework.util import (
     assert_equal,
+    LOCALHOST,
     p2p_port,
     rpc_port,
 )

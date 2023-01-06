@@ -26,6 +26,7 @@ from . import coverage
 from .p2p import NetworkThread
 from .test_node import TestNode
 from .util import (
+    LOCALHOST,
     MAX_NODES,
     PortSeed,
     assert_equal,

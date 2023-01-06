@@ -23,6 +23,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    LOCALHOST,
 )
 from test_framework.wallet import (
     MiniWallet,

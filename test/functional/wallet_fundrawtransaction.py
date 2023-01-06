@@ -24,6 +24,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     count_bytes,
     find_vout_for_address,
+    LOCALHOST,
 )
 from test_framework.wallet_util import bytes_to_wif
 

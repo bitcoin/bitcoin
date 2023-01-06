@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_fee_amount,
     assert_raises_rpc_error,
     find_vout_for_address,
+    LOCALHOST,
 )
 from test_framework.wallet_util import test_address
 

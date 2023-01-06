@@ -18,6 +18,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     chain_transaction,
+    LOCALHOST,
 )
 
 
