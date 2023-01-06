@@ -77,7 +77,7 @@ class RPCBindTest(BitcoinTestFramework):
         self.log.info("Check for non-loopback interface")
         self.non_loopback_ip = None
         for name,ip in all_interfaces():
-            if ip != '127.0.0.1':
+            if not ip.startswith("127."):
                 self.non_loopback_ip = ip
                 break
         if self.non_loopback_ip is None and self.options.run_nonloopback:
