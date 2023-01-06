@@ -61,7 +61,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # For this, we need to use whitebind instead of bind
         # by modifying the configuration file.
         ip_port = f"127.0.0.1:{p2p_port(1)}"
-        self.replaceinconfig(1, "bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)
+        self.replaceinconfig(1, "\nbind=127.0.0.1", "\nwhitebind=bloomfilter,forcerelay@" + ip_port)
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
