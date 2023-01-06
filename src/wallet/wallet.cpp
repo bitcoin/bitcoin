@@ -4001,6 +4001,23 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             }
         }
     }
+
+    // Persist added address book entries (labels, purpose) for watchonly and solvable wallets
+    auto persist_address_book = [](const CWallet& wallet) {
+        LOCK(wallet.cs_wallet);
+        WalletBatch batch{wallet.GetDatabase()};
+        for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
+            auto address{EncodeDestination(destination)};
+            auto purpose{addr_book_data.purpose};
+            auto label{addr_book_data.GetLabel()};
+            // don't bother writing default values (unknown purpose, empty label)
+            if (purpose != "unknown") batch.WritePurpose(address, purpose);
+            if (!label.empty()) batch.WriteName(address, label);
+        }
+    };
+    if (data.watchonly_wallet) persist_address_book(*data.watchonly_wallet);
+    if (data.solvable_wallet) persist_address_book(*data.solvable_wallet);
+
     // Remove the things to delete
     if (dests_to_delete.size() > 0) {
         for (const auto& dest : dests_to_delete) {
