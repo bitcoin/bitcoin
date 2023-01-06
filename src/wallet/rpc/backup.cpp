@@ -21,6 +21,7 @@
 #include <util/translation.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
+#include <wallet/imports.h>
 
 #include <cstdint>
 #include <fstream>
@@ -152,56 +153,36 @@ RPCHelpMan importprivkey()
 
     WalletRescanReserver reserver(*pwallet);
     bool fRescan = true;
+
+    std::string strSecret = request.params[0].get_str();
+    const std::string strLabel{LabelFromValue(request.params[1])};
+
+    // Whether to perform rescan after import
+    if (!request.params[2].isNull())
+        fRescan = request.params[2].get_bool();
+
+    if (fRescan && pwallet->chain().havePruned()) {
+        // Exit early and print an error.
+        // If a block is pruned after this check, we will import the key(s),
+        // but fail the rescan with a generic error.
+        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled when blocks are pruned");
+    }
+
+    if (fRescan && !reserver.reserve()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+    }
+
+    CKey key = DecodeSecret(strSecret);
+    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
     {
         LOCK(pwallet->cs_wallet);
-
         EnsureWalletIsUnlocked(*pwallet);
 
-        std::string strSecret = request.params[0].get_str();
-        const std::string strLabel{LabelFromValue(request.params[1])};
-
-        // Whether to perform rescan after import
-        if (!request.params[2].isNull())
-            fRescan = request.params[2].get_bool();
-
-        if (fRescan && pwallet->chain().havePruned()) {
-            // Exit early and print an error.
-            // If a block is pruned after this check, we will import the key(s),
-            // but fail the rescan with a generic error.
-            throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled when blocks are pruned");
-        }
-
-        if (fRescan && !reserver.reserve()) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
-        }
-
-        CKey key = DecodeSecret(strSecret);
-        if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-
-        CPubKey pubkey = key.GetPubKey();
-        CHECK_NONFATAL(key.VerifyPubKey(pubkey));
-        CKeyID vchAddress = pubkey.GetID();
-        {
-            pwallet->MarkDirty();
-
-            // We don't know which corresponding address will be used;
-            // label all new addresses, and label existing addresses if a
-            // label was passed.
-            for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
-                if (!request.params[1].isNull() || !pwallet->FindAddressBookEntry(dest)) {
-                    pwallet->SetAddressBook(dest, strLabel, AddressPurpose::RECEIVE);
-                }
-            }
-
-            // Use timestamp of 1 to scan the whole chain
-            if (!pwallet->ImportPrivKeys({{vchAddress, key}}, 1)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-
-            // Add the wpkh script for this key if possible
-            if (pubkey.IsCompressed()) {
-                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, /*timestamp=*/0);
-            }
+        try {
+            ProcessPrivateKey(*pwallet, strLabel, key);
+        } catch (const WalletError& e) {
+            throw JSONRPCError(RPC_WALLET_ERROR, e.error);
         }
     }
     if (fRescan) {
@@ -273,35 +254,14 @@ RPCHelpMan importaddress()
     if (!request.params[3].isNull())
         fP2SH = request.params[3].get_bool();
 
+    std::string strAddress = request.params[0].get_str();
+
     {
         LOCK(pwallet->cs_wallet);
-
-        CTxDestination dest = DecodeDestination(request.params[0].get_str());
-        if (IsValidDestination(dest)) {
-            if (fP2SH) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
-            }
-            if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
-            }
-
-            pwallet->MarkDirty();
-
-            pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
-        } else if (IsHex(request.params[0].get_str())) {
-            std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
-            CScript redeem_script(data.begin(), data.end());
-
-            std::set<CScript> scripts = {redeem_script};
-            pwallet->ImportScripts(scripts, /*timestamp=*/0);
-
-            if (fP2SH) {
-                scripts.insert(GetScriptForDestination(ScriptHash(redeem_script)));
-            }
-
-            pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
-        } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+        try {
+            ProcessAddress(*pwallet, strAddress, strLabel, fP2SH);
+        } catch (const InvalidAddressOrKey& e) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, e.error);
         }
     }
     if (fRescan)
@@ -469,17 +429,7 @@ RPCHelpMan importpubkey()
 
     {
         LOCK(pwallet->cs_wallet);
-
-        std::set<CScript> script_pub_keys;
-        for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
-            script_pub_keys.insert(GetScriptForDestination(dest));
-        }
-
-        pwallet->MarkDirty();
-
-        pwallet->ImportScriptPubKeys(strLabel, script_pub_keys, /*have_solving_data=*/true, /*apply_label=*/true, /*timestamp=*/1);
-
-        pwallet->ImportPubKeys({pubKey.GetID()}, {{pubKey.GetID(), pubKey}} , /*key_origins=*/{}, /*add_keypool=*/false, /*internal=*/false, /*timestamp=*/1);
+        ProcessPublicKey(*pwallet, strLabel, pubKey);
     }
     if (fRescan)
     {
