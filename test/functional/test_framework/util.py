@@ -301,6 +301,8 @@ def random_bytes(n):
 # RPC/P2P connection constants and functions
 ############################################
 
+# The localhost address to use for everything
+LOCALHOST = os.getenv("BITCOIN_TEST_BIND", default="127.0.0.1")
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 12
 # Don't assign rpc or p2p ports lower than this
@@ -350,7 +352,7 @@ def rpc_port(n):
 
 def rpc_url(datadir, i, chain, rpchost):
     rpc_u, rpc_p = get_auth_cookie(datadir, chain)
-    host = '127.0.0.1'
+    host = "127.0.0.1"
     port = rpc_port(i)
     if rpchost:
         parts = rpchost.split(':')
