@@ -370,28 +370,28 @@ CBlock TestChain100Setup::CreateBlock(
         LOCK(cs_main);
         CCbTx cbTx;
         if (!GetTxPayload(*block.vtx[0], cbTx)) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(),  *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state)) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         ds << cbTx;
     } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         LOCK(cs_main);
         llmq::CFinalCommitmentTxPayload qc;
         if (!GetTxPayload(*block.vtx[0], qc)) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), *llmq::quorumBlockProcessor, qc.cbTx.merkleRootQuorums, state)) {
-            BOOST_ASSERT(false);
+            assert(false);
         }
         ds << qc;
     }
