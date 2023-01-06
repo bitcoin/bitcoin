@@ -33,6 +33,26 @@ struct InvalidParameter {
     InvalidParameter(std::string error) : error(error) {}
 };
 
+struct ImportMultiData
+{
+    std::unique_ptr<Descriptor> parsed_desc;
+    std::string scriptPubKey;
+    std::string redeem_script;
+    std::string witness_script;
+    std::string label;
+    std::vector<std::string> public_keys;
+    std::vector<std::string> private_keys;
+    int64_t range_start = 0;
+    int64_t range_end = 0;
+    int64_t timestamp = 0;
+    bool internal = false;
+    bool isScript = false;
+    bool watch_only = false;
+    bool keypool = false;
+    FlatSigningProvider keys;
+};
+
+bool ProcessImport(CWallet& wallet, const ImportMultiData& data, std::vector<std::string>& warnings, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessPublicKey(CWallet& wallet, std::string strLabel, CPubKey pubKey) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessPrivateKey(CWallet& wallet, std::string strLabel, CKey key) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessAddress(CWallet &wallet, std::string strAddress, std::string strLabel, bool fP2SH) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
