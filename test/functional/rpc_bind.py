@@ -92,6 +92,8 @@ class RPCBindTest(BitcoinTestFramework):
 
         self.defaultport = rpc_port(0)
 
+        self.replaceinconfig(0, "rpcbind", "#rpcbind")
+        self.replaceinconfig(0, "rpcallowip", "#rpcallowip")
         if not self.options.run_nonloopback:
             self._run_loopback_tests()
         if not self.options.run_ipv4 and not self.options.run_ipv6:
@@ -132,6 +134,12 @@ class RPCBindTest(BitcoinTestFramework):
         # Check that with invalid rpcallowip, we are denied
         self.run_allowip_test([self.non_loopback_ip], self.non_loopback_ip, self.defaultport)
         assert_raises_rpc_error(-342, "non-JSON HTTP response with '403 Forbidden' from server", self.run_allowip_test, ['1.1.1.1'], self.non_loopback_ip, self.defaultport)
+
+    def replaceinconfig(self, nodeid, old, new):
+        with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
+            newText = f.read().replace(old, new)
+        with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
+            f.write(newText)
 
 if __name__ == '__main__':
     RPCBindTest().main()
