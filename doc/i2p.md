@@ -134,14 +134,19 @@ port (`TO_PORT`) is always set to 0 and is not in the control of Bitcoin Core.
 
 ## Bandwidth
 
-I2P routers may route a large amount of general network traffic with their
-default settings. Check your router's configuration to limit the amount of this
-traffic relayed, if desired.
+By default, your node shares bandwidth and transit tunnels with the I2P network
+in order to increase your anonymity with cover traffic, help the I2P router used
+by your node integrate optimally with the network, and give back to the network.
+It's important that the nodes of a popular application like Bitcoin contribute
+as much to the I2P network as they consume.
 
-With `i2pd`, the amount of bandwidth being shared with the wider network can be
-adjusted with the `bandwidth`, `share` and `transittunnels` options in your
-`i2pd.conf` file. For example, to limit total I2P traffic to 256KB/s and share
-50% of this limit for a maximum of 20 transit tunnels:
+It is possible, though strongly discouraged, to change your I2P router
+configuration to limit the amount of I2P traffic relayed by your node.
+
+With `i2pd`, this can be done by adjusting the `bandwidth`, `share` and
+`transittunnels` options in your `i2pd.conf` file. For example, to limit total
+I2P traffic to 256KB/s and share 50% of this limit for a maximum of 20 transit
+tunnels:
 
 ```
 bandwidth = 256
@@ -151,9 +156,15 @@ share = 50
 transittunnels = 20
 ```
 
-If you prefer not to relay any public I2P traffic and only permit I2P traffic
-from programs which are connecting via the SAM proxy, e.g. Bitcoin Core, you
-can set the `notransit` option to `true`.
-
 Similar bandwidth configuration options for the Java I2P router can be found in
 `http://127.0.0.1:7657/config` under the "Bandwidth" tab.
+
+Before doing this, please see the "Participating Traffic Considerations" section
+in [Embedding I2P in your Application](https://geti2p.net/en/docs/applications/embedding).
+
+In most cases, the default router settings should work fine.
+
+## Bundling I2P in a Bitcoin application
+
+Please see the "General Guidance for Developers" section in https://geti2p.net/en/docs/api/samv3
+if you are developing a downstream application that may be bundling I2P with Bitcoin.
