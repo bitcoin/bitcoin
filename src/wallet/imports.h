@@ -52,6 +52,19 @@ struct ImportMultiData
     FlatSigningProvider keys;
 };
 
+struct ImportDescriptorData
+{
+    std::shared_ptr<Descriptor> parsed_desc;
+    std::string label;
+    int64_t range_start = 0;
+    int64_t range_end = 0;
+    int64_t next_index = 0;
+    int64_t timestamp = 0;
+    bool active = false;
+    bool internal = false;
+};
+
+bool ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorData& data, std::vector<std::string>& warnings, FlatSigningProvider& keys, bool range_exists, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessImport(CWallet& wallet, const ImportMultiData& data, std::vector<std::string>& warnings, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessPublicKey(CWallet& wallet, std::string strLabel, CPubKey pubKey) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ProcessPrivateKey(CWallet& wallet, std::string strLabel, CKey key) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);

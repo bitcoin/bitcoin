@@ -371,6 +371,99 @@ bool ProcessImport(CWallet &wallet, const ImportMultiData &data, std::vector<std
     return true;
 }
 
+bool ProcessDescriptorImport(CWallet &wallet, const ImportDescriptorData &data, std::vector<std::string> &warnings,
+                             FlatSigningProvider &keys, bool range_exists, const int64_t timestamp) {
+    // Active descriptors must be ranged
+    if (data.active && !data.parsed_desc->IsRange()) {
+        throw InvalidParameter("Active descriptors must be ranged");
+    }
+
+    // Ranged descriptors should not have a label
+    if (range_exists && !data.label.empty()) {
+        throw InvalidParameter("Ranged descriptors should not have a label");
+    }
+
+    // Internal addresses should not have a label either
+    if (data.internal && !data.label.empty()) {
+        throw InvalidParameter("Internal addresses should not have a label");
+    }
+
+    // Combo descriptor check
+    if (data.active && !data.parsed_desc->IsSingleType()) {
+        throw WalletError("Combo descriptors cannot be set to active");
+    }
+
+    // If the wallet disabled private keys, abort if private keys exist
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.keys.empty()) {
+        throw WalletError("Cannot import private keys to a wallet with private keys disabled");
+    }
+
+    // Need to ExpandPrivate to check if private keys are available for all pubkeys
+    FlatSigningProvider expand_keys;
+    std::vector<CScript> scripts;
+    if (!data.parsed_desc->Expand(0, keys, scripts, expand_keys)) {
+        throw WalletError(
+                "Cannot expand descriptor. Probably because of hardened derivations without private keys provided");
+    }
+    data.parsed_desc->ExpandPrivate(0, keys, expand_keys);
+
+    // Check if all private keys are provided
+    bool have_all_privkeys = !expand_keys.keys.empty();
+    for (const auto &entry: expand_keys.origins) {
+        const CKeyID &key_id = entry.first;
+        CKey key;
+        if (!expand_keys.GetKey(key_id, key)) {
+            have_all_privkeys = false;
+            break;
+        }
+    }
+
+    // If private keys are enabled, check some things.
+    if (!wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (keys.keys.empty()) {
+            throw WalletError(
+                    "Cannot import descriptor without private keys to a wallet with private keys enabled");
+        }
+        if (!have_all_privkeys) {
+            warnings.push_back(
+                    "Not all private keys provided. Some wallet functionality may return unexpected errors");
+        }
+    }
+
+    WalletDescriptor w_desc(data.parsed_desc, timestamp, data.range_start, data.range_end, data.next_index);
+
+    // Check if the wallet already contains the descriptor
+    std::string error;
+    auto existing_spk_manager = wallet.GetDescriptorScriptPubKeyMan(w_desc);
+    if (existing_spk_manager) {
+        if (!existing_spk_manager->CanUpdateToWalletDescriptor(w_desc, error)) {
+            throw InvalidParameter(error);
+        }
+    }
+
+    // Add descriptor to the wallet
+    auto spk_manager = wallet.AddWalletDescriptor(w_desc, keys, data.label, data.internal);
+    if (spk_manager == nullptr) {
+        throw WalletError(strprintf("Could not add descriptor '%s'", data.parsed_desc->ToString()));
+    }
+
+    // Set descriptor as active if necessary
+    if (data.active) {
+        if (!w_desc.descriptor->GetOutputType()) {
+            warnings.push_back("Unknown output type, cannot set descriptor to active.");
+        } else {
+            wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(),
+                                            data.internal);
+        }
+    } else {
+        if (w_desc.descriptor->GetOutputType()) {
+            wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(),
+                                             data.internal);
+        }
+    }
+    return true;
+}
+
 bool ProcessPublicKey(CWallet &wallet, std::string strLabel, CPubKey pubKey) {
     std::set<CScript> script_pub_keys;
     for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
