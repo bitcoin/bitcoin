@@ -12,7 +12,7 @@ export MSAN_FLAGS="-fsanitize=memory -fsanitize-memory-track-origins=2 -fno-omit
 LIBCXX_FLAGS="-nostdinc++ -stdlib=libc++ -L${LIBCXX_DIR}lib -lc++abi -I${LIBCXX_DIR}include -I${LIBCXX_DIR}include/c++/v1 -lpthread -Wl,-rpath,${LIBCXX_DIR}lib -Wno-unused-command-line-argument"
 export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
 
-export CONTAINER_NAME="ci_native_msan"
+export CONTAINER_NAME="ci_native_fuzz_msan"
 export PACKAGES="clang-12 llvm-12 cmake"
 # BDB generates false-positives and will be removed in future
 export DEP_OPTS="NO_BDB=1 NO_QT=1 CC='clang' CXX='clang++' CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' libevent_cflags='${MSAN_FLAGS}' sqlite_cflags='${MSAN_FLAGS}' zeromq_cxxflags='-std=c++17 ${MSAN_AND_LIBCXX_FLAGS}'"
